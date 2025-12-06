@@ -15,6 +15,8 @@ class Club extends Model
         'afkorting',
         'plaats',
         'email',
+        'contact_naam',
+        'telefoon',
     ];
 
     public function judokas(): HasMany

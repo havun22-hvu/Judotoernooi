@@ -28,6 +28,23 @@
             @enderror
         </div>
 
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="inschrijving_deadline" class="block text-gray-700 font-bold mb-2">Inschrijving Deadline</label>
+                <input type="date" name="inschrijving_deadline" id="inschrijving_deadline"
+                       value="{{ old('inschrijving_deadline', $toernooi->inschrijving_deadline?->format('Y-m-d')) }}"
+                       class="w-full border rounded px-3 py-2">
+                <p class="text-gray-500 text-sm mt-1">Tot wanneer kunnen clubs judoka's opgeven?</p>
+            </div>
+            <div>
+                <label for="max_judokas" class="block text-gray-700 font-bold mb-2">Max Aantal Judoka's</label>
+                <input type="number" name="max_judokas" id="max_judokas"
+                       value="{{ old('max_judokas', $toernooi->max_judokas) }}"
+                       class="w-full border rounded px-3 py-2" min="1">
+                <p class="text-gray-500 text-sm mt-1">Maximaal aantal deelnemers</p>
+            </div>
+        </div>
+
         <div class="mb-4">
             <label for="organisatie" class="block text-gray-700 font-bold mb-2">Organisatie</label>
             <input type="text" name="organisatie" id="organisatie" value="{{ old('organisatie', $toernooi->organisatie) }}"
