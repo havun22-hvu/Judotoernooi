@@ -32,13 +32,17 @@
 <!-- Nieuwe club toevoegen -->
 <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-bold mb-4">Nieuwe Club Toevoegen</h2>
-    <form action="{{ route('toernooi.club.store', $toernooi) }}" method="POST" class="grid grid-cols-4 gap-4">
+    <form action="{{ route('toernooi.club.store', $toernooi) }}" method="POST" class="grid grid-cols-6 gap-4">
         @csrf
         <input type="text" name="naam" placeholder="Clubnaam *" required
                class="border rounded px-3 py-2 @error('naam') border-red-500 @enderror">
-        <input type="email" name="email" placeholder="Email"
+        <input type="email" name="email" placeholder="Email 1"
+               class="border rounded px-3 py-2">
+        <input type="email" name="email2" placeholder="Email 2"
                class="border rounded px-3 py-2">
         <input type="text" name="contact_naam" placeholder="Contactpersoon"
+               class="border rounded px-3 py-2">
+        <input type="tel" name="telefoon" placeholder="Telefoon"
                class="border rounded px-3 py-2">
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Toevoegen
@@ -52,8 +56,8 @@
         <thead class="bg-gray-50">
             <tr>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Emails</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact / Tel</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judoka's</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
@@ -68,21 +72,43 @@
                     <td class="px-4 py-3 font-medium">{{ $club->naam }}</td>
                 </template>
                 <template x-if="!editing">
-                    <td class="px-4 py-3 text-gray-600">{{ $club->email ?? '-' }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-sm">
+                        @if($club->email)
+                        <div>{{ $club->email }}</div>
+                        @endif
+                        @if($club->email2)
+                        <div>{{ $club->email2 }}</div>
+                        @endif
+                        @if(!$club->email && !$club->email2)
+                        <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
                 </template>
                 <template x-if="!editing">
-                    <td class="px-4 py-3 text-gray-600">{{ $club->contact_naam ?? '-' }}</td>
+                    <td class="px-4 py-3 text-gray-600 text-sm">
+                        @if($club->contact_naam)
+                        <div>{{ $club->contact_naam }}</div>
+                        @endif
+                        @if($club->telefoon)
+                        <div class="text-gray-500">{{ $club->telefoon }}</div>
+                        @endif
+                        @if(!$club->contact_naam && !$club->telefoon)
+                        <span class="text-gray-400">-</span>
+                        @endif
+                    </td>
                 </template>
 
                 <!-- Edit view -->
                 <template x-if="editing">
                     <td colspan="3" class="px-4 py-3">
-                        <form action="{{ route('toernooi.club.update', [$toernooi, $club]) }}" method="POST" class="flex space-x-2">
+                        <form action="{{ route('toernooi.club.update', [$toernooi, $club]) }}" method="POST" class="flex flex-wrap gap-2">
                             @csrf
                             @method('PUT')
-                            <input type="text" name="naam" value="{{ $club->naam }}" class="border rounded px-2 py-1 w-32">
-                            <input type="email" name="email" value="{{ $club->email }}" placeholder="Email" class="border rounded px-2 py-1 w-40">
-                            <input type="text" name="contact_naam" value="{{ $club->contact_naam }}" placeholder="Contact" class="border rounded px-2 py-1 w-32">
+                            <input type="text" name="naam" value="{{ $club->naam }}" placeholder="Clubnaam" class="border rounded px-2 py-1 w-28">
+                            <input type="email" name="email" value="{{ $club->email }}" placeholder="Email 1" class="border rounded px-2 py-1 w-36">
+                            <input type="email" name="email2" value="{{ $club->email2 }}" placeholder="Email 2" class="border rounded px-2 py-1 w-36">
+                            <input type="text" name="contact_naam" value="{{ $club->contact_naam }}" placeholder="Contact" class="border rounded px-2 py-1 w-28">
+                            <input type="tel" name="telefoon" value="{{ $club->telefoon }}" placeholder="Telefoon" class="border rounded px-2 py-1 w-28">
                             <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded text-sm">Opslaan</button>
                             <button type="button" @click="editing = false" class="bg-gray-300 px-2 py-1 rounded text-sm">Annuleer</button>
                         </form>

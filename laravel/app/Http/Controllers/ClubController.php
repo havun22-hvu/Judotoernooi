@@ -32,7 +32,9 @@ class ClubController extends Controller
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
+            'email2' => 'nullable|email|max:255',
             'contact_naam' => 'nullable|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
             'plaats' => 'nullable|string|max:255',
         ]);
 
@@ -48,7 +50,9 @@ class ClubController extends Controller
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
+            'email2' => 'nullable|email|max:255',
             'contact_naam' => 'nullable|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
             'plaats' => 'nullable|string|max:255',
         ]);
 

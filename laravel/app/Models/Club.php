@@ -15,6 +15,7 @@ class Club extends Model
         'afkorting',
         'plaats',
         'email',
+        'email2',
         'contact_naam',
         'telefoon',
     ];
