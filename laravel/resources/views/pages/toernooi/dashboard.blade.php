@@ -6,6 +6,24 @@
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-800">{{ $toernooi->naam }}</h1>
     <p class="text-gray-600">{{ $toernooi->datum->format('d-m-Y') }} - {{ $toernooi->organisatie }}</p>
+
+    @if($toernooi->max_judokas)
+    <div class="mt-4 flex items-center space-x-4">
+        <div class="flex-1 bg-gray-200 rounded-full h-4 max-w-md">
+            <div class="h-4 rounded-full {{ $toernooi->bezettings_percentage >= 100 ? 'bg-red-500' : ($toernooi->bezettings_percentage >= 80 ? 'bg-orange-500' : 'bg-green-500') }}"
+                 style="width: {{ min($toernooi->bezettings_percentage, 100) }}%"></div>
+        </div>
+        <span class="text-sm font-medium {{ $toernooi->bezettings_percentage >= 100 ? 'text-red-600' : ($toernooi->bezettings_percentage >= 80 ? 'text-orange-600' : 'text-gray-600') }}">
+            {{ $statistieken['totaal_judokas'] }} / {{ $toernooi->max_judokas }} ({{ $toernooi->bezettings_percentage }}%)
+        </span>
+    </div>
+    @endif
+
+    @if($toernooi->inschrijving_deadline)
+    <p class="text-sm mt-2 {{ $toernooi->isInschrijvingOpen() ? 'text-green-600' : 'text-red-600' }}">
+        Inschrijving: {{ $toernooi->isInschrijvingOpen() ? 'Open tot' : 'Gesloten sinds' }} {{ $toernooi->inschrijving_deadline->format('d-m-Y') }}
+    </p>
+    @endif
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

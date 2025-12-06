@@ -94,4 +94,26 @@ class Toernooi extends Model
         }
         return $this->judokas()->count() >= $this->max_judokas;
     }
+
+    public function getBezettingsPercentageAttribute(): ?int
+    {
+        if (!$this->max_judokas) {
+            return null;
+        }
+        return (int) round(($this->judokas()->count() / $this->max_judokas) * 100);
+    }
+
+    public function isBijna80ProcentVol(): bool
+    {
+        $percentage = $this->bezettings_percentage;
+        return $percentage !== null && $percentage >= 80 && $percentage < 100;
+    }
+
+    public function getPlaatsenOverAttribute(): ?int
+    {
+        if (!$this->max_judokas) {
+            return null;
+        }
+        return max(0, $this->max_judokas - $this->judokas()->count());
+    }
 }
