@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      padding: 25px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .scanner-section {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    #qr-reader {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+
+    .scanner-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+      font-size: 18px;
+      padding: 16px 32px;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    .judoka-info {
+      background: white;
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .judoka-info.active {
+      display: block;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .info-value {
+      color: #333;
+      font-size: 18px;
+    }
+
+    .weight-input-section {
+      background: #fff3cd;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .weight-input-section.active {
+      display: block;
+    }
+
+    .weight-input-group {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .weight-input {
+      width: 150px;
+      padding: 15px;
+      font-size: 24px;
+      text-align: center;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .weight-input:focus {
+      outline: none;
+      border-color: #764ba2;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .kg-label {
+      font-size: 24px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .status-message {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+
+    .history-section {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-item {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #28a745;
+    }
+
+    .history-name {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .history-weight {
+      color: #667eea;
+      font-weight: 600;
+      font-size: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .weight-input {
+        width: 120px;
+        font-size: 20px;
+      }
+    }
+  </style>
+
+  <!-- QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>⚖️ Weging Blok <?= blokNr ?></h1>
+
+    <!-- Scanner Section -->
+    <div class="scanner-section">
+      <div id="qr-reader"></div>
+      <div class="scanner-controls">
+        <button class="btn btn-primary" id="startScanBtn" onclick="startScanner()">
+          📷 Start Scanner
+        </button>
+        <button class="btn btn-secondary" id="stopScanBtn" onclick="stopScanner()" style="display:none;">
+          ⏹️ Stop Scanner
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Message -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <!-- Judoka Info -->
+    <div id="judokaInfo" class="judoka-info">
+      <div class="info-row">
+        <span class="info-label">Naam:</span>
+        <span class="info-value" id="judokaNaam">-</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Club:</span>
+        <span class="info-value" id="judokaClub">-</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Leeftijdsklasse:</span>
+        <span class="info-value" id="judokaLeeftijd">-</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Gewichtsklasse:</span>
+        <span class="info-value" id="judokaGewicht">-</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Poule:</span>
+        <span class="info-value" id="judokaPoule">-</span>
+      </div>
+    </div>
+
+    <!-- Weight Input -->
+    <div id="weightInputSection" class="weight-input-section">
+      <h3 style="text-align: center; margin-bottom: 15px; color: #856404;">
+        📊 Voer gewicht in
+      </h3>
+      <div class="weight-input-group">
+        <input type="number" id="weightInput" class="weight-input"
+               placeholder="0.0" step="0.1" min="0" max="200"
+               autofocus>
+        <span class="kg-label">kg</span>
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button class="btn btn-success" onclick="saveWeight()">
+          ✓ Gewicht Opslaan
+        </button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="history-title">
+        📋 Gewogen Judoka's
+      </div>
+      <div id="historyList">
+        <p style="text-align: center; color: #999;">Nog geen judoka's gewogen</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <button class="btn btn-secondary" onclick="google.script.host.close()">
+        ← Sluiten
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode;
+    let currentJudoka = null;
+    let blokNr = <?= blokNr ?>;
+    let history = [];
+
+    function startScanner() {
+      const qrReader = document.getElementById('qr-reader');
+
+      html5QrCode = new Html5Qrcode("qr-reader");
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        onScanSuccess,
+        onScanError
+      ).then(() => {
+        document.getElementById('startScanBtn').style.display = 'none';
+        document.getElementById('stopScanBtn').style.display = 'block';
+        showStatus('Scanner actief - scan QR code', 'success');
+      }).catch(err => {
+        showStatus('Camera toegang geweigerd: ' + err, 'error');
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          document.getElementById('startScanBtn').style.display = 'block';
+          document.getElementById('stopScanBtn').style.display = 'none';
+          showStatus('Scanner gestopt', 'success');
+        });
+      }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      // Stop scanner tijdelijk
+      stopScanner();
+
+      // Parse QR data
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            currentJudoka = result.judoka;
+            showJudokaInfo(currentJudoka);
+            showStatus('✓ Judoka herkend: ' + currentJudoka.naam, 'success');
+            document.getElementById('weightInput').focus();
+          } else {
+            showStatus('⚠️ ' + result.error, 'error');
+            setTimeout(startScanner, 2000);
+          }
+        })
+        .withFailureHandler(function(error) {
+          showStatus('Fout: ' + error, 'error');
+          setTimeout(startScanner, 2000);
+        })
+        .zoekJudokaViaQR(decodedText);
+    }
+
+    function onScanError(errorMessage) {
+      // Negeer scan fouten (gebeurt veel)
+    }
+
+    function showJudokaInfo(judoka) {
+      document.getElementById('judokaNaam').textContent = judoka.naam;
+      document.getElementById('judokaClub').textContent = judoka.club || '-';
+      document.getElementById('judokaLeeftijd').textContent = judoka.leeftijdsklasse || '-';
+      document.getElementById('judokaGewicht').textContent = judoka.gewichtsklasse || '-';
+      document.getElementById('judokaPoule').textContent = judoka.poule || '-';
+
+      document.getElementById('judokaInfo').classList.add('active');
+      document.getElementById('weightInputSection').classList.add('active');
+      document.getElementById('weightInput').value = '';
+    }
+
+    function saveWeight() {
+      const weight = parseFloat(document.getElementById('weightInput').value);
+
+      if (!weight || weight <= 0) {
+        showStatus('⚠️ Voer een geldig gewicht in', 'error');
+        return;
+      }
+
+      if (!currentJudoka) {
+        showStatus('⚠️ Geen judoka geselecteerd', 'error');
+        return;
+      }
+
+      showStatus('💾 Gewicht opslaan...', 'success');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (result.success) {
+            showStatus(`✓ Gewicht opgeslagen: ${result.naam} - ${result.gewicht} kg`, 'success');
+
+            // Voeg toe aan history
+            addToHistory(result.naam, result.gewicht);
+
+            // Reset
+            currentJudoka = null;
+            document.getElementById('judokaInfo').classList.remove('active');
+            document.getElementById('weightInputSection').classList.remove('active');
+
+            // Start scanner weer
+            setTimeout(startScanner, 1500);
+          } else {
+            showStatus('⚠️ Fout bij opslaan: ' + result.error, 'error');
+          }
+        })
+        .withFailureHandler(function(error) {
+          showStatus('⚠️ Fout: ' + error, 'error');
+        })
+        .slaGewichtOp(currentJudoka.rijNr, weight);
+    }
+
+    function addToHistory(naam, gewicht) {
+      history.unshift({ naam, gewicht });
+
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+
+      history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+          <span class="history-name">${item.naam}</span>
+          <span class="history-weight">${item.gewicht} kg</span>
+        `;
+        historyList.appendChild(div);
+      });
+    }
+
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = 'status-message ' + type;
+
+      if (type === 'success') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Enter key in weight input
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('weightInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          saveWeight();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

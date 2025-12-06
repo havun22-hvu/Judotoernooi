@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mat Beheer - WestFries Open</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .header .icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 15px;
+    }
+
+    .grid-button {
+      background: #f0f0f0;
+      border: 3px solid transparent;
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .grid-button:hover {
+      background: #e0e0e0;
+      transform: translateY(-2px);
+    }
+
+    .grid-button.selected {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border-color: #4facfe;
+      transform: translateY(-2px);
+    }
+
+    .continue-button {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: block;
+      margin: 30px auto 0;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .continue-button.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .continue-button.active:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(79, 172, 254, 0.4);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4facfe;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    .info-box {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      color: #333;
+      font-size: 14px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 10px;
+      }
+
+      .grid-button {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-button" onclick="goBack()">
+      ← Terug
+    </button>
+
+    <div class="header">
+      <div class="icon">🥋</div>
+      <h1>Mat Beheer</h1>
+      <p>Selecteer blok en mat nummer</p>
+    </div>
+
+    <div class="section">
+      <h2>Selecteer Blok</h2>
+      <div id="blokGrid" class="grid">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Laden...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Selecteer Mat</h2>
+      <div id="matGrid" class="grid">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Laden...</p>
+        </div>
+      </div>
+    </div>
+
+    <button id="continueButton" class="continue-button" onclick="continueTo()">
+      Doorgaan →
+    </button>
+
+    <div class="info-box">
+      <strong>ℹ️ Mat Beheer Functies:</strong>
+      • Wedstrijdresultaten invoeren<br>
+      • Wedstrijdschema's bekijken<br>
+      • Poule overzichten<br>
+      • Automatische berekening plaatsen<br>
+      • Real-time synchronisatie
+    </div>
+  </div>
+
+  <script>
+    let selectedBlok = null;
+    let selectedMat = null;
+
+    function goBack() {
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('?')[0];
+      window.location.href = baseUrl + '?page=login';
+    }
+
+    function loadData() {
+      // Data komt van de server-side template
+      const blokken = <?!= JSON.stringify(blokken) ?>;
+      const matten = <?!= JSON.stringify(matten) ?>;
+
+      renderBlokken(blokken);
+      renderMatten(matten);
+    }
+
+    function renderBlokken(blokken) {
+      const grid = document.getElementById('blokGrid');
+      grid.innerHTML = '';
+
+      blokken.forEach(function(blok) {
+        const button = document.createElement('div');
+        button.className = 'grid-button';
+        button.textContent = 'Blok ' + blok.nummer;
+
+        button.onclick = function() {
+          selectBlok(blok.nummer, button);
+        };
+
+        grid.appendChild(button);
+      });
+    }
+
+    function renderMatten(matten) {
+      const grid = document.getElementById('matGrid');
+      grid.innerHTML = '';
+
+      matten.forEach(function(mat) {
+        const button = document.createElement('div');
+        button.className = 'grid-button';
+        button.textContent = 'Mat ' + mat.nummer;
+
+        button.onclick = function() {
+          selectMat(mat.nummer, button);
+        };
+
+        grid.appendChild(button);
+      });
+    }
+
+    function selectBlok(blokNr, buttonElement) {
+      // Deselecteer alle blok buttons
+      const allButtons = document.querySelectorAll('#blokGrid .grid-button');
+      allButtons.forEach(function(btn) {
+        btn.classList.remove('selected');
+      });
+
+      // Selecteer deze button
+      buttonElement.classList.add('selected');
+      selectedBlok = blokNr;
+
+      checkCanContinue();
+    }
+
+    function selectMat(matNr, buttonElement) {
+      // Deselecteer alle mat buttons
+      const allButtons = document.querySelectorAll('#matGrid .grid-button');
+      allButtons.forEach(function(btn) {
+        btn.classList.remove('selected');
+      });
+
+      // Selecteer deze button
+      buttonElement.classList.add('selected');
+      selectedMat = matNr;
+
+      checkCanContinue();
+    }
+
+    function checkCanContinue() {
+      const continueBtn = document.getElementById('continueButton');
+      if (selectedBlok && selectedMat) {
+        continueBtn.classList.add('active');
+      } else {
+        continueBtn.classList.remove('active');
+      }
+    }
+
+    function continueTo() {
+      if (!selectedBlok || !selectedMat) {
+        alert('Selecteer eerst een blok en een mat');
+        return;
+      }
+
+      // Navigeer naar de mat detail pagina met blok en mat parameters
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('?')[0];
+      window.location.href = baseUrl + '?page=mat_detail&blok=' + selectedBlok + '&mat=' + selectedMat;
+    }
+
+    // Laad data bij page load
+    window.onload = function() {
+      loadData();
+    };
+  </script>
+</body>
+</html>

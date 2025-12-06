@@ -1,0 +1,81 @@
+<script>
+/**
+ * WebApp API Helper
+ * Vervangt google.script.run voor web apps
+ */
+const WebAppAPI = {
+  /**
+   * Haal de base URL van de web app
+   */
+  getBaseUrl() {
+    return window.location.href.split('?')[0];
+  },
+
+  /**
+   * Roep een server-side functie aan via POST
+   */
+  async call(action, params = {}) {
+    const url = this.getBaseUrl();
+    const formData = new FormData();
+    formData.append('action', action);
+
+    // Voeg parameters toe
+    for (const [key, value] of Object.entries(params)) {
+      formData.append(key, value);
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('API call error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Zoek judoka op naam
+   */
+  async zoekJudokaOpNaam(zoekterm, blokNr) {
+    return this.call('zoekJudokaOpNaam', { zoekterm, blokNr });
+  },
+
+  /**
+   * Zoek judoka via QR code
+   */
+  async zoekJudokaViaQR(qrData) {
+    return this.call('zoekJudokaViaQR', { qrData });
+  },
+
+  /**
+   * Sla gewicht op
+   */
+  async slaGewichtOp(rijNr, gewicht) {
+    return this.call('slaGewichtOp', { rijNr, gewicht });
+  },
+
+  /**
+   * Haal poules op voor een specifieke mat
+   */
+  async getPoulesVoorMat(blokNr, matNr) {
+    return this.call('getPoulesVoorMat', { blokNr, matNr });
+  },
+
+  /**
+   * Synchroniseer mat data naar de sheet
+   */
+  async syncMatData(blokNr, matNr, poulesData, changes) {
+    return this.call('syncMatData', {
+      blokNr,
+      matNr,
+      poulesData: JSON.stringify(poulesData),
+      changes: JSON.stringify(changes)
+    });
+  }
+};
+</script>

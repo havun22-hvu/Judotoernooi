@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>Email Weegkaarten</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      background: #f5f7fa;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      background: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .tab:hover {
+      border-color: #2563eb;
+    }
+
+    .tab.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .tab-content {
+      display: none;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #374151;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #1e40af;
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 2px solid #10b981;
+      display: block;
+    }
+
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 2px solid #ef4444;
+      display: block;
+    }
+
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 2px solid #2563eb;
+      display: block;
+    }
+
+    .school-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .school-item {
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .school-name {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .school-count {
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 5px;
+    }
+
+    .judoka-result-item:hover {
+      background: #f3f4f6;
+    }
+
+    .judoka-result-item:active {
+      background: #2563eb;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📧 Email Weegkaarten</h1>
+    <p>Verstuur weegkaarten naar coaches per judoschool</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('single')">Enkele Weegkaart</div>
+    <div class="tab" onclick="switchTab('school')">Per Judoschool</div>
+  </div>
+
+  <!-- Tab: Enkele Weegkaart -->
+  <div id="tab-single" class="tab-content active">
+    <h2 style="margin-bottom: 15px;">Verstuur enkele weegkaart</h2>
+
+    <div class="form-group">
+      <label for="judoka-search">Zoek Judoka</label>
+      <input type="text" id="judoka-search" placeholder="Typ naam om te zoeken..." autocomplete="off">
+      <div class="help-text">Typ minimaal 2 letters om te zoeken</div>
+      <div id="judoka-results" style="display: none; max-height: 200px; overflow-y: auto; border: 2px solid #2563eb; border-radius: 8px; margin-top: 5px; background: white;"></div>
+      <input type="hidden" id="judoka-naam">
+    </div>
+
+    <div class="form-group">
+      <label for="email-single">Email Adres</label>
+      <input type="email" id="email-single" placeholder="voorbeeld@email.com">
+      <div class="help-text">Voer het email adres in van de ontvanger</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="verstuurEnkeleWeegkaart()" id="btn-single">
+      📧 Verstuur Weegkaart
+    </button>
+
+    <div id="status-single" class="status"></div>
+  </div>
+
+  <!-- Tab: Per Judoschool -->
+  <div id="tab-school" class="tab-content">
+    <h2 style="margin-bottom: 15px;">Verstuur weegkaarten per judoschool</h2>
+
+    <div class="form-group">
+      <label for="judoschool-select">Selecteer Judoschool</label>
+      <select id="judoschool-select" onchange="updateSchoolInfo()">
+        <option value="">-- Selecteer een judoschool --</option>
+      </select>
+      <div class="help-text" id="school-info"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="email-school">Email Adres Coach</label>
+      <input type="email" id="email-school" placeholder="coach@judoschool.nl">
+      <div class="help-text">Alle weegkaarten van deze judoschool worden in één email verstuurd</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="verstuurSchoolWeegkaarten()" id="btn-school">
+      📧 Verstuur Weegkaarten
+    </button>
+
+    <div id="status-school" class="status"></div>
+  </div>
+
+  <script>
+    let judokaNamen = [];
+    let schoolGroepen = {};
+
+    // Laad data bij openen
+    window.onload = function() {
+      laadJudokaNamen();
+      laadJudoscholen();
+    };
+
+    function switchTab(tab) {
+      // Update tabs
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+      if (tab === 'single') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('tab-single').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('tab-school').classList.add('active');
+      }
+    }
+
+    function laadJudokaNamen() {
+      google.script.run
+        .withSuccessHandler(function(namen) {
+          judokaNamen = namen;
+          // Setup live search
+          setupJudokaSearch();
+        })
+        .withFailureHandler(function(error) {
+          toonStatus('single', 'error', 'Fout bij laden judoka namen: ' + error.message);
+        })
+        .getJudokaNamenLijst();
+    }
+
+    function setupJudokaSearch() {
+      const searchInput = document.getElementById('judoka-search');
+      const resultsDiv = document.getElementById('judoka-results');
+      const hiddenInput = document.getElementById('judoka-naam');
+
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+
+        if (query.length < 2) {
+          resultsDiv.style.display = 'none';
+          resultsDiv.innerHTML = '';
+          hiddenInput.value = '';
+          return;
+        }
+
+        // Filter judoka's
+        const matches = judokaNamen.filter(naam =>
+          naam.toLowerCase().includes(query)
+        );
+
+        if (matches.length === 0) {
+          resultsDiv.innerHTML = '<div style="padding: 10px; color: #6b7280;">Geen judoka gevonden</div>';
+          resultsDiv.style.display = 'block';
+          hiddenInput.value = '';
+          return;
+        }
+
+        // Toon resultaten
+        resultsDiv.innerHTML = matches.slice(0, 10).map(naam =>
+          `<div class="judoka-result-item" onclick="selectJudoka('${naam.replace(/'/g, "\\'")}')" style="padding: 10px; cursor: pointer; border-bottom: 1px solid #e5e7eb;">${naam}</div>`
+        ).join('');
+
+        if (matches.length > 10) {
+          resultsDiv.innerHTML += '<div style="padding: 10px; color: #6b7280; font-size: 12px;">... en ' + (matches.length - 10) + ' meer. Verfijn je zoekopdracht.</div>';
+        }
+
+        resultsDiv.style.display = 'block';
+        hiddenInput.value = '';
+      });
+
+      // Sluit results bij click buiten
+      document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+          resultsDiv.style.display = 'none';
+        }
+      });
+    }
+
+    function selectJudoka(naam) {
+      document.getElementById('judoka-search').value = naam;
+      document.getElementById('judoka-naam').value = naam;
+      document.getElementById('judoka-results').style.display = 'none';
+    }
+
+    function laadJudoscholen() {
+      google.script.run
+        .withSuccessHandler(function(groepen) {
+          schoolGroepen = groepen;
+          const select = document.getElementById('judoschool-select');
+          select.innerHTML = '<option value="">-- Selecteer een judoschool --</option>';
+
+          Object.keys(groepen).sort().forEach(school => {
+            const option = document.createElement('option');
+            option.value = school;
+            option.textContent = school;
+            select.appendChild(option);
+          });
+        })
+        .withFailureHandler(function(error) {
+          toonStatus('school', 'error', 'Fout bij laden judoscholen: ' + error.message);
+        })
+        .groepeerJudokasPerSchool();
+    }
+
+    function updateSchoolInfo() {
+      const school = document.getElementById('judoschool-select').value;
+      const infoDiv = document.getElementById('school-info');
+
+      if (school && schoolGroepen[school]) {
+        const aantal = schoolGroepen[school].length;
+        infoDiv.textContent = `Deze judoschool heeft ${aantal} deelnemer${aantal === 1 ? '' : 's'}`;
+      } else {
+        infoDiv.textContent = '';
+      }
+    }
+
+    function verstuurEnkeleWeegkaart() {
+      const naam = document.getElementById('judoka-naam').value;
+      const email = document.getElementById('email-single').value;
+      const btn = document.getElementById('btn-single');
+
+      if (!naam) {
+        toonStatus('single', 'error', 'Selecteer eerst een judoka');
+        return;
+      }
+
+      if (!email || !email.includes('@')) {
+        toonStatus('single', 'error', 'Voer een geldig email adres in');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Bezig met versturen...';
+      toonStatus('single', 'info', 'Email wordt verstuurd...');
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = '📧 Verstuur Weegkaart';
+
+          if (result.success) {
+            toonStatus('single', 'success', '✅ ' + result.message);
+            document.getElementById('email-single').value = '';
+          } else {
+            toonStatus('single', 'error', '❌ ' + result.error);
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.textContent = '📧 Verstuur Weegkaart';
+          toonStatus('single', 'error', '❌ Fout: ' + error.message);
+        })
+        .verstuurEnkeleWeegkaartUI(naam, email);
+    }
+
+    function verstuurSchoolWeegkaarten() {
+      const school = document.getElementById('judoschool-select').value;
+      const email = document.getElementById('email-school').value;
+      const btn = document.getElementById('btn-school');
+
+      if (!school) {
+        toonStatus('school', 'error', 'Selecteer eerst een judoschool');
+        return;
+      }
+
+      if (!email || !email.includes('@')) {
+        toonStatus('school', 'error', 'Voer een geldig email adres in');
+        return;
+      }
+
+      const aantal = schoolGroepen[school] ? schoolGroepen[school].length : 0;
+      if (!confirm(`${aantal} weegkaart(en) versturen naar ${email}?`)) {
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Bezig met versturen...';
+      toonStatus('school', 'info', `${aantal} weegkaarten worden verstuurd...`);
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = '📧 Verstuur Weegkaarten';
+
+          if (result.success) {
+            toonStatus('school', 'success', `✅ ${result.aantalKaarten} weegkaarten verstuurd naar ${email}`);
+            document.getElementById('email-school').value = '';
+          } else {
+            toonStatus('school', 'error', '❌ ' + result.error);
+          }
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.textContent = '📧 Verstuur Weegkaarten';
+          toonStatus('school', 'error', '❌ Fout: ' + error.message);
+        })
+        .verstuurWeegkaartenPerSchool(school, email);
+    }
+
+    function toonStatus(tab, type, message) {
+      const statusDiv = document.getElementById('status-' + tab);
+      statusDiv.className = 'status ' + type;
+      statusDiv.textContent = message;
+    }
+  </script>
+</body>
+</html>

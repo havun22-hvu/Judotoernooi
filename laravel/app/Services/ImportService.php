@@ -103,8 +103,8 @@ class ImportService
             'gewichtsklasse' => $gewichtsklasse,
         ]);
 
-        // Generate judoka code
-        $judoka->update(['judoka_code' => $judoka->berekenJudokaCode()]);
+        // Generate judoka code (temporary, will get proper volgnummer during validation)
+        $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
 
         return $judoka;
     }

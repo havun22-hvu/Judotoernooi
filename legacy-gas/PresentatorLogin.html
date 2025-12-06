@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 32px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .logo p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      color: #f59e0b;
+      margin-top: 20px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 30px 0;
+      color: #999;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .divider::before {
+      left: 0;
+    }
+
+    .divider::after {
+      right: 0;
+    }
+
+    .quick-access {
+      display: grid;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      padding: 12px;
+      background: #f8f9fa;
+      color: #333;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+      border-color: #f59e0b;
+    }
+
+    @media (max-width: 500px) {
+      .login-container {
+        padding: 30px 20px;
+      }
+
+      .logo h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <h1>📺 Presentator</h1>
+      <p>WestFries Open Judotoernooi</p>
+      <p style="margin-top: 10px; color: #f59e0b; font-weight: bold;">⚠️ DEV MODUS - Direct inloggen</p>
+      <p style="margin-top: 5px; color: #999; font-size: 12px;">Versie: 2.0 (Web App Fix)</p>
+    </div>
+
+    <button onclick="handleDirectLogin()" class="btn-login" id="loginBtn">
+      📺 Uitslagen Dashboard Openen
+    </button>
+
+    <div class="loading" id="loading">
+      <p>⏳ Uitslagen Dashboard openen...</p>
+    </div>
+
+    <div class="divider">of</div>
+
+    <div class="quick-access">
+      <button class="btn-secondary" onclick="openAdminLogin()">
+        🔐 Admin Login
+      </button>
+      <button class="btn-secondary" onclick="openMatLogin()">
+        🥋 Mat Login
+      </button>
+      <button class="btn-secondary" onclick="openWeeglijstLogin()">
+        ⚖️ Weeglijst Login
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Detecteer of we in een Web App of Dialog zitten
+    const isWebApp = (typeof google === 'undefined' || !google.script || !google.script.host);
+
+    // DEV MODUS: Direct inloggen zonder wachtwoord
+    function handleDirectLogin() {
+      const loading = document.getElementById('loading');
+      const loginBtn = document.getElementById('loginBtn');
+
+      loading.classList.add('active');
+      loginBtn.disabled = true;
+
+      if (isWebApp) {
+        // Web App: navigeer naar dashboard pagina
+        const currentUrl = window.location.href;
+        const baseUrl = currentUrl.split('?')[0];
+        window.location.href = baseUrl + '?page=presentator_dashboard';
+      } else {
+        // Dialog: gebruik google.script
+        google.script.host.close();
+        google.script.run.openPresentatorDashboard();
+      }
+    }
+
+    function openAdminLogin() {
+      if (isWebApp) {
+        const currentUrl = window.location.href;
+        const baseUrl = currentUrl.split('?')[0];
+        window.location.href = baseUrl + '?page=admin';
+      } else {
+        google.script.host.close();
+        google.script.run.openAdminLogin();
+      }
+    }
+
+    function openMatLogin() {
+      if (isWebApp) {
+        const currentUrl = window.location.href;
+        const baseUrl = currentUrl.split('?')[0];
+        window.location.href = baseUrl + '?page=mat';
+      } else {
+        google.script.host.close();
+        google.script.run.openMatLogin();
+      }
+    }
+
+    function openWeeglijstLogin() {
+      if (isWebApp) {
+        const currentUrl = window.location.href;
+        const baseUrl = currentUrl.split('?')[0];
+        window.location.href = baseUrl + '?page=weging';
+      } else {
+        google.script.host.close();
+        google.script.run.openWeeglijstLogin();
+      }
+    }
+  </script>
+</body>
+</html>

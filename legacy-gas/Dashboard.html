@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>WestFries Open - Toernooi Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
+      padding: 0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .header p {
+      margin: 5px 0 0 0;
+      opacity: 0.9;
+      font-size: 11px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    .tab {
+      padding: 12px 15px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: #666;
+      border-left: 3px solid transparent;
+      transition: all 0.3s;
+      text-align: left;
+    }
+
+    .tab:hover {
+      background: #f8f8f8;
+      color: #333;
+    }
+
+    .tab.active {
+      color: #667eea;
+      background: #f8f9ff;
+      border-left-color: #667eea;
+    }
+
+    .content {
+      padding: 15px;
+      overflow-y: auto;
+      height: calc(100vh - 250px);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: white;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .card h3 {
+      margin: 0 0 8px 0;
+      color: #333;
+      font-size: 14px;
+      border-left: 3px solid #667eea;
+      padding-left: 8px;
+      font-weight: 600;
+    }
+
+    .card p {
+      color: #666;
+      margin-bottom: 10px;
+      line-height: 1.4;
+      font-size: 12px;
+    }
+
+    .btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.3s;
+      margin-right: 5px;
+      margin-bottom: 8px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-success {
+      background: #28a745;
+    }
+
+    .btn-success:hover {
+      background: #218838;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    .btn-block {
+      width: 100%;
+      display: block;
+      margin-right: 0;
+    }
+
+    .upload-zone {
+      border: 2px dashed #667eea;
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+      background: #f8f9ff;
+      margin-bottom: 10px;
+      transition: all 0.3s;
+    }
+
+    .upload-zone:hover {
+      border-color: #5568d3;
+      background: #f0f2ff;
+    }
+
+    .upload-zone input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      cursor: pointer;
+      display: inline-block;
+    }
+
+    .upload-icon {
+      font-size: 32px;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+
+    .upload-label strong {
+      font-size: 12px;
+    }
+
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      display: none;
+      font-size: 11px;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 20px 0;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      font-weight: 600;
+    }
+
+    .step.completed .step-number {
+      background: #28a745;
+      color: white;
+    }
+
+    .step.active .step-number {
+      background: #667eea;
+      color: white;
+    }
+
+    .step-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .btn-group .btn {
+      margin-right: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>WestFries Open JudoToernooi</h1>
+    <p>Judoschool Cees Veen - Toernooi Management Dashboard</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('voorbereiding')">⚙️ Voorbereiding</button>
+    <button class="tab" onclick="showTab('poule-indeling')">👥 Poule Indeling</button>
+    <button class="tab" onclick="showTab('blok-mat')">📋 Blok/Mat Indeling</button>
+    <button class="tab" onclick="showTab('toernooidag')">🥋 Toernooidag</button>
+    <button class="tab" onclick="showTab('wedstrijden')">⚔️ Wedstrijden</button>
+  </div>
+
+  <div class="content">
+    <!-- Status Message -->
+    <div id="statusMessage" class="status"></div>
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 10px;">Bezig...</p>
+    </div>
+
+    <!-- Voorbereiding Tab -->
+    <div id="voorbereiding" class="tab-content active">
+      <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 style="color: white; border-left-color: white;">🚀 Start Nieuw Toernooi</h3>
+        <p style="color: rgba(255,255,255,0.95);">Zet alles klaar: configuratie, tabbladen en standaard instellingen (6 blokken, 7 matten).</p>
+        <button class="btn btn-success" style="background: white; color: #667eea; font-weight: 600;" onclick="startNieuwToernooi()">Start Nieuw Toernooi</button>
+      </div>
+
+      <div class="card">
+        <h3>⚙️ Pas Tabbladen Aan (na config wijziging)</h3>
+        <p>Als je het aantal blokken of matten hebt gewijzigd in ToernooiConfig, klik dan hier om de tabbladen bij te werken.</p>
+        <button class="btn btn-secondary" onclick="pasTabbladeAan()">Pas Tabbladen Aan op Basis van Config</button>
+      </div>
+
+      <div class="card">
+        <h3>📥 Stap 1: Deelnemerslijst Importeren</h3>
+        <p>Upload Excel of CSV met: Naam, Band, Club, Gewicht, Geslacht, Geboortejaar.</p>
+
+        <div class="upload-zone">
+          <label for="fileUpload" class="upload-label">
+            <div class="upload-icon">📁</div>
+            <div><strong>Selecteer bestand</strong></div>
+            <div style="color: #666; font-size: 10px; margin-top: 3px;">Excel/CSV</div>
+          </label>
+          <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(this)">
+        </div>
+        <p style="font-size: 10px; color: #999; margin-top: 5px;">Wordt automatisch gecontroleerd na upload</p>
+      </div>
+
+      <div class="card">
+        <h3>🔍 Deelnemers Handmatig Controleren</h3>
+        <p>Alleen nodig als je wijzigingen hebt aangebracht in de deelnemerslijst.</p>
+        <button class="btn btn-secondary" onclick="controleerDeelnemers()">Controleer Deelnemers</button>
+      </div>
+    </div>
+
+    <!-- Poule Indeling Tab -->
+    <div id="poule-indeling" class="tab-content">
+      <div class="card">
+        <h3>Poule-indeling Genereren</h3>
+        <p>Genereer automatisch poules op basis van leeftijd, gewicht, geslacht en bandkleur.</p>
+        <button class="btn btn-success" onclick="genereerPoules()">Genereer Poule-indeling</button>
+      </div>
+
+      <div class="card">
+        <h3>Poule Beheer</h3>
+        <p>Beheer en pas poules aan na het genereren.</p>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="verplaatsJudoka()">Verplaats Judoka naar Andere Poule</button>
+          <button class="btn btn-secondary" onclick="herberekeningWedstrijden()">Herbereken Wedstrijden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Blok/Mat Indeling Tab -->
+    <div id="blok-mat" class="tab-content">
+      <div class="card">
+        <h3>Blok en Mat Indeling</h3>
+        <p>Verdeel poules over blokken en matten voor een efficiënte planning.</p>
+        <div class="btn-group">
+          <button class="btn btn-success" onclick="genereerBlokMatIndeling()">Genereer Blok/Mat Indeling</button>
+          <button class="btn" onclick="vulPoulesInBlokken()">Vul Poules in Blokken</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Blok/Mat Nummers Toewijzen</h3>
+        <p>Schrijf de blok- en matnummers uit de Blok/Mat verdeling terug naar de PouleIndeling tab.</p>
+        <button class="btn btn-primary" onclick="updatePouleIndeling()">Vul Blok/Mat Nummers in bij PouleIndeling</button>
+      </div>
+
+      <div class="card">
+        <h3>Weeglijst en Blokbladen</h3>
+        <p>Genereer de weeglijst, zaaloverzicht en blokbladen voor de toernooiorganisatie.</p>
+        <button class="btn" onclick="genereerWeeglijstEnBlokbladen()">Genereer Weeglijst, Zaaloverzicht en Blokbladen</button>
+      </div>
+
+      <div class="card">
+        <h3>📧 Email Weegkaarten</h3>
+        <p>Verstuur weegkaarten per email naar coaches van judoscholen of individuele deelnemers.</p>
+        <button class="btn btn-primary" onclick="openEmailWeegkaartenUI()">Open Email Interface</button>
+      </div>
+    </div>
+
+    <!-- Toernooidag Tab -->
+    <div id="toernooidag" class="tab-content">
+      <div class="card">
+        <h3>Blokbladen Bijwerken</h3>
+        <p>Synchroniseer blokbladen met de weeglijst voor de laatste aanwezigheidscontrole.</p>
+        <button class="btn" onclick="updateBlokBladen()">Blokbladen Bijwerken (mbt Weeglijst)</button>
+      </div>
+
+      <div class="card">
+        <h3>Zaaloverzicht</h3>
+        <p>Genereer een actueel overzicht van alle matten en de planning.</p>
+        <button class="btn" onclick="genereerZaalOverzicht()">Werk ZaalOverzicht Bij</button>
+      </div>
+
+      <div class="card">
+        <h3>Tijdens het Toernooi</h3>
+        <p>Functies voor aanpassingen tijdens de toernooidag.</p>
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="verplaatsJudokaNaarAnderePoule()">Verplaats Judoka naar Andere Poule</button>
+          <button class="btn btn-secondary" onclick="verplaatsPouleNaarAndereMat()">Verplaats Poule naar Andere Mat</button>
+          <button class="btn btn-secondary" onclick="maakNieuwePoule()">Nieuwe Poule Aanmaken</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Weging Afsluiten per Blok</h3>
+        <p>Sluit de weging af voor een specifiek blok.</p>
+        <div class="btn-group">
+          <button class="btn" onclick="sluitWegingBlok(1)">Sluit Weging Blok 1</button>
+          <button class="btn" onclick="sluitWegingBlok(2)">Sluit Weging Blok 2</button>
+          <button class="btn" onclick="sluitWegingBlok(3)">Sluit Weging Blok 3</button>
+          <button class="btn" onclick="sluitWegingBlok(4)">Sluit Weging Blok 4</button>
+          <button class="btn" onclick="sluitWegingBlok(5)">Sluit Weging Blok 5</button>
+          <button class="btn" onclick="sluitWegingBlok(6)">Sluit Weging Blok 6</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wedstrijden Tab -->
+    <div id="wedstrijden" class="tab-content">
+      <div class="card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+        <h3 style="color: white; border-left-color: white;">📋 Wedstrijdschema's per Blok</h3>
+        <p style="color: rgba(255,255,255,0.95);">Genereer wedstrijdschema's per blok.</p>
+      </div>
+
+      <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h3 style="color: white; border-left-color: white;">🖨️ Print Backup</h3>
+        <p style="color: rgba(255,255,255,0.95); margin-bottom: 12px;"><strong>1. Selecteer een poule</strong> in het wedstrijdschema<br>
+        <strong>2. Klik Print Poule</strong> (maakt backup in verborgen tab)<br>
+        <strong>3. Klik Open Print Tab</strong> om te printen (Ctrl+P)</p>
+        <div class="btn-group">
+          <button class="btn" style="background: #28a745; color: white; border-color: #28a745;" onclick="printGeselecteerdePoule()">📋 Print Poule</button>
+          <button class="btn" style="background: #667eea; color: white; border-color: #667eea;" onclick="openPrintTab()">👁️ Open Print Tab</button>
+          <button class="btn" style="background: #dc3545; color: white; border-color: #dc3545;" onclick="wisPrintTab()">🗑️ Wis Print Tab</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Poule Beheer</h3>
+        <p style="margin-bottom: 12px;"><strong>Selecteer een poule</strong> en klik op de knop</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="berekenPlaatsen()">🏆 Bereken Plaatsen</button>
+          <button class="btn" style="background: #f59e0b; color: white; border-color: #f59e0b;" onclick="stuurNaarUitslagen()">📤 Naar Uitslagen</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 10px;">
+        <h3 style="margin-bottom: 8px;">📋 Genereer Wedstrijdschema's</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(1)">Blok 1</button>
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(2)">Blok 2</button>
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(3)">Blok 3</button>
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(4)">Blok 4</button>
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(5)">Blok 5</button>
+          <button class="btn btn-success" onclick="digitaalWedstrijdschemaBlok(6)">Blok 6</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(tabName) {
+      // Hide all tab contents
+      const contents = document.querySelectorAll('.tab-content');
+      contents.forEach(content => content.classList.remove('active'));
+
+      // Remove active class from all tabs
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+
+      // Show selected tab content
+      document.getElementById(tabName).classList.add('active');
+
+      // Add active class to clicked tab
+      event.target.classList.add('active');
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('statusMessage');
+      status.className = 'status show status-' + type;
+      status.textContent = message;
+      setTimeout(() => {
+        status.classList.remove('show');
+      }, 5000);
+    }
+
+    function showLoading(show) {
+      const loading = document.getElementById('loading');
+      if (show) {
+        loading.classList.add('show');
+      } else {
+        loading.classList.remove('show');
+      }
+    }
+
+    // Voorbereiding functies
+    function startNieuwToernooi() {
+      // Deze functie roept nu initializeToernooi aan
+      // Geen extra confirm hier - die zit al in initializeToernooi()
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Toernooi basis is klaar! Maak nu de tabbladen aan.', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .initializeToernooi();
+    }
+
+    function maakTabbladen() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Tabbladen succesvol aangemaakt!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .maakMatEnTijdsblokBladen();
+    }
+
+    function pasTabbladeAan() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Tabbladen succesvol aangepast op basis van configuratie!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .pasTabbladeAanOpBasisVanConfig();
+    }
+
+    function handleFileUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      showLoading(true);
+      showStatus('Bestand wordt geüpload en verwerkt...', 'info');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = e.target.result;
+        const base64 = data.split(',')[1];
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            showLoading(false);
+            if (result.success) {
+              showStatus('Deelnemerslijst succesvol geïmporteerd en gecontroleerd!', 'success');
+              input.value = ''; // Reset file input
+            } else {
+              showStatus('Fout bij importeren: ' + result.error, 'error');
+            }
+          })
+          .withFailureHandler(function(error) {
+            showLoading(false);
+            showStatus('Fout: ' + error.message, 'error');
+          })
+          .importeerDeelnemerslijstViaUpload(base64, file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function controleerDeelnemers() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Deelnemers succesvol gecontroleerd!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .controleerEnGenereerCodes();
+    }
+
+    // Poule indeling functies
+    function genereerPoules() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Poule-indeling succesvol gegenereerd!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .genereerPouleIndeling();
+    }
+
+    function verplaatsJudoka() {
+      google.script.run.verplaatsJudoka();
+    }
+
+    function herberekeningWedstrijden() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Wedstrijden succesvol herberekend!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .herberekeningWedstrijden();
+    }
+
+    // Blok/Mat indeling functies
+    function genereerBlokMatIndeling() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Blok/Mat indeling succesvol gegenereerd!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .genereerBlokMatIndeling();
+    }
+
+    function vulPoulesInBlokken() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Poules succesvol in blokken gevuld!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .vulPoulesInBlokken();
+    }
+
+    function genereerWeeglijstEnBlokbladen() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Weeglijst, Zaaloverzicht en Blokbladen succesvol gegenereerd!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .genereerWeeglijstEnBlokbladen();
+    }
+
+    function openEmailWeegkaartenUI() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Email interface geopend!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .openEmailWeegkaartenUI();
+    }
+
+    function updatePouleIndeling() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Poule-indeling succesvol bijgewerkt!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .updatePouleIndelingVanuitMenu();
+    }
+
+    // Toernooidag functies
+    function updateBlokBladen() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Blokbladen succesvol bijgewerkt!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .updateBlokBladen();
+    }
+
+    function genereerZaalOverzicht() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('ZaalOverzicht succesvol bijgewerkt!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .genereerZaalOverzicht();
+    }
+
+    function verplaatsJudokaNaarAnderePoule() {
+      google.script.run.verplaatsJudokaNaarAnderePoule();
+    }
+
+    function verplaatsPouleNaarAndereMat() {
+      google.script.run.verplaatsPouleNaarAndereMat();
+    }
+
+    function maakNieuwePoule() {
+      google.script.run.maakNieuwePoule();
+    }
+
+    function sluitWegingBlok(blokNr) {
+      showLoading(true);
+      const functionName = 'sluitWegingBlok' + blokNr;
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Weging Blok ' + blokNr + ' succesvol afgesloten!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        [functionName]();
+    }
+
+    // Wedstrijden functies
+    function digitaalWedstrijdschemaBlok(blokNr) {
+      showLoading(true);
+      const functionName = 'digitaalWedstrijdschemaBlok' + blokNr;
+      google.script.run
+        .withSuccessHandler(function() {
+          showLoading(false);
+          showStatus('Wedstrijdschema\'s voor Blok ' + blokNr + ' succesvol aangemaakt!', 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        [functionName]();
+    }
+
+    function printGeselecteerdePoule() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showLoading(false);
+          showStatus('✅ ' + result.message, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .printGeselecteerdePouleSimple();
+    }
+
+    function openPrintTab() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showLoading(false);
+          showStatus('✅ ' + result.message, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .openPrintTab();
+    }
+
+    function berekenPlaatsen() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showLoading(false);
+          showStatus('✅ ' + result.message, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .berekenPlaatsenGeselecteerdePoule();
+    }
+
+    function wisPrintTab() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showLoading(false);
+          showStatus('✅ ' + result.message, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .wisPrintTab();
+    }
+
+    function stuurNaarUitslagen() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showLoading(false);
+          showStatus('✅ ' + result.message, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showLoading(false);
+          showStatus('Fout: ' + error.message, 'error');
+        })
+        .stuurNaarUitslagen();
+    }
+  </script>
+</body>
+</html>

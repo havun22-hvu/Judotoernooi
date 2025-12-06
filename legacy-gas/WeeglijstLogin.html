@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .info-box {
+      background: #f8f9fa;
+      border-left: 4px solid #667eea;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 5px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      color: #667eea;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .blok-buttons {
+      display: grid;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .blok-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 20px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .blok-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    .blok-btn:active {
+      transform: translateY(0);
+    }
+
+    .back-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: #5a6268;
+    }
+
+    .loading {
+      text-align: center;
+      color: #667eea;
+      margin: 20px 0;
+      display: none;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .blok-btn {
+        padding: 18px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚖️ Weeglijst Login</h1>
+    <div class="subtitle">WestFries Open Judotoernooi</div>
+
+    <div class="info-box">
+      <strong>📱 QR Code Weging</strong>
+      Scan de QR code van de judoka om automatisch het gewicht in te vullen.
+      Sneller en foutloos wegen!
+    </div>
+
+    <div class="loading" id="loading">
+      <p>⏳ Weging interface laden...</p>
+    </div>
+
+    <div class="blok-buttons" id="blokButtons">
+      <!-- Blok knoppen worden hier dynamisch toegevoegd -->
+    </div>
+
+    <button class="back-btn" onclick="google.script.host.close()">
+      ← Terug naar spreadsheet
+    </button>
+  </div>
+
+  <script>
+    // Haal aantal blokken op en genereer knoppen
+    google.script.run
+      .withSuccessHandler(function(aantalBlokken) {
+        const container = document.getElementById('blokButtons');
+
+        for (let i = 1; i <= aantalBlokken; i++) {
+          const btn = document.createElement('button');
+          btn.className = 'blok-btn';
+          btn.innerHTML = `⚖️ Blok ${i} Weging`;
+          btn.onclick = function() {
+            openWegingInterface(i);
+          };
+          container.appendChild(btn);
+        }
+      })
+      .withFailureHandler(function(error) {
+        alert('Fout bij ophalen blokken: ' + error);
+      })
+      .getAantalBlokken();
+
+    function openWegingInterface(blokNr) {
+      document.getElementById('loading').classList.add('active');
+      document.getElementById('blokButtons').style.display = 'none';
+
+      google.script.run
+        .withSuccessHandler(function() {
+          // Interface wordt geopend
+        })
+        .withFailureHandler(function(error) {
+          alert('Fout bij openen weging interface: ' + error);
+          document.getElementById('loading').classList.remove('active');
+          document.getElementById('blokButtons').style.display = 'grid';
+        })
+        .openWegingInterface(blokNr);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WestFries Open - Login</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header .emoji {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+
+    .header p {
+      font-size: 18px;
+      opacity: 0.95;
+    }
+
+    .login-options {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .login-option {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      width: 100%;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 16px;
+    }
+
+    .login-option:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .login-option:active {
+      transform: translateY(-2px);
+    }
+
+    .login-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .login-option .icon {
+      font-size: 48px;
+      flex-shrink: 0;
+    }
+
+    .login-option .content {
+      flex-grow: 1;
+    }
+
+    .login-option .title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .login-option .description {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .login-option.admin {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .login-option.mat {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .login-option.weging {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .login-option.presentator {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 30px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    @media (max-width: 600px) {
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .header .emoji {
+        font-size: 48px;
+      }
+
+      .login-options {
+        padding: 25px;
+      }
+
+      .login-option {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .login-option .icon {
+        font-size: 40px;
+      }
+
+      .login-option .title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="emoji">🥋</div>
+      <h1>WestFries Open</h1>
+      <p>Judotoernooi Management Systeem</p>
+    </div>
+
+    <div class="login-options">
+      <a href="?page=admin" style="text-decoration: none;">
+        <button class="login-option admin">
+          <div class="icon">🔐</div>
+          <div class="content">
+            <div class="title">Admin Login</div>
+            <div class="description">Volledige toegang tot alle functies (wachtwoord vereist)</div>
+          </div>
+        </button>
+      </a>
+
+      <a href="?page=mat" style="text-decoration: none;">
+        <button class="login-option mat">
+          <div class="icon">🥋</div>
+          <div class="content">
+            <div class="title">Mat Beheer</div>
+            <div class="description">Wedstrijdresultaten invoeren en wedstrijden beheren</div>
+          </div>
+        </button>
+      </a>
+
+      <a href="?page=weging" style="text-decoration: none;">
+        <button class="login-option weging">
+          <div class="icon">⚖️</div>
+          <div class="content">
+            <div class="title">Weeglijst</div>
+            <div class="description">Judoka's wegen met QR scanner of naam zoeken</div>
+          </div>
+        </button>
+      </a>
+
+      <a href="?page=presentator" style="text-decoration: none;">
+        <button class="login-option presentator">
+          <div class="icon">🎤</div>
+          <div class="content">
+            <div class="title">Presentator</div>
+            <div class="description">Wedstrijden presenteren en bekendmakingen doen</div>
+          </div>
+        </button>
+      </a>
+    </div>
+
+    <div class="footer">
+      © 2026 Judoschool Cees Veen - WestFries Open<br>
+      <small style="opacity: 0.7;">Versie: v19 - Direct links ipv JavaScript</small>
+    </div>
+  </div>
+
+  <script>
+    function navigateTo(page) {
+      // Debug: log wat we doen
+      console.log('Navigeren naar:', page);
+
+      // Haal de huidige URL op
+      const currentUrl = window.location.href;
+      console.log('Huidige URL:', currentUrl);
+
+      // Verwijder query parameters als die er zijn
+      const baseUrl = currentUrl.split('?')[0];
+      console.log('Base URL:', baseUrl);
+
+      // Maak nieuwe URL
+      const newUrl = baseUrl + '?page=' + page;
+      console.log('Nieuwe URL:', newUrl);
+
+      // Alert om te zien of navigatie werkt
+      alert('Navigeren naar: ' + newUrl);
+
+      // Navigeer naar de juiste pagina
+      window.location.href = newUrl;
+    }
+  </script>
+</body>
+</html>
