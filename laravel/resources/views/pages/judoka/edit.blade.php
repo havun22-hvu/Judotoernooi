@@ -1,0 +1,60 @@
+@extends('layouts.app')
+
+@section('title', 'Bewerk ' . $judoka->naam)
+
+@section('content')
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">Judoka Bewerken</h1>
+
+    <form action="{{ route('toernooi.judoka.update', [$toernooi, $judoka]) }}" method="POST" class="bg-white rounded-lg shadow p-6">
+        @csrf
+        @method('PUT')
+
+        <div class="mb-4">
+            <label for="naam" class="block text-gray-700 font-bold mb-2">Naam *</label>
+            <input type="text" name="naam" id="naam" value="{{ old('naam', $judoka->naam) }}"
+                   class="w-full border rounded px-3 py-2" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="geboortejaar" class="block text-gray-700 font-bold mb-2">Geboortejaar *</label>
+                <input type="number" name="geboortejaar" id="geboortejaar" value="{{ old('geboortejaar', $judoka->geboortejaar) }}"
+                       class="w-full border rounded px-3 py-2" required>
+            </div>
+            <div>
+                <label for="geslacht" class="block text-gray-700 font-bold mb-2">Geslacht *</label>
+                <select name="geslacht" id="geslacht" class="w-full border rounded px-3 py-2" required>
+                    <option value="M" {{ $judoka->geslacht === 'M' ? 'selected' : '' }}>Man</option>
+                    <option value="V" {{ $judoka->geslacht === 'V' ? 'selected' : '' }}>Vrouw</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+                <label for="band" class="block text-gray-700 font-bold mb-2">Band *</label>
+                <select name="band" id="band" class="w-full border rounded px-3 py-2" required>
+                    @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $b)
+                    <option value="{{ $b }}" {{ $judoka->band === $b ? 'selected' : '' }}>{{ ucfirst($b) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label for="gewicht" class="block text-gray-700 font-bold mb-2">Gewicht (kg)</label>
+                <input type="number" name="gewicht" id="gewicht" value="{{ old('gewicht', $judoka->gewicht) }}"
+                       class="w-full border rounded px-3 py-2" step="0.1">
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4">
+            <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                Annuleren
+            </a>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Opslaan
+            </button>
+        </div>
+    </form>
+</div>
+@endsection
