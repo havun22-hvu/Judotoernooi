@@ -10,8 +10,8 @@
         @csrf
 
         <div class="mb-4">
-            <label for="naam" class="block text-gray-700 font-bold mb-2">Naam *</label>
-            <input type="text" name="naam" id="naam" value="{{ old('naam', '6e WestFries Open') }}"
+            <label for="naam" class="block text-gray-700 font-bold mb-2">Naam Toernooi *</label>
+            <input type="text" name="naam" id="naam" value="{{ old('naam') }}" placeholder="Bijv. Judo Toernooi 2025"
                    class="w-full border rounded px-3 py-2 @error('naam') border-red-500 @enderror" required>
             @error('naam')
             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -29,7 +29,7 @@
 
         <div class="mb-4">
             <label for="organisatie" class="block text-gray-700 font-bold mb-2">Organisatie</label>
-            <input type="text" name="organisatie" id="organisatie" value="{{ old('organisatie', 'Judoschool Cees Veen') }}"
+            <input type="text" name="organisatie" id="organisatie" value="{{ old('organisatie') }}" placeholder="Naam van de organiserende club"
                    class="w-full border rounded px-3 py-2">
         </div>
 
