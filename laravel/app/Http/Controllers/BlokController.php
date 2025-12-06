@@ -68,4 +68,11 @@ class BlokController extends Controller
 
         return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht'));
     }
+
+    public function sprekerInterface(Toernooi $toernooi): View
+    {
+        $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
+
+        return view('pages.spreker.interface', compact('toernooi', 'overzicht'));
+    }
 }

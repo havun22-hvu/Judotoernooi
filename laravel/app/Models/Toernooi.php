@@ -32,6 +32,7 @@ class Toernooi extends Model
         'wachtwoord_jury',
         'wachtwoord_weging',
         'wachtwoord_mat',
+        'wachtwoord_spreker',
     ];
 
     protected $hidden = [
@@ -39,6 +40,7 @@ class Toernooi extends Model
         'wachtwoord_jury',
         'wachtwoord_weging',
         'wachtwoord_mat',
+        'wachtwoord_spreker',
     ];
 
     protected $casts = [
@@ -132,7 +134,7 @@ class Toernooi extends Model
     public function setWachtwoord(string $rol, string $wachtwoord): void
     {
         $veld = "wachtwoord_{$rol}";
-        if (in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat'])) {
+        if (in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat', 'wachtwoord_spreker'])) {
             $this->$veld = bcrypt($wachtwoord);
             $this->save();
         }
@@ -141,7 +143,7 @@ class Toernooi extends Model
     public function checkWachtwoord(string $rol, string $wachtwoord): bool
     {
         $veld = "wachtwoord_{$rol}";
-        if (!in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat'])) {
+        if (!in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat', 'wachtwoord_spreker'])) {
             return false;
         }
 

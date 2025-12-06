@@ -81,7 +81,7 @@ class ToernooiController extends Controller
 
     public function updateWachtwoorden(Request $request, Toernooi $toernooi): RedirectResponse
     {
-        $rollen = ['admin', 'jury', 'weging', 'mat'];
+        $rollen = ['admin', 'jury', 'weging', 'mat', 'spreker'];
         $updated = [];
 
         foreach ($rollen as $rol) {

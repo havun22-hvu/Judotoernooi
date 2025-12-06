@@ -232,6 +232,21 @@
                     <input type="password" name="wachtwoord_mat" placeholder="Nieuw wachtwoord..."
                            class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
                 </div>
+
+                <div class="p-4 border rounded-lg col-span-2">
+                    <div class="flex items-center mb-2">
+                        <span class="text-2xl mr-2">🎙️</span>
+                        <div>
+                            <h3 class="font-bold">Spreker</h3>
+                            <p class="text-sm text-gray-500">Omroepen wedstrijden</p>
+                        </div>
+                        @if($toernooi->heeftWachtwoord('spreker'))
+                        <span class="ml-auto text-green-600 text-sm">Ingesteld</span>
+                        @endif
+                    </div>
+                    <input type="password" name="wachtwoord_spreker" placeholder="Nieuw wachtwoord..."
+                           class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
+                </div>
             </div>
 
             <div class="mt-4 p-3 bg-yellow-50 rounded text-sm text-yellow-800">
