@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'JudoToernooi') - WestFries Open</title>
+    <title>@yield('title', 'Dashboard') - {{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -13,7 +13,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ route('dashboard') }}" class="text-xl font-bold">WestFries Open</a>
+                    <a href="{{ route('dashboard') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
                     <div class="hidden md:flex space-x-4">
                         <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="hover:text-blue-200">Judoka's</a>
@@ -54,7 +54,7 @@
 
     <footer class="bg-gray-800 text-white py-4 mt-8">
         <div class="max-w-7xl mx-auto px-4 text-center text-sm">
-            &copy; {{ date('Y') }} Judoschool Cees Veen - WestFries Open JudoToernooi
+            &copy; {{ date('Y') }} Havun - Judo Toernooi Management Systeem
         </div>
     </footer>
 </body>

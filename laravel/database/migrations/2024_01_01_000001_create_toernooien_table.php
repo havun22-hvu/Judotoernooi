@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('toernooien', function (Blueprint $table) {
             $table->id();
             $table->string('naam');
-            $table->string('organisatie')->default('Judoschool Cees Veen');
+            $table->string('organisatie')->nullable();
             $table->date('datum');
             $table->string('locatie')->nullable();
 
