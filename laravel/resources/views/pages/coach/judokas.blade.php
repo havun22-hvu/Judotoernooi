@@ -28,7 +28,17 @@
             </div>
             @elseif($maxBereikt)
             <div class="mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-                <strong>Vol:</strong> Het maximum aantal deelnemers is bereikt.
+                <strong>Vol:</strong> Het maximum aantal deelnemers ({{ $toernooi->max_judokas }}) is bereikt. Je kunt geen nieuwe judoka's meer toevoegen.
+            </div>
+            @elseif($bijna80ProcentVol)
+            <div class="mt-4 bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded">
+                <strong>Bijna vol!</strong> Het toernooi is {{ $bezettingsPercentage }}% vol. Nog {{ $plaatsenOver }} {{ $plaatsenOver == 1 ? 'plek' : 'plekken' }} beschikbaar.
+            </div>
+            @endif
+
+            @if($toernooi->max_judokas && !$maxBereikt && !$bijna80ProcentVol)
+            <div class="mt-4 text-sm text-gray-600">
+                Totaal aangemeld: {{ $totaalJudokas }} / {{ $toernooi->max_judokas }} ({{ $bezettingsPercentage }}%)
             </div>
             @endif
         </div>
@@ -191,7 +201,9 @@
             <p>Deadline: {{ $toernooi->inschrijving_deadline->format('d-m-Y') }}</p>
             @endif
             @if($toernooi->max_judokas)
-            <p>Totaal deelnemers: {{ $toernooi->judokas()->count() }} / {{ $toernooi->max_judokas }}</p>
+            <p>Totaal deelnemers: {{ $totaalJudokas }} / {{ $toernooi->max_judokas }} ({{ $bezettingsPercentage }}%)</p>
+            @else
+            <p>Totaal deelnemers: {{ $totaalJudokas }}</p>
             @endif
         </div>
     </div>

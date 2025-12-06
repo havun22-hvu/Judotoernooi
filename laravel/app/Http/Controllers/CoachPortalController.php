@@ -146,6 +146,10 @@ class CoachPortalController extends Controller
             'leeftijdsklassen' => $leeftijdsklassen,
             'inschrijvingOpen' => $toernooi->isInschrijvingOpen(),
             'maxBereikt' => $toernooi->isMaxJudokasBereikt(),
+            'bijna80ProcentVol' => $toernooi->isBijna80ProcentVol(),
+            'bezettingsPercentage' => $toernooi->bezettings_percentage,
+            'plaatsenOver' => $toernooi->plaatsen_over,
+            'totaalJudokas' => $toernooi->judokas()->count(),
         ]);
     }
 
