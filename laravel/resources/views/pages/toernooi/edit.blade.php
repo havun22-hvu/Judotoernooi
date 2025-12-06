@@ -157,5 +157,94 @@
             </button>
         </div>
     </form>
+
+    <!-- WACHTWOORDEN (apart formulier) -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Wachtwoorden</h2>
+        <p class="text-gray-600 mb-4">
+            Stel wachtwoorden in voor de verschillende rollen. De login pagina is te vinden op:
+            <a href="{{ route('toernooi.auth.login', $toernooi) }}" class="text-blue-600 hover:underline" target="_blank">
+                {{ route('toernooi.auth.login', $toernooi) }}
+            </a>
+        </p>
+
+        <form action="{{ route('toernooi.wachtwoorden', $toernooi) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 border rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span class="text-2xl mr-2">👑</span>
+                        <div>
+                            <h3 class="font-bold">Admin</h3>
+                            <p class="text-sm text-gray-500">Volledig beheer</p>
+                        </div>
+                        @if($toernooi->heeftWachtwoord('admin'))
+                        <span class="ml-auto text-green-600 text-sm">Ingesteld</span>
+                        @endif
+                    </div>
+                    <input type="password" name="wachtwoord_admin" placeholder="Nieuw wachtwoord..."
+                           class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
+                </div>
+
+                <div class="p-4 border rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span class="text-2xl mr-2">⚖️</span>
+                        <div>
+                            <h3 class="font-bold">Jury</h3>
+                            <p class="text-sm text-gray-500">Hoofdtafel overzicht</p>
+                        </div>
+                        @if($toernooi->heeftWachtwoord('jury'))
+                        <span class="ml-auto text-green-600 text-sm">Ingesteld</span>
+                        @endif
+                    </div>
+                    <input type="password" name="wachtwoord_jury" placeholder="Nieuw wachtwoord..."
+                           class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
+                </div>
+
+                <div class="p-4 border rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span class="text-2xl mr-2">⚖️</span>
+                        <div>
+                            <h3 class="font-bold">Weging</h3>
+                            <p class="text-sm text-gray-500">Alleen weeglijst</p>
+                        </div>
+                        @if($toernooi->heeftWachtwoord('weging'))
+                        <span class="ml-auto text-green-600 text-sm">Ingesteld</span>
+                        @endif
+                    </div>
+                    <input type="password" name="wachtwoord_weging" placeholder="Nieuw wachtwoord..."
+                           class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
+                </div>
+
+                <div class="p-4 border rounded-lg">
+                    <div class="flex items-center mb-2">
+                        <span class="text-2xl mr-2">🥋</span>
+                        <div>
+                            <h3 class="font-bold">Mat</h3>
+                            <p class="text-sm text-gray-500">Wedstrijdschema per mat</p>
+                        </div>
+                        @if($toernooi->heeftWachtwoord('mat'))
+                        <span class="ml-auto text-green-600 text-sm">Ingesteld</span>
+                        @endif
+                    </div>
+                    <input type="password" name="wachtwoord_mat" placeholder="Nieuw wachtwoord..."
+                           class="w-full border rounded px-3 py-2 text-sm" autocomplete="new-password">
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-yellow-50 rounded text-sm text-yellow-800">
+                <strong>Let op:</strong> Laat een veld leeg om het huidige wachtwoord te behouden.
+                Wachtwoorden worden versleuteld opgeslagen.
+            </div>
+
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                    Wachtwoorden Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
