@@ -83,6 +83,18 @@
                                 <div class="text-xs text-gray-500">Wedstrijden</div>
                             </div>
                         </label>
+
+                        <label class="relative col-span-2">
+                            <input type="radio" name="rol" value="spreker" x-model="rol" @change="showMatSelect = false"
+                                   class="peer sr-only">
+                            <div class="p-4 border-2 rounded-lg cursor-pointer text-center transition-all
+                                        peer-checked:border-blue-500 peer-checked:bg-blue-50
+                                        hover:border-gray-300">
+                                <div class="text-2xl mb-1">🎙️</div>
+                                <div class="font-medium">Spreker</div>
+                                <div class="text-xs text-gray-500">Omroepen wedstrijden</div>
+                            </div>
+                        </label>
                     </div>
                 </div>
 

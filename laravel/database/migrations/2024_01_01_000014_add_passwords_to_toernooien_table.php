@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('wachtwoord_jury')->nullable()->after('wachtwoord_admin');
             $table->string('wachtwoord_weging')->nullable()->after('wachtwoord_jury');
             $table->string('wachtwoord_mat')->nullable()->after('wachtwoord_weging');
+            $table->string('wachtwoord_spreker')->nullable()->after('wachtwoord_mat');
         });
     }
 
@@ -25,6 +26,7 @@ return new class extends Migration
                 'wachtwoord_jury',
                 'wachtwoord_weging',
                 'wachtwoord_mat',
+                'wachtwoord_spreker',
             ]);
         });
     }

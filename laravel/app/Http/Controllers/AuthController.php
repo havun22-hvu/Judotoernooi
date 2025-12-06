@@ -23,7 +23,7 @@ class AuthController extends Controller
     public function login(Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
-            'rol' => 'required|in:admin,jury,weging,mat',
+            'rol' => 'required|in:admin,jury,weging,mat,spreker',
             'wachtwoord' => 'required|string',
             'mat_nummer' => 'nullable|integer|min:1',
         ]);
@@ -51,6 +51,7 @@ class AuthController extends Controller
             'jury' => redirect()->route('toernooi.blok.zaaloverzicht', $toernooi)->with('success', 'Ingelogd als Jury'),
             'weging' => redirect()->route('toernooi.weging.interface', $toernooi)->with('success', 'Ingelogd voor Weging'),
             'mat' => redirect()->route('toernooi.mat.interface', $toernooi)->with('success', 'Ingelogd voor Mat ' . ($validated['mat_nummer'] ?? '')),
+            'spreker' => redirect()->route('toernooi.spreker.interface', $toernooi)->with('success', 'Ingelogd als Spreker'),
         };
     }
 

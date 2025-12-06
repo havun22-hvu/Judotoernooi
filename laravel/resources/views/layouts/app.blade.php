@@ -34,6 +34,7 @@
                             @case('jury') ⚖️ Jury @break
                             @case('weging') ⚖️ Weging @break
                             @case('mat') 🥋 Mat {{ session("toernooi_{$toernooi->id}_mat") }} @break
+                            @case('spreker') 🎙️ Spreker @break
                         @endswitch
                     </span>
                     <form action="{{ route('toernooi.auth.logout', $toernooi) }}" method="POST" class="inline">
