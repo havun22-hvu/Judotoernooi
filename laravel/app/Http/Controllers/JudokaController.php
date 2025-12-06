@@ -126,4 +126,77 @@ class JudokaController extends Controller
 
         return response()->json($judokas);
     }
+
+    public function valideer(Toernooi $toernooi): RedirectResponse
+    {
+        $judokas = $toernooi->judokas()->get();
+        $gecorrigeerd = 0;
+        $fouten = [];
+
+        foreach ($judokas as $judoka) {
+            $wijzigingen = [];
+
+            // Correct name capitalization (Jan de Vries, Anna van den Berg)
+            $naamOud = $judoka->naam;
+            $naamNieuw = $this->formatNaam($naamOud);
+            if ($naamOud !== $naamNieuw) {
+                $wijzigingen['naam'] = $naamNieuw;
+            }
+
+            // Check required fields
+            $ontbreekt = [];
+            if (empty($judoka->naam)) $ontbreekt[] = 'naam';
+            if (empty($judoka->geboortejaar)) $ontbreekt[] = 'geboortejaar';
+            if (empty($judoka->geslacht)) $ontbreekt[] = 'geslacht';
+            if (empty($judoka->band)) $ontbreekt[] = 'band';
+
+            if (!empty($ontbreekt)) {
+                $fouten[] = "{$judoka->naam}: ontbreekt " . implode(', ', $ontbreekt);
+            }
+
+            // Generate/update judoka code
+            if ($judoka->leeftijdsklasse && $judoka->gewichtsklasse) {
+                $nieuweCode = $judoka->berekenJudokaCode();
+                if ($judoka->judoka_code !== $nieuweCode) {
+                    $wijzigingen['judoka_code'] = $nieuweCode;
+                }
+            }
+
+            // Apply changes
+            if (!empty($wijzigingen)) {
+                $judoka->update($wijzigingen);
+                $gecorrigeerd++;
+            }
+        }
+
+        $message = "Validatie voltooid: {$gecorrigeerd} judoka's gecorrigeerd.";
+        if (!empty($fouten)) {
+            $message .= " " . count($fouten) . " met ontbrekende gegevens.";
+            session()->flash('validatie_fouten', $fouten);
+        }
+
+        return redirect()
+            ->route('toernooi.judoka.index', $toernooi)
+            ->with('success', $message);
+    }
+
+    private function formatNaam(string $naam): string
+    {
+        // Dutch name prefixes that should stay lowercase
+        $tussenvoegsels = ['van', 'de', 'den', 'der', 'het', 'ter', 'ten', 'te', 'op', 'in', "'t"];
+
+        $delen = explode(' ', trim($naam));
+        $result = [];
+
+        foreach ($delen as $i => $deel) {
+            $lower = mb_strtolower($deel);
+            if (in_array($lower, $tussenvoegsels) && $i > 0) {
+                $result[] = $lower;
+            } else {
+                $result[] = mb_convert_case($deel, MB_CASE_TITLE);
+            }
+        }
+
+        return implode(' ', $result);
+    }
 }

@@ -28,6 +28,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     // Judokas
     Route::get('judoka/import', [JudokaController::class, 'importForm'])->name('judoka.import');
     Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
+    Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
     Route::get('judoka/zoek', [JudokaController::class, 'zoek'])->name('judoka.zoek');
     Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
 

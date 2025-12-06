@@ -5,10 +5,29 @@
 @section('content')
 <div class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->total() }})</h1>
-    <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        📥 Importeren
-    </a>
+    <div class="flex space-x-2">
+        <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                ✓ Valideren
+            </button>
+        </form>
+        <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            📥 Importeren
+        </a>
+    </div>
 </div>
+
+@if(session('validatie_fouten'))
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <h3 class="font-bold text-yellow-800 mb-2">Ontbrekende gegevens:</h3>
+    <ul class="list-disc list-inside text-yellow-700 text-sm">
+        @foreach(session('validatie_fouten') as $fout)
+        <li>{{ $fout }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <table class="min-w-full">
