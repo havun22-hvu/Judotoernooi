@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weging - WestFries Open</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f0f0f0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    h1 {
+      color: #2563eb;
+    }
+    .search-box {
+      margin: 20px 0;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    #results {
+      margin-top: 20px;
+    }
+    .judoka-item {
+      padding: 15px;
+      margin: 10px 0;
+      background: #f9fafb;
+      border-radius: 5px;
+      border-left: 4px solid #2563eb;
+    }
+    .judoka-name {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    .judoka-info {
+      color: #666;
+      font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    .error {
+      background: #fee;
+      color: #c00;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚖️ Weging</h1>
+    <p>Zoek judoka op naam om gewicht in te voeren</p>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Typ naam (min. 2 letters)..." onkeyup="handleSearch(event)">
+      <button onclick="search()">Zoeken</button>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    function handleSearch(event) {
+      if (event.key === 'Enter') {
+        search();
+      }
+    }
+
+    function search() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+      const resultsDiv = document.getElementById('results');
+
+      if (searchTerm.length < 2) {
+        resultsDiv.innerHTML = '<div class="error">Voer minimaal 2 letters in</div>';
+        return;
+      }
+
+      resultsDiv.innerHTML = '<div class="loading">Zoeken...</div>';
+
+      // Call server-side function
+      google.script.run
+        .withSuccessHandler(showResults)
+        .withFailureHandler(showError)
+        .zoekJudokaOpNaam(searchTerm, 0);
+    }
+
+    function showResults(judokas) {
+      const resultsDiv = document.getElementById('results');
+
+      if (!judokas || judokas.length === 0) {
+        resultsDiv.innerHTML = '<div class="error">Geen judoka\'s gevonden</div>';
+        return;
+      }
+
+      let html = '<h3>Gevonden: ' + judokas.length + ' judoka(s)</h3>';
+
+      judokas.forEach(function(judoka) {
+        html += '<div class="judoka-item">';
+        html += '<div class="judoka-name">' + judoka.naam + '</div>';
+        html += '<div class="judoka-info">';
+        html += judoka.club + ' • ';
+        html += judoka.gewichtsklasse + ' • ';
+        html += 'Blok ' + judoka.blok + ' • ';
+        html += 'Mat ' + judoka.mat;
+        html += '</div>';
+        html += '</div>';
+      });
+
+      resultsDiv.innerHTML = html;
+    }
+
+    function showError(error) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<div class="error">Fout: ' + error.message + '</div>';
+    }
+  </script>
+</body>
+</html>

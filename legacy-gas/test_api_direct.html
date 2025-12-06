@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Direct API Test</title>
+</head>
+<body>
+  <h1>Direct API Test - Gebruik google.script.run</h1>
+  <button onclick="testDirect()">Test zoekJudokaViaQR</button>
+  <pre id="result"></pre>
+
+  <script>
+    function testDirect() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = 'Testing via google.script.run...';
+
+      const qrData = '{"naam":"Mawin van Unen","gewichtsklasse":"-36kg","blok":5}';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          resultDiv.textContent = 'SUCCESS!\n\n' + JSON.stringify(result, null, 2);
+        })
+        .withFailureHandler(function(error) {
+          resultDiv.textContent = 'ERROR!\n\n' + error.message + '\n\n' + error.stack;
+        })
+        .zoekJudokaViaQR(qrData);
+    }
+  </script>
+</body>
+</html>

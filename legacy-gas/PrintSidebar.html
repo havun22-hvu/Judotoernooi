@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background: #f5f7fa;
+    }
+
+    h2 {
+      color: #4A86E8;
+      font-size: 18px;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #4A86E8;
+      padding-bottom: 10px;
+    }
+
+    .instructie {
+      background: #FFF3CD;
+      border-left: 4px solid #f59e0b;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .instructie strong {
+      color: #92400e;
+    }
+
+    .print-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #28A745 0%, #20833a 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+      margin-bottom: 10px;
+    }
+
+    .print-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .print-btn:active {
+      transform: translateY(0);
+    }
+
+    .print-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .wis-btn {
+      width: 100%;
+      padding: 12px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .wis-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(220, 53, 69, 0.4);
+    }
+
+    .wis-btn:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 15px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status.success {
+      background: #d1fae5;
+      border: 1px solid #4ade80;
+      color: #065f46;
+      display: block;
+    }
+
+    .status.error {
+      background: #fee;
+      border: 1px solid #ef4444;
+      color: #991b1b;
+      display: block;
+    }
+
+    .status.info {
+      background: #dbeafe;
+      border: 1px solid #3b82f6;
+      color: #1e40af;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>🖨️ Print Poule</h2>
+
+  <div class="instructie">
+    <strong>Hoe te gebruiken:</strong><br>
+    1. Klik in de <strong>titel balk</strong> van een poule<br>
+    2. Klik op <strong>Print Geselecteerde Poule</strong><br>
+    3. Klik op <strong>Open Print Tab</strong><br>
+    4. Print via Ctrl+P of Bestand > Afdrukken<br>
+    5. Klik op <strong>Wis Print Tab</strong> na het printen
+  </div>
+
+  <button class="print-btn" id="printBtn" onclick="printPoule()">
+    🖨️ Print Geselecteerde Poule
+  </button>
+
+  <button class="print-btn" id="openBtn" onclick="openTab()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    👁️ Open Print Tab
+  </button>
+
+  <button class="print-btn" id="plaatsenBtn" onclick="berekenPlaatsen()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    🏆 Bereken Plaatsen
+  </button>
+
+  <button class="wis-btn" onclick="wisPrintTab()">
+    🗑️ Wis Print Tab
+  </button>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    function printPoule() {
+      const btn = document.getElementById('printBtn');
+      const status = document.getElementById('status');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Bezig met kopiëren...';
+
+      status.className = 'status info';
+      status.textContent = 'Poule wordt gekopieerd naar Print tab...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = '🖨️ Print Geselecteerde Poule';
+
+          status.className = 'status success';
+          status.textContent = '✅ Poule gekopieerd! Ga naar Print tab en print met Ctrl+P';
+
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 5000);
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.textContent = '🖨️ Print Geselecteerde Poule';
+
+          status.className = 'status error';
+          status.textContent = '❌ Fout: ' + error.message;
+        })
+        .printGeselecteerdePoule();
+    }
+
+    function openTab() {
+      const btn = document.getElementById('openBtn');
+      const status = document.getElementById('status');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Bezig met openen...';
+
+      status.className = 'status info';
+      status.textContent = 'Print tab wordt geopend...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = '👁️ Open Print Tab';
+
+          status.className = 'status success';
+          status.textContent = '✅ Print tab geopend! Print met Ctrl+P';
+
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 5000);
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.textContent = '👁️ Open Print Tab';
+
+          status.className = 'status error';
+          status.textContent = '❌ Fout: ' + error.message;
+        })
+        .openPrintTab();
+    }
+
+    function berekenPlaatsen() {
+      const btn = document.getElementById('plaatsenBtn');
+      const status = document.getElementById('status');
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Bezig met berekenen...';
+
+      status.className = 'status info';
+      status.textContent = 'Plaatsen worden berekend...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.textContent = '🏆 Bereken Plaatsen';
+
+          status.className = 'status success';
+          status.textContent = '✅ ' + result.message;
+
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 5000);
+        })
+        .withFailureHandler(function(error) {
+          btn.disabled = false;
+          btn.textContent = '🏆 Bereken Plaatsen';
+
+          status.className = 'status error';
+          status.textContent = '❌ Fout: ' + error.message;
+        })
+        .berekenPlaatsenGeselecteerdePoule();
+    }
+
+    function wisPrintTab() {
+      const status = document.getElementById('status');
+
+      status.className = 'status info';
+      status.textContent = 'Print tab wordt gewist...';
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          status.className = 'status success';
+          status.textContent = '✅ Print tab gewist!';
+
+          setTimeout(() => {
+            status.style.display = 'none';
+          }, 3000);
+        })
+        .withFailureHandler(function(error) {
+          status.className = 'status error';
+          status.textContent = '❌ Fout: ' + error.message;
+        })
+        .wisPrintTab();
+    }
+  </script>
+</body>
+</html>

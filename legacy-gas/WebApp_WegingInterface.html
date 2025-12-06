@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weging - WestFries Open</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    // WebAppAPI - gebruik google.script.run in plaats van fetch voor betrouwbaarheid
+    const WebAppAPI = {
+      zoekJudokaOpNaam(zoekterm, blokNr) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .zoekJudokaOpNaam(zoekterm, blokNr);
+        });
+      },
+      zoekJudokaViaQR(qrData) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .zoekJudokaViaQR(qrData);
+        });
+      },
+      slaGewichtOp(rijNr, gewicht) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .slaGewichtOp(rijNr, gewicht);
+        });
+      }
+    };
+  </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .header {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .header .icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 16px;
+    }
+
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .tab.active {
+      background: white;
+      color: #43e97b;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .search-section,
+    .scan-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #43e97b;
+    }
+
+    .search-box button {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .search-box button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(67, 233, 123, 0.4);
+    }
+
+    .search-results {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .judoka-card {
+      background: #f8f9fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .judoka-card:hover {
+      border-color: #43e97b;
+      transform: translateX(5px);
+    }
+
+    .judoka-card.heeft-gewicht {
+      background: #d4edda;
+      border-color: #28a745;
+    }
+
+    .judoka-card .naam {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .judoka-card .info {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .judoka-card .gewicht {
+      font-size: 16px;
+      color: #28a745;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    #qr-reader {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto 20px;
+      border-radius: 15px;
+      overflow: hidden;
+      border: 3px solid #43e97b;
+    }
+
+    .weight-input-section {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .weight-input-section.show {
+      display: block;
+    }
+
+    .current-judoka {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .current-judoka .naam {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .current-judoka .info {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .weight-form {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .weight-form input {
+      flex: 1;
+      padding: 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .weight-form input:focus {
+      outline: none;
+      border-color: #43e97b;
+    }
+
+    .weight-form button {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      color: white;
+      border: none;
+      padding: 20px 40px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .weight-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(67, 233, 123, 0.4);
+    }
+
+    .weight-form button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .history {
+      margin-top: 30px;
+    }
+
+    .history h3 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .history-item {
+      background: #f0f0f0;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-item .judoka-naam {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .history-item .gewicht {
+      color: #28a745;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #43e97b;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .blok-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+
+      .weight-form {
+        flex-direction: column;
+      }
+
+      .weight-form button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-button" onclick="goBack()">
+      ← Terug
+    </button>
+
+    <div class="header">
+      <div class="icon">⚖️</div>
+      <h1>Weeglijst</h1>
+      <p>Weeg alle judoka's met QR scanner of naam zoeken</p>
+      <p style="margin-top: 10px; color: #666; font-size: 12px;">Versie: 2.0 (Alle judokas, geen blok filter)</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('scan')">
+        📷 QR Scanner
+      </button>
+      <button class="tab" onclick="switchTab('search')">
+        🔍 Naam Zoeken
+      </button>
+    </div>
+
+    <div id="scanTab" class="tab-content active">
+      <div class="scan-section">
+        <div id="qr-reader"></div>
+        <div id="scanStatus" style="text-align: center; color: #666; margin-bottom: 20px;">
+          Richt de camera op de QR code...
+        </div>
+      </div>
+    </div>
+
+    <div id="searchTab" class="tab-content">
+      <div class="search-section">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Zoek op naam..."
+            onkeyup="handleSearchKeyup(event)"
+          >
+          <button onclick="searchJudoka()">Zoeken</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+    </div>
+
+    <div id="weightInput" class="weight-input-section">
+      <div id="currentJudokaInfo" class="current-judoka"></div>
+      <form class="weight-form" onsubmit="saveWeight(event)">
+        <input
+          type="number"
+          id="weightField"
+          placeholder="00.0"
+          step="0.1"
+          min="10"
+          max="200"
+          required
+        >
+        <button type="submit" id="saveButton">Opslaan</button>
+      </form>
+    </div>
+
+    <div class="history" id="history" style="display: none;">
+      <h3>Gewogen (deze sessie)</h3>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    let html5QrCode = null;
+    let currentJudoka = null;
+    let history = [];
+
+    function goBack() {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop();
+      }
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('?')[0];
+      window.location.href = baseUrl + '?page=login';
+    }
+
+    function switchTab(tab) {
+      // Update tab buttons
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(function(t) {
+        t.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // Update tab content
+      document.getElementById('scanTab').classList.remove('active');
+      document.getElementById('searchTab').classList.remove('active');
+
+      if (tab === 'scan') {
+        document.getElementById('scanTab').classList.add('active');
+        if (!html5QrCode) {
+          startScanner();
+        }
+      } else {
+        document.getElementById('searchTab').classList.add('active');
+        document.getElementById('searchInput').focus();
+      }
+    }
+
+    function startScanner() {
+      if (html5QrCode) return;
+
+      html5QrCode = new Html5Qrcode("qr-reader");
+
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanError
+      ).catch(err => {
+        console.error('QR scanner fout:', err);
+        document.getElementById('scanStatus').innerHTML =
+          '<span style="color: #c33;">Camera toegang geweigerd of niet beschikbaar</span>';
+      });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      // Zoek judoka via QR data
+      WebAppAPI.zoekJudokaViaQR(decodedText)
+        .then(function(result) {
+          if (result && result.success) {
+
+            // Check of er judoka data in de QR zat (nieuw formaat)
+            if (result.judoka) {
+              // Judoka gevonden! Toon direct de weging interface
+              document.getElementById('scanStatus').innerHTML =
+                '<span style="color: #28a745;">✓ ' + result.message + '</span>';
+
+              // Toon direct de weging interface voor deze judoka
+              showWeightInput(result.judoka);
+
+              // Herstart scanner voor volgende scan
+              if (html5QrCode) {
+                setTimeout(function() {
+                  if (html5QrCode.getState() === 2) {
+                    html5QrCode.resume();
+                  }
+                }, 2000);
+              }
+            } else {
+              // Oude format: alleen blok/mat info
+              document.getElementById('scanStatus').innerHTML =
+                '<span style="color: #28a745;">✓ ' + result.message + '</span><br>' +
+                '<span style="color: #666;">Zoek nu de judoka op naam hiernaast →</span>';
+
+              // Switch naar zoek tab
+              switchTab('search');
+              document.getElementById('searchInput').focus();
+
+              // Herstart scanner voor volgende scan
+              if (html5QrCode) {
+                setTimeout(function() {
+                  if (html5QrCode.getState() === 2) {
+                    html5QrCode.resume();
+                  }
+                }, 3000);
+              }
+            }
+          } else {
+            document.getElementById('scanStatus').innerHTML =
+              '<span style="color: #c33;">✗ ' + (result.error || 'Ongeldige QR code') + '</span>';
+
+            if (html5QrCode) {
+              html5QrCode.resume();
+            }
+          }
+        })
+        .catch(function(error) {
+          document.getElementById('scanStatus').innerHTML =
+            '<span style="color: #c33;">✗ Fout: ' + error.message + '</span>';
+
+          if (html5QrCode) {
+            html5QrCode.resume();
+          }
+        });
+    }
+
+    function onScanError(error) {
+      // Negeer deze errors - ze zijn normaal tijdens scannen
+    }
+
+    function handleSearchKeyup(event) {
+      if (event.key === 'Enter') {
+        searchJudoka();
+      }
+    }
+
+    function searchJudoka() {
+      const searchTerm = document.getElementById('searchInput').value.trim();
+
+      if (searchTerm.length < 2) {
+        document.getElementById('searchResults').innerHTML =
+          '<div class="no-results">Voer minimaal 2 tekens in</div>';
+        return;
+      }
+
+      document.getElementById('searchResults').innerHTML =
+        '<div class="loading"><div class="loading-spinner"></div>Zoeken...</div>';
+
+      // Search ALL judokas (blok 0 = alle blokken)
+      WebAppAPI.zoekJudokaOpNaam(searchTerm, 0)
+        .then(function(resultaten) {
+          renderSearchResults(resultaten);
+        })
+        .catch(function(error) {
+          document.getElementById('searchResults').innerHTML =
+            '<div class="no-results" style="color: #c33;">Fout: ' + error.message + '</div>';
+        });
+    }
+
+    function renderSearchResults(resultaten) {
+      const container = document.getElementById('searchResults');
+
+      if (resultaten.length === 0) {
+        container.innerHTML = '<div class="no-results">Geen judoka\'s gevonden</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      resultaten.forEach(function(judoka) {
+        const card = document.createElement('div');
+        card.className = 'judoka-card' + (judoka.heeftGewicht ? ' heeft-gewicht' : '');
+        card.onclick = function() { showWeightInput(judoka); };
+
+        card.innerHTML =
+          '<div class="naam">' + judoka.naam + '</div>' +
+          '<div class="info">' +
+          judoka.club + ' • ' +
+          judoka.leeftijdsklasse + ' • ' +
+          judoka.gewichtsklasse +
+          (judoka.blok ? ' • Blok ' + judoka.blok : '') +
+          '</div>' +
+          (judoka.heeftGewicht ?
+            '<div class="gewicht">✓ Gewogen: ' + judoka.gewicht + ' kg</div>' : '');
+
+        container.appendChild(card);
+      });
+    }
+
+    function showWeightInput(judoka) {
+      currentJudoka = judoka;
+
+      document.getElementById('currentJudokaInfo').innerHTML =
+        '<div class="naam">' + judoka.naam + '</div>' +
+        '<div class="info">' +
+        judoka.club + ' • ' +
+        judoka.leeftijdsklasse + ' • ' +
+        judoka.gewichtsklasse +
+        '</div>';
+
+      document.getElementById('weightInput').classList.add('show');
+      document.getElementById('weightField').value = judoka.gewicht || '';
+      document.getElementById('weightField').focus();
+      document.getElementById('weightField').select();
+    }
+
+    function saveWeight(event) {
+      event.preventDefault();
+
+      const weight = parseFloat(document.getElementById('weightField').value);
+
+      if (!weight || weight < 10 || weight > 200) {
+        alert('Voer een geldig gewicht in (10-200 kg)');
+        return;
+      }
+
+      const saveButton = document.getElementById('saveButton');
+      saveButton.disabled = true;
+      saveButton.textContent = 'Opslaan...';
+
+      WebAppAPI.slaGewichtOp(currentJudoka.rijNr, weight)
+        .then(function(result) {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Opslaan';
+
+          if (result.success) {
+            // Voeg toe aan history
+            addToHistory(currentJudoka.naam, weight);
+
+            // Reset form
+            document.getElementById('weightInput').classList.remove('show');
+            document.getElementById('weightField').value = '';
+            currentJudoka = null;
+
+            // Herstart scanner als actief
+            if (html5QrCode && html5QrCode.getState() === 2) {
+              html5QrCode.resume();
+              document.getElementById('scanStatus').textContent =
+                'Richt de camera op de QR code...';
+            }
+
+            // Clear search results
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchInput').value = '';
+          } else {
+            alert('Fout bij opslaan: ' + (result.error || 'Onbekende fout'));
+          }
+        })
+        .catch(function(error) {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Opslaan';
+          alert('Fout bij opslaan: ' + error.message);
+        });
+    }
+
+    function addToHistory(naam, gewicht) {
+      history.unshift({ naam: naam, gewicht: gewicht });
+
+      const historyDiv = document.getElementById('history');
+      const historyList = document.getElementById('historyList');
+
+      historyDiv.style.display = 'block';
+
+      historyList.innerHTML = '';
+      history.forEach(function(item) {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.innerHTML =
+          '<span class="judoka-naam">' + item.naam + '</span>' +
+          '<span class="gewicht">' + item.gewicht.toFixed(1) + ' kg</span>';
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    // Init
+    window.onload = function() {
+      startScanner();
+    };
+  </script>
+</body>
+</html>

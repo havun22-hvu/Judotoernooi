@@ -110,10 +110,10 @@ class Judoka extends Model
     }
 
     /**
-     * Calculate the judoka code for pool assignment
+     * Calculate the judoka base code for pool assignment (without volgnummer)
      * Format: LLGGBG (Leeftijd-Gewicht-Band-Geslacht)
      */
-    public function berekenJudokaCode(): string
+    public function berekenBasisCode(): string
     {
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($this->leeftijd, $this->geslacht);
         $leeftijdCode = $leeftijdsklasse->code();
@@ -122,7 +122,7 @@ class Judoka extends Model
         $gewichtNum = abs(intval(str_replace(['-', '+', 'kg', ' '], '', $this->gewichtsklasse)));
         $gewichtCode = str_pad($gewichtNum, 2, '0', STR_PAD_LEFT);
 
-        // Band code (1 digit)
+        // Band code (1 digit): wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
         $bandEnum = $this->band_enum;
         $bandCode = $bandEnum ? $bandEnum->kyu() : 'X';
 
@@ -130,6 +130,19 @@ class Judoka extends Model
         $geslachtCode = strtoupper($this->geslacht);
 
         return "{$leeftijdCode}{$gewichtCode}{$bandCode}{$geslachtCode}";
+    }
+
+    /**
+     * Calculate full judoka code with volgnummer
+     * Format: LLGGBGVV (Leeftijd-Gewicht-Band-Geslacht-Volgnummer)
+     * Note: volgnummer must be provided externally per category
+     */
+    public function berekenJudokaCode(int $volgnummer = 1): string
+    {
+        $basisCode = $this->berekenBasisCode();
+        $volgnummerCode = str_pad($volgnummer, 2, '0', STR_PAD_LEFT);
+
+        return "{$basisCode}{$volgnummerCode}";
     }
 
     /**

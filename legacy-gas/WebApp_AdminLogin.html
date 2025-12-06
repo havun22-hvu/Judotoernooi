@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - WestFries Open</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 450px;
+      width: 100%;
+    }
+
+    .back-button {
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s ease;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header .icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #f093fb;
+    }
+
+    .login-button {
+      width: 100%;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(245, 87, 108, 0.4);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .login-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #c33;
+      display: none;
+      animation: shake 0.5s;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #f093fb;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .info-box {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 13px;
+      border-left: 4px solid #1976d2;
+    }
+
+    .info-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="back-button" onclick="goBack()">
+      ← Terug
+    </button>
+
+    <div class="login-card">
+      <div class="header">
+        <div class="icon">🔐</div>
+        <h1>Admin Login</h1>
+        <p>Wachtwoord vereist voor volledige toegang</p>
+      </div>
+
+      <div id="errorMessage" class="error-message"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="password">Wachtwoord</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            placeholder="Voer admin wachtwoord in"
+          >
+        </div>
+
+        <button type="submit" class="login-button" id="loginButton">
+          Inloggen
+        </button>
+      </form>
+
+      <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p style="margin-top: 10px; color: #666;">Verifiëren...</p>
+      </div>
+
+      <div class="info-box">
+        <strong>ℹ️ Standaard wachtwoord:</strong>
+        WestFries2026<br>
+        (Wijzig dit wachtwoord na eerste login!)
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function goBack() {
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('?')[0];
+      window.location.href = baseUrl + '?page=login';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('errorMessage');
+      errorDiv.textContent = message;
+      errorDiv.classList.add('show');
+
+      setTimeout(() => {
+        errorDiv.classList.remove('show');
+      }, 5000);
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+
+      const password = document.getElementById('password').value;
+      const loginButton = document.getElementById('loginButton');
+      const loading = document.getElementById('loading');
+
+      // Disable form
+      loginButton.disabled = true;
+      loginButton.textContent = 'Verifiëren...';
+      loading.classList.add('show');
+
+      // Roep de backend functie aan
+      google.script.run
+        .withSuccessHandler(function(result) {
+          loginButton.disabled = false;
+          loginButton.textContent = 'Inloggen';
+          loading.classList.remove('show');
+
+          if (result.success) {
+            // Success! Redirect naar dashboard
+            const currentUrl = window.location.href;
+            const baseUrl = currentUrl.split('?')[0];
+            window.location.href = baseUrl + '?page=dashboard';
+          } else {
+            // Fout
+            showError(result.error || 'Onjuist wachtwoord');
+            document.getElementById('password').value = '';
+            document.getElementById('password').focus();
+          }
+        })
+        .withFailureHandler(function(error) {
+          loginButton.disabled = false;
+          loginButton.textContent = 'Inloggen';
+          loading.classList.remove('show');
+          showError('Systeemfout: ' + error.message);
+        })
+        .verifyAdminPassword(password);
+    }
+
+    // Focus op password veld bij laden
+    window.onload = function() {
+      document.getElementById('password').focus();
+    };
+  </script>
+</body>
+</html>

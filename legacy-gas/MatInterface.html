@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mat Interface - WestFries Open</title>
+  <?!= include('WebApp_API') ?>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; }
+      .poule-card { page-break-inside: avoid; border: 2px solid #000; }
+      .schema-table { border: 2px solid #000; }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 30px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-left h1 {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header-left p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.2);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4ade80;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background: #ef4444;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: white;
+      color: #667eea;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+    }
+
+    .btn-success {
+      background: #4ade80;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .poules-container {
+      display: grid;
+      gap: 20px;
+    }
+
+    .poule-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      transition: all 0.3s;
+    }
+
+    .poule-card:hover {
+      box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    }
+
+    .poule-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .poule-afronden-btn {
+      padding: 10px 20px;
+      background: #f59e0b;
+      color: white;
+      border: 2px solid #d97706;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .poule-afronden-btn:hover {
+      background: #d97706;
+      transform: scale(1.05);
+    }
+
+    .poule-voltooid-btn {
+      padding: 10px 20px;
+      background: #10b981;
+      color: white;
+      border: 2px solid #059669;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .poule-voltooid-btn:hover {
+      background: #059669;
+    }
+
+    .poule-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .poule-meta {
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      gap: 15px;
+    }
+
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .schema-table th,
+    .schema-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .schema-table th {
+      background: #f8f9fa;
+      font-weight: 600;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .schema-table .judoka-nr {
+      background: #f8f9fa;
+      font-weight: bold;
+      width: 40px;
+    }
+
+    .schema-table .judoka-naam {
+      text-align: left;
+      font-weight: 500;
+      width: auto;
+      white-space: nowrap;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wedstrijd-cell {
+      background: #fff;
+      padding: 5px;
+    }
+
+    .wedstrijd-cell.zwart {
+      background: #2c3e50;
+      color: white;
+    }
+
+    .wedstrijd-cell.grijs {
+      background: #9ca3af;
+      color: #4b5563;
+    }
+
+    .wedstrijd-cell.wp-display {
+      background: #f3f4f6;
+      color: #374151;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .wedstrijd-cell select {
+      width: 50px;
+      padding: 4px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .wedstrijd-cell select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .totaal-cell {
+      background: #fffbeb;
+      font-weight: bold;
+      color: #92400e;
+    }
+
+    .plaats-cell {
+      background: #dbeafe;
+      font-weight: bold;
+      color: #1e40af;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .plaats-goud {
+      background: #FFD700 !important;
+      color: #000 !important;
+      font-size: 18px !important;
+      animation: highlight-pulse 1s ease-in-out;
+    }
+
+    .plaats-zilver {
+      background: #C0C0C0 !important;
+      color: #000 !important;
+      font-size: 17px !important;
+      animation: highlight-pulse 1s ease-in-out;
+    }
+
+    .plaats-brons {
+      background: #CD7F32 !important;
+      color: #fff !important;
+      font-size: 17px !important;
+      animation: highlight-pulse 1s ease-in-out;
+    }
+
+    .highlight-goud {
+      background: #fffbeb !important;
+      border-left: 4px solid #FFD700;
+    }
+
+    .highlight-zilver {
+      background: #f8f9fa !important;
+      border-left: 4px solid #C0C0C0;
+    }
+
+    .highlight-brons {
+      background: #fef3e2 !important;
+      border-left: 4px solid #CD7F32;
+    }
+
+    @keyframes highlight-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
+
+    .plts-btn {
+      padding: 5px 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+    }
+
+    .plts-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+    }
+
+    .plts-btn:active {
+      transform: translateY(0);
+    }
+
+    .auto-save-indicator {
+      display: inline-block;
+      margin-left: 10px;
+      font-size: 12px;
+      color: #4ade80;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .auto-save-indicator.saving {
+      opacity: 1;
+      color: #f59e0b;
+    }
+
+    .auto-save-indicator.saved {
+      opacity: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .print-header {
+      display: none;
+    }
+
+    @media print {
+      .print-header {
+        display: block;
+        text-align: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #000;
+      }
+
+      .poule-card {
+        page-break-after: always;
+      }
+
+      .poule-card:last-child {
+        page-break-after: auto;
+      }
+
+      .schema-table input {
+        border: none;
+        background: transparent;
+      }
+    }
+
+    .offline-banner {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .offline-banner.active {
+      display: block;
+    }
+
+    .offline-banner strong {
+      color: #92400e;
+    }
+
+    .wedstrijd-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .wedstrijd-btn {
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .wedstrijd-btn:hover {
+      background: #e5e7eb;
+    }
+
+    .wedstrijd-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .wedstrijd-btn.completed {
+      background: #d1fae5;
+      border-color: #4ade80;
+      color: #065f46;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-banner" id="offlineBanner">
+    <strong>⚠️ Offline Modus</strong> - Werkt zonder internet. Wijzigingen worden lokaal opgeslagen en gesynchroniseerd zodra de verbinding hersteld is.
+  </div>
+
+  <div class="header no-print">
+    <div class="header-left">
+      <h1 id="matTitle">Mat X - Blok X</h1>
+      <p id="matSubtitle">Wedstrijdregistratie</p>
+    </div>
+    <div class="header-right">
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Online</span>
+      </div>
+      <button class="btn btn-primary" onclick="syncData()">💾 Sync</button>
+      <button class="btn btn-primary" onclick="printSchemas()">🖨️ Print</button>
+      <button class="btn btn-danger" onclick="logout()">Uitloggen</button>
+    </div>
+  </div>
+
+  <div class="print-header">
+    <h1 id="printTitle">WestFries Open - Mat X - Blok X</h1>
+    <p id="printDate">Datum: <span></span></p>
+  </div>
+
+  <div class="poules-container" id="poulesContainer">
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <h3>Aan het laden...</h3>
+      <p>Poules worden geladen voor deze mat</p>
+    </div>
+  </div>
+
+  <script>
+    // Globale variabelen - waarden komen van de server-side template
+    let currentBlok = <?= blok ?>;
+    let currentMat = <?= mat ?>;
+    let poulesData = [];
+    let isOnline = navigator.onLine;
+    let localChanges = [];
+    let autoSyncTimer = null; // Timer voor auto-sync
+
+    // Initialisatie
+    function init() {
+      if (!currentBlok || !currentMat) {
+        showMessage('Geen blok of mat geselecteerd', 'error');
+        return;
+      }
+
+      // Update UI
+      document.getElementById('matTitle').textContent = `Mat ${currentMat} - Blok ${currentBlok}`;
+      document.getElementById('printTitle').textContent = `WestFries Open - Mat ${currentMat} - Blok ${currentBlok}`;
+      document.getElementById('printDate').querySelector('span').textContent = new Date().toLocaleDateString('nl-NL');
+
+      // Laad poules
+      loadPoules();
+
+      // Setup online/offline detectie
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      updateConnectionStatus();
+
+      // Auto-save elke 30 seconden
+      setInterval(autoSave, 30000);
+    }
+
+    function loadPoules() {
+      // Probeer eerst lokale data te laden
+      const localData = localStorage.getItem(`poules_blok${currentBlok}_mat${currentMat}`);
+
+      if (localData && !isOnline) {
+        // Offline: gebruik lokale data
+        poulesData = JSON.parse(localData);
+        renderPoules();
+        return;
+      }
+
+      // Online: laad van server
+      if (isOnline) {
+        // Detecteer of we in web app of dialog zijn
+        const isWebApp = typeof WebAppAPI !== 'undefined' && window.location.href.indexOf('script.google.com/macros') !== -1;
+
+        if (isWebApp) {
+          // Web app: gebruik WebAppAPI
+          WebAppAPI.getPoulesVoorMat(currentBlok, currentMat)
+            .then(handlePoulesLoaded)
+            .catch(handleLoadError);
+        } else {
+          // Dialog: gebruik google.script.run
+          google.script.run
+            .withSuccessHandler(handlePoulesLoaded)
+            .withFailureHandler(handleLoadError)
+            .getPoulesVoorMat(currentBlok, currentMat);
+        }
+      }
+    }
+
+    function handlePoulesLoaded(data) {
+      poulesData = data;
+
+      // Sla op in localStorage voor offline gebruik
+      localStorage.setItem(`poules_blok${currentBlok}_mat${currentMat}`, JSON.stringify(data));
+
+      renderPoules();
+    }
+
+    function handleLoadError(error) {
+      console.error('Fout bij laden poules:', error);
+
+      // Probeer lokale data
+      const localData = localStorage.getItem(`poules_blok${currentBlok}_mat${currentMat}`);
+      if (localData) {
+        poulesData = JSON.parse(localData);
+        renderPoules();
+        showMessage('Poules geladen vanuit lokale opslag', 'warning');
+      } else {
+        showEmptyState('Kon geen poules laden. Controleer je internetverbinding.');
+      }
+    }
+
+    function renderPoules() {
+      const container = document.getElementById('poulesContainer');
+
+      if (!poulesData || poulesData.length === 0) {
+        showEmptyState('Geen poules gevonden voor deze mat');
+        return;
+      }
+
+      container.innerHTML = '';
+
+      poulesData.forEach((poule, pouleIndex) => {
+        const pouleCard = createPouleCard(poule, pouleIndex);
+        container.appendChild(pouleCard);
+      });
+    }
+
+    function createPouleCard(poule, pouleIndex) {
+      const card = document.createElement('div');
+      card.className = 'poule-card';
+      card.id = `poule-${pouleIndex}`;
+
+      const aantalJudokas = poule.judokas.length;
+
+      // Genereer wedstrijdvolgorde (zoals in digitale schema's)
+      const wedstrijdvolgorde = genereerWedstrijdvolgorde(aantalJudokas);
+      const aantalWedstrijden = wedstrijdvolgorde.length;
+
+      const isAfgerond = poule.voltooid || false;
+
+      let html = `
+        <div class="poule-header">
+          <div>
+            <div class="poule-title">
+              Poule ${poule.pouleNr} - ${poule.leeftijdsklasse} ${poule.gewichtsklasse}
+              <span style="margin-left: 15px; font-size: 18px;">
+                <span id="vinkje-afgerond-${pouleIndex}" style="color: ${isAfgerond ? '#10b981' : '#9ca3af'}; cursor: pointer;"
+                      onclick="togglePouleVoltooid(${pouleIndex})"
+                      title="${isAfgerond ? 'Poule is afgerond (klik om te deactiveren)' : 'Poule is nog niet afgerond (klik om af te ronden)'}">
+                  ${isAfgerond ? '✅' : '⭕'} Afgerond
+                </span>
+              </span>
+            </div>
+            <div class="poule-meta">
+              <span>📍 Mat ${poule.mat}</span>
+              <span>🥋 ${aantalJudokas} judoka's</span>
+              <span>⚔️ ${aantalWedstrijden} wedstrijden</span>
+            </div>
+          </div>
+        </div>
+
+        <table class="schema-table">
+          <thead>
+            <tr>
+              <th class="judoka-nr">Nr</th>
+              <th class="judoka-naam">Naam</th>`;
+
+      // Kolom headers voor Wed 1, Wed 2, etc.
+      for (let w = 1; w <= aantalWedstrijden; w++) {
+        html += `<th colspan="2">Wed ${w}</th>`;
+      }
+
+      html += `
+              <th>WP</th>
+              <th>JP</th>
+              <th>
+                <button class="plts-btn" onclick="toonPlaatsen(${pouleIndex})" title="Bereken en toon plaatsen">
+                  Plts
+                </button>
+              </th>
+            </tr>
+            <tr>
+              <th colspan="2"></th>`;
+
+      // Sub-headers WP/JP
+      for (let w = 1; w <= aantalWedstrijden; w++) {
+        html += `<th style="font-size: 11px;">WP</th><th style="font-size: 11px;">JP</th>`;
+      }
+
+      html += `<th colspan="3"></th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      // Judoka rijen
+      poule.judokas.forEach((judoka, i) => {
+        const judokaNummer = i + 1;
+
+        html += `
+          <tr data-judoka="${i}">
+            <td class="judoka-nr">${judokaNummer}</td>
+            <td class="judoka-naam">${judoka.naam}</td>`;
+
+        // Wedstrijdcellen - chronologisch
+        for (let w = 0; w < aantalWedstrijden; w++) {
+          const wedstrijd = wedstrijdvolgorde[w];
+          const speeltInDezeWedstrijd = (wedstrijd.judoka1 === judokaNummer || wedstrijd.judoka2 === judokaNummer);
+
+          if (!speeltInDezeWedstrijd) {
+            // Grijze cel (deze judoka speelt niet in deze wedstrijd)
+            html += `<td colspan="2" class="wedstrijd-cell grijs"></td>`;
+          } else {
+            // Bepaal tegen wie deze judoka speelt
+            const tegenJudoka = wedstrijd.judoka1 === judokaNummer ? wedstrijd.judoka2 : wedstrijd.judoka1;
+            const tegenIndex = tegenJudoka - 1;
+
+            // Haal opgeslagen waardes op
+            // BELANGRIJK: Gebruik geen || '', want dan wordt 0 (verlies) vervangen door ''
+            const wpValue = judoka.wedstrijden && judoka.wedstrijden[tegenIndex] && judoka.wedstrijden[tegenIndex].wp !== null && judoka.wedstrijden[tegenIndex].wp !== undefined ? judoka.wedstrijden[tegenIndex].wp : '';
+            const jpValue = judoka.wedstrijden && judoka.wedstrijden[tegenIndex] && judoka.wedstrijden[tegenIndex].jp !== null && judoka.wedstrijden[tegenIndex].jp !== undefined ? judoka.wedstrijden[tegenIndex].jp : '';
+
+            // WP automatisch berekend (read-only), JP dropdown
+            html += `
+              <td class="wedstrijd-cell wp-display" id="wp-${pouleIndex}-${i}-${tegenIndex}">
+                ${wpValue !== '' && wpValue !== null && wpValue !== undefined ? wpValue : '-'}
+              </td>
+              <td class="wedstrijd-cell">
+                <select onchange="updateWedstrijdJP(${pouleIndex}, ${i}, ${tegenIndex}, ${w}, this.value)"
+                  data-poule="${pouleIndex}" data-judoka="${i}" data-tegen="${tegenIndex}" data-wedstrijd="${w}">
+                  <option value="10" ${jpValue == 10 ? 'selected' : ''}>10</option>
+                  <option value="7" ${jpValue == 7 ? 'selected' : ''}>7</option>
+                  <option value="5" ${jpValue == 5 ? 'selected' : ''}>5</option>
+                  <option value="0" ${jpValue == 0 ? 'selected' : ''}>0</option>
+                  <option value="" ${jpValue === '' || jpValue === null || jpValue === undefined ? 'selected' : ''}>-</option>
+                </select>
+              </td>`;
+          }
+        }
+
+        // Totalen
+        const totaalWP = judoka.totaalWP || 0;
+        const totaalJP = judoka.totaalJP || 0;
+
+        html += `
+            <td class="totaal-cell" id="totaal-wp-${pouleIndex}-${i}">${totaalWP}</td>
+            <td class="totaal-cell" id="totaal-jp-${pouleIndex}-${i}">${totaalJP}</td>
+            <td class="plaats-cell" id="plaats-${pouleIndex}-${i}">${judoka.plaats || '-'}</td>
+          </tr>`;
+      });
+
+      html += `
+          </tbody>
+        </table>`;
+
+      card.innerHTML = html;
+      return card;
+    }
+
+    /**
+     * Update wedstrijd op basis van JP invoer
+     * Berekent automatisch WP: winnaar krijgt 2, verliezer krijgt 0
+     */
+    function updateWedstrijdJP(pouleIndex, judokaIndex, tegenIndex, wedstrijdIndex, jpValue) {
+      const jp = parseInt(jpValue) || 0;
+      const poule = poulesData[pouleIndex];
+
+      // Initialiseer wedstrijden arrays
+      if (!poule.judokas[judokaIndex].wedstrijden) {
+        poule.judokas[judokaIndex].wedstrijden = [];
+      }
+      if (!poule.judokas[tegenIndex].wedstrijden) {
+        poule.judokas[tegenIndex].wedstrijden = [];
+      }
+
+      // Bepaal winnaar en verliezer op basis van JP
+      let judokaWP, tegenWP, tegenJP;
+
+      if (jpValue === '' || jpValue === null) {
+        // Geen score ingevuld - reset beide
+        judokaWP = 0;
+        tegenWP = 0;
+        tegenJP = 0;
+      } else if (jp > 0) {
+        // Deze judoka heeft gewonnen (JP > 0)
+        judokaWP = 2;
+        tegenWP = 0;
+        tegenJP = 0;
+      } else {
+        // JP = 0 betekent deze judoka heeft verloren
+        // De tegenstander moet dan gewonnen hebben
+        judokaWP = 0;
+        tegenWP = 2;
+        tegenJP = 0; // We weten niet hoeveel JP de tegenstander heeft
+      }
+
+      // Update data voor beide judoka's
+      poule.judokas[judokaIndex].wedstrijden[tegenIndex] = { wp: judokaWP, jp: jp };
+      poule.judokas[tegenIndex].wedstrijden[judokaIndex] = { wp: tegenWP, jp: tegenJP };
+
+      // Update WP display voor beide judoka's
+      const wpCell1 = document.getElementById(`wp-${pouleIndex}-${judokaIndex}-${tegenIndex}`);
+      const wpCell2 = document.getElementById(`wp-${pouleIndex}-${tegenIndex}-${judokaIndex}`);
+
+      if (wpCell1) {
+        wpCell1.textContent = jpValue === '' || jpValue === null ? '-' : judokaWP;
+      }
+      if (wpCell2) {
+        wpCell2.textContent = jpValue === '' || jpValue === null ? '-' : tegenWP;
+      }
+
+      // Update JP dropdown voor tegenstander
+      // Vind de juiste dropdown voor de tegenstander
+      const tegenDropdowns = document.querySelectorAll(`select[data-poule="${pouleIndex}"][data-judoka="${tegenIndex}"][data-tegen="${judokaIndex}"]`);
+      tegenDropdowns.forEach(dropdown => {
+        dropdown.value = jpValue === '' || jpValue === null ? '' : tegenJP;
+      });
+
+      // Bereken totalen AUTOMATISCH voor beide judoka's
+      berekenTotalenVoorJudoka(pouleIndex, judokaIndex);
+      berekenTotalenVoorJudoka(pouleIndex, tegenIndex);
+
+      // Sla op in localStorage (voor offline backup)
+      localStorage.setItem(`poules_blok${currentBlok}_mat${currentMat}`, JSON.stringify(poulesData));
+    }
+
+    function berekenTotalenVoorJudoka(pouleIndex, judokaIndex) {
+      const judoka = poulesData[pouleIndex].judokas[judokaIndex];
+      let totaalWP = 0;
+      let totaalJP = 0;
+
+      if (judoka.wedstrijden) {
+        judoka.wedstrijden.forEach(wedstrijd => {
+          if (wedstrijd) {
+            totaalWP += wedstrijd.wp || 0;
+            totaalJP += wedstrijd.jp || 0;
+          }
+        });
+      }
+
+      judoka.totaalWP = totaalWP;
+      judoka.totaalJP = totaalJP;
+
+      // Update UI (met null check)
+      const totaalWPEl = document.getElementById(`totaal-wp-${pouleIndex}-${judokaIndex}`);
+      const totaalJPEl = document.getElementById(`totaal-jp-${pouleIndex}-${judokaIndex}`);
+      const totaalEl = document.getElementById(`totaal-${pouleIndex}-${judokaIndex}`);
+
+      if (totaalWPEl) totaalWPEl.textContent = totaalWP;
+      if (totaalJPEl) totaalJPEl.textContent = totaalJP;
+      if (totaalEl) totaalEl.textContent = `${totaalWP} / ${totaalJP}`;
+    }
+
+    function berekenRangschikking(pouleIndex) {
+      const poule = poulesData[pouleIndex];
+      const judokasMetIndex = poule.judokas.map((j, idx) => ({ ...j, origIndex: idx }));
+
+      // Sorteer op WP (hoogste eerst), dan JP (hoogste eerst), dan head-to-head
+      judokasMetIndex.sort((a, b) => {
+        if (b.totaalWP !== a.totaalWP) return b.totaalWP - a.totaalWP;
+        if (b.totaalJP !== a.totaalJP) return b.totaalJP - a.totaalJP;
+
+        // Bij gelijk WP en JP → kijk naar onderlinge wedstrijd (head-to-head)
+        // a.origIndex is de judoka index, b.origIndex is de tegenstander index
+        // a.wedstrijden[b.origIndex] bevat het resultaat van a tegen b
+        if (a.wedstrijden && b.wedstrijden &&
+            a.wedstrijden[b.origIndex] && b.wedstrijden[a.origIndex]) {
+          const aTegenB_WP = a.wedstrijden[b.origIndex].wp || 0;
+          const bTegenA_WP = b.wedstrijden[a.origIndex].wp || 0;
+
+          if (bTegenA_WP !== aTegenB_WP) {
+            return bTegenA_WP - aTegenB_WP; // Winnaar van onderlinge wedstrijd eerst
+          }
+        }
+
+        return 0; // Helemaal gelijk
+      });
+
+      // Update plaatsen
+      judokasMetIndex.forEach((judoka, plaats) => {
+        const origIndex = judoka.origIndex;
+        poulesData[pouleIndex].judokas[origIndex].plaats = plaats + 1;
+
+        // Update UI (met null check)
+        const plaatsEl = document.getElementById(`plaats-${pouleIndex}-${origIndex}`);
+        if (plaatsEl) {
+          plaatsEl.textContent = plaats + 1;
+        }
+      });
+    }
+
+    /**
+     * Toont de plaatsen visueel met kleuren en animatie
+     */
+    function toonPlaatsen(pouleIndex) {
+      // Bereken eerst de rangschikking
+      berekenRangschikking(pouleIndex);
+
+      const poule = poulesData[pouleIndex];
+
+      // Maak een lijst van judoka's met hun plaats
+      const resultaten = poule.judokas.map((j, idx) => ({
+        naam: j.naam,
+        plaats: j.plaats,
+        wp: j.totaalWP || 0,
+        jp: j.totaalJP || 0,
+        origIndex: idx
+      }));
+
+      // Sorteer op plaats
+      resultaten.sort((a, b) => a.plaats - b.plaats);
+
+      // Highlight de plaats cellen met kleuren ALLEEN als poule voltooid is
+      poule.judokas.forEach((judoka, idx) => {
+        const plaatsCell = document.getElementById(`plaats-${pouleIndex}-${idx}`);
+        const rijElement = plaatsCell.closest('tr');
+
+        // Verwijder oude highlights
+        plaatsCell.className = 'plaats-cell';
+        rijElement.classList.remove('highlight-goud', 'highlight-zilver', 'highlight-brons');
+
+        // Voeg kleuren toe voor top 3 ALLEEN als poule voltooid is
+        if (poule.voltooid) {
+          if (judoka.plaats === 1) {
+            plaatsCell.classList.add('plaats-goud');
+            rijElement.classList.add('highlight-goud');
+          } else if (judoka.plaats === 2) {
+            plaatsCell.classList.add('plaats-zilver');
+            rijElement.classList.add('highlight-zilver');
+          } else if (judoka.plaats === 3) {
+            plaatsCell.classList.add('plaats-brons');
+            rijElement.classList.add('highlight-brons');
+          }
+        }
+      });
+
+      // Plaatsen zijn nu zichtbaar in de tabel, geen popup nodig
+    }
+
+    /**
+     * Bereken standen voor alle poules
+     * - Berekent totaal WP en JP automatisch
+     * - Berekent plaatsen (rangschikking)
+     * - Toont visueel in de interface
+     */
+    function berekenStanden() {
+      poulesData.forEach((poule, pouleIndex) => {
+        // Bereken totalen voor elke judoka
+        poule.judokas.forEach((judoka, judokaIndex) => {
+          berekenTotalenVoorJudoka(pouleIndex, judokaIndex);
+        });
+
+        // Bereken rangschikking (plaatsen)
+        berekenRangschikking(pouleIndex);
+      });
+
+      showMessage('Standen berekend voor alle poules ✅', 'success', 3000);
+    }
+
+    function berekenAantalWedstrijden(aantalJudokas) {
+      if (aantalJudokas === 3) return 6; // Dubbele poule
+      return (aantalJudokas * (aantalJudokas - 1)) / 2;
+    }
+
+    // Genereer wedstrijdvolgorde (moet identiek zijn aan server-side versie)
+    function genereerWedstrijdvolgorde(aantalJudokas) {
+      if (aantalJudokas === 3) {
+        return [
+          { judoka1: 1, judoka2: 2 }, { judoka1: 1, judoka2: 3 }, { judoka1: 2, judoka2: 3 },
+          { judoka1: 1, judoka2: 2 }, { judoka1: 1, judoka2: 3 }, { judoka1: 2, judoka2: 3 }
+        ];
+      }
+      if (aantalJudokas === 4) {
+        return [
+          { judoka1: 1, judoka2: 2 }, { judoka1: 3, judoka2: 4 }, { judoka1: 2, judoka2: 3 },
+          { judoka1: 1, judoka2: 4 }, { judoka1: 2, judoka2: 4 }, { judoka1: 1, judoka2: 3 }
+        ];
+      }
+      if (aantalJudokas === 5) {
+        return [
+          { judoka1: 1, judoka2: 2 }, { judoka1: 3, judoka2: 4 }, { judoka1: 1, judoka2: 5 },
+          { judoka1: 2, judoka2: 3 }, { judoka1: 4, judoka2: 5 }, { judoka1: 1, judoka2: 3 },
+          { judoka1: 2, judoka2: 4 }, { judoka1: 3, judoka2: 5 }, { judoka1: 1, judoka2: 4 },
+          { judoka1: 2, judoka2: 5 }
+        ];
+      }
+      if (aantalJudokas === 6) {
+        return [
+          { judoka1: 1, judoka2: 2 }, { judoka1: 3, judoka2: 4 }, { judoka1: 5, judoka2: 6 },
+          { judoka1: 1, judoka2: 3 }, { judoka1: 2, judoka2: 5 }, { judoka1: 4, judoka2: 6 },
+          { judoka1: 3, judoka2: 5 }, { judoka1: 2, judoka2: 4 }, { judoka1: 1, judoka2: 6 },
+          { judoka1: 2, judoka2: 3 }, { judoka1: 4, judoka2: 5 }, { judoka1: 3, judoka2: 6 },
+          { judoka1: 1, judoka2: 4 }, { judoka1: 2, judoka2: 6 }, { judoka1: 1, judoka2: 5 }
+        ];
+      }
+      // Fallback: simpele round robin
+      const wedstrijden = [];
+      for (let i = 1; i <= aantalJudokas; i++) {
+        for (let j = i + 1; j <= aantalJudokas; j++) {
+          wedstrijden.push({ judoka1: i, judoka2: j });
+        }
+      }
+      return wedstrijden;
+    }
+
+    function markChanged(pouleIndex, judokaIndex, tegenIndex, type, value) {
+      localChanges.push({
+        timestamp: Date.now(),
+        blok: currentBlok,
+        mat: currentMat,
+        pouleIndex,
+        judokaIndex,
+        tegenIndex,
+        type,
+        value
+      });
+
+      // Sla op in localStorage
+      localStorage.setItem(`changes_blok${currentBlok}_mat${currentMat}`, JSON.stringify(localChanges));
+      localStorage.setItem(`poules_blok${currentBlok}_mat${currentMat}`, JSON.stringify(poulesData));
+    }
+
+    function autoSave() {
+      if (localChanges.length > 0 && isOnline) {
+        syncData();
+      }
+    }
+
+    /**
+     * Synchroniseer ALLE poule data naar Google Sheet
+     * - Gespeelde wedstrijden (WP en JP per wedstrijd)
+     * - Totaal WP en JP (automatisch berekend)
+     * - Plaatsen (1, 2, 3, 4... met kleuren)
+     */
+    function syncData() {
+      console.log('=== syncData() gestart ===');
+      console.log('isOnline:', isOnline);
+      console.log('poulesData length:', poulesData ? poulesData.length : 0);
+
+      if (!isOnline) {
+        showMessage('Offline - kan niet synchroniseren', 'warning');
+        return;
+      }
+
+      if (!poulesData || poulesData.length === 0) {
+        showMessage('Geen poule data om te synchroniseren', 'warning');
+        return;
+      }
+
+      // Bereken eerst alle totalen en plaatsen
+      poulesData.forEach((poule, pouleIndex) => {
+        poule.judokas.forEach((judoka, judokaIndex) => {
+          berekenTotalenVoorJudoka(pouleIndex, judokaIndex);
+        });
+        berekenRangschikking(pouleIndex);
+      });
+
+      console.log('Totalen en plaatsen berekend');
+      console.log('Blok:', currentBlok, 'Mat:', currentMat);
+
+      // Log wedstrijden data voor eerste poule/judoka (voor debugging)
+      if (poulesData[0] && poulesData[0].judokas[0]) {
+        console.log('Voorbeeld judoka data:');
+        console.log('  Naam:', poulesData[0].judokas[0].naam);
+        console.log('  Wedstrijden:', poulesData[0].judokas[0].wedstrijden);
+        console.log('  Totaal WP:', poulesData[0].judokas[0].totaalWP);
+        console.log('  Totaal JP:', poulesData[0].judokas[0].totaalJP);
+        console.log('  Plaats:', poulesData[0].judokas[0].plaats);
+      }
+
+      console.log('Volledige data wordt gestuurd naar server...');
+
+      showAutoSaveIndicator('saving');
+      showMessage('Synchroniseren gestart...', 'info', 2000);
+
+      // Detecteer of we in web app of dialog zijn
+      const isWebApp = typeof WebAppAPI !== 'undefined' && window.location.href.indexOf('script.google.com/macros') !== -1;
+
+      // Stuur ALLE poule data door (niet alleen changes)
+      if (isWebApp) {
+        // Web app: gebruik WebAppAPI
+        WebAppAPI.syncMatData(currentBlok, currentMat, poulesData, [])
+          .then(handleSyncSuccess)
+          .catch(handleSyncError);
+      } else {
+        // Dialog: gebruik google.script.run
+        google.script.run
+          .withSuccessHandler(handleSyncSuccess)
+          .withFailureHandler(handleSyncError)
+          .syncMatData(currentBlok, currentMat, poulesData, []);
+      }
+    }
+
+    function handleSyncSuccess(result) {
+      console.log('Sync success!', result);
+      showAutoSaveIndicator('saved');
+      showMessage('Alle data gesynchroniseerd naar Google Sheet ✅', 'success', 4000);
+
+      setTimeout(() => {
+        document.getElementById('autoSaveIndicator').style.opacity = '0';
+      }, 3000);
+    }
+
+    function handleSyncError(error) {
+      console.error('Sync error:', error);
+      console.error('Error details:', JSON.stringify(error));
+      showMessage('Fout bij synchroniseren: ' + (error.message || error), 'error', 8000);
+      showAutoSaveIndicator('saved');
+    }
+
+    /**
+     * Plant automatische synchronisatie in (debounced - wacht 3 sec na laatste wijziging)
+     */
+    function scheduleAutoSync() {
+      // Cancel vorige timer
+      if (autoSyncTimer) {
+        clearTimeout(autoSyncTimer);
+      }
+
+      // Plan nieuwe sync over 3 seconden
+      autoSyncTimer = setTimeout(() => {
+        if (isOnline && localChanges.length > 0) {
+          console.log('Auto-sync gestart...');
+          syncData();
+        }
+      }, 3000); // 3 seconden wachten na laatste wijziging
+    }
+
+    function showAutoSaveIndicator(status) {
+      const indicator = document.getElementById('autoSaveIndicator');
+      if (!indicator) return; // Element bestaat niet meer, skip
+
+      indicator.classList.remove('saving', 'saved');
+      indicator.classList.add(status);
+      indicator.style.opacity = '1';
+
+      if (status === 'saving') {
+        indicator.textContent = '💾 Synchroniseren...';
+      } else {
+        indicator.textContent = '✓ Gesynchroniseerd';
+      }
+    }
+
+    function handleOnline() {
+      isOnline = true;
+      updateConnectionStatus();
+      showMessage('Verbinding hersteld - synchroniseren...', 'success');
+      syncData();
+    }
+
+    function handleOffline() {
+      isOnline = false;
+      updateConnectionStatus();
+      showMessage('Offline - wijzigingen worden lokaal opgeslagen', 'warning');
+    }
+
+    function updateConnectionStatus() {
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      const offlineBanner = document.getElementById('offlineBanner');
+
+      if (isOnline) {
+        statusDot.classList.remove('offline');
+        statusText.textContent = 'Online';
+        offlineBanner.classList.remove('active');
+      } else {
+        statusDot.classList.add('offline');
+        statusText.textContent = 'Offline';
+        offlineBanner.classList.add('active');
+      }
+    }
+
+    function printSchemas() {
+      window.print();
+    }
+
+    function exportData() {
+      const dataStr = JSON.stringify(poulesData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mat${currentMat}_blok${currentBlok}_${new Date().toISOString()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function refreshPoules() {
+      loadPoules();
+    }
+
+    function togglePouleVoltooid(pouleIndex) {
+      const poule = poulesData[pouleIndex];
+
+      // Toggle de voltooid status
+      poule.voltooid = !poule.voltooid;
+
+      if (poule.voltooid) {
+        showMessage(`Poule ${poule.pouleNr} gemarkeerd als afgerond! Klik op "💾 Sync" om door te sturen.`, 'success', 5000);
+      } else {
+        showMessage(`Poule ${poule.pouleNr} is weer actief.`, 'info', 3000);
+      }
+
+      // Sla op in localStorage
+      localStorage.setItem(`poules_blok${currentBlok}_mat${currentMat}`, JSON.stringify(poulesData));
+
+      // Update de vinkjes in de UI zonder volledige re-render
+      updatePouleStatusVinkjes(pouleIndex);
+    }
+
+    /**
+     * Update alleen de status vinkjes van een poule zonder volledige re-render
+     */
+    function updatePouleStatusVinkjes(pouleIndex) {
+      const poule = poulesData[pouleIndex];
+      const isAfgerond = poule.voltooid || false;
+
+      // Update afgerond vinkje (klikbaar)
+      const afgerondVinkje = document.getElementById(`vinkje-afgerond-${pouleIndex}`);
+      if (afgerondVinkje) {
+        afgerondVinkje.innerHTML = `${isAfgerond ? '✅' : '⭕'} Afgerond`;
+        afgerondVinkje.style.color = isAfgerond ? '#10b981' : '#9ca3af';
+        afgerondVinkje.title = isAfgerond ? 'Poule is afgerond (klik om te deactiveren)' : 'Poule is nog niet afgerond (klik om af te ronden)';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(`poules_blok${currentBlok}_mat${currentMat}`);
+      localStorage.removeItem('matSession');
+
+      // Check of we in een web app zijn of in een dialog
+      if (window.location.href.indexOf('script.google.com/macros') !== -1) {
+        // Web app - navigeer terug naar blok 1 mat 1 (of toon keuzemenu)
+        const baseUrl = window.location.href.split('?')[0];
+
+        // Vraag welk blok/mat
+        const blok = prompt('Naar welk blok? (1-10)', '1');
+        const mat = prompt('Naar welke mat? (1-7)', '1');
+
+        if (blok && mat) {
+          window.location.href = baseUrl + '?blok=' + blok + '&mat=' + mat;
+        } else {
+          window.location.href = baseUrl; // Default blok 1 mat 1
+        }
+      } else {
+        // Dialog - sluit de dialog
+        google.script.host.close();
+        showMessage('Uitgelogd - sluit dit venster en klik opnieuw op Mat Login in het menu', 'success', 5000);
+      }
+    }
+
+    function showMessage(message, type = 'info', duration = 5000) {
+      // Maak toast container als die nog niet bestaat
+      let toastContainer = document.getElementById('toastContainer');
+      if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.style.cssText = `
+          position: fixed;
+          top: 80px;
+          right: 20px;
+          z-index: 10000;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        `;
+        document.body.appendChild(toastContainer);
+      }
+
+      // Maak toast element
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.innerHTML = message;
+      toast.style.cssText = `
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        min-width: 300px;
+        max-width: 500px;
+        font-size: 14px;
+        line-height: 1.5;
+        animation: slideIn 0.3s ease-out;
+        cursor: pointer;
+      `;
+
+      // Voeg toe aan container
+      toastContainer.appendChild(toast);
+
+      // Auto-hide
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, duration);
+
+      // Click om te sluiten
+      toast.onclick = () => {
+        toast.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => toast.remove(), 300);
+      };
+
+      console.log(`[${type}] ${message}`);
+    }
+
+    function showEmptyState(message) {
+      const container = document.getElementById('poulesContainer');
+      container.innerHTML = `
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3>${message}</h3>
+        </div>`;
+    }
+
+    // Initialiseer bij laden
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
