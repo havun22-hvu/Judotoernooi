@@ -17,6 +17,8 @@ class ToernooiRequest extends FormRequest
             'naam' => 'required|string|max:255',
             'organisatie' => 'nullable|string|max:255',
             'datum' => 'required|date',
+            'inschrijving_deadline' => 'nullable|date|before_or_equal:datum',
+            'max_judokas' => 'nullable|integer|min:1',
             'locatie' => 'nullable|string|max:255',
             'aantal_matten' => 'nullable|integer|min:1|max:20',
             'aantal_blokken' => 'nullable|integer|min:1|max:12',

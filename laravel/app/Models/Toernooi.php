@@ -16,6 +16,8 @@ class Toernooi extends Model
         'naam',
         'organisatie',
         'datum',
+        'inschrijving_deadline',
+        'max_judokas',
         'locatie',
         'aantal_matten',
         'aantal_blokken',
@@ -30,6 +32,7 @@ class Toernooi extends Model
 
     protected $casts = [
         'datum' => 'date',
+        'inschrijving_deadline' => 'date',
         'is_actief' => 'boolean',
         'poules_gegenereerd_op' => 'datetime',
         'blokken_verdeeld_op' => 'datetime',
@@ -69,5 +72,26 @@ class Toernooi extends Model
     public function getTotaalJudokasAttribute(): int
     {
         return $this->judokas()->count();
+    }
+
+    public function clubUitnodigingen(): HasMany
+    {
+        return $this->hasMany(ClubUitnodiging::class);
+    }
+
+    public function isInschrijvingOpen(): bool
+    {
+        if (!$this->inschrijving_deadline) {
+            return true;
+        }
+        return now()->startOfDay()->lte($this->inschrijving_deadline);
+    }
+
+    public function isMaxJudokasBereikt(): bool
+    {
+        if (!$this->max_judokas) {
+            return false;
+        }
+        return $this->judokas()->count() >= $this->max_judokas;
     }
 }

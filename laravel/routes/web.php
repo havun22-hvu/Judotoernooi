@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BlokController;
+use App\Http\Controllers\ClubController;
+use App\Http\Controllers\CoachPortalController;
 use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
 use App\Http\Controllers\PouleController;
@@ -60,4 +62,24 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::get('mat/{mat}/{blok?}', [MatController::class, 'show'])->name('mat.show');
     Route::post('mat/wedstrijden', [MatController::class, 'getWedstrijden'])->name('mat.wedstrijden');
     Route::post('mat/uitslag', [MatController::class, 'registreerUitslag'])->name('mat.uitslag');
+
+    // Clubs
+    Route::get('club', [ClubController::class, 'index'])->name('club.index');
+    Route::post('club', [ClubController::class, 'store'])->name('club.store');
+    Route::put('club/{club}', [ClubController::class, 'update'])->name('club.update');
+    Route::delete('club/{club}', [ClubController::class, 'destroy'])->name('club.destroy');
+    Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
+    Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
+});
+
+// Coach Portal (public routes with token authentication)
+Route::prefix('coach')->name('coach.')->group(function () {
+    Route::get('{token}', [CoachPortalController::class, 'index'])->name('portal');
+    Route::post('{token}/login', [CoachPortalController::class, 'login'])->name('login');
+    Route::post('{token}/registreer', [CoachPortalController::class, 'registreer'])->name('registreer');
+    Route::post('{token}/logout', [CoachPortalController::class, 'logout'])->name('logout');
+    Route::get('{token}/judokas', [CoachPortalController::class, 'judokas'])->name('judokas');
+    Route::post('{token}/judoka', [CoachPortalController::class, 'storeJudoka'])->name('judoka.store');
+    Route::put('{token}/judoka/{judoka}', [CoachPortalController::class, 'updateJudoka'])->name('judoka.update');
+    Route::delete('{token}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudoka'])->name('judoka.destroy');
 });
