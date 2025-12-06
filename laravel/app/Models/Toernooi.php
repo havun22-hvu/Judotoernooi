@@ -28,6 +28,17 @@ class Toernooi extends Model
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
+        'wachtwoord_admin',
+        'wachtwoord_jury',
+        'wachtwoord_weging',
+        'wachtwoord_mat',
+    ];
+
+    protected $hidden = [
+        'wachtwoord_admin',
+        'wachtwoord_jury',
+        'wachtwoord_weging',
+        'wachtwoord_mat',
     ];
 
     protected $casts = [
@@ -115,5 +126,36 @@ class Toernooi extends Model
             return null;
         }
         return max(0, $this->max_judokas - $this->judokas()->count());
+    }
+
+    // Wachtwoord methodes
+    public function setWachtwoord(string $rol, string $wachtwoord): void
+    {
+        $veld = "wachtwoord_{$rol}";
+        if (in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat'])) {
+            $this->$veld = bcrypt($wachtwoord);
+            $this->save();
+        }
+    }
+
+    public function checkWachtwoord(string $rol, string $wachtwoord): bool
+    {
+        $veld = "wachtwoord_{$rol}";
+        if (!in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat'])) {
+            return false;
+        }
+
+        $hash = $this->$veld;
+        if (!$hash) {
+            return false;
+        }
+
+        return password_verify($wachtwoord, $hash);
+    }
+
+    public function heeftWachtwoord(string $rol): bool
+    {
+        $veld = "wachtwoord_{$rol}";
+        return !empty($this->$veld);
     }
 }

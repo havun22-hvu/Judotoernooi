@@ -25,7 +25,26 @@
                     </div>
                     @endif
                 </div>
-                <div class="flex items-center">
+                <div class="flex items-center space-x-4">
+                    @if(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
+                    @php $rol = session("toernooi_{$toernooi->id}_rol"); @endphp
+                    <span class="text-blue-200 text-sm">
+                        @switch($rol)
+                            @case('admin') 👑 Admin @break
+                            @case('jury') ⚖️ Jury @break
+                            @case('weging') ⚖️ Weging @break
+                            @case('mat') 🥋 Mat {{ session("toernooi_{$toernooi->id}_mat") }} @break
+                        @endswitch
+                    </span>
+                    <form action="{{ route('toernooi.auth.logout', $toernooi) }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
+                    </form>
+                    @else
+                    @if(isset($toernooi))
+                    <a href="{{ route('toernooi.auth.login', $toernooi) }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    @endif
+                    @endif
                     <a href="{{ route('toernooi.index') }}" class="hover:text-blue-200">Toernooien</a>
                 </div>
             </div>

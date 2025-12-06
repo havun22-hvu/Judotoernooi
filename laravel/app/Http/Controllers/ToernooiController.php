@@ -6,6 +6,7 @@ use App\Http\Requests\ToernooiRequest;
 use App\Models\Toernooi;
 use App\Services\ToernooiService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class ToernooiController extends Controller
@@ -76,5 +77,29 @@ class ToernooiController extends Controller
         $statistieken = $this->toernooiService->getStatistieken($toernooi);
 
         return view('pages.toernooi.dashboard', compact('toernooi', 'statistieken'));
+    }
+
+    public function updateWachtwoorden(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $rollen = ['admin', 'jury', 'weging', 'mat'];
+        $updated = [];
+
+        foreach ($rollen as $rol) {
+            $wachtwoord = $request->input("wachtwoord_{$rol}");
+            if ($wachtwoord && strlen($wachtwoord) > 0) {
+                $toernooi->setWachtwoord($rol, $wachtwoord);
+                $updated[] = ucfirst($rol);
+            }
+        }
+
+        if (empty($updated)) {
+            return redirect()
+                ->route('toernooi.edit', $toernooi)
+                ->with('info', 'Geen wachtwoorden gewijzigd');
+        }
+
+        return redirect()
+            ->route('toernooi.edit', $toernooi)
+            ->with('success', 'Wachtwoorden bijgewerkt voor: ' . implode(', ', $updated));
     }
 }
