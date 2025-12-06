@@ -60,6 +60,9 @@
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">Voorbereiding</h2>
         <div class="space-y-3">
+            <a href="{{ route('toernooi.edit', $toernooi) }}" class="block bg-gray-100 hover:bg-gray-200 p-3 rounded">
+                ⚙️ Toernooi Instellingen
+            </a>
             <a href="{{ route('toernooi.club.index', $toernooi) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
                 🏢 Clubs & Uitnodigingen
             </a>
