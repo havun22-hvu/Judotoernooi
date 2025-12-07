@@ -37,7 +37,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
     // Admin only routes
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
-        // Judokas management
+        // Judokas management (zoek route MOET voor resource staan!)
+        Route::get('judoka/zoek', [JudokaController::class, 'zoek'])->name('judoka.zoek');
         Route::get('judoka/import', [JudokaController::class, 'importForm'])->name('judoka.import');
         Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
@@ -94,10 +95,6 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('spreker', [BlokController::class, 'sprekerInterface'])->name('spreker.interface');
     });
 
-    // Judoka search - accessible by all logged in users
-    Route::middleware(CheckToernooiRol::class . ':admin,jury,weging,mat,spreker')->group(function () {
-        Route::get('judoka/zoek', [JudokaController::class, 'zoek'])->name('judoka.zoek');
-    });
 });
 
 // Coach Portal (public routes with token authentication)
