@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen flex flex-col">
     <nav class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
@@ -74,11 +74,11 @@
     </div>
     @endif
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
         @yield('content')
     </main>
 
-    <footer class="bg-gray-800 text-white py-4 mt-8">
+    <footer class="bg-gray-800 text-white py-4 mt-auto">
         <div class="max-w-7xl mx-auto px-4 text-center text-sm">
             &copy; {{ date('Y') }} Havun - Judo Toernooi Management Systeem
         </div>
