@@ -54,7 +54,7 @@ class JudokaController extends Controller
         // Group by leeftijdsklasse (preserving sort order)
         $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse');
 
-        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
+        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'leeftijdsklasseVolgorde'));
     }
 
     /**
