@@ -44,15 +44,17 @@ class PouleIndelingService
             foreach ($groepen as $sleutel => $judokas) {
                 if ($judokas->isEmpty()) continue;
 
-                $eersteJudoka = $judokas->first();
-                $leeftijdsklasse = $eersteJudoka->leeftijdsklasse;
-                $gewichtsklasse = $eersteJudoka->gewichtsklasse;
+                // Parse group key: "Leeftijdsklasse|Gewichtsklasse" or "Leeftijdsklasse|Gewichtsklasse|Geslacht"
+                $delen = explode('|', $sleutel);
+                $leeftijdsklasse = $delen[0];
+                $gewichtsklasse = $delen[1] ?? 'Onbekend';
+                $geslacht = $delen[2] ?? null;
 
                 // Split into optimal pools
                 $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
                 foreach ($pouleVerdelingen as $pouleJudokas) {
-                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $pouleNummer);
+                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer);
 
                     $poule = Poule::create([
                         'toernooi_id' => $toernooi->id,
@@ -95,35 +97,31 @@ class PouleIndelingService
     }
 
     /**
-     * Group judokas by age class, weight class, and (for -15+) gender
+     * Group judokas by age class, weight class, and (for U15+) gender
+     * Uses actual model fields instead of parsing judoka_code
      */
     private function groepeerJudokas(Toernooi $toernooi): Collection
     {
         $judokas = $toernooi->judokas()
-            ->orderBy('judoka_code')
+            ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
+            ->orderBy('geslacht')
+            ->orderBy('band')
             ->get();
 
         return $judokas->groupBy(function (Judoka $judoka) {
-            $leeftijdCode = substr($judoka->judoka_code, 0, 2);
-            $gewichtCode = substr($judoka->judoka_code, 2, 2);
-            $geslachtCode = substr($judoka->judoka_code, 5, 1);
+            $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
+            $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
+            $geslacht = strtoupper($judoka->geslacht);
 
-            // For -15 and older, separate by gender
-            if (in_array($leeftijdCode, ['15', '18', '21'])) {
-                $sleutel = "{$leeftijdCode}-{$gewichtCode}-{$geslachtCode}";
-            } else {
-                $sleutel = "{$leeftijdCode}-{$gewichtCode}";
+            // For U15, U18, U21 and Senioren: separate by gender
+            $oudereCategorien = ['U15', 'U18', 'U21', 'Senioren'];
+            if (in_array($leeftijdsklasse, $oudereCategorien)) {
+                return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
             }
 
-            // Handle +/- weight classes separately
-            $gewichtsklasse = $judoka->gewichtsklasse;
-            if (str_contains($gewichtsklasse, '+')) {
-                $sleutel .= '-P';
-            } elseif (str_contains($gewichtsklasse, '-')) {
-                $sleutel .= '-M';
-            }
-
-            return $sleutel;
+            // For younger categories (U9, U11, U13): mixed gender
+            return "{$leeftijdsklasse}|{$gewichtsklasse}";
         });
     }
 
@@ -199,7 +197,7 @@ class PouleIndelingService
     /**
      * Create standardized pool title
      */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, int $pouleNr): string
+    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr): string
     {
         $lk = $leeftijdsklasse ?: 'Onbekend';
         $gk = $gewichtsklasse ?: 'Onbekend gewicht';
@@ -207,6 +205,17 @@ class PouleIndelingService
         // Format weight class
         if (!str_contains($gk, 'kg')) {
             $gk .= ' kg';
+        }
+
+        // Add gender for older categories
+        $geslachtLabel = match ($geslacht) {
+            'M' => 'Jongens',
+            'V' => 'Meisjes',
+            default => null,
+        };
+
+        if ($geslachtLabel) {
+            return "{$lk} {$geslachtLabel} {$gk} Poule {$pouleNr}";
         }
 
         return "{$lk} {$gk} Poule {$pouleNr}";
@@ -243,5 +252,52 @@ class PouleIndelingService
     public function berekenTotaalWedstrijden(Toernooi $toernooi): int
     {
         return $toernooi->poules()->sum('aantal_wedstrijden');
+    }
+
+    /**
+     * Recalculate all judoka codes for tournament
+     * Orders by leeftijdsklasse, gewichtsklasse, band (descending), naam
+     */
+    public function herberekenJudokaCodes(Toernooi $toernooi): int
+    {
+        $judokas = $toernooi->judokas()
+            ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
+            ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END")
+            ->orderByRaw("CASE band
+                WHEN 'zwart' THEN 0
+                WHEN 'bruin' THEN 1
+                WHEN 'blauw' THEN 2
+                WHEN 'groen' THEN 3
+                WHEN 'oranje' THEN 4
+                WHEN 'geel' THEN 5
+                WHEN 'wit' THEN 6
+                ELSE 7 END")
+            ->orderBy('naam')
+            ->get();
+
+        $vorigeCategorie = null;
+        $volgnummer = 0;
+        $bijgewerkt = 0;
+
+        foreach ($judokas as $judoka) {
+            // Create category key for volgnummer reset
+            $categorie = "{$judoka->leeftijdsklasse}|{$judoka->gewichtsklasse}|{$judoka->geslacht}";
+
+            if ($categorie !== $vorigeCategorie) {
+                $volgnummer = 1;
+                $vorigeCategorie = $categorie;
+            } else {
+                $volgnummer++;
+            }
+
+            $nieuweCode = $judoka->berekenJudokaCode($volgnummer);
+            if ($judoka->judoka_code !== $nieuweCode) {
+                $judoka->update(['judoka_code' => $nieuweCode]);
+                $bijgewerkt++;
+            }
+        }
+
+        return $bijgewerkt;
     }
 }

@@ -13,6 +13,13 @@ use Illuminate\Support\Str;
 
 class ImportService
 {
+    private PouleIndelingService $pouleIndelingService;
+
+    public function __construct(PouleIndelingService $pouleIndelingService)
+    {
+        $this->pouleIndelingService = $pouleIndelingService;
+    }
+
     /**
      * Import participants from array data (CSV/Excel)
      */
@@ -23,6 +30,7 @@ class ImportService
                 'geimporteerd' => 0,
                 'overgeslagen' => 0,
                 'fouten' => [],
+                'codes_bijgewerkt' => 0,
             ];
 
             // Default column mapping
@@ -50,6 +58,9 @@ class ImportService
                     $resultaat['fouten'][] = "Rij {$rijNummer}: {$e->getMessage()}";
                 }
             }
+
+            // Recalculate all judoka codes after import
+            $resultaat['codes_bijgewerkt'] = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
 
             return $resultaat;
         });
@@ -116,7 +127,7 @@ class ImportService
             return null; // Return null to count as skipped
         }
 
-        // Create judoka
+        // Create judoka (judoka_code will be calculated after full import)
         $judoka = Judoka::create([
             'toernooi_id' => $toernooi->id,
             'club_id' => $club?->id,
@@ -128,9 +139,6 @@ class ImportService
             'leeftijdsklasse' => $leeftijdsklasse->label(),
             'gewichtsklasse' => $gewichtsklasse,
         ]);
-
-        // Generate judoka code (temporary, will get proper volgnummer during validation)
-        $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
 
         return $judoka;
     }
