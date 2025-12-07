@@ -14,7 +14,14 @@
             <p class="text-blue-200 mt-2">{{ $toernooi->datum->format('d F Y') }}</p>
         </div>
 
-        <div class="bg-white rounded-xl shadow-2xl p-8" x-data="{ rol: '', showMatSelect: false }">
+        <div class="bg-white rounded-xl shadow-2xl p-8" x-data="{
+            rol: '',
+            showMatSelect: false,
+            wachtwoordVereist: {{ Js::from($wachtwoordVereist) }},
+            needsPassword() {
+                return this.rol && this.wachtwoordVereist[this.rol];
+            }
+        }">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Inloggen</h2>
 
             @if(session('error'))
@@ -108,8 +115,8 @@
                     </select>
                 </div>
 
-                <!-- Wachtwoord -->
-                <div class="mb-6" x-show="rol !== ''" x-collapse>
+                <!-- Wachtwoord (alleen als vereist) -->
+                <div class="mb-6" x-show="needsPassword()" x-collapse>
                     <label for="wachtwoord" class="block text-gray-700 font-medium mb-2">Wachtwoord</label>
                     <input type="password" name="wachtwoord" id="wachtwoord"
                            class="w-full border-2 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none">
@@ -118,7 +125,7 @@
                 <!-- Submit -->
                 <button type="submit" x-show="rol !== ''" x-collapse
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                    Inloggen
+                    <span x-text="needsPassword() ? 'Inloggen' : 'Doorgaan'"></span>
                 </button>
             </form>
 

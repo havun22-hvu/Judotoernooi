@@ -14,7 +14,15 @@ class AuthController extends Controller
      */
     public function loginForm(Toernooi $toernooi): View
     {
-        return view('pages.auth.login', compact('toernooi'));
+        $wachtwoordVereist = [
+            'admin' => $toernooi->heeftWachtwoord('admin'),
+            'jury' => $toernooi->heeftWachtwoord('jury'),
+            'weging' => $toernooi->heeftWachtwoord('weging'),
+            'mat' => $toernooi->heeftWachtwoord('mat'),
+            'spreker' => $toernooi->heeftWachtwoord('spreker'),
+        ];
+
+        return view('pages.auth.login', compact('toernooi', 'wachtwoordVereist'));
     }
 
     /**
@@ -24,16 +32,18 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'rol' => 'required|in:admin,jury,weging,mat,spreker',
-            'wachtwoord' => 'required|string',
+            'wachtwoord' => 'nullable|string',
             'mat_nummer' => 'nullable|integer|min:1',
         ]);
 
         $rol = $validated['rol'];
         $wachtwoord = $validated['wachtwoord'];
 
-        // Check wachtwoord
-        if (!$toernooi->checkWachtwoord($rol, $wachtwoord)) {
-            return back()->with('error', 'Onjuist wachtwoord');
+        // Check wachtwoord (alleen als er een wachtwoord is ingesteld)
+        if ($toernooi->heeftWachtwoord($rol)) {
+            if (!$toernooi->checkWachtwoord($rol, $wachtwoord)) {
+                return back()->with('error', 'Onjuist wachtwoord');
+            }
         }
 
         // Sla sessie op
