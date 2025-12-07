@@ -37,7 +37,7 @@ class AuthController extends Controller
         ]);
 
         $rol = $validated['rol'];
-        $wachtwoord = $validated['wachtwoord'];
+        $wachtwoord = $validated['wachtwoord'] ?? null;
 
         // Check wachtwoord (alleen als er een wachtwoord is ingesteld)
         // In local environment: skip password check for easier development
