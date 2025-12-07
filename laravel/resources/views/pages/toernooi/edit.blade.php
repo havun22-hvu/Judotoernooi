@@ -126,8 +126,8 @@
             </div>
 
             <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>Tip:</strong> Bij een poule van 3 spelen alle judoka's 2 wedstrijden. Bij 4 judoka's zijn dat 3 wedstrijden,
-                bij 5 judoka's 4 wedstrijden, etc.
+                <strong>Tip:</strong> Bij een poule van 3 spelen judoka's 2x tegen elkaar (4 wedstrijden per judoka).
+                Bij 4+ judoka's speelt iedereen 1x tegen elkaar (3, 4, 5... wedstrijden).
             </div>
         </div>
 
