@@ -57,15 +57,25 @@
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
     <!-- Zoekbalk -->
     <div class="px-4 py-3 bg-gray-50 border-b">
-        <div class="relative">
-            <input type="text"
-                   x-model="zoekterm"
-                   placeholder="Filter op naam, club, gewicht, band..."
-                   class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
-            <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <span x-show="zoekterm" class="absolute right-3 top-2.5 text-sm text-gray-500" x-text="filteredJudokas.length + ' resultaten'"></span>
+        <div class="flex gap-2">
+            <div class="relative flex-1">
+                <input type="text"
+                       x-model="zoekterm"
+                       placeholder="Filter op naam, club, gewicht, band..."
+                       class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
+                <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <div class="flex items-center gap-1 text-sm">
+                <span class="text-gray-500">Fuzzy:</span>
+                <template x-for="level in [0,1,2,3]" :key="level">
+                    <button @click="fuzzyLevel = level"
+                            :class="fuzzyLevel === level ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                            class="w-7 h-7 rounded font-medium" x-text="level"></button>
+                </template>
+            </div>
+            <span x-show="zoekterm" class="flex items-center text-sm text-gray-500" x-text="filteredJudokas.length + ' resultaten'"></span>
         </div>
     </div>
     <table class="min-w-full">
@@ -111,10 +121,44 @@
 
 <script>
 function judokaTable() {
+    // Levenshtein distance for fuzzy matching
+    function levenshtein(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+        for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                matrix[i][j] = b[i-1] === a[j-1]
+                    ? matrix[i-1][j-1]
+                    : Math.min(matrix[i-1][j-1] + 1, matrix[i][j-1] + 1, matrix[i-1][j] + 1);
+            }
+        }
+        return matrix[b.length][a.length];
+    }
+
+    // Check if term fuzzy-matches any word in text
+    function fuzzyMatch(term, text, maxDist) {
+        if (maxDist === 0) return text.includes(term);
+        const words = text.split(/\s+/);
+        for (const word of words) {
+            if (word.includes(term)) return true;
+            if (term.length >= 3 && levenshtein(term, word.substring(0, term.length + maxDist)) <= maxDist) return true;
+        }
+        // Also check substring match with tolerance
+        for (let i = 0; i <= text.length - term.length + maxDist; i++) {
+            const sub = text.substring(i, i + term.length);
+            if (levenshtein(term, sub) <= maxDist) return true;
+        }
+        return false;
+    }
+
     return {
         sortKey: null,
         sortAsc: true,
         zoekterm: '',
+        fuzzyLevel: 0,
         judokas: [
             @foreach($judokas as $judoka)
             {
@@ -137,11 +181,12 @@ function judokaTable() {
         get filteredJudokas() {
             if (!this.zoekterm) return this.judokas;
             const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+            const maxDist = this.fuzzyLevel;
             return this.judokas.filter(j => {
                 const searchText = [
                     j.naam, j.club, j.leeftijdsklasse, j.gewichtsklasse, j.geslacht, j.band
                 ].filter(Boolean).join(' ').toLowerCase();
-                return terms.every(term => searchText.includes(term));
+                return terms.every(term => fuzzyMatch(term, searchText, maxDist));
             });
         },
 
