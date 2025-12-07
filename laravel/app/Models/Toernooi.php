@@ -142,7 +142,7 @@ class Toernooi extends Model
         }
     }
 
-    public function checkWachtwoord(string $rol, string $wachtwoord): bool
+    public function checkWachtwoord(string $rol, ?string $wachtwoord): bool
     {
         $veld = "wachtwoord_{$rol}";
         if (!in_array($veld, ['wachtwoord_admin', 'wachtwoord_jury', 'wachtwoord_weging', 'wachtwoord_mat', 'wachtwoord_spreker'])) {
@@ -151,6 +151,10 @@ class Toernooi extends Model
 
         $hash = $this->$veld;
         if (!$hash) {
+            return false;
+        }
+
+        if ($wachtwoord === null) {
             return false;
         }
 
