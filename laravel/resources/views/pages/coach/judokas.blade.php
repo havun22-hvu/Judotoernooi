@@ -22,6 +22,18 @@
                 </form>
             </div>
 
+            <!-- Navigation tabs -->
+            <div class="mt-4 flex space-x-4 border-t pt-4">
+                <a href="{{ route('coach.judokas', $uitnodiging->token) }}"
+                   class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1">
+                    Judoka's
+                </a>
+                <a href="{{ route('coach.weegkaarten', $uitnodiging->token) }}"
+                   class="text-gray-600 hover:text-gray-800 px-3 py-1 rounded">
+                    Weegkaarten
+                </a>
+            </div>
+
             @if(!$inschrijvingOpen)
             <div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
                 <strong>Let op:</strong> De inschrijving is gesloten. Je kunt geen judoka's meer toevoegen of bewerken.

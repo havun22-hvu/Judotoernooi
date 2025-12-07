@@ -16,6 +16,8 @@ class Blok extends Model
     protected $fillable = [
         'toernooi_id',
         'nummer',
+        'weging_start',
+        'weging_einde',
         'starttijd',
         'eindtijd',
         'weging_gesloten',
@@ -23,6 +25,8 @@ class Blok extends Model
     ];
 
     protected $casts = [
+        'weging_start' => 'datetime:H:i',
+        'weging_einde' => 'datetime:H:i',
         'starttijd' => 'datetime:H:i',
         'eindtijd' => 'datetime:H:i',
         'weging_gesloten' => 'boolean',
