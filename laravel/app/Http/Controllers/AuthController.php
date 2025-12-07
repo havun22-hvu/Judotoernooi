@@ -40,7 +40,8 @@ class AuthController extends Controller
         $wachtwoord = $validated['wachtwoord'];
 
         // Check wachtwoord (alleen als er een wachtwoord is ingesteld)
-        if ($toernooi->heeftWachtwoord($rol)) {
+        // In local environment: skip password check for easier development
+        if (!app()->environment('local') && $toernooi->heeftWachtwoord($rol)) {
             if (!$toernooi->checkWachtwoord($rol, $wachtwoord)) {
                 return back()->with('error', 'Onjuist wachtwoord');
             }
