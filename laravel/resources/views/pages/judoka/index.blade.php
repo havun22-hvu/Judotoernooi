@@ -141,13 +141,12 @@ function judokaZoek() {
                 <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Acties</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
             <template x-for="judoka in sortedJudokas" :key="judoka.id">
                 <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
-                    <!-- Naam (editable) -->
+                    <!-- Naam (link naar detail + editable) -->
                     <td class="px-4 py-2">
                         <template x-if="editing.id === judoka.id && editing.field === 'naam'">
                             <input type="text" x-model="editing.value"
@@ -158,11 +157,12 @@ function judokaZoek() {
                                    class="w-full px-2 py-1 border rounded focus:outline-none focus:border-blue-500">
                         </template>
                         <template x-if="!(editing.id === judoka.id && editing.field === 'naam')">
-                            <span @click="startEdit(judoka, 'naam', judoka.naam)"
-                                  class="cursor-pointer hover:bg-blue-100 px-1 rounded text-blue-600 font-medium"
-                                  x-text="judoka.naam"></span>
+                            <div class="flex items-center gap-2">
+                                <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
+                                <button @click.stop="startEdit(judoka, 'naam', judoka.naam)" class="text-gray-400 hover:text-blue-600" title="Bewerken">✎</button>
+                                <span x-show="judoka.incompleet" class="text-red-600 text-xs">⚠</span>
+                            </div>
                         </template>
-                        <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
                     </td>
 
                     <!-- Leeftijdsklasse (read-only, calculated) -->
@@ -244,11 +244,6 @@ function judokaZoek() {
                                   class="cursor-pointer hover:bg-blue-100 px-1 rounded text-gray-500"
                                   x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></span>
                         </template>
-                    </td>
-
-                    <!-- Acties -->
-                    <td class="px-4 py-2">
-                        <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 text-sm">Details</a>
                     </td>
                 </tr>
             </template>
