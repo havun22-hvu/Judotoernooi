@@ -59,11 +59,16 @@ class JudokaController extends Controller
 
     /**
      * Parse weight class to numeric value for sorting
+     * -50 = up to 50kg, +50 = over 50kg, so +50 should sort after -50
      */
     private function parseGewicht(string $gewichtsklasse): int
     {
-        preg_match('/[+-]?(\d+)/', $gewichtsklasse ?? '', $matches);
-        return (int) ($matches[1] ?? 999);
+        if (preg_match('/([+-]?)(\d+)/', $gewichtsklasse ?? '', $matches)) {
+            $sign = $matches[1] ?? '';
+            $num = (int) ($matches[2] ?? 999);
+            return $sign === '+' ? $num + 1000 : $num;
+        }
+        return 999;
     }
 
     public function show(Toernooi $toernooi, Judoka $judoka): View
