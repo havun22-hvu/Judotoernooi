@@ -147,6 +147,36 @@
             </div>
         </div>
 
+        <!-- GEWICHTSKLASSEN PER LEEFTIJD -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Gewichtsklassen per Leeftijdscategorie</h2>
+            <p class="text-gray-600 text-sm mb-4">
+                Standaard volgens JBN-normen. Pas aan indien nodig voor dit toernooi.
+            </p>
+
+            @php
+                $gewichtsklassen = $toernooi->getAlleGewichtsklassen();
+            @endphp
+
+            <div class="space-y-4">
+                @foreach($gewichtsklassen as $key => $data)
+                <div class="border rounded-lg p-4">
+                    <label class="block text-gray-700 font-medium mb-2">{{ $data['label'] }}</label>
+                    <input type="text" name="gewichtsklassen[{{ $key }}]"
+                           value="{{ implode(', ', $data['gewichten']) }}"
+                           class="w-full border rounded px-3 py-2 font-mono text-sm"
+                           placeholder="-20, -23, -26, +26">
+                    <p class="text-gray-500 text-xs mt-1">Komma-gescheiden. Gebruik - voor maximum, + voor minimum (open klasse)</p>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <strong>Tip:</strong> Voeg gewichten toe of verwijder ze door de lijst aan te passen.
+                Voorbeeld: "-24, -27, -30, +30" betekent tot 24kg, 24-27kg, 27-30kg, en 30+ kg.
+            </div>
+        </div>
+
         <!-- ACTIES -->
         <div class="flex justify-between items-center">
             <a href="{{ route('toernooi.show', $toernooi) }}" class="text-gray-600 hover:text-gray-800">

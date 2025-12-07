@@ -28,6 +28,7 @@ class Toernooi extends Model
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
+        'gewichtsklassen',
         'wachtwoord_admin',
         'wachtwoord_jury',
         'wachtwoord_weging',
@@ -50,6 +51,7 @@ class Toernooi extends Model
         'poules_gegenereerd_op' => 'datetime',
         'blokken_verdeeld_op' => 'datetime',
         'gewicht_tolerantie' => 'decimal:1',
+        'gewichtsklassen' => 'array',
     ];
 
     public function judokas(): HasMany
@@ -159,5 +161,64 @@ class Toernooi extends Model
     {
         $veld = "wachtwoord_{$rol}";
         return !empty($this->$veld);
+    }
+
+    // Gewichtsklassen methodes
+    public static function getStandaardGewichtsklassen(): array
+    {
+        return [
+            'minis' => [
+                'label' => "Mini's",
+                'gewichten' => ['-20', '-23', '-26', '-29', '+29'],
+            ],
+            'a_pupillen' => [
+                'label' => 'A-pupillen',
+                'gewichten' => ['-24', '-27', '-30', '-34', '-38', '+38'],
+            ],
+            'b_pupillen' => [
+                'label' => 'B-pupillen',
+                'gewichten' => ['-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
+            ],
+            'dames_15' => [
+                'label' => 'Dames -15',
+                'gewichten' => ['-36', '-40', '-44', '-48', '-52', '-57', '-63', '+63'],
+            ],
+            'heren_15' => [
+                'label' => 'Heren -15',
+                'gewichten' => ['-34', '-38', '-42', '-46', '-50', '-55', '-60', '-66', '+66'],
+            ],
+            'dames_18' => [
+                'label' => 'Dames -18',
+                'gewichten' => ['-40', '-44', '-48', '-52', '-57', '-63', '-70', '+70'],
+            ],
+            'heren_18' => [
+                'label' => 'Heren -18',
+                'gewichten' => ['-46', '-50', '-55', '-60', '-66', '-73', '-81', '-90', '+90'],
+            ],
+            'dames' => [
+                'label' => 'Dames',
+                'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
+            ],
+            'heren' => [
+                'label' => 'Heren',
+                'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
+            ],
+        ];
+    }
+
+    public function getGewichtsklassenVoorLeeftijd(string $leeftijdsklasseKey): array
+    {
+        $klassen = $this->gewichtsklassen ?? self::getStandaardGewichtsklassen();
+        return $klassen[$leeftijdsklasseKey]['gewichten'] ?? [];
+    }
+
+    public function getAlleGewichtsklassen(): array
+    {
+        return $this->gewichtsklassen ?? self::getStandaardGewichtsklassen();
+    }
+
+    public function resetGewichtsklassenNaarStandaard(): void
+    {
+        $this->update(['gewichtsklassen' => self::getStandaardGewichtsklassen()]);
     }
 }

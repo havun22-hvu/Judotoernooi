@@ -26,6 +26,8 @@ class ToernooiRequest extends FormRequest
             'optimal_judokas_poule' => 'nullable|integer|min:3|max:10',
             'max_judokas_poule' => 'nullable|integer|min:4|max:12',
             'gewicht_tolerantie' => 'nullable|numeric|min:0|max:5',
+            'gewichtsklassen' => 'nullable|array',
+            'gewichtsklassen.*' => 'nullable|string',
         ];
     }
 
