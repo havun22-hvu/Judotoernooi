@@ -190,18 +190,25 @@ class JudokaController extends Controller
     public function zoek(Request $request, Toernooi $toernooi): JsonResponse
     {
         $zoekterm = $request->get('q', '');
+        $blokFilter = $request->get('blok');
 
         if (strlen($zoekterm) < 2) {
             return response()->json([]);
         }
 
-        $judokas = $toernooi->judokas()
-            ->where(function ($query) use ($zoekterm) {
-                $query->where('naam', 'LIKE', "%{$zoekterm}%")
-                      ->orWhereHas('club', fn($q) => $q->where('naam', 'LIKE', "%{$zoekterm}%"));
+        $query = $toernooi->judokas()
+            ->where(function ($q) use ($zoekterm) {
+                $q->where('naam', 'LIKE', "%{$zoekterm}%")
+                  ->orWhereHas('club', fn($q) => $q->where('naam', 'LIKE', "%{$zoekterm}%"));
             })
-            ->with('club')
-            ->orderBy('naam')
+            ->with(['club', 'poules.blok']);
+
+        // Filter by blok if specified
+        if ($blokFilter) {
+            $query->whereHas('poules.blok', fn($q) => $q->where('nummer', $blokFilter));
+        }
+
+        $judokas = $query->orderBy('naam')
             ->limit(30)
             ->get()
             ->map(fn($j) => [
@@ -212,6 +219,9 @@ class JudokaController extends Controller
                 'gewichtsklasse' => $j->gewichtsklasse,
                 'band' => ucfirst($j->band),
                 'aanwezig' => $j->isAanwezig(),
+                'gewogen' => $j->gewicht_gewogen !== null,
+                'gewicht_gewogen' => $j->gewicht_gewogen,
+                'blok' => $j->poules->first()?->blok?->nummer,
             ]);
 
         return response()->json($judokas);

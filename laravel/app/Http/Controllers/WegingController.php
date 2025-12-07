@@ -91,6 +91,8 @@ class WegingController extends Controller
 
     public function interface(Toernooi $toernooi): View
     {
+        $toernooi->load('blokken');
+
         return view('pages.weging.interface', compact('toernooi'));
     }
 }
