@@ -40,63 +40,6 @@
     </div>
 </div>
 
-<!-- Zoekbalk -->
-<div class="mb-6" x-data="judokaZoek()">
-    <div class="relative">
-        <input type="text"
-               x-model="zoekterm"
-               @input.debounce.200ms="zoek()"
-               placeholder="Zoek op naam of club..."
-               class="w-full border-2 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:outline-none">
-        <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-    </div>
-
-    <!-- Zoekresultaten -->
-    <div x-show="zoekterm.length >= 2 && resultaten.length > 0" x-cloak
-         class="mt-2 bg-white rounded-lg shadow-lg border max-h-96 overflow-y-auto">
-        <template x-for="judoka in resultaten" :key="judoka.id">
-            <a :href="'{{ route('toernooi.judoka.index', $toernooi) }}/' + judoka.id"
-               class="block px-4 py-3 hover:bg-blue-50 border-b last:border-0">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
-                        <span class="text-gray-500 text-sm ml-2" x-text="judoka.club || '-'"></span>
-                    </div>
-                    <div class="text-sm text-gray-500">
-                        <span x-text="judoka.leeftijdsklasse"></span> |
-                        <span x-text="judoka.gewichtsklasse"></span>
-                    </div>
-                </div>
-            </a>
-        </template>
-    </div>
-</div>
-
-<script>
-function judokaZoek() {
-    return {
-        zoekterm: '',
-        resultaten: [],
-        loading: false,
-        async zoek() {
-            if (this.zoekterm.length < 2) {
-                this.resultaten = [];
-                return;
-            }
-            this.loading = true;
-            try {
-                const response = await fetch('{{ route('toernooi.judoka.zoek', $toernooi) }}?q=' + encodeURIComponent(this.zoekterm));
-                this.resultaten = await response.json();
-            } catch (e) {
-                this.resultaten = [];
-            }
-            this.loading = false;
-        }
-    }
-}
-</script>
 
 @if(session('validatie_fouten'))
 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -112,6 +55,19 @@ function judokaZoek() {
 <!-- Judoka tabel -->
 @if($judokas->count() > 0)
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
+    <!-- Zoekbalk -->
+    <div class="px-4 py-3 bg-gray-50 border-b">
+        <div class="relative">
+            <input type="text"
+                   x-model="zoekterm"
+                   placeholder="Filter op naam of club..."
+                   class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
+            <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <span x-show="zoekterm" class="absolute right-3 top-2.5 text-sm text-gray-500" x-text="filteredJudokas.length + ' resultaten'"></span>
+        </div>
+    </div>
     <table class="min-w-full">
         <thead class="bg-blue-800 text-white sticky top-0 z-10">
             <tr>
@@ -158,6 +114,7 @@ function judokaTable() {
     return {
         sortKey: null,
         sortAsc: true,
+        zoekterm: '',
         judokas: [
             @foreach($judokas as $judoka)
             {
@@ -177,9 +134,19 @@ function judokaTable() {
             @endforeach
         ],
 
+        get filteredJudokas() {
+            if (!this.zoekterm) return this.judokas;
+            const term = this.zoekterm.toLowerCase();
+            return this.judokas.filter(j =>
+                (j.naam && j.naam.toLowerCase().includes(term)) ||
+                (j.club && j.club.toLowerCase().includes(term))
+            );
+        },
+
         get sortedJudokas() {
-            if (!this.sortKey) return this.judokas;
-            return [...this.judokas].sort((a, b) => {
+            const list = this.filteredJudokas;
+            if (!this.sortKey) return list;
+            return [...list].sort((a, b) => {
                 let aVal, bVal;
                 if (this.sortKey === 'leeftijdsklasse') {
                     aVal = a.leeftijdsklasseOrder;
