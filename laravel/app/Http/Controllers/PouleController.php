@@ -86,6 +86,57 @@ class PouleController extends Controller
     }
 
     /**
+     * Verify all poules and recalculate match counts
+     */
+    public function verifieer(Toernooi $toernooi): JsonResponse
+    {
+        $poules = $toernooi->poules()->withCount('judokas')->get();
+        $problemen = [];
+        $totaalWedstrijden = 0;
+        $herberekend = 0;
+
+        foreach ($poules as $poule) {
+            $aantalJudokas = $poule->judokas_count;
+            $verwachtWedstrijden = $aantalJudokas >= 2 ? ($aantalJudokas * ($aantalJudokas - 1)) / 2 : 0;
+
+            // Check for problems
+            if ($aantalJudokas < 3) {
+                $problemen[] = [
+                    'poule' => $poule->titel,
+                    'type' => 'te_weinig',
+                    'message' => "{$poule->titel}: {$aantalJudokas} judoka's (min. 3)",
+                ];
+            } elseif ($aantalJudokas > 6) {
+                $problemen[] = [
+                    'poule' => $poule->titel,
+                    'type' => 'te_veel',
+                    'message' => "{$poule->titel}: {$aantalJudokas} judoka's (max. 6)",
+                ];
+            }
+
+            // Check and fix match count
+            $huidigWedstrijden = $poule->wedstrijden()->count();
+            if ($huidigWedstrijden !== $verwachtWedstrijden) {
+                // Regenerate matches
+                $poule->wedstrijden()->delete();
+                $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+                $poule->updateStatistieken();
+                $herberekend++;
+            }
+
+            $totaalWedstrijden += $verwachtWedstrijden;
+        }
+
+        return response()->json([
+            'success' => true,
+            'totaal_poules' => $poules->count(),
+            'totaal_wedstrijden' => $totaalWedstrijden,
+            'herberekend' => $herberekend,
+            'problemen' => $problemen,
+        ]);
+    }
+
+    /**
      * API endpoint for drag-and-drop judoka move
      */
     public function verplaatsJudokaApi(Request $request, Toernooi $toernooi): JsonResponse

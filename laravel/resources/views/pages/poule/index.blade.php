@@ -6,7 +6,10 @@
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
     <div class="flex items-center space-x-4">
-        <span class="text-sm text-gray-500">Sleep judoka's tussen poules (wedstrijden worden automatisch herberekend)</span>
+        <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
+        <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            Verifieer poules
+        </button>
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
               onsubmit="return confirm('Let op: dit verwijdert alle huidige poules en maakt nieuwe. Doorgaan?')">
             @csrf
@@ -16,6 +19,9 @@
         </form>
     </div>
 </div>
+
+<!-- Verificatie resultaat -->
+<div id="verificatie-resultaat" class="hidden mb-6"></div>
 
 <!-- Toast notification -->
 <div id="toast" class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
@@ -100,9 +106,62 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
+const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
+
+async function verifieerPoules() {
+    const resultaatDiv = document.getElementById('verificatie-resultaat');
+    resultaatDiv.className = 'mb-6 bg-blue-50 border border-blue-300 rounded-lg p-4';
+    resultaatDiv.innerHTML = '<p class="text-blue-700">Bezig met verificatie...</p>';
+
+    try {
+        const response = await fetch(verifieerUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            let html = '';
+            const hasProblems = data.problemen.length > 0;
+
+            if (hasProblems) {
+                html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+                    <h3 class="font-bold text-yellow-800 mb-2">Verificatie: ${data.problemen.length} probleem(en) gevonden</h3>
+                    <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
+                        ${data.problemen.map(p => `<li>${p.message}</li>`).join('')}
+                    </ul>
+                    <p class="text-yellow-600 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                </div>`;
+            } else {
+                html = `<div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                    <h3 class="font-bold text-green-800 mb-2">Verificatie geslaagd!</h3>
+                    <p class="text-green-700 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                </div>`;
+            }
+
+            resultaatDiv.className = 'mb-6';
+            resultaatDiv.innerHTML = html;
+
+            // Reload page if matches were recalculated
+            if (data.herberekend > 0) {
+                setTimeout(() => location.reload(), 2000);
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultaatDiv.className = 'mb-6 bg-red-50 border border-red-300 rounded-lg p-4';
+        resultaatDiv.innerHTML = '<p class="text-red-700">Fout bij verificatie</p>';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
 
     // Initialize sortable on all poule containers
     document.querySelectorAll('.sortable-poule').forEach(container => {
