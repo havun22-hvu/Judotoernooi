@@ -13,6 +13,25 @@
     </form>
 </div>
 
+@php
+    $problematischePoules = $poules->filter(fn($p) => $p->judokas_count < 3);
+@endphp
+
+@if($problematischePoules->count() > 0)
+<div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
+    <h3 class="font-bold text-red-800 mb-2">⚠️ Problematische poules ({{ $problematischePoules->count() }})</h3>
+    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's en moeten worden aangepast:</p>
+    <div class="flex flex-wrap gap-2">
+        @foreach($problematischePoules as $p)
+        <a href="{{ route('toernooi.poule.show', [$toernooi, $p]) }}"
+           class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200">
+            {{ $p->titel }} ({{ $p->judokas_count }} judoka's)
+        </a>
+        @endforeach
+    </div>
+</div>
+@endif
+
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <table class="min-w-full">
         <thead class="bg-gray-50">
@@ -27,8 +46,13 @@
         </thead>
         <tbody class="divide-y divide-gray-200">
             @forelse($poules as $poule)
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3 font-medium">{{ $poule->nummer }}</td>
+            <tr class="hover:bg-gray-50 {{ $poule->judokas_count < 3 ? 'bg-red-50' : '' }}">
+                <td class="px-4 py-3 font-medium">
+                    @if($poule->judokas_count < 3)
+                    <span class="text-red-600">⚠️</span>
+                    @endif
+                    {{ $poule->nummer }}
+                </td>
                 <td class="px-4 py-3">
                     <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="text-blue-600 hover:text-blue-800">
                         {{ $poule->titel }}
