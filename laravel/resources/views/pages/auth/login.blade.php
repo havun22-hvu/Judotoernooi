@@ -115,17 +115,23 @@
                     </select>
                 </div>
 
-                <!-- Wachtwoord (alleen als vereist) -->
+                <!-- Wachtwoord (alleen als vereist, niet in development) -->
+                @if(!app()->environment('local'))
                 <div class="mb-6" x-show="needsPassword()" x-collapse>
                     <label for="wachtwoord" class="block text-gray-700 font-medium mb-2">Wachtwoord</label>
                     <input type="password" name="wachtwoord" id="wachtwoord"
                            class="w-full border-2 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none">
                 </div>
+                @endif
 
                 <!-- Submit -->
                 <button type="submit" x-show="rol !== ''" x-collapse
                         class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    @if(app()->environment('local'))
+                    <span>Doorgaan (dev)</span>
+                    @else
                     <span x-text="needsPassword() ? 'Inloggen' : 'Doorgaan'"></span>
+                    @endif
                 </button>
             </form>
 
