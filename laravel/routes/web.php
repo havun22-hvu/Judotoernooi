@@ -42,6 +42,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('judoka/import', [JudokaController::class, 'importForm'])->name('judoka.import');
         Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
+        Route::patch('judoka/{judoka}/update-api', [JudokaController::class, 'updateApi'])->name('judoka.update-api');
         Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
 
         // Poules management

@@ -150,6 +150,43 @@ class JudokaController extends Controller
             ->with('success', $message);
     }
 
+    /**
+     * API endpoint for inline judoka updates
+     */
+    public function updateApi(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    {
+        $validated = $request->validate([
+            'naam' => 'sometimes|string|max:255',
+            'gewichtsklasse' => 'sometimes|nullable|string|max:20',
+            'geslacht' => 'sometimes|in:M,V',
+            'band' => 'sometimes|nullable|string|max:20',
+            'gewicht' => 'sometimes|nullable|numeric|min:10|max:200',
+            'geboortejaar' => 'sometimes|integer|min:1900|max:' . date('Y'),
+        ]);
+
+        $judoka->update($validated);
+
+        // Recalculate leeftijdsklasse if geboortejaar changed
+        if (isset($validated['geboortejaar'])) {
+            $leeftijd = date('Y') - $judoka->geboortejaar;
+            $leeftijdsklasse = \App\Enums\Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
+            $judoka->update(['leeftijdsklasse' => $leeftijdsklasse->label()]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'judoka' => [
+                'id' => $judoka->id,
+                'naam' => $judoka->naam,
+                'leeftijdsklasse' => $judoka->leeftijdsklasse,
+                'gewichtsklasse' => $judoka->gewichtsklasse,
+                'geslacht' => $judoka->geslacht,
+                'band' => $judoka->band,
+                'gewicht' => $judoka->gewicht,
+            ]
+        ]);
+    }
+
     public function zoek(Request $request, Toernooi $toernooi): JsonResponse
     {
         $zoekterm = $request->get('q', '');
