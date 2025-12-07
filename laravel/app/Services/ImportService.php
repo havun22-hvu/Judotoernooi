@@ -108,9 +108,9 @@ class ImportService
             $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse);
         }
 
-        // Check for duplicate (same name + birth year + tournament)
+        // Check for duplicate (same name + birth year + tournament) - case insensitive
         $bestaande = Judoka::where('toernooi_id', $toernooi->id)
-            ->where('naam', $naam)
+            ->whereRaw('LOWER(naam) = ?', [strtolower($naam)])
             ->where('geboortejaar', $geboortejaar)
             ->first();
 
