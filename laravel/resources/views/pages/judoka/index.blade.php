@@ -191,7 +191,7 @@ function judokaZoek() {
                         <template x-if="editing.id === judoka.id && editing.field === 'geslacht'">
                             <select x-model="editing.value"
                                     @change="saveEdit(judoka)"
-                                    @blur="cancelEdit()"
+                                    @keydown.escape="cancelEdit()"
                                     class="px-2 py-1 border rounded focus:outline-none focus:border-blue-500">
                                 <option value="M">Jongen</option>
                                 <option value="V">Meisje</option>
@@ -209,7 +209,7 @@ function judokaZoek() {
                         <template x-if="editing.id === judoka.id && editing.field === 'band'">
                             <select x-model="editing.value"
                                     @change="saveEdit(judoka)"
-                                    @blur="cancelEdit()"
+                                    @keydown.escape="cancelEdit()"
                                     class="px-2 py-1 border rounded focus:outline-none focus:border-blue-500">
                                 <option value="">-</option>
                                 <option value="wit">Wit</option>
