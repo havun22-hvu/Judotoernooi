@@ -67,14 +67,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
             </div>
-            <div class="flex items-center gap-1 text-sm">
-                <span class="text-gray-500">Fuzzy:</span>
-                <template x-for="level in [0,1,2,3]" :key="level">
-                    <button @click="fuzzyLevel = level"
-                            :class="fuzzyLevel === level ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
-                            class="w-7 h-7 rounded font-medium" x-text="level"></button>
-                </template>
-            </div>
+            <button @click="fuzzyLevel = fuzzyLevel ? 0 : 1"
+                    :class="fuzzyLevel ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                    class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
+                Fuzzy <span x-text="fuzzyLevel ? 'aan' : 'uit'"></span>
+            </button>
             <span x-show="zoekterm" class="flex items-center text-sm text-gray-500" x-text="filteredJudokas.length + ' resultaten'"></span>
         </div>
     </div>
