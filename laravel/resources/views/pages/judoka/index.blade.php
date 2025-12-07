@@ -130,8 +130,8 @@ function judokaZoek() {
                 <th @click="sort('band')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Band <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                <th @click="sort('club')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
             </tr>
         </thead>
@@ -146,7 +146,7 @@ function judokaZoek() {
                     <td class="px-4 py-2 text-sm" :class="!judoka.gewichtsklasse ? 'text-red-600' : ''" x-text="judoka.gewichtsklasse || '-'"></td>
                     <td class="px-4 py-2 text-sm" x-text="judoka.geslacht"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
-                    <td class="px-4 py-2 text-sm text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
+                    <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
                 </tr>
             </template>
         </tbody>
@@ -170,7 +170,7 @@ function judokaTable() {
                 geslacht: '{{ $judoka->geslacht == "M" ? "Jongen" : "Meisje" }}',
                 band: @json($judoka->band ? ucfirst($judoka->band) : null),
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
-                gewicht: {{ $judoka->gewicht ? number_format($judoka->gewicht, 1) : 'null' }},
+                club: @json($judoka->club?->naam),
                 incompleet: {{ (!$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}'
             },
@@ -190,9 +190,9 @@ function judokaTable() {
                 } else if (this.sortKey === 'band') {
                     aVal = a.bandOrder;
                     bVal = b.bandOrder;
-                } else if (this.sortKey === 'gewicht') {
-                    aVal = a.gewicht || 9999;
-                    bVal = b.gewicht || 9999;
+                } else if (this.sortKey === 'club') {
+                    aVal = (a.club || 'zzz').toLowerCase();
+                    bVal = (b.club || 'zzz').toLowerCase();
                 } else {
                     aVal = (a[this.sortKey] || '').toString().toLowerCase();
                     bVal = (b[this.sortKey] || '').toString().toLowerCase();
