@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $incompleteJudokas = $judokas->filter(fn($j) => !$j->gewicht || !$j->club_id || !$j->band || !$j->geboortejaar);
+    $incompleteJudokas = $judokas->filter(fn($j) => !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewichtsklasse);
 @endphp
 
 <div class="flex justify-between items-center mb-4">
@@ -139,10 +139,10 @@ function judokaZoek() {
                             <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
                         </td>
                         <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600 font-medium' : 'text-gray-600'" x-text="judoka.club || '-'"></td>
-                        <td class="px-4 py-2" x-text="judoka.gewichtsklasse"></td>
+                        <td class="px-4 py-2" :class="!judoka.gewichtsklasse ? 'text-red-600 font-medium' : ''" x-text="judoka.gewichtsklasse || '-'"></td>
                         <td class="px-4 py-2" x-text="judoka.geslacht"></td>
                         <td class="px-4 py-2" :class="!judoka.band ? 'text-red-600 font-medium' : ''" x-text="judoka.band || '-'"></td>
-                        <td class="px-4 py-2" :class="!judoka.gewicht ? 'text-red-600 font-medium' : ''" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
+                        <td class="px-4 py-2 text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
                         <td class="px-4 py-2">
                             <span x-show="judoka.status === 'aanwezig'" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
                             <span x-show="judoka.status === 'afwezig'" class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
@@ -174,7 +174,7 @@ function judokaTable{{ $loop->index }}() {
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 gewicht: {{ $judoka->gewicht ? number_format($judoka->gewicht, 1) : 'null' }},
                 status: @json($judoka->aanwezigheid),
-                incompleet: {{ (!$judoka->gewicht || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar) ? 'true' : 'false' }},
+                incompleet: {{ (!$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}'
             },
             @endforeach
