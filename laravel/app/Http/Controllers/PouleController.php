@@ -6,6 +6,7 @@ use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\PouleIndelingService;
+use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ use Illuminate\View\View;
 class PouleController extends Controller
 {
     public function __construct(
-        private PouleIndelingService $pouleService
+        private PouleIndelingService $pouleService,
+        private WedstrijdSchemaService $wedstrijdService
     ) {}
 
     public function index(Toernooi $toernooi): View
@@ -114,9 +116,11 @@ class PouleController extends Controller
         $vanPoule->updateStatistieken();
         $naarPoule->updateStatistieken();
 
-        // Delete matches from both poules (need regeneration)
+        // Regenerate matches for both poules
         $vanPoule->wedstrijden()->delete();
         $naarPoule->wedstrijden()->delete();
+        $this->wedstrijdService->genereerWedstrijdenVoorPoule($vanPoule);
+        $this->wedstrijdService->genereerWedstrijdenVoorPoule($naarPoule);
 
         return response()->json([
             'success' => true,

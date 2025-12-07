@@ -6,10 +6,11 @@
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
     <div class="flex items-center space-x-4">
-        <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
-        <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
+        <span class="text-sm text-gray-500">Sleep judoka's tussen poules (wedstrijden worden automatisch herberekend)</span>
+        <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
+              onsubmit="return confirm('Let op: dit verwijdert alle huidige poules en maakt nieuwe. Doorgaan?')">
             @csrf
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 Herindelen
             </button>
         </form>
