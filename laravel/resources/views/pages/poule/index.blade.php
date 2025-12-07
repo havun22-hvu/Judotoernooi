@@ -28,13 +28,12 @@
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">Problematische poules ({{ $problematischePoules->count() }})</h3>
-    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's:</p>
+    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Sleep judoka's tussen poules om dit op te lossen:</p>
     <div class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
-        <a href="{{ route('toernooi.poule.show', [$toernooi, $p]) }}"
-           class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200">
+        <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
             {{ $p->titel }} ({{ $p->judokas_count }})
-        </a>
+        </span>
         @endforeach
     </div>
 </div>
@@ -54,17 +53,16 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
             <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
-                <!-- Poule header - klikbaar naar detail pagina -->
-                <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}"
-                   class="block px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50 hover:bg-red-100' : 'bg-gray-50 hover:bg-gray-100' }} transition-colors">
+                <!-- Poule header -->
+                <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-blue-600 text-sm">{{ $poule->gewichtsklasse }}</span>
+                        <span class="font-bold text-gray-800 text-sm">{{ $poule->gewichtsklasse }}</span>
                         <span class="text-xs text-gray-500" data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span>
                     </div>
                     <div class="text-xs text-gray-500">
                         <span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden
                     </div>
-                </a>
+                </div>
 
                 <!-- Judoka's in poule (sortable) -->
                 <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
