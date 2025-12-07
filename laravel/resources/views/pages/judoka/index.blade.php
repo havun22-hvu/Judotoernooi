@@ -3,7 +3,7 @@
 @section('title', 'Judoka\'s')
 
 @section('content')
-<div class="flex justify-between items-center mb-8">
+<div class="flex justify-between items-center mb-4">
     <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->total() }})</h1>
     <div class="flex space-x-2">
         <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
@@ -17,6 +17,76 @@
         </a>
     </div>
 </div>
+
+<!-- Zoekbalk -->
+<div class="mb-6" x-data="judokaZoek()">
+    <div class="relative">
+        <input type="text"
+               x-model="zoekterm"
+               @input.debounce.200ms="zoek()"
+               placeholder="Zoek op naam of club..."
+               class="w-full border-2 rounded-lg px-4 py-3 pl-10 focus:border-blue-500 focus:outline-none">
+        <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span x-show="loading" class="absolute right-3 top-3.5 text-gray-400">
+            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+        </span>
+    </div>
+
+    <!-- Zoekresultaten -->
+    <div x-show="zoekterm.length >= 2 && resultaten.length > 0" x-cloak
+         class="mt-2 bg-white rounded-lg shadow-lg border max-h-96 overflow-y-auto">
+        <template x-for="judoka in resultaten" :key="judoka.id">
+            <a :href="'{{ route('toernooi.judoka.index', $toernooi) }}/' + judoka.id"
+               class="block px-4 py-3 hover:bg-blue-50 border-b last:border-0">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
+                        <span class="text-gray-500 text-sm ml-2" x-text="judoka.club || '-'"></span>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <span x-text="judoka.leeftijdsklasse"></span> |
+                        <span x-text="judoka.gewichtsklasse"></span> |
+                        <span x-text="judoka.band"></span>
+                    </div>
+                </div>
+            </a>
+        </template>
+    </div>
+
+    <div x-show="zoekterm.length >= 2 && resultaten.length === 0 && !loading" x-cloak
+         class="mt-2 bg-white rounded-lg shadow border px-4 py-3 text-gray-500">
+        Geen resultaten gevonden
+    </div>
+</div>
+
+<script>
+function judokaZoek() {
+    return {
+        zoekterm: '',
+        resultaten: [],
+        loading: false,
+        async zoek() {
+            if (this.zoekterm.length < 2) {
+                this.resultaten = [];
+                return;
+            }
+            this.loading = true;
+            try {
+                const response = await fetch('{{ route('toernooi.judoka.zoek', $toernooi) }}?q=' + encodeURIComponent(this.zoekterm));
+                this.resultaten = await response.json();
+            } catch (e) {
+                this.resultaten = [];
+            }
+            this.loading = false;
+        }
+    }
+}
+</script>
 
 @if(session('validatie_fouten'))
 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
