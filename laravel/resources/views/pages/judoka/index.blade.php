@@ -3,8 +3,17 @@
 @section('title', 'Judoka\'s')
 
 @section('content')
+@php
+    $incompleteJudokas = $judokas->filter(fn($j) => !$j->gewicht || !$j->club_id || !$j->band || !$j->geboortejaar);
+@endphp
+
 <div class="flex justify-between items-center mb-4">
-    <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->count() }})</h1>
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->count() }})</h1>
+        @if($incompleteJudokas->count() > 0)
+        <p class="text-red-600 text-sm mt-1">{{ $incompleteJudokas->count() }} judoka's met ontbrekende gegevens</p>
+        @endif
+    </div>
     <div class="flex space-x-2">
         <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
             @csrf
@@ -112,17 +121,23 @@ function judokaZoek() {
             </thead>
             <tbody class="divide-y divide-gray-200">
                 @foreach($klasseJudokas as $judoka)
-                <tr class="hover:bg-gray-50">
+                @php
+                    $isIncompleet = !$judoka->gewicht || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar;
+                @endphp
+                <tr class="{{ $isIncompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50' }}">
                     <td class="px-4 py-2">
                         <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="text-blue-600 hover:text-blue-800 font-medium">
                             {{ $judoka->naam }}
                         </a>
+                        @if($isIncompleet)
+                        <span class="ml-2 text-red-600 text-xs">⚠</span>
+                        @endif
                     </td>
-                    <td class="px-4 py-2 text-gray-600 text-sm">{{ $judoka->club?->naam ?? '-' }}</td>
+                    <td class="px-4 py-2 text-sm {{ !$judoka->club_id ? 'text-red-600 font-medium' : 'text-gray-600' }}">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="px-4 py-2">{{ $judoka->gewichtsklasse }}</td>
                     <td class="px-4 py-2">{{ $judoka->geslacht == 'M' ? 'Jongen' : 'Meisje' }}</td>
-                    <td class="px-4 py-2">{{ ucfirst($judoka->band) }}</td>
-                    <td class="px-4 py-2">{{ $judoka->gewicht ? number_format($judoka->gewicht, 1) . ' kg' : '-' }}</td>
+                    <td class="px-4 py-2 {{ !$judoka->band ? 'text-red-600 font-medium' : '' }}">{{ $judoka->band ? ucfirst($judoka->band) : '-' }}</td>
+                    <td class="px-4 py-2 {{ !$judoka->gewicht ? 'text-red-600 font-medium' : '' }}">{{ $judoka->gewicht ? number_format($judoka->gewicht, 1) . ' kg' : '-' }}</td>
                     <td class="px-4 py-2">
                         @if($judoka->aanwezigheid === 'aanwezig')
                         <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
