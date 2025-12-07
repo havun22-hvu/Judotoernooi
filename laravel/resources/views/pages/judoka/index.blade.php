@@ -4,16 +4,16 @@
 
 @section('content')
 <div class="flex justify-between items-center mb-4">
-    <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->total() }})</h1>
+    <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->count() }})</h1>
     <div class="flex space-x-2">
         <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                ✓ Valideren
+                Valideren
             </button>
         </form>
         <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            📥 Importeren
+            Importeren
         </a>
     </div>
 </div>
@@ -29,12 +29,6 @@
         <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <span x-show="loading" class="absolute right-3 top-3.5 text-gray-400">
-            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
-        </span>
     </div>
 
     <!-- Zoekresultaten -->
@@ -50,17 +44,11 @@
                     </div>
                     <div class="text-sm text-gray-500">
                         <span x-text="judoka.leeftijdsklasse"></span> |
-                        <span x-text="judoka.gewichtsklasse"></span> |
-                        <span x-text="judoka.band"></span>
+                        <span x-text="judoka.gewichtsklasse"></span>
                     </div>
                 </div>
             </a>
         </template>
-    </div>
-
-    <div x-show="zoekterm.length >= 2 && resultaten.length === 0 && !loading" x-cloak
-         class="mt-2 bg-white rounded-lg shadow border px-4 py-3 text-gray-500">
-        Geen resultaten gevonden
     </div>
 </div>
 
@@ -99,52 +87,60 @@ function judokaZoek() {
 </div>
 @endif
 
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="min-w-full">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Leeftijdsklasse</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewicht</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Band</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @forelse($judokas as $judoka)
-            <tr class="hover:bg-gray-50">
-                <td class="px-4 py-3">
-                    <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                        {{ $judoka->naam }}
-                    </a>
-                </td>
-                <td class="px-4 py-3 text-gray-600">{{ $judoka->club?->naam ?? '-' }}</td>
-                <td class="px-4 py-3">{{ $judoka->leeftijdsklasse }}</td>
-                <td class="px-4 py-3">{{ $judoka->gewichtsklasse }}</td>
-                <td class="px-4 py-3">{{ ucfirst($judoka->band) }}</td>
-                <td class="px-4 py-3">
-                    @if($judoka->aanwezigheid === 'aanwezig')
-                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
-                    @elseif($judoka->aanwezigheid === 'afwezig')
-                    <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
-                    @else
-                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Onbekend</span>
-                    @endif
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                    Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-blue-600">Importeer deelnemers</a>.
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-</div>
+<!-- Per leeftijdsklasse -->
+@forelse($judokasPerKlasse as $leeftijdsklasse => $klasseJudokas)
+<div class="mb-6" x-data="{ open: true }">
+    <button @click="open = !open" class="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg hover:bg-blue-700">
+        <span class="text-lg font-bold">{{ $leeftijdsklasse }} ({{ $klasseJudokas->count() }} judoka's)</span>
+        <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
 
-<div class="mt-4">
-    {{ $judokas->links() }}
+    <div x-show="open" x-collapse class="bg-white rounded-b-lg shadow overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Gewichtsklasse</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Geslacht</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Band</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Gewicht</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @foreach($klasseJudokas as $judoka)
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">
+                        <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                            {{ $judoka->naam }}
+                        </a>
+                    </td>
+                    <td class="px-4 py-2 text-gray-600 text-sm">{{ $judoka->club?->naam ?? '-' }}</td>
+                    <td class="px-4 py-2">{{ $judoka->gewichtsklasse }}</td>
+                    <td class="px-4 py-2">{{ $judoka->geslacht == 'M' ? 'Jongen' : 'Meisje' }}</td>
+                    <td class="px-4 py-2">{{ ucfirst($judoka->band) }}</td>
+                    <td class="px-4 py-2">{{ $judoka->gewicht ? number_format($judoka->gewicht, 1) . ' kg' : '-' }}</td>
+                    <td class="px-4 py-2">
+                        @if($judoka->aanwezigheid === 'aanwezig')
+                        <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
+                        @elseif($judoka->aanwezigheid === 'afwezig')
+                        <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
+                        @else
+                        <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Onbekend</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
+@empty
+<div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+    Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-blue-600">Importeer deelnemers</a>.
+</div>
+@endforelse
 @endsection

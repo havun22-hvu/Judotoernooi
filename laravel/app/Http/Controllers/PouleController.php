@@ -21,12 +21,17 @@ class PouleController extends Controller
     public function index(Toernooi $toernooi): View
     {
         $poules = $toernooi->poules()
-            ->with(['blok', 'mat'])
+            ->with(['blok', 'mat', 'judokas.club'])
             ->withCount('judokas')
+            ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
             ->orderBy('nummer')
-            ->paginate(25);
+            ->get();
 
-        return view('pages.poule.index', compact('toernooi', 'poules'));
+        // Group by leeftijdsklasse
+        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+
+        return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse'));
     }
 
     public function show(Toernooi $toernooi, Poule $poule): View

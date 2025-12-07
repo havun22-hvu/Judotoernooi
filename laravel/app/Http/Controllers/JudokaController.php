@@ -22,10 +22,15 @@ class JudokaController extends Controller
         $judokas = $toernooi->judokas()
             ->with('club')
             ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
+            ->orderBy('geslacht')
             ->orderBy('naam')
-            ->paginate(50);
+            ->get();
 
-        return view('pages.judoka.index', compact('toernooi', 'judokas'));
+        // Group by leeftijdsklasse
+        $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse');
+
+        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
     }
 
     public function show(Toernooi $toernooi, Judoka $judoka): View
