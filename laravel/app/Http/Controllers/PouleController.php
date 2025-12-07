@@ -7,6 +7,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\PouleIndelingService;
 use App\Services\WedstrijdSchemaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -122,24 +123,70 @@ class PouleController extends Controller
         $judoka = Judoka::findOrFail($validated['judoka_id']);
         $naarPoule = Poule::findOrFail($validated['naar_poule_id']);
 
+        $this->doVerplaatsJudoka($judoka, $poule, $naarPoule);
+
+        return redirect()
+            ->route('toernooi.poule.show', [$toernooi, $poule])
+            ->with('success', "{$judoka->naam} verplaatst naar {$naarPoule->titel}");
+    }
+
+    /**
+     * API endpoint for drag-and-drop judoka move
+     */
+    public function verplaatsJudokaApi(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|exists:judokas,id',
+            'van_poule_id' => 'required|exists:poules,id',
+            'naar_poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $judoka = Judoka::findOrFail($validated['judoka_id']);
+        $vanPoule = Poule::findOrFail($validated['van_poule_id']);
+        $naarPoule = Poule::findOrFail($validated['naar_poule_id']);
+
+        // Skip if same poule
+        if ($vanPoule->id === $naarPoule->id) {
+            return response()->json(['success' => true, 'message' => 'Geen wijziging']);
+        }
+
+        $this->doVerplaatsJudoka($judoka, $vanPoule, $naarPoule);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$judoka->naam} verplaatst naar {$naarPoule->titel}",
+            'van_poule' => [
+                'id' => $vanPoule->id,
+                'judokas_count' => $vanPoule->fresh()->judokas()->count(),
+                'aantal_wedstrijden' => $vanPoule->fresh()->aantal_wedstrijden,
+            ],
+            'naar_poule' => [
+                'id' => $naarPoule->id,
+                'judokas_count' => $naarPoule->fresh()->judokas()->count(),
+                'aantal_wedstrijden' => $naarPoule->fresh()->aantal_wedstrijden,
+            ],
+        ]);
+    }
+
+    /**
+     * Move judoka between poules (shared logic)
+     */
+    private function doVerplaatsJudoka(Judoka $judoka, Poule $vanPoule, Poule $naarPoule): void
+    {
         // Remove from current poule
-        $poule->judokas()->detach($judoka->id);
+        $vanPoule->judokas()->detach($judoka->id);
 
         // Add to new poule
         $nieuwePositie = $naarPoule->judokas()->count() + 1;
         $naarPoule->judokas()->attach($judoka->id, ['positie' => $nieuwePositie]);
 
         // Update statistics
-        $poule->updateStatistieken();
+        $vanPoule->updateStatistieken();
         $naarPoule->updateStatistieken();
 
-        // Delete matches from old poule (need regeneration)
-        $poule->wedstrijden()->delete();
+        // Delete matches from both poules (need regeneration)
+        $vanPoule->wedstrijden()->delete();
         $naarPoule->wedstrijden()->delete();
-
-        return redirect()
-            ->route('toernooi.poule.show', [$toernooi, $poule])
-            ->with('success', "{$judoka->naam} verplaatst naar {$naarPoule->titel}");
     }
 
     public function samenvoegen(Request $request, Toernooi $toernooi, Poule $poule): RedirectResponse

@@ -5,12 +5,20 @@
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
-    <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
-        @csrf
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            Herindelen
-        </button>
-    </form>
+    <div class="flex items-center space-x-4">
+        <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
+        <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
+            @csrf
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Herindelen
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+    <span id="toast-message"></span>
 </div>
 
 @php
@@ -43,43 +51,34 @@
     </button>
 
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
-            <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}">
+            <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
-                <div class="px-4 py-3 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
+                <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
                     <div class="flex justify-between items-center">
-                        <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="font-bold text-blue-600 hover:text-blue-800">
-                            {{ $poule->titel }}
+                        <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="font-bold text-blue-600 hover:text-blue-800 text-sm">
+                            {{ $poule->gewichtsklasse }}
                         </a>
-                        @if($poule->judokas_count < 3)
-                        <span class="text-red-600 text-sm">{{ $poule->judokas_count }} judoka's</span>
-                        @endif
+                        <span class="text-xs text-gray-500" data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span>
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">
-                        @if($poule->blok)
-                        Blok {{ $poule->blok->nummer }}
-                        @endif
-                        @if($poule->mat)
-                        | Mat {{ $poule->mat->nummer }}
-                        @endif
-                        | {{ $poule->aantal_wedstrijden }} wedstrijden
+                    <div class="text-xs text-gray-500">
+                        <span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden
                     </div>
                 </div>
 
-                <!-- Judoka's in poule -->
-                <div class="divide-y divide-gray-100">
+                <!-- Judoka's in poule (sortable) -->
+                <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
-                    <div class="px-4 py-2 hover:bg-gray-50 text-sm">
+                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item"
+                         data-judoka-id="{{ $judoka->id }}"
+                         data-poule-id="{{ $poule->id }}">
                         <div class="flex justify-between items-start">
-                            <div>
-                                <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="font-medium text-gray-800 hover:text-blue-600">
-                                    {{ $judoka->naam }}
-                                </a>
-                                <div class="text-xs text-gray-500">{{ $judoka->club?->naam ?? '-' }}</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
-                            <div class="text-right text-xs text-gray-500">
-                                <div>{{ $judoka->gewichtsklasse }}</div>
+                            <div class="text-right text-xs text-gray-400 ml-2">
                                 <div>{{ ucfirst($judoka->band) }}</div>
                             </div>
                         </div>
@@ -87,7 +86,7 @@
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-4 py-3 text-gray-400 text-sm italic">Geen judoka's</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center">Leeg</div>
                     @endif
                 </div>
             </div>
@@ -100,4 +99,108 @@
     Nog geen poules. Genereer eerst de poule-indeling.
 </div>
 @endforelse
+
+<!-- SortableJS for drag and drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
+
+    // Initialize sortable on all poule containers
+    document.querySelectorAll('.sortable-poule').forEach(container => {
+        new Sortable(container, {
+            group: 'poules',
+            animation: 150,
+            ghostClass: 'bg-blue-100',
+            chosenClass: 'bg-blue-200',
+            dragClass: 'shadow-lg',
+            onEnd: async function(evt) {
+                const judokaId = evt.item.dataset.judokaId;
+                const vanPouleId = evt.from.dataset.pouleId;
+                const naarPouleId = evt.to.dataset.pouleId;
+
+                if (vanPouleId === naarPouleId) return;
+
+                // Update data attribute
+                evt.item.dataset.pouleId = naarPouleId;
+
+                try {
+                    const response = await fetch(verplaatsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            judoka_id: judokaId,
+                            van_poule_id: vanPouleId,
+                            naar_poule_id: naarPouleId
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update counts
+                        updatePouleStats(data.van_poule);
+                        updatePouleStats(data.naar_poule);
+
+                        // Show toast
+                        showToast(data.message);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('Fout bij verplaatsen', true);
+                    // Revert the move
+                    evt.from.appendChild(evt.item);
+                }
+            }
+        });
+    });
+
+    function updatePouleStats(pouleData) {
+        // Update count
+        const countEl = document.querySelector(`[data-poule-count="${pouleData.id}"]`);
+        if (countEl) countEl.textContent = pouleData.judokas_count;
+
+        // Update wedstrijden
+        const wedstrijdenEl = document.querySelector(`[data-poule-wedstrijden="${pouleData.id}"]`);
+        if (wedstrijdenEl) wedstrijdenEl.textContent = pouleData.aantal_wedstrijden;
+
+        // Update problematic styling
+        const pouleCard = document.querySelector(`[data-poule-id="${pouleData.id}"]`);
+        if (pouleCard && pouleCard.classList.contains('bg-white')) {
+            const header = pouleCard.querySelector('.border-b');
+            if (pouleData.judokas_count < 3) {
+                pouleCard.classList.add('border-2', 'border-red-300');
+                header?.classList.add('bg-red-50');
+                header?.classList.remove('bg-gray-50');
+            } else {
+                pouleCard.classList.remove('border-2', 'border-red-300');
+                header?.classList.remove('bg-red-50');
+                header?.classList.add('bg-gray-50');
+            }
+        }
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-x-full', 'bg-green-600', 'bg-red-600');
+        toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+
+        setTimeout(() => toast.classList.add('translate-x-full'), 2000);
+    }
+});
+</script>
+
+<style>
+.sortable-ghost {
+    opacity: 0.4;
+}
+</style>
 @endsection
