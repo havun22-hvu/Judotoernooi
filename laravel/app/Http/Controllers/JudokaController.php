@@ -116,9 +116,13 @@ class JudokaController extends Controller
         }
 
         $judokas = $toernooi->judokas()
-            ->where('naam', 'LIKE', "%{$zoekterm}%")
-            ->with(['club', 'poules'])
-            ->limit(20)
+            ->where(function ($query) use ($zoekterm) {
+                $query->where('naam', 'LIKE', "%{$zoekterm}%")
+                      ->orWhereHas('club', fn($q) => $q->where('naam', 'LIKE', "%{$zoekterm}%"));
+            })
+            ->with('club')
+            ->orderBy('naam')
+            ->limit(30)
             ->get()
             ->map(fn($j) => [
                 'id' => $j->id,
@@ -126,6 +130,7 @@ class JudokaController extends Controller
                 'club' => $j->club?->naam,
                 'leeftijdsklasse' => $j->leeftijdsklasse,
                 'gewichtsklasse' => $j->gewichtsklasse,
+                'band' => ucfirst($j->band),
                 'aanwezig' => $j->isAanwezig(),
             ]);
 
