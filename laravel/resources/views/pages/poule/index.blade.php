@@ -54,18 +54,17 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
             <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
-                <!-- Poule header -->
-                <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
+                <!-- Poule header - klikbaar naar detail pagina -->
+                <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}"
+                   class="block px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50 hover:bg-red-100' : 'bg-gray-50 hover:bg-gray-100' }} transition-colors">
                     <div class="flex justify-between items-center">
-                        <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="font-bold text-blue-600 hover:text-blue-800 text-sm">
-                            {{ $poule->gewichtsklasse }}
-                        </a>
+                        <span class="font-bold text-blue-600 text-sm">{{ $poule->gewichtsklasse }}</span>
                         <span class="text-xs text-gray-500" data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span>
                     </div>
                     <div class="text-xs text-gray-500">
                         <span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden
                     </div>
-                </div>
+                </a>
 
                 <!-- Judoka's in poule (sortable) -->
                 <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
