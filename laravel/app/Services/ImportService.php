@@ -31,6 +31,7 @@ class ImportService
                 'band' => 'band',
                 'club' => 'club',
                 'gewicht' => 'gewicht',
+                'gewichtsklasse' => 'gewichtsklasse',
                 'geslacht' => 'geslacht',
                 'geboortejaar' => 'geboortejaar',
             ], $kolomMapping);
@@ -64,6 +65,7 @@ class ImportService
         $band = $this->getWaarde($rij, $mapping['band']);
         $clubNaam = $this->getWaarde($rij, $mapping['club']);
         $gewicht = $this->getWaarde($rij, $mapping['gewicht']);
+        $gewichtsklasseRaw = $this->getWaarde($rij, $mapping['gewichtsklasse']);
         $geslacht = $this->getWaarde($rij, $mapping['geslacht']);
         $geboortejaar = $this->getWaarde($rij, $mapping['geboortejaar']);
 
@@ -85,10 +87,15 @@ class ImportService
             $club = Club::findOrCreateByName($clubNaam);
         }
 
-        // Calculate age class and weight class
+        // Calculate age class
         $leeftijd = date('Y') - $geboortejaar;
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
-        $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse);
+
+        // Use provided weight class from CSV, or calculate if not provided
+        $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw);
+        if (empty($gewichtsklasse)) {
+            $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse);
+        }
 
         // Check for duplicate (same name + birth year + tournament)
         $bestaande = Judoka::where('toernooi_id', $toernooi->id)
@@ -214,6 +221,31 @@ class ImportService
 
         $band = Band::fromString((string)$waarde);
         return $band ? strtolower($band->label()) : strtolower(trim((string)$waarde));
+    }
+
+    /**
+     * Parse weight class from CSV (handles Excel formatting like '-38 kg)
+     */
+    private function parseGewichtsklasse(mixed $waarde): ?string
+    {
+        if (empty($waarde)) {
+            return null;
+        }
+
+        $klasse = trim((string)$waarde);
+
+        // Remove leading apostrophe (Excel text format)
+        $klasse = ltrim($klasse, "'");
+
+        // Remove 'kg' suffix and extra spaces
+        $klasse = preg_replace('/\s*kg\s*$/i', '', $klasse);
+        $klasse = trim($klasse);
+
+        if (empty($klasse)) {
+            return null;
+        }
+
+        return $klasse;
     }
 
     /**
