@@ -20,18 +20,52 @@ class PouleController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
+        // Define age class order (youngest to oldest)
+        $leeftijdsklasseVolgorde = [
+            "Mini's" => 1,
+            'A-pupillen' => 2,
+            'B-pupillen' => 3,
+            'U9' => 1,
+            'U11' => 2,
+            'U13' => 3,
+            'U15' => 4,
+            'U18' => 5,
+            'U21' => 6,
+            'Senioren' => 7,
+            'Dames -15' => 4,
+            'Heren -15' => 4,
+            'Dames -18' => 5,
+            'Heren -18' => 5,
+            'Dames' => 6,
+            'Heren' => 6,
+        ];
+
         $poules = $toernooi->poules()
             ->with(['blok', 'mat', 'judokas.club'])
             ->withCount('judokas')
-            ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
-            ->orderBy('nummer')
             ->get();
 
-        // Group by leeftijdsklasse
+        // Sort by: age class (youngest first), then weight class (lightest first)
+        $poules = $poules->sortBy([
+            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => $this->parseGewicht($a->gewichtsklasse) <=> $this->parseGewicht($b->gewichtsklasse),
+            fn ($a, $b) => $a->nummer <=> $b->nummer,
+        ]);
+
+        // Group by leeftijdsklasse (preserving sort order)
         $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
 
         return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse'));
+    }
+
+    /**
+     * Parse weight class to numeric value for sorting
+     */
+    private function parseGewicht(string $gewichtsklasse): int
+    {
+        // Extract numeric value from weight class like "-38", "+70", "-38 kg"
+        preg_match('/[+-]?(\d+)/', $gewichtsklasse, $matches);
+        return (int) ($matches[1] ?? 999);
     }
 
     public function show(Toernooi $toernooi, Poule $poule): View
