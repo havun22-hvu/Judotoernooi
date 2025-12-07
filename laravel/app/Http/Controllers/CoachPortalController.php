@@ -186,6 +186,17 @@ class CoachPortalController extends Controller
         $leeftijd = date('Y') - $validated['geboortejaar'];
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
 
+        // Check for duplicate
+        $bestaande = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('naam', $validated['naam'])
+            ->where('geboortejaar', $validated['geboortejaar'])
+            ->first();
+
+        if ($bestaande) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Deze judoka bestaat al (zelfde naam en geboortejaar)');
+        }
+
         $judoka = Judoka::create([
             'toernooi_id' => $toernooi->id,
             'club_id' => $uitnodiging->club_id,

@@ -90,6 +90,25 @@ class ImportService
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
         $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse);
 
+        // Check for duplicate (same name + birth year + tournament)
+        $bestaande = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('naam', $naam)
+            ->where('geboortejaar', $geboortejaar)
+            ->first();
+
+        if ($bestaande) {
+            // Update existing judoka instead of creating new one
+            $bestaande->update([
+                'club_id' => $club?->id,
+                'geslacht' => $geslacht,
+                'band' => $band,
+                'gewicht' => $gewicht,
+                'leeftijdsklasse' => $leeftijdsklasse->label(),
+                'gewichtsklasse' => $gewichtsklasse,
+            ]);
+            return null; // Return null to count as skipped
+        }
+
         // Create judoka
         $judoka = Judoka::create([
             'toernooi_id' => $toernooi->id,
