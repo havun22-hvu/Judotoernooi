@@ -280,4 +280,33 @@ class CoachPortalController extends Controller
             ->with('success', 'Judoka verwijderd');
     }
 
+    public function weegkaarten(Request $request, string $token): View|RedirectResponse
+    {
+        $uitnodiging = $this->getUitnodiging($token);
+
+        if (!$uitnodiging) {
+            abort(404);
+        }
+
+        if (!$this->checkIngelogd($request, $uitnodiging)) {
+            return redirect()->route('coach.portal', $token);
+        }
+
+        $toernooi = $uitnodiging->toernooi;
+        $club = $uitnodiging->club;
+
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->with(['poules.blok'])
+            ->orderBy('naam')
+            ->get();
+
+        return view('pages.coach.weegkaarten', [
+            'uitnodiging' => $uitnodiging,
+            'toernooi' => $toernooi,
+            'club' => $club,
+            'judokas' => $judokas,
+        ]);
+    }
+
 }

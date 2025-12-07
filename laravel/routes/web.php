@@ -8,6 +8,7 @@ use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
 use App\Http\Controllers\PouleController;
 use App\Http\Controllers\ToernooiController;
+use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WegingController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
@@ -112,4 +113,8 @@ Route::prefix('coach')->name('coach.')->group(function () {
     Route::post('{token}/judoka', [CoachPortalController::class, 'storeJudoka'])->name('judoka.store');
     Route::put('{token}/judoka/{judoka}', [CoachPortalController::class, 'updateJudoka'])->name('judoka.update');
     Route::delete('{token}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudoka'])->name('judoka.destroy');
+    Route::get('{token}/weegkaarten', [CoachPortalController::class, 'weegkaarten'])->name('weegkaarten');
 });
+
+// Weegkaart (public, accessed via QR code)
+Route::get('weegkaart/{token}', [WeegkaartController::class, 'show'])->name('weegkaart.show');
