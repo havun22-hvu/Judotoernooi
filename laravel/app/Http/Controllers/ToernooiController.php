@@ -50,7 +50,26 @@ class ToernooiController extends Controller
 
     public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse
     {
-        $toernooi->update($request->validated());
+        $data = $request->validated();
+
+        // Process gewichtsklassen: convert comma-separated strings to arrays
+        if (isset($data['gewichtsklassen'])) {
+            $gewichtsklassen = [];
+            $standaard = Toernooi::getStandaardGewichtsklassen();
+
+            foreach ($data['gewichtsklassen'] as $key => $value) {
+                $gewichten = array_map('trim', explode(',', $value));
+                $gewichten = array_filter($gewichten, fn($g) => !empty($g));
+                $gewichtsklassen[$key] = [
+                    'label' => $standaard[$key]['label'] ?? ucfirst(str_replace('_', ' ', $key)),
+                    'gewichten' => array_values($gewichten),
+                ];
+            }
+
+            $data['gewichtsklassen'] = $gewichtsklassen;
+        }
+
+        $toernooi->update($data);
 
         return redirect()
             ->route('toernooi.show', $toernooi)

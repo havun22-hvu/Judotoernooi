@@ -144,6 +144,7 @@ class CoachPortalController extends Controller
             'club' => $club,
             'judokas' => $judokas,
             'leeftijdsklassen' => $leeftijdsklassen,
+            'gewichtsklassen' => $toernooi->getAlleGewichtsklassen(),
             'inschrijvingOpen' => $toernooi->isInschrijvingOpen(),
             'maxBereikt' => $toernooi->isMaxJudokasBereikt(),
             'bijna80ProcentVol' => $toernooi->isBijna80ProcentVol(),

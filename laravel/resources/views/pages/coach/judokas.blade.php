@@ -102,49 +102,13 @@
                         <label class="block text-gray-700 font-medium mb-1">Gewichtsklasse *</label>
                         <select name="gewichtsklasse" required class="w-full border rounded px-3 py-2">
                             <option value="">Selecteer...</option>
-                            <optgroup label="Mini's / A-pupillen">
-                                <option value="-20">-20 kg</option>
-                                <option value="-23">-23 kg</option>
-                                <option value="-24">-24 kg</option>
-                                <option value="-26">-26 kg</option>
-                                <option value="-27">-27 kg</option>
-                                <option value="-29">-29 kg</option>
-                                <option value="+29">+29 kg</option>
-                                <option value="-30">-30 kg</option>
-                                <option value="-34">-34 kg</option>
-                                <option value="-38">-38 kg</option>
-                                <option value="+38">+38 kg</option>
+                            @foreach($gewichtsklassen as $key => $data)
+                            <optgroup label="{{ $data['label'] }}">
+                                @foreach($data['gewichten'] as $gewicht)
+                                <option value="{{ $gewicht }}">{{ $gewicht }} kg</option>
+                                @endforeach
                             </optgroup>
-                            <optgroup label="B-pupillen">
-                                <option value="-42">-42 kg</option>
-                                <option value="-46">-46 kg</option>
-                                <option value="-50">-50 kg</option>
-                                <option value="+50">+50 kg</option>
-                            </optgroup>
-                            <optgroup label="-15 / -18 / Senioren">
-                                <option value="-36">-36 kg</option>
-                                <option value="-40">-40 kg</option>
-                                <option value="-44">-44 kg</option>
-                                <option value="-48">-48 kg</option>
-                                <option value="-52">-52 kg</option>
-                                <option value="-55">-55 kg</option>
-                                <option value="-57">-57 kg</option>
-                                <option value="-60">-60 kg</option>
-                                <option value="-63">-63 kg</option>
-                                <option value="+63">+63 kg</option>
-                                <option value="-66">-66 kg</option>
-                                <option value="+66">+66 kg</option>
-                                <option value="-70">-70 kg</option>
-                                <option value="+70">+70 kg</option>
-                                <option value="-73">-73 kg</option>
-                                <option value="-78">-78 kg</option>
-                                <option value="+78">+78 kg</option>
-                                <option value="-81">-81 kg</option>
-                                <option value="-90">-90 kg</option>
-                                <option value="+90">+90 kg</option>
-                                <option value="-100">-100 kg</option>
-                                <option value="+100">+100 kg</option>
-                            </optgroup>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -218,8 +182,10 @@
                                 @endforeach
                             </select>
                             <select name="gewichtsklasse" required class="border rounded px-2 py-1">
-                                @foreach(['-20','-23','-24','-26','-27','-29','+29','-30','-34','-36','-38','+38','-40','-42','-44','-46','-48','-50','+50','-52','-55','-57','-60','-63','+63','-66','+66','-70','+70','-73','-78','+78','-81','-90','+90','-100','+100'] as $gk)
-                                <option value="{{ $gk }}" {{ $judoka->gewichtsklasse === $gk ? 'selected' : '' }}>{{ $gk }} kg</option>
+                                @foreach($gewichtsklassen as $key => $data)
+                                    @foreach($data['gewichten'] as $gewicht)
+                                    <option value="{{ $gewicht }}" {{ $judoka->gewichtsklasse === $gewicht ? 'selected' : '' }}>{{ $gewicht }} kg</option>
+                                    @endforeach
                                 @endforeach
                             </select>
                         </div>
