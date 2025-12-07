@@ -27,6 +27,19 @@
     </div>
 </div>
 
+<!-- Rapportage per leeftijdsklasse -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <h3 class="font-bold text-gray-700 mb-3">Overzicht per leeftijdsklasse</h3>
+    <div class="flex flex-wrap gap-3">
+        @foreach($judokasPerKlasse as $klasse => $klasseJudokas)
+        <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
+            <span class="font-medium text-blue-800">{{ $klasse }}</span>
+            <span class="ml-2 bg-blue-600 text-white px-2 py-0.5 rounded-full text-sm">{{ $klasseJudokas->count() }}</span>
+        </div>
+        @endforeach
+    </div>
+</div>
+
 <!-- Zoekbalk -->
 <div class="mb-6" x-data="judokaZoek()">
     <div class="relative">
@@ -96,76 +109,77 @@ function judokaZoek() {
 </div>
 @endif
 
-<!-- Per leeftijdsklasse -->
-@forelse($judokasPerKlasse as $leeftijdsklasse => $klasseJudokas)
-<div class="mb-6" x-data="judokaTable{{ $loop->index }}()">
-    <button @click="open = !open" class="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg hover:bg-blue-700 sticky top-0 z-20">
-        <span class="text-lg font-bold">{{ $leeftijdsklasse }} ({{ $klasseJudokas->count() }} judoka's)</span>
-        <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </button>
-
-    <div x-show="open" x-collapse class="bg-white rounded-b-lg shadow overflow-hidden">
-        <table class="min-w-full">
-            <thead class="bg-gray-100 sticky top-12 z-10">
-                <tr>
-                    <th @click="sort('naam')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Naam <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th @click="sort('club')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th @click="sort('gewichtsklasse')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Gewichtsklasse <template x-if="sortKey === 'gewichtsklasse'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th @click="sort('geslacht')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Geslacht <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th @click="sort('band')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Band <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th @click="sort('gewicht')" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-200 select-none">
-                        <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'" class="text-blue-600"></span></template></span>
-                    </th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+<!-- Judoka tabel -->
+@if($judokas->count() > 0)
+<div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
+    <table class="min-w-full">
+        <thead class="bg-blue-800 text-white sticky top-0 z-10">
+            <tr>
+                <th @click="sort('naam')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Naam <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('leeftijdsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Leeftijdsklasse <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('club')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('gewichtsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Gewichtsklasse <template x-if="sortKey === 'gewichtsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('geslacht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Geslacht <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('band')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Band <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Status</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            <template x-for="judoka in sortedJudokas" :key="judoka.id">
+                <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
+                    <td class="px-4 py-2">
+                        <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
+                        <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-600" x-text="judoka.leeftijdsklasse"></td>
+                    <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600 font-medium' : 'text-gray-600'" x-text="judoka.club || '-'"></td>
+                    <td class="px-4 py-2" :class="!judoka.gewichtsklasse ? 'text-red-600 font-medium' : ''" x-text="judoka.gewichtsklasse || '-'"></td>
+                    <td class="px-4 py-2" x-text="judoka.geslacht"></td>
+                    <td class="px-4 py-2" :class="!judoka.band ? 'text-red-600 font-medium' : ''" x-text="judoka.band || '-'"></td>
+                    <td class="px-4 py-2 text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
+                    <td class="px-4 py-2">
+                        <span x-show="judoka.status === 'aanwezig'" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
+                        <span x-show="judoka.status === 'afwezig'" class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
+                        <span x-show="judoka.status !== 'aanwezig' && judoka.status !== 'afwezig'" class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Onbekend</span>
+                    </td>
                 </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                <template x-for="judoka in sortedJudokas" :key="judoka.id">
-                    <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
-                        <td class="px-4 py-2">
-                            <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
-                            <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
-                        </td>
-                        <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600 font-medium' : 'text-gray-600'" x-text="judoka.club || '-'"></td>
-                        <td class="px-4 py-2" :class="!judoka.gewichtsklasse ? 'text-red-600 font-medium' : ''" x-text="judoka.gewichtsklasse || '-'"></td>
-                        <td class="px-4 py-2" x-text="judoka.geslacht"></td>
-                        <td class="px-4 py-2" :class="!judoka.band ? 'text-red-600 font-medium' : ''" x-text="judoka.band || '-'"></td>
-                        <td class="px-4 py-2 text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
-                        <td class="px-4 py-2">
-                            <span x-show="judoka.status === 'aanwezig'" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
-                            <span x-show="judoka.status === 'afwezig'" class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
-                            <span x-show="judoka.status !== 'aanwezig' && judoka.status !== 'afwezig'" class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Onbekend</span>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </div>
+            </template>
+        </tbody>
+    </table>
 </div>
 
 <script>
-function judokaTable{{ $loop->index }}() {
+function judokaTable() {
+    const leeftijdsklasseOrder = {
+        "Mini's": 1, 'A-pupillen': 2, 'B-pupillen': 3,
+        'U9': 1, 'U11': 2, 'U13': 3, 'U15': 4, 'U18': 5, 'U21': 6, 'Senioren': 7,
+        'Dames -15': 4, 'Heren -15': 4, 'Dames -18': 5, 'Heren -18': 5, 'Dames': 6, 'Heren': 6
+    };
     return {
-        open: true,
         sortKey: null,
         sortAsc: true,
         judokas: [
-            @foreach($klasseJudokas as $judoka)
+            @foreach($judokas as $judoka)
             {
                 id: {{ $judoka->id }},
                 naam: @json($judoka->naam),
+                leeftijdsklasse: @json($judoka->leeftijdsklasse),
+                leeftijdsklasseOrder: {{ $leeftijdsklasseVolgorde[$judoka->leeftijdsklasse] ?? 99 }},
                 club: @json($judoka->club?->naam),
                 gewichtsklasse: @json($judoka->gewichtsklasse),
                 gewichtsklasseNum: {{ preg_match('/([+-]?)(\d+)/', $judoka->gewichtsklasse ?? '', $m) ? ((int)($m[2] ?? 999) + (($m[1] ?? '') === '+' ? 1000 : 0)) : 999 }},
@@ -183,7 +197,10 @@ function judokaTable{{ $loop->index }}() {
             if (!this.sortKey) return this.judokas;
             return [...this.judokas].sort((a, b) => {
                 let aVal, bVal;
-                if (this.sortKey === 'gewichtsklasse') {
+                if (this.sortKey === 'leeftijdsklasse') {
+                    aVal = a.leeftijdsklasseOrder;
+                    bVal = b.leeftijdsklasseOrder;
+                } else if (this.sortKey === 'gewichtsklasse') {
                     aVal = a.gewichtsklasseNum;
                     bVal = b.gewichtsklasseNum;
                 } else if (this.sortKey === 'band') {
@@ -212,9 +229,9 @@ function judokaTable{{ $loop->index }}() {
     }
 }
 </script>
-@empty
+@else
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
     Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-blue-600">Importeer deelnemers</a>.
 </div>
-@endforelse
+@endif
 @endsection
