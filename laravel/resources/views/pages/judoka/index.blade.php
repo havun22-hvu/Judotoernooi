@@ -60,7 +60,7 @@
         <div class="relative">
             <input type="text"
                    x-model="zoekterm"
-                   placeholder="Filter op naam of club..."
+                   placeholder="Filter op naam, club, gewicht, band..."
                    class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
             <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -138,7 +138,9 @@ function judokaTable() {
             if (!this.zoekterm) return this.judokas;
             const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
             return this.judokas.filter(j => {
-                const searchText = ((j.naam || '') + ' ' + (j.club || '')).toLowerCase();
+                const searchText = [
+                    j.naam, j.club, j.leeftijdsklasse, j.gewichtsklasse, j.geslacht, j.band
+                ].filter(Boolean).join(' ').toLowerCase();
                 return terms.every(term => searchText.includes(term));
             });
         },
