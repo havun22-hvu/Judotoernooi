@@ -48,6 +48,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Poules management
         Route::post('poule/genereer', [PouleController::class, 'genereer'])->name('poule.genereer');
+        Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
         Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
         Route::get('poule', [PouleController::class, 'index'])->name('poule.index');
 
