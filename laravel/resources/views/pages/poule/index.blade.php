@@ -55,12 +55,10 @@
             <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold text-gray-800 text-sm">{{ $poule->gewichtsklasse }}</span>
-                        <span class="text-xs text-gray-500" data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span>
-                    </div>
-                    <div class="text-xs text-gray-500">
-                        <span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden
+                    <div class="font-bold text-gray-800 text-sm">{{ $poule->leeftijdsklasse }} - {{ $poule->gewichtsklasse }}</div>
+                    <div class="flex justify-between items-center text-xs text-gray-500">
+                        <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
+                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden</span>
                     </div>
                 </div>
 
@@ -75,8 +73,9 @@
                                 <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
-                            <div class="text-right text-xs text-gray-400 ml-2">
-                                <div>{{ ucfirst($judoka->band) }}</div>
+                            <div class="text-right text-xs ml-2">
+                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht ? $judoka->gewicht . ' kg' : '-' }}</div>
+                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                             </div>
                         </div>
                     </div>
