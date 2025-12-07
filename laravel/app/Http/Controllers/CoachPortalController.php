@@ -179,13 +179,12 @@ class CoachPortalController extends Controller
             'geboortejaar' => 'required|integer|min:1990|max:' . date('Y'),
             'geslacht' => 'required|in:M,V',
             'band' => 'required|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'gewichtsklasse' => 'required|string|max:10',
         ]);
 
-        // Calculate age class and weight class
+        // Calculate age class
         $leeftijd = date('Y') - $validated['geboortejaar'];
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-        $gewichtsklasse = $this->bepaalGewichtsklasse($validated['gewicht'] ?? null, $leeftijdsklasse);
 
         $judoka = Judoka::create([
             'toernooi_id' => $toernooi->id,
@@ -194,9 +193,8 @@ class CoachPortalController extends Controller
             'geboortejaar' => $validated['geboortejaar'],
             'geslacht' => $validated['geslacht'],
             'band' => $validated['band'],
-            'gewicht' => $validated['gewicht'],
             'leeftijdsklasse' => $leeftijdsklasse->label(),
-            'gewichtsklasse' => $gewichtsklasse,
+            'gewichtsklasse' => $validated['gewichtsklasse'],
         ]);
 
         // Generate temporary judoka code
@@ -230,17 +228,15 @@ class CoachPortalController extends Controller
             'geboortejaar' => 'required|integer|min:1990|max:' . date('Y'),
             'geslacht' => 'required|in:M,V',
             'band' => 'required|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'gewichtsklasse' => 'required|string|max:10',
         ]);
 
-        // Recalculate age class and weight class
+        // Recalculate age class
         $leeftijd = date('Y') - $validated['geboortejaar'];
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-        $gewichtsklasse = $this->bepaalGewichtsklasse($validated['gewicht'] ?? null, $leeftijdsklasse);
 
         $judoka->update(array_merge($validated, [
             'leeftijdsklasse' => $leeftijdsklasse->label(),
-            'gewichtsklasse' => $gewichtsklasse,
         ]));
 
         return redirect()->route('coach.judokas', $token)
@@ -272,31 +268,4 @@ class CoachPortalController extends Controller
             ->with('success', 'Judoka verwijderd');
     }
 
-    private function bepaalGewichtsklasse(?float $gewicht, Leeftijdsklasse $leeftijdsklasse): string
-    {
-        if (!$gewicht) {
-            return 'onbekend';
-        }
-
-        $klassen = $leeftijdsklasse->gewichtsklassen();
-
-        foreach ($klassen as $klasse) {
-            if ($klasse > 0) {
-                if ($gewicht >= $klasse) {
-                    return "+{$klasse}";
-                }
-            } else {
-                if ($gewicht <= abs($klasse)) {
-                    return "{$klasse}";
-                }
-            }
-        }
-
-        $laatsteKlasse = end($klassen);
-        if ($laatsteKlasse > 0) {
-            return "+{$laatsteKlasse}";
-        }
-
-        return "+" . abs($laatsteKlasse);
-    }
 }
