@@ -61,12 +61,18 @@ class PouleController extends Controller
 
     /**
      * Parse weight class to numeric value for sorting
+     * -50 = up to 50kg, +50 = over 50kg, so +50 should sort after -50
      */
     private function parseGewicht(string $gewichtsklasse): int
     {
-        // Extract numeric value from weight class like "-38", "+70", "-38 kg"
-        preg_match('/[+-]?(\d+)/', $gewichtsklasse, $matches);
-        return (int) ($matches[1] ?? 999);
+        // Extract sign and numeric value from weight class like "-38", "+70", "-38 kg"
+        if (preg_match('/([+-]?)(\d+)/', $gewichtsklasse, $matches)) {
+            $sign = $matches[1] ?? '';
+            $num = (int) ($matches[2] ?? 999);
+            // Add 1000 to + categories so they sort after - categories
+            return $sign === '+' ? $num + 1000 : $num;
+        }
+        return 999;
     }
 
     public function show(Toernooi $toernooi, Poule $poule): View

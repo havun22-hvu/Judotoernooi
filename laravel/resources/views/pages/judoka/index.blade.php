@@ -168,7 +168,7 @@ function judokaTable{{ $loop->index }}() {
                 naam: @json($judoka->naam),
                 club: @json($judoka->club?->naam),
                 gewichtsklasse: @json($judoka->gewichtsklasse),
-                gewichtsklasseNum: {{ preg_match('/[+-]?(\d+)/', $judoka->gewichtsklasse ?? '', $m) ? ($m[1] ?? 999) : 999 }},
+                gewichtsklasseNum: {{ preg_match('/([+-]?)(\d+)/', $judoka->gewichtsklasse ?? '', $m) ? ((int)($m[2] ?? 999) + (($m[1] ?? '') === '+' ? 1000 : 0)) : 999 }},
                 geslacht: '{{ $judoka->geslacht == "M" ? "Jongen" : "Meisje" }}',
                 band: @json($judoka->band ? ucfirst($judoka->band) : null),
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
