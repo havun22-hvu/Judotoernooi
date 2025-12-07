@@ -51,7 +51,7 @@
                 </td>
                 <td class="px-4 py-3 text-gray-600">{{ $judoka->club?->naam ?? '-' }}</td>
                 <td class="px-4 py-3">{{ $judoka->leeftijdsklasse }}</td>
-                <td class="px-4 py-3">{{ $judoka->gewichtsklasse }} kg</td>
+                <td class="px-4 py-3">{{ $judoka->gewichtsklasse }}</td>
                 <td class="px-4 py-3">{{ ucfirst($judoka->band) }}</td>
                 <td class="px-4 py-3">
                     @if($judoka->aanwezigheid === 'aanwezig')
