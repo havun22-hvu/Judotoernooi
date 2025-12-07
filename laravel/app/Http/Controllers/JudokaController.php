@@ -19,18 +19,51 @@ class JudokaController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
+        // Define age class order (youngest to oldest)
+        $leeftijdsklasseVolgorde = [
+            "Mini's" => 1,
+            'A-pupillen' => 2,
+            'B-pupillen' => 3,
+            'U9' => 1,
+            'U11' => 2,
+            'U13' => 3,
+            'U15' => 4,
+            'U18' => 5,
+            'U21' => 6,
+            'Senioren' => 7,
+            'Dames -15' => 4,
+            'Heren -15' => 4,
+            'Dames -18' => 5,
+            'Heren -18' => 5,
+            'Dames' => 6,
+            'Heren' => 6,
+        ];
+
         $judokas = $toernooi->judokas()
             ->with('club')
-            ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
-            ->orderBy('geslacht')
-            ->orderBy('naam')
             ->get();
 
-        // Group by leeftijdsklasse
+        // Sort by: age class (youngest first), weight class (lightest first), gender, name
+        $judokas = $judokas->sortBy([
+            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => $this->parseGewicht($a->gewichtsklasse) <=> $this->parseGewicht($b->gewichtsklasse),
+            fn ($a, $b) => $a->geslacht <=> $b->geslacht,
+            fn ($a, $b) => $a->naam <=> $b->naam,
+        ]);
+
+        // Group by leeftijdsklasse (preserving sort order)
         $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse');
 
         return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
+    }
+
+    /**
+     * Parse weight class to numeric value for sorting
+     */
+    private function parseGewicht(string $gewichtsklasse): int
+    {
+        preg_match('/[+-]?(\d+)/', $gewichtsklasse ?? '', $matches);
+        return (int) ($matches[1] ?? 999);
     }
 
     public function show(Toernooi $toernooi, Judoka $judoka): View
