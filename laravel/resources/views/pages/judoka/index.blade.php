@@ -136,11 +136,11 @@ function judokaTable() {
 
         get filteredJudokas() {
             if (!this.zoekterm) return this.judokas;
-            const term = this.zoekterm.toLowerCase();
-            return this.judokas.filter(j =>
-                (j.naam && j.naam.toLowerCase().includes(term)) ||
-                (j.club && j.club.toLowerCase().includes(term))
-            );
+            const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+            return this.judokas.filter(j => {
+                const searchText = ((j.naam || '') + ' ' + (j.club || '')).toLowerCase();
+                return terms.every(term => searchText.includes(term));
+            });
         },
 
         get sortedJudokas() {
