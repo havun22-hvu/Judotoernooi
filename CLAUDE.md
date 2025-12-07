@@ -32,10 +32,28 @@
 
 ## Database
 
+| | Local | Server |
+|---|---|---|
+| **Type** | SQLite | MySQL |
+| **Database** | database/database.sqlite | judo_toernooi |
+| **User** | - | judotoernooi |
+
+## Local Development
+
+```bash
+cd laravel
+cp .env.example .env
+# Pas .env aan: DB_CONNECTION=sqlite, SESSION_DRIVER=file, CACHE_STORE=file
+touch database/database.sqlite
+php artisan key:generate
+php artisan migrate
+php artisan serve --port=8001
 ```
-Database: judo_toernooi
-User: judotoernooi
-```
+
+**Let op:**
+- Local gebruikt SQLite (geen MySQL nodig)
+- Login zonder wachtwoord in local (APP_ENV=local)
+- Poort 8001 (8000 is Herdenkingsportaal)
 
 ## Functionaliteit
 

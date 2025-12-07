@@ -3,6 +3,11 @@
 /laravel/.env
 /laravel/storage/*.key
 /laravel/storage/logs/
+/laravel/storage/framework/cache/data/
+/laravel/storage/framework/sessions/
+/laravel/storage/framework/views/
+/laravel/bootstrap/cache/
+/laravel/database/*.sqlite
 *.log
 .DS_Store
 Thumbs.db
