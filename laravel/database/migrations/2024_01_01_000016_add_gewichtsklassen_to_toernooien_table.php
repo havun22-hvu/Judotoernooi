@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('toernooien', function (Blueprint $table) {
-            $table->json('gewichtsklassen')->nullable()->after('inschrijving_gesloten_op');
+            $table->json('gewichtsklassen')->nullable();
         });
     }
 
