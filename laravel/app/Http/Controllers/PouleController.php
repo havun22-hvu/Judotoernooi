@@ -216,6 +216,10 @@ class PouleController extends Controller
         $nieuwePositie = $naarPoule->judokas()->count() + 1;
         $naarPoule->judokas()->attach($judoka->id, ['positie' => $nieuwePositie]);
 
+        // Refresh relations to get updated judoka lists
+        $vanPoule->load('judokas');
+        $naarPoule->load('judokas');
+
         // Regenerate matches for both poules
         $vanPoule->wedstrijden()->delete();
         $naarPoule->wedstrijden()->delete();
