@@ -216,15 +216,15 @@ class PouleController extends Controller
         $nieuwePositie = $naarPoule->judokas()->count() + 1;
         $naarPoule->judokas()->attach($judoka->id, ['positie' => $nieuwePositie]);
 
-        // Update statistics
-        $vanPoule->updateStatistieken();
-        $naarPoule->updateStatistieken();
-
         // Regenerate matches for both poules
         $vanPoule->wedstrijden()->delete();
         $naarPoule->wedstrijden()->delete();
         $this->wedstrijdService->genereerWedstrijdenVoorPoule($vanPoule);
         $this->wedstrijdService->genereerWedstrijdenVoorPoule($naarPoule);
+
+        // Update statistics after regenerating matches
+        $vanPoule->updateStatistieken();
+        $naarPoule->updateStatistieken();
 
         return response()->json([
             'success' => true,
