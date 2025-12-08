@@ -39,7 +39,7 @@
     <div class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         <a href="#poule-{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-            {{ $p->titel }} ({{ $p->judokas_count }})
+            #{{ $p->nummer }} {{ $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg ({{ $p->judokas_count }})
         </a>
         @endforeach
     </div>
@@ -62,7 +62,7 @@
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
-                    <div class="font-bold text-gray-800 text-sm">{{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
+                    <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
                         <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
                         <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden</span>
