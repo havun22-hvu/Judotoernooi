@@ -161,6 +161,17 @@ function closeNieuwePouleModal() {
     document.getElementById('nieuwe-poule-modal').classList.add('hidden');
 }
 
+function showToast(message, isError = false) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    toastMessage.textContent = message;
+    toast.classList.remove('translate-x-full', 'bg-green-600', 'bg-red-600');
+    toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
+
+    setTimeout(() => toast.classList.add('translate-x-full'), 2000);
+}
+
 // Modal event listeners - direct na DOM ready
 document.addEventListener('DOMContentLoaded', function() {
     const leeftijdsSelect = document.getElementById('leeftijdsklasse');
@@ -356,16 +367,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-
-        toastMessage.textContent = message;
-        toast.classList.remove('translate-x-full', 'bg-green-600', 'bg-red-600');
-        toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
-
-        setTimeout(() => toast.classList.add('translate-x-full'), 2000);
-    }
 });
 </script>
 
