@@ -32,7 +32,8 @@
 </div>
 
 @php
-    $problematischePoules = $poules->filter(fn($p) => $p->judokas_count < 3);
+    // Alleen poules met 1 of 2 judoka's zijn problematisch (lege poules zijn ok)
+    $problematischePoules = $poules->filter(fn($p) => $p->judokas_count > 0 && $p->judokas_count < 3);
 @endphp
 
 @if($problematischePoules->count() > 0)
@@ -62,9 +63,9 @@
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
-                <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
+                <div class="px-3 py-2 border-b {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
                     <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
                         <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
