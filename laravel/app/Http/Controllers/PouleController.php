@@ -130,18 +130,18 @@ class PouleController extends Controller
             $aantalJudokas = $poule->judokas_count;
             $verwachtWedstrijden = $aantalJudokas >= 2 ? ($aantalJudokas * ($aantalJudokas - 1)) / 2 : 0;
 
-            // Check for problems
-            if ($aantalJudokas < 3) {
+            // Check for problems (empty poules are ok)
+            if ($aantalJudokas > 0 && $aantalJudokas < 3) {
                 $problemen[] = [
                     'poule' => $poule->titel,
                     'type' => 'te_weinig',
-                    'message' => "{$poule->titel}: {$aantalJudokas} judoka's (min. 3)",
+                    'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 3)",
                 ];
             } elseif ($aantalJudokas > 6) {
                 $problemen[] = [
                     'poule' => $poule->titel,
                     'type' => 'te_veel',
-                    'message' => "{$poule->titel}: {$aantalJudokas} judoka's (max. 6)",
+                    'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (max. 6)",
                 ];
             }
 
