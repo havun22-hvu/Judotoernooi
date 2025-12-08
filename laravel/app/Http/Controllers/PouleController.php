@@ -74,6 +74,28 @@ class PouleController extends Controller
     }
 
     /**
+     * Delete an empty poule
+     */
+    public function destroy(Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        // Only allow deleting empty poules
+        if ($poule->judokas()->count() > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kan alleen lege poules verwijderen',
+            ], 400);
+        }
+
+        $nummer = $poule->nummer;
+        $poule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Poule #{$nummer} verwijderd",
+        ]);
+    }
+
+    /**
      * Create a new empty poule
      */
     public function store(Request $request, Toernooi $toernooi): JsonResponse

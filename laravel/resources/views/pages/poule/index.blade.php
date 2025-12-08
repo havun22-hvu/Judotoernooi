@@ -66,7 +66,12 @@
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
-                    <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
+                    <div class="flex justify-between items-center">
+                        <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
+                        @if($poule->judokas_count === 0)
+                        <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
+                        @endif
+                    </div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
                         <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
                         <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden</span>
@@ -146,6 +151,7 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
@@ -170,6 +176,32 @@ function showToast(message, isError = false) {
     toast.classList.add(isError ? 'bg-red-600' : 'bg-green-600');
 
     setTimeout(() => toast.classList.add('translate-x-full'), 2000);
+}
+
+async function verwijderPoule(pouleId, pouleNummer) {
+    if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
+
+    try {
+        const response = await fetch(verwijderPouleUrl.replace(':id', pouleId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message);
+            document.getElementById('poule-' + pouleId)?.remove();
+        } else {
+            showToast(data.message || 'Fout bij verwijderen', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Fout bij verwijderen', true);
+    }
 }
 
 // Modal event listeners - direct na DOM ready
