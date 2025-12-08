@@ -51,6 +51,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
         Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
         Route::post('poule', [PouleController::class, 'store'])->name('poule.store');
+        Route::delete('poule/{poule}', [PouleController::class, 'destroy'])->name('poule.destroy');
         Route::get('poule', [PouleController::class, 'index'])->name('poule.index');
 
         // Blokken management
