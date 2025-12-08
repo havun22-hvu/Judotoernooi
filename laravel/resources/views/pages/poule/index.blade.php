@@ -14,7 +14,7 @@
             Verifieer poules
         </button>
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
-              onsubmit="return confirm('Let op: dit verwijdert alle huidige poules en maakt nieuwe. Doorgaan?')">
+              onsubmit="return confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 Herindelen
