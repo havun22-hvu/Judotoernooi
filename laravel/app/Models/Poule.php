@@ -70,10 +70,10 @@ class Poule extends Model
 
     public function updateStatistieken(): void
     {
-        $this->update([
-            'aantal_judokas' => $this->judokas()->count(),
-            'aantal_wedstrijden' => $this->berekenAantalWedstrijden(),
-        ]);
+        // First update aantal_judokas so berekenAantalWedstrijden uses correct value
+        $this->aantal_judokas = $this->judokas()->count();
+        $this->aantal_wedstrijden = $this->berekenAantalWedstrijden();
+        $this->save();
     }
 
     /**
