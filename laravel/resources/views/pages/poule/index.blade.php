@@ -35,12 +35,12 @@
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">Problematische poules ({{ $problematischePoules->count() }})</h3>
-    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Sleep judoka's tussen poules om dit op te lossen:</p>
+    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Klik om naar de poule te gaan:</p>
     <div class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
-        <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+        <a href="#poule-{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
             {{ $p->titel }} ({{ $p->judokas_count }})
-        </span>
+        </a>
         @endforeach
     </div>
 </div>
@@ -59,7 +59,7 @@
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
-            <div class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
                     <div class="font-bold text-gray-800 text-sm">{{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
