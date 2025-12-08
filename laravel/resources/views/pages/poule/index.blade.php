@@ -98,7 +98,7 @@
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">Leeg</div>
                     @endif
                 </div>
             </div>
@@ -335,6 +335,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const naarPouleId = evt.to.dataset.pouleId;
 
                 if (vanPouleId === naarPouleId) return;
+
+                // Remove "Leeg" placeholder from target poule
+                evt.to.querySelector('.empty-placeholder')?.remove();
 
                 // Update data attribute
                 evt.item.dataset.pouleId = naarPouleId;
