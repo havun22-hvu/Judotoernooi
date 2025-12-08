@@ -73,6 +73,37 @@ class PouleController extends Controller
         return 999;
     }
 
+    /**
+     * Create a new empty poule
+     */
+    public function store(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'leeftijdsklasse' => 'required|string',
+            'gewichtsklasse' => 'required|string',
+        ]);
+
+        // Get next nummer for this tournament
+        $maxNummer = $toernooi->poules()->max('nummer') ?? 0;
+        $nieuweNummer = $maxNummer + 1;
+
+        // Create the poule
+        $poule = $toernooi->poules()->create([
+            'nummer' => $nieuweNummer,
+            'leeftijdsklasse' => $validated['leeftijdsklasse'],
+            'gewichtsklasse' => $validated['gewichtsklasse'],
+            'titel' => $validated['leeftijdsklasse'] . ' ' . $validated['gewichtsklasse'],
+            'aantal_judokas' => 0,
+            'aantal_wedstrijden' => 0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Poule #{$nieuweNummer} aangemaakt",
+            'poule' => $poule,
+        ]);
+    }
+
     public function genereer(Toernooi $toernooi): RedirectResponse
     {
         $statistieken = $this->pouleService->genereerPouleIndeling($toernooi);

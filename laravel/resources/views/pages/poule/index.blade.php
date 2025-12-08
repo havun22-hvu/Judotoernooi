@@ -7,6 +7,9 @@
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
+        <button onclick="openNieuwePouleModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            + Nieuwe poule
+        </button>
         <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             Verifieer poules
         </button>
@@ -103,12 +106,112 @@
 </div>
 @endforelse
 
+<!-- Modal nieuwe poule -->
+<div id="nieuwe-poule-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Nieuwe poule aanmaken</h2>
+        <form id="nieuwe-poule-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Leeftijdsklasse</label>
+                <select id="leeftijdsklasse" class="w-full border rounded px-3 py-2" required>
+                    <option value="">Selecteer...</option>
+                    @foreach($toernooi->getAlleGewichtsklassen() as $key => $klasse)
+                    <option value="{{ $key }}" data-label="{{ $klasse['label'] }}">{{ $klasse['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Gewichtsklasse</label>
+                <select id="gewichtsklasse" class="w-full border rounded px-3 py-2" required disabled>
+                    <option value="">Selecteer eerst leeftijdsklasse</option>
+                </select>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Annuleren
+                </button>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Aanmaken
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
+const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
+
+// Gewichtsklassen per leeftijdsklasse
+const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
+
+function openNieuwePouleModal() {
+    document.getElementById('nieuwe-poule-modal').classList.remove('hidden');
+    document.getElementById('leeftijdsklasse').value = '';
+    document.getElementById('gewichtsklasse').innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+    document.getElementById('gewichtsklasse').disabled = true;
+}
+
+function closeNieuwePouleModal() {
+    document.getElementById('nieuwe-poule-modal').classList.add('hidden');
+}
+
+document.getElementById('leeftijdsklasse').addEventListener('change', function() {
+    const select = document.getElementById('gewichtsklasse');
+    const key = this.value;
+
+    if (!key || !gewichtsklassen[key]) {
+        select.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+        select.disabled = true;
+        return;
+    }
+
+    const gewichten = gewichtsklassen[key].gewichten;
+    select.innerHTML = '<option value="">Selecteer...</option>' +
+        gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
+    select.disabled = false;
+});
+
+document.getElementById('nieuwe-poule-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const leeftijdsklasseKey = document.getElementById('leeftijdsklasse').value;
+    const leeftijdsklasseLabel = document.getElementById('leeftijdsklasse').selectedOptions[0].dataset.label;
+    const gewichtsklasse = document.getElementById('gewichtsklasse').value;
+
+    if (!leeftijdsklasseKey || !gewichtsklasse) return;
+
+    try {
+        const response = await fetch(nieuwePouleUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                leeftijdsklasse: leeftijdsklasseLabel,
+                gewichtsklasse: gewichtsklasse
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Fout bij aanmaken', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Fout bij aanmaken', true);
+    }
+});
 
 async function verifieerPoules() {
     const resultaatDiv = document.getElementById('verificatie-resultaat');
