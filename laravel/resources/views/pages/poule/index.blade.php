@@ -69,7 +69,7 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
                         @if($poule->judokas_count === 0)
-                        <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
+                        <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                         @endif
                     </div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
@@ -336,8 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (vanPouleId === naarPouleId) return;
 
-                // Remove "Leeg" placeholder from target poule
+                // Remove "Leeg" placeholder and delete button from target poule
                 evt.to.querySelector('.empty-placeholder')?.remove();
+                const pouleCard = evt.to.closest('[data-poule-id]');
+                pouleCard?.querySelector('.delete-empty-btn')?.remove();
 
                 // Update data attribute
                 evt.item.dataset.pouleId = naarPouleId;
