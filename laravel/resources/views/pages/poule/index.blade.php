@@ -161,56 +161,67 @@ function closeNieuwePouleModal() {
     document.getElementById('nieuwe-poule-modal').classList.add('hidden');
 }
 
-document.getElementById('leeftijdsklasse').addEventListener('change', function() {
-    const select = document.getElementById('gewichtsklasse');
-    const key = this.value;
+// Modal event listeners - direct na DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    const leeftijdsSelect = document.getElementById('leeftijdsklasse');
+    const gewichtsSelect = document.getElementById('gewichtsklasse');
+    const form = document.getElementById('nieuwe-poule-form');
 
-    if (!key || !gewichtsklassen[key]) {
-        select.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
-        select.disabled = true;
-        return;
+    if (leeftijdsSelect) {
+        leeftijdsSelect.addEventListener('change', function() {
+            const key = this.value;
+
+            if (!key || !gewichtsklassen[key]) {
+                gewichtsSelect.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+                gewichtsSelect.disabled = true;
+                return;
+            }
+
+            const gewichten = gewichtsklassen[key].gewichten;
+            gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
+                gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
+            gewichtsSelect.disabled = false;
+        });
     }
 
-    const gewichten = gewichtsklassen[key].gewichten;
-    select.innerHTML = '<option value="">Selecteer...</option>' +
-        gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
-    select.disabled = false;
-});
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
 
-document.getElementById('nieuwe-poule-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+            const leeftijdsklasseKey = leeftijdsSelect.value;
+            const leeftijdsklasseLabel = leeftijdsSelect.selectedOptions[0]?.dataset?.label;
+            const gewichtsklasse = gewichtsSelect.value;
 
-    const leeftijdsklasseKey = document.getElementById('leeftijdsklasse').value;
-    const leeftijdsklasseLabel = document.getElementById('leeftijdsklasse').selectedOptions[0].dataset.label;
-    const gewichtsklasse = document.getElementById('gewichtsklasse').value;
+            if (!leeftijdsklasseKey || !gewichtsklasse) return;
 
-    if (!leeftijdsklasseKey || !gewichtsklasse) return;
+            try {
+                const response = await fetch(nieuwePouleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        leeftijdsklasse: leeftijdsklasseLabel,
+                        gewichtsklasse: gewichtsklasse
+                    })
+                });
 
-    try {
-        const response = await fetch(nieuwePouleUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                leeftijdsklasse: leeftijdsklasseLabel,
-                gewichtsklasse: gewichtsklasse
-            })
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message);
+                    closeNieuwePouleModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Fout bij aanmaken', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Fout bij aanmaken', true);
+            }
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-            showToast(data.message);
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showToast(data.message || 'Fout bij aanmaken', true);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Fout bij aanmaken', true);
     }
 });
 
