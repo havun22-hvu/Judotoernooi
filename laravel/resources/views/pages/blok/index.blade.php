@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     $aantalMatten = $toernooi->matten->count();
     $leeftijdVolgorde = ["Mini's", 'A-pupillen', 'B-pupillen', 'C-pupillen', 'Dames -15', 'Heren -15', 'Dames -18', 'Heren -18', 'Dames', 'Heren'];
 
-    // Groepeer gewichtsklassen met hun wedstrijden
+    // Groepeer gewichtsklassen met hun wedstrijden, filter 0 wedstrijden weg
     $gewichtsklassen = $toernooi->poules()
         ->selectRaw('leeftijdsklasse, gewichtsklasse, SUM(aantal_wedstrijden) as totaal_wedstrijden, blok_id')
         ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id')
@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'wedstrijden' => $group->sum('totaal_wedstrijden'),
             'blok' => $group->first()->blok->nummer ?? null,
         ])
+        ->filter(fn($v) => $v['wedstrijden'] > 0)
         ->sortBy(fn($v) => (($pos = array_search($v['leeftijdsklasse'], $leeftijdVolgorde)) !== false ? $pos * 1000 : 99000) + (int)preg_replace('/[^0-9]/', '', $v['gewichtsklasse']));
 @endphp
 
