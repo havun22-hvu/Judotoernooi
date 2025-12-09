@@ -58,6 +58,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
+        Route::post('blok/handmatige-verdeling', [BlokController::class, 'handmatigeVerdeling'])->name('blok.handmatige-verdeling');
+        Route::post('blok/save-prioriteiten', [BlokController::class, 'savePrioriteiten'])->name('blok.save-prioriteiten');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
         Route::post('blok/{blok}/genereer-wedstrijdschemas', [BlokController::class, 'genereerWedstrijdschemas'])->name('blok.genereer-wedstrijdschemas');
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
