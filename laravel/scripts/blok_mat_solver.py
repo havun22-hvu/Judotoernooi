@@ -99,6 +99,7 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
     # Add ordering constraint: lighter weight category blok <= heavier weight category blok
     # Also track gaps between consecutive weights for minimization
     gaps = []
+    gap_penalties = []  # Penalty for each gap > 0 (discontinuity)
     for leeftijd, weight_categories in leeftijd_categories.items():
         for i in range(len(weight_categories) - 1):
             _, c_light, _ = weight_categories[i]
@@ -111,10 +112,21 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
             model.Add(gap == category_blok[c_heavy] - category_blok[c_light])
             gaps.append(gap)
 
-    # Sum of all gaps (we want to minimize this for better continuity)
+            # Penalty: is there ANY gap? (binary: 0 or 1)
+            has_gap = model.NewBoolVar(f'has_gap_{leeftijd}_{i}')
+            model.Add(gap >= 1).OnlyEnforceIf(has_gap)
+            model.Add(gap == 0).OnlyEnforceIf(has_gap.Not())
+            gap_penalties.append(has_gap)
+
+    # Sum of all gaps (total distance)
     total_gaps = model.NewIntVar(0, num_blokken * len(gaps) if gaps else 0, 'total_gaps')
     if gaps:
         model.Add(total_gaps == sum(gaps))
+
+    # Count of discontinuities (number of times consecutive weights are in different blocks)
+    num_discontinuities = model.NewIntVar(0, len(gap_penalties), 'num_discontinuities')
+    if gap_penalties:
+        model.Add(num_discontinuities == sum(gap_penalties))
 
     # Constraint 3: Balance matches across blocks
     # Track total matches per blok
@@ -138,10 +150,15 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
         model.Add(diff_pos <= max_deviation)
         model.Add(diff_neg <= max_deviation)
 
-    # Multi-objective: minimize deviation (most important) AND gaps (secondary)
-    # Higher weight on deviation ensures better balance across blocks
-    # Lower weight on gaps allows more spreading of categories
-    model.Minimize(100 * max_deviation + total_gaps)
+    # Multi-objective: balance between equal blocks AND weight continuity
+    # - max_deviation: difference from average (want small)
+    # - num_discontinuities: number of breaks in weight sequence (want minimal)
+    # - total_gaps: total distance of jumps (secondary)
+    #
+    # Balanced approach: discontinuities are bad but not at all costs
+    # Allow some breaks to achieve better balance
+    # Each discontinuity costs 15 wedstrijden worth of deviation
+    model.Minimize(15 * num_discontinuities + max_deviation)
 
     # Solve
     solver = cp_model.CpSolver()
@@ -180,6 +197,7 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
         stats = {
             'status': 'optimal' if status == cp_model.OPTIMAL else 'feasible',
             'max_deviation': solver.Value(max_deviation),
+            'num_discontinuities': solver.Value(num_discontinuities) if gap_penalties else 0,
             'total_gaps': solver.Value(total_gaps),
             'avg_per_blok': avg_per_blok,
             'num_categories': num_categories,
