@@ -96,20 +96,25 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
         category_blok[c] = model.NewIntVar(0, num_blokken - 1, f'blok_{c}')
         model.Add(category_blok[c] == sum(b * x[c, b] for b in range(num_blokken)))
 
-    # Add ordering constraint: lighter weight category blok <= heavier weight category blok
-    # Also track gaps between consecutive weights for minimization
+    # Track gaps between consecutive weight classes
+    # RELAXED: heavier weight can be 1 blok EARLIER than lighter (maar liefst niet)
+    # HARD LIMIT: max 2 blokken verschil (geen 3+ blokken wachten)
     gaps = []
-    gap_penalties = []  # Penalty for each gap > 0 (discontinuity)
+    gap_penalties = []  # Penalty for each discontinuity
+    backward_penalties = []  # Extra penalty for going backwards
     for leeftijd, weight_categories in leeftijd_categories.items():
         for i in range(len(weight_categories) - 1):
             _, c_light, _ = weight_categories[i]
             _, c_heavy, _ = weight_categories[i + 1]
-            # Lighter weight blok <= heavier weight blok
-            model.Add(category_blok[c_light] <= category_blok[c_heavy])
 
-            # Track the gap between consecutive weights
-            gap = model.NewIntVar(0, num_blokken - 1, f'gap_{leeftijd}_{i}')
-            model.Add(gap == category_blok[c_heavy] - category_blok[c_light])
+            # Difference: heavy_blok - light_blok (can be negative if going back)
+            diff = model.NewIntVar(-1, 2, f'diff_{leeftijd}_{i}')  # Allow -1 to +2
+            model.Add(diff == category_blok[c_heavy] - category_blok[c_light])
+
+            # Track absolute gap for continuity scoring
+            gap = model.NewIntVar(0, 2, f'gap_{leeftijd}_{i}')
+            # gap = |diff|
+            model.AddAbsEquality(gap, diff)
             gaps.append(gap)
 
             # Penalty: is there ANY gap? (binary: 0 or 1)
@@ -117,6 +122,12 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
             model.Add(gap >= 1).OnlyEnforceIf(has_gap)
             model.Add(gap == 0).OnlyEnforceIf(has_gap.Not())
             gap_penalties.append(has_gap)
+
+            # Extra penalty for going backwards (diff < 0)
+            goes_back = model.NewBoolVar(f'goes_back_{leeftijd}_{i}')
+            model.Add(diff <= -1).OnlyEnforceIf(goes_back)
+            model.Add(diff >= 0).OnlyEnforceIf(goes_back.Not())
+            backward_penalties.append(goes_back)
 
     # Sum of all gaps (total distance)
     total_gaps = model.NewIntVar(0, num_blokken * len(gaps) if gaps else 0, 'total_gaps')
@@ -127,6 +138,11 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
     num_discontinuities = model.NewIntVar(0, len(gap_penalties), 'num_discontinuities')
     if gap_penalties:
         model.Add(num_discontinuities == sum(gap_penalties))
+
+    # Count of backwards moves (heavier weight in earlier block - allowed but discouraged)
+    num_backwards = model.NewIntVar(0, len(backward_penalties), 'num_backwards')
+    if backward_penalties:
+        model.Add(num_backwards == sum(backward_penalties))
 
     # Constraint 3: Balance matches across blocks
     # Track total matches per blok
@@ -150,15 +166,16 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
         model.Add(diff_pos <= max_deviation)
         model.Add(diff_neg <= max_deviation)
 
-    # Multi-objective: balance between equal blocks AND weight continuity
-    # - max_deviation: difference from average (want small)
-    # - num_discontinuities: number of breaks in weight sequence (want minimal)
-    # - total_gaps: total distance of jumps (secondary)
+    # Multi-objective optimization:
+    # - max_deviation: difference from average (want small for balance)
+    # - num_discontinuities: number of breaks in weight sequence
+    # - num_backwards: going to earlier block (allowed but discouraged)
     #
-    # Balanced approach: discontinuities are bad but not at all costs
-    # Allow some breaks to achieve better balance
-    # Each discontinuity costs 15 wedstrijden worth of deviation
-    model.Minimize(15 * num_discontinuities + max_deviation)
+    # Weights:
+    # - Discontinuity costs 15 (prefer continuity)
+    # - Going backwards costs 10 (prefer forward, but better than big jump)
+    # - Each unit deviation costs 1
+    model.Minimize(15 * num_discontinuities + 10 * num_backwards + max_deviation)
 
     # Solve
     solver = cp_model.CpSolver()
@@ -198,6 +215,7 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
             'status': 'optimal' if status == cp_model.OPTIMAL else 'feasible',
             'max_deviation': solver.Value(max_deviation),
             'num_discontinuities': solver.Value(num_discontinuities) if gap_penalties else 0,
+            'num_backwards': solver.Value(num_backwards) if backward_penalties else 0,
             'total_gaps': solver.Value(total_gaps),
             'avg_per_blok': avg_per_blok,
             'num_categories': num_categories,
