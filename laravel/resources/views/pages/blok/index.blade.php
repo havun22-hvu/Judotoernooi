@@ -82,6 +82,7 @@ function switchTab(tab) {
     $totaalPoules = $blokken->sum(fn($b) => $b->poules->count());
     $totaalWedstrijden = collect($statistieken)->sum('totaal_wedstrijden');
     $nietVerdeeld = $toernooi->poules()->whereNull('blok_id')->count();
+    $gemiddeldPerBlok = $blokken->count() > 0 ? round($totaalWedstrijden / $blokken->count()) : 0;
 @endphp
 
 <div class="bg-white rounded-lg shadow p-4 mb-6">
@@ -90,6 +91,7 @@ function switchTab(tab) {
         <div><span class="font-bold text-gray-700">Matten:</span> {{ $toernooi->matten->count() }}</div>
         <div><span class="font-bold text-gray-700">Verdeelde poules:</span> {{ $totaalPoules }}</div>
         <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $totaalWedstrijden }}</div>
+        <div class="bg-blue-50 px-2 py-1 rounded"><span class="font-bold text-blue-700">Gemiddeld per blok:</span> <span class="text-blue-600">{{ $gemiddeldPerBlok }}</span></div>
         @if($nietVerdeeld > 0)
         <div class="text-red-600"><span class="font-bold">Niet verdeeld:</span> {{ $nietVerdeeld }} poules</div>
         @endif
@@ -394,7 +396,21 @@ document.addEventListener('DOMContentLoaded', function() {
         ])
         ->filter(fn($v) => $v['wedstrijden'] > 0)
         ->sortBy(fn($v) => (($pos = array_search($v['leeftijdsklasse'], $leeftijdVolgorde)) !== false ? $pos * 1000 : 99000) + (int)preg_replace('/[^0-9]/', '', $v['gewichtsklasse']));
+
+    $handmatigTotaalWedstrijden = $gewichtsklassen->sum('wedstrijden');
+    $handmatigGemiddeld = $aantalBlokken > 0 ? round($handmatigTotaalWedstrijden / $aantalBlokken) : 0;
 @endphp
+
+<!-- Statistieken -->
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex flex-wrap gap-6 text-sm">
+        <div><span class="font-bold text-gray-700">Blokken:</span> {{ $aantalBlokken }}</div>
+        <div><span class="font-bold text-gray-700">Matten:</span> {{ $aantalMatten }}</div>
+        <div><span class="font-bold text-gray-700">Categorieën:</span> {{ $gewichtsklassen->count() }}</div>
+        <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $handmatigTotaalWedstrijden }}</div>
+        <div class="bg-blue-50 px-2 py-1 rounded"><span class="font-bold text-blue-700">Gemiddeld per blok:</span> <span class="text-blue-600">{{ $handmatigGemiddeld }}</span></div>
+    </div>
+</div>
 
 <div class="bg-white rounded-lg shadow p-4 mb-6">
     <h3 class="font-bold text-gray-700 mb-3">Stap 1: Categorieën verdelen over Blokken</h3>
