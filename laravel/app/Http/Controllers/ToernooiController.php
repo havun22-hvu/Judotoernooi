@@ -45,7 +45,8 @@ class ToernooiController extends Controller
 
     public function edit(Toernooi $toernooi): View
     {
-        return view('pages.toernooi.edit', compact('toernooi'));
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get();
+        return view('pages.toernooi.edit', compact('toernooi', 'blokken'));
     }
 
     public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse
@@ -67,6 +68,11 @@ class ToernooiController extends Controller
             }
 
             $data['gewichtsklassen'] = $gewichtsklassen;
+        }
+
+        // Process mat voorkeuren from JSON input
+        if ($request->has('mat_voorkeuren_json')) {
+            $data['mat_voorkeuren'] = json_decode($request->input('mat_voorkeuren_json'), true) ?? [];
         }
 
         $toernooi->update($data);
@@ -120,5 +126,25 @@ class ToernooiController extends Controller
         return redirect()
             ->route('toernooi.edit', $toernooi)
             ->with('success', 'Wachtwoorden bijgewerkt voor: ' . implode(', ', $updated));
+    }
+
+    public function updateBloktijden(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $bloktijden = $request->input('blokken', []);
+
+        foreach ($bloktijden as $blokId => $tijden) {
+            $blok = $toernooi->blokken()->find($blokId);
+            if ($blok) {
+                $blok->update([
+                    'weging_start' => $tijden['weging_start'] ?: null,
+                    'weging_einde' => $tijden['weging_einde'] ?: null,
+                    'starttijd' => $tijden['starttijd'] ?: null,
+                ]);
+            }
+        }
+
+        return redirect()
+            ->route('toernooi.edit', $toernooi)
+            ->with('success', 'Bloktijden bijgewerkt');
     }
 }

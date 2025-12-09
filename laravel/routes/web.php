@@ -28,6 +28,7 @@ Route::get('/dashboard', [ToernooiController::class, 'dashboard'])->name('dashbo
 // Toernooi management
 Route::resource('toernooi', ToernooiController::class);
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
+Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 
 // Toernooi sub-routes
 Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
@@ -51,6 +52,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
         Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
         Route::post('poule', [PouleController::class, 'store'])->name('poule.store');
+        Route::patch('poule/{poule}/kruisfinale', [PouleController::class, 'updateKruisfinale'])->name('poule.update-kruisfinale');
         Route::delete('poule/{poule}', [PouleController::class, 'destroy'])->name('poule.destroy');
         Route::get('poule', [PouleController::class, 'index'])->name('poule.index');
 
@@ -58,6 +60,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
         Route::post('blok/{blok}/genereer-wedstrijdschemas', [BlokController::class, 'genereerWedstrijdschemas'])->name('blok.genereer-wedstrijdschemas');
+        Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
+        Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
 
         // Clubs management
@@ -69,9 +73,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
     });
 
-    // Jury + Admin routes (zaaloverzicht)
+    // Jury + Admin routes
     Route::middleware(CheckToernooiRol::class . ':jury')->group(function () {
-        Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
         Route::get('poule/{poule}/wedstrijdschema', [PouleController::class, 'wedstrijdschema'])->name('poule.wedstrijdschema');
     });
 

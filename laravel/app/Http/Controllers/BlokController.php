@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Blok;
+use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
 use App\Services\ToernooiService;
 use App\Services\WedstrijdSchemaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BlokController extends Controller
@@ -20,7 +23,8 @@ class BlokController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        $blokken = $toernooi->blokken()->with('poules')->get();
+        $blokken = $toernooi->blokken()->with('poules')->orderBy('nummer')->get();
+        $toernooi->load('matten');
         $statistieken = $this->verdelingService->getVerdelingsStatistieken($toernooi);
 
         return view('pages.blok.index', compact('toernooi', 'blokken', 'statistieken'));
@@ -74,5 +78,21 @@ class BlokController extends Controller
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
         return view('pages.spreker.interface', compact('toernooi', 'overzicht'));
+    }
+
+    public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'mat_id' => 'required|exists:matten,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+        $poule->update(['mat_id' => $validated['mat_id']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Poule {$poule->nummer} verplaatst",
+        ]);
     }
 }

@@ -12,14 +12,29 @@ use Illuminate\Support\Facades\DB;
 class PouleIndelingService
 {
     private int $minJudokas;
-    private int $optimalJudokas;
     private int $maxJudokas;
+    private array $voorkeur;
+    private bool $clubspreiding;
+
+    /**
+     * Initialize with tournament-specific settings
+     */
+    public function initializeFromToernooi(Toernooi $toernooi): void
+    {
+        $this->voorkeur = $toernooi->getPouleGrootteVoorkeurOfDefault();
+        // Min/max are derived from preference list
+        $this->minJudokas = $toernooi->min_judokas_poule;
+        $this->maxJudokas = $toernooi->max_judokas_poule;
+        $this->clubspreiding = $toernooi->clubspreiding ?? true;
+    }
 
     public function __construct()
     {
-        $this->minJudokas = config('toernooi.min_judokas_poule', 3);
-        $this->optimalJudokas = config('toernooi.optimal_judokas_poule', 5);
-        $this->maxJudokas = config('toernooi.max_judokas_poule', 6);
+        // Default values, will be overridden by initializeFromToernooi
+        $this->voorkeur = [5, 4, 6, 3];
+        $this->minJudokas = 3;
+        $this->maxJudokas = 6;
+        $this->clubspreiding = true;
     }
 
     /**
@@ -27,6 +42,9 @@ class PouleIndelingService
      */
     public function genereerPouleIndeling(Toernooi $toernooi): array
     {
+        // Initialize settings from tournament
+        $this->initializeFromToernooi($toernooi);
+
         return DB::transaction(function () use ($toernooi) {
             // Delete existing pools
             $toernooi->poules()->delete();
@@ -34,12 +52,19 @@ class PouleIndelingService
             // Get all judokas grouped by category
             $groepen = $this->groepeerJudokas($toernooi);
 
+            // Get wedstrijd_systeem settings
+            $wedstrijdSysteem = $toernooi->wedstrijd_systeem ?? [];
+
             $pouleNummer = 1;
             $statistieken = [
                 'totaal_poules' => 0,
                 'totaal_wedstrijden' => 0,
+                'totaal_kruisfinales' => 0,
                 'per_leeftijdsklasse' => [],
             ];
+
+            // Track voorrondepoules per categorie (leeftijdsklasse + gewichtsklasse) for kruisfinale creation
+            $voorrondesPerCategorie = [];
 
             foreach ($groepen as $sleutel => $judokas) {
                 if ($judokas->isEmpty()) continue;
@@ -60,6 +85,7 @@ class PouleIndelingService
                         'toernooi_id' => $toernooi->id,
                         'nummer' => $pouleNummer,
                         'titel' => $titel,
+                        'type' => 'voorronde',
                         'leeftijdsklasse' => $leeftijdsklasse,
                         'gewichtsklasse' => $gewichtsklasse,
                         'aantal_judokas' => count($pouleJudokas),
@@ -81,10 +107,70 @@ class PouleIndelingService
                         $statistieken['per_leeftijdsklasse'][$leeftijdsklasse] = [
                             'poules' => 0,
                             'wedstrijden' => 0,
+                            'kruisfinales' => 0,
                         ];
                     }
                     $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['poules']++;
                     $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
+
+                    // Track for kruisfinale per categorie (leeftijdsklasse + gewichtsklasse + geslacht)
+                    $categorieKey = $sleutel; // Use original group key
+                    if (!isset($voorrondesPerCategorie[$categorieKey])) {
+                        $voorrondesPerCategorie[$categorieKey] = [
+                            'leeftijdsklasse' => $leeftijdsklasse,
+                            'gewichtsklasse' => $gewichtsklasse,
+                            'geslacht' => $geslacht,
+                            'aantal_poules' => 0,
+                        ];
+                    }
+                    $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+
+                    $pouleNummer++;
+                }
+            }
+
+            // Create kruisfinale pools where applicable (per gewichtsklasse)
+            foreach ($voorrondesPerCategorie as $categorieKey => $data) {
+                $klasseKey = $this->getLeeftijdsklasseKey($data['leeftijdsklasse']);
+                $systeem = $wedstrijdSysteem[$klasseKey] ?? 'poules';
+
+                // Only create kruisfinale if system is poules_kruisfinale AND there are 2+ voorrondepoules
+                if ($systeem === 'poules_kruisfinale' && $data['aantal_poules'] >= 2) {
+                    // Calculate how many places qualify based on number of poules
+                    // Goal: kruisfinale of 4-6 judokas
+                    $aantalPoules = $data['aantal_poules'];
+                    $kruisfinalesAantal = $this->berekenKruisfinalesPlaatsen($aantalPoules);
+                    $aantalJudokasKruisfinale = $aantalPoules * $kruisfinalesAantal;
+
+                    $geslachtLabel = match ($data['geslacht']) {
+                        'M' => 'Jongens',
+                        'V' => 'Meisjes',
+                        default => null,
+                    };
+
+                    // Include qualifying places in title
+                    $plaatsenTekst = $kruisfinalesAantal === 1 ? 'top 1' : "top {$kruisfinalesAantal}";
+                    $titel = $geslachtLabel
+                        ? "Kruisfinale {$data['leeftijdsklasse']} {$geslachtLabel} {$data['gewichtsklasse']} ({$plaatsenTekst})"
+                        : "Kruisfinale {$data['leeftijdsklasse']} {$data['gewichtsklasse']} ({$plaatsenTekst})";
+
+                    $kruisfinalePoule = Poule::create([
+                        'toernooi_id' => $toernooi->id,
+                        'nummer' => $pouleNummer,
+                        'titel' => $titel,
+                        'type' => 'kruisfinale',
+                        'kruisfinale_plaatsen' => $kruisfinalesAantal,
+                        'leeftijdsklasse' => $data['leeftijdsklasse'],
+                        'gewichtsklasse' => $data['gewichtsklasse'],
+                        'aantal_judokas' => $aantalJudokasKruisfinale,
+                        'aantal_wedstrijden' => $this->berekenAantalWedstrijden($aantalJudokasKruisfinale),
+                    ]);
+
+                    $statistieken['totaal_poules']++;
+                    $statistieken['totaal_kruisfinales']++;
+                    $statistieken['totaal_wedstrijden'] += $kruisfinalePoule->aantal_wedstrijden;
+                    $statistieken['per_leeftijdsklasse'][$data['leeftijdsklasse']]['kruisfinales']++;
+                    $statistieken['per_leeftijdsklasse'][$data['leeftijdsklasse']]['wedstrijden'] += $kruisfinalePoule->aantal_wedstrijden;
 
                     $pouleNummer++;
                 }
@@ -94,6 +180,60 @@ class PouleIndelingService
 
             return $statistieken;
         });
+    }
+
+    /**
+     * Get the key used in wedstrijd_systeem for a leeftijdsklasse label
+     */
+    private function getLeeftijdsklasseKey(string $label): string
+    {
+        $mapping = [
+            "Mini's" => 'minis',
+            'A-pupillen' => 'a_pupillen',
+            'B-pupillen' => 'b_pupillen',
+            'Dames -15' => 'dames_15',
+            'Heren -15' => 'heren_15',
+            'Dames -18' => 'dames_18',
+            'Heren -18' => 'heren_18',
+            'Dames' => 'dames',
+            'Heren' => 'heren',
+        ];
+
+        return $mapping[$label] ?? strtolower(str_replace([' ', '-', "'"], '_', $label));
+    }
+
+    /**
+     * Calculate how many places qualify for kruisfinale based on number of poules
+     * Goal: kruisfinale of 4-6 judokas (ideal pool size)
+     *
+     * 2 poules → top 2 or 3 (4-6 judokas)
+     * 3 poules → top 2 (6 judokas)
+     * 4 poules → top 1 (4 judokas) or top 2 if we want more
+     * 5+ poules → top 1 (5+ judokas)
+     */
+    private function berekenKruisfinalesPlaatsen(int $aantalPoules): int
+    {
+        if ($aantalPoules <= 2) {
+            return 3; // 2 poules × 3 = 6 judokas
+        }
+        if ($aantalPoules === 3) {
+            return 2; // 3 poules × 2 = 6 judokas
+        }
+        if ($aantalPoules <= 5) {
+            return 1; // 4-5 poules × 1 = 4-5 judokas
+        }
+        // 6+ poules: still top 1, results in 6+ judokas kruisfinale
+        return 1;
+    }
+
+    /**
+     * Calculate number of matches for a given number of judokas
+     */
+    private function berekenAantalWedstrijden(int $aantal): int
+    {
+        if ($aantal <= 1) return 0;
+        if ($aantal === 3) return 6; // Double round
+        return intval(($aantal * ($aantal - 1)) / 2);
     }
 
     /**
@@ -126,32 +266,26 @@ class PouleIndelingService
     }
 
     /**
-     * Create optimal pool division
-     * Aims for pools of optimal size (5), avoids pools of 1-2
+     * Create optimal pool division based on preference order
+     * Uses the configured preference list (e.g., [5, 4, 6, 3]) to score divisions
      */
     private function maakOptimalePoules(Collection $judokas): array
     {
         $aantal = $judokas->count();
         $judokasArray = $judokas->values()->all();
 
-        // Less than minimum: single pool
+        // Less than minimum: single pool (can't split)
         if ($aantal <= $this->minJudokas) {
             return [$judokasArray];
         }
 
-        // Up to optimal+1: single pool
-        if ($aantal <= $this->optimalJudokas + 1) {
+        // If within max, check if single pool is best
+        if ($aantal <= $this->maxJudokas) {
             return [$judokasArray];
         }
 
-        // Special cases for common numbers
-        if ($aantal === 7) return [array_slice($judokasArray, 0, 3), array_slice($judokasArray, 3)];
-        if ($aantal === 8) return [array_slice($judokasArray, 0, 4), array_slice($judokasArray, 4)];
-        if ($aantal === 9) return [array_slice($judokasArray, 0, 4), array_slice($judokasArray, 4)];
-        if ($aantal === 10) return [array_slice($judokasArray, 0, 5), array_slice($judokasArray, 5)];
-
-        // Find best division for larger numbers
-        $besteVerdeling = [];
+        // Find best division based on preference scores
+        $bestePouleGroottes = [];
         $besteScore = PHP_INT_MAX;
 
         $maxPoules = (int) floor($aantal / $this->minJudokas);
@@ -160,38 +294,125 @@ class PouleIndelingService
             $basisGrootte = (int) floor($aantal / $aantalPoules);
             $rest = $aantal % $aantalPoules;
 
-            $score = 0;
+            // Calculate pool sizes for this division
             $pouleGroottes = array_fill(0, $aantalPoules, $basisGrootte);
-
             for ($i = 0; $i < $rest; $i++) {
                 $pouleGroottes[$i]++;
             }
 
+            // Skip if any pool is outside min/max bounds
+            $valid = true;
             foreach ($pouleGroottes as $grootte) {
-                if ($grootte <= 2) {
-                    $score += 1000; // Heavy penalty for too small
-                } elseif ($grootte === 3) {
-                    $score += 100;
-                } elseif ($grootte >= 7) {
-                    $score += 50 + ($grootte - 7) * 20;
-                } else {
-                    $score += abs($grootte - $this->optimalJudokas) * 10;
+                if ($grootte < $this->minJudokas || $grootte > $this->maxJudokas) {
+                    $valid = false;
+                    break;
                 }
             }
+            if (!$valid) continue;
+
+            // Calculate score based on preference order
+            $score = $this->berekenVerdelingScore($pouleGroottes);
 
             if ($score < $besteScore) {
                 $besteScore = $score;
-                $besteVerdeling = [];
-                $index = 0;
+                $bestePouleGroottes = $pouleGroottes;
+            }
+        }
+
+        if (empty($bestePouleGroottes)) {
+            return [$judokasArray];
+        }
+
+        // Now distribute judokas across pools with club spreading if enabled
+        if ($this->clubspreiding) {
+            return $this->verdeelMetClubspreiding($judokas, $bestePouleGroottes);
+        }
+
+        // Without club spreading: just slice the array
+        $verdeling = [];
+        $index = 0;
+        foreach ($bestePouleGroottes as $grootte) {
+            $verdeling[] = array_slice($judokasArray, $index, $grootte);
+            $index += $grootte;
+        }
+
+        return $verdeling;
+    }
+
+    /**
+     * Distribute judokas across pools while spreading club members
+     * Judokas from the same club are placed in different pools where possible
+     */
+    private function verdeelMetClubspreiding(Collection $judokas, array $pouleGroottes): array
+    {
+        $aantalPoules = count($pouleGroottes);
+
+        // Group judokas by club
+        $perClub = $judokas->groupBy('club_id');
+
+        // Initialize empty pools
+        $poules = array_fill(0, $aantalPoules, []);
+        $pouleHuidig = array_map(fn($g) => 0, $pouleGroottes); // Current count per pool
+
+        // Sort clubs by size (largest first) for better distribution
+        $clubs = $perClub->sortByDesc(fn($j) => $j->count());
+
+        // Distribute judokas round-robin per club
+        foreach ($clubs as $clubId => $clubJudokas) {
+            $pouleIndex = 0;
+
+            foreach ($clubJudokas as $judoka) {
+                // Find next pool with space, starting from current index
+                $gevonden = false;
                 for ($i = 0; $i < $aantalPoules; $i++) {
-                    $pouleGrootte = $basisGrootte + ($i < $rest ? 1 : 0);
-                    $besteVerdeling[] = array_slice($judokasArray, $index, $pouleGrootte);
-                    $index += $pouleGrootte;
+                    $idx = ($pouleIndex + $i) % $aantalPoules;
+                    if ($pouleHuidig[$idx] < $pouleGroottes[$idx]) {
+                        $poules[$idx][] = $judoka;
+                        $pouleHuidig[$idx]++;
+                        $pouleIndex = ($idx + 1) % $aantalPoules; // Next judoka starts at next pool
+                        $gevonden = true;
+                        break;
+                    }
+                }
+
+                // Fallback: shouldn't happen, but place in first available
+                if (!$gevonden) {
+                    for ($idx = 0; $idx < $aantalPoules; $idx++) {
+                        if ($pouleHuidig[$idx] < $pouleGroottes[$idx]) {
+                            $poules[$idx][] = $judoka;
+                            $pouleHuidig[$idx]++;
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        return empty($besteVerdeling) ? [$judokasArray] : $besteVerdeling;
+        return $poules;
+    }
+
+    /**
+     * Calculate score for a division based on preference order
+     * Lower score = better division
+     */
+    private function berekenVerdelingScore(array $pouleGroottes): int
+    {
+        $score = 0;
+
+        foreach ($pouleGroottes as $grootte) {
+            // Find position in preference list (0 = best)
+            $positie = array_search($grootte, $this->voorkeur);
+
+            if ($positie === false) {
+                // Size not in preference list - heavy penalty
+                $score += 1000;
+            } else {
+                // Score based on position: first preference = 0, second = 10, etc.
+                $score += $positie * 10;
+            }
+        }
+
+        return $score;
     }
 
     /**

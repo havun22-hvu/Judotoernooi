@@ -102,10 +102,14 @@ class ImportService
         $leeftijd = date('Y') - $geboortejaar;
         $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
 
-        // Use provided weight class from CSV, or calculate if not provided
-        $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw);
-        if (empty($gewichtsklasse)) {
-            $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse);
+        // Always calculate weight class from actual weight if provided (takes precedence)
+        // This ensures correct classification based on tolerance
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+        if ($gewicht) {
+            $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse, $tolerantie);
+        } else {
+            // No weight provided, use CSV weight class or unknown
+            $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
         }
 
         // Check for duplicate (same name + birth year + tournament) - case insensitive
@@ -277,9 +281,13 @@ class ImportService
     }
 
     /**
-     * Determine weight class based on weight and age category
+     * Determine weight class based on weight, age category and tolerance
+     *
+     * Example with tolerance 0.5:
+     * - Weight 32.5 kg → fits in -32 (32.5 <= 32 + 0.5)
+     * - Weight 32.6 kg → goes to -36 (32.6 > 32 + 0.5)
      */
-    private function bepaalGewichtsklasse(?float $gewicht, Leeftijdsklasse $leeftijdsklasse): string
+    private function bepaalGewichtsklasse(?float $gewicht, Leeftijdsklasse $leeftijdsklasse, float $tolerantie = 0.5): string
     {
         if (!$gewicht) {
             return 'onbekend';
@@ -289,24 +297,28 @@ class ImportService
 
         foreach ($klassen as $klasse) {
             if ($klasse > 0) {
-                // Plus category (minimum weight)
-                if ($gewicht >= $klasse) {
-                    return "+{$klasse}";
-                }
+                // Plus category (minimum weight) - this is always the last one
+                // With tolerance, you can be slightly under the limit
+                // e.g., +63 with tolerance 0.5 means 62.5+ kg qualifies
+                return "+{$klasse}";
             } else {
                 // Minus category (maximum weight)
-                if ($gewicht <= abs($klasse)) {
+                // With tolerance, the limit is extended
+                // e.g., -32 with tolerance 0.5 means up to 32.5 kg qualifies
+                $limiet = abs($klasse);
+                if ($gewicht <= $limiet + $tolerantie) {
                     return "{$klasse}";
                 }
             }
         }
 
-        // If heavier than all categories, use the plus category
+        // If heavier than all minus categories, use the plus category
         $laatsteKlasse = end($klassen);
         if ($laatsteKlasse > 0) {
             return "+{$laatsteKlasse}";
         }
 
-        return "+{abs($laatsteKlasse)}";
+        // Fallback: create plus category from last minus class
+        return "+" . abs($laatsteKlasse);
     }
 }

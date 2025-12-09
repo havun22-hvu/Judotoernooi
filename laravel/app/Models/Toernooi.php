@@ -21,14 +21,16 @@ class Toernooi extends Model
         'locatie',
         'aantal_matten',
         'aantal_blokken',
-        'min_judokas_poule',
-        'optimal_judokas_poule',
-        'max_judokas_poule',
+        'poule_grootte_voorkeur',
+        'clubspreiding',
+        'wedstrijd_systeem',
+        'kruisfinales_aantal',
         'gewicht_tolerantie',
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
         'gewichtsklassen',
+        'mat_voorkeuren',
         'wachtwoord_admin',
         'wachtwoord_jury',
         'wachtwoord_weging',
@@ -48,11 +50,46 @@ class Toernooi extends Model
         'datum' => 'date',
         'inschrijving_deadline' => 'date',
         'is_actief' => 'boolean',
+        'clubspreiding' => 'boolean',
+        'wedstrijd_systeem' => 'array',
         'poules_gegenereerd_op' => 'datetime',
         'blokken_verdeeld_op' => 'datetime',
         'gewicht_tolerantie' => 'decimal:1',
         'gewichtsklassen' => 'array',
+        'poule_grootte_voorkeur' => 'array',
+        'mat_voorkeuren' => 'array',
     ];
+
+    /**
+     * Get the pool size preferences, with fallback to default order
+     */
+    public function getPouleGrootteVoorkeurOfDefault(): array
+    {
+        if (!empty($this->poule_grootte_voorkeur)) {
+            return $this->poule_grootte_voorkeur;
+        }
+
+        // Default preference order: 5, 4, 6, 3
+        return [5, 4, 6, 3];
+    }
+
+    /**
+     * Get minimum pool size from preference list
+     */
+    public function getMinJudokasPouleAttribute(): int
+    {
+        $voorkeur = $this->getPouleGrootteVoorkeurOfDefault();
+        return !empty($voorkeur) ? min($voorkeur) : 3;
+    }
+
+    /**
+     * Get maximum pool size from preference list
+     */
+    public function getMaxJudokasPouleAttribute(): int
+    {
+        $voorkeur = $this->getPouleGrootteVoorkeurOfDefault();
+        return !empty($voorkeur) ? max($voorkeur) : 6;
+    }
 
     public function judokas(): HasMany
     {

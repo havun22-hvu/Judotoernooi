@@ -18,11 +18,38 @@ class Poule extends Model
         'mat_id',
         'nummer',
         'titel',
+        'type', // voorronde, kruisfinale
+        'kruisfinale_plaatsen', // how many places qualify (1, 2, 3)
         'leeftijdsklasse',
         'gewichtsklasse',
         'aantal_judokas',
         'aantal_wedstrijden',
     ];
+
+    public function isKruisfinale(): bool
+    {
+        return $this->type === 'kruisfinale';
+    }
+
+    public function isVoorronde(): bool
+    {
+        return $this->type === 'voorronde' || $this->type === null;
+    }
+
+    /**
+     * Get the voorrondepoules that feed into this kruisfinale
+     */
+    public function getVoorrondePoules()
+    {
+        if (!$this->isKruisfinale()) {
+            return collect();
+        }
+
+        return static::where('toernooi_id', $this->toernooi_id)
+            ->where('leeftijdsklasse', $this->leeftijdsklasse)
+            ->where('type', 'voorronde')
+            ->get();
+    }
 
     public function toernooi(): BelongsTo
     {

@@ -3,34 +3,132 @@
 @section('title', 'Zaaloverzicht')
 
 @section('content')
-<h1 class="text-3xl font-bold text-gray-800 mb-8">Zaaloverzicht</h1>
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
+    <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-blue-600 hover:underline">
+        ← Terug naar Blokkenverdeling
+    </a>
+</div>
+
+<p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
 
 @foreach($overzicht as $blok)
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="bg-gray-800 text-white px-6 py-3 rounded-t-lg flex justify-between items-center">
-        <h2 class="text-xl font-bold">Blok {{ $blok['nummer'] }}</h2>
-        @if($blok['weging_gesloten'])
-        <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
-        @endif
-    </div>
+<div class="mb-6" x-data="{ open: true }">
+    <button @click="open = !open" class="w-full flex justify-between items-center bg-gray-800 text-white px-4 py-3 rounded-t-lg hover:bg-gray-700">
+        <div class="flex items-center gap-4">
+            <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
+            <span class="text-gray-300 text-sm">
+                {{ collect($blok['matten'])->sum(fn($m) => count($m['poules'])) }} poules |
+                {{ collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden')) }} wedstrijden
+            </span>
+            @if($blok['weging_gesloten'])
+            <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
+            @endif
+        </div>
+        <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
 
-    <div class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-{{ count($blok['matten']) > 4 ? '4' : count($blok['matten']) }} gap-4">
-            @foreach($blok['matten'] as $matNr => $matData)
-            <div class="border rounded p-4">
-                <h3 class="font-bold text-lg mb-2">Mat {{ $matNr }}</h3>
-                @forelse($matData['poules'] as $poule)
-                <div class="text-sm border-b py-1 last:border-0">
-                    <div class="font-medium">{{ $poule['titel'] }}</div>
-                    <div class="text-gray-500">{{ $poule['judokas'] }} judoka's, {{ $poule['wedstrijden'] }} wedstrijden</div>
+    <div x-show="open" x-collapse class="bg-white rounded-b-lg shadow">
+        <div class="p-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                @foreach($blok['matten'] as $matNr => $matData)
+                @php
+                    $matId = $toernooi->matten->firstWhere('nummer', $matNr)?->id;
+                    $matWedstrijden = collect($matData['poules'])->sum('wedstrijden');
+                @endphp
+                <div class="border rounded-lg overflow-hidden">
+                    <div class="bg-blue-600 text-white px-3 py-2 flex justify-between items-center">
+                        <span class="font-bold">Mat {{ $matNr }}</span>
+                        <span class="text-xs bg-blue-800 px-2 py-0.5 rounded mat-wedstrijden">{{ $matWedstrijden }}w</span>
+                    </div>
+                    <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
+                        @forelse($matData['poules'] as $poule)
+                        <div class="poule-item text-xs border rounded p-1 bg-gray-50 cursor-move hover:bg-blue-50"
+                             data-poule-id="{{ $poule['id'] }}"
+                             data-wedstrijden="{{ $poule['wedstrijden'] }}">
+                            <div class="font-medium text-gray-800">{{ $poule['titel'] }}</div>
+                            <div class="text-gray-500">{{ $poule['judokas'] }}j / {{ $poule['wedstrijden'] }}w</div>
+                        </div>
+                        @empty
+                        <div class="text-gray-400 text-xs italic empty-message">Geen poules</div>
+                        @endforelse
+                    </div>
                 </div>
-                @empty
-                <div class="text-gray-400 text-sm">Geen poules</div>
-                @endforelse
+                @endforeach
             </div>
-            @endforeach
         </div>
     </div>
 </div>
 @endforeach
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi) }}';
+
+document.querySelectorAll('.mat-container').forEach(container => {
+    new Sortable(container, {
+        group: 'matten',
+        animation: 150,
+        ghostClass: 'bg-blue-100',
+        chosenClass: 'bg-blue-200',
+        dragClass: 'shadow-lg',
+        onEnd: async function(evt) {
+            const pouleEl = evt.item;
+            const pouleId = pouleEl.dataset.pouleId;
+            const newMatId = evt.to.dataset.matId;
+            const oldMatId = evt.from.dataset.matId;
+
+            if (newMatId === oldMatId) return;
+
+            // Remove empty message if present
+            const emptyMsg = evt.to.querySelector('.empty-message');
+            if (emptyMsg) emptyMsg.remove();
+
+            // Add empty message to old container if empty
+            if (evt.from.querySelectorAll('.poule-item').length === 0) {
+                evt.from.innerHTML = '<div class="text-gray-400 text-xs italic empty-message">Geen poules</div>';
+            }
+
+            try {
+                const response = await fetch(verplaatsUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        poule_id: pouleId,
+                        mat_id: newMatId
+                    })
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    alert('Fout bij verplaatsen: ' + (data.message || 'Onbekende fout'));
+                    location.reload();
+                } else {
+                    // Update wedstrijden counts
+                    updateMatCounts();
+                }
+            } catch (err) {
+                alert('Fout bij verplaatsen: ' + err.message);
+                location.reload();
+            }
+        }
+    });
+});
+
+function updateMatCounts() {
+    document.querySelectorAll('.mat-container').forEach(container => {
+        const wedstrijden = Array.from(container.querySelectorAll('.poule-item'))
+            .reduce((sum, el) => sum + parseInt(el.dataset.wedstrijden || 0), 0);
+        const countEl = container.parentElement.querySelector('.mat-wedstrijden');
+        if (countEl) countEl.textContent = wedstrijden + 'w';
+    });
+}
+</script>
 @endsection

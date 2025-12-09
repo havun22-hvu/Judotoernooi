@@ -36,19 +36,21 @@
     $problematischePoules = $poules->filter(fn($p) => $p->judokas_count > 0 && $p->judokas_count < 3);
 @endphp
 
+<div id="problematische-poules-container">
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
-    <h3 class="font-bold text-red-800 mb-2">Problematische poules ({{ $problematischePoules->count() }})</h3>
+    <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
     <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Klik om naar de poule te gaan:</p>
-    <div class="flex flex-wrap gap-2">
+    <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
-        <a href="#poule-{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-            #{{ $p->nummer }} {{ $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg ({{ $p->judokas_count }})
+        <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
+            #{{ $p->nummer }} {{ $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg (<span data-probleem-count="{{ $p->id }}">{{ $p->judokas_count }}</span>)
         </a>
         @endforeach
     </div>
 </div>
 @endif
+</div>
 
 <!-- Per leeftijdsklasse -->
 @forelse($poulesPerKlasse as $leeftijdsklasse => $klassePoules)
@@ -63,18 +65,36 @@
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($klassePoules as $poule)
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'border-2 border-red-300' : '' }}" data-poule-id="{{ $poule->id }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$poule->isKruisfinale() ? 'border-2 border-red-300' : '' }} {{ $poule->isKruisfinale() ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $poule->isKruisfinale() ? '1' : '0' }}">
                 <!-- Poule header -->
-                <div class="px-3 py-2 border-b {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50' }}">
+                <div class="px-3 py-2 border-b {{ $poule->isKruisfinale() ? 'bg-purple-50' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50') }}">
                     <div class="flex justify-between items-center">
-                        <div class="font-bold text-gray-800 text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</div>
-                        @if($poule->judokas_count === 0)
+                        <div class="font-bold text-sm {{ $poule->isKruisfinale() ? 'text-purple-800' : 'text-gray-800' }}">
+                            @if($poule->isKruisfinale())
+                                #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
+                            @else
+                                #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg
+                            @endif
+                        </div>
+                        @if($poule->judokas_count === 0 && !$poule->isKruisfinale())
                         <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                         @endif
                     </div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
+                        @if($poule->isKruisfinale())
+                        <span class="flex items-center gap-1">
+                            Top
+                            <select onchange="updateKruisfinalesPlaatsen({{ $poule->id }}, this.value)" class="border rounded px-1 py-0.5 text-xs bg-white">
+                                @for($i = 1; $i <= 3; $i++)
+                                <option value="{{ $i }}" {{ $poule->kruisfinale_plaatsen == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                @endfor
+                            </select>
+                            door → <span data-poule-count="{{ $poule->id }}">{{ $poule->aantal_judokas }}</span> judoka's
+                        </span>
+                        @else
                         <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
-                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->aantal_wedstrijden }}</span> wedstrijden</span>
+                        @endif
+                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->judokas_count < 2 && !$poule->isKruisfinale() ? '-' : $poule->aantal_wedstrijden }}</span> wedstrijden</span>
                     </div>
                 </div>
 
@@ -152,6 +172,7 @@ const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
@@ -201,6 +222,36 @@ async function verwijderPoule(pouleId, pouleNummer) {
     } catch (error) {
         console.error('Error:', error);
         showToast('Fout bij verwijderen', true);
+    }
+}
+
+async function updateKruisfinalesPlaatsen(pouleId, plaatsen) {
+    try {
+        const response = await fetch(updateKruisfinaleUrl.replace(':id', pouleId), {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ kruisfinale_plaatsen: plaatsen })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Update displayed values
+            const countEl = document.querySelector(`[data-poule-count="${pouleId}"]`);
+            const wedstrijdenEl = document.querySelector(`[data-poule-wedstrijden="${pouleId}"]`);
+            if (countEl) countEl.textContent = data.aantal_judokas;
+            if (wedstrijdenEl) wedstrijdenEl.textContent = data.aantal_wedstrijden;
+            showToast(data.message);
+        } else {
+            showToast(data.message || 'Fout bij opslaan', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Fout bij opslaan', true);
     }
 }
 
@@ -380,26 +431,143 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function updatePouleStats(pouleData) {
+        const pouleCard = document.getElementById(`poule-${pouleData.id}`);
+        if (!pouleCard) return;
+
+        const sortableContainer = pouleCard.querySelector('.sortable-poule');
+        const header = pouleCard.querySelector('.border-b');
+        const headerTop = header?.querySelector('.flex.justify-between');
+        const isKruisfinale = pouleCard.dataset.pouleIsKruisfinale === '1';
+
         // Update count
         const countEl = document.querySelector(`[data-poule-count="${pouleData.id}"]`);
         if (countEl) countEl.textContent = pouleData.judokas_count;
 
-        // Update wedstrijden
+        // Update wedstrijden (show "-" for 0 or 1 judokas)
         const wedstrijdenEl = document.querySelector(`[data-poule-wedstrijden="${pouleData.id}"]`);
-        if (wedstrijdenEl) wedstrijdenEl.textContent = pouleData.aantal_wedstrijden;
+        if (wedstrijdenEl) {
+            wedstrijdenEl.textContent = pouleData.judokas_count < 2 ? '-' : pouleData.aantal_wedstrijden;
+        }
 
-        // Update problematic styling
-        const pouleCard = document.querySelector(`[data-poule-id="${pouleData.id}"]`);
-        if (pouleCard && pouleCard.classList.contains('bg-white')) {
-            const header = pouleCard.querySelector('.border-b');
-            if (pouleData.judokas_count < 3) {
+        // Handle empty poule: add placeholder and delete button
+        if (pouleData.judokas_count === 0) {
+            // Add "Leeg" placeholder if not present
+            if (!sortableContainer.querySelector('.empty-placeholder')) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder';
+                placeholder.textContent = 'Leeg';
+                sortableContainer.appendChild(placeholder);
+            }
+
+            // Add delete button if not present
+            if (headerTop && !headerTop.querySelector('.delete-empty-btn')) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none';
+                deleteBtn.title = 'Verwijder poule';
+                deleteBtn.innerHTML = '&minus;';
+                deleteBtn.onclick = () => verwijderPoule(pouleData.id, pouleData.nummer);
+                headerTop.appendChild(deleteBtn);
+            }
+
+            // Remove red border for empty poules (they're ok)
+            pouleCard.classList.remove('border-2', 'border-red-300');
+            header?.classList.remove('bg-red-50');
+            header?.classList.add('bg-gray-50');
+        } else {
+            // Remove "Leeg" placeholder
+            sortableContainer.querySelector('.empty-placeholder')?.remove();
+
+            // Remove delete button
+            headerTop?.querySelector('.delete-empty-btn')?.remove();
+
+            // Update problematic styling (1-2 judokas = problematic, skip kruisfinale)
+            if (pouleData.judokas_count < 3 && !isKruisfinale) {
                 pouleCard.classList.add('border-2', 'border-red-300');
                 header?.classList.add('bg-red-50');
                 header?.classList.remove('bg-gray-50');
-            } else {
+            } else if (!isKruisfinale) {
                 pouleCard.classList.remove('border-2', 'border-red-300');
                 header?.classList.remove('bg-red-50');
                 header?.classList.add('bg-gray-50');
+            }
+        }
+
+        // Update problematic poules section at the top
+        if (!isKruisfinale) {
+            updateProblematischePoules(pouleData);
+        }
+    }
+
+    function updateProblematischePoules(pouleData) {
+        const container = document.getElementById('problematische-poules-container');
+        const linksContainer = document.getElementById('problematische-links');
+        const countEl = document.getElementById('problematische-count');
+        const existingLink = document.querySelector(`[data-probleem-poule="${pouleData.id}"]`);
+
+        const isProblematic = pouleData.judokas_count > 0 && pouleData.judokas_count < 3;
+
+        if (isProblematic) {
+            // Update or add the link
+            if (existingLink) {
+                // Update count in existing link
+                const linkCount = existingLink.querySelector(`[data-probleem-count="${pouleData.id}"]`);
+                if (linkCount) linkCount.textContent = pouleData.judokas_count;
+            } else {
+                // Need to add new link - ensure container exists
+                if (!linksContainer) {
+                    // Create the entire problematic section
+                    const pouleCard = document.getElementById(`poule-${pouleData.id}`);
+                    const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
+                    const leeftijd = pouleCard?.dataset.pouleLeeftijdsklasse || '';
+                    const gewicht = pouleCard?.dataset.pouleGewichtsklasse || '';
+
+                    container.innerHTML = `
+                        <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
+                            <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">1</span>)</h3>
+                            <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Klik om naar de poule te gaan:</p>
+                            <div id="problematische-links" class="flex flex-wrap gap-2">
+                                <a href="#poule-${pouleData.id}" data-probleem-poule="${pouleData.id}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
+                                    #${nummer} ${leeftijd} / ${gewicht} kg (<span data-probleem-count="${pouleData.id}">${pouleData.judokas_count}</span>)
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Add new link to existing container
+                    const pouleCard = document.getElementById(`poule-${pouleData.id}`);
+                    const nummer = pouleCard?.dataset.pouleNummer || pouleData.nummer;
+                    const leeftijd = pouleCard?.dataset.pouleLeeftijdsklasse || '';
+                    const gewicht = pouleCard?.dataset.pouleGewichtsklasse || '';
+
+                    const newLink = document.createElement('a');
+                    newLink.href = `#poule-${pouleData.id}`;
+                    newLink.dataset.probleemPoule = pouleData.id;
+                    newLink.className = 'inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors';
+                    newLink.innerHTML = `#${nummer} ${leeftijd} / ${gewicht} kg (<span data-probleem-count="${pouleData.id}">${pouleData.judokas_count}</span>)`;
+                    linksContainer.appendChild(newLink);
+
+                    // Update count
+                    if (countEl) {
+                        countEl.textContent = parseInt(countEl.textContent) + 1;
+                    }
+                }
+            }
+        } else {
+            // Remove from problematic list if present
+            if (existingLink) {
+                existingLink.remove();
+
+                // Update count
+                const newLinksContainer = document.getElementById('problematische-links');
+                if (countEl && newLinksContainer) {
+                    const remaining = newLinksContainer.querySelectorAll('[data-probleem-poule]').length;
+                    countEl.textContent = remaining;
+
+                    // Hide entire section if no more problematic poules
+                    if (remaining === 0) {
+                        container.innerHTML = '';
+                    }
+                }
             }
         }
     }

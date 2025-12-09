@@ -235,14 +235,56 @@ class PouleController extends Controller
             'message' => "{$judoka->naam} verplaatst naar {$naarPoule->titel}",
             'van_poule' => [
                 'id' => $vanPoule->id,
+                'nummer' => $vanPoule->nummer,
                 'judokas_count' => $vanPoule->fresh()->judokas()->count(),
                 'aantal_wedstrijden' => $vanPoule->fresh()->aantal_wedstrijden,
             ],
             'naar_poule' => [
                 'id' => $naarPoule->id,
+                'nummer' => $naarPoule->nummer,
                 'judokas_count' => $naarPoule->fresh()->judokas()->count(),
                 'aantal_wedstrijden' => $naarPoule->fresh()->aantal_wedstrijden,
             ],
+        ]);
+    }
+
+    /**
+     * Update kruisfinale plaatsen (how many qualify from each voorronde)
+     */
+    public function updateKruisfinale(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        if (!$poule->isKruisfinale()) {
+            return response()->json(['success' => false, 'message' => 'Dit is geen kruisfinale poule'], 400);
+        }
+
+        $validated = $request->validate([
+            'kruisfinale_plaatsen' => 'required|integer|min:1|max:3',
+        ]);
+
+        // Count how many voorrondepoules feed into this kruisfinale
+        $aantalVoorrondepoules = Poule::where('toernooi_id', $toernooi->id)
+            ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+            ->where('gewichtsklasse', $poule->gewichtsklasse)
+            ->where('type', 'voorronde')
+            ->count();
+
+        $kruisfinalesPlaatsen = $validated['kruisfinale_plaatsen'];
+        $aantalJudokas = $aantalVoorrondepoules * $kruisfinalesPlaatsen;
+
+        // Calculate wedstrijden
+        $aantalWedstrijden = $aantalJudokas <= 1 ? 0 : ($aantalJudokas === 3 ? 6 : intval(($aantalJudokas * ($aantalJudokas - 1)) / 2));
+
+        $poule->update([
+            'kruisfinale_plaatsen' => $kruisfinalesPlaatsen,
+            'aantal_judokas' => $aantalJudokas,
+            'aantal_wedstrijden' => $aantalWedstrijden,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Kruisfinale aangepast: top {$kruisfinalesPlaatsen} door ({$aantalJudokas} judoka's)",
+            'aantal_judokas' => $aantalJudokas,
+            'aantal_wedstrijden' => $aantalWedstrijden,
         ]);
     }
 }
