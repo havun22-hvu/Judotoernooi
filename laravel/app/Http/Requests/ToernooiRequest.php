@@ -11,6 +11,16 @@ class ToernooiRequest extends FormRequest
         return true; // Add proper authorization later
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Convert JSON string to array for poule_grootte_voorkeur
+        if ($this->has('poule_grootte_voorkeur') && is_string($this->poule_grootte_voorkeur)) {
+            $this->merge([
+                'poule_grootte_voorkeur' => json_decode($this->poule_grootte_voorkeur, true),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -22,9 +32,12 @@ class ToernooiRequest extends FormRequest
             'locatie' => 'nullable|string|max:255',
             'aantal_matten' => 'nullable|integer|min:1|max:20',
             'aantal_blokken' => 'nullable|integer|min:1|max:12',
-            'min_judokas_poule' => 'nullable|integer|min:2|max:10',
-            'optimal_judokas_poule' => 'nullable|integer|min:3|max:10',
-            'max_judokas_poule' => 'nullable|integer|min:4|max:12',
+            'poule_grootte_voorkeur' => 'nullable|array|min:1',
+            'poule_grootte_voorkeur.*' => 'integer|min:2|max:12',
+            'clubspreiding' => 'nullable|boolean',
+            'wedstrijd_systeem' => 'nullable|array',
+            'wedstrijd_systeem.*' => 'string|in:poules,poules_kruisfinale,eliminatie',
+            'kruisfinales_aantal' => 'nullable|integer|min:1|max:3',
             'gewicht_tolerantie' => 'nullable|numeric|min:0|max:5',
             'gewichtsklassen' => 'nullable|array',
             'gewichtsklassen.*' => 'nullable|string',

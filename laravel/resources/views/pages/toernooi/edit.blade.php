@@ -96,40 +96,340 @@
                     <p class="text-gray-500 text-sm mt-1">In hoeveel tijdsblokken wordt het toernooi verdeeld?</p>
                 </div>
             </div>
+
+            <!-- Mat Voorkeuren per Leeftijdsklasse -->
+            <div class="mt-6 pt-4 border-t">
+                <label class="block text-gray-700 font-medium mb-2">Mat Voorkeuren per Leeftijdsklasse</label>
+                <p class="text-gray-500 text-sm mb-3">Geef aan welke leeftijdsklassen bij voorkeur op bepaalde matten moeten staan.</p>
+
+                @php
+                    $matVoorkeuren = old('mat_voorkeuren', $toernooi->mat_voorkeuren) ?? [];
+                    if (is_string($matVoorkeuren)) {
+                        $matVoorkeuren = json_decode($matVoorkeuren, true) ?? [];
+                    }
+                    $leeftijdsklassen = ["Mini's", 'A-pupillen', 'B-pupillen', 'Dames -15', 'Heren -15', 'C-pupillen', 'Aspiranten', 'Junioren', 'Senioren'];
+                @endphp
+
+                <div id="mat-voorkeuren-container" class="space-y-2 mb-3">
+                    @foreach($matVoorkeuren as $index => $voorkeur)
+                    <div class="mat-voorkeur-item flex items-center gap-2 bg-gray-50 p-2 rounded">
+                        <select name="mat_voorkeuren[{{ $index }}][leeftijdsklasse]" class="border rounded px-2 py-1 text-sm">
+                            @foreach($leeftijdsklassen as $lk)
+                            <option value="{{ $lk }}" {{ ($voorkeur['leeftijdsklasse'] ?? '') === $lk ? 'selected' : '' }}>{{ $lk }}</option>
+                            @endforeach
+                        </select>
+                        <span class="text-gray-500">→ Mat:</span>
+                        <div class="flex gap-1 mat-nummers">
+                            @foreach($voorkeur['matten'] ?? [] as $matNr)
+                            <span class="mat-nummer bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                                {{ $matNr }}
+                                <button type="button" class="ml-1 text-blue-400 hover:text-red-500 remove-mat">&times;</button>
+                            </span>
+                            @endforeach
+                        </div>
+                        <button type="button" class="add-mat-nr text-green-600 hover:text-green-800 text-lg font-bold" title="Mat toevoegen">+</button>
+                        <button type="button" class="remove-voorkeur-item ml-auto text-red-400 hover:text-red-600" title="Verwijder regel">&times;</button>
+                    </div>
+                    @endforeach
+                </div>
+
+                <button type="button" id="add-mat-voorkeur" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                    + Leeftijdsklasse toevoegen
+                </button>
+
+                <input type="hidden" name="mat_voorkeuren_json" id="mat_voorkeuren_input" value="{{ json_encode($matVoorkeuren) }}">
+            </div>
         </div>
 
         <!-- POULE INSTELLINGEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Poule Instellingen</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label for="min_judokas_poule" class="block text-gray-700 font-medium mb-1">Minimum per Poule</label>
-                    <input type="number" name="min_judokas_poule" id="min_judokas_poule"
-                           value="{{ old('min_judokas_poule', $toernooi->min_judokas_poule) }}"
-                           class="w-full border rounded px-3 py-2" min="2" max="10">
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Voorkeursvolgorde Poule Grootte</label>
+                <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Eerste = meest gewenst, laagste = minimum, hoogste = maximum.</p>
+
+                @php
+                    $voorkeur = old('poule_grootte_voorkeur', $toernooi->poule_grootte_voorkeur) ?? [5, 4, 6, 3];
+                    if (is_string($voorkeur)) {
+                        $voorkeur = json_decode($voorkeur, true) ?? [5, 4, 6, 3];
+                    }
+                @endphp
+
+                <div id="voorkeur-container" class="flex flex-wrap gap-2 mb-3">
+                    @foreach($voorkeur as $index => $grootte)
+                    <div class="voorkeur-item flex items-center bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-2 cursor-move" draggable="true" data-grootte="{{ $grootte }}">
+                        <span class="font-bold text-blue-800 text-lg mr-2">{{ $grootte }}</span>
+                        <span class="text-blue-600 text-sm">judoka's</span>
+                        <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="Verwijder">&times;</button>
+                    </div>
+                    @endforeach
                 </div>
 
-                <div>
-                    <label for="optimal_judokas_poule" class="block text-gray-700 font-medium mb-1">Optimaal per Poule</label>
-                    <input type="number" name="optimal_judokas_poule" id="optimal_judokas_poule"
-                           value="{{ old('optimal_judokas_poule', $toernooi->optimal_judokas_poule) }}"
-                           class="w-full border rounded px-3 py-2" min="3" max="10">
+                <div class="flex items-center gap-2">
+                    <select id="add-voorkeur-select" class="border rounded px-3 py-2 text-sm">
+                        @for($i = 2; $i <= 8; $i++)
+                        <option value="{{ $i }}">{{ $i }} judoka's</option>
+                        @endfor
+                    </select>
+                    <button type="button" id="add-voorkeur-btn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                        + Toevoegen
+                    </button>
                 </div>
 
-                <div>
-                    <label for="max_judokas_poule" class="block text-gray-700 font-medium mb-1">Maximum per Poule</label>
-                    <input type="number" name="max_judokas_poule" id="max_judokas_poule"
-                           value="{{ old('max_judokas_poule', $toernooi->max_judokas_poule) }}"
-                           class="w-full border rounded px-3 py-2" min="4" max="12">
+                <input type="hidden" name="poule_grootte_voorkeur" id="poule_grootte_voorkeur_input" value="{{ json_encode($voorkeur) }}">
+
+                <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                    <strong>Voorbeeld:</strong> Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.
+                    Bij een poule van 3 spelen judoka's 2x tegen elkaar (dubbele ronde).
                 </div>
             </div>
 
-            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>Tip:</strong> Bij een poule van 3 spelen judoka's 2x tegen elkaar (4 wedstrijden per judoka).
-                Bij 4+ judoka's speelt iedereen 1x tegen elkaar (3, 4, 5... wedstrijden).
+            <!-- Clubspreiding -->
+            <div class="border-t pt-4 mt-4">
+                <label class="flex items-center cursor-pointer">
+                    <input type="hidden" name="clubspreiding" value="0">
+                    <input type="checkbox" name="clubspreiding" value="1"
+                           {{ old('clubspreiding', $toernooi->clubspreiding ?? true) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span class="ml-3">
+                        <span class="font-medium text-gray-700">Clubspreiding</span>
+                        <span class="block text-sm text-gray-500">Judoka's van dezelfde club zoveel mogelijk in verschillende poules plaatsen</span>
+                    </span>
+                </label>
+            </div>
+
+            <!-- Wedstrijdsysteem per leeftijdsklasse -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-2">Wedstrijdsysteem per Leeftijdsklasse</h3>
+
+                <p class="text-xs text-gray-500 mb-3">
+                    Bij kruisfinale: aantal doorgeplaatsten wordt automatisch bepaald op basis van het aantal poules (doel: 4-6 judoka's in kruisfinale)
+                </p>
+
+                @php
+                    $wedstrijdSysteem = old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? [];
+                    $leeftijdsklassen = [
+                        'minis' => "Mini's",
+                        'a_pupillen' => 'A-pupillen',
+                        'b_pupillen' => 'B-pupillen',
+                        'dames_15' => 'Dames -15',
+                        'heren_15' => 'Heren -15',
+                        'dames_18' => 'Dames -18',
+                        'heren_18' => 'Heren -18',
+                        'dames' => 'Dames',
+                        'heren' => 'Heren',
+                    ];
+                @endphp
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    @foreach($leeftijdsklassen as $key => $label)
+                    <div class="flex items-center justify-between p-2 border rounded bg-gray-50">
+                        <span class="text-sm font-medium">{{ $label }}</span>
+                        <select name="wedstrijd_systeem[{{ $key }}]" class="border rounded px-2 py-1 text-sm bg-white">
+                            <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
+                            <option value="poules_kruisfinale" {{ ($wedstrijdSysteem[$key] ?? '') == 'poules_kruisfinale' ? 'selected' : '' }}>Poules + Kruisfinale</option>
+                            <option value="eliminatie" {{ ($wedstrijdSysteem[$key] ?? '') == 'eliminatie' ? 'selected' : '' }}>Direct eliminatie</option>
+                        </select>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                    <strong>Poules:</strong> Iedereen tegen iedereen, elke poule eigen podium<br>
+                    <strong>Poules + Kruisfinale:</strong> Na poules strijden top X om overall klassering<br>
+                    <strong>Direct eliminatie:</strong> Knock-out systeem (verlies = uit)
+                </div>
             </div>
         </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('voorkeur-container');
+            const hiddenInput = document.getElementById('poule_grootte_voorkeur_input');
+            const addBtn = document.getElementById('add-voorkeur-btn');
+            const addSelect = document.getElementById('add-voorkeur-select');
+
+            function updateHiddenInput() {
+                const items = container.querySelectorAll('.voorkeur-item');
+                const voorkeur = Array.from(items).map(item => parseInt(item.dataset.grootte));
+                hiddenInput.value = JSON.stringify(voorkeur);
+            }
+
+            // Drag and drop
+            let draggedItem = null;
+
+            container.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('voorkeur-item')) {
+                    draggedItem = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+
+            container.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('voorkeur-item')) {
+                    e.target.style.opacity = '1';
+                    draggedItem = null;
+                }
+            });
+
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.voorkeur-item');
+                if (target && target !== draggedItem) {
+                    const rect = target.getBoundingClientRect();
+                    const midX = rect.left + rect.width / 2;
+                    if (e.clientX < midX) {
+                        container.insertBefore(draggedItem, target);
+                    } else {
+                        container.insertBefore(draggedItem, target.nextSibling);
+                    }
+                }
+            });
+
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                updateHiddenInput();
+            });
+
+            // Remove button
+            container.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-voorkeur')) {
+                    e.target.closest('.voorkeur-item').remove();
+                    updateHiddenInput();
+                }
+            });
+
+            // Add button
+            addBtn.addEventListener('click', function() {
+                const grootte = addSelect.value;
+                // Check if already exists
+                const existing = container.querySelector(`[data-grootte="${grootte}"]`);
+                if (existing) {
+                    existing.classList.add('ring-2', 'ring-red-500');
+                    setTimeout(() => existing.classList.remove('ring-2', 'ring-red-500'), 1000);
+                    return;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'voorkeur-item flex items-center bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-2 cursor-move';
+                item.draggable = true;
+                item.dataset.grootte = grootte;
+                item.innerHTML = `
+                    <span class="font-bold text-blue-800 text-lg mr-2">${grootte}</span>
+                    <span class="text-blue-600 text-sm">judoka's</span>
+                    <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="Verwijder">&times;</button>
+                `;
+                container.appendChild(item);
+                updateHiddenInput();
+            });
+
+            // Mat Voorkeuren functionaliteit
+            const matVoorkeurenContainer = document.getElementById('mat-voorkeuren-container');
+            const matVoorkeurenInput = document.getElementById('mat_voorkeuren_input');
+            const addMatVoorkeurBtn = document.getElementById('add-mat-voorkeur');
+            const leeftijdsklassen = ["Mini's", "A-pupillen", "B-pupillen", "Dames -15", "Heren -15", "C-pupillen", "Aspiranten", "Junioren", "Senioren"];
+            const aantalMatten = {{ $toernooi->aantal_matten ?? 7 }};
+
+            function updateMatVoorkeurenInput() {
+                const items = matVoorkeurenContainer.querySelectorAll('.mat-voorkeur-item');
+                const voorkeuren = Array.from(items).map(item => {
+                    const lk = item.querySelector('select').value;
+                    const matten = Array.from(item.querySelectorAll('.mat-nummer')).map(el =>
+                        parseInt(el.textContent.trim())
+                    );
+                    return { leeftijdsklasse: lk, matten: matten };
+                });
+                matVoorkeurenInput.value = JSON.stringify(voorkeuren);
+            }
+
+            // Add mat number to voorkeur
+            matVoorkeurenContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('add-mat-nr')) {
+                    const item = e.target.closest('.mat-voorkeur-item');
+                    const matNummers = item.querySelector('.mat-nummers');
+                    const existingNrs = Array.from(matNummers.querySelectorAll('.mat-nummer')).map(el =>
+                        parseInt(el.textContent.trim())
+                    );
+
+                    // Check if dropdown already exists
+                    if (item.querySelector('.mat-select-popup')) return;
+
+                    // Create inline dropdown
+                    const select = document.createElement('select');
+                    select.className = 'mat-select-popup border rounded px-2 py-1 text-sm bg-white';
+                    select.innerHTML = '<option value="">Kies mat...</option>';
+                    for (let i = 1; i <= aantalMatten; i++) {
+                        if (!existingNrs.includes(i)) {
+                            select.innerHTML += `<option value="${i}">Mat ${i}</option>`;
+                        }
+                    }
+
+                    select.addEventListener('change', function() {
+                        const matNr = this.value;
+                        if (matNr) {
+                            const span = document.createElement('span');
+                            span.className = 'mat-nummer bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm';
+                            span.innerHTML = matNr + ' <button type="button" class="ml-1 text-blue-400 hover:text-red-500 remove-mat">&times;</button>';
+                            matNummers.appendChild(span);
+                            updateMatVoorkeurenInput();
+                        }
+                        this.remove();
+                    });
+
+                    select.addEventListener('blur', function() {
+                        setTimeout(() => this.remove(), 100);
+                    });
+
+                    matNummers.appendChild(select);
+                    select.focus();
+                }
+
+                // Remove mat number
+                if (e.target.classList.contains('remove-mat')) {
+                    e.target.closest('.mat-nummer').remove();
+                    updateMatVoorkeurenInput();
+                }
+
+                // Remove voorkeur item
+                if (e.target.classList.contains('remove-voorkeur-item')) {
+                    e.target.closest('.mat-voorkeur-item').remove();
+                    updateMatVoorkeurenInput();
+                }
+            });
+
+            // Update on select change
+            matVoorkeurenContainer.addEventListener('change', function(e) {
+                if (e.target.tagName === 'SELECT') {
+                    updateMatVoorkeurenInput();
+                }
+            });
+
+            // Add new voorkeur
+            addMatVoorkeurBtn.addEventListener('click', function() {
+                const index = matVoorkeurenContainer.querySelectorAll('.mat-voorkeur-item').length;
+                const item = document.createElement('div');
+                item.className = 'mat-voorkeur-item flex items-center gap-2 bg-gray-50 p-2 rounded';
+
+                let options = leeftijdsklassen.map(lk => `<option value="${lk}">${lk}</option>`).join('');
+
+                item.innerHTML = `
+                    <select name="mat_voorkeuren[${index}][leeftijdsklasse]" class="border rounded px-2 py-1 text-sm">
+                        ${options}
+                    </select>
+                    <span class="text-gray-500">→ Mat:</span>
+                    <div class="flex gap-1 mat-nummers"></div>
+                    <button type="button" class="add-mat-nr text-green-600 hover:text-green-800 text-lg font-bold" title="Mat toevoegen">+</button>
+                    <button type="button" class="remove-voorkeur-item ml-auto text-red-400 hover:text-red-600" title="Verwijder regel">&times;</button>
+                `;
+                matVoorkeurenContainer.appendChild(item);
+                updateMatVoorkeurenInput();
+            });
+
+            // Initial update
+            updateMatVoorkeurenInput();
+        });
+        </script>
 
         <!-- GEWICHT -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -187,6 +487,64 @@
             </button>
         </div>
     </form>
+
+    <!-- BLOKTIJDEN (apart formulier) -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Bloktijden</h2>
+        <p class="text-gray-600 mb-4">
+            Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.
+        </p>
+
+        <form action="{{ route('toernooi.bloktijden', $toernooi) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b bg-gray-50">
+                            <th class="text-left py-2 px-3 font-medium">Blok</th>
+                            <th class="text-left py-2 px-3 font-medium">Weging Start</th>
+                            <th class="text-left py-2 px-3 font-medium">Weging Einde</th>
+                            <th class="text-left py-2 px-3 font-medium">Start Wedstrijden</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($blokken as $blok)
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-3 font-medium">Blok {{ $blok->nummer }}</td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[{{ $blok->id }}][weging_start]"
+                                       value="{{ $blok->weging_start?->format('H:i') }}"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[{{ $blok->id }}][weging_einde]"
+                                       value="{{ $blok->weging_einde?->format('H:i') }}"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                            <td class="py-2 px-3">
+                                <input type="time" name="blokken[{{ $blok->id }}][starttijd]"
+                                       value="{{ $blok->starttijd?->format('H:i') }}"
+                                       class="border rounded px-2 py-1 w-28">
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <strong>Tip:</strong> De weging sluit automatisch wanneer de "Weging Einde" tijd is bereikt, of kan handmatig gesloten worden.
+            </div>
+
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                    Bloktijden Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
 
     <!-- WACHTWOORDEN (apart formulier) -->
     <div class="bg-white rounded-lg shadow p-6 mt-6">

@@ -17,6 +17,13 @@ class Wedstrijd extends Model
         'judoka_wit_id',
         'judoka_blauw_id',
         'volgorde',
+        'ronde',
+        'groep',
+        'bracket_positie',
+        'volgende_wedstrijd_id',
+        'herkansing_wedstrijd_id',
+        'winnaar_naar_slot',
+        'verliezer_naar_slot',
         'winnaar_id',
         'score_wit',
         'score_blauw',
@@ -48,6 +55,60 @@ class Wedstrijd extends Model
     public function winnaar(): BelongsTo
     {
         return $this->belongsTo(Judoka::class, 'winnaar_id');
+    }
+
+    /**
+     * Wedstrijd waar de winnaar naartoe gaat
+     */
+    public function volgendeWedstrijd(): BelongsTo
+    {
+        return $this->belongsTo(Wedstrijd::class, 'volgende_wedstrijd_id');
+    }
+
+    /**
+     * Wedstrijd waar de verliezer naartoe gaat (herkansing)
+     */
+    public function herkansingWedstrijd(): BelongsTo
+    {
+        return $this->belongsTo(Wedstrijd::class, 'herkansing_wedstrijd_id');
+    }
+
+    /**
+     * Check if this is an elimination match
+     */
+    public function isEliminatie(): bool
+    {
+        return $this->ronde !== null;
+    }
+
+    /**
+     * Check if this is a main bracket match (Groep A)
+     */
+    public function isHoofdboom(): bool
+    {
+        return $this->groep === 'A';
+    }
+
+    /**
+     * Check if this is a repechage match (Groep B)
+     */
+    public function isHerkansing(): bool
+    {
+        return $this->groep === 'B';
+    }
+
+    /**
+     * Get the loser of this match
+     */
+    public function getVerliezerId(): ?int
+    {
+        if (!$this->is_gespeeld || !$this->winnaar_id) {
+            return null;
+        }
+
+        return $this->winnaar_id === $this->judoka_wit_id
+            ? $this->judoka_blauw_id
+            : $this->judoka_wit_id;
     }
 
     public function registreerUitslag(int $winnaarId, string $scoreWinnaar, string $scoreVerliezer, string $type): void
