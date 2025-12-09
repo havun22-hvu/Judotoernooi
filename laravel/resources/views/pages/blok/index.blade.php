@@ -309,16 +309,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Categorieën per leeftijdsklasse -->
     <div class="p-4">
         @forelse($categorieenInBlok as $leeftijdsklasse => $gewichten)
-        <div class="mb-3 last:mb-0">
-            <div class="font-bold text-gray-700 mb-1">{{ $leeftijdsklasse }}</div>
-            <div class="flex flex-wrap gap-2">
-                @foreach($gewichten as $gewicht => $data)
-                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                    {{ $gewicht }} kg
-                    <span class="text-blue-600 text-xs">({{ $data['wedstrijden'] }}w)</span>
-                </span>
-                @endforeach
-            </div>
+        <div class="mb-2 last:mb-0 flex flex-wrap items-baseline gap-x-2">
+            <span class="font-bold text-gray-700">{{ $leeftijdsklasse }}:</span>
+            @foreach($gewichten as $gewicht => $data)
+            <span class="text-sm text-blue-800">{{ $gewicht }}<span class="text-blue-500 text-xs">({{ $data['wedstrijden'] }})</span></span>
+            @endforeach
         </div>
         @empty
         <div class="text-gray-400 text-sm italic">Geen categorieën in dit blok</div>
