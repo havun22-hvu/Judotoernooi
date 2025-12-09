@@ -138,10 +138,10 @@ def solve_blok_mat_distribution(data: Dict) -> Dict:
         model.Add(diff_pos <= max_deviation)
         model.Add(diff_neg <= max_deviation)
 
-    # Multi-objective: minimize both deviation AND gaps
-    # Balance between equal blocks and good continuity
-    # Using weight of 10 for deviation, 1 for gaps
-    model.Minimize(10 * max_deviation + total_gaps)
+    # Multi-objective: minimize deviation (most important) AND gaps (secondary)
+    # Higher weight on deviation ensures better balance across blocks
+    # Lower weight on gaps allows more spreading of categories
+    model.Minimize(100 * max_deviation + total_gaps)
 
     # Solve
     solver = cp_model.CpSolver()
