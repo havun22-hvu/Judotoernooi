@@ -83,6 +83,7 @@ function switchTab(tab) {
     $totaalWedstrijden = collect($statistieken)->sum('totaal_wedstrijden');
     $nietVerdeeld = $toernooi->poules()->whereNull('blok_id')->count();
     $gemiddeldPerBlok = $blokken->count() > 0 ? round($totaalWedstrijden / $blokken->count()) : 0;
+    $gemiddeldPerMat = ($blokken->count() > 0 && $toernooi->matten->count() > 0) ? round($totaalWedstrijden / $blokken->count() / $toernooi->matten->count()) : 0;
 @endphp
 
 <div class="bg-white rounded-lg shadow p-4 mb-6">
@@ -92,6 +93,7 @@ function switchTab(tab) {
         <div><span class="font-bold text-gray-700">Verdeelde poules:</span> {{ $totaalPoules }}</div>
         <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $totaalWedstrijden }}</div>
         <div><span class="font-bold text-gray-700">Gemiddeld per blok:</span> {{ $gemiddeldPerBlok }}</div>
+        <div><span class="font-bold text-gray-700">Gemiddeld per mat:</span> {{ $gemiddeldPerMat }}</div>
         @if($nietVerdeeld > 0)
         <div class="text-red-600"><span class="font-bold">Niet verdeeld:</span> {{ $nietVerdeeld }} poules</div>
         @endif
@@ -399,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $handmatigTotaalWedstrijden = $gewichtsklassen->sum('wedstrijden');
     $handmatigGemiddeld = $aantalBlokken > 0 ? round($handmatigTotaalWedstrijden / $aantalBlokken) : 0;
+    $handmatigGemiddeldPerMat = ($aantalBlokken > 0 && $aantalMatten > 0) ? round($handmatigTotaalWedstrijden / $aantalBlokken / $aantalMatten) : 0;
 @endphp
 
 <!-- Statistieken -->
@@ -409,6 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div><span class="font-bold text-gray-700">Categorieën:</span> {{ $gewichtsklassen->count() }}</div>
         <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $handmatigTotaalWedstrijden }}</div>
         <div><span class="font-bold text-gray-700">Gemiddeld per blok:</span> {{ $handmatigGemiddeld }}</div>
+        <div><span class="font-bold text-gray-700">Gemiddeld per mat:</span> {{ $handmatigGemiddeldPerMat }}</div>
     </div>
 </div>
 
