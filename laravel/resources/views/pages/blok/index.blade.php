@@ -268,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @foreach($blokken as $blok)
 @php
     $blokStats = $statistieken[$blok->nummer] ?? ['totaal_wedstrijden' => 0, 'matten' => []];
+    $leeftijdVolgordeBlok = ["Mini's", 'A-pupillen', 'B-pupillen', 'C-pupillen', 'Dames -15', 'Heren -15', 'Dames -18', 'Heren -18', 'Dames -21', 'Heren -21', 'Dames', 'Heren', 'Aspiranten', 'Junioren', 'Senioren'];
     // Groepeer per leeftijdsklasse, dan per gewichtsklasse
     $categorieenInBlok = $blok->poules->groupBy('leeftijdsklasse')->map(function($poules) {
         return $poules->groupBy('gewichtsklasse')->map(function($ps) {
@@ -276,7 +277,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 'wedstrijden' => $ps->sum('aantal_wedstrijden'),
             ];
         })->filter(fn($data) => $data['wedstrijden'] > 0)->sortKeys();
-    })->filter(fn($gewichten) => $gewichten->isNotEmpty())->sortKeys();
+    })->filter(fn($gewichten) => $gewichten->isNotEmpty())
+      ->sortBy(fn($v, $k) => ($pos = array_search($k, $leeftijdVolgordeBlok)) !== false ? $pos : 99);
 @endphp
 <div class="bg-white rounded-lg shadow mb-6">
     <!-- Blok header -->
