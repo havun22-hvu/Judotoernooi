@@ -91,7 +91,7 @@ function switchTab(tab) {
         <div><span class="font-bold text-gray-700">Matten:</span> {{ $toernooi->matten->count() }}</div>
         <div><span class="font-bold text-gray-700">Verdeelde poules:</span> {{ $totaalPoules }}</div>
         <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $totaalWedstrijden }}</div>
-        <div class="bg-blue-50 px-2 py-1 rounded"><span class="font-bold text-blue-700">Gemiddeld per blok:</span> <span class="text-blue-600">{{ $gemiddeldPerBlok }}</span></div>
+        <div><span class="font-bold text-gray-700">Gemiddeld per blok:</span> {{ $gemiddeldPerBlok }}</div>
         @if($nietVerdeeld > 0)
         <div class="text-red-600"><span class="font-bold">Niet verdeeld:</span> {{ $nietVerdeeld }} poules</div>
         @endif
@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div><span class="font-bold text-gray-700">Matten:</span> {{ $aantalMatten }}</div>
         <div><span class="font-bold text-gray-700">Categorieën:</span> {{ $gewichtsklassen->count() }}</div>
         <div><span class="font-bold text-gray-700">Totaal wedstrijden:</span> {{ $handmatigTotaalWedstrijden }}</div>
-        <div class="bg-blue-50 px-2 py-1 rounded"><span class="font-bold text-blue-700">Gemiddeld per blok:</span> <span class="text-blue-600">{{ $handmatigGemiddeld }}</span></div>
+        <div><span class="font-bold text-gray-700">Gemiddeld per blok:</span> {{ $handmatigGemiddeld }}</div>
     </div>
 </div>
 
