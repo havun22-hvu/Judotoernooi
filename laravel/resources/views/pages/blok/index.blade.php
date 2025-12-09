@@ -397,7 +397,13 @@ document.addEventListener('DOMContentLoaded', function() {
             'blok' => $group->first()->blok->nummer ?? null,
         ])
         ->filter(fn($v) => $v['wedstrijden'] > 0)
-        ->sortBy(fn($v) => (($pos = array_search($v['leeftijdsklasse'], $leeftijdVolgorde)) !== false ? $pos * 1000 : 99000) + (int)preg_replace('/[^0-9]/', '', $v['gewichtsklasse']));
+        ->sortBy(function($v) use ($leeftijdVolgorde) {
+            $leeftijdPos = ($pos = array_search($v['leeftijdsklasse'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
+            $gewicht = (int)preg_replace('/[^0-9]/', '', $v['gewichtsklasse']);
+            // + klassen komen na - klassen (voeg 500 toe als het met + begint)
+            $plusBonus = str_starts_with($v['gewichtsklasse'], '+') ? 500 : 0;
+            return $leeftijdPos + $gewicht + $plusBonus;
+        });
 
     $handmatigTotaalWedstrijden = $gewichtsklassen->sum('wedstrijden');
     $handmatigGemiddeld = $aantalBlokken > 0 ? round($handmatigTotaalWedstrijden / $aantalBlokken) : 0;
