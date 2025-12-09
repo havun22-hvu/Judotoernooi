@@ -440,6 +440,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <button type="button" onclick="kopieerVanAutomatisch()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             Kopieer van Automatisch
                         </button>
+                        <button type="button" onclick="resetVerdeling()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+                            Nieuw
+                        </button>
                     </div>
                 </form>
             </div>
@@ -520,6 +523,16 @@ function kopieerVanAutomatisch() {
     document.querySelector('select[name="blok[{{ $key }}]"]').value = '{{ $data['blok'] }}';
     @endif
     @endforeach
+
+    updateBlokTotalen();
+}
+
+function resetVerdeling() {
+    if (!confirm('Alle bloktoewijzingen verwijderen?')) return;
+
+    document.querySelectorAll('#handmatigForm .blok-select').forEach(select => {
+        select.value = '';
+    });
 
     updateBlokTotalen();
 }
