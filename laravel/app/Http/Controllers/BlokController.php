@@ -27,14 +27,7 @@ class BlokController extends Controller
         $toernooi->load('matten');
         $statistieken = $this->verdelingService->getVerdelingsStatistieken($toernooi);
 
-        // Load saved priorities with defaults
-        $prioriteiten = $toernooi->verdeling_prioriteiten ?? [
-            'spreiding' => 'hoog',
-            'gewicht' => 'hoog',
-            'matten' => 'normaal',
-        ];
-
-        return view('pages.blok.index', compact('toernooi', 'blokken', 'statistieken', 'prioriteiten'));
+        return view('pages.blok.index', compact('toernooi', 'blokken', 'statistieken'));
     }
 
     public function show(Toernooi $toernooi, Blok $blok): View
@@ -44,39 +37,119 @@ class BlokController extends Controller
         return view('pages.blok.show', compact('toernooi', 'blok'));
     }
 
+    /**
+     * Generate block distribution variants and show selection UI
+     */
     public function genereerVerdeling(Request $request, Toernooi $toernooi): RedirectResponse
     {
-        // Get priorities from request (hoog, normaal, laag)
-        $prioriteiten = [
-            'spreiding' => $request->input('prioriteit_spreiding', 'hoog'),
-            'gewicht' => $request->input('prioriteit_gewicht', 'hoog'),
-            'matten' => $request->input('prioriteit_matten', 'normaal'),
-        ];
+        try {
+            $result = $this->verdelingService->genereerVarianten($toernooi);
 
-        // Save priorities to database
-        $toernooi->update(['verdeling_prioriteiten' => $prioriteiten]);
+            if (empty($result['varianten'])) {
+                return redirect()
+                    ->route('toernooi.blok.index', $toernooi)
+                    ->with('info', $result['message'] ?? 'Geen varianten gegenereerd');
+            }
 
-        $statistieken = $this->verdelingService->genereerBlokMatVerdeling($toernooi, false, $prioriteiten);
+            // Store variants in session for selection
+            session(['blok_varianten' => $result['varianten']]);
 
-        return redirect()
-            ->route('toernooi.blok.index', $toernooi)
-            ->with('success', 'Blok/Mat verdeling gegenereerd');
+            // Build info message with best variant stats
+            $beste = $result['varianten'][0];
+            $maxAfwijking = $beste['scores']['max_afwijking'] ?? 0;
+            $breaks = $beste['scores']['breaks'] ?? 0;
+            $msg = count($result['varianten']) . " varianten berekend (beste: max afwijking {$maxAfwijking} wed., {$breaks} breaks)";
+
+            return redirect()
+                ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1])
+                ->with('success', $msg);
+
+        } catch (\Exception $e) {
+            \Log::error('genereerVerdeling failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('error', 'Verdeling mislukt: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Save distribution priorities via AJAX
+     * Apply chosen variant (supports both form POST and JSON)
      */
-    public function savePrioriteiten(Request $request, Toernooi $toernooi): JsonResponse
+    public function kiesVariant(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
+    {
+        $variantIndex = (int) $request->input('variant', 0);
+        $varianten = session('blok_varianten', []);
+
+        if (!isset($varianten[$variantIndex])) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => 'Variant niet gevonden'], 404);
+            }
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('error', 'Variant niet gevonden');
+        }
+
+        $variant = $varianten[$variantIndex];
+
+        try {
+            $this->verdelingService->pasVariantToe($toernooi, $variant['toewijzingen']);
+
+            // Clear session
+            session()->forget('blok_varianten');
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true]);
+            }
+
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('success', 'Variant ' . ($variantIndex + 1) . ' toegepast');
+
+        } catch (\Exception $e) {
+            \Log::error('kiesVariant failed', ['error' => $e->getMessage()]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('error', 'Variant toepassen mislukt: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update gewenst wedstrijden for a block via AJAX
+     */
+    public function updateGewenst(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
-            'spreiding' => 'required|in:hoog,normaal,laag',
-            'gewicht' => 'required|in:hoog,normaal,laag',
-            'matten' => 'required|in:hoog,normaal,laag',
+            'blok_id' => 'required|exists:blokken,id',
+            'gewenst' => 'nullable|integer|min:0',
         ]);
 
-        $toernooi->update(['verdeling_prioriteiten' => $validated]);
+        $blok = Blok::findOrFail($validated['blok_id']);
 
-        return response()->json(['success' => true]);
+        // Ensure blok belongs to this toernooi
+        if ($blok->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Blok hoort niet bij dit toernooi'], 403);
+        }
+
+        // Empty or 0 = null (auto-calculate)
+        $gewenst = !empty($validated['gewenst']) ? (int)$validated['gewenst'] : null;
+        $blok->update(['gewenst_wedstrijden' => $gewenst]);
+
+        return response()->json(['success' => true, 'gewenst' => $gewenst]);
+    }
+
+    /**
+     * Distribute categories over mats and redirect to zaaloverzicht
+     */
+    public function zetOpMat(Toernooi $toernooi): RedirectResponse
+    {
+        $this->verdelingService->verdeelOverMatten($toernooi);
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', 'Categorieën verdeeld over matten');
     }
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
@@ -130,61 +203,59 @@ class BlokController extends Controller
     }
 
     /**
-     * Handmatige blok/mat verdeling opslaan
+     * Reset blok toewijzingen - ALLES (ook vastgezette)
      */
-    public function handmatigeVerdeling(Request $request, Toernooi $toernooi): RedirectResponse
+    public function resetVerdeling(Toernooi $toernooi): JsonResponse
     {
-        $blokToewijzingen = $request->input('blok', []);
-        $matToewijzingen = $request->input('mat', []);
+        // Reset ALL categories (including pinned)
+        $updated = $toernooi->poules()
+            ->update(['blok_id' => null, 'blok_vast' => false]);
 
-        // Haal alle blokken op (cache)
-        $blokken = $toernooi->blokken()->get()->keyBy('nummer');
-        $matten = $toernooi->matten()->get()->keyBy('nummer');
+        // Clear any variant session
+        session()->forget('blok_varianten');
 
-        $gewijzigd = 0;
+        return response()->json(['success' => true, 'reset' => $updated]);
+    }
 
-        // Loop door alle toewijzingen (key = "leeftijdsklasse gewichtsklasse")
-        foreach ($blokToewijzingen as $key => $blokNummer) {
-            if (empty($blokNummer)) continue;
+    /**
+     * Verplaats een categorie naar een blok (drag & drop)
+     * Manually placed categories are marked as "vast" (pinned)
+     */
+    public function verplaatsCategorie(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'key' => 'required|string',
+            'blok' => 'required|integer|min:0',
+        ]);
 
-            // Parse de key (bijv. "Mini's -24")
-            $parts = explode(' ', $key, 2);
-            if (count($parts) < 2) continue;
+        // Parse key: "leeftijdsklasse|gewichtsklasse"
+        $parts = explode('|', $validated['key']);
+        if (count($parts) !== 2) {
+            return response()->json(['success' => false, 'error' => 'Invalid key'], 400);
+        }
 
-            $leeftijdsklasse = $parts[0];
-            $gewichtsklasse = trim($parts[1]);
+        $leeftijdsklasse = $parts[0];
+        $gewichtsklasse = $parts[1];
+        $blokNummer = $validated['blok'];
 
-            // Haal het blok op
-            $blok = $blokken->get((int)$blokNummer);
-            if (!$blok) continue;
+        // Blok 0 = niet verdeeld (null), also unpin
+        $blokId = null;
+        $blokVast = false;
 
-            // Haal optioneel de mat op
-            $mat = null;
-            if (!empty($matToewijzingen[$key])) {
-                $mat = $matten->get((int)$matToewijzingen[$key]);
-            }
-
-            // Update alle poules met deze leeftijdsklasse en gewichtsklasse
-            $poules = $toernooi->poules()
-                ->where('leeftijdsklasse', $leeftijdsklasse)
-                ->where('gewichtsklasse', $gewichtsklasse)
-                ->get();
-
-            foreach ($poules as $poule) {
-                $updates = ['blok_id' => $blok->id];
-                if ($mat) {
-                    $updates['mat_id'] = $mat->id;
-                }
-                $poule->update($updates);
-                $gewijzigd++;
+        if ($blokNummer > 0) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if ($blok) {
+                $blokId = $blok->id;
+                $blokVast = true;  // Manual placement = pinned
             }
         }
 
-        // Update timestamp
-        $toernooi->update(['blokken_verdeeld_op' => now()]);
+        // Update alle poules met deze categorie
+        $updated = $toernooi->poules()
+            ->where('leeftijdsklasse', $leeftijdsklasse)
+            ->where('gewichtsklasse', $gewichtsklasse)
+            ->update(['blok_id' => $blokId, 'blok_vast' => $blokVast]);
 
-        return redirect()
-            ->route('toernooi.blok.index', $toernooi)
-            ->with('success', "Handmatige verdeling opgeslagen ({$gewijzigd} poules bijgewerkt)");
+        return response()->json(['success' => true, 'updated' => $updated, 'vast' => $blokVast]);
     }
 }

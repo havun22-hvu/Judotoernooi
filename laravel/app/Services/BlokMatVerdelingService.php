@@ -11,125 +11,803 @@ use Illuminate\Support\Facades\Log;
 
 class BlokMatVerdelingService
 {
-    private ?ConstraintSolverService $solver = null;
-
-    public function __construct(?ConstraintSolverService $solver = null)
-    {
-        $this->solver = $solver ?? app(ConstraintSolverService::class);
-    }
+    /**
+     * Preference order for placing categories relative to previous weight
+     * Same block (0), +1 block, +2 blocks, -1 block, +3 blocks
+     */
+    private array $blokVoorkeur = [0, 1, 2, -1, 3];
 
     /**
-     * Distribute pools over blocks and mats using constraint solver
-     * Falls back to simple algorithm if solver fails
+     * Generate distribution variants until we have 5 acceptable ones
+     * Acceptable = max 25% deviation from gewenst per block (relaxed)
+     *
+     * @return array ['varianten' => [...top 5...], 'huidige' => current state]
      */
-    public function genereerBlokMatVerdeling(Toernooi $toernooi, bool $forceFallback = false): array
+    public function genereerVarianten(Toernooi $toernooi): array
     {
-        return DB::transaction(function () use ($toernooi, $forceFallback) {
-            $blokken = $toernooi->blokken;
-            $matten = $toernooi->matten;
-            $poules = $toernooi->poules()->orderBy('leeftijdsklasse')->orderBy('nummer')->get();
+        $blokken = $toernooi->blokken->sortBy('nummer')->values();
 
-            if ($blokken->isEmpty() || $matten->isEmpty() || $poules->isEmpty()) {
-                throw new \RuntimeException('Blokken, matten of poules ontbreken');
-            }
+        if ($blokken->isEmpty()) {
+            throw new \RuntimeException('Geen blokken gevonden');
+        }
 
-            $method = 'fallback';
+        // Get all categories with their current assignments
+        $categories = $this->getCategoriesMetToewijzing($toernooi);
 
-            // Try constraint solver first (unless forced to fallback)
-            if (!$forceFallback && $this->solver && $this->solver->isAvailable()) {
-                $solverResult = $this->solver->solveBlokMatDistribution($toernooi);
+        // Only distribute categories that are NOT pinned (blok_vast = false)
+        // Pinned categories stay where they are
+        $nietVerdeeld = $categories->filter(fn($cat) => $cat['blok_id'] === null && !$cat['blok_vast']);
 
-                if ($solverResult['success']) {
-                    // Apply solver assignments
-                    $this->applySolverAssignments($solverResult['assignments'], $toernooi);
-                    $method = 'constraint_solver';
+        if ($nietVerdeeld->isEmpty()) {
+            return ['varianten' => [], 'message' => 'Alle categorieën zijn al verdeeld'];
+        }
 
-                    Log::info('Blok/mat distribution solved with constraint solver', [
-                        'toernooi_id' => $toernooi->id,
-                        'statistics' => $solverResult['statistics'] ?? [],
-                    ]);
-                } else {
-                    Log::warning('Constraint solver failed, falling back', [
-                        'error' => $solverResult['error'] ?? 'Unknown',
+        // Calculate base capacity WITH existing placements (respect what's already there)
+        $baseCapaciteit = $this->berekenBlokCapaciteit($toernooi, $blokken);
+
+        // Calculate totals for logging
+        $totaalGewenst = array_sum(array_column($baseCapaciteit, 'gewenst'));
+        $totaalActueel = array_sum(array_column($baseCapaciteit, 'actueel'));
+        $gemiddeld = $totaalGewenst / count($baseCapaciteit);
+
+        // Relaxed threshold: 25% of average OR 30 wedstrijden (whichever is higher)
+        $maxAcceptabeleAfwijking = max(ceil($gemiddeld * 0.25), 30);
+
+        // Group only NOT YET PLACED categories by leeftijd
+        $perLeeftijd = $this->groepeerPerLeeftijd($nietVerdeeld);
+
+        Log::info('Blokverdeling start', [
+            'blokken' => $blokken->count(),
+            'al_geplaatst' => $categories->count() - $nietVerdeeld->count(),
+            'te_verdelen' => $nietVerdeeld->count(),
+            'actueel_in_blokken' => $totaalActueel,
+            'gemiddeld_per_blok' => round($gemiddeld),
+        ]);
+
+        // Keep generating until we have 5 acceptable unique variants
+        $alleVarianten = [];
+        $gezien = [];
+        $poging = 0;
+        $maxPogingen = 200;
+
+        while ($poging < $maxPogingen) {
+            $variant = $this->simuleerVerdeling(
+                $perLeeftijd,
+                $blokken,
+                $baseCapaciteit,
+                $categories,  // For anchor detection
+                $poging
+            );
+
+            $variant['id'] = $poging + 1;
+            $variant['poging'] = $poging;
+
+            // Check for duplicates - sort keys for consistent hash
+            $toewijzingenSorted = $variant['toewijzingen'];
+            ksort($toewijzingenSorted);
+            $hash = md5(json_encode($toewijzingenSorted));
+
+            if (!isset($gezien[$hash])) {
+                $gezien[$hash] = true;
+                $alleVarianten[] = $variant;
+
+                // Log first few attempts for debugging
+                if ($poging < 5) {
+                    Log::info("Variant #{$poging}", [
+                        'max_afwijking' => $variant['scores']['max_afwijking'],
+                        'breaks' => $variant['scores']['breaks'],
+                        'blok_stats' => $variant['scores']['blok_stats'],
                     ]);
                 }
             }
 
-            // Fallback to simple algorithm
-            if ($method === 'fallback') {
-                $this->genereerBlokMatVerdelingFallback($toernooi);
+            $poging++;
+        }
+
+        // Sort all variants by score
+        usort($alleVarianten, function($a, $b) {
+            // First by max_afwijking (lower = better)
+            $afwijkingDiff = $a['scores']['max_afwijking'] - $b['scores']['max_afwijking'];
+            if ($afwijkingDiff !== 0) {
+                return $afwijkingDiff;
+            }
+            // Then by breaks (lower = better)
+            $breaksDiff = $a['scores']['breaks'] - $b['scores']['breaks'];
+            if ($breaksDiff !== 0) {
+                return $breaksDiff;
+            }
+            // Then by verdeling_score (lower = better)
+            return $a['scores']['verdeling_score'] - $b['scores']['verdeling_score'];
+        });
+
+        // Take top 5 UNIQUE variants (different toewijzingen)
+        $beste = [];
+        $gezienHashes = [];
+        foreach ($alleVarianten as $variant) {
+            // Sort toewijzingen by key for consistent hash
+            $toewijzingen = $variant['toewijzingen'];
+            ksort($toewijzingen);
+            $hash = md5(json_encode($toewijzingen));
+
+            if (!isset($gezienHashes[$hash])) {
+                $gezienHashes[$hash] = true;
+                $beste[] = $variant;
+
+                Log::debug("Variant toegevoegd aan top 5", [
+                    'index' => count($beste),
+                    'hash' => substr($hash, 0, 8),
+                    'max_afwijking' => $variant['scores']['max_afwijking'],
+                    'breaks' => $variant['scores']['breaks'],
+                ]);
+
+                if (count($beste) >= 5) {
+                    break;
+                }
+            }
+        }
+
+        Log::info("Blokverdeling klaar na {$poging} pogingen", [
+            'unieke_varianten' => count($alleVarianten),
+            'beste_afwijking' => $beste[0]['scores']['max_afwijking'] ?? 'N/A',
+        ]);
+
+        // Return top 5 unique variants
+        return ['varianten' => $beste];
+    }
+
+    /**
+     * Calculate distribution weight based on attempt number
+     * Use more variation to find different solutions
+     */
+    private function berekenVerdelingGewicht(int $poging, int $gevonden): float
+    {
+        // Create distinct weight patterns for variety
+        $patterns = [
+            0.95, 0.90, 0.85, 0.80, 0.75,  // High distribution focus
+            0.70, 0.65, 0.60, 0.55, 0.50,  // Balanced
+            0.92, 0.88, 0.82, 0.78, 0.72,  // Slightly different
+            0.68, 0.62, 0.58, 0.52, 0.48,  // More aansluiting focus
+        ];
+
+        return $patterns[$poging % count($patterns)];
+    }
+
+    /**
+     * Calculate random factor based on attempt number
+     * Add variety through controlled randomness
+     */
+    private function berekenRandomFactor(int $poging): float
+    {
+        // Every 5th attempt: add some randomness
+        if ($poging % 5 === 0) {
+            return 0.05 + ($poging % 20) * 0.01;
+        }
+
+        // Every 10th attempt: more randomness
+        if ($poging % 10 === 0) {
+            return 0.15;
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Simulate a distribution without saving to database
+     * Uses a smarter approach: balance blocks while keeping weight classes together
+     */
+    private function simuleerVerdeling(
+        array $perLeeftijd,
+        $blokken,
+        array $baseCapaciteit,
+        $alleCategorieen,
+        int $seed
+    ): array {
+        $capaciteit = $baseCapaciteit;  // Copy
+        $toewijzingen = [];  // category_key => blok_nummer
+        $numBlokken = $blokken->count();
+
+        // Use seed for reproducible randomness
+        mt_srand($seed * 12345);
+
+        // Vary strategy based on seed - more variation
+        $verdelingGewichten = [0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50];
+        $verdelingGewicht = $verdelingGewichten[$seed % count($verdelingGewichten)];
+        $aansluitingGewicht = 1.0 - $verdelingGewicht;
+        // Add randomness more often for variety
+        $randomFactor = ($seed % 3 === 0) ? 0.1 + ($seed % 5) * 0.02 : 0.0;
+
+        // Calculate total wedstrijden per leeftijd for smart distribution
+        $leeftijdTotalen = [];
+        foreach ($perLeeftijd as $leeftijd => $gewichten) {
+            $leeftijdTotalen[$leeftijd] = array_sum(array_column($gewichten, 'wedstrijden'));
+        }
+
+        // Vary the order of processing based on seed for different results
+        $leeftijdKeys = array_keys($leeftijdTotalen);
+        $orderStrategy = $seed % 8;  // More strategies
+
+        switch ($orderStrategy) {
+            case 0:
+                // Largest leeftijd first
+                arsort($leeftijdTotalen);
+                $leeftijdKeys = array_keys($leeftijdTotalen);
+                break;
+            case 1:
+                // Smallest leeftijd first
+                asort($leeftijdTotalen);
+                $leeftijdKeys = array_keys($leeftijdTotalen);
+                break;
+            case 2:
+                // Original order
+                break;
+            case 3:
+                // Reverse original order
+                $leeftijdKeys = array_reverse($leeftijdKeys);
+                break;
+            case 4:
+                // Random shuffle with seed
+                shuffle($leeftijdKeys);
+                break;
+            case 5:
+                // Alphabetical
+                sort($leeftijdKeys);
+                break;
+            case 6:
+                // Reverse alphabetical
+                rsort($leeftijdKeys);
+                break;
+            case 7:
+                // Middle-out (alternate from middle)
+                $mid = (int)(count($leeftijdKeys) / 2);
+                $newOrder = [];
+                for ($i = 0; $i <= $mid; $i++) {
+                    if ($mid + $i < count($leeftijdKeys)) $newOrder[] = $leeftijdKeys[$mid + $i];
+                    if ($mid - $i - 1 >= 0) $newOrder[] = $leeftijdKeys[$mid - $i - 1];
+                }
+                $leeftijdKeys = $newOrder;
+                break;
+        }
+
+        // Assign starting blocks for each leeftijd - vary offset per seed
+        $leeftijdStartBlok = [];
+        $blokOffset = $seed % $numBlokken;  // Different starting point per seed
+
+        foreach ($leeftijdKeys as $idx => $leeftijd) {
+            // Check if this leeftijd has an anchor from already placed categories
+            $ankerBlokIndex = $this->vindAnkerBlok($leeftijd, $alleCategorieen, $blokken);
+
+            if ($ankerBlokIndex !== null) {
+                // Start near where this leeftijd already has categories
+                $leeftijdStartBlok[$leeftijd] = $ankerBlokIndex;
+            } else {
+                // Distribute starting points evenly, with seed-based offset
+                $leeftijdStartBlok[$leeftijd] = ($idx + $blokOffset) % $numBlokken;
+            }
+        }
+
+        // Process each leeftijd in the determined order
+        foreach ($leeftijdKeys as $leeftijd) {
+            if (!isset($perLeeftijd[$leeftijd])) continue;
+
+            $gewichten = $perLeeftijd[$leeftijd];
+            $vorigeBlokIndex = $leeftijdStartBlok[$leeftijd] ?? 0;
+
+            // Vary weight order based on seed
+            $weightStrategy = ($seed + array_search($leeftijd, $leeftijdKeys)) % 4;
+            if ($weightStrategy === 1) {
+                $gewichten = array_reverse($gewichten);  // Heavy first
+            } elseif ($weightStrategy === 2) {
+                // Start from middle
+                $mid = (int)(count($gewichten) / 2);
+                $reordered = [];
+                for ($w = 0; $w < count($gewichten); $w++) {
+                    $idx = ($mid + ($w % 2 === 0 ? $w/2 : -(($w+1)/2))) % count($gewichten);
+                    if ($idx < 0) $idx += count($gewichten);
+                    $reordered[] = $gewichten[(int)$idx];
+                }
+                $gewichten = $reordered;
+            }
+            // weightStrategy 0 and 3 = original order (light first)
+
+            foreach ($gewichten as $cat) {
+                $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
+
+                // Find best block with current strategy
+                $besteBlokIndex = $this->vindBesteBlokMetStrategie(
+                    $vorigeBlokIndex,
+                    $cat['wedstrijden'],
+                    $capaciteit,
+                    $blokken,
+                    $numBlokken,
+                    $verdelingGewicht,
+                    $aansluitingGewicht,
+                    $randomFactor
+                );
+
+                // Record assignment
+                $blok = $blokken[$besteBlokIndex];
+                $toewijzingen[$key] = $blok->nummer;
+
+                // Update capacity
+                $capaciteit[$blok->id]['actueel'] += $cat['wedstrijden'];
+                $capaciteit[$blok->id]['ruimte'] -= $cat['wedstrijden'];
+
+                $vorigeBlokIndex = $besteBlokIndex;
+            }
+        }
+
+        // Calculate scores for this variant
+        $scores = $this->berekenScores($toewijzingen, $capaciteit, $blokken, $perLeeftijd);
+
+        return [
+            'toewijzingen' => $toewijzingen,
+            'capaciteit' => $capaciteit,
+            'scores' => $scores,
+            'totaal_score' => $scores['verdeling_score'] + $scores['aansluiting_score'],
+            'strategie' => [
+                'verdeling' => round($verdelingGewicht * 100),
+                'aansluiting' => round($aansluitingGewicht * 100),
+            ],
+        ];
+    }
+
+    /**
+     * Find best block using weighted strategy
+     * Balances even distribution with continuity
+     */
+    private function vindBesteBlokMetStrategie(
+        int $vorigeBlokIndex,
+        int $wedstrijden,
+        array $blokCapaciteit,
+        $blokken,
+        int $numBlokken,
+        float $verdelingGewicht,
+        float $aansluitingGewicht,
+        float $randomFactor
+    ): int {
+        $opties = [];
+
+        foreach ($blokken as $index => $blok) {
+            $cap = $blokCapaciteit[$blok->id];
+            $nieuweActueel = $cap['actueel'] + $wedstrijden;
+            $gewenst = max(1, $cap['gewenst']);
+
+            // Calculate how far from ideal this block is (can be negative = under, positive = over)
+            $afwijkingPct = ($nieuweActueel - $gewenst) / $gewenst;
+
+            // Distance penalty for continuity (0 = same block, 1 = adjacent, etc.)
+            $afstand = abs($index - $vorigeBlokIndex);
+
+            // Combined score calculation
+            // Verdeling: penalize being over gewenst more than under
+            $verdelingsScore = $afwijkingPct > 0
+                ? $afwijkingPct * 150  // Over capacity = big penalty
+                : abs($afwijkingPct) * 50;  // Under capacity = smaller penalty
+
+            // Aansluiting: prefer staying close to previous block
+            $aansluitingScore = $afstand * 10;
+
+            // Total score (lower = better)
+            $score = ($verdelingsScore * $verdelingGewicht) + ($aansluitingScore * $aansluitingGewicht);
+
+            // Bonus for blocks that are underfilled (prefer filling empty blocks first)
+            $vulgraad = $cap['actueel'] / $gewenst;
+            if ($vulgraad < 0.7) {
+                $score -= 15;  // Big bonus for empty blocks
+            } elseif ($vulgraad < 0.9) {
+                $score -= 5;   // Small bonus
+            }
+
+            // Add randomness only if configured
+            if ($randomFactor > 0) {
+                $score += mt_rand(0, 30) * $randomFactor;
+            }
+
+            $opties[] = [
+                'index' => $index,
+                'score' => $score,
+                'nieuwe_actueel' => $nieuweActueel,
+                'afwijking_pct' => $afwijkingPct,
+            ];
+        }
+
+        // Sort by score and pick best
+        usort($opties, fn($a, $b) => $a['score'] <=> $b['score']);
+
+        return $opties[0]['index'];
+    }
+
+    /**
+     * Calculate quality scores for a variant
+     */
+    private function berekenScores(
+        array $toewijzingen,
+        array $capaciteit,
+        $blokken,
+        array $perLeeftijd
+    ): array {
+        // Verdeling score: sum of absolute deviations from gewenst
+        $verdelingScore = 0;
+        $maxAfwijking = 0;
+        $blokStats = [];
+
+        foreach ($blokken as $blok) {
+            $cap = $capaciteit[$blok->id];
+            $afwijking = abs($cap['actueel'] - $cap['gewenst']);
+            $verdelingScore += $afwijking;
+            $maxAfwijking = max($maxAfwijking, $afwijking);
+            $blokStats[$blok->nummer] = [
+                'actueel' => $cap['actueel'],
+                'gewenst' => $cap['gewenst'],
+                'afwijking' => $afwijking,
+            ];
+        }
+
+        // Aansluiting score: count of "breaks" (adjacent weights in different blocks)
+        $aansluitingScore = 0;
+        $breaks = 0;
+
+        foreach ($perLeeftijd as $leeftijd => $gewichten) {
+            $vorigBlok = null;
+            foreach ($gewichten as $cat) {
+                $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
+                $blokNr = $toewijzingen[$key] ?? null;
+
+                if ($vorigBlok !== null && $blokNr !== null && $blokNr !== $vorigBlok) {
+                    // Adjacent weights in different blocks = break
+                    $breaks++;
+                    $aansluitingScore += abs($blokNr - $vorigBlok) * 5;
+                }
+                $vorigBlok = $blokNr;
+            }
+        }
+
+        return [
+            'verdeling_score' => $verdelingScore,
+            'max_afwijking' => $maxAfwijking,
+            'aansluiting_score' => $aansluitingScore,
+            'breaks' => $breaks,
+            'blok_stats' => $blokStats,
+        ];
+    }
+
+    /**
+     * Apply a chosen variant to the database
+     * Only updates categories that are NOT yet assigned (respects manual placements)
+     */
+    public function pasVariantToe(Toernooi $toernooi, array $toewijzingen): void
+    {
+        DB::transaction(function () use ($toernooi, $toewijzingen) {
+            foreach ($toewijzingen as $key => $blokNummer) {
+                [$leeftijd, $gewicht] = explode('|', $key);
+
+                $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+
+                if ($blok) {
+                    // Only update poules that are NOT yet assigned
+                    Poule::where('toernooi_id', $toernooi->id)
+                        ->where('leeftijdsklasse', $leeftijd)
+                        ->where('gewichtsklasse', $gewicht)
+                        ->whereNull('blok_id')
+                        ->update(['blok_id' => $blok->id]);
+                }
             }
 
             $toernooi->update(['blokken_verdeeld_op' => now()]);
-
-            $stats = $this->getVerdelingsStatistieken($toernooi);
-            $stats['method'] = $method;
-
-            return $stats;
         });
     }
 
     /**
-     * Apply assignments from constraint solver
+     * Generate block distribution for unassigned categories (legacy single variant)
      */
-    private function applySolverAssignments(array $assignments, Toernooi $toernooi): void
+    public function genereerVerdeling(Toernooi $toernooi): array
     {
-        foreach ($assignments as $assignment) {
-            $update = ['blok_id' => $assignment['blok_id']];
-            Poule::where('id', $assignment['poule_id'])->update($update);
+        // Generate variants and apply the best one
+        $result = $this->genereerVarianten($toernooi);
+
+        if (!empty($result['varianten'])) {
+            $beste = $result['varianten'][0];
+            $this->pasVariantToe($toernooi, $beste['toewijzingen']);
         }
 
-        // Na blok toewijzing, verdeel poules over matten
-        $this->verdeelPoulesOverMatten($toernooi);
+        return $this->getVerdelingsStatistieken($toernooi);
     }
 
     /**
-     * Verdeel poules over matten binnen elk blok, rekening houdend met voorkeuren
+     * Place categories for a single leeftijdsklasse
      */
-    private function verdeelPoulesOverMatten(Toernooi $toernooi): void
+    private function plaatsCategorieenVoorLeeftijd(
+        Toernooi $toernooi,
+        string $leeftijd,
+        array $gewichten,
+        $blokken,
+        array &$blokCapaciteit,
+        $alleCategorieen
+    ): void {
+        $numBlokken = $blokken->count();
+
+        // Find anchor: block where this leeftijd already has weights placed
+        $ankerBlokIndex = $this->vindAnkerBlok($leeftijd, $alleCategorieen, $blokken);
+
+        // If no anchor found, start at block with most available space
+        if ($ankerBlokIndex === null) {
+            $ankerBlokIndex = $this->vindBlokMetMeesteRuimte($blokCapaciteit, $blokken);
+        }
+
+        $vorigeBlokIndex = $ankerBlokIndex;
+
+        foreach ($gewichten as $cat) {
+            // Try preference order: same, +1, +2, -1, +3
+            $besteBlokIndex = $this->vindBesteBlokVoorCategorie(
+                $vorigeBlokIndex,
+                $cat['wedstrijden'],
+                $blokCapaciteit,
+                $blokken,
+                $numBlokken
+            );
+
+            // Assign all poules of this category to this block
+            $blok = $blokken[$besteBlokIndex];
+            Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $cat['leeftijd'])
+                ->where('gewichtsklasse', $cat['gewicht'])
+                ->update(['blok_id' => $blok->id]);
+
+            // Update capacity
+            $blokCapaciteit[$blok->id]['actueel'] += $cat['wedstrijden'];
+            $blokCapaciteit[$blok->id]['ruimte'] -= $cat['wedstrijden'];
+
+            $vorigeBlokIndex = $besteBlokIndex;
+        }
+    }
+
+    /**
+     * Find anchor block: where this leeftijd already has categories placed
+     */
+    private function vindAnkerBlok(string $leeftijd, $alleCategorieen, $blokken): ?int
+    {
+        // Find highest weight of this leeftijd that's already placed
+        $geplaatst = $alleCategorieen
+            ->filter(fn($cat) => $cat['leeftijd'] === $leeftijd && $cat['blok_id'] !== null)
+            ->sortByDesc('gewicht_num');
+
+        if ($geplaatst->isEmpty()) {
+            return null;
+        }
+
+        $laatsteBlokId = $geplaatst->first()['blok_id'];
+
+        // Find index of this block
+        foreach ($blokken as $index => $blok) {
+            if ($blok->id === $laatsteBlokId) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find block with most available space
+     */
+    private function vindBlokMetMeesteRuimte(array $blokCapaciteit, $blokken): int
+    {
+        $maxRuimte = -PHP_INT_MAX;
+        $besteIndex = 0;
+
+        foreach ($blokken as $index => $blok) {
+            $ruimte = $blokCapaciteit[$blok->id]['ruimte'] ?? 0;
+            if ($ruimte > $maxRuimte) {
+                $maxRuimte = $ruimte;
+                $besteIndex = $index;
+            }
+        }
+
+        return $besteIndex;
+    }
+
+    /**
+     * Find best block for a category using preference order
+     * Preference: same block (0), +1, +2, -1, +3
+     *
+     * IMPORTANT: Never exceed 110% of gewenst capacity
+     * Balance is more important than keeping categories together
+     */
+    private function vindBesteBlokVoorCategorie(
+        int $vorigeBlokIndex,
+        int $wedstrijden,
+        array $blokCapaciteit,
+        $blokken,
+        int $numBlokken
+    ): int {
+        $besteIndex = null;
+        $besteScore = PHP_INT_MAX;
+
+        // Maximum allowed = 110% of gewenst (never exceed this)
+        $maxOverflow = 0.10;
+
+        // First pass: try preference order, only if block has enough space
+        foreach ($this->blokVoorkeur as $offset) {
+            $testIndex = $vorigeBlokIndex + $offset;
+
+            if ($testIndex < 0 || $testIndex >= $numBlokken) {
+                continue;
+            }
+
+            $blok = $blokken[$testIndex];
+            $cap = $blokCapaciteit[$blok->id];
+            $ruimte = $cap['ruimte'];
+            $gewenst = $cap['gewenst'];
+            $actueel = $cap['actueel'];
+
+            // Would this exceed 110% of gewenst?
+            $nieuweActueel = $actueel + $wedstrijden;
+            $maxToegestaan = $gewenst * (1 + $maxOverflow);
+
+            if ($nieuweActueel > $maxToegestaan) {
+                // Skip this block - would overflow too much
+                continue;
+            }
+
+            // Score: proximity bonus + fill percentage penalty
+            // Lower score = better
+            $fillPct = $nieuweActueel / max(1, $gewenst);
+            $score = abs($offset) * 5 + ($fillPct * 10);
+
+            if ($score < $besteScore) {
+                $besteScore = $score;
+                $besteIndex = $testIndex;
+            }
+        }
+
+        // If no block found in preference order, find ANY block with space
+        if ($besteIndex === null) {
+            $meestRuimte = -PHP_INT_MAX;
+
+            foreach ($blokken as $index => $blok) {
+                $cap = $blokCapaciteit[$blok->id];
+                $ruimte = $cap['ruimte'];
+                $gewenst = $cap['gewenst'];
+                $actueel = $cap['actueel'];
+
+                // Would this exceed 110%?
+                $nieuweActueel = $actueel + $wedstrijden;
+                $maxToegestaan = $gewenst * (1 + $maxOverflow);
+
+                if ($nieuweActueel <= $maxToegestaan && $ruimte > $meestRuimte) {
+                    $meestRuimte = $ruimte;
+                    $besteIndex = $index;
+                }
+            }
+        }
+
+        // Last resort: if ALL blocks would exceed 110%, pick the one with most space
+        if ($besteIndex === null) {
+            $meestRuimte = -PHP_INT_MAX;
+
+            foreach ($blokken as $index => $blok) {
+                $ruimte = $blokCapaciteit[$blok->id]['ruimte'];
+                if ($ruimte > $meestRuimte) {
+                    $meestRuimte = $ruimte;
+                    $besteIndex = $index;
+                }
+            }
+
+            // Log warning
+            Log::warning('Blokverdeling: alle blokken overvol, categorie geplaatst in blok met meeste ruimte', [
+                'blok_index' => $besteIndex,
+                'wedstrijden' => $wedstrijden,
+            ]);
+        }
+
+        return $besteIndex ?? 0;
+    }
+
+    /**
+     * Calculate capacity per block
+     * gewenst: from database or calculated (totaal / aantal_blokken)
+     * actueel: sum of wedstrijden already assigned
+     * ruimte: gewenst - actueel
+     */
+    private function berekenBlokCapaciteit(Toernooi $toernooi, $blokken): array
+    {
+        $totaalWedstrijden = $toernooi->poules()->sum('aantal_wedstrijden');
+        $defaultGewenst = $blokken->count() > 0 ? (int) ceil($totaalWedstrijden / $blokken->count()) : 0;
+
+        $capaciteit = [];
+
+        foreach ($blokken as $blok) {
+            $actueel = $toernooi->poules()
+                ->where('blok_id', $blok->id)
+                ->sum('aantal_wedstrijden');
+
+            $gewenst = $blok->gewenst_wedstrijden ?? $defaultGewenst;
+
+            $capaciteit[$blok->id] = [
+                'gewenst' => $gewenst,
+                'actueel' => $actueel,
+                'ruimte' => $gewenst - $actueel,
+            ];
+        }
+
+        return $capaciteit;
+    }
+
+    /**
+     * Get all categories with their block assignment
+     */
+    private function getCategoriesMetToewijzing(Toernooi $toernooi)
+    {
+        return $toernooi->poules()
+            ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
+            ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
+            ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
+            ->get()
+            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->map(fn($g) => [
+                'leeftijd' => $g->first()->leeftijdsklasse,
+                'gewicht' => $g->first()->gewichtsklasse,
+                'gewicht_num' => $this->parseGewicht($g->first()->gewichtsklasse),
+                'wedstrijden' => $g->sum('wedstrijden'),
+                'blok_id' => $g->first()->blok_id,
+                'blok_vast' => (bool) $g->first()->blok_vast,
+            ]);
+    }
+
+    /**
+     * Group categories by leeftijd, sort weights ascending
+     */
+    private function groepeerPerLeeftijd($categories): array
+    {
+        $perLeeftijd = [];
+
+        foreach ($categories as $cat) {
+            $lk = $cat['leeftijd'];
+            if (!isset($perLeeftijd[$lk])) {
+                $perLeeftijd[$lk] = [];
+            }
+            $perLeeftijd[$lk][] = $cat;
+        }
+
+        // Sort each group by weight
+        foreach ($perLeeftijd as $lk => &$cats) {
+            usort($cats, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
+        }
+
+        return $perLeeftijd;
+    }
+
+    /**
+     * Parse weight class to numeric value for sorting
+     * -50 = up to 50kg, +50 = over 50kg
+     */
+    private function parseGewicht(string $gewichtsklasse): float
+    {
+        if (preg_match('/([+-]?)(\d+)/', $gewichtsklasse, $match)) {
+            $sign = $match[1];
+            $num = (int) $match[2];
+            return $sign === '+' ? $num + 1000 : $num;
+        }
+        return 999;
+    }
+
+    /**
+     * Distribute poules over mats within each block (simple balanced distribution)
+     */
+    public function verdeelOverMatten(Toernooi $toernooi): void
     {
         $matten = $toernooi->matten->sortBy('nummer');
         $matIds = $matten->pluck('id')->toArray();
-        $matIdByNummer = $matten->pluck('id', 'nummer')->toArray();
-        $voorkeuren = $toernooi->mat_voorkeuren ?? [];
-
-        // Bouw voorkeur lookup: leeftijdsklasse => [mat_ids]
-        $voorkeurMatten = [];
-        foreach ($voorkeuren as $v) {
-            $lk = $v['leeftijdsklasse'] ?? '';
-            $matNrs = $v['matten'] ?? [];
-            $voorkeurMatten[$lk] = array_filter(array_map(
-                fn($nr) => $matIdByNummer[$nr] ?? null,
-                $matNrs
-            ));
-        }
 
         foreach ($toernooi->blokken as $blok) {
             $wedstrijdenPerMat = array_fill_keys($matIds, 0);
 
-            // Eerst poules met voorkeur
-            $poulesMetVoorkeur = $blok->poules()
-                ->whereIn('leeftijdsklasse', array_keys($voorkeurMatten))
-                ->orderByDesc('aantal_wedstrijden')
-                ->get();
+            // Get poules ordered by wedstrijden (largest first for better balance)
+            $poules = $blok->poules()->orderByDesc('aantal_wedstrijden')->get();
 
-            foreach ($poulesMetVoorkeur as $poule) {
-                $toegestaneMatten = $voorkeurMatten[$poule->leeftijdsklasse] ?? $matIds;
-                if (empty($toegestaneMatten)) $toegestaneMatten = $matIds;
-
-                $besteMat = $this->vindMinsteWedstrijdenMatUitLijst($toegestaneMatten, $wedstrijdenPerMat);
-                $poule->update(['mat_id' => $besteMat]);
-                $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
-            }
-
-            // Dan poules zonder voorkeur
-            $poulesZonderVoorkeur = $blok->poules()
-                ->whereNotIn('leeftijdsklasse', array_keys($voorkeurMatten))
-                ->orderByDesc('aantal_wedstrijden')
-                ->get();
-
-            foreach ($poulesZonderVoorkeur as $poule) {
-                $besteMat = $this->vindMinsteWedstrijdenMatUitLijst($matIds, $wedstrijdenPerMat);
+            foreach ($poules as $poule) {
+                // Find mat with least wedstrijden
+                $besteMat = $this->vindMinsteWedstrijdenMat($matIds, $wedstrijdenPerMat);
                 $poule->update(['mat_id' => $besteMat]);
                 $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
             }
@@ -137,9 +815,9 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Vind mat met minste wedstrijden uit een lijst van mat IDs
+     * Find mat with least wedstrijden
      */
-    private function vindMinsteWedstrijdenMatUitLijst(array $matIds, array $wedstrijdenPerMat): int
+    private function vindMinsteWedstrijdenMat(array $matIds, array $wedstrijdenPerMat): int
     {
         $minWedstrijden = PHP_INT_MAX;
         $besteMat = $matIds[0];
@@ -155,86 +833,6 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Fallback: Simple greedy algorithm (original method)
-     */
-    private function genereerBlokMatVerdelingFallback(Toernooi $toernooi): void
-    {
-        $blokken = $toernooi->blokken;
-        $matten = $toernooi->matten;
-        $poules = $toernooi->poules()->orderBy('leeftijdsklasse')->orderBy('nummer')->get();
-
-        // Track matches per block/mat
-        $wedstrijdenPerBlok = array_fill_keys($blokken->pluck('id')->toArray(), 0);
-        $wedstrijdenPerMat = [];
-        foreach ($blokken as $blok) {
-            $wedstrijdenPerMat[$blok->id] = array_fill_keys($matten->pluck('id')->toArray(), 0);
-        }
-
-        $blokkenArray = $blokken->values()->all();
-        $mattenArray = $matten->values()->all();
-
-        // Group pools by age category
-        $poulesPerLeeftijd = $poules->groupBy('leeftijdsklasse');
-
-        foreach ($poulesPerLeeftijd as $leeftijdsklasse => $leeftijdPoules) {
-            foreach ($leeftijdPoules as $poule) {
-                // Find best block/mat combination
-                $besteBlok = $this->vindMinsteWedstrijdenBlok($blokkenArray, $wedstrijdenPerBlok);
-                $besteMat = $this->vindMinsteWedstrijdenMat(
-                    $mattenArray,
-                    $wedstrijdenPerMat[$besteBlok->id]
-                );
-
-                // Assign pool to block/mat
-                $poule->update([
-                    'blok_id' => $besteBlok->id,
-                    'mat_id' => $besteMat->id,
-                ]);
-
-                // Update counters
-                $wedstrijdenPerBlok[$besteBlok->id] += $poule->aantal_wedstrijden;
-                $wedstrijdenPerMat[$besteBlok->id][$besteMat->id] += $poule->aantal_wedstrijden;
-            }
-        }
-    }
-
-    /**
-     * Find block with least matches
-     */
-    private function vindMinsteWedstrijdenBlok(array $blokken, array $wedstrijdenPerBlok): Blok
-    {
-        $minWedstrijden = PHP_INT_MAX;
-        $besteBlok = $blokken[0];
-
-        foreach ($blokken as $blok) {
-            if ($wedstrijdenPerBlok[$blok->id] < $minWedstrijden) {
-                $minWedstrijden = $wedstrijdenPerBlok[$blok->id];
-                $besteBlok = $blok;
-            }
-        }
-
-        return $besteBlok;
-    }
-
-    /**
-     * Find mat with least matches in a block
-     */
-    private function vindMinsteWedstrijdenMat(array $matten, array $wedstrijdenPerMat): Mat
-    {
-        $minWedstrijden = PHP_INT_MAX;
-        $besteMat = $matten[0];
-
-        foreach ($matten as $mat) {
-            if ($wedstrijdenPerMat[$mat->id] < $minWedstrijden) {
-                $minWedstrijden = $wedstrijdenPerMat[$mat->id];
-                $besteMat = $mat;
-            }
-        }
-
-        return $besteMat;
-    }
-
-    /**
      * Get distribution statistics
      */
     public function getVerdelingsStatistieken(Toernooi $toernooi): array
@@ -242,9 +840,12 @@ class BlokMatVerdelingService
         $stats = [];
 
         foreach ($toernooi->blokken as $blok) {
+            $totaalWedstrijden = Poule::where('blok_id', $blok->id)->sum('aantal_wedstrijden');
+
             $blokStats = [
                 'blok' => $blok->nummer,
-                'totaal_wedstrijden' => 0,
+                'gewenst' => $blok->gewenst_wedstrijden,
+                'totaal_wedstrijden' => $totaalWedstrijden,
                 'matten' => [],
             ];
 
@@ -261,7 +862,6 @@ class BlokMatVerdelingService
                     'poules' => $poules,
                     'wedstrijden' => $wedstrijden,
                 ];
-                $blokStats['totaal_wedstrijden'] += $wedstrijden;
             }
 
             $stats[$blok->nummer] = $blokStats;
@@ -271,14 +871,11 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Move pool to different block/mat
+     * Move pool to different block
      */
-    public function verplaatsPoule(Poule $poule, Blok $nieuweBlok, Mat $nieuweMat): void
+    public function verplaatsPoule(Poule $poule, Blok $nieuweBlok): void
     {
-        $poule->update([
-            'blok_id' => $nieuweBlok->id,
-            'mat_id' => $nieuweMat->id,
-        ]);
+        $poule->update(['blok_id' => $nieuweBlok->id]);
     }
 
     /**

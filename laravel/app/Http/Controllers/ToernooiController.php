@@ -53,16 +53,22 @@ class ToernooiController extends Controller
     {
         $data = $request->validated();
 
-        // Process gewichtsklassen: convert comma-separated strings to arrays
-        if (isset($data['gewichtsklassen'])) {
+        // Process gewichtsklassen from JSON input (includes leeftijdsgrenzen)
+        if ($request->has('gewichtsklassen_json') && $request->input('gewichtsklassen_json')) {
+            $data['gewichtsklassen'] = json_decode($request->input('gewichtsklassen_json'), true) ?? [];
+        } elseif (isset($data['gewichtsklassen'])) {
+            // Fallback: process from individual form fields
             $gewichtsklassen = [];
             $standaard = Toernooi::getStandaardGewichtsklassen();
+            $leeftijden = $request->input('gewichtsklassen_leeftijd', []);
+            $labels = $request->input('gewichtsklassen_label', []);
 
             foreach ($data['gewichtsklassen'] as $key => $value) {
                 $gewichten = array_map('trim', explode(',', $value));
                 $gewichten = array_filter($gewichten, fn($g) => !empty($g));
                 $gewichtsklassen[$key] = [
-                    'label' => $standaard[$key]['label'] ?? ucfirst(str_replace('_', ' ', $key)),
+                    'label' => $labels[$key] ?? $standaard[$key]['label'] ?? ucfirst(str_replace('_', ' ', $key)),
+                    'max_leeftijd' => (int) ($leeftijden[$key] ?? $standaard[$key]['max_leeftijd'] ?? 99),
                     'gewichten' => array_values($gewichten),
                 ];
             }
@@ -70,10 +76,8 @@ class ToernooiController extends Controller
             $data['gewichtsklassen'] = $gewichtsklassen;
         }
 
-        // Process mat voorkeuren from JSON input
-        if ($request->has('mat_voorkeuren_json')) {
-            $data['mat_voorkeuren'] = json_decode($request->input('mat_voorkeuren_json'), true) ?? [];
-        }
+        // Remove temporary fields from data
+        unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label']);
 
         $toernooi->update($data);
 

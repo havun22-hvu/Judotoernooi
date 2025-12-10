@@ -16,6 +16,7 @@ class Blok extends Model
     protected $fillable = [
         'toernooi_id',
         'nummer',
+        'gewenst_wedstrijden',
         'weging_start',
         'weging_einde',
         'starttijd',

@@ -58,8 +58,11 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
-        Route::post('blok/handmatige-verdeling', [BlokController::class, 'handmatigeVerdeling'])->name('blok.handmatige-verdeling');
-        Route::post('blok/save-prioriteiten', [BlokController::class, 'savePrioriteiten'])->name('blok.save-prioriteiten');
+        Route::post('blok/kies-variant', [BlokController::class, 'kiesVariant'])->name('blok.kies-variant');
+        Route::post('blok/reset-verdeling', [BlokController::class, 'resetVerdeling'])->name('blok.reset-verdeling');
+        Route::post('blok/verplaats-categorie', [BlokController::class, 'verplaatsCategorie'])->name('blok.verplaats-categorie');
+        Route::post('blok/update-gewenst', [BlokController::class, 'updateGewenst'])->name('blok.update-gewenst');
+        Route::post('blok/zet-op-mat', [BlokController::class, 'zetOpMat'])->name('blok.zet-op-mat');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
         Route::post('blok/{blok}/genereer-wedstrijdschemas', [BlokController::class, 'genereerWedstrijdschemas'])->name('blok.genereer-wedstrijdschemas');
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');

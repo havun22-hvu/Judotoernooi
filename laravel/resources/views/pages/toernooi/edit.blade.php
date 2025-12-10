@@ -97,48 +97,6 @@
                 </div>
             </div>
 
-            <!-- Mat Voorkeuren per Leeftijdsklasse -->
-            <div class="mt-6 pt-4 border-t">
-                <label class="block text-gray-700 font-medium mb-2">Mat Voorkeuren per Leeftijdsklasse</label>
-                <p class="text-gray-500 text-sm mb-3">Geef aan welke leeftijdsklassen bij voorkeur op bepaalde matten moeten staan.</p>
-
-                @php
-                    $matVoorkeuren = old('mat_voorkeuren', $toernooi->mat_voorkeuren) ?? [];
-                    if (is_string($matVoorkeuren)) {
-                        $matVoorkeuren = json_decode($matVoorkeuren, true) ?? [];
-                    }
-                    $leeftijdsklassen = ["Mini's", 'A-pupillen', 'B-pupillen', 'Dames -15', 'Heren -15', 'C-pupillen', 'Aspiranten', 'Junioren', 'Senioren'];
-                @endphp
-
-                <div id="mat-voorkeuren-container" class="space-y-2 mb-3">
-                    @foreach($matVoorkeuren as $index => $voorkeur)
-                    <div class="mat-voorkeur-item flex items-center gap-2 bg-gray-50 p-2 rounded">
-                        <select name="mat_voorkeuren[{{ $index }}][leeftijdsklasse]" class="border rounded px-2 py-1 text-sm">
-                            @foreach($leeftijdsklassen as $lk)
-                            <option value="{{ $lk }}" {{ ($voorkeur['leeftijdsklasse'] ?? '') === $lk ? 'selected' : '' }}>{{ $lk }}</option>
-                            @endforeach
-                        </select>
-                        <span class="text-gray-500">→ Mat:</span>
-                        <div class="flex gap-1 mat-nummers">
-                            @foreach($voorkeur['matten'] ?? [] as $matNr)
-                            <span class="mat-nummer bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                                {{ $matNr }}
-                                <button type="button" class="ml-1 text-blue-400 hover:text-red-500 remove-mat">&times;</button>
-                            </span>
-                            @endforeach
-                        </div>
-                        <button type="button" class="add-mat-nr text-green-600 hover:text-green-800 text-lg font-bold" title="Mat toevoegen">+</button>
-                        <button type="button" class="remove-voorkeur-item ml-auto text-red-400 hover:text-red-600" title="Verwijder regel">&times;</button>
-                    </div>
-                    @endforeach
-                </div>
-
-                <button type="button" id="add-mat-voorkeur" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
-                    + Leeftijdsklasse toevoegen
-                </button>
-
-                <input type="hidden" name="mat_voorkeuren_json" id="mat_voorkeuren_input" value="{{ json_encode($matVoorkeuren) }}">
-            </div>
         </div>
 
         <!-- POULE INSTELLINGEN -->
@@ -324,110 +282,6 @@
                 updateHiddenInput();
             });
 
-            // Mat Voorkeuren functionaliteit
-            const matVoorkeurenContainer = document.getElementById('mat-voorkeuren-container');
-            const matVoorkeurenInput = document.getElementById('mat_voorkeuren_input');
-            const addMatVoorkeurBtn = document.getElementById('add-mat-voorkeur');
-            const leeftijdsklassen = ["Mini's", "A-pupillen", "B-pupillen", "Dames -15", "Heren -15", "C-pupillen", "Aspiranten", "Junioren", "Senioren"];
-            const aantalMatten = {{ $toernooi->aantal_matten ?? 7 }};
-
-            function updateMatVoorkeurenInput() {
-                const items = matVoorkeurenContainer.querySelectorAll('.mat-voorkeur-item');
-                const voorkeuren = Array.from(items).map(item => {
-                    const lk = item.querySelector('select').value;
-                    const matten = Array.from(item.querySelectorAll('.mat-nummer')).map(el =>
-                        parseInt(el.textContent.trim())
-                    );
-                    return { leeftijdsklasse: lk, matten: matten };
-                });
-                matVoorkeurenInput.value = JSON.stringify(voorkeuren);
-            }
-
-            // Add mat number to voorkeur
-            matVoorkeurenContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('add-mat-nr')) {
-                    const item = e.target.closest('.mat-voorkeur-item');
-                    const matNummers = item.querySelector('.mat-nummers');
-                    const existingNrs = Array.from(matNummers.querySelectorAll('.mat-nummer')).map(el =>
-                        parseInt(el.textContent.trim())
-                    );
-
-                    // Check if dropdown already exists
-                    if (item.querySelector('.mat-select-popup')) return;
-
-                    // Create inline dropdown
-                    const select = document.createElement('select');
-                    select.className = 'mat-select-popup border rounded px-2 py-1 text-sm bg-white';
-                    select.innerHTML = '<option value="">Kies mat...</option>';
-                    for (let i = 1; i <= aantalMatten; i++) {
-                        if (!existingNrs.includes(i)) {
-                            select.innerHTML += `<option value="${i}">Mat ${i}</option>`;
-                        }
-                    }
-
-                    select.addEventListener('change', function() {
-                        const matNr = this.value;
-                        if (matNr) {
-                            const span = document.createElement('span');
-                            span.className = 'mat-nummer bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm';
-                            span.innerHTML = matNr + ' <button type="button" class="ml-1 text-blue-400 hover:text-red-500 remove-mat">&times;</button>';
-                            matNummers.appendChild(span);
-                            updateMatVoorkeurenInput();
-                        }
-                        this.remove();
-                    });
-
-                    select.addEventListener('blur', function() {
-                        setTimeout(() => this.remove(), 100);
-                    });
-
-                    matNummers.appendChild(select);
-                    select.focus();
-                }
-
-                // Remove mat number
-                if (e.target.classList.contains('remove-mat')) {
-                    e.target.closest('.mat-nummer').remove();
-                    updateMatVoorkeurenInput();
-                }
-
-                // Remove voorkeur item
-                if (e.target.classList.contains('remove-voorkeur-item')) {
-                    e.target.closest('.mat-voorkeur-item').remove();
-                    updateMatVoorkeurenInput();
-                }
-            });
-
-            // Update on select change
-            matVoorkeurenContainer.addEventListener('change', function(e) {
-                if (e.target.tagName === 'SELECT') {
-                    updateMatVoorkeurenInput();
-                }
-            });
-
-            // Add new voorkeur
-            addMatVoorkeurBtn.addEventListener('click', function() {
-                const index = matVoorkeurenContainer.querySelectorAll('.mat-voorkeur-item').length;
-                const item = document.createElement('div');
-                item.className = 'mat-voorkeur-item flex items-center gap-2 bg-gray-50 p-2 rounded';
-
-                let options = leeftijdsklassen.map(lk => `<option value="${lk}">${lk}</option>`).join('');
-
-                item.innerHTML = `
-                    <select name="mat_voorkeuren[${index}][leeftijdsklasse]" class="border rounded px-2 py-1 text-sm">
-                        ${options}
-                    </select>
-                    <span class="text-gray-500">→ Mat:</span>
-                    <div class="flex gap-1 mat-nummers"></div>
-                    <button type="button" class="add-mat-nr text-green-600 hover:text-green-800 text-lg font-bold" title="Mat toevoegen">+</button>
-                    <button type="button" class="remove-voorkeur-item ml-auto text-red-400 hover:text-red-600" title="Verwijder regel">&times;</button>
-                `;
-                matVoorkeurenContainer.appendChild(item);
-                updateMatVoorkeurenInput();
-            });
-
-            // Initial update
-            updateMatVoorkeurenInput();
         });
         </script>
 
@@ -449,33 +303,206 @@
 
         <!-- GEWICHTSKLASSEN PER LEEFTIJD -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Gewichtsklassen per Leeftijdscategorie</h2>
-            <p class="text-gray-600 text-sm mb-4">
-                Standaard volgens JBN-normen. Pas aan indien nodig voor dit toernooi.
-            </p>
+            <div class="flex justify-between items-start mb-4 pb-2 border-b">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Leeftijds- en Gewichtsklassen</h2>
+                    <p class="text-gray-600 text-sm mt-1">Pas leeftijdsgrenzen en gewichtsklassen aan per categorie.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
+                        JBN 2025
+                    </button>
+                    <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        JBN 2026
+                    </button>
+                </div>
+            </div>
 
             @php
                 $gewichtsklassen = $toernooi->getAlleGewichtsklassen();
             @endphp
 
-            <div class="space-y-4">
+            <div id="gewichtsklassen-container" class="space-y-3">
                 @foreach($gewichtsklassen as $key => $data)
-                <div class="border rounded-lg p-4">
-                    <label class="block text-gray-700 font-medium mb-2">{{ $data['label'] }}</label>
-                    <input type="text" name="gewichtsklassen[{{ $key }}]"
-                           value="{{ implode(', ', $data['gewichten']) }}"
-                           class="w-full border rounded px-3 py-2 font-mono text-sm"
-                           placeholder="-20, -23, -26, +26">
-                    <p class="text-gray-500 text-xs mt-1">Komma-gescheiden. Gebruik - voor maximum, + voor minimum (open klasse)</p>
+                <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50" data-key="{{ $key }}">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                            <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
+                                   value="{{ $data['max_leeftijd'] ?? 99 }}"
+                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold {{ ($data['max_leeftijd'] ?? 99) < 99 ? 'text-blue-600' : 'text-gray-400' }}"
+                                   min="5" max="99">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Naam:</label>
+                            <input type="text" name="gewichtsklassen_label[{{ $key }}]"
+                                   value="{{ $data['label'] }}"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                        </div>
+                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                        <input type="text" name="gewichtsklassen[{{ $key }}]"
+                               value="{{ implode(', ', $data['gewichten']) }}"
+                               class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                               placeholder="-20, -23, -26, +26">
+                    </div>
                 </div>
                 @endforeach
             </div>
 
-            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>Tip:</strong> Voeg gewichten toe of verwijder ze door de lijst aan te passen.
-                Voorbeeld: "-24, -27, -30, +30" betekent tot 24kg, 24-27kg, 27-30kg, en 30+ kg.
+            <div class="mt-4 flex gap-2">
+                <button type="button" id="add-categorie" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
+                    + Categorie toevoegen
+                </button>
             </div>
+
+            <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <strong>JBN 2025:</strong> -8, -10, -12, -15, -18 (huidige regels)<br>
+                <strong>JBN 2026:</strong> -7, -9, -11, -13, -15 (nieuwe regels)
+            </div>
+
+            <input type="hidden" name="gewichtsklassen_json" id="gewichtsklassen_json_input">
         </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('gewichtsklassen-container');
+            const jsonInput = document.getElementById('gewichtsklassen_json_input');
+
+            // JBN presets
+            const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
+            const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
+
+            function updateJsonInput() {
+                const items = container.querySelectorAll('.gewichtsklasse-item');
+                const data = {};
+                items.forEach(item => {
+                    const key = item.dataset.key;
+                    const leeftijd = parseInt(item.querySelector('.leeftijd-input').value) || 99;
+                    const label = item.querySelector('.label-input').value;
+                    const gewichten = item.querySelector('.gewichten-input').value
+                        .split(',')
+                        .map(g => g.trim())
+                        .filter(g => g);
+                    data[key] = { label, max_leeftijd: leeftijd, gewichten };
+                });
+                jsonInput.value = JSON.stringify(data);
+            }
+
+            function renderCategorieen(data) {
+                container.innerHTML = '';
+                let index = 0;
+                for (const [key, item] of Object.entries(data)) {
+                    const div = document.createElement('div');
+                    div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
+                    div.dataset.key = key;
+                    const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
+                    div.innerHTML = `
+                        <div class="flex items-center gap-4 mb-2">
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                                <input type="number" name="gewichtsklassen_leeftijd[${key}]"
+                                       value="${item.max_leeftijd}"
+                                       class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold ${leeftijdClass}"
+                                       min="5" max="99">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Naam:</label>
+                                <input type="text" name="gewichtsklassen_label[${key}]"
+                                       value="${item.label}"
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                            </div>
+                            <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
+                        </div>
+                        <div>
+                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                            <input type="text" name="gewichtsklassen[${key}]"
+                                   value="${item.gewichten.join(', ')}"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                   placeholder="-20, -23, -26, +26">
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    index++;
+                }
+                updateJsonInput();
+            }
+
+            // JBN buttons
+            document.getElementById('btn-jbn-2025').addEventListener('click', () => {
+                if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
+                    renderCategorieen(jbn2025);
+                }
+            });
+
+            document.getElementById('btn-jbn-2026').addEventListener('click', () => {
+                if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
+                    renderCategorieen(jbn2026);
+                }
+            });
+
+            // Add category
+            document.getElementById('add-categorie').addEventListener('click', () => {
+                const items = container.querySelectorAll('.gewichtsklasse-item');
+                const newKey = 'custom_' + Date.now();
+                const div = document.createElement('div');
+                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
+                div.dataset.key = newKey;
+                div.innerHTML = `
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                            <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
+                                   value="99"
+                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-gray-400"
+                                   min="5" max="99">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Naam:</label>
+                            <input type="text" name="gewichtsklassen_label[${newKey}]"
+                                   value="Nieuwe categorie"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                        </div>
+                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
+                    </div>
+                    <div>
+                        <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                        <input type="text" name="gewichtsklassen[${newKey}]"
+                               value=""
+                               class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                               placeholder="-20, -23, -26, +26">
+                    </div>
+                `;
+                container.appendChild(div);
+                updateJsonInput();
+            });
+
+            // Remove category
+            container.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-categorie')) {
+                    if (confirm('Deze categorie verwijderen?')) {
+                        e.target.closest('.gewichtsklasse-item').remove();
+                        updateJsonInput();
+                    }
+                }
+            });
+
+            // Update styling on leeftijd change
+            container.addEventListener('input', (e) => {
+                if (e.target.classList.contains('leeftijd-input')) {
+                    const val = parseInt(e.target.value) || 99;
+                    e.target.classList.toggle('text-blue-600', val < 99);
+                    e.target.classList.toggle('text-gray-400', val >= 99);
+                }
+                updateJsonInput();
+            });
+
+            // Initial update
+            updateJsonInput();
+        });
+        </script>
 
         <!-- ACTIES -->
         <div class="flex justify-between items-center">
