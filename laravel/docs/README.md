@@ -4,12 +4,21 @@ Welkom bij de documentatie van het WestFries Open JudoToernooi Management Systee
 
 ## Inhoud
 
-1. [Installatie](./INSTALLATIE.md) - Hoe het systeem te installeren
-2. [Configuratie](./CONFIGURATIE.md) - Configuratie opties
-3. [Gebruikershandleiding](./GEBRUIKERSHANDLEIDING.md) - Handleiding voor gebruikers
-4. [API Documentatie](./API.md) - REST API endpoints
-5. [Database Schema](./DATABASE.md) - Database structuur
-6. [Ontwikkelaar Gids](./ONTWIKKELAAR.md) - Informatie voor ontwikkelaars
+### 1. Getting Started
+- [Installatie](./1-GETTING-STARTED/INSTALLATIE.md) - Hoe het systeem te installeren
+- [Configuratie](./1-GETTING-STARTED/CONFIGURATIE.md) - Configuratie opties
+
+### 2. Features
+- [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding voor gebruikers
+- [Eliminatie Systeem](./2-FEATURES/ELIMINATIE_SYSTEEM.md) - Double elimination bracket systeem
+
+### 3. Technical
+- [API Documentatie](./3-TECHNICAL/API.md) - REST API endpoints
+- [Database Schema](./3-TECHNICAL/DATABASE.md) - Database structuur
+- [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Informatie voor ontwikkelaars
+
+### 4. Deployment
+- Server deployment instructies (zie INSTALLATIE.md)
 
 ## Snelle Start
 
@@ -50,6 +59,11 @@ laravel/
 │   ├── migrations/      # Database migraties
 │   └── seeders/         # Test data seeders
 ├── docs/                # Documentatie (deze map)
+│   ├── 1-GETTING-STARTED/
+│   ├── 2-FEATURES/
+│   ├── 3-TECHNICAL/
+│   ├── 4-DEPLOYMENT/
+│   └── archive/
 ├── resources/
 │   └── views/           # Blade templates
 ├── routes/              # Route definities

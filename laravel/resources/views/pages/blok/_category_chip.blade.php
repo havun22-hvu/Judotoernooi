@@ -1,0 +1,35 @@
+@php
+    $leeftijdVolgorde = ["Mini's", 'A-pupillen', 'B-pupillen', 'C-pupillen', 'Dames -15', 'Heren -15', 'Dames -18', 'Heren -18', 'Dames -21', 'Heren -21', 'Dames', 'Heren'];
+    $afkortingen = [
+        "Mini's" => "Mini's", 'A-pupillen' => 'A-pup', 'B-pupillen' => 'B-pup', 'C-pupillen' => 'C-pup',
+        'Dames -15' => 'D-15', 'Heren -15' => 'H-15', 'Dames -18' => 'D-18', 'Heren -18' => 'H-18',
+        'Dames -21' => 'D-21', 'Heren -21' => 'H-21', 'Dames' => 'Dames', 'Heren' => 'Heren',
+    ];
+    $sortValue = array_search($cat['leeftijd'], $leeftijdVolgorde) * 10000 + (int)preg_replace('/[^0-9]/', '', $cat['gewicht']) + (str_starts_with($cat['gewicht'], '+') ? 500 : 0);
+
+    if ($inSleepvak) {
+        $chipClass = 'bg-gradient-to-b from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:from-purple-100 hover:to-purple-200';
+        $textClass = 'text-purple-600';
+        $subClass = 'text-purple-400';
+    } elseif ($cat['vast']) {
+        $chipClass = 'bg-gradient-to-b from-green-50 to-green-100 text-green-800 border border-green-400';
+        $textClass = 'text-green-600';
+        $subClass = 'text-green-400';
+    } else {
+        $chipClass = 'bg-gradient-to-b from-blue-50 to-blue-100 text-blue-800 border border-blue-300';
+        $textClass = 'text-blue-600';
+        $subClass = 'text-blue-400';
+    }
+@endphp
+<div class="category-chip px-2 py-1 text-sm rounded cursor-move {{ $chipClass }} shadow-sm hover:shadow transition-all inline-flex items-center gap-1"
+     draggable="true"
+     data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}"
+     data-leeftijd="{{ $cat['leeftijd'] }}"
+     data-wedstrijden="{{ $cat['wedstrijden'] }}"
+     data-vast="{{ $cat['vast'] ? '1' : '0' }}"
+     data-sort="{{ $sortValue }}">
+    @if($cat['vast'] && !$inSleepvak)<span class="text-green-600 pin-icon">📍</span>@endif
+    <span class="font-semibold">{{ $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'] }}</span>
+    <span class="{{ $textClass }}">{{ $cat['gewicht'] }}</span>
+    <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }})</span>
+</div>
