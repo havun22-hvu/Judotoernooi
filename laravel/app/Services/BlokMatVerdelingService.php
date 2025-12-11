@@ -742,6 +742,8 @@ class BlokMatVerdelingService
             ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
             ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
             ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
+            ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
             ->get()
             ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
             ->map(fn($g) => [
