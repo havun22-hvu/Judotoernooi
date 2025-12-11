@@ -65,7 +65,7 @@
                                     <span>Poule {{ $poule->nummer }}</span>
                                     <span class="text-xs text-gray-400">{{ $poule->judokas->count() }} judoka's</span>
                                 </div>
-                                <div class="space-y-1">
+                                <div class="divide-y divide-gray-100">
                                     @foreach($poule->judokas as $judoka)
                                     @php
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig';
@@ -77,17 +77,28 @@
                                         draggable="true"
                                         @dragstart="dragStart($event, {{ $judoka->id }}, {{ $poule->id }})"
                                         @dragend="dragEnd()"
-                                        class="flex items-center gap-1.5 text-sm cursor-move hover:bg-gray-50 p-1 rounded {{ $isAfwezig || $moetOverpoulen ? 'line-through text-gray-400' : '' }}"
+                                        class="px-2 py-1.5 hover:bg-blue-50 cursor-move text-sm {{ $isAfwezig || $moetOverpoulen ? 'line-through opacity-50' : '' }}"
                                     >
-                                        {{-- Status marker --}}
-                                        @if($isAfwezig)
-                                            {{-- No dot for absent --}}
-                                        @elseif($moetOverpoulen)
-                                            <span class="text-red-500 text-xs">●</span>
-                                        @elseif($isGewogen && $isBinnenKlasse)
-                                            <span class="text-green-500 text-xs">●</span>
-                                        @endif
-                                        <span>{{ $judoka->naam }}</span>
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex items-center gap-1 flex-1 min-w-0">
+                                                {{-- Status marker --}}
+                                                @if($isAfwezig)
+                                                    {{-- No dot --}}
+                                                @elseif($moetOverpoulen)
+                                                    <span class="text-red-500 text-xs flex-shrink-0">●</span>
+                                                @elseif($isGewogen && $isBinnenKlasse)
+                                                    <span class="text-green-500 text-xs flex-shrink-0">●</span>
+                                                @endif
+                                                <div class="min-w-0">
+                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                                    <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right text-xs ml-2 flex-shrink-0">
+                                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                     @endforeach
                                 </div>
@@ -101,21 +112,34 @@
                             @dragover.prevent
                             @drop="dropToWachtruimte($event, '{{ $category['key'] }}')"
                         >
-                            <div class="font-medium text-sm text-orange-600 mb-2">Wachtruimte</div>
-                            <div class="space-y-1">
+                            <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
+                                <span>Wachtruimte</span>
+                                <span class="text-xs text-orange-400">{{ count($category['wachtruimte']) }}</span>
+                            </div>
+                            <div class="divide-y divide-orange-200">
                                 @forelse($category['wachtruimte'] as $judoka)
                                 <div
                                     draggable="true"
                                     @dragstart="dragStartFromWacht($event, {{ $judoka->id }}, '{{ $category['key'] }}')"
                                     @dragend="dragEnd()"
-                                    class="flex items-center gap-1.5 text-sm cursor-move hover:bg-orange-100 p-1 rounded"
+                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm"
                                 >
-                                    <span class="text-red-500 text-xs">●</span>
-                                    <span>{{ $judoka->naam }}</span>
-                                    <span class="text-xs text-gray-400">({{ $judoka->gewicht_gewogen }}kg)</span>
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex items-center gap-1 flex-1 min-w-0">
+                                            <span class="text-red-500 text-xs flex-shrink-0">●</span>
+                                            <div class="min-w-0">
+                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                                <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right text-xs ml-2 flex-shrink-0">
+                                            <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen }} kg</div>
+                                            <div class="text-gray-400">was {{ $judoka->gewichtsklasse }}</div>
+                                        </div>
+                                    </div>
                                 </div>
                                 @empty
-                                <div class="text-sm text-gray-400 italic">Leeg</div>
+                                <div class="text-sm text-gray-400 italic py-2 text-center">Leeg</div>
                                 @endforelse
                             </div>
                         </div>
