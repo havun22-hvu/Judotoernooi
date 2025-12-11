@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ClubUitnodigingMail;
 use App\Models\Club;
 use App\Models\ClubUitnodiging;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class ClubController extends Controller
@@ -96,8 +98,9 @@ class ClubController extends Controller
         // Update sent time
         $uitnodiging->update(['uitgenodigd_op' => now()]);
 
-        // TODO: Send actual email
-        // Mail::to($club->email)->send(new ClubUitnodigingMail($uitnodiging));
+        // Send email
+        $recipients = array_filter([$club->email, $club->email2]);
+        Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
 
         return redirect()
             ->route('toernooi.club.index', $toernooi)
@@ -108,21 +111,49 @@ class ClubController extends Controller
     {
         $clubs = Club::whereNotNull('email')->get();
         $verzonden = 0;
+        $fouten = 0;
 
         foreach ($clubs as $club) {
-            $uitnodiging = ClubUitnodiging::firstOrCreate(
-                ['toernooi_id' => $toernooi->id, 'club_id' => $club->id],
-                ['uitgenodigd_op' => now()]
-            );
+            try {
+                $uitnodiging = ClubUitnodiging::firstOrCreate(
+                    ['toernooi_id' => $toernooi->id, 'club_id' => $club->id],
+                    ['uitgenodigd_op' => now()]
+                );
 
-            $uitnodiging->update(['uitgenodigd_op' => now()]);
-            $verzonden++;
+                $uitnodiging->update(['uitgenodigd_op' => now()]);
 
-            // TODO: Send actual email
+                $recipients = array_filter([$club->email, $club->email2]);
+                Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
+
+                $verzonden++;
+            } catch (\Exception $e) {
+                $fouten++;
+            }
+        }
+
+        $message = "{$verzonden} uitnodigingen verstuurd";
+        if ($fouten > 0) {
+            $message .= " ({$fouten} mislukt)";
         }
 
         return redirect()
             ->route('toernooi.club.index', $toernooi)
-            ->with('success', "{$verzonden} uitnodigingen verstuurd");
+            ->with('success', $message);
+    }
+
+    /**
+     * Get coach portal URL for a club (for manual sharing)
+     */
+    public function getCoachUrl(Toernooi $toernooi, Club $club): RedirectResponse
+    {
+        $uitnodiging = ClubUitnodiging::firstOrCreate(
+            ['toernooi_id' => $toernooi->id, 'club_id' => $club->id],
+            ['uitgenodigd_op' => now()]
+        );
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('coach_url', route('coach.portal', $uitnodiging->token))
+            ->with('coach_url_club', $club->naam);
     }
 }

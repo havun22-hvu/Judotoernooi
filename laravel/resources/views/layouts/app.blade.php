@@ -84,5 +84,20 @@
             &copy; {{ date('Y') }} Havun - Judo Toernooi Management Systeem
         </div>
     </footer>
+
+    {{-- Service Worker Registration --}}
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

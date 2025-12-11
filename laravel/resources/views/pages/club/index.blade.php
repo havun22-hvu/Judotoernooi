@@ -3,6 +3,8 @@
 @section('title', 'Clubs Beheren')
 
 @section('content')
+<div x-data="{ copiedUrl: null, showUrlModal: false, modalUrl: '', modalClub: '' }">
+
 <div class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold text-gray-800">Clubs & Uitnodigingen</h1>
     <div class="flex space-x-2">
@@ -15,6 +17,39 @@
         </form>
     </div>
 </div>
+
+{{-- Coach URL modal --}}
+@if(session('coach_url'))
+<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="this.remove()">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full mx-4" onclick="event.stopPropagation()">
+        <h3 class="text-lg font-bold mb-2">Coach Link voor {{ session('coach_url_club') }}</h3>
+        <p class="text-gray-600 text-sm mb-4">Kopieer deze link en stuur hem naar de coach:</p>
+        <div class="flex gap-2">
+            <input type="text" value="{{ session('coach_url') }}" readonly
+                   class="flex-1 border rounded px-3 py-2 text-sm font-mono bg-gray-50" id="coach-url-input">
+            <button onclick="copyCoachUrl()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                Kopieer
+            </button>
+        </div>
+        <div class="mt-4 flex justify-between">
+            <a href="{{ session('coach_url') }}" target="_blank" class="text-blue-600 hover:underline text-sm">
+                Open in nieuw tabblad
+            </a>
+            <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-sm">
+                Sluiten
+            </button>
+        </div>
+    </div>
+</div>
+<script>
+function copyCoachUrl() {
+    const input = document.getElementById('coach-url-input');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    alert('Link gekopieerd!');
+}
+</script>
+@endif
 
 @if($toernooi->inschrijving_deadline)
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -134,7 +169,7 @@
                 </td>
 
                 <td class="px-4 py-3">
-                    <div class="flex space-x-2">
+                    <div class="flex flex-wrap gap-1">
                         <button @click="editing = !editing" class="text-blue-600 hover:text-blue-800 text-sm">
                             Bewerk
                         </button>
@@ -149,9 +184,22 @@
                         @endif
 
                         @if($uitnodiging)
+                        <button
+                            @click="navigator.clipboard.writeText('{{ route('coach.portal', $uitnodiging->token) }}'); copiedUrl = {{ $club->id }}; setTimeout(() => copiedUrl = null, 2000)"
+                            class="text-sm"
+                            :class="copiedUrl === {{ $club->id }} ? 'text-green-600' : 'text-purple-600 hover:text-purple-800'"
+                        >
+                            <span x-show="copiedUrl !== {{ $club->id }}">Kopieer link</span>
+                            <span x-show="copiedUrl === {{ $club->id }}">Gekopieerd!</span>
+                        </button>
                         <a href="{{ route('coach.portal', $uitnodiging->token) }}" target="_blank"
+                           class="text-gray-500 hover:text-gray-700 text-sm" title="Open coach portal">
+                            Open
+                        </a>
+                        @else
+                        <a href="{{ route('toernooi.club.coach-url', [$toernooi, $club]) }}"
                            class="text-purple-600 hover:text-purple-800 text-sm">
-                            Link
+                            Maak link
                         </a>
                         @endif
                     </div>
@@ -167,4 +215,6 @@
         </tbody>
     </table>
 </div>
+
+</div>{{-- End x-data --}}
 @endsection

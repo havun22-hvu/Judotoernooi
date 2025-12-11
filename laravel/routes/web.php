@@ -76,6 +76,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::delete('club/{club}', [ClubController::class, 'destroy'])->name('club.destroy');
         Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
+        Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');
     });
 
     // Jury + Admin routes
