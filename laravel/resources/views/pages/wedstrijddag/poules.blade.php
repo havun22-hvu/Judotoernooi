@@ -63,7 +63,7 @@
                             >
                                 <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center">
                                     <span>Poule {{ $poule->nummer }}</span>
-                                    <span class="text-xs text-gray-400">{{ $poule->judokas->count() }} judoka's</span>
+                                    <span class="text-xs text-gray-400">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
                                 </div>
                                 <div class="divide-y divide-gray-100">
                                     @foreach($poule->judokas as $judoka)
