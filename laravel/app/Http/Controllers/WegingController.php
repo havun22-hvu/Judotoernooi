@@ -34,6 +34,13 @@ class WegingController extends Controller
             $request->user()?->name
         );
 
+        if (!($resultaat['success'] ?? true)) {
+            return response()->json([
+                'success' => false,
+                'message' => $resultaat['error'] ?? 'Weging niet toegestaan',
+            ], 400);
+        }
+
         return response()->json([
             'success' => true,
             'binnen_klasse' => $resultaat['binnen_klasse'],
@@ -84,7 +91,9 @@ class WegingController extends Controller
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'mat' => $judoka->poules->first()?->mat?->nummer,
                 'aanwezig' => $judoka->isAanwezig(),
+                'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
+                'aantal_wegingen' => $judoka->wegingen()->count(),
             ],
         ]);
     }

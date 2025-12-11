@@ -270,6 +270,7 @@ class JudokaController extends Controller
                 'gewogen' => $j->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $j->gewicht_gewogen,
                 'blok' => $j->poules->first()?->blok?->nummer,
+                'aantal_wegingen' => $j->wegingen()->count(),
             ]);
 
         return response()->json($judokas);

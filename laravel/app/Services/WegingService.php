@@ -15,6 +15,21 @@ class WegingService
      */
     public function registreerGewicht(Judoka $judoka, float $gewicht, ?string $geregistreerdDoor = null): array
     {
+        // Check max wegingen
+        $maxWegingen = $judoka->toernooi->max_wegingen;
+        if ($maxWegingen) {
+            $aantalWegingen = $judoka->wegingen()->count();
+            if ($aantalWegingen >= $maxWegingen) {
+                return [
+                    'success' => false,
+                    'error' => "Maximum aantal wegingen ({$maxWegingen}x) bereikt",
+                    'binnen_klasse' => false,
+                    'alternatieve_poule' => null,
+                    'opmerking' => null,
+                ];
+            }
+        }
+
         return DB::transaction(function () use ($judoka, $gewicht, $geregistreerdDoor) {
             $tolerantie = $judoka->toernooi->gewicht_tolerantie ?? 0.5;
             $binnenKlasse = $judoka->isGewichtBinnenKlasse($gewicht, $tolerantie);
@@ -46,6 +61,7 @@ class WegingService
             ]);
 
             return [
+                'success' => true,
                 'weging' => $weging,
                 'binnen_klasse' => $binnenKlasse,
                 'alternatieve_poule' => $alternatievePoule,

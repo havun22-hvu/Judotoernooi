@@ -289,18 +289,29 @@
         <div class="bg-white rounded-lg shadow p-6 mb-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Weging</h2>
 
-            <!-- Weging verplicht checkbox -->
-            <div class="mb-4">
-                <label class="flex items-center cursor-pointer">
-                    <input type="hidden" name="weging_verplicht" value="0">
-                    <input type="checkbox" name="weging_verplicht" value="1"
-                           {{ old('weging_verplicht', $toernooi->weging_verplicht ?? true) ? 'checked' : '' }}
-                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span class="ml-3">
-                        <span class="font-medium text-gray-700">Weging verplicht</span>
-                        <span class="block text-sm text-gray-500">Judoka's moeten gewogen worden voordat ze kunnen deelnemen. Uitschakelen voor toernooien zonder weegplicht.</span>
-                    </span>
-                </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Weging verplicht checkbox -->
+                <div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="weging_verplicht" value="0">
+                        <input type="checkbox" name="weging_verplicht" value="1"
+                               {{ old('weging_verplicht', $toernooi->weging_verplicht ?? true) ? 'checked' : '' }}
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-3">
+                            <span class="font-medium text-gray-700">Weging verplicht</span>
+                            <span class="block text-sm text-gray-500">Uitschakelen voor toernooien zonder weegplicht</span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Max wegingen -->
+                <div>
+                    <label for="max_wegingen" class="block text-gray-700 font-medium mb-1">Max aantal wegingen</label>
+                    <input type="number" name="max_wegingen" id="max_wegingen"
+                           value="{{ old('max_wegingen', $toernooi->max_wegingen) }}"
+                           placeholder="Onbeperkt" class="w-full border rounded px-3 py-2" min="1" max="10">
+                    <p class="text-gray-500 text-sm mt-1">Leeg = onbeperkt. Bij sommige toernooien max 2-3x wegen.</p>
+                </div>
             </div>
 
             <div class="max-w-md border-t pt-4">
