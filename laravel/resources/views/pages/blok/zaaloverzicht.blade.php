@@ -15,60 +15,74 @@
     </div>
 </div>
 
-{{-- Category status buttons --}}
-@if(isset($categories) && count($categories) > 0)
-<div class="bg-white rounded-lg shadow p-4 mb-6">
-    <div class="flex items-center gap-2 mb-2">
-        <span class="text-sm font-medium text-gray-600">Categorieën:</span>
-        <span class="text-xs text-gray-400">(rood = wachtruimte, wit = klaar, groen = naar mat)</span>
-    </div>
-    <div class="flex flex-wrap gap-2">
-        @foreach($categories as $key => $cat)
-        @php
-            $sentToZaaloverzicht = $sentToZaaloverzicht ?? [];
-            $isSent = isset($sentToZaaloverzicht[$key]);
-            $hasWaiting = $cat['wachtruimte_count'] > 0;
-
-            if ($isSent) {
-                $bgClass = 'bg-green-100 border-green-500 text-green-800';
-            } elseif ($hasWaiting) {
-                $bgClass = 'bg-red-100 border-red-500 text-red-800';
-            } else {
-                $bgClass = 'bg-white border-gray-300 text-gray-700';
-            }
-        @endphp
-        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($key) }}"
-           class="px-3 py-1 text-sm border rounded-full {{ $bgClass }} hover:opacity-80 transition-opacity"
-        >
-            {{ $cat['leeftijdsklasse'] }} {{ $cat['gewichtsklasse'] }}
-            @if($hasWaiting)
-            <span class="text-xs">({{ $cat['wachtruimte_count'] }})</span>
-            @endif
-        </a>
-        @endforeach
-    </div>
-</div>
-@endif
-
 <p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
 
 @foreach($overzicht as $blok)
+@php
+    // Get unique categories in this blok
+    $blokCategories = collect($blok['matten'])
+        ->flatMap(fn($m) => $m['poules'])
+        ->map(function($p) {
+            $parts = explode(' Poule ', $p['titel']);
+            return $parts[0] ?? $p['titel'];
+        })
+        ->unique()
+        ->values();
+@endphp
 <div class="mb-6" x-data="{ open: true }">
-    <button @click="open = !open" class="w-full flex justify-between items-center bg-gray-800 text-white px-4 py-3 rounded-t-lg hover:bg-gray-700">
-        <div class="flex items-center gap-4">
-            <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
-            <span class="text-gray-300 text-sm">
-                {{ collect($blok['matten'])->sum(fn($m) => count($m['poules'])) }} poules |
-                {{ collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden')) }} wedstrijden
-            </span>
-            @if($blok['weging_gesloten'])
-            <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
-            @endif
+    <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
+        <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
+            <div class="flex items-center gap-4">
+                <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
+                <span class="text-gray-300 text-sm">
+                    {{ collect($blok['matten'])->sum(fn($m) => count($m['poules'])) }} poules |
+                    {{ collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden')) }} wedstrijden
+                </span>
+                @if($blok['weging_gesloten'])
+                <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
+                @endif
+            </div>
+            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        @if($blokCategories->isNotEmpty())
+        <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
+            @foreach($blokCategories as $catNaam)
+            @php
+                // Find category key and status
+                $catKey = null;
+                $catData = null;
+                foreach (($categories ?? []) as $key => $cat) {
+                    if ($cat['leeftijdsklasse'] . ' ' . $cat['gewichtsklasse'] === $catNaam) {
+                        $catKey = $key;
+                        $catData = $cat;
+                        break;
+                    }
+                }
+                $isSent = $catKey && isset(($sentToZaaloverzicht ?? [])[$catKey]);
+                $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
+
+                if ($isSent) {
+                    $btnClass = 'bg-green-500 text-white';
+                } elseif ($hasWaiting) {
+                    $btnClass = 'bg-red-500 text-white';
+                } else {
+                    $btnClass = 'bg-gray-600 text-gray-200';
+                }
+            @endphp
+            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}{{ $catKey ? '#' . urlencode($catKey) : '' }}"
+               class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
+            >
+                {{ $catNaam }}
+                @if($hasWaiting)
+                <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
+                @endif
+            </a>
+            @endforeach
         </div>
-        <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </button>
+        @endif
+    </div>
 
     <div x-show="open" x-collapse class="bg-white rounded-b-lg shadow">
         <div class="p-4">
