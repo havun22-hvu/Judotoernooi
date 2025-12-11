@@ -19,14 +19,18 @@
 
 @foreach($overzicht as $blok)
 @php
-    // Get unique categories in this blok
+    // Get unique categories in this blok with leeftijdsklasse and gewichtsklasse for sorting
     $blokCategories = collect($blok['matten'])
         ->flatMap(fn($m) => $m['poules'])
         ->map(function($p) {
-            $parts = explode(' Poule ', $p['titel']);
-            return $parts[0] ?? $p['titel'];
+            return [
+                'leeftijdsklasse' => $p['leeftijdsklasse'] ?? '',
+                'gewichtsklasse' => $p['gewichtsklasse'] ?? '',
+                'naam' => ($p['leeftijdsklasse'] ?? '') . ' ' . ($p['gewichtsklasse'] ?? ''),
+            ];
         })
-        ->unique()
+        ->unique('naam')
+        ->sortBy(['leeftijdsklasse', 'gewichtsklasse'])
         ->values();
 @endphp
 <div class="mb-6" x-data="{ open: true }">
@@ -48,30 +52,24 @@
         </button>
         @if($blokCategories->isNotEmpty())
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
-            @foreach($blokCategories as $catNaam)
+            @foreach($blokCategories as $catInfo)
             @php
-                // Find category key and status
-                $catKey = null;
-                $catData = null;
-                foreach (($categories ?? []) as $key => $cat) {
-                    if ($cat['leeftijdsklasse'] . ' ' . $cat['gewichtsklasse'] === $catNaam) {
-                        $catKey = $key;
-                        $catData = $cat;
-                        break;
-                    }
-                }
-                $isSent = $catKey && isset(($sentToZaaloverzicht ?? [])[$catKey]);
+                $catNaam = $catInfo['naam'];
+                $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
+                $catData = ($categories ?? [])[$catKey] ?? null;
+                $isSent = isset(($sentToZaaloverzicht ?? [])[$catKey]);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 
+                // rood = wachtend, wit = aanwezig, groen = naar mat
                 if ($isSent) {
                     $btnClass = 'bg-green-500 text-white';
                 } elseif ($hasWaiting) {
                     $btnClass = 'bg-red-500 text-white';
                 } else {
-                    $btnClass = 'bg-gray-600 text-gray-200';
+                    $btnClass = 'bg-white text-gray-800';
                 }
             @endphp
-            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}{{ $catKey ? '#' . urlencode($catKey) : '' }}"
+            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($catKey) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
                 {{ $catNaam }}

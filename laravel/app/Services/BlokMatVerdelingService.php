@@ -904,6 +904,8 @@ class BlokMatVerdelingService
                         'id' => $p->id,
                         'nummer' => $p->nummer,
                         'titel' => $p->titel,
+                        'leeftijdsklasse' => $p->leeftijdsklasse,
+                        'gewichtsklasse' => $p->gewichtsklasse,
                         'judokas' => $p->aantal_judokas,
                         'wedstrijden' => $p->aantal_wedstrijden,
                     ])->values()->toArray(),
