@@ -287,9 +287,23 @@
 
         <!-- GEWICHT -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Gewicht</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Weging</h2>
 
-            <div class="max-w-md">
+            <!-- Weging verplicht checkbox -->
+            <div class="mb-4">
+                <label class="flex items-center cursor-pointer">
+                    <input type="hidden" name="weging_verplicht" value="0">
+                    <input type="checkbox" name="weging_verplicht" value="1"
+                           {{ old('weging_verplicht', $toernooi->weging_verplicht ?? true) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <span class="ml-3">
+                        <span class="font-medium text-gray-700">Weging verplicht</span>
+                        <span class="block text-sm text-gray-500">Judoka's moeten gewogen worden voordat ze kunnen deelnemen. Uitschakelen voor toernooien zonder weegplicht.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="max-w-md border-t pt-4">
                 <label for="gewicht_tolerantie" class="block text-gray-700 font-medium mb-1">Gewichtstolerantie (kg)</label>
                 <input type="number" name="gewicht_tolerantie" id="gewicht_tolerantie"
                        value="{{ old('gewicht_tolerantie', $toernooi->gewicht_tolerantie) }}"
