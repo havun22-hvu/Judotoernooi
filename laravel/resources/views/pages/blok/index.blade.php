@@ -226,7 +226,7 @@
                             <span>{{ $cat['gewicht'] }} <span class="text-gray-400">({{ $cat['wedstrijden'] }})</span></span>
                             @if($cat['blok'])
                                 @if($cat['vast'])
-                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}">📍{{ $cat['blok'] }}</span>
+                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}">●{{ $cat['blok'] }}</span>
                                 @else
                                 <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}">{{ $cat['blok'] }}</span>
                                 @endif
