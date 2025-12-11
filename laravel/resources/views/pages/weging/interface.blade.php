@@ -182,7 +182,15 @@
                     <!-- Already weighed indicator -->
                     <div x-show="geselecteerd?.gewogen" class="mt-4 bg-green-100 text-green-800 p-3 rounded text-center">
                         Al gewogen: <span class="font-bold" x-text="geselecteerd?.gewicht_gewogen + ' kg'"></span>
+                        <span x-show="geselecteerd?.aantal_wegingen" class="text-green-600 text-sm ml-2" x-text="'(' + geselecteerd.aantal_wegingen + 'x gewogen)'"></span>
                     </div>
+
+                    <!-- Max wegingen warning -->
+                    @if($toernooi->max_wegingen)
+                    <div x-show="geselecteerd?.aantal_wegingen >= {{ $toernooi->max_wegingen }}" class="mt-2 bg-red-100 text-red-800 p-3 rounded text-center">
+                        Maximum aantal wegingen ({{ $toernooi->max_wegingen }}x) bereikt!
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Weight input -->

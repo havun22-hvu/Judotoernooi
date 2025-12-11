@@ -27,6 +27,7 @@ class Toernooi extends Model
         'kruisfinales_aantal',
         'gewicht_tolerantie',
         'weging_verplicht',
+        'max_wegingen',
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
