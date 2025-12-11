@@ -43,22 +43,24 @@ class WedstrijddagController extends Controller
                 'Heren' => 9,
             ];
 
-            $categories = $blokPoules->groupBy(function ($poule) {
-                return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
-                [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
-                // Extract numeric weight for sorting
-                $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
-                return [
-                    'key' => $key,
-                    'leeftijdsklasse' => $leeftijdsklasse,
-                    'gewichtsklasse' => $gewichtsklasse,
-                    'leeftijd_sort' => $leeftijdVolgorde[$leeftijdsklasse] ?? 99,
-                    'gewicht_sort' => $gewichtNum,
-                    'poules' => $categoryPoules->sortBy('nummer'),
-                    'wachtruimte' => [],
-                ];
-            })->sortBy([
+            $categories = $blokPoules
+                ->filter(fn($poule) => $poule->judokas->count() > 0) // Filter lege poules
+                ->groupBy(function ($poule) {
+                    return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+                })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
+                    [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
+                    // Extract numeric weight for sorting
+                    $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
+                    return [
+                        'key' => $key,
+                        'leeftijdsklasse' => $leeftijdsklasse,
+                        'gewichtsklasse' => $gewichtsklasse,
+                        'leeftijd_sort' => $leeftijdVolgorde[$leeftijdsklasse] ?? 99,
+                        'gewicht_sort' => $gewichtNum,
+                        'poules' => $categoryPoules->sortBy('nummer'),
+                        'wachtruimte' => [],
+                    ];
+                })->sortBy([
                 ['leeftijd_sort', 'asc'],
                 ['gewicht_sort', 'asc'],
             ])->values();
