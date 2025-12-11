@@ -31,9 +31,21 @@ class WedstrijddagController extends Controller
             $blokPoules = $poules->where('blok_id', $blok->id);
 
             // Group by category and sort
+            $leeftijdVolgorde = [
+                "Mini's" => 1,
+                'A-pupillen' => 2,
+                'B-pupillen' => 3,
+                'Dames -15' => 4,
+                'Heren -15' => 5,
+                'Dames -18' => 6,
+                'Heren -18' => 7,
+                'Dames' => 8,
+                'Heren' => 9,
+            ];
+
             $categories = $blokPoules->groupBy(function ($poule) {
                 return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            })->map(function ($categoryPoules, $key) {
+            })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
                 [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
                 // Extract numeric weight for sorting
                 $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
@@ -41,12 +53,13 @@ class WedstrijddagController extends Controller
                     'key' => $key,
                     'leeftijdsklasse' => $leeftijdsklasse,
                     'gewichtsklasse' => $gewichtsklasse,
+                    'leeftijd_sort' => $leeftijdVolgorde[$leeftijdsklasse] ?? 99,
                     'gewicht_sort' => $gewichtNum,
                     'poules' => $categoryPoules->sortBy('nummer'),
                     'wachtruimte' => [],
                 ];
             })->sortBy([
-                ['leeftijdsklasse', 'asc'],
+                ['leeftijd_sort', 'asc'],
                 ['gewicht_sort', 'asc'],
             ])->values();
 

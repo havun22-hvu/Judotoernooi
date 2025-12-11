@@ -19,18 +19,29 @@
 
 @foreach($overzicht as $blok)
 @php
+    // Leeftijd volgorde: mini's eerst (jongste)
+    $leeftijdVolgorde = [
+        "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
+        'Dames -15' => 4, 'Heren -15' => 5, 'Dames -18' => 6, 'Heren -18' => 7,
+        'Dames' => 8, 'Heren' => 9,
+    ];
+
     // Get unique categories in this blok with leeftijdsklasse and gewichtsklasse for sorting
     $blokCategories = collect($blok['matten'])
         ->flatMap(fn($m) => $m['poules'])
-        ->map(function($p) {
+        ->map(function($p) use ($leeftijdVolgorde) {
+            $lk = $p['leeftijdsklasse'] ?? '';
+            $gk = $p['gewichtsklasse'] ?? '';
             return [
-                'leeftijdsklasse' => $p['leeftijdsklasse'] ?? '',
-                'gewichtsklasse' => $p['gewichtsklasse'] ?? '',
-                'naam' => ($p['leeftijdsklasse'] ?? '') . ' ' . ($p['gewichtsklasse'] ?? ''),
+                'leeftijdsklasse' => $lk,
+                'gewichtsklasse' => $gk,
+                'naam' => $lk . ' ' . $gk,
+                'leeftijd_sort' => $leeftijdVolgorde[$lk] ?? 99,
+                'gewicht_sort' => floatval(preg_replace('/[^0-9.]/', '', $gk)),
             ];
         })
         ->unique('naam')
-        ->sortBy(['leeftijdsklasse', 'gewichtsklasse'])
+        ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc']])
         ->values();
 @endphp
 <div class="mb-6" x-data="{ open: true }">
