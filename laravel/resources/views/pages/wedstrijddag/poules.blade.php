@@ -167,17 +167,21 @@ function wedstrijddagPoules() {
         sentCategories: @json($sentToZaaloverzicht ?? []),
 
         dragStart(event, judokaId, pouleId) {
+            console.log('dragStart', judokaId, 'from poule', pouleId);
             this.draggedJudoka = judokaId;
             this.draggedFromPoule = pouleId;
             this.draggedFromWacht = null;
             event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', judokaId);
         },
 
         dragStartFromWacht(event, judokaId, categoryKey) {
+            console.log('dragStartFromWacht', judokaId, categoryKey);
             this.draggedJudoka = judokaId;
             this.draggedFromPoule = null;
             this.draggedFromWacht = categoryKey;
             event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', judokaId);
         },
 
         dragEnd() {
@@ -187,7 +191,12 @@ function wedstrijddagPoules() {
         },
 
         async dropJudoka(event, pouleId) {
-            if (!this.draggedJudoka) return;
+            if (!this.draggedJudoka) {
+                console.log('No dragged judoka');
+                return;
+            }
+
+            console.log('Dropping judoka', this.draggedJudoka, 'to poule', pouleId, 'from', this.draggedFromPoule);
 
             try {
                 const response = await fetch('{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}', {
@@ -203,11 +212,16 @@ function wedstrijddagPoules() {
                     }),
                 });
 
-                if (response.ok) {
+                const data = await response.json();
+
+                if (response.ok && data.success) {
                     window.location.reload();
+                } else {
+                    alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
                 }
             } catch (error) {
                 console.error('Error moving judoka:', error);
+                alert('Fout bij verplaatsen: ' + error.message);
             }
         },
 
