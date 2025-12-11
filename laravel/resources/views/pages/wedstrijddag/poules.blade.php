@@ -67,18 +67,24 @@
                                 </div>
                                 <div class="space-y-1">
                                     @foreach($poule->judokas as $judoka)
+                                    @php
+                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig';
+                                        $isGewogen = $judoka->gewicht_gewogen !== null;
+                                        $isBinnenKlasse = $judoka->isGewichtBinnenKlasse();
+                                        $moetOverpoulen = $isGewogen && !$isBinnenKlasse;
+                                    @endphp
                                     <div
                                         draggable="true"
                                         @dragstart="dragStart($event, {{ $judoka->id }}, {{ $poule->id }})"
                                         @dragend="dragEnd()"
-                                        class="flex items-center gap-1.5 text-sm cursor-move hover:bg-gray-50 p-1 rounded {{ $judoka->aanwezigheid === 'afwezig' ? 'line-through text-gray-400' : '' }}"
+                                        class="flex items-center gap-1.5 text-sm cursor-move hover:bg-gray-50 p-1 rounded {{ $isAfwezig || $moetOverpoulen ? 'line-through text-gray-400' : '' }}"
                                     >
                                         {{-- Status marker --}}
-                                        @if($judoka->aanwezigheid === 'afwezig')
+                                        @if($isAfwezig)
                                             {{-- No dot for absent --}}
-                                        @elseif($judoka->opmerking === 'Overgepouled')
+                                        @elseif($moetOverpoulen)
                                             <span class="text-red-500 text-xs">●</span>
-                                        @elseif($judoka->gewicht_gewogen && $judoka->isGewichtBinnenKlasse())
+                                        @elseif($isGewogen && $isBinnenKlasse)
                                             <span class="text-green-500 text-xs">●</span>
                                         @endif
                                         <span>{{ $judoka->naam }}</span>
