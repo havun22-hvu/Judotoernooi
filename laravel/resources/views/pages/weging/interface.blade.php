@@ -218,19 +218,6 @@
                         </svg>
                         <span x-text="bezig ? 'Bezig...' : 'Registreer Gewicht'"></span>
                     </button>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <button @click="markeerAanwezig()"
-                                :disabled="bezig"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 rounded-lg">
-                            Alleen aanwezig
-                        </button>
-                        <button @click="markeerAfwezig()"
-                                :disabled="bezig"
-                                class="bg-red-500 hover:bg-red-600 text-white font-medium py-3 rounded-lg">
-                            Afwezig
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Feedback message -->
@@ -379,7 +366,7 @@ function wegingInterface() {
             this.melding = '';
 
             try {
-                const response = await fetch(`/toernooi/{{ $toernooi->id }}/weging/${this.geselecteerd.id}/registreer`, {
+                const response = await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/registreer`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -399,11 +386,14 @@ function wegingInterface() {
                     });
                     if (this.recenteWegingen.length > 10) this.recenteWegingen.pop();
 
+                    // Update stats
+                    this.stats.gewogen++;
+
                     if (data.binnen_klasse) {
-                        this.melding = `Gewicht ${this.gewichtInput} kg geregistreerd!`;
+                        this.melding = `✓ Gewicht ${this.gewichtInput} kg geregistreerd!`;
                         this.meldingType = 'success';
                     } else {
-                        this.melding = `Let op: ${data.opmerking}`;
+                        this.melding = `⚠️ ${data.opmerking}`;
                         this.meldingType = 'error';
                     }
 
@@ -417,64 +407,14 @@ function wegingInterface() {
                         this.gewichtInput = '';
                         this.melding = '';
                     }, 2000);
+                } else {
+                    this.melding = data.message || 'Fout bij registreren';
+                    this.meldingType = 'error';
                 }
             } catch (error) {
-                this.melding = 'Fout bij registreren';
+                console.error('Error:', error);
+                this.melding = 'Fout bij registreren: ' + error.message;
                 this.meldingType = 'error';
-            } finally {
-                this.bezig = false;
-            }
-        },
-
-        async markeerAanwezig() {
-            if (!this.geselecteerd || this.bezig) return;
-
-            this.bezig = true;
-
-            try {
-                await fetch(`/toernooi/{{ $toernooi->id }}/weging/${this.geselecteerd.id}/aanwezig`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-
-                this.melding = 'Gemarkeerd als aanwezig';
-                this.meldingType = 'success';
-
-                setTimeout(() => {
-                    this.geselecteerd = null;
-                    this.gewichtInput = '';
-                    this.melding = '';
-                }, 1500);
-            } finally {
-                this.bezig = false;
-            }
-        },
-
-        async markeerAfwezig() {
-            if (!this.geselecteerd || this.bezig) return;
-
-            this.bezig = true;
-
-            try {
-                await fetch(`/toernooi/{{ $toernooi->id }}/weging/${this.geselecteerd.id}/afwezig`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-
-                this.melding = 'Gemarkeerd als afwezig';
-                this.meldingType = 'error';
-
-                setTimeout(() => {
-                    this.geselecteerd = null;
-                    this.gewichtInput = '';
-                    this.melding = '';
-                }, 1500);
             } finally {
                 this.bezig = false;
             }
