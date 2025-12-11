@@ -900,6 +900,7 @@ class BlokMatVerdelingService
                     'mat_naam' => $mat->label,
                     'poules' => $poules->map(fn($p) => [
                         'id' => $p->id,
+                        'nummer' => $p->nummer,
                         'titel' => $p->titel,
                         'judokas' => $p->aantal_judokas,
                         'wedstrijden' => $p->aantal_wedstrijden,

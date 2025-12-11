@@ -43,13 +43,17 @@
                         <span class="font-bold">Mat {{ $matNr }}</span>
                         <span class="text-xs bg-blue-800 px-2 py-0.5 rounded mat-wedstrijden">{{ $matWedstrijden }}w</span>
                     </div>
+                    @php
+                        // Filter out poules with 0 wedstrijden
+                        $poulesMetWedstrijden = collect($matData['poules'])->filter(fn($p) => $p['wedstrijden'] > 0);
+                    @endphp
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
-                        @forelse($matData['poules'] as $poule)
+                        @forelse($poulesMetWedstrijden as $poule)
                         <div class="poule-item text-xs border rounded p-1 bg-gray-50 cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
                             <div class="font-medium text-gray-800">{{ $poule['titel'] }}</div>
-                            <div class="text-gray-500">{{ $poule['judokas'] }}j / {{ $poule['wedstrijden'] }}w</div>
+                            <div class="text-gray-500">Poule {{ $poule['nummer'] }} ({{ $poule['wedstrijden'] }}w)</div>
                         </div>
                         @empty
                         <div class="text-gray-400 text-xs italic empty-message">Geen poules</div>
