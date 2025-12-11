@@ -9,6 +9,7 @@ use App\Http\Controllers\MatController;
 use App\Http\Controllers\PouleController;
 use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
+use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WegingController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
@@ -93,6 +94,14 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('weging/{judoka}/aanwezig', [WegingController::class, 'markeerAanwezig'])->name('weging.aanwezig');
         Route::post('weging/{judoka}/afwezig', [WegingController::class, 'markeerAfwezig'])->name('weging.afwezig');
         Route::post('weging/scan-qr', [WegingController::class, 'scanQR'])->name('weging.scan-qr');
+    });
+
+    // Wedstrijddag routes (admin only)
+    Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
+        Route::get('wedstrijddag/poules', [WedstrijddagController::class, 'poules'])->name('wedstrijddag.poules');
+        Route::post('wedstrijddag/verplaats-judoka', [WedstrijddagController::class, 'verplaatsJudoka'])->name('wedstrijddag.verplaats-judoka');
+        Route::post('wedstrijddag/naar-zaaloverzicht', [WedstrijddagController::class, 'naarZaaloverzicht'])->name('wedstrijddag.naar-zaaloverzicht');
+        Route::post('wedstrijddag/nieuwe-poule', [WedstrijddagController::class, 'nieuwePoule'])->name('wedstrijddag.nieuwe-poule');
     });
 
     // Mat routes (mat + admin)

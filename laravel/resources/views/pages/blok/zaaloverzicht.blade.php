@@ -5,10 +5,50 @@
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
-    <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-blue-600 hover:underline">
-        ← Terug naar Blokkenverdeling
-    </a>
+    <div class="flex items-center gap-4">
+        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="text-blue-600 hover:underline">
+            Wedstrijddag Poules →
+        </a>
+        <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-blue-600 hover:underline">
+            ← Terug naar Blokkenverdeling
+        </a>
+    </div>
 </div>
+
+{{-- Category status buttons --}}
+@if(isset($categories) && count($categories) > 0)
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="flex items-center gap-2 mb-2">
+        <span class="text-sm font-medium text-gray-600">Categorieën:</span>
+        <span class="text-xs text-gray-400">(rood = wachtruimte, wit = klaar, groen = naar mat)</span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        @foreach($categories as $key => $cat)
+        @php
+            $sentToZaaloverzicht = $sentToZaaloverzicht ?? [];
+            $isSent = isset($sentToZaaloverzicht[$key]);
+            $hasWaiting = $cat['wachtruimte_count'] > 0;
+
+            if ($isSent) {
+                $bgClass = 'bg-green-100 border-green-500 text-green-800';
+            } elseif ($hasWaiting) {
+                $bgClass = 'bg-red-100 border-red-500 text-red-800';
+            } else {
+                $bgClass = 'bg-white border-gray-300 text-gray-700';
+            }
+        @endphp
+        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($key) }}"
+           class="px-3 py-1 text-sm border rounded-full {{ $bgClass }} hover:opacity-80 transition-opacity"
+        >
+            {{ $cat['leeftijdsklasse'] }} {{ $cat['gewichtsklasse'] }}
+            @if($hasWaiting)
+            <span class="text-xs">({{ $cat['wachtruimte_count'] }})</span>
+            @endif
+        </a>
+        @endforeach
+    </div>
+</div>
+@endif
 
 <p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
 

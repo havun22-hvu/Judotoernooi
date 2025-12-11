@@ -176,7 +176,51 @@ class BlokController extends Controller
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
-        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht'));
+        // Get category statuses for wedstrijddag
+        $categories = $this->getCategoryStatuses($toernooi);
+        $sentToZaaloverzicht = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
+
+        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories', 'sentToZaaloverzicht'));
+    }
+
+    /**
+     * Get category statuses for wedstrijddag overview
+     * Returns: red = waiting room has judokas, white = ready, green = sent to mat
+     */
+    private function getCategoryStatuses(Toernooi $toernooi): array
+    {
+        $categories = [];
+
+        // Get all unique categories
+        $poules = $toernooi->poules()
+            ->select('leeftijdsklasse', 'gewichtsklasse')
+            ->distinct()
+            ->get();
+
+        // Get judokas that need re-pooling (outside weight class)
+        $judokasNaarWachtruimte = \App\Models\Judoka::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('gewicht_gewogen')
+            ->where('aanwezigheid', 'aanwezig')
+            ->get()
+            ->filter(fn($j) => !$j->isGewichtBinnenKlasse());
+
+        // Group by target category
+        $wachtruimtePerCategorie = [];
+        foreach ($judokasNaarWachtruimte as $judoka) {
+            $key = $judoka->leeftijdsklasse . '|' . $judoka->gewichtsklasse;
+            $wachtruimtePerCategorie[$key] = ($wachtruimtePerCategorie[$key] ?? 0) + 1;
+        }
+
+        foreach ($poules as $poule) {
+            $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+            $categories[$key] = [
+                'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'gewichtsklasse' => $poule->gewichtsklasse,
+                'wachtruimte_count' => $wachtruimtePerCategorie[$key] ?? 0,
+            ];
+        }
+
+        return $categories;
     }
 
     public function sprekerInterface(Toernooi $toernooi): View

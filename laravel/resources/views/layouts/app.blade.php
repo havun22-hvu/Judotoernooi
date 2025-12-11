@@ -28,6 +28,7 @@
                         <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="hover:text-blue-200">Blokken</a>
                         <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="hover:text-blue-200">Zaaloverzicht</a>
                         <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="hover:text-blue-200">Weging</a>
+                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="hover:text-blue-200">Wedstrijddag</a>
                         <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="hover:text-blue-200">Matten</a>
                     </div>
                     @endif
