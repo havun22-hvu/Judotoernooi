@@ -52,17 +52,17 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
   - **Gewenst**: invoerveld (default = totaal/aantal_blokken)
   - **Actueel**: aantal wedstrijden in dit blok (real-time)
   - Afwijking badge (groen/geel/rood)
-- Categorieën als chips:
-  - **Normaal (blauw)**: door solver geplaatst, NIET vastgezet
-  - **Met 📍 (groen pinnetje)**: handmatig geplaatst, vastgezet
+- Categorieën als chips met pin-icon rechts:
+  - **Blauw + rode 📌**: geplaatst maar NIET vastgezet (klik 📌 om vast te zetten)
+  - **Groen + groene ●**: vastgezet (klik ● om los te maken)
 - Drop zone voor drag & drop
 - **Sleepbaar tussen blokken onderling**
 
 ### 3. Overzicht Panel (rechts)
 - Compacte tabel per leeftijd
 - Per gewicht: bloknummer of `-` als niet verdeeld
-- 📍 indicator voor vastgezette categorieën
-- **Real-time update** bij elke drag & drop
+- **●** indicator voor vastgezette categorieën
+- **Real-time update** bij elke drag & drop of pin toggle
 
 ### 4. Variant Keuze Balk (onderaan, na Bereken)
 - Compacte balk onder de blokken
@@ -100,26 +100,31 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 ## Drag & Drop Gedrag
 
 ### Van Sleepvak naar Blok
-- Categorie krijgt **📍 groen pinnetje** (vastgezet)
-- Wordt NIET meegenomen bij "Bereken"
+- Categorie wordt **blauw met rode 📌** (NIET vastgezet)
+- Wordt WEL meegenomen bij "Bereken"
+- Klik op 📌 om vast te zetten
 
 ### Van Blok naar Blok
-- Categorie krijgt **📍 groen pinnetje** (vastgezet)
-- Wordt NIET meegenomen bij "Bereken"
+- Categorie blijft in huidige staat (vast of niet vast)
+- Klik op pin-icon om te togglen
 
 ### Van Blok naar Sleepvak
-- Categorie verliest 📍 (niet meer vastgezet)
+- Categorie wordt paars (geen pin)
 - Wordt WEL meegenomen bij "Bereken"
+
+### Pin Toggle (klik op pin-icon)
+- **📌 → ●**: Categorie wordt vastgezet (groen)
+- **● → 📌**: Categorie wordt losgemaakt (blauw)
 
 ---
 
-## Vastgezet (📍) vs Niet-Vastgezet
+## Vastgezet (●) vs Niet-Vastgezet (📌)
 
 | Status | Weergave | Gedrag bij "Bereken" | Gedrag bij "Opnieuw" |
 |--------|----------|---------------------|---------------------|
-| In sleepvak | Normaal | Wordt verdeeld | Blijft in sleepvak |
-| In blok, niet vast | Blauw chip | Wordt opnieuw verdeeld | Terug naar sleepvak |
-| In blok, vastgezet | 📍 Groen pin | **Blijft staan** | Terug naar sleepvak |
+| In sleepvak | Paars, geen pin | Wordt verdeeld | Blijft in sleepvak |
+| In blok, niet vast | Blauw + rode 📌 | Wordt opnieuw verdeeld | Terug naar sleepvak |
+| In blok, vastgezet | Groen + groene ● | **Blijft staan** | Terug naar sleepvak |
 
 ---
 
