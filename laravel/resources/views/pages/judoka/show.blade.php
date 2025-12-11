@@ -25,50 +25,54 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-bold mb-4">Gegevens</h2>
-            <dl class="space-y-2">
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Geboortejaar</dt>
-                    <dd class="font-medium">{{ $judoka->geboortejaar }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Leeftijd</dt>
-                    <dd class="font-medium">{{ $judoka->leeftijd }} jaar</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Geslacht</dt>
-                    <dd class="font-medium">{{ $judoka->geslacht === 'M' ? 'Man' : 'Vrouw' }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Band</dt>
-                    <dd class="font-medium">{{ ucfirst($judoka->band) }}</dd>
-                </div>
-            </dl>
+            <table class="w-full">
+                <tbody>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Geboortejaar</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->geboortejaar }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Leeftijd</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->leeftijd }} jaar</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Geslacht</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->geslacht === 'M' ? 'Man' : 'Vrouw' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Band</td>
+                        <td class="font-medium text-right py-1.5">{{ ucfirst($judoka->band) }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-bold mb-4">Classificatie</h2>
-            <dl class="space-y-2">
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Leeftijdsklasse</dt>
-                    <dd class="font-medium">{{ $judoka->leeftijdsklasse }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Gewichtsklasse</dt>
-                    <dd class="font-medium">{{ $judoka->gewichtsklasse }} kg</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Opgegeven gewicht</dt>
-                    <dd class="font-medium">{{ $judoka->gewicht ? $judoka->gewicht . ' kg' : '-' }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Gewogen gewicht</dt>
-                    <dd class="font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : '-' }}</dd>
-                </div>
-                <div class="flex justify-between">
-                    <dt class="text-gray-600">Judoka Code</dt>
-                    <dd class="font-mono">{{ $judoka->judoka_code }}</dd>
-                </div>
-            </dl>
+            <table class="w-full">
+                <tbody>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Leeftijdsklasse</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->leeftijdsklasse }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Gewichtsklasse</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->gewichtsklasse }} kg</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Opgegeven gewicht</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->gewicht ? $judoka->gewicht . ' kg' : '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Gewogen gewicht</td>
+                        <td class="font-medium text-right py-1.5">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-600 py-1.5">Judoka Code</td>
+                        <td class="font-mono text-right py-1.5">{{ $judoka->judoka_code }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -88,7 +92,7 @@
 
     <div class="flex justify-between">
         <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
-            ← Terug naar lijst
+            &larr; Terug naar lijst
         </a>
         <a href="{{ route('toernooi.judoka.edit', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             Bewerken
