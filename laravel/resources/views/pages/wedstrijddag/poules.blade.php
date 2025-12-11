@@ -15,9 +15,18 @@
     <div class="bg-white rounded-lg shadow">
         {{-- Category header --}}
         <div class="flex justify-between items-center px-4 py-3 bg-gray-100 rounded-t-lg border-b">
-            <h2 class="text-lg font-bold">
-                {{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
-            </h2>
+            <div class="flex items-center gap-3">
+                <h2 class="text-lg font-bold">
+                    {{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
+                </h2>
+                <button
+                    @click="nieuwePoule('{{ $category['leeftijdsklasse'] }}', '{{ $category['gewichtsklasse'] }}')"
+                    class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
+                    title="Nieuwe poule toevoegen"
+                >
+                    + Poule
+                </button>
+            </div>
             <button
                 @click="naarZaaloverzicht('{{ $category['key'] }}')"
                 :class="sentCategories['{{ $category['key'] }}'] ? 'ring-2 ring-green-500 ring-offset-2' : ''"
@@ -28,44 +37,46 @@
         </div>
 
         <div class="p-4">
-            <div class="flex flex-wrap gap-4">
+            <div class="flex gap-4">
                 {{-- Existing poules --}}
-                @foreach($category['poules'] as $poule)
-                <div
-                    class="border rounded-lg p-3 min-w-[200px] bg-white"
-                    @dragover.prevent
-                    @drop="dropJudoka($event, {{ $poule->id }})"
-                >
-                    <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center">
-                        <span>Poule {{ $poule->nummer }}</span>
-                        <span class="text-xs text-gray-400">{{ $poule->judokas->count() }} judoka's</span>
-                    </div>
-                    <div class="space-y-1">
-                        @foreach($poule->judokas as $judoka)
-                        <div
-                            draggable="true"
-                            @dragstart="dragStart($event, {{ $judoka->id }}, {{ $poule->id }})"
-                            @dragend="dragEnd()"
-                            class="flex items-center gap-1.5 text-sm cursor-move hover:bg-gray-50 p-1 rounded {{ $judoka->aanwezigheid === 'afwezig' ? 'line-through text-gray-400' : '' }}"
-                        >
-                            {{-- Status marker --}}
-                            @if($judoka->aanwezigheid === 'afwezig')
-                                {{-- No dot for absent --}}
-                            @elseif($judoka->opmerking === 'Overgepouled')
-                                <span class="text-red-500 text-xs">●</span>
-                            @elseif($judoka->gewicht_gewogen && $judoka->isGewichtBinnenKlasse())
-                                <span class="text-green-500 text-xs">●</span>
-                            @endif
-                            <span>{{ $judoka->naam }}</span>
+                <div class="flex flex-wrap gap-4 flex-1">
+                    @foreach($category['poules'] as $poule)
+                    <div
+                        class="border rounded-lg p-3 min-w-[200px] bg-white"
+                        @dragover.prevent
+                        @drop="dropJudoka($event, {{ $poule->id }})"
+                    >
+                        <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center">
+                            <span>Poule {{ $poule->nummer }}</span>
+                            <span class="text-xs text-gray-400">{{ $poule->judokas->count() }} judoka's</span>
                         </div>
-                        @endforeach
+                        <div class="space-y-1">
+                            @foreach($poule->judokas as $judoka)
+                            <div
+                                draggable="true"
+                                @dragstart="dragStart($event, {{ $judoka->id }}, {{ $poule->id }})"
+                                @dragend="dragEnd()"
+                                class="flex items-center gap-1.5 text-sm cursor-move hover:bg-gray-50 p-1 rounded {{ $judoka->aanwezigheid === 'afwezig' ? 'line-through text-gray-400' : '' }}"
+                            >
+                                {{-- Status marker --}}
+                                @if($judoka->aanwezigheid === 'afwezig')
+                                    {{-- No dot for absent --}}
+                                @elseif($judoka->opmerking === 'Overgepouled')
+                                    <span class="text-red-500 text-xs">●</span>
+                                @elseif($judoka->gewicht_gewogen && $judoka->isGewichtBinnenKlasse())
+                                    <span class="text-green-500 text-xs">●</span>
+                                @endif
+                                <span>{{ $judoka->naam }}</span>
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
+                    @endforeach
                 </div>
-                @endforeach
 
-                {{-- Wachtruimte --}}
+                {{-- Wachtruimte (rechts) --}}
                 <div
-                    class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50"
+                    class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0"
                     @dragover.prevent
                     @drop="dropToWachtruimte($event, '{{ $category['key'] }}')"
                 >
@@ -87,14 +98,6 @@
                         @endforelse
                     </div>
                 </div>
-
-                {{-- New poule button --}}
-                <button
-                    @click="nieuwePoule('{{ $category['leeftijdsklasse'] }}', '{{ $category['gewichtsklasse'] }}')"
-                    class="border-2 border-dashed border-gray-300 rounded-lg p-3 min-w-[120px] flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors"
-                >
-                    <span class="text-2xl mr-1">+</span> Poule
-                </button>
             </div>
         </div>
     </div>
