@@ -60,6 +60,11 @@ class WegingService
                 'opmerking' => $opmerking,
             ]);
 
+            // Update poule statistics (counts may change if weight outside class)
+            foreach ($judoka->poules as $poule) {
+                $poule->updateStatistieken();
+            }
+
             return [
                 'success' => true,
                 'weging' => $weging,
@@ -128,6 +133,11 @@ class WegingService
         $judoka->update([
             'aanwezigheid' => AanwezigheidsStatus::AANWEZIG->value,
         ]);
+
+        // Update poule statistics
+        foreach ($judoka->poules as $poule) {
+            $poule->updateStatistieken();
+        }
     }
 
     /**
@@ -138,6 +148,11 @@ class WegingService
         $judoka->update([
             'aanwezigheid' => AanwezigheidsStatus::AFWEZIG->value,
         ]);
+
+        // Update poule statistics
+        foreach ($judoka->poules as $poule) {
+            $poule->updateStatistieken();
+        }
     }
 
     /**
