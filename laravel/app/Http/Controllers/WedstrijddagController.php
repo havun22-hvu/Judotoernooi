@@ -103,11 +103,18 @@ class WedstrijddagController extends Controller
         $judoka = Judoka::findOrFail($validated['judoka_id']);
         $nieuwePoule = Poule::findOrFail($validated['poule_id']);
 
-        // Remove from old poule if specified
+        // Remove from old poule(s)
         if (!empty($validated['from_poule_id'])) {
+            // From specific poule (drag within poules)
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
+        } else {
+            // From wachtruimte - detach from ALL current poules
+            foreach ($judoka->poules as $oudePoule) {
+                $oudePoule->judokas()->detach($judoka->id);
+                $oudePoule->updateStatistieken();
+            }
         }
 
         // Add to new poule
