@@ -63,10 +63,11 @@
                             @foreach($category['poules'] as $poule)
                             <div
                                 class="border rounded-lg p-3 min-w-[200px] bg-white transition-colors"
-                                :class="{ 'bg-blue-100 border-blue-400': draggedJudoka }"
+                                :class="{ 'bg-blue-100 border-blue-400 border-2': hoverPoule === {{ $poule->id }} }"
                                 @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
-                                @dragenter.prevent
-                                @drop.prevent="dropJudoka($event, {{ $poule->id }})"
+                                @dragenter.prevent="hoverPoule = {{ $poule->id }}"
+                                @dragleave.prevent="hoverPoule = null"
+                                @drop.prevent="dropJudoka($event, {{ $poule->id }}); hoverPoule = null"
                             >
                                 <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center">
                                     <span>Poule {{ $poule->nummer }}</span>
@@ -171,6 +172,7 @@ function wedstrijddagPoules() {
         draggedJudoka: null,
         draggedFromPoule: null,
         draggedFromWacht: null,
+        hoverPoule: null,
         sentCategories: @json($sentToZaaloverzicht ?? []),
 
         dragStart(event, judokaId, pouleId) {
@@ -195,6 +197,7 @@ function wedstrijddagPoules() {
             this.draggedJudoka = null;
             this.draggedFromPoule = null;
             this.draggedFromWacht = null;
+            this.hoverPoule = null;
         },
 
         async dropJudoka(event, pouleId) {
