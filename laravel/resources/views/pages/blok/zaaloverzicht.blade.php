@@ -49,10 +49,15 @@
                     @endphp
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
                         @forelse($poulesMetWedstrijden as $poule)
+                        @php
+                            // titel = "A-pupillen -30 kg Poule 11" -> split op "Poule"
+                            $titelParts = explode(' Poule ', $poule['titel']);
+                            $categorie = $titelParts[0] ?? $poule['titel'];
+                        @endphp
                         <div class="poule-item text-xs border rounded p-1 bg-gray-50 cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
-                            <div class="font-medium text-gray-800">{{ $poule['titel'] }}</div>
+                            <div class="font-medium text-gray-800">{{ $categorie }}</div>
                             <div class="text-gray-500">Poule {{ $poule['nummer'] }} ({{ $poule['wedstrijden'] }}w)</div>
                         </div>
                         @empty
