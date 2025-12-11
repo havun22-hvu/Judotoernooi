@@ -180,21 +180,40 @@ class WedstrijddagController extends Controller
         $gewicht = $judoka->gewicht_gewogen;
         if (!$gewicht) return null;
 
-        // Get all weight classes for this age group
-        $gewichtsklassen = config("toernooi.gewichtsklassen.{$judoka->leeftijdsklasse}.{$judoka->geslacht}", []);
+        // Map label to config key
+        $labelToKey = [
+            "Mini's" => 'minis',
+            'A-pupillen' => 'a_pupillen',
+            'B-pupillen' => 'b_pupillen',
+            'Dames -15' => 'dames_15',
+            'Heren -15' => 'heren_15',
+            'Dames -18' => 'dames_18',
+            'Heren -18' => 'heren_18',
+            'Dames' => 'dames',
+            'Heren' => 'heren',
+        ];
 
-        // Find matching weight class
+        $configKey = $labelToKey[$judoka->leeftijdsklasse] ?? null;
+        if (!$configKey) return null;
+
+        // Get weight classes from config
+        $gewichtsklassen = config("toernooi.leeftijdsklassen.{$configKey}.gewichtsklassen", []);
+        if (empty($gewichtsklassen)) return null;
+
+        // Find matching weight class (gewichtsklassen are integers: -20, -23, 29, etc.)
         foreach ($gewichtsklassen as $klasse) {
-            $isPlusKlasse = str_starts_with($klasse, '+');
-            $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
+            $isPlusKlasse = $klasse > 0;
+            $limiet = abs($klasse);
 
             if ($isPlusKlasse) {
+                // +29 means minimum 29kg
                 if ($gewicht >= $limiet) {
-                    return $judoka->leeftijdsklasse . '|' . $klasse;
+                    return $judoka->leeftijdsklasse . '|+' . $limiet;
                 }
             } else {
+                // -20 means maximum 20kg
                 if ($gewicht <= $limiet) {
-                    return $judoka->leeftijdsklasse . '|' . $klasse;
+                    return $judoka->leeftijdsklasse . '|-' . $limiet;
                 }
             }
         }
