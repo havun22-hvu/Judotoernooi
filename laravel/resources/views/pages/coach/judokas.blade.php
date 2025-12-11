@@ -253,17 +253,24 @@
         }
 
         // Bepaal leeftijdsklasse op basis van geboortejaar en geslacht
+        // Let op: -15 = max 14 jaar, -12 = max 11 jaar, etc.
         function bepaalLeeftijdsklasse(geboortejaar, geslacht) {
             if (!geboortejaar || !geslacht) return null;
 
             const huidigJaar = new Date().getFullYear();
             const leeftijd = huidigJaar - parseInt(geboortejaar);
 
-            if (leeftijd < 8) return 'minis';
-            if (leeftijd < 10) return 'a_pupillen';
-            if (leeftijd < 12) return 'b_pupillen';
-            if (leeftijd < 15) return geslacht === 'V' ? 'dames_15' : 'heren_15';
-            if (leeftijd < 18) return geslacht === 'V' ? 'dames_18' : 'heren_18';
+            // Mini's: t/m 7 jaar (< 8)
+            if (leeftijd <= 7) return 'minis';
+            // A-pupillen: 8-9 jaar (< 10)
+            if (leeftijd <= 9) return 'a_pupillen';
+            // B-pupillen: 10-11 jaar (< 12)
+            if (leeftijd <= 11) return 'b_pupillen';
+            // -15: 12-14 jaar (< 15)
+            if (leeftijd <= 14) return geslacht === 'V' ? 'dames_15' : 'heren_15';
+            // -18: 15-17 jaar (< 18)
+            if (leeftijd <= 17) return geslacht === 'V' ? 'dames_18' : 'heren_18';
+            // Senioren: 18+
             return geslacht === 'V' ? 'dames' : 'heren';
         }
 
