@@ -65,11 +65,13 @@ class WedstrijddagController extends Controller
                 ['gewicht_sort', 'asc'],
             ])->values();
 
-            // Add wachtruimte judokas to categories in this blok
+            // Add wachtruimte judokas to their NEW category (based on actual weight)
             foreach ($judokasNaarWachtruimte as $judoka) {
-                $targetKey = $judoka->leeftijdsklasse . '|' . $judoka->gewichtsklasse;
-                $categories = $categories->map(function ($cat) use ($judoka, $targetKey) {
-                    if ($cat['key'] === $targetKey) {
+                $nieuweKey = $this->bepaalNieuweCategorie($judoka);
+                if (!$nieuweKey) continue;
+
+                $categories = $categories->map(function ($cat) use ($judoka, $nieuweKey) {
+                    if ($cat['key'] === $nieuweKey) {
                         $cat['wachtruimte'][] = $judoka;
                     }
                     return $cat;
