@@ -34,8 +34,13 @@
                         <h2 class="text-lg font-bold">
                             {{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
                         </h2>
+                        @php
+                            $jsLeeftijd = addslashes($category['leeftijdsklasse']);
+                            $jsGewicht = addslashes($category['gewichtsklasse']);
+                            $jsKey = addslashes($category['key']);
+                        @endphp
                         <button
-                            @click="nieuwePoule('{{ $category['leeftijdsklasse'] }}', '{{ $category['gewichtsklasse'] }}')"
+                            @click="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
                             title="Nieuwe poule toevoegen"
                         >
@@ -43,8 +48,8 @@
                         </button>
                     </div>
                     <button
-                        @click="naarZaaloverzicht('{{ $category['key'] }}')"
-                        :class="sentCategories['{{ $category['key'] }}'] ? 'ring-2 ring-green-500 ring-offset-2' : ''"
+                        @click="naarZaaloverzicht('{{ $jsKey }}')"
+                        :class="sentCategories['{{ $jsKey }}'] ? 'ring-2 ring-green-500 ring-offset-2' : ''"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-sm rounded transition-all"
                     >
                         Naar zaaloverzicht
@@ -110,7 +115,7 @@
                         <div
                             class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0"
                             @dragover.prevent
-                            @drop="dropToWachtruimte($event, '{{ $category['key'] }}')"
+                            @drop="dropToWachtruimte($event, '{{ $jsKey }}')"
                         >
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
                                 <span>Wachtruimte</span>
@@ -120,7 +125,7 @@
                                 @forelse($category['wachtruimte'] as $judoka)
                                 <div
                                     draggable="true"
-                                    @dragstart="dragStartFromWacht($event, {{ $judoka->id }}, '{{ $category['key'] }}')"
+                                    @dragstart="dragStartFromWacht($event, {{ $judoka->id }}, '{{ $jsKey }}')"
                                     @dragend="dragEnd()"
                                     class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm"
                                 >
