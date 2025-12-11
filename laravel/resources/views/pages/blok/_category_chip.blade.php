@@ -7,6 +7,7 @@
     ];
     $sortValue = array_search($cat['leeftijd'], $leeftijdVolgorde) * 10000 + (int)preg_replace('/[^0-9]/', '', $cat['gewicht']) + (str_starts_with($cat['gewicht'], '+') ? 500 : 0);
 
+    // In sleepvak = purple, in blok vast = green, in blok niet vast = blue
     if ($inSleepvak) {
         $chipClass = 'bg-gradient-to-b from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:from-purple-100 hover:to-purple-200';
         $textClass = 'text-purple-600';
@@ -28,8 +29,14 @@
      data-wedstrijden="{{ $cat['wedstrijden'] }}"
      data-vast="{{ $cat['vast'] ? '1' : '0' }}"
      data-sort="{{ $sortValue }}">
-    @if($cat['vast'] && !$inSleepvak)<span class="text-green-600 pin-icon">📍</span>@endif
     <span class="font-semibold">{{ $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'] }}</span>
     <span class="{{ $textClass }}">{{ $cat['gewicht'] }}</span>
     <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }})</span>
+    @if(!$inSleepvak)
+        @if($cat['vast'])
+            <span class="pin-icon text-green-600 cursor-pointer ml-1" title="Vast - klik om los te maken">●</span>
+        @else
+            <span class="pin-icon text-red-400 cursor-pointer ml-1" title="Niet vast - klik om vast te zetten">📌</span>
+        @endif
+    @endif
 </div>

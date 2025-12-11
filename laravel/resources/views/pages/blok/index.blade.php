@@ -312,13 +312,20 @@ function toonVariant(idx) {
                 // Always move chip to ensure correct placement
                 insertChipSorted(chip, targetZone);
 
-                // Update chip styling to blue (solver placed)
+                // Update chip styling to blue (solver placed, not vast)
                 chip.className = 'category-chip px-2 py-1 text-sm rounded cursor-move bg-gradient-to-b from-blue-50 to-blue-100 text-blue-800 border border-blue-300 shadow-sm hover:shadow transition-all inline-flex items-center gap-1';
                 chip.dataset.vast = '0';
 
-                // Remove any pin icon
-                const pinIcon = chip.querySelector('.pin-icon');
-                if (pinIcon) pinIcon.remove();
+                // Add red 📌 pin icon (not vast)
+                let pinIcon = chip.querySelector('.pin-icon');
+                if (!pinIcon) {
+                    pinIcon = document.createElement('span');
+                    pinIcon.className = 'pin-icon text-red-400 cursor-pointer ml-1';
+                    chip.appendChild(pinIcon);
+                }
+                pinIcon.textContent = '📌';
+                pinIcon.className = 'pin-icon text-red-400 cursor-pointer ml-1';
+                pinIcon.title = 'Niet vast - klik om vast te zetten';
             }
         }
     });
@@ -413,7 +420,7 @@ function updateAllStats() {
             badge.textContent = '-';
             badge.className = 'bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge';
         } else if (isVast) {
-            badge.textContent = '📍' + blokNr;
+            badge.textContent = '●' + blokNr;
             badge.className = 'bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge';
         } else {
             badge.textContent = blokNr;
@@ -478,29 +485,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pinIcon = draggedChip.querySelector('.pin-icon');
                 if (pinIcon) pinIcon.remove();
             } else {
-                // Move to blok - green with pin (manually placed = vast)
+                // Move to blok - blue with red 📌 (NOT vast yet)
                 insertChipSorted(draggedChip, this);
 
-                draggedChip.className = 'category-chip px-2 py-1 text-sm rounded cursor-move bg-gradient-to-b from-green-50 to-green-100 text-green-800 border border-green-400 shadow-sm hover:shadow transition-all inline-flex items-center gap-1';
-                draggedChip.dataset.vast = '1';
+                draggedChip.className = 'category-chip px-2 py-1 text-sm rounded cursor-move bg-gradient-to-b from-blue-50 to-blue-100 text-blue-800 border border-blue-300 shadow-sm hover:shadow transition-all inline-flex items-center gap-1';
+                draggedChip.dataset.vast = '0';
 
-                if (!draggedChip.querySelector('.pin-icon')) {
-                    const pin = document.createElement('span');
-                    pin.className = 'text-green-600 pin-icon';
-                    pin.textContent = '📍';
-                    draggedChip.insertBefore(pin, draggedChip.firstChild);
+                // Add or update pin icon
+                let pinIcon = draggedChip.querySelector('.pin-icon');
+                if (!pinIcon) {
+                    pinIcon = document.createElement('span');
+                    pinIcon.className = 'pin-icon text-red-400 cursor-pointer ml-1';
+                    pinIcon.title = 'Niet vast - klik om vast te zetten';
+                    draggedChip.appendChild(pinIcon);
                 }
+                pinIcon.textContent = '📌';
+                pinIcon.className = 'pin-icon text-red-400 cursor-pointer ml-1';
+                pinIcon.title = 'Niet vast - klik om vast te zetten';
             }
 
-            // Save to server
+            // Save to server (vast: false for drag, true only when pinned)
             fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi) }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                body: JSON.stringify({ key: draggedChip.dataset.key, blok: blok })
+                body: JSON.stringify({ key: draggedChip.dataset.key, blok: blok, vast: false })
             });
 
             updateAllStats();
         });
+    });
+
+    // Pin icon click handler - toggle vast status
+    document.addEventListener('click', function(e) {
+        if (!e.target.classList.contains('pin-icon')) return;
+        e.stopPropagation();
+
+        const chip = e.target.closest('.category-chip');
+        if (!chip) return;
+
+        const blokZone = chip.closest('.blok-dropzone');
+        if (!blokZone || blokZone.dataset.blok === '0') return; // Not in a blok
+
+        const isVast = chip.dataset.vast === '1';
+        const newVast = !isVast;
+
+        chip.dataset.vast = newVast ? '1' : '0';
+
+        if (newVast) {
+            // Vast: green chip, green ●
+            chip.className = 'category-chip px-2 py-1 text-sm rounded cursor-move bg-gradient-to-b from-green-50 to-green-100 text-green-800 border border-green-400 shadow-sm hover:shadow transition-all inline-flex items-center gap-1';
+            e.target.textContent = '●';
+            e.target.className = 'pin-icon text-green-600 cursor-pointer ml-1';
+            e.target.title = 'Vast - klik om los te maken';
+        } else {
+            // Niet vast: blue chip, red 📌
+            chip.className = 'category-chip px-2 py-1 text-sm rounded cursor-move bg-gradient-to-b from-blue-50 to-blue-100 text-blue-800 border border-blue-300 shadow-sm hover:shadow transition-all inline-flex items-center gap-1';
+            e.target.textContent = '📌';
+            e.target.className = 'pin-icon text-red-400 cursor-pointer ml-1';
+            e.target.title = 'Niet vast - klik om vast te zetten';
+        }
+
+        // Save to server
+        fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ key: chip.dataset.key, blok: blokZone.dataset.blok, vast: newVast })
+        });
+
+        updateAllStats();
     });
 });
 </script>

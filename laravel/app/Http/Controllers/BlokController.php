@@ -219,13 +219,14 @@ class BlokController extends Controller
 
     /**
      * Verplaats een categorie naar een blok (drag & drop)
-     * Manually placed categories are marked as "vast" (pinned)
+     * vast parameter determines if category is pinned
      */
     public function verplaatsCategorie(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'key' => 'required|string',
             'blok' => 'required|integer|min:0',
+            'vast' => 'nullable|boolean',
         ]);
 
         // Parse key: "leeftijdsklasse|gewichtsklasse"
@@ -246,7 +247,8 @@ class BlokController extends Controller
             $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
             if ($blok) {
                 $blokId = $blok->id;
-                $blokVast = true;  // Manual placement = pinned
+                // Use vast from request, default false (drag = not pinned)
+                $blokVast = $validated['vast'] ?? false;
             }
         }
 
