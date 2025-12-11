@@ -22,6 +22,8 @@
         ->selectRaw('MAX(blok_vast) as is_vast')
         ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
         ->with('blok:id,nummer')
+        ->orderBy('leeftijdsklasse')
+        ->orderBy('gewichtsklasse')
         ->get();
 
     // Group per category (database state)
