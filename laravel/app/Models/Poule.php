@@ -97,8 +97,14 @@ class Poule extends Model
 
     public function updateStatistieken(): void
     {
-        // First update aantal_judokas so berekenAantalWedstrijden uses correct value
-        $this->aantal_judokas = $this->judokas()->count();
+        // Count only active judokas: not absent AND within weight class (if weighed)
+        $activeJudokas = $this->judokas()
+            ->where('aanwezigheid', '!=', 'afwezig')
+            ->get()
+            ->filter(fn($j) => $j->isGewichtBinnenKlasse())
+            ->count();
+
+        $this->aantal_judokas = $activeJudokas;
         $this->aantal_wedstrijden = $this->berekenAantalWedstrijden();
         $this->save();
     }
