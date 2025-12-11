@@ -9,121 +9,135 @@
     <style>
         @media print {
             .no-print { display: none !important; }
+            body { padding: 0; background: white; }
         }
         body {
             -webkit-user-select: none;
             user-select: none;
         }
+        /* Smartphone optimized - fits nicely on screen */
+        #weegkaart {
+            max-width: 360px;
+            margin: 0 auto;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-2">
-    <div id="weegkaart" class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-        {{-- Header with tournament name --}}
-        <div class="bg-blue-600 text-white px-4 py-3 text-center">
-            <h1 class="text-lg font-bold">{{ $judoka->toernooi->naam ?? 'Judo Toernooi' }}</h1>
-            <p class="text-blue-100 text-sm">{{ $judoka->toernooi->datum?->format('d-m-Y') ?? '' }}</p>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 pb-24">
+    <div id="weegkaart" class="bg-white rounded-xl shadow-xl w-full overflow-hidden">
+        {{-- Compact header --}}
+        <div class="bg-blue-700 text-white px-3 py-2 flex justify-between items-center">
+            <span class="text-sm font-medium truncate">{{ $judoka->toernooi->naam ?? 'Judo Toernooi' }}</span>
+            <span class="text-blue-200 text-sm">{{ $judoka->toernooi->datum?->format('d-m-Y') ?? '' }}</span>
         </div>
 
-        {{-- Judoka info --}}
-        <div class="px-4 py-4 border-b">
-            <h2 class="text-2xl font-bold text-gray-800 text-center">{{ $judoka->naam }}</h2>
-            <p class="text-gray-500 text-center mt-1">{{ $judoka->club?->naam ?? 'Geen club' }}</p>
+        {{-- NAAM PROMINENT - dit moet de weegkamer goed kunnen lezen --}}
+        <div class="px-3 py-3 bg-gray-50 border-b-2 border-blue-200">
+            <h1 class="text-2xl font-black text-gray-900 text-center leading-tight">{{ $judoka->naam }}</h1>
+            <p class="text-base font-medium text-blue-600 text-center mt-1">{{ $judoka->club?->naam ?? 'Geen club' }}</p>
         </div>
 
-        {{-- Classification badges --}}
-        <div class="px-4 py-3 flex justify-center gap-2 flex-wrap border-b">
-            {{-- Weight class --}}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                {{ $judoka->gewichtsklasse ?? '?' }} kg
-            </span>
-            {{-- Belt --}}
-            @php
-                $bandColors = [
-                    'wit' => 'bg-gray-100 text-gray-800 border border-gray-300',
-                    'geel' => 'bg-yellow-300 text-yellow-900',
-                    'oranje' => 'bg-orange-400 text-white',
-                    'groen' => 'bg-green-500 text-white',
-                    'blauw' => 'bg-blue-500 text-white',
-                    'bruin' => 'bg-amber-700 text-white',
-                    'zwart' => 'bg-gray-900 text-white',
-                ];
-                $bandClass = $bandColors[strtolower($judoka->band ?? '')] ?? 'bg-gray-200 text-gray-700';
-            @endphp
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $bandClass }}">
-                {{ ucfirst($judoka->band ?? '?') }}
-            </span>
-            {{-- Age class --}}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                {{ $judoka->leeftijdsklasse ?? '?' }}
-            </span>
-            {{-- Gender --}}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $judoka->geslacht === 'M' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
-                {{ $judoka->geslacht === 'M' ? '♂ Jongen' : '♀ Meisje' }}
-            </span>
+        {{-- Classification row - compact horizontal --}}
+        @php
+            $bandColors = [
+                'wit' => 'bg-white text-gray-800 border-2 border-gray-400',
+                'geel' => 'bg-yellow-400 text-yellow-900',
+                'oranje' => 'bg-orange-500 text-white',
+                'groen' => 'bg-green-600 text-white',
+                'blauw' => 'bg-blue-600 text-white',
+                'bruin' => 'bg-amber-800 text-white',
+                'zwart' => 'bg-gray-900 text-white',
+            ];
+            $bandClass = $bandColors[strtolower($judoka->band ?? '')] ?? 'bg-gray-200 text-gray-700';
+        @endphp
+        <div class="px-3 py-2 grid grid-cols-4 gap-1 text-center border-b">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 uppercase">Leeftijd</span>
+                <span class="text-sm font-bold text-purple-700">{{ $judoka->leeftijdsklasse ?? '?' }}</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 uppercase">Gewicht</span>
+                <span class="text-sm font-bold text-green-700">{{ $judoka->gewichtsklasse ?? '?' }} kg</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 uppercase">Band</span>
+                <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ ucfirst($judoka->band ?? '?') }}</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 uppercase">Geslacht</span>
+                <span class="text-sm font-bold {{ $judoka->geslacht === 'M' ? 'text-blue-600' : 'text-pink-600' }}">
+                    {{ $judoka->geslacht === 'M' ? '♂' : '♀' }}
+                </span>
+            </div>
         </div>
 
-        {{-- Block info with times --}}
+        {{-- BLOK INFO - GROOT EN DUIDELIJK --}}
         @if($blok)
-        <div class="px-4 py-3 bg-amber-50 border-b">
-            <div class="text-center">
-                <span class="text-lg font-bold text-amber-800">{{ $blok->naam }}</span>
-            </div>
-            <div class="mt-2 grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wide">Weging</p>
-                    <p class="text-lg font-semibold text-gray-800">
-                        @if($blok->weging_start && $blok->weging_einde)
-                            {{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </p>
+        <div class="bg-amber-100 border-b-2 border-amber-300">
+            <div class="px-3 py-2 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="bg-amber-500 text-white text-lg font-black px-3 py-1 rounded">{{ $blok->naam }}</span>
                 </div>
-                <div>
-                    <p class="text-xs text-gray-500 uppercase tracking-wide">Wedstrijden</p>
-                    <p class="text-lg font-semibold text-gray-800">
-                        @if($blok->starttijd)
-                            vanaf {{ $blok->starttijd->format('H:i') }}
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </p>
+                @if($blok->starttijd)
+                <div class="text-right">
+                    <span class="text-xs text-amber-700">Start</span>
+                    <span class="text-lg font-bold text-amber-900 ml-1">{{ $blok->starttijd->format('H:i') }}</span>
+                </div>
+                @endif
+            </div>
+            @if($blok->weging_start && $blok->weging_einde)
+            <div class="px-3 pb-2">
+                <div class="bg-white rounded px-3 py-2 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-sm font-medium text-gray-600">Weging:</span>
+                    <span class="text-lg font-bold text-gray-900">{{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}</span>
                 </div>
             </div>
+            @endif
         </div>
         @else
-        <div class="px-4 py-3 bg-gray-50 border-b text-center text-gray-500">
-            <p class="text-sm">Nog niet ingedeeld in een blok</p>
+        <div class="px-3 py-3 bg-gray-100 border-b text-center">
+            <span class="text-sm text-gray-500">⏳ Nog niet ingedeeld</span>
         </div>
         @endif
 
-        {{-- QR Code --}}
-        <div class="px-4 py-4 flex flex-col items-center">
+        {{-- QR CODE - GROOT voor makkelijk scannen --}}
+        <div class="p-4 flex flex-col items-center bg-white">
             <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode(route('weegkaart.show', $judoka->qr_code)) }}"
+                src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(route('weegkaart.show', $judoka->qr_code)) }}"
                 alt="QR Code"
-                class="w-48 h-48"
+                class="w-52 h-52"
                 crossorigin="anonymous"
             >
-            <p class="mt-2 text-xs text-gray-400 font-mono">{{ Str::limit($judoka->qr_code, 18, '...') }}</p>
+            <p class="mt-2 text-xs text-gray-400 font-mono">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</p>
         </div>
 
-        {{-- Instructions --}}
-        <div class="px-4 py-3 bg-gray-50 text-center text-xs text-gray-500">
-            Toon deze QR-code bij de weging
+        {{-- Footer instruction --}}
+        <div class="px-3 py-2 bg-blue-50 text-center border-t">
+            <p class="text-xs text-blue-700 font-medium">📱 Toon bij weging • Scan QR-code</p>
         </div>
     </div>
 
-    {{-- Download button (outside card for clean image) --}}
-    <div class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-3 px-4">
+    {{-- Action buttons --}}
+    <div class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
         <button
             onclick="downloadWeegkaart()"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-full shadow-lg flex items-center gap-2 transition-colors"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-full shadow-lg flex items-center gap-2 transition-colors text-sm"
         >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            Download afbeelding
+            Opslaan
+        </button>
+        <button
+            onclick="shareWeegkaart()"
+            class="bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 px-5 rounded-full shadow-lg flex items-center gap-2 transition-colors text-sm"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+            Delen
         </button>
     </div>
 
@@ -133,7 +147,7 @@
             const button = event.target.closest('button');
             const originalText = button.innerHTML;
 
-            button.innerHTML = '<svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Even geduld...';
+            button.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
             button.disabled = true;
 
             try {
@@ -155,6 +169,34 @@
                 button.innerHTML = originalText;
                 button.disabled = false;
             }
+        }
+
+        async function shareWeegkaart() {
+            const shareData = {
+                title: 'Weegkaart {{ $judoka->naam }}',
+                text: 'Weegkaart voor {{ $judoka->naam }} - {{ $judoka->toernooi->naam ?? "Judo Toernooi" }}',
+                url: window.location.href
+            };
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard();
+                    }
+                }
+            } else {
+                copyToClipboard();
+            }
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link gekopieerd naar klembord!');
+            }).catch(() => {
+                prompt('Kopieer deze link:', window.location.href);
+            });
         }
     </script>
 </body>
