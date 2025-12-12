@@ -100,6 +100,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
         Route::get('wedstrijddag/poules', [WedstrijddagController::class, 'poules'])->name('wedstrijddag.poules');
         Route::post('wedstrijddag/verplaats-judoka', [WedstrijddagController::class, 'verplaatsJudoka'])->name('wedstrijddag.verplaats-judoka');
+        Route::post('wedstrijddag/naar-wachtruimte', [WedstrijddagController::class, 'naarWachtruimte'])->name('wedstrijddag.naar-wachtruimte');
         Route::post('wedstrijddag/naar-zaaloverzicht', [WedstrijddagController::class, 'naarZaaloverzicht'])->name('wedstrijddag.naar-zaaloverzicht');
         Route::post('wedstrijddag/nieuwe-poule', [WedstrijddagController::class, 'nieuwePoule'])->name('wedstrijddag.nieuwe-poule');
     });
