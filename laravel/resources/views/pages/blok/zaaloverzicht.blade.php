@@ -69,19 +69,30 @@
                 $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
                 $catData = ($categories ?? [])[$catKey] ?? null;
                 $isSent = isset(($sentToZaaloverzicht ?? [])[$catKey]);
+                $isActivated = $catData && ($catData['is_activated'] ?? false);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 
                 // Status flow:
-                // 1. Wit = doorgestuurd vanuit wedstrijddagpoules (actief)
-                // 2. Grijs = NIET doorgestuurd (inactief, disabled look)
-                if ($isSent) {
+                // 1. Groen = geactiveerd (wedstrijdschema gegenereerd, op mat)
+                // 2. Wit = doorgestuurd vanuit wedstrijddagpoules (klaar voor activatie)
+                // 3. Grijs = NIET doorgestuurd (wacht op overpoulen)
+                if ($isActivated) {
+                    $btnClass = 'bg-green-500 text-white font-medium';
+                } elseif ($isSent) {
                     $btnClass = 'bg-white text-gray-800 font-medium';
                 } else {
-                    // Niet doorgestuurd = inactief (disabled look)
                     $btnClass = 'bg-gray-500 text-gray-300';
                 }
             @endphp
-            @if($hasWaiting && !$isSent)
+            @if($isActivated)
+            {{-- Groen: al geactiveerd, klik gaat naar mat interface --}}
+            <a href="{{ route('toernooi.mat.interface', $toernooi) }}"
+               class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
+            >
+                ✓ {{ $catNaam }}
+            </a>
+            @elseif($hasWaiting && !$isSent)
+            {{-- Heeft wachtende judokas, moet eerst overpoulen --}}
             <button
                 onclick="alert('Maak eerst de poules klaar bij Overpoulen')"
                 class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80 cursor-not-allowed"
@@ -90,7 +101,7 @@
                 <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
             </button>
             @elseif($isSent)
-            {{-- Actief: klik om naar mat te gaan en wedstrijdschema te genereren --}}
+            {{-- Wit: klaar voor activatie, klik genereert wedstrijdschema --}}
             <form action="{{ route('toernooi.blok.activeer-categorie', $toernooi) }}" method="POST" class="inline">
                 @csrf
                 <input type="hidden" name="category" value="{{ $catKey }}">
@@ -100,7 +111,7 @@
                 </button>
             </form>
             @else
-            {{-- Inactief: link naar wedstrijddag --}}
+            {{-- Grijs: wacht op overpoulen, link naar wedstrijddag --}}
             <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($catKey) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
