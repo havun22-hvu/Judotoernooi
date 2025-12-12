@@ -113,6 +113,7 @@ class WedstrijddagController extends Controller
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
+            $oudePoule->refresh(); // Ensure we have fresh data
             $oudePouleData = [
                 'id' => $oudePoule->id,
                 'aantal_judokas' => $oudePoule->aantal_judokas,
@@ -148,6 +149,7 @@ class WedstrijddagController extends Controller
         }
 
         $nieuwePoule->updateStatistieken();
+        $nieuwePoule->refresh(); // Ensure we have fresh data
 
         return response()->json([
             'success' => true,
