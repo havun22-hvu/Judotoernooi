@@ -11,6 +11,7 @@ Welkom bij de documentatie van het WestFries Open JudoToernooi Management Systee
 ### 2. Features
 - [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding voor gebruikers
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën verdelen over blokken
+- [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Wedstrijdschema's, punten en kruisfinales
 - [Eliminatie Systeem](./2-FEATURES/ELIMINATIE_SYSTEEM.md) - Double elimination bracket systeem
 
 ### 3. Technical
