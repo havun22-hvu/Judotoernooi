@@ -15,6 +15,7 @@ class Coach extends Model
         'club_id',
         'toernooi_id',
         'uuid',
+        'portal_code',
         'naam',
         'email',
         'telefoon',
@@ -39,7 +40,26 @@ class Coach extends Model
             if (empty($coach->pincode)) {
                 $coach->pincode = self::generatePincode();
             }
+            // Share portal_code with other coaches of same club+toernooi
+            if (empty($coach->portal_code)) {
+                $existing = self::where('club_id', $coach->club_id)
+                    ->where('toernooi_id', $coach->toernooi_id)
+                    ->whereNotNull('portal_code')
+                    ->first();
+
+                $coach->portal_code = $existing?->portal_code ?? self::generatePortalCode();
+            }
         });
+    }
+
+    public static function generatePortalCode(): string
+    {
+        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+        $code = '';
+        for ($i = 0; $i < 12; $i++) {
+            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $code;
     }
 
     public function club(): BelongsTo
@@ -77,6 +97,6 @@ class Coach extends Model
 
     public function getPortalUrl(): string
     {
-        return route('coach.portal.uuid', $this->uuid);
+        return route('coach.portal.code', $this->portal_code);
     }
 }

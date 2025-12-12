@@ -26,13 +26,7 @@
         </div>
         @endif
 
-        <div class="bg-blue-50 rounded-lg p-4 mb-6">
-            <p class="text-sm text-blue-800">
-                <strong>Inloggen als:</strong> {{ $coach->naam }}
-            </p>
-        </div>
-
-        <form action="{{ route('coach.portal.login', $coach->uuid) }}" method="POST">
+        <form action="{{ route('coach.portal.login', $code) }}" method="POST">
             @csrf
             <div class="mb-6">
                 <label for="pincode" class="block text-sm font-medium text-gray-700 mb-2">
