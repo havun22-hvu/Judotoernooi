@@ -22,8 +22,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Homepage - redirect to organisator login
-Route::get('/', fn() => redirect()->route('organisator.login'));
+// Homepage
+Route::get('/', fn() => view('pages.home'))->name('home');
 
 /*
 |--------------------------------------------------------------------------
