@@ -6,6 +6,7 @@ use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CoachPortalController;
 use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
+use App\Http\Controllers\OrganisatorAuthController;
 use App\Http\Controllers\PouleController;
 use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
@@ -20,10 +21,35 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Homepage - redirect to dashboard
-Route::get('/', fn() => redirect()->route('dashboard'));
+// Homepage - redirect to organisator login
+Route::get('/', fn() => redirect()->route('organisator.login'));
 
-// Dashboard
+/*
+|--------------------------------------------------------------------------
+| Organisator Authentication
+|--------------------------------------------------------------------------
+*/
+Route::prefix('organisator')->name('organisator.')->group(function () {
+    // Guest routes
+    Route::middleware('guest:organisator')->group(function () {
+        Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
+        Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
+        Route::get('register', [OrganisatorAuthController::class, 'showRegister'])->name('register');
+        Route::post('register', [OrganisatorAuthController::class, 'register'])->name('register.submit');
+        Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
+        Route::post('wachtwoord-vergeten', [OrganisatorAuthController::class, 'sendResetLink'])->name('password.email');
+        Route::get('wachtwoord-reset/{token}', [OrganisatorAuthController::class, 'showResetPassword'])->name('password.reset');
+        Route::post('wachtwoord-reset', [OrganisatorAuthController::class, 'resetPassword'])->name('password.update');
+    });
+
+    // Authenticated routes
+    Route::middleware('auth:organisator')->group(function () {
+        Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
+        Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('dashboard');
+    });
+});
+
+// Dashboard (legacy - redirect to organisator dashboard)
 Route::get('/dashboard', [ToernooiController::class, 'dashboard'])->name('dashboard');
 
 // Toernooi management
