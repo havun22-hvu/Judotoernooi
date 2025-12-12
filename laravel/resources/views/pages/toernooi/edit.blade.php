@@ -223,7 +223,7 @@
                 <div class="mt-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
                     <strong>Poules:</strong> Iedereen tegen iedereen, elke poule eigen podium<br>
                     <strong>Poules + Kruisfinale:</strong> Na poules strijden top X om overall klassering<br>
-                    <strong>Direct eliminatie:</strong> Knock-out systeem (verlies = uit)
+                    <strong>Direct eliminatie:</strong> Knock-out systeem (2 x verlies = uit)
                 </div>
             </div>
         </div>
