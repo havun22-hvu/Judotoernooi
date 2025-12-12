@@ -222,17 +222,15 @@ class BlokController extends Controller
 
     /**
      * Get category statuses for wedstrijddag overview
-     * Returns: red = waiting room has judokas, white = ready, green = sent to mat
+     * Returns: wachtruimte_count, is_activated (has wedstrijden)
      */
     private function getCategoryStatuses(Toernooi $toernooi): array
     {
         $categories = [];
 
-        // Get all unique categories (reorder to remove default orderBy which conflicts with DISTINCT in MySQL)
+        // Get all unique categories with wedstrijd count
         $poules = $toernooi->poules()
-            ->reorder()
-            ->select('leeftijdsklasse', 'gewichtsklasse')
-            ->distinct()
+            ->withCount('wedstrijden')
             ->get();
 
         // Get judokas that need re-pooling (outside weight class)
@@ -249,12 +247,23 @@ class BlokController extends Controller
             $wachtruimtePerCategorie[$key] = ($wachtruimtePerCategorie[$key] ?? 0) + 1;
         }
 
+        // Group poules by category and check if any have wedstrijden
+        $wedstrijdenPerCategorie = [];
         foreach ($poules as $poule) {
+            $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+            if (!isset($wedstrijdenPerCategorie[$key])) {
+                $wedstrijdenPerCategorie[$key] = 0;
+            }
+            $wedstrijdenPerCategorie[$key] += $poule->wedstrijden_count;
+        }
+
+        foreach ($poules->unique(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse) as $poule) {
             $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
             $categories[$key] = [
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'wachtruimte_count' => $wachtruimtePerCategorie[$key] ?? 0,
+                'is_activated' => ($wedstrijdenPerCategorie[$key] ?? 0) > 0,
             ];
         }
 
