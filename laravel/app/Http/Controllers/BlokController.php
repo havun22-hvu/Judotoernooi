@@ -184,6 +184,43 @@ class BlokController extends Controller
     }
 
     /**
+     * Activate a category: generate match schedules and go to mat interface
+     */
+    public function activeerCategorie(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'category' => 'required|string',
+            'blok' => 'required|integer',
+        ]);
+
+        [$leeftijdsklasse, $gewichtsklasse] = explode('|', $validated['category']);
+        $blokNummer = $validated['blok'];
+
+        // Find all poules for this category in this blok
+        $poules = $toernooi->poules()
+            ->whereHas('blok', fn($q) => $q->where('nummer', $blokNummer))
+            ->where('leeftijdsklasse', $leeftijdsklasse)
+            ->where('gewichtsklasse', $gewichtsklasse)
+            ->get();
+
+        // Generate match schedules for each poule
+        $totaalWedstrijden = 0;
+        foreach ($poules as $poule) {
+            // Only generate if no wedstrijden exist yet
+            if ($poule->wedstrijden()->count() === 0) {
+                $schema = $poule->genereerWedstrijdSchema();
+                $totaalWedstrijden += count($schema);
+            }
+        }
+
+        // Redirect to mat interface
+        return redirect()
+            ->route('toernooi.mat.interface', $toernooi)
+            ->with('success', "Categorie {$leeftijdsklasse} {$gewichtsklasse} geactiveerd" .
+                ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden gegenereerd)" : ""));
+    }
+
+    /**
      * Get category statuses for wedstrijddag overview
      * Returns: red = waiting room has judokas, white = ready, green = sent to mat
      */

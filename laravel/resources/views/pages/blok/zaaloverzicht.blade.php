@@ -89,7 +89,18 @@
                 {{ $catNaam }}
                 <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
             </button>
+            @elseif($isSent)
+            {{-- Actief: klik om naar mat te gaan en wedstrijdschema te genereren --}}
+            <form action="{{ route('toernooi.blok.activeer-categorie', $toernooi) }}" method="POST" class="inline">
+                @csrf
+                <input type="hidden" name="category" value="{{ $catKey }}">
+                <input type="hidden" name="blok" value="{{ $blok['nummer'] }}">
+                <button type="submit" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
+                    {{ $catNaam }}
+                </button>
+            </form>
             @else
+            {{-- Inactief: link naar wedstrijddag --}}
             <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($catKey) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
