@@ -26,18 +26,8 @@ class WedstrijddagController extends Controller
             ->get()
             ->filter(fn($judoka) => !$judoka->isGewichtBinnenKlasse());
 
-        // Get manually added judokas to wachtruimte from session
-        $handmatigeWachtruimte = session("toernooi_{$toernooi->id}_wachtruimte", []);
-        $handmatigeJudokas = [];
-        if (!empty($handmatigeWachtruimte)) {
-            $handmatigeJudokas = Judoka::whereIn('id', array_keys($handmatigeWachtruimte))
-                ->with('club')
-                ->get()
-                ->keyBy('id');
-        }
-
         // Group by blok first, then by category within each blok
-        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $handmatigeWachtruimte, $handmatigeJudokas) {
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
             // Group by category and sort
@@ -83,23 +73,6 @@ class WedstrijddagController extends Controller
                 $categories = $categories->map(function ($cat) use ($judoka, $nieuweKey) {
                     if ($cat['key'] === $nieuweKey) {
                         $cat['wachtruimte'][] = $judoka;
-                    }
-                    return $cat;
-                });
-            }
-
-            // Add manually added judokas to wachtruimte (from session)
-            foreach ($handmatigeWachtruimte as $judokaId => $categoryKey) {
-                if (!isset($handmatigeJudokas[$judokaId])) continue;
-                $judoka = $handmatigeJudokas[$judokaId];
-
-                $categories = $categories->map(function ($cat) use ($judoka, $categoryKey) {
-                    if ($cat['key'] === $categoryKey) {
-                        // Don't add if already in wachtruimte (from auto-detection)
-                        $existingIds = collect($cat['wachtruimte'])->pluck('id')->toArray();
-                        if (!in_array($judoka->id, $existingIds)) {
-                            $cat['wachtruimte'][] = $judoka;
-                        }
                     }
                     return $cat;
                 });
@@ -168,13 +141,6 @@ class WedstrijddagController extends Controller
             $nieuwePoule->judokas()->attach($judoka->id, ['positie' => 999]);
         }
 
-        // Remove from manual wachtruimte session if present
-        $wachtruimte = session("toernooi_{$toernooi->id}_wachtruimte", []);
-        if (isset($wachtruimte[$judoka->id])) {
-            unset($wachtruimte[$judoka->id]);
-            session(["toernooi_{$toernooi->id}_wachtruimte" => $wachtruimte]);
-        }
-
         // Update positions if provided
         if (!empty($validated['positions'])) {
             foreach ($validated['positions'] as $pos) {
@@ -193,41 +159,6 @@ class WedstrijddagController extends Controller
                 'aantal_judokas' => $nieuwePoule->aantal_judokas,
                 'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
             ],
-        ]);
-    }
-
-    public function naarWachtruimte(Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $validated = $request->validate([
-            'judoka_id' => 'required|exists:judokas,id',
-            'from_poule_id' => 'nullable|exists:poules,id',
-            'category' => 'required|string',
-        ]);
-
-        $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $oudePouleData = null;
-
-        // Remove from old poule if coming from a poule
-        if (!empty($validated['from_poule_id'])) {
-            $oudePoule = Poule::findOrFail($validated['from_poule_id']);
-            $oudePoule->judokas()->detach($judoka->id);
-            $oudePoule->updateStatistieken();
-            $oudePoule->refresh();
-            $oudePouleData = [
-                'id' => $oudePoule->id,
-                'aantal_judokas' => $oudePoule->aantal_judokas,
-                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
-            ];
-        }
-
-        // Store in session that this judoka is manually in wachtruimte for this category
-        $wachtruimte = session("toernooi_{$toernooi->id}_wachtruimte", []);
-        $wachtruimte[$judoka->id] = $validated['category'];
-        session(["toernooi_{$toernooi->id}_wachtruimte" => $wachtruimte]);
-
-        return response()->json([
-            'success' => true,
-            'van_poule' => $oudePouleData,
         ]);
     }
 

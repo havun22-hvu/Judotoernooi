@@ -258,57 +258,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize sortable on wachtruimte (can receive judokas)
-    const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi) }}';
+    // Initialize sortable on wachtruimte (only as source, not drop target)
     document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
         new Sortable(container, {
             group: {
                 name: 'wedstrijddag-poules',
                 pull: true,
-                put: true // Allow dropping into wachtruimte
+                put: false // Cannot drop into wachtruimte
             },
             animation: 150,
             ghostClass: 'bg-orange-200',
-            sort: false, // No sorting within wachtruimte
-            onAdd: async function(evt) {
-                const judokaId = evt.item.dataset.judokaId;
-                const vanPouleId = evt.from.dataset.pouleId;
-                const category = evt.to.dataset.category;
-
-                // Remove empty message if present
-                const emptyMsg = evt.to.querySelector('.text-gray-400.italic');
-                if (emptyMsg) emptyMsg.remove();
-
-                try {
-                    const response = await fetch(naarWachtruimteUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            judoka_id: parseInt(judokaId),
-                            from_poule_id: vanPouleId ? parseInt(vanPouleId) : null,
-                            category: category
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        // Reload to show updated state
-                        window.location.reload();
-                    } else {
-                        alert('Fout: ' + (data.error || 'Onbekende fout'));
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Fout bij verplaatsen: ' + error.message);
-                    window.location.reload();
-                }
-            }
+            sort: false // No sorting within wachtruimte
         });
     });
 
