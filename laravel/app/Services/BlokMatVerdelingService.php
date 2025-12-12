@@ -739,6 +739,7 @@ class BlokMatVerdelingService
     private function getCategoriesMetToewijzing(Toernooi $toernooi)
     {
         return $toernooi->poules()
+            ->reorder() // Remove default orderBy('nummer') which conflicts with GROUP BY in MySQL
             ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
             ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
             ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
