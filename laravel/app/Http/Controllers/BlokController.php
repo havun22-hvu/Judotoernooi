@@ -191,8 +191,9 @@ class BlokController extends Controller
     {
         $categories = [];
 
-        // Get all unique categories
+        // Get all unique categories (reorder to remove default orderBy which conflicts with DISTINCT in MySQL)
         $poules = $toernooi->poules()
+            ->reorder()
             ->select('leeftijdsklasse', 'gewichtsklasse')
             ->distinct()
             ->get();
