@@ -79,6 +79,12 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
         Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');
+
+        // Coach management
+        Route::post('club/{club}/coach', [ClubController::class, 'storeCoach'])->name('club.coach.store');
+        Route::put('coach/{coach}', [ClubController::class, 'updateCoach'])->name('club.coach.update');
+        Route::delete('coach/{coach}', [ClubController::class, 'destroyCoach'])->name('club.coach.destroy');
+        Route::post('coach/{coach}/regenerate-pin', [ClubController::class, 'regeneratePincode'])->name('club.coach.regenerate-pin');
     });
 
     // Jury + Admin routes
@@ -122,7 +128,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
 });
 
-// Coach Portal (public routes with token authentication)
+// Coach Portal (public routes with token authentication - legacy)
 Route::prefix('coach')->name('coach.')->group(function () {
     Route::get('{token}', [CoachPortalController::class, 'index'])->name('portal');
     Route::post('{token}/login', [CoachPortalController::class, 'login'])->name('login');
@@ -133,6 +139,18 @@ Route::prefix('coach')->name('coach.')->group(function () {
     Route::put('{token}/judoka/{judoka}', [CoachPortalController::class, 'updateJudoka'])->name('judoka.update');
     Route::delete('{token}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudoka'])->name('judoka.destroy');
     Route::get('{token}/weegkaarten', [CoachPortalController::class, 'weegkaarten'])->name('weegkaarten');
+});
+
+// Coach Portal with UUID and PIN (new system)
+Route::prefix('school')->name('coach.portal.')->group(function () {
+    Route::get('{uuid}', [CoachPortalController::class, 'indexUuid'])->name('uuid');
+    Route::post('{uuid}/login', [CoachPortalController::class, 'loginPin'])->name('login');
+    Route::post('{uuid}/logout', [CoachPortalController::class, 'logoutUuid'])->name('logout');
+    Route::get('{uuid}/judokas', [CoachPortalController::class, 'judokasUuid'])->name('judokas');
+    Route::post('{uuid}/judoka', [CoachPortalController::class, 'storeJudokaUuid'])->name('judoka.store');
+    Route::put('{uuid}/judoka/{judoka}', [CoachPortalController::class, 'updateJudokaUuid'])->name('judoka.update');
+    Route::delete('{uuid}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudokaUuid'])->name('judoka.destroy');
+    Route::get('{uuid}/weegkaarten', [CoachPortalController::class, 'weegkaartenUuid'])->name('weegkaarten');
 });
 
 // Weegkaart (public, accessed via QR code)
