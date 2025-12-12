@@ -72,15 +72,13 @@
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 
                 // Status flow:
-                // 1. Licht rood = overpoulen nog niet klaar (wachtruimte heeft judoka's)
-                // 2. Wit = overpoulen klaar, klaar voor matverdeling
-                // 3. Groen = naar mat gestuurd, categorie kan starten
+                // 1. Groen = naar mat gestuurd vanuit wedstrijddagpoules, categorie kan starten
+                // 2. Rood = NIET doorgestuurd (inactief), met extra indicator als wachtruimte judoka's heeft
                 if ($isSent) {
                     $btnClass = 'bg-green-500 text-white';
-                } elseif ($hasWaiting) {
-                    $btnClass = 'bg-red-200 text-red-800';
                 } else {
-                    $btnClass = 'bg-white text-gray-800';
+                    // Niet doorgestuurd = inactief rood
+                    $btnClass = 'bg-red-500 text-white';
                 }
             @endphp
             @if($hasWaiting && !$isSent)
