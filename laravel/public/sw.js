@@ -1,16 +1,15 @@
 // Service Worker for Judo Toernooi PWA
-const CACHE_NAME = 'judo-toernooi-v1';
+const CACHE_NAME = 'judo-toernooi-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately on install
+// Note: External CDNs are NOT precached due to CORS restrictions
 const PRECACHE_ASSETS = [
     '/',
     '/offline.html',
     '/manifest.json',
     '/icon-192x192.png',
     '/icon-512x512.png',
-    'https://cdn.tailwindcss.com',
-    'https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js',
 ];
 
 // Install event - cache core assets
