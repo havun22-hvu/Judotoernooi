@@ -3,14 +3,32 @@
 @section('title', 'Instellingen')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Toernooi Instellingen</h1>
+<div class="max-w-4xl mx-auto" x-data="{ activeTab: 'toernooi' }">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
         <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
             &larr; Terug naar Dashboard
         </a>
     </div>
 
+    <!-- TABS -->
+    <div class="flex border-b mb-6">
+        <button type="button"
+                @click="activeTab = 'toernooi'"
+                :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            Toernooi
+        </button>
+        <button type="button"
+                @click="activeTab = 'organisatie'"
+                :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            Organisatie
+        </button>
+    </div>
+
+    <!-- TAB: TOERNOOI -->
+    <div x-show="activeTab === 'toernooi'" x-cloak>
     <form action="{{ route('toernooi.update', $toernooi) }}" method="POST">
         @csrf
         @method('PUT')
@@ -566,9 +584,70 @@
             </button>
         </div>
     </form>
+    </div>
 
-    <!-- BLOKTIJDEN (apart formulier) -->
-    <div class="bg-white rounded-lg shadow p-6 mt-6">
+    <!-- TAB: ORGANISATIE -->
+    <div x-show="activeTab === 'organisatie'" x-cloak>
+
+    <!-- VRIJWILLIGERS LINKS -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ copied: null }">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers Links</h2>
+        <p class="text-gray-600 mb-4">
+            Deel deze links met je vrijwilligers. Elke rol heeft een unieke geheime link - geen wachtwoord nodig.
+            <br><span class="text-sm text-gray-500">Na klikken verdwijnt de code uit de adresbalk.</span>
+        </p>
+
+        <div class="space-y-4">
+            @php
+                $rollen = [
+                    'hoofdjury' => ['icon' => '⚖️', 'naam' => 'Hoofdjury', 'desc' => 'Overzicht alle poules'],
+                    'weging' => ['icon' => '⚖️', 'naam' => 'Weging', 'desc' => 'Weeglijst en registratie'],
+                    'mat' => ['icon' => '🥋', 'naam' => 'Mat', 'desc' => 'Wedstrijden per mat'],
+                    'spreker' => ['icon' => '🎙️', 'naam' => 'Spreker', 'desc' => 'Omroep interface'],
+                ];
+            @endphp
+
+            @foreach($rollen as $rol => $info)
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-3">{{ $info['icon'] }}</span>
+                        <div>
+                            <h3 class="font-bold">{{ $info['naam'] }}</h3>
+                            <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button"
+                                @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
+                            <span x-show="copied !== '{{ $rol }}'">Kopieer link</span>
+                            <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
+                        </button>
+                        <a href="{{ $toernooi->getRoleUrl($rol) }}" target="_blank"
+                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm" title="Test link">
+                            Test
+                        </a>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 class="font-bold text-blue-800 mb-2">Voorbeeld bericht voor WhatsApp/Email:</h4>
+            <div class="bg-white p-3 rounded border text-sm text-gray-700">
+                Hoi! Morgen is het toernooi. Klik op je link om in te loggen:<br><br>
+                @foreach($rollen as $rol => $info)
+                👉 <strong>{{ $info['naam'] }}</strong><br>
+                @endforeach
+            </div>
+            <p class="text-xs text-blue-600 mt-2">Stuur elke vrijwilliger alleen zijn/haar eigen link!</p>
+        </div>
+    </div>
+
+    <!-- BLOKTIJDEN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Bloktijden</h2>
         <p class="text-gray-600 mb-4">
             Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.
@@ -625,11 +704,12 @@
         </form>
     </div>
 
-    <!-- WACHTWOORDEN (apart formulier) -->
-    <div class="bg-white rounded-lg shadow p-6 mt-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Wachtwoorden</h2>
+    <!-- WACHTWOORDEN (legacy - voor oude systeem) -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Wachtwoorden (Legacy)</h2>
         <p class="text-gray-600 mb-4">
-            Stel wachtwoorden in voor de verschillende rollen. De login pagina is te vinden op:
+            <span class="text-orange-600 text-sm">Oude methode - gebruik liever de Vrijwilligers Links hierboven.</span><br>
+            Wachtwoord login pagina:
             <a href="{{ route('toernooi.auth.login', $toernooi) }}" class="text-blue-600 hover:underline" target="_blank">
                 {{ route('toernooi.auth.login', $toernooi) }}
             </a>
@@ -729,61 +809,7 @@
         </form>
     </div>
 
-    <!-- VRIJWILLIGERS URLS (nieuwe methode - geheime links) -->
-    <div class="bg-white rounded-lg shadow p-6 mt-6" x-data="{ copied: null }">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers Links</h2>
-        <p class="text-gray-600 mb-4">
-            Deel deze links met je vrijwilligers. Elke rol heeft een unieke geheime link - geen wachtwoord nodig.
-            <br><span class="text-sm text-gray-500">Na klikken verdwijnt de code uit de adresbalk.</span>
-        </p>
+    </div><!-- End TAB: ORGANISATIE -->
 
-        <div class="space-y-4">
-            @php
-                $rollen = [
-                    'hoofdjury' => ['icon' => '⚖️', 'naam' => 'Hoofdjury', 'desc' => 'Overzicht alle poules'],
-                    'weging' => ['icon' => '⚖️', 'naam' => 'Weging', 'desc' => 'Weeglijst en registratie'],
-                    'mat' => ['icon' => '🥋', 'naam' => 'Mat', 'desc' => 'Wedstrijden per mat'],
-                    'spreker' => ['icon' => '🎙️', 'naam' => 'Spreker', 'desc' => 'Omroep interface'],
-                ];
-            @endphp
-
-            @foreach($rollen as $rol => $info)
-            <div class="p-4 border rounded-lg bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <span class="text-2xl mr-3">{{ $info['icon'] }}</span>
-                        <div>
-                            <h3 class="font-bold">{{ $info['naam'] }}</h3>
-                            <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button"
-                                @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
-                            <span x-show="copied !== '{{ $rol }}'">Kopieer link</span>
-                            <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
-                        </button>
-                        <a href="{{ $toernooi->getRoleUrl($rol) }}" target="_blank"
-                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm" title="Test link">
-                            Test
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-bold text-blue-800 mb-2">Voorbeeld bericht voor WhatsApp/Email:</h4>
-            <div class="bg-white p-3 rounded border text-sm text-gray-700 font-mono">
-                Hoi! Morgen is het toernooi. Klik op je link om in te loggen:<br><br>
-                @foreach($rollen as $rol => $info)
-                👉 <a href="{{ $toernooi->getRoleUrl($rol) }}" class="text-blue-600 hover:underline">{{ $info['naam'] }}</a><br>
-                @endforeach
-            </div>
-            <p class="text-xs text-blue-600 mt-2">Stuur elke vrijwilliger alleen zijn/haar eigen link!</p>
-        </div>
-    </div>
 </div>
 @endsection
