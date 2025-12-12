@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\RoleToegang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,25 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Toernooi extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (Toernooi $toernooi) {
+            // Generate unique codes for each role
+            if (empty($toernooi->code_hoofdjury)) {
+                $toernooi->code_hoofdjury = RoleToegang::generateCode();
+            }
+            if (empty($toernooi->code_weging)) {
+                $toernooi->code_weging = RoleToegang::generateCode();
+            }
+            if (empty($toernooi->code_mat)) {
+                $toernooi->code_mat = RoleToegang::generateCode();
+            }
+            if (empty($toernooi->code_spreker)) {
+                $toernooi->code_spreker = RoleToegang::generateCode();
+            }
+        });
+    }
 
     protected $table = 'toernooien';
 
@@ -42,6 +62,10 @@ class Toernooi extends Model
         'wachtwoord_mat',
         'wachtwoord_spreker',
         'verdeling_prioriteiten',
+        'code_hoofdjury',
+        'code_weging',
+        'code_mat',
+        'code_spreker',
     ];
 
     protected $hidden = [
@@ -50,6 +74,10 @@ class Toernooi extends Model
         'wachtwoord_weging',
         'wachtwoord_mat',
         'wachtwoord_spreker',
+        'code_hoofdjury',
+        'code_weging',
+        'code_mat',
+        'code_spreker',
     ];
 
     protected $casts = [
@@ -439,5 +467,32 @@ class Toernooi extends Model
     public function resetGewichtsklassenNaarStandaard(): void
     {
         $this->update(['gewichtsklassen' => self::getStandaardGewichtsklassen()]);
+    }
+
+    // Role URL methods
+    public function getRoleUrl(string $rol): ?string
+    {
+        $code = match ($rol) {
+            'hoofdjury' => $this->code_hoofdjury,
+            'weging' => $this->code_weging,
+            'mat' => $this->code_mat,
+            'spreker' => $this->code_spreker,
+            default => null,
+        };
+
+        return $code ? route('rol.toegang', $code) : null;
+    }
+
+    public function regenerateRoleCode(string $rol): ?string
+    {
+        $veld = "code_{$rol}";
+        if (!in_array($veld, ['code_hoofdjury', 'code_weging', 'code_mat', 'code_spreker'])) {
+            return null;
+        }
+
+        $this->$veld = RoleToegang::generateCode();
+        $this->save();
+
+        return $this->$veld;
     }
 }
