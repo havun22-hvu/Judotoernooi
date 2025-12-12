@@ -62,17 +62,14 @@
                         <div class="flex flex-wrap gap-4 flex-1">
                             @foreach($category['poules'] as $poule)
                             <div
-                                class="border rounded-lg p-3 min-w-[200px] bg-white transition-colors"
-                                :class="{ 'bg-blue-100 border-blue-400 border-2': hoverPoule === {{ $poule->id }} }"
-                                @dragover.prevent="$event.dataTransfer.dropEffect = 'move'; hoverPoule = {{ $poule->id }}"
-                                @dragleave.self="hoverPoule = null"
-                                @drop.prevent="dropJudoka($event, {{ $poule->id }}); hoverPoule = null"
+                                class="border rounded-lg p-3 min-w-[200px] bg-white transition-colors poule-card"
+                                data-poule-id="{{ $poule->id }}"
                             >
                                 <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center pointer-events-none">
                                     <span>Poule {{ $poule->nummer }}</span>
                                     <span class="text-xs text-gray-400">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
                                 </div>
-                                <div class="divide-y divide-gray-100" :class="{ 'pointer-events-none': draggedJudoka }">
+                                <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
                                     @php
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig';
@@ -81,10 +78,8 @@
                                         $moetOverpoulen = $isGewogen && !$isBinnenKlasse;
                                     @endphp
                                     <div
-                                        draggable="true"
-                                        @dragstart="dragStart($event, {{ $judoka->id }}, {{ $poule->id }})"
-                                        @dragend="dragEnd()"
-                                        class="px-2 py-1.5 hover:bg-blue-50 cursor-move text-sm {{ $isAfwezig || $moetOverpoulen ? 'line-through opacity-50' : '' }}"
+                                        class="px-2 py-1.5 hover:bg-blue-50 cursor-move text-sm judoka-item {{ $isAfwezig || $moetOverpoulen ? 'line-through opacity-50' : '' }}"
+                                        data-judoka-id="{{ $judoka->id }}"
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
@@ -114,22 +109,16 @@
                         </div>
 
                         {{-- Wachtruimte (rechts) --}}
-                        <div
-                            class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0"
-                            @dragover.prevent
-                            @drop="dropToWachtruimte($event, '{{ $jsKey }}')"
-                        >
+                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0">
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
                                 <span>Wachtruimte</span>
                                 <span class="text-xs text-orange-400">{{ count($category['wachtruimte']) }}</span>
                             </div>
-                            <div class="divide-y divide-orange-200">
+                            <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
                                 @forelse($category['wachtruimte'] as $judoka)
                                 <div
-                                    draggable="true"
-                                    @dragstart="dragStartFromWacht($event, {{ $judoka->id }}, '{{ $jsKey }}')"
-                                    @dragend="dragEnd()"
-                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm"
+                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item"
+                                    data-judoka-id="{{ $judoka->id }}"
                                 >
                                     <div class="flex justify-between items-start">
                                         <div class="flex items-center gap-1 flex-1 min-w-0">
@@ -165,78 +154,12 @@
     @endforelse
 </div>
 
+<!-- SortableJS for drag and drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 function wedstrijddagPoules() {
     return {
-        draggedJudoka: null,
-        draggedFromPoule: null,
-        draggedFromWacht: null,
-        hoverPoule: null,
         sentCategories: @json($sentToZaaloverzicht ?? []),
-
-        dragStart(event, judokaId, pouleId) {
-            console.log('dragStart', judokaId, 'from poule', pouleId);
-            this.draggedJudoka = judokaId;
-            this.draggedFromPoule = pouleId;
-            this.draggedFromWacht = null;
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', judokaId);
-        },
-
-        dragStartFromWacht(event, judokaId, categoryKey) {
-            console.log('dragStartFromWacht', judokaId, categoryKey);
-            this.draggedJudoka = judokaId;
-            this.draggedFromPoule = null;
-            this.draggedFromWacht = categoryKey;
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', judokaId);
-        },
-
-        dragEnd() {
-            this.draggedJudoka = null;
-            this.draggedFromPoule = null;
-            this.draggedFromWacht = null;
-            this.hoverPoule = null;
-        },
-
-        async dropJudoka(event, pouleId) {
-            if (!this.draggedJudoka) {
-                console.log('No dragged judoka');
-                return;
-            }
-
-            console.log('Dropping judoka', this.draggedJudoka, 'to poule', pouleId, 'from', this.draggedFromPoule);
-
-            try {
-                const response = await fetch('{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        judoka_id: this.draggedJudoka,
-                        poule_id: pouleId,
-                        from_poule_id: this.draggedFromPoule,
-                    }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
-                }
-            } catch (error) {
-                console.error('Error moving judoka:', error);
-                alert('Fout bij verplaatsen: ' + error.message);
-            }
-        },
-
-        dropToWachtruimte(event, categoryKey) {
-            console.log('Drop to wachtruimte not implemented - determined by weight');
-        },
 
         async naarZaaloverzicht(categoryKey) {
             try {
@@ -277,5 +200,94 @@ function wedstrijddagPoules() {
         }
     }
 }
+
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}';
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize sortable on all poule containers
+    document.querySelectorAll('.sortable-poule').forEach(container => {
+        new Sortable(container, {
+            group: 'wedstrijddag-poules',
+            animation: 150,
+            ghostClass: 'bg-blue-100',
+            chosenClass: 'bg-blue-200',
+            dragClass: 'shadow-lg',
+            onEnd: async function(evt) {
+                const judokaId = evt.item.dataset.judokaId;
+                const vanPouleId = evt.from.dataset.pouleId;
+                const naarPouleId = evt.to.dataset.pouleId;
+                const newIndex = evt.newIndex;
+
+                // Calculate positions of all judokas in the target poule
+                const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
+                    .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
+
+                try {
+                    const response = await fetch(verplaatsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            judoka_id: judokaId,
+                            poule_id: naarPouleId,
+                            from_poule_id: vanPouleId !== naarPouleId ? vanPouleId : null,
+                            positions: positions
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update stats without full reload
+                        if (data.van_poule) updatePouleStats(data.van_poule);
+                        if (data.naar_poule) updatePouleStats(data.naar_poule);
+                    } else {
+                        alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Fout bij verplaatsen: ' + error.message);
+                    window.location.reload();
+                }
+            }
+        });
+    });
+
+    // Initialize sortable on wachtruimte (only as source, not drop target)
+    document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
+        new Sortable(container, {
+            group: {
+                name: 'wedstrijddag-poules',
+                pull: true,
+                put: false // Cannot drop into wachtruimte
+            },
+            animation: 150,
+            ghostClass: 'bg-orange-200',
+            sort: false // No sorting within wachtruimte
+        });
+    });
+
+    function updatePouleStats(pouleData) {
+        const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleData.id}"]`);
+        if (!pouleCard) return;
+
+        // Update the stats in header
+        const statsSpan = pouleCard.querySelector('.text-xs.text-gray-400');
+        if (statsSpan) {
+            statsSpan.textContent = `${pouleData.aantal_judokas} judoka's (${pouleData.aantal_wedstrijden}w)`;
+        }
+    }
+});
 </script>
+
+<style>
+.sortable-ghost {
+    opacity: 0.4;
+}
+</style>
 @endsection
