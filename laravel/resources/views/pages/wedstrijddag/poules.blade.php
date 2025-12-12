@@ -67,7 +67,7 @@
                             >
                                 <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center pointer-events-none">
                                     <span>Poule {{ $poule->nummer }}</span>
-                                    <span class="text-xs text-gray-400">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
+                                    <span class="text-xs text-gray-400 poule-stats">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
@@ -274,12 +274,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updatePouleStats(pouleData) {
         const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleData.id}"]`);
-        if (!pouleCard) return;
+        if (!pouleCard) {
+            console.warn('Poule card not found for id:', pouleData.id);
+            return;
+        }
 
         // Update the stats in header
-        const statsSpan = pouleCard.querySelector('.text-xs.text-gray-400');
+        const statsSpan = pouleCard.querySelector('.poule-stats');
         if (statsSpan) {
             statsSpan.textContent = `${pouleData.aantal_judokas} judoka's (${pouleData.aantal_wedstrijden}w)`;
+        } else {
+            console.warn('Stats span not found in poule card:', pouleData.id);
         }
     }
 });
