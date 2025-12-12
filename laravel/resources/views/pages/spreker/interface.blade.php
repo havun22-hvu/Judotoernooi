@@ -36,8 +36,8 @@
                         @php $plaats = $judoka->pivot->eindpositie ?? $loop->iteration; @endphp
                         <tr class="{{ !$loop->last ? 'border-b' : '' }}">
                             <td class="py-2">
-                                <div class="font-medium">{{ $judoka->naam }}</div>
-                                <div class="text-xs text-gray-500">{{ $judoka->club?->naam ?? '-' }}</div>
+                                <span class="font-medium">{{ $judoka->naam }}</span>
+                                <span class="text-gray-500">({{ $judoka->club?->naam ?? '-' }})</span>
                             </td>
                             <td class="text-center font-bold">{{ $judoka->pivot->punten ?? 0 }}</td>
                             <td class="text-center">{{ $judoka->pivot->gewonnen ?? 0 }}</td>
