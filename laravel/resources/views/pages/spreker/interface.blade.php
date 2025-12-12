@@ -25,22 +25,22 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b text-gray-500 text-xs">
-                            <th class="text-left py-1">Naam - Club</th>
+                            <th class="text-left py-1">Naam (Club)</th>
                             <th class="text-center w-12">WP</th>
                             <th class="text-center w-12">JP</th>
                             <th class="text-center w-12">Plaats</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($poule->judokas as $judoka)
-                        @php $plaats = $judoka->pivot->eindpositie ?? $loop->iteration; @endphp
+                        @foreach($poule->standings as $index => $standing)
+                        @php $plaats = $index + 1; @endphp
                         <tr class="{{ !$loop->last ? 'border-b' : '' }}">
                             <td class="py-2">
-                                <span class="font-medium">{{ $judoka->naam }}</span>
-                                <span class="text-gray-500">({{ $judoka->club?->naam ?? '-' }})</span>
+                                <span class="font-medium">{{ $standing['judoka']->naam }}</span>
+                                <span class="text-gray-500">({{ $standing['judoka']->club?->naam ?? '-' }})</span>
                             </td>
-                            <td class="text-center font-bold">{{ $judoka->pivot->punten ?? 0 }}</td>
-                            <td class="text-center">{{ $judoka->pivot->gewonnen ?? 0 }}</td>
+                            <td class="text-center font-bold">{{ $standing['wp'] }}</td>
+                            <td class="text-center">{{ $standing['jp'] }}</td>
                             <td class="text-center font-bold text-lg
                                 {{ $plaats === 1 ? 'text-yellow-500' : ($plaats === 2 ? 'text-gray-400' : ($plaats === 3 ? 'text-amber-600' : 'text-gray-600')) }}">
                                 {{ $plaats === 1 ? '🥇' : ($plaats === 2 ? '🥈' : ($plaats === 3 ? '🥉' : $plaats)) }}
