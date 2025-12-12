@@ -110,11 +110,10 @@
                                                     @change="updateWedstrijdScore(w, judoka.id, 'jp', $event.target.value)"
                                                 >
                                                     <option value="">-</option>
-                                                    <option value="0">0 ❌</option>
-                                                    <option value="1">1</option>
-                                                    <option value="5">5 ❌</option>
+                                                    <option value="0">0</option>
+                                                    <option value="5">5</option>
                                                     <option value="7">7</option>
-                                                    <option value="10">10 ❌</option>
+                                                    <option value="10">10</option>
                                                 </select>
                                             </div>
                                         </td>

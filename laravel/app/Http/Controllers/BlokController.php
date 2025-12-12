@@ -268,10 +268,41 @@ class BlokController extends Controller
         // Get poules that are ready for spreker (with results)
         $klarePoules = $toernooi->poules()
             ->whereNotNull('spreker_klaar')
-            ->with(['mat', 'judokas' => fn($q) => $q->orderByPivot('eindpositie')])
+            ->with(['mat', 'judokas.club', 'wedstrijden'])
             ->orderBy('spreker_klaar', 'asc')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($poule) {
+                // Calculate WP and JP from wedstrijden for each judoka
+                $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                    $wp = 0;
+                    $jp = 0;
+
+                    foreach ($poule->wedstrijden as $wedstrijd) {
+                        if ($wedstrijd->judoka_wit_id === $judoka->id) {
+                            $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
+                            $jp += (int) $wedstrijd->score_wit;
+                        } elseif ($wedstrijd->judoka_blauw_id === $judoka->id) {
+                            $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
+                            $jp += (int) $wedstrijd->score_blauw;
+                        }
+                    }
+
+                    return [
+                        'judoka' => $judoka,
+                        'wp' => $wp,
+                        'jp' => $jp,
+                    ];
+                });
+
+                // Sort by WP desc, then JP desc
+                $poule->standings = $standings->sortBy([
+                    ['wp', 'desc'],
+                    ['jp', 'desc'],
+                ])->values();
+
+                return $poule;
+            });
 
         return view('pages.spreker.interface', compact('toernooi', 'overzicht', 'klarePoules'));
     }
