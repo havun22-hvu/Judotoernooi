@@ -236,14 +236,14 @@ class PouleController extends Controller
             'van_poule' => [
                 'id' => $vanPoule->id,
                 'nummer' => $vanPoule->nummer,
-                'judokas_count' => $vanPoule->fresh()->judokas()->count(),
-                'aantal_wedstrijden' => $vanPoule->fresh()->aantal_wedstrijden,
+                'judokas_count' => $vanPoule->aantal_judokas,
+                'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
             ],
             'naar_poule' => [
                 'id' => $naarPoule->id,
                 'nummer' => $naarPoule->nummer,
-                'judokas_count' => $naarPoule->fresh()->judokas()->count(),
-                'aantal_wedstrijden' => $naarPoule->fresh()->aantal_wedstrijden,
+                'judokas_count' => $naarPoule->aantal_judokas,
+                'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
             ],
         ]);
     }
