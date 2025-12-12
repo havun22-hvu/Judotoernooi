@@ -361,7 +361,7 @@ class CoachPortalController extends Controller
         }
 
         $validated = $request->validate([
-            'pincode' => 'required|string|min:4|max:6',
+            'pincode' => 'required|string|size:5',
         ]);
 
         // Find coach by PIN

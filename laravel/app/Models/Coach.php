@@ -74,7 +74,7 @@ class Coach extends Model
 
     public static function generatePincode(): string
     {
-        return str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        return str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
     }
 
     public function checkPincode(string $pincode): bool
