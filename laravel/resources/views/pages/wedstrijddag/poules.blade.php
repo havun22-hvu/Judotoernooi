@@ -288,8 +288,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             'Accept': 'application/json'
                         },
                         body: JSON.stringify({
-                            judoka_id: judokaId,
-                            from_poule_id: vanPouleId,
+                            judoka_id: parseInt(judokaId),
+                            from_poule_id: vanPouleId ? parseInt(vanPouleId) : null,
                             category: category
                         })
                     });
