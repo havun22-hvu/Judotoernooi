@@ -9,7 +9,9 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

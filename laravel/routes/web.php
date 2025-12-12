@@ -184,4 +184,13 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
 Route::get('weegkaart/{token}', [WeegkaartController::class, 'show'])->name('weegkaart.show');
 
 // Role access via secret code (vrijwilligers)
-Route::get('t/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
+Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
+
+// Generic role interfaces (session-based, no toernooi in URL)
+Route::middleware('rol.sessie')->group(function () {
+    Route::get('weging', [RoleToegang::class, 'wegingInterface'])->name('rol.weging');
+    Route::get('mat', [RoleToegang::class, 'matInterface'])->name('rol.mat');
+    Route::get('mat/{mat}', [RoleToegang::class, 'matShow'])->name('rol.mat.show');
+    Route::get('jury', [RoleToegang::class, 'juryInterface'])->name('rol.jury');
+    Route::get('spreker', [RoleToegang::class, 'sprekerInterface'])->name('rol.spreker');
+});
