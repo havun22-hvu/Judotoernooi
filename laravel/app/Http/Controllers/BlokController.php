@@ -203,13 +203,13 @@ class BlokController extends Controller
             ->where('gewichtsklasse', $gewichtsklasse)
             ->get();
 
-        // Generate match schedules for each poule
+        // Generate match schedules for each poule using the service
         $totaalWedstrijden = 0;
         foreach ($poules as $poule) {
             // Only generate if no wedstrijden exist yet
             if ($poule->wedstrijden()->count() === 0) {
-                $schema = $poule->genereerWedstrijdSchema();
-                $totaalWedstrijden += count($schema);
+                $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+                $totaalWedstrijden += count($wedstrijden);
             }
         }
 
