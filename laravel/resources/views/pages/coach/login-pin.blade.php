@@ -30,18 +30,18 @@
             @csrf
             <div class="mb-6">
                 <label for="pincode" class="block text-sm font-medium text-gray-700 mb-2">
-                    PIN code (4 cijfers)
+                    PIN code (5 cijfers)
                 </label>
                 <input type="text"
                        id="pincode"
                        name="pincode"
-                       maxlength="4"
-                       pattern="[0-9]{4}"
+                       maxlength="5"
+                       pattern="[0-9]{5}"
                        inputmode="numeric"
                        autocomplete="off"
                        required
-                       class="w-full text-center text-3xl tracking-[0.5em] font-mono border-2 border-gray-300 rounded-lg px-4 py-4 focus:border-blue-500 focus:ring-blue-500"
-                       placeholder="____">
+                       class="w-full text-center text-3xl tracking-[0.4em] font-mono border-2 border-gray-300 rounded-lg px-4 py-4 focus:border-blue-500 focus:ring-blue-500"
+                       placeholder="_____">
                 @error('pincode')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
