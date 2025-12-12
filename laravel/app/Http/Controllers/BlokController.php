@@ -295,11 +295,27 @@ class BlokController extends Controller
                     ];
                 });
 
-                // Sort by WP desc, then JP desc
-                $poule->standings = $standings->sortBy([
-                    ['wp', 'desc'],
-                    ['jp', 'desc'],
-                ])->values();
+                // Sort by WP desc, then JP desc, then head-to-head
+                $wedstrijden = $poule->wedstrijden;
+                $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
+                    // First: compare WP (higher is better)
+                    if ($a['wp'] !== $b['wp']) {
+                        return $b['wp'] - $a['wp'];
+                    }
+                    // Second: compare JP (higher is better)
+                    if ($a['jp'] !== $b['jp']) {
+                        return $b['jp'] - $a['jp'];
+                    }
+                    // Third: head-to-head winner
+                    foreach ($wedstrijden as $w) {
+                        $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
+                                || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
+                        if ($isMatch && $w->winnaar_id) {
+                            return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
+                        }
+                    }
+                    return 0;
+                })->values();
 
                 return $poule;
             });
