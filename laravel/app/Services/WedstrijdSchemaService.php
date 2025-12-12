@@ -69,6 +69,7 @@ class WedstrijdSchemaService
             $pouleSchema = [
                 'poule_id' => $poule->id,
                 'titel' => $poule->titel,
+                'spreker_klaar' => $poule->spreker_klaar !== null,
                 'judokas' => $poule->judokas->map(fn($j) => [
                     'id' => $j->id,
                     'naam' => $j->naam,

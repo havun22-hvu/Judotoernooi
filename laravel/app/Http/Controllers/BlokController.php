@@ -265,7 +265,15 @@ class BlokController extends Controller
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
-        return view('pages.spreker.interface', compact('toernooi', 'overzicht'));
+        // Get poules that are ready for spreker (with results)
+        $klarePoules = $toernooi->poules()
+            ->whereNotNull('spreker_klaar')
+            ->with(['mat', 'judokas' => fn($q) => $q->orderByPivot('eindpositie')])
+            ->orderBy('spreker_klaar', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('pages.spreker.interface', compact('toernooi', 'overzicht', 'klarePoules'));
     }
 
     public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse

@@ -42,8 +42,20 @@
                         <span x-text="poule.wedstrijden.length + ' wedstrijden'"></span>
                     </div>
                 </div>
-                <div x-show="isPouleAfgerond(poule)" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-medium">
-                    ✓ Afgerond
+                <div class="flex items-center gap-2">
+                    <div x-show="isPouleAfgerond(poule) && !poule.spreker_klaar" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-medium">
+                        ✓ Afgerond
+                    </div>
+                    <button
+                        x-show="isPouleAfgerond(poule) && !poule.spreker_klaar"
+                        @click="markeerKlaar(poule)"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold"
+                    >
+                        📢 Klaar
+                    </button>
+                    <div x-show="poule.spreker_klaar" class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium">
+                        📢 Naar spreker
+                    </div>
                 </div>
             </div>
 
@@ -294,6 +306,28 @@ function matInterface() {
 
         isPouleAfgerond(poule) {
             return poule.wedstrijden.every(w => w.is_gespeeld);
+        },
+
+        async markeerKlaar(poule) {
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.poule-klaar', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    poule.spreker_klaar = true;
+                }
+            } catch (err) {
+                alert('Fout bij markeren: ' + err.message);
+            }
         }
     }
 }
