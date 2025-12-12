@@ -122,8 +122,11 @@ class WedstrijddagController extends Controller
         $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
         $nieuwePoule->updateStatistieken();
 
-        // Mark judoka as re-pooled
-        $judoka->update(['opmerking' => 'Overgepouled']);
+        // Update judoka's gewichtsklasse to match new poule (removes strikethrough)
+        $judoka->update([
+            'gewichtsklasse' => $nieuwePoule->gewichtsklasse,
+            'opmerking' => 'Overgepouled',
+        ]);
 
         return response()->json(['success' => true]);
     }

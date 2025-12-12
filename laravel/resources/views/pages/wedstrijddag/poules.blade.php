@@ -64,16 +64,15 @@
                             <div
                                 class="border rounded-lg p-3 min-w-[200px] bg-white transition-colors"
                                 :class="{ 'bg-blue-100 border-blue-400 border-2': hoverPoule === {{ $poule->id }} }"
-                                @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
-                                @dragenter.prevent="hoverPoule = {{ $poule->id }}"
-                                @dragleave.prevent="hoverPoule = null"
+                                @dragover.prevent="$event.dataTransfer.dropEffect = 'move'; hoverPoule = {{ $poule->id }}"
+                                @dragleave.self="hoverPoule = null"
                                 @drop.prevent="dropJudoka($event, {{ $poule->id }}); hoverPoule = null"
                             >
-                                <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center">
+                                <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center pointer-events-none">
                                     <span>Poule {{ $poule->nummer }}</span>
                                     <span class="text-xs text-gray-400">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
                                 </div>
-                                <div class="divide-y divide-gray-100">
+                                <div class="divide-y divide-gray-100" :class="{ 'pointer-events-none': draggedJudoka }">
                                     @foreach($poule->judokas as $judoka)
                                     @php
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig';
