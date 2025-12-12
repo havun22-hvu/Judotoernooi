@@ -144,30 +144,28 @@
 
             <!-- Dubbel spel instellingen -->
             <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-3">Dubbel spel bij kleine poules</h3>
-                <p class="text-sm text-gray-500 mb-3">Bij kleine poules spelen judoka's 2x tegen elkaar voor meer wedstrijdervaring.</p>
-
-                <div class="space-y-3">
+                <h3 class="font-medium text-gray-700 mb-2">Dubbel spel (2x tegen elkaar)</h3>
+                <div class="flex flex-wrap gap-4">
                     <label class="flex items-center cursor-pointer">
                         <input type="hidden" name="dubbel_bij_2_judokas" value="0">
                         <input type="checkbox" name="dubbel_bij_2_judokas" value="1"
                                {{ old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true) ? 'checked' : '' }}
-                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-3">
-                            <span class="font-medium text-gray-700">Dubbel bij 2 judoka's</span>
-                            <span class="block text-sm text-gray-500">2 wedstrijden in plaats van 1</span>
-                        </span>
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-gray-700">2 judoka's <span class="text-gray-400 text-sm">(2w)</span></span>
                     </label>
-
                     <label class="flex items-center cursor-pointer">
                         <input type="hidden" name="dubbel_bij_3_judokas" value="0">
                         <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
                                {{ old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : '' }}
-                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-3">
-                            <span class="font-medium text-gray-700">Dubbel bij 3 judoka's</span>
-                            <span class="block text-sm text-gray-500">6 wedstrijden in plaats van 3</span>
-                        </span>
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-gray-700">3 judoka's <span class="text-gray-400 text-sm">(6w)</span></span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="dubbel_bij_4_judokas" value="0">
+                        <input type="checkbox" name="dubbel_bij_4_judokas" value="1"
+                               {{ old('dubbel_bij_4_judokas', $toernooi->dubbel_bij_4_judokas ?? false) ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-gray-700">4 judoka's <span class="text-gray-400 text-sm">(12w)</span></span>
                     </label>
                 </div>
             </div>
