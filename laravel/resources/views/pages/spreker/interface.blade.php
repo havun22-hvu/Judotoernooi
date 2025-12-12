@@ -4,12 +4,50 @@
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Spreker Interface</h1>
+    <h1 class="text-3xl font-bold text-gray-800">📢 Spreker Interface</h1>
     <div class="text-sm text-gray-600">
-        Auto-refresh elke 30 seconden
+        Auto-refresh elke 10 seconden
     </div>
 </div>
 
+{{-- Uitslagen om af te roepen --}}
+@if($klarePoules->isNotEmpty())
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-purple-800 mb-4">🏆 Uitslagen om af te roepen</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @foreach($klarePoules as $poule)
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-purple-500">
+            <div class="bg-purple-600 text-white px-4 py-3">
+                <div class="font-bold text-lg">{{ $poule->titel }}</div>
+                <div class="text-purple-200 text-sm">Mat {{ $poule->mat?->nummer ?? '?' }}</div>
+            </div>
+            <div class="p-4">
+                @php $positie = 1; @endphp
+                @foreach($poule->judokas as $judoka)
+                <div class="flex items-center py-2 {{ !$loop->last ? 'border-b' : '' }}">
+                    <div class="w-8 text-center font-bold text-lg
+                        {{ $positie === 1 ? 'text-yellow-500' : ($positie === 2 ? 'text-gray-400' : ($positie === 3 ? 'text-amber-600' : 'text-gray-600')) }}">
+                        {{ $positie === 1 ? '🥇' : ($positie === 2 ? '🥈' : ($positie === 3 ? '🥉' : $positie)) }}
+                    </div>
+                    <div class="flex-1 ml-2">
+                        <div class="font-medium">{{ $judoka->naam }}</div>
+                        <div class="text-xs text-gray-500">{{ $judoka->club?->naam ?? '' }}</div>
+                    </div>
+                </div>
+                @php $positie++; @endphp
+                @endforeach
+            </div>
+            <div class="bg-gray-100 px-4 py-2 text-xs text-gray-500">
+                Klaar: {{ $poule->spreker_klaar->format('H:i') }}
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+{{-- Mat overzicht --}}
+<h2 class="text-xl font-bold text-gray-800 mb-4">Mat Overzicht</h2>
 <div class="grid grid-cols-1 md:grid-cols-{{ $toernooi->aantal_matten > 4 ? 4 : $toernooi->aantal_matten }} gap-6">
     @for($mat = 1; $mat <= $toernooi->aantal_matten; $mat++)
     <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -59,9 +97,9 @@
 </div>
 
 <script>
-    // Auto-refresh elke 30 seconden
+    // Auto-refresh elke 10 seconden
     setTimeout(function() {
         location.reload();
-    }, 30000);
+    }, 10000);
 </script>
 @endsection

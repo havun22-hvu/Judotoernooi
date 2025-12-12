@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Blok;
 use App\Models\Mat;
+use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use App\Services\WedstrijdSchemaService;
@@ -84,6 +85,27 @@ class MatController extends Controller
             $validated['score_blauw'] ?? '',
             $validated['uitslag_type'] ?? 'beslissing'
         );
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark poule as ready for spreker (results announcement)
+     */
+    public function pouleKlaar(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this toernooi
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        $poule->update(['spreker_klaar' => now()]);
 
         return response()->json(['success' => true]);
     }
