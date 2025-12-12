@@ -3,18 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Toernooi;
+use App\Models\Mat;
+use App\Services\ToernooiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class RoleToegang extends Controller
 {
+    public function __construct(
+        private ToernooiService $toernooiService
+    ) {}
+
     /**
-     * Handle role access via secret code
+     * Handle role access via secret code - redirects to generic URL
      */
-    public function access(Request $request, string $code): View|RedirectResponse
+    public function access(Request $request, string $code): RedirectResponse
     {
-        // Find toernooi and role by code
         $result = $this->findToernooiByCode($code);
 
         if (!$result) {
@@ -23,18 +28,112 @@ class RoleToegang extends Controller
 
         [$toernooi, $rol] = $result;
 
-        // Store in session
-        $request->session()->put('toernooi_id', $toernooi->id);
-        $request->session()->put('rol', $rol);
+        // Store in session with different keys than old system
+        $request->session()->put('rol_toernooi_id', $toernooi->id);
+        $request->session()->put('rol_type', $rol);
 
-        // Redirect to appropriate interface
+        // Redirect to generic URL (code disappears from address bar)
         return match ($rol) {
-            'hoofdjury' => redirect()->route('toernooi.poule.index', $toernooi),
-            'weging' => redirect()->route('toernooi.weging.interface', $toernooi),
-            'mat' => redirect()->route('toernooi.mat.interface', $toernooi),
-            'spreker' => redirect()->route('toernooi.spreker.interface', $toernooi),
+            'hoofdjury' => redirect()->route('rol.jury'),
+            'weging' => redirect()->route('rol.weging'),
+            'mat' => redirect()->route('rol.mat'),
+            'spreker' => redirect()->route('rol.spreker'),
             default => abort(404),
         };
+    }
+
+    /**
+     * Weging interface (generic URL)
+     */
+    public function wegingInterface(Request $request): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'weging');
+
+        return view('pages.weging.interface', [
+            'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken,
+        ]);
+    }
+
+    /**
+     * Mat selection interface (generic URL)
+     */
+    public function matInterface(Request $request): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'mat');
+
+        return view('pages.mat.interface', [
+            'toernooi' => $toernooi,
+            'matten' => $toernooi->matten,
+        ]);
+    }
+
+    /**
+     * Mat show (specific mat)
+     */
+    public function matShow(Request $request, int $mat): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'mat');
+
+        $matModel = Mat::where('toernooi_id', $toernooi->id)
+            ->where('nummer', $mat)
+            ->firstOrFail();
+
+        return view('pages.mat.show', [
+            'toernooi' => $toernooi,
+            'mat' => $matModel,
+        ]);
+    }
+
+    /**
+     * Jury/Hoofdjury interface (generic URL)
+     */
+    public function juryInterface(Request $request): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'hoofdjury');
+
+        return view('pages.poule.index', [
+            'toernooi' => $toernooi,
+            'poules' => $toernooi->poules()->with('judokas')->get(),
+        ]);
+    }
+
+    /**
+     * Spreker interface (generic URL)
+     */
+    public function sprekerInterface(Request $request): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'spreker');
+
+        return view('pages.blok.spreker', [
+            'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken()->with('matten')->get(),
+        ]);
+    }
+
+    /**
+     * Get toernooi from session
+     */
+    private function getToernooiFromSession(Request $request): Toernooi
+    {
+        $toernooiId = $request->session()->get('rol_toernooi_id');
+        return Toernooi::findOrFail($toernooiId);
+    }
+
+    /**
+     * Check if user has correct role
+     */
+    private function checkRole(Request $request, string $expectedRole): void
+    {
+        $rol = $request->session()->get('rol_type');
+        if ($rol !== $expectedRole) {
+            abort(403, 'Geen toegang tot deze functie.');
+        }
     }
 
     /**

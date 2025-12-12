@@ -731,9 +731,10 @@
 
     <!-- VRIJWILLIGERS URLS (nieuwe methode - geheime links) -->
     <div class="bg-white rounded-lg shadow p-6 mt-6" x-data="{ copied: null }">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers URLs</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers Links</h2>
         <p class="text-gray-600 mb-4">
-            Deel deze geheime links met je vrijwilligers. Elke rol heeft een unieke URL - geen wachtwoord nodig.
+            Deel deze links met je vrijwilligers. Elke rol heeft een unieke geheime link - geen wachtwoord nodig.
+            <br><span class="text-sm text-gray-500">Na klikken verdwijnt de code uit de adresbalk.</span>
         </p>
 
         <div class="space-y-4">
@@ -748,33 +749,40 @@
 
             @foreach($rollen as $rol => $info)
             <div class="p-4 border rounded-lg bg-gray-50">
-                <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        <span class="text-2xl mr-2">{{ $info['icon'] }}</span>
+                        <span class="text-2xl mr-3">{{ $info['icon'] }}</span>
                         <div>
                             <h3 class="font-bold">{{ $info['naam'] }}</h3>
                             <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
                         </div>
                     </div>
-                </div>
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="text" readonly
-                           value="{{ $toernooi->getRoleUrl($rol) }}"
-                           id="url-{{ $rol }}"
-                           class="flex-1 bg-white border rounded px-3 py-2 text-sm font-mono text-gray-600">
-                    <button type="button"
-                            @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
-                        <span x-show="copied !== '{{ $rol }}'">Kopieer</span>
-                        <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button"
+                                @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
+                            <span x-show="copied !== '{{ $rol }}'">Kopieer link</span>
+                            <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
+                        </button>
+                        <a href="{{ $toernooi->getRoleUrl($rol) }}" target="_blank"
+                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm" title="Test link">
+                            Test
+                        </a>
+                    </div>
                 </div>
             </div>
             @endforeach
         </div>
 
-        <div class="mt-4 p-3 bg-green-50 rounded text-sm text-green-800">
-            <strong>Tip:</strong> Stuur elke vrijwilliger alleen zijn/haar eigen link. Ze kunnen direct aan de slag zonder wachtwoord.
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h4 class="font-bold text-blue-800 mb-2">Voorbeeld bericht voor WhatsApp/Email:</h4>
+            <div class="bg-white p-3 rounded border text-sm text-gray-700 font-mono">
+                Hoi! Morgen is het toernooi. Klik op je link om in te loggen:<br><br>
+                @foreach($rollen as $rol => $info)
+                👉 <a href="{{ $toernooi->getRoleUrl($rol) }}" class="text-blue-600 hover:underline">{{ $info['naam'] }}</a><br>
+                @endforeach
+            </div>
+            <p class="text-xs text-blue-600 mt-2">Stuur elke vrijwilliger alleen zijn/haar eigen link!</p>
         </div>
     </div>
 </div>
