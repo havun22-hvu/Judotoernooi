@@ -83,14 +83,21 @@
                     $btnClass = 'bg-white text-gray-800';
                 }
             @endphp
+            @if($hasWaiting && !$isSent)
+            <button
+                onclick="alert('Maak eerst de poules klaar bij Overpoulen')"
+                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80 cursor-not-allowed"
+            >
+                {{ $catNaam }}
+                <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
+            </button>
+            @else
             <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($catKey) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
                 {{ $catNaam }}
-                @if($hasWaiting)
-                <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
-                @endif
             </a>
+            @endif
             @endforeach
         </div>
         @endif
