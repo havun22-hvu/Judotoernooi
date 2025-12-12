@@ -139,7 +139,36 @@
 
                 <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
                     <strong>Voorbeeld:</strong> Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.
-                    Bij een poule van 3 spelen judoka's 2x tegen elkaar (dubbele ronde).
+                </div>
+            </div>
+
+            <!-- Dubbel spel instellingen -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-3">Dubbel spel bij kleine poules</h3>
+                <p class="text-sm text-gray-500 mb-3">Bij kleine poules spelen judoka's 2x tegen elkaar voor meer wedstrijdervaring.</p>
+
+                <div class="space-y-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="dubbel_bij_2_judokas" value="0">
+                        <input type="checkbox" name="dubbel_bij_2_judokas" value="1"
+                               {{ old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true) ? 'checked' : '' }}
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-3">
+                            <span class="font-medium text-gray-700">Dubbel bij 2 judoka's</span>
+                            <span class="block text-sm text-gray-500">2 wedstrijden in plaats van 1</span>
+                        </span>
+                    </label>
+
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="dubbel_bij_3_judokas" value="0">
+                        <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
+                               {{ old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : '' }}
+                               class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-3">
+                            <span class="font-medium text-gray-700">Dubbel bij 3 judoka's</span>
+                            <span class="block text-sm text-gray-500">6 wedstrijden in plaats van 3</span>
+                        </span>
+                    </label>
                 </div>
             </div>
 
