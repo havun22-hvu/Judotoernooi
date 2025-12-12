@@ -16,7 +16,9 @@
     $toonVarianten = request()->has('kies') && !empty($varianten);
 
     // Get all categories with their block assignment from database
+    // reorder() removes default orderBy('nummer') which conflicts with GROUP BY in MySQL
     $alleCatsRaw = $toernooi->poules()
+        ->reorder()
         ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
         ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
         ->selectRaw('MAX(blok_vast) as is_vast')
