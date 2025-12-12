@@ -80,13 +80,13 @@ class Poule extends Model
     }
 
     /**
-     * Calculate number of matches for this poule
+     * Calculate number of matches for a given number of judokas
      * Formula: n*(n-1)/2 for round-robin
      * Exception: 3 judokas play double round (6 matches)
      */
-    public function berekenAantalWedstrijden(): int
+    public function berekenAantalWedstrijden(?int $aantalJudokas = null): int
     {
-        $aantal = $this->aantal_judokas;
+        $aantal = $aantalJudokas ?? $this->aantal_judokas;
 
         if ($aantal === 3) {
             return 6; // Double round for 3 judokas
@@ -105,7 +105,7 @@ class Poule extends Model
             ->count();
 
         $this->aantal_judokas = $activeJudokas;
-        $this->aantal_wedstrijden = $this->berekenAantalWedstrijden();
+        $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($activeJudokas);
         $this->save();
     }
 
