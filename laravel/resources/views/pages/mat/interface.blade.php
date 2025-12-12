@@ -286,17 +286,27 @@ function matInterface() {
         },
 
         getPlaats(poule, judokaId) {
-            // Calculate standings based on WP, then JP
+            // Calculate standings based on WP, then JP, then head-to-head
             const standings = poule.judokas.map(j => ({
                 id: j.id,
                 wp: this.getTotaalWP(poule, j.id),
                 jp: this.getTotaalJP(poule, j.id)
             }));
 
-            // Sort by WP desc, then JP desc
+            // Sort by WP desc, then JP desc, then head-to-head
+            const wedstrijden = poule.wedstrijden;
             standings.sort((a, b) => {
                 if (b.wp !== a.wp) return b.wp - a.wp;
-                return b.jp - a.jp;
+                if (b.jp !== a.jp) return b.jp - a.jp;
+                // Head-to-head: find their match and check winner
+                for (const w of wedstrijden) {
+                    const isMatch = (w.wit.id === a.id && w.blauw.id === b.id)
+                                 || (w.wit.id === b.id && w.blauw.id === a.id);
+                    if (isMatch && w.winnaar_id) {
+                        return w.winnaar_id === a.id ? -1 : 1;
+                    }
+                }
+                return 0;
             });
 
             const index = standings.findIndex(s => s.id === judokaId);
