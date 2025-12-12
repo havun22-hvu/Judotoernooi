@@ -141,16 +141,16 @@ Route::prefix('coach')->name('coach.')->group(function () {
     Route::get('{token}/weegkaarten', [CoachPortalController::class, 'weegkaarten'])->name('weegkaarten');
 });
 
-// Coach Portal with UUID and PIN (new system)
+// Coach Portal with shared code and PIN (new system)
 Route::prefix('school')->name('coach.portal.')->group(function () {
-    Route::get('{uuid}', [CoachPortalController::class, 'indexUuid'])->name('uuid');
-    Route::post('{uuid}/login', [CoachPortalController::class, 'loginPin'])->name('login');
-    Route::post('{uuid}/logout', [CoachPortalController::class, 'logoutUuid'])->name('logout');
-    Route::get('{uuid}/judokas', [CoachPortalController::class, 'judokasUuid'])->name('judokas');
-    Route::post('{uuid}/judoka', [CoachPortalController::class, 'storeJudokaUuid'])->name('judoka.store');
-    Route::put('{uuid}/judoka/{judoka}', [CoachPortalController::class, 'updateJudokaUuid'])->name('judoka.update');
-    Route::delete('{uuid}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudokaUuid'])->name('judoka.destroy');
-    Route::get('{uuid}/weegkaarten', [CoachPortalController::class, 'weegkaartenUuid'])->name('weegkaarten');
+    Route::get('{code}', [CoachPortalController::class, 'indexCode'])->name('code');
+    Route::post('{code}/login', [CoachPortalController::class, 'loginPin'])->name('login');
+    Route::post('{code}/logout', [CoachPortalController::class, 'logoutCode'])->name('logout');
+    Route::get('{code}/judokas', [CoachPortalController::class, 'judokasCode'])->name('judokas');
+    Route::post('{code}/judoka', [CoachPortalController::class, 'storeJudokaCode'])->name('judoka.store');
+    Route::put('{code}/judoka/{judoka}', [CoachPortalController::class, 'updateJudokaCode'])->name('judoka.update');
+    Route::delete('{code}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudokaCode'])->name('judoka.destroy');
+    Route::get('{code}/weegkaarten', [CoachPortalController::class, 'weegkaartenCode'])->name('weegkaarten');
 });
 
 // Weegkaart (public, accessed via QR code)
