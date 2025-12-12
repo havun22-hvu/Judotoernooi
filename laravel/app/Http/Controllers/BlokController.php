@@ -269,7 +269,7 @@ class BlokController extends Controller
         $klarePoules = $toernooi->poules()
             ->whereNotNull('spreker_klaar')
             ->with(['mat', 'judokas' => fn($q) => $q->orderByPivot('eindpositie')])
-            ->orderBy('spreker_klaar', 'desc')
+            ->orderBy('spreker_klaar', 'asc')
             ->limit(10)
             ->get();
 
