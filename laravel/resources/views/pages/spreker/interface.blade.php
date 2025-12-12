@@ -18,24 +18,37 @@
         @foreach($klarePoules as $poule)
         <div class="bg-white rounded-lg shadow-lg overflow-hidden border-2 border-purple-500">
             <div class="bg-purple-600 text-white px-4 py-3">
-                <div class="font-bold text-lg">{{ $poule->titel }}</div>
+                <div class="font-bold text-lg">{{ $poule->leeftijdsklasse }} - {{ $poule->gewichtsklasse }} - Poule {{ $poule->nummer }}</div>
                 <div class="text-purple-200 text-sm">Mat {{ $poule->mat?->nummer ?? '?' }}</div>
             </div>
             <div class="p-4">
-                @php $positie = 1; @endphp
-                @foreach($poule->judokas as $judoka)
-                <div class="flex items-center py-2 {{ !$loop->last ? 'border-b' : '' }}">
-                    <div class="w-8 text-center font-bold text-lg
-                        {{ $positie === 1 ? 'text-yellow-500' : ($positie === 2 ? 'text-gray-400' : ($positie === 3 ? 'text-amber-600' : 'text-gray-600')) }}">
-                        {{ $positie === 1 ? '🥇' : ($positie === 2 ? '🥈' : ($positie === 3 ? '🥉' : $positie)) }}
-                    </div>
-                    <div class="flex-1 ml-2">
-                        <div class="font-medium">{{ $judoka->naam }}</div>
-                        <div class="text-xs text-gray-500">{{ $judoka->club?->naam ?? '' }}</div>
-                    </div>
-                </div>
-                @php $positie++; @endphp
-                @endforeach
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b text-gray-500 text-xs">
+                            <th class="text-left py-1">Naam - Club</th>
+                            <th class="text-center w-12">WP</th>
+                            <th class="text-center w-12">JP</th>
+                            <th class="text-center w-12">Plaats</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($poule->judokas as $judoka)
+                        @php $plaats = $judoka->pivot->eindpositie ?? $loop->iteration; @endphp
+                        <tr class="{{ !$loop->last ? 'border-b' : '' }}">
+                            <td class="py-2">
+                                <div class="font-medium">{{ $judoka->naam }}</div>
+                                <div class="text-xs text-gray-500">{{ $judoka->club?->naam ?? '-' }}</div>
+                            </td>
+                            <td class="text-center font-bold">{{ $judoka->pivot->punten ?? 0 }}</td>
+                            <td class="text-center">{{ $judoka->pivot->gewonnen ?? 0 }}</td>
+                            <td class="text-center font-bold text-lg
+                                {{ $plaats === 1 ? 'text-yellow-500' : ($plaats === 2 ? 'text-gray-400' : ($plaats === 3 ? 'text-amber-600' : 'text-gray-600')) }}">
+                                {{ $plaats === 1 ? '🥇' : ($plaats === 2 ? '🥈' : ($plaats === 3 ? '🥉' : $plaats)) }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
             <div class="bg-gray-100 px-4 py-2 text-xs text-gray-500">
                 Klaar: {{ $poule->spreker_klaar->format('H:i') }}
