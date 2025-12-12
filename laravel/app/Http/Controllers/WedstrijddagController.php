@@ -117,16 +117,16 @@ class WedstrijddagController extends Controller
             }
         }
 
-        // Add to new poule
-        $maxPositie = $nieuwePoule->judokas()->max('poule_judoka.positie') ?? 0;
-        $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
-        $nieuwePoule->updateStatistieken();
-
-        // Update judoka's gewichtsklasse to match new poule (removes strikethrough)
+        // Update judoka's gewichtsklasse FIRST to match new poule (removes strikethrough)
         $judoka->update([
             'gewichtsklasse' => $nieuwePoule->gewichtsklasse,
             'opmerking' => 'Overgepouled',
         ]);
+
+        // Add to new poule and update statistics (judoka now has correct weight class)
+        $maxPositie = $nieuwePoule->judokas()->max('poule_judoka.positie') ?? 0;
+        $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
+        $nieuwePoule->updateStatistieken();
 
         return response()->json(['success' => true]);
     }
