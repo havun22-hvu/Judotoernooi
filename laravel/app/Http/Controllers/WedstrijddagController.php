@@ -98,10 +98,14 @@ class WedstrijddagController extends Controller
             'judoka_id' => 'required|exists:judokas,id',
             'poule_id' => 'required|exists:poules,id',
             'from_poule_id' => 'nullable|exists:poules,id',
+            'positions' => 'nullable|array',
+            'positions.*.id' => 'required|exists:judokas,id',
+            'positions.*.positie' => 'required|integer|min:1',
         ]);
 
         $judoka = Judoka::findOrFail($validated['judoka_id']);
         $nieuwePoule = Poule::findOrFail($validated['poule_id']);
+        $oudePouleData = null;
 
         // Remove from old poule(s)
         if (!empty($validated['from_poule_id'])) {
@@ -109,6 +113,11 @@ class WedstrijddagController extends Controller
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
+            $oudePouleData = [
+                'id' => $oudePoule->id,
+                'aantal_judokas' => $oudePoule->aantal_judokas,
+                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
+            ];
         } else {
             // From wachtruimte - detach from ALL current poules
             foreach ($judoka->poules as $oudePoule) {
@@ -123,12 +132,32 @@ class WedstrijddagController extends Controller
             'opmerking' => 'Overgepouled',
         ]);
 
-        // Add to new poule and update statistics (judoka now has correct weight class)
-        $maxPositie = $nieuwePoule->judokas()->max('poule_judoka.positie') ?? 0;
-        $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
+        // Check if judoka already in target poule (reordering within same poule)
+        $alreadyInPoule = $nieuwePoule->judokas()->where('judoka_id', $judoka->id)->exists();
+
+        if (!$alreadyInPoule) {
+            // Add to new poule
+            $nieuwePoule->judokas()->attach($judoka->id, ['positie' => 999]);
+        }
+
+        // Update positions if provided
+        if (!empty($validated['positions'])) {
+            foreach ($validated['positions'] as $pos) {
+                $nieuwePoule->judokas()->updateExistingPivot($pos['id'], ['positie' => $pos['positie']]);
+            }
+        }
+
         $nieuwePoule->updateStatistieken();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'van_poule' => $oudePouleData,
+            'naar_poule' => [
+                'id' => $nieuwePoule->id,
+                'aantal_judokas' => $nieuwePoule->aantal_judokas,
+                'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
+            ],
+        ]);
     }
 
     public function naarZaaloverzicht(Request $request, Toernooi $toernooi): JsonResponse
