@@ -200,17 +200,25 @@ class WedstrijddagController extends Controller
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
-            'from_poule_id' => 'required|exists:poules,id',
+            'from_poule_id' => 'nullable|exists:poules,id',
             'category' => 'required|string',
         ]);
 
         $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $oudePoule = Poule::findOrFail($validated['from_poule_id']);
+        $oudePouleData = null;
 
-        // Remove from old poule
-        $oudePoule->judokas()->detach($judoka->id);
-        $oudePoule->updateStatistieken();
-        $oudePoule->refresh();
+        // Remove from old poule if coming from a poule
+        if (!empty($validated['from_poule_id'])) {
+            $oudePoule = Poule::findOrFail($validated['from_poule_id']);
+            $oudePoule->judokas()->detach($judoka->id);
+            $oudePoule->updateStatistieken();
+            $oudePoule->refresh();
+            $oudePouleData = [
+                'id' => $oudePoule->id,
+                'aantal_judokas' => $oudePoule->aantal_judokas,
+                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
+            ];
+        }
 
         // Store in session that this judoka is manually in wachtruimte for this category
         $wachtruimte = session("toernooi_{$toernooi->id}_wachtruimte", []);
@@ -219,11 +227,7 @@ class WedstrijddagController extends Controller
 
         return response()->json([
             'success' => true,
-            'van_poule' => [
-                'id' => $oudePoule->id,
-                'aantal_judokas' => $oudePoule->aantal_judokas,
-                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
-            ],
+            'van_poule' => $oudePouleData,
         ]);
     }
 
