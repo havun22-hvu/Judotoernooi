@@ -71,11 +71,14 @@
                 $isSent = isset(($sentToZaaloverzicht ?? [])[$catKey]);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 
-                // rood = wachtend, wit = aanwezig, groen = naar mat
+                // Status flow:
+                // 1. Licht rood = overpoulen nog niet klaar (wachtruimte heeft judoka's)
+                // 2. Wit = overpoulen klaar, klaar voor matverdeling
+                // 3. Groen = naar mat gestuurd, categorie kan starten
                 if ($isSent) {
                     $btnClass = 'bg-green-500 text-white';
                 } elseif ($hasWaiting) {
-                    $btnClass = 'bg-red-500 text-white';
+                    $btnClass = 'bg-red-200 text-red-800';
                 } else {
                     $btnClass = 'bg-white text-gray-800';
                 }
