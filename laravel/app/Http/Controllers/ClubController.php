@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\ClubUitnodigingMail;
 use App\Models\Club;
 use App\Models\ClubUitnodiging;
+use App\Models\Coach;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,9 @@ class ClubController extends Controller
     public function index(Toernooi $toernooi): View
     {
         $clubs = Club::withCount(['judokas' => function ($query) use ($toernooi) {
+            $query->where('toernooi_id', $toernooi->id);
+        }])
+        ->with(['coaches' => function ($query) use ($toernooi) {
             $query->where('toernooi_id', $toernooi->id);
         }])
         ->orderBy('naam')
@@ -155,5 +159,101 @@ class ClubController extends Controller
             ->route('toernooi.club.index', $toernooi)
             ->with('coach_url', route('coach.portal', $uitnodiging->token))
             ->with('coach_url_club', $club->naam);
+    }
+
+    /**
+     * Store a new coach for a club
+     */
+    public function storeCoach(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    {
+        // Check max 3 coaches per club
+        $existingCount = Coach::where('club_id', $club->id)
+            ->where('toernooi_id', $toernooi->id)
+            ->count();
+
+        if ($existingCount >= 3) {
+            return redirect()
+                ->route('toernooi.club.index', $toernooi)
+                ->with('error', 'Maximum 3 coaches per club bereikt');
+        }
+
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefoon' => 'nullable|string|max:20',
+        ]);
+
+        $coach = Coach::create([
+            'club_id' => $club->id,
+            'toernooi_id' => $toernooi->id,
+            'naam' => $validated['naam'],
+            'email' => $validated['email'] ?? null,
+            'telefoon' => $validated['telefoon'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', "Coach {$coach->naam} toegevoegd (PIN: {$coach->pincode})")
+            ->with('new_coach_id', $coach->id)
+            ->with('new_coach_pin', $coach->pincode)
+            ->with('new_coach_url', $coach->getPortalUrl());
+    }
+
+    /**
+     * Update a coach
+     */
+    public function updateCoach(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    {
+        if ($coach->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefoon' => 'nullable|string|max:20',
+        ]);
+
+        $coach->update($validated);
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', 'Coach bijgewerkt');
+    }
+
+    /**
+     * Delete a coach
+     */
+    public function destroyCoach(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    {
+        if ($coach->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        $naam = $coach->naam;
+        $coach->delete();
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', "Coach {$naam} verwijderd");
+    }
+
+    /**
+     * Regenerate pincode for a coach
+     */
+    public function regeneratePincode(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    {
+        if ($coach->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        $newPin = $coach->regeneratePincode();
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', "Nieuwe PIN voor {$coach->naam}: {$newPin}")
+            ->with('new_coach_id', $coach->id)
+            ->with('new_coach_pin', $newPin)
+            ->with('new_coach_url', $coach->getPortalUrl());
     }
 }

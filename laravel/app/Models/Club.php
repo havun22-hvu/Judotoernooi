@@ -25,6 +25,16 @@ class Club extends Model
         return $this->hasMany(Judoka::class);
     }
 
+    public function coaches(): HasMany
+    {
+        return $this->hasMany(Coach::class);
+    }
+
+    public function coachesVoorToernooi(int $toernooiId): HasMany
+    {
+        return $this->coaches()->where('toernooi_id', $toernooiId);
+    }
+
     public static function findOrCreateByName(string $naam): self
     {
         return self::firstOrCreate(
