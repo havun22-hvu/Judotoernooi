@@ -108,6 +108,17 @@ class ToernooiController extends Controller
         return view('pages.toernooi.dashboard', compact('toernooi', 'statistieken'));
     }
 
+    /**
+     * Dashboard for authenticated organisators
+     */
+    public function organisatorDashboard(): View
+    {
+        $organisator = auth('organisator')->user();
+        $toernooien = $organisator->toernooien()->orderBy('datum', 'desc')->get();
+
+        return view('organisator.dashboard', compact('organisator', 'toernooien'));
+    }
+
     public function updateWachtwoorden(Request $request, Toernooi $toernooi): RedirectResponse
     {
         $rollen = ['admin', 'jury', 'weging', 'mat', 'spreker'];
