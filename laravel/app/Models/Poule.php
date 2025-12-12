@@ -102,10 +102,12 @@ class Poule extends Model
 
     public function updateStatistieken(): void
     {
+        // Refresh the judokas relation to get fresh data after detach/attach
+        $this->load('judokas');
+
         // Count only active judokas: not absent AND within weight class (if weighed)
-        $activeJudokas = $this->judokas()
+        $activeJudokas = $this->judokas
             ->where('aanwezigheid', '!=', 'afwezig')
-            ->get()
             ->filter(fn($j) => $j->isGewichtBinnenKlasse())
             ->count();
 

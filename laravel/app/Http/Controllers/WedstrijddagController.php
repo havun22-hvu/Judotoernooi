@@ -207,8 +207,6 @@ class WedstrijddagController extends Controller
         $judoka = Judoka::findOrFail($validated['judoka_id']);
         $oudePouleData = null;
 
-        \Log::info('naarWachtruimte', $validated);
-
         // Remove from old poule if coming from a poule
         if (!empty($validated['from_poule_id'])) {
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);

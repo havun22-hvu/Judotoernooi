@@ -275,8 +275,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const vanPouleId = evt.from.dataset.pouleId;
                 const category = evt.to.dataset.category;
 
-                console.log('Naar wachtruimte:', { judokaId, vanPouleId, category, fromElement: evt.from });
-
                 // Remove empty message if present
                 const emptyMsg = evt.to.querySelector('.text-gray-400.italic');
                 if (emptyMsg) emptyMsg.remove();
