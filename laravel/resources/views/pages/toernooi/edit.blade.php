@@ -728,5 +728,54 @@
             </div>
         </form>
     </div>
+
+    <!-- VRIJWILLIGERS URLS (nieuwe methode - geheime links) -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6" x-data="{ copied: null }">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers URLs</h2>
+        <p class="text-gray-600 mb-4">
+            Deel deze geheime links met je vrijwilligers. Elke rol heeft een unieke URL - geen wachtwoord nodig.
+        </p>
+
+        <div class="space-y-4">
+            @php
+                $rollen = [
+                    'hoofdjury' => ['icon' => '⚖️', 'naam' => 'Hoofdjury', 'desc' => 'Overzicht alle poules'],
+                    'weging' => ['icon' => '⚖️', 'naam' => 'Weging', 'desc' => 'Weeglijst en registratie'],
+                    'mat' => ['icon' => '🥋', 'naam' => 'Mat', 'desc' => 'Wedstrijden per mat'],
+                    'spreker' => ['icon' => '🎙️', 'naam' => 'Spreker', 'desc' => 'Omroep interface'],
+                ];
+            @endphp
+
+            @foreach($rollen as $rol => $info)
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-2">{{ $info['icon'] }}</span>
+                        <div>
+                            <h3 class="font-bold">{{ $info['naam'] }}</h3>
+                            <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <input type="text" readonly
+                           value="{{ $toernooi->getRoleUrl($rol) }}"
+                           id="url-{{ $rol }}"
+                           class="flex-1 bg-white border rounded px-3 py-2 text-sm font-mono text-gray-600">
+                    <button type="button"
+                            @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
+                        <span x-show="copied !== '{{ $rol }}'">Kopieer</span>
+                        <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
+                    </button>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div class="mt-4 p-3 bg-green-50 rounded text-sm text-green-800">
+            <strong>Tip:</strong> Stuur elke vrijwilliger alleen zijn/haar eigen link. Ze kunnen direct aan de slag zonder wachtwoord.
+        </div>
+    </div>
 </div>
 @endsection

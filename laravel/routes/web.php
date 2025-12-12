@@ -8,6 +8,7 @@ use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
 use App\Http\Controllers\OrganisatorAuthController;
 use App\Http\Controllers\PouleController;
+use App\Http\Controllers\RoleToegang;
 use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WedstrijddagController;
@@ -181,3 +182,6 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
 
 // Weegkaart (public, accessed via QR code)
 Route::get('weegkaart/{token}', [WeegkaartController::class, 'show'])->name('weegkaart.show');
+
+// Role access via secret code (vrijwilligers)
+Route::get('t/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
