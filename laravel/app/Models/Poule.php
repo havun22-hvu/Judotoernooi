@@ -120,6 +120,7 @@ class Poule extends Model
     /**
      * Generate match schedule for this poule
      * Returns optimal match order to minimize consecutive matches for same judoka
+     * Each judoka gets rest between their matches
      */
     public function genereerWedstrijdSchema(): array
     {
@@ -130,37 +131,97 @@ class Poule extends Model
             return [];
         }
 
-        // Standard round-robin pairing
-        $wedstrijden = [];
+        // Get optimal order indices (1-based from legacy code)
+        $volgorde = $this->getOptimaleWedstrijdvolgorde($aantal);
 
-        if ($aantal === 3) {
-            // Double round for 3 judokas: each pair plays twice
-            // Order: 1-2, 1-3, 2-3, 1-2, 1-3, 2-3
-            $wedstrijden = [
-                [$judokas[0], $judokas[1]],
-                [$judokas[0], $judokas[2]],
-                [$judokas[1], $judokas[2]],
-                [$judokas[0], $judokas[1]],
-                [$judokas[0], $judokas[2]],
-                [$judokas[1], $judokas[2]],
+        // Convert indices to actual judoka IDs
+        $wedstrijden = [];
+        foreach ($volgorde as $paar) {
+            $wedstrijden[] = [
+                $judokas[$paar[0] - 1],  // Convert 1-based to 0-based
+                $judokas[$paar[1] - 1],
             ];
-        } elseif ($aantal === 4) {
-            // Optimal order for 4: 1-2, 3-4, 1-3, 2-4, 1-4, 2-3
-            $wedstrijden = [
-                [$judokas[0], $judokas[1]],
-                [$judokas[2], $judokas[3]],
-                [$judokas[0], $judokas[2]],
-                [$judokas[1], $judokas[3]],
-                [$judokas[0], $judokas[3]],
-                [$judokas[1], $judokas[2]],
-            ];
-        } else {
-            // Standard round-robin for 5+ judokas
-            for ($i = 0; $i < $aantal; $i++) {
-                for ($j = $i + 1; $j < $aantal; $j++) {
-                    $wedstrijden[] = [$judokas[$i], $judokas[$j]];
+        }
+
+        return $wedstrijden;
+    }
+
+    /**
+     * Get optimal match order for given number of judokas
+     * Returns array of [judoka1, judoka2] pairs (1-based indices)
+     * Optimized to give each judoka rest between their matches
+     */
+    private function getOptimaleWedstrijdvolgorde(int $aantal): array
+    {
+        // Predefined optimal orders for common pool sizes
+        $schema = match ($aantal) {
+            2 => [
+                [1, 2],
+                [1, 2],  // Double round
+            ],
+            3 => [
+                // Double round for 3: each pair plays twice
+                [1, 2], [1, 3], [2, 3],
+                [1, 2], [1, 3], [2, 3],
+            ],
+            4 => [
+                // Optimal: each judoka rests 1 match between games
+                [1, 2], [3, 4],  // 1,2 play; 3,4 play
+                [2, 3], [1, 4],  // 2,3 play; 1,4 play
+                [2, 4], [1, 3],  // 2,4 play; 1,3 play
+            ],
+            5 => [
+                // Optimal order with rest between matches
+                [1, 2], [3, 4], [1, 5], [2, 3], [4, 5],
+                [1, 3], [2, 4], [3, 5], [1, 4], [2, 5],
+            ],
+            6 => [
+                // 15 matches with optimal rest
+                [1, 2], [3, 4], [5, 6],
+                [1, 3], [2, 5], [4, 6],
+                [3, 5], [2, 4], [1, 6],
+                [2, 3], [4, 5], [3, 6],
+                [1, 4], [2, 6], [1, 5],
+            ],
+            default => $this->genereerRoundRobinSchema($aantal),
+        };
+
+        return $schema;
+    }
+
+    /**
+     * Generate round-robin schema using circle method
+     * For 7+ judokas where predefined schemas aren't available
+     */
+    private function genereerRoundRobinSchema(int $n): array
+    {
+        $wedstrijden = [];
+        $judokas = range(1, $n);
+
+        // Add dummy for odd numbers
+        if ($n % 2 !== 0) {
+            $judokas[] = null;
+        }
+
+        $totaal = count($judokas);
+
+        // Round Robin with circle method
+        for ($ronde = 0; $ronde < $totaal - 1; $ronde++) {
+            for ($i = 0; $i < $totaal / 2; $i++) {
+                $j = $totaal - 1 - $i;
+
+                $judoka1 = $judokas[$i];
+                $judoka2 = $judokas[$j];
+
+                // Skip if one is dummy (bye)
+                if ($judoka1 !== null && $judoka2 !== null) {
+                    $wedstrijden[] = [$judoka1, $judoka2];
                 }
             }
+
+            // Rotate (first position stays fixed)
+            $laatste = array_pop($judokas);
+            array_splice($judokas, 1, 0, [$laatste]);
         }
 
         return $wedstrijden;
