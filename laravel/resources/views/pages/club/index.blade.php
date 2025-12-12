@@ -86,9 +86,9 @@ function copyCoachUrl() {
     </form>
 </div>
 
-<!-- Clubs grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    @forelse($clubs as $club)
+<!-- Clubs lijst -->
+<div class="space-y-4">
+    @forelse($clubs->sortBy('naam') as $club)
     @php $uitnodiging = $uitnodigingen[$club->id] ?? null; @endphp
     <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ showEdit: false }">
         <!-- Club header -->
@@ -232,7 +232,7 @@ function copyCoachUrl() {
         </div>
     </div>
     @empty
-    <div class="col-span-full bg-white rounded-lg shadow p-8 text-center text-gray-500">
+    <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
         Nog geen clubs. Voeg hierboven een club toe.
     </div>
     @endforelse
