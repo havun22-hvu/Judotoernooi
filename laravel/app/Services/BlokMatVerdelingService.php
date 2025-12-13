@@ -401,13 +401,24 @@ class BlokMatVerdelingService
             $nieuweActueel = $cap['actueel'] + $wedstrijden;
             $gewenst = max(1, $cap['gewenst']);
 
-            // Calculate how far from ideal this block is
-            $afwijkingPct = ($nieuweActueel - $gewenst) / $gewenst;
+            // Calculate deviation from gewenst as percentage
+            $afwijkingPct = ($nieuweActueel - $gewenst) / max(1, $gewenst);
+            $afwijkingAbs = abs($afwijkingPct);
 
-            // Verdeling score: penalize being over gewenst
-            $verdelingsScore = $afwijkingPct > 0
-                ? $afwijkingPct * 200  // Over capacity = big penalty
-                : abs($afwijkingPct) * 30;  // Under capacity = smaller penalty
+            // Verdeling scoring:
+            // - 100% verdeling = ALL deviation is bad (must be equal)
+            // - 0% verdeling = only deviation > 25% is bad
+            // Scale: at 0% slider, tolerance is 25%. At 100% slider, tolerance is 0%.
+            $tolerantie = 0.25 * (1.0 - $verdelingGewicht);  // 25% at 0%, 0% at 100%
+
+            if ($afwijkingAbs <= $tolerantie) {
+                // Within tolerance = no penalty
+                $verdelingsScore = 0;
+            } else {
+                // Penalty for exceeding tolerance
+                $overschrijding = $afwijkingAbs - $tolerantie;
+                $verdelingsScore = $overschrijding * 400;  // Strong penalty beyond tolerance
+            }
 
             // Aansluiting score: based on direction and distance
             // Same block (0) or +1 = perfect, +2 = ok, -1 or +3+ = bad
@@ -433,17 +444,7 @@ class BlokMatVerdelingService
             }
 
             // Total score (lower = better)
-            $score = ($verdelingsScore * $verdelingGewicht) + ($aansluitingScore * $aansluitingGewicht);
-
-            // Bonus for underfilled blocks (only when verdeling matters)
-            if ($verdelingGewicht > 0.3) {
-                $vulgraad = $cap['actueel'] / $gewenst;
-                if ($vulgraad < 0.7) {
-                    $score -= 20 * $verdelingGewicht;
-                } elseif ($vulgraad < 0.9) {
-                    $score -= 8 * $verdelingGewicht;
-                }
-            }
+            $score = $verdelingsScore + ($aansluitingScore * $aansluitingGewicht);
 
             // Add randomness only if configured
             if ($randomFactor > 0) {

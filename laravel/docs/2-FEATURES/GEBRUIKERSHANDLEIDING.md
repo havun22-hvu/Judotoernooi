@@ -138,9 +138,12 @@ De blokkenpagina bestaat uit twee delen:
 6. Klik **Zet op Mat** om gekozen variant toe te passen
 
 **Sliders voor prioriteit:**
-- **Verdeling** (0-100): hogere waarde = meer focus op gelijke verdeling over blokken
-- **Aansluiting** (0-100): hogere waarde = meer focus op aansluiting gewichtscategorieën
-- Bij 100% aansluiting: alleen zelfde blok of +1 blok toegestaan
+- **Verdeling** (0-100):
+  - 100% = alle blokken exact gelijk aantal wedstrijden
+  - 0% = max ±25% afwijking van gemiddelde toegestaan
+- **Aansluiting** (0-100):
+  - 100% = alleen zelfde blok of +1 blok toegestaan
+  - 0% = aansluiting wordt genegeerd
 - Pas sliders aan en klik opnieuw op **Bereken** voor nieuwe varianten
 
 ### Handmatig Aanpassen

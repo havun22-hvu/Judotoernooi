@@ -216,9 +216,12 @@ $service->pasVariantToe($toernooi, $variant['toewijzingen']);
 ```
 
 **Sliders (0-100):**
-- `verdeling` - prioriteit voor gelijkmatige verdeling over blokken
-- `aansluiting` - prioriteit voor aansluiting gewichtscategorieën
-- Bij 100% aansluiting: alleen 0 of +1 overgangen toegestaan
+- `verdeling` - toegestane afwijking van gemiddelde:
+  - 100% = alle blokken exact gelijk (0% tolerantie)
+  - 0% = max ±25% afwijking toegestaan
+- `aansluiting` - prioriteit voor aansluiting gewichtscategorieën:
+  - 100% = alleen 0 of +1 overgangen toegestaan
+  - 0% = aansluiting wordt genegeerd
 
 **Scores per variant:**
 - `max_afwijking` - grootste verschil met gemiddelde wedstrijden/blok
