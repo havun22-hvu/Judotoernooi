@@ -193,19 +193,36 @@ De blokverdeling heeft twee doelen:
 1. **Gelijkmatige verdeling** - evenveel wedstrijden per blok
 2. **Aansluiting gewichten** - opeenvolgende gewichtsklassen in zelfde/aansluitende blokken
 
+**Waarom aansluiting belangrijk is:**
+Bij overpoelen gaat een te zware judoka naar een zwaardere gewichtsklasse. Die klasse moet in hetzelfde of volgend blok zitten, anders moet de judoka lang wachten.
+
+**Aansluiting regels:**
+| Overgang | Score | Uitleg |
+|----------|-------|--------|
+| Zelfde blok (0) | Perfect | Ideaal |
+| +1 blok | Perfect | Ook ideaal, volgend blok |
+| +2 blokken | Acceptabel | Minder goed maar werkbaar |
+| -1 blok (terug) | Slecht | Blok is al geweest! |
+| +3+ blokken | Slecht | Te lang wachten |
+
 **Service:** `BlokMatVerdelingService`
 
 ```php
 // Genereer 5 varianten met verschillende verdelingen
-$varianten = $service->genereerVarianten($toernooi);
+$varianten = $service->genereerVarianten($toernooi, $verdelingGewicht, $aansluitingGewicht);
 
 // Pas gekozen variant toe op database
 $service->pasVariantToe($toernooi, $variant['toewijzingen']);
 ```
 
+**Sliders (0-100):**
+- `verdeling` - prioriteit voor gelijkmatige verdeling over blokken
+- `aansluiting` - prioriteit voor aansluiting gewichtscategorieën
+- Bij 100% aansluiting: alleen 0 of +1 overgangen toegestaan
+
 **Scores per variant:**
 - `max_afwijking` - grootste verschil met gemiddelde wedstrijden/blok
-- `breaks` - aantal keer dat leeftijdsklasse over meerdere blokken verdeeld is
+- `breaks` - aantal slechte overgangen (+2, -1, of +3+)
 
 **JavaScript Interactiviteit (index.blade.php):**
 
