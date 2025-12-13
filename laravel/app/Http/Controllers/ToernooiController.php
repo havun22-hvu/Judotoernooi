@@ -114,7 +114,12 @@ class ToernooiController extends Controller
     public function organisatorDashboard(): View
     {
         $organisator = auth('organisator')->user();
-        $toernooien = $organisator->toernooien()->orderBy('datum', 'desc')->get();
+
+        if ($organisator->isSitebeheerder()) {
+            $toernooien = Toernooi::orderBy('datum', 'desc')->get();
+        } else {
+            $toernooien = $organisator->toernooien()->orderBy('datum', 'desc')->get();
+        }
 
         return view('organisator.dashboard', compact('organisator', 'toernooien'));
     }

@@ -17,6 +17,7 @@ class Organisator extends Authenticatable
         'naam',
         'email',
         'telefoon',
+        'is_sitebeheerder',
         'password',
         'email_verified_at',
         'laatste_login',
@@ -33,7 +34,16 @@ class Organisator extends Authenticatable
             'email_verified_at' => 'datetime',
             'laatste_login' => 'datetime',
             'password' => 'hashed',
+            'is_sitebeheerder' => 'boolean',
         ];
+    }
+
+    /**
+     * Check if this organisator is a sitebeheerder
+     */
+    public function isSitebeheerder(): bool
+    {
+        return $this->is_sitebeheerder === true;
     }
 
     /**
@@ -62,6 +72,10 @@ class Organisator extends Authenticatable
      */
     public function hasAccessToToernooi(Toernooi $toernooi): bool
     {
+        if ($this->isSitebeheerder()) {
+            return true;
+        }
+
         return $this->toernooien()
             ->wherePivot('toernooi_id', $toernooi->id)
             ->exists();
