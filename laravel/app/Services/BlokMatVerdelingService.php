@@ -405,19 +405,18 @@ class BlokMatVerdelingService
             $afwijkingPct = ($nieuweActueel - $gewenst) / max(1, $gewenst);
             $afwijkingAbs = abs($afwijkingPct);
 
-            // Verdeling scoring:
-            // - 100% verdeling = ALL deviation is bad (must be equal)
-            // - 0% verdeling = only deviation > 25% is bad
-            // Scale: at 0% slider, tolerance is 25%. At 100% slider, tolerance is 0%.
-            $tolerantie = 0.25 * (1.0 - $verdelingGewicht);  // 25% at 0%, 0% at 100%
+            // Verdeling: HARD LIMIT on deviation
+            // - 100% verdeling = 0% tolerance (must be equal)
+            // - 0% verdeling = 25% tolerance (max ±25%)
+            // Scale linearly between these extremes
+            $maxTolerantie = 0.25 * (1.0 - $verdelingGewicht);  // 25% at 0%, 0% at 100%
 
-            if ($afwijkingAbs <= $tolerantie) {
-                // Within tolerance = no penalty
-                $verdelingsScore = 0;
+            if ($afwijkingAbs > $maxTolerantie) {
+                // EXCEEDS LIMIT - block this option entirely
+                $verdelingsScore = 9999;
             } else {
-                // Penalty for exceeding tolerance
-                $overschrijding = $afwijkingAbs - $tolerantie;
-                $verdelingsScore = $overschrijding * 400;  // Strong penalty beyond tolerance
+                // Within limit - small preference for closer to target
+                $verdelingsScore = $afwijkingAbs * 100;
             }
 
             // Aansluiting score: based on direction and distance
