@@ -188,18 +188,39 @@
                 </div>
             </div>
 
-            <!-- Clubspreiding -->
+            <!-- Prioriteit volgorde -->
             <div class="border-t pt-4 mt-4">
-                <label class="flex items-center cursor-pointer">
-                    <input type="hidden" name="clubspreiding" value="0">
-                    <input type="checkbox" name="clubspreiding" value="1"
-                           {{ old('clubspreiding', $toernooi->clubspreiding ?? true) ? 'checked' : '' }}
-                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                    <span class="ml-3">
-                        <span class="font-medium text-gray-700">Clubspreiding</span>
-                        <span class="block text-sm text-gray-500">Judoka's van dezelfde club zoveel mogelijk in verschillende poules plaatsen</span>
-                    </span>
-                </label>
+                <label class="block text-gray-700 font-medium mb-2">Prioriteit Volgorde bij Indeling</label>
+                <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Bovenste = hoogste prioriteit.</p>
+
+                @php
+                    $prioriteit = old('verdeling_prioriteiten', $toernooi->verdeling_prioriteiten) ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+                    if (is_string($prioriteit)) {
+                        $prioriteit = json_decode($prioriteit, true) ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+                    }
+                    $prioriteitLabels = [
+                        'groepsgrootte' => ['label' => 'Groepsgrootte', 'desc' => 'Optimale poule grootte (5, 4, 6, 3)', 'icon' => '👥'],
+                        'bandkleur' => ['label' => 'Bandkleur', 'desc' => 'Zelfde banden bij elkaar', 'icon' => '🥋'],
+                        'clubspreiding' => ['label' => 'Clubspreiding', 'desc' => 'Clubleden verspreiden', 'icon' => '🏠'],
+                    ];
+                @endphp
+
+                <div id="prioriteit-container" class="space-y-2 mb-3">
+                    @foreach($prioriteit as $index => $key)
+                    @if(isset($prioriteitLabels[$key]))
+                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="{{ $key }}">
+                        <span class="text-xl mr-3">{{ $prioriteitLabels[$key]['icon'] }}</span>
+                        <div class="flex-1">
+                            <span class="font-bold text-gray-800">{{ $prioriteitLabels[$key]['label'] }}</span>
+                            <span class="block text-sm text-gray-500">{{ $prioriteitLabels[$key]['desc'] }}</span>
+                        </div>
+                        <span class="text-gray-400 text-lg">☰</span>
+                    </div>
+                    @endif
+                    @endforeach
+                </div>
+
+                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value="{{ json_encode($prioriteit) }}">
             </div>
 
             <!-- Wedstrijdsysteem per leeftijdsklasse -->
@@ -325,6 +346,51 @@
                 `;
                 container.appendChild(item);
                 updateHiddenInput();
+            });
+
+            // ========== PRIORITEIT VOLGORDE DRAG & DROP ==========
+            const prioriteitContainer = document.getElementById('prioriteit-container');
+            const prioriteitInput = document.getElementById('prioriteit_input');
+
+            function updatePrioriteitInput() {
+                const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
+                const prioriteit = Array.from(items).map(item => item.dataset.key);
+                prioriteitInput.value = JSON.stringify(prioriteit);
+            }
+
+            let draggedPrioriteitItem = null;
+
+            prioriteitContainer.addEventListener('dragstart', function(e) {
+                if (e.target.classList.contains('prioriteit-item')) {
+                    draggedPrioriteitItem = e.target;
+                    e.target.style.opacity = '0.5';
+                }
+            });
+
+            prioriteitContainer.addEventListener('dragend', function(e) {
+                if (e.target.classList.contains('prioriteit-item')) {
+                    e.target.style.opacity = '1';
+                    draggedPrioriteitItem = null;
+                }
+            });
+
+            prioriteitContainer.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const target = e.target.closest('.prioriteit-item');
+                if (target && target !== draggedPrioriteitItem) {
+                    const rect = target.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        prioriteitContainer.insertBefore(draggedPrioriteitItem, target);
+                    } else {
+                        prioriteitContainer.insertBefore(draggedPrioriteitItem, target.nextSibling);
+                    }
+                }
+            });
+
+            prioriteitContainer.addEventListener('drop', function(e) {
+                e.preventDefault();
+                updatePrioriteitInput();
             });
 
         });

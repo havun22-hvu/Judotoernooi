@@ -15,6 +15,7 @@ class PouleIndelingService
     private int $maxJudokas;
     private array $voorkeur;
     private bool $clubspreiding;
+    private array $prioriteiten;
 
     /**
      * Initialize with tournament-specific settings
@@ -26,6 +27,7 @@ class PouleIndelingService
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
         $this->clubspreiding = $toernooi->clubspreiding ?? true;
+        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
     }
 
     public function __construct()
@@ -35,6 +37,7 @@ class PouleIndelingService
         $this->minJudokas = 3;
         $this->maxJudokas = 6;
         $this->clubspreiding = true;
+        $this->prioriteiten = ['groepsgrootte', 'bandkleur', 'clubspreiding'];
     }
 
     /**
@@ -368,19 +371,29 @@ class PouleIndelingService
             $index += $grootte;
         }
 
-        // Apply club spreading as refinement (swap within same band level if possible)
+        // Apply club spreading as refinement
+        // Check priority: if clubspreiding > bandkleur, allow cross-band swaps
         if ($this->clubspreiding && count($verdeling) > 1) {
-            $verdeling = $this->pasClubspreidingToe($verdeling);
+            $bandkleurIdx = array_search('bandkleur', $this->prioriteiten);
+            $clubspreidingIdx = array_search('clubspreiding', $this->prioriteiten);
+
+            // If clubspreiding has higher priority (lower index), allow any swap
+            // If bandkleur has higher priority, only swap same band
+            $onlySwapSameBand = ($bandkleurIdx !== false && $clubspreidingIdx !== false)
+                ? $bandkleurIdx < $clubspreidingIdx
+                : true;
+
+            $verdeling = $this->pasClubspreidingToe($verdeling, $onlySwapSameBand);
         }
 
         return $verdeling;
     }
 
     /**
-     * Apply club spreading as refinement without breaking band order
-     * Swaps judokas between pools only if they have the same band
+     * Apply club spreading as refinement
+     * @param bool $onlySwapSameBand If true, only swap judokas with same band
      */
-    private function pasClubspreidingToe(array $poules): array
+    private function pasClubspreidingToe(array $poules, bool $onlySwapSameBand = true): array
     {
         $aantalPoules = count($poules);
 
@@ -405,18 +418,20 @@ class PouleIndelingService
                     $judoka = $poules[$p][$judokaIdx];
                     $judokaBand = $judoka->band;
 
-                    // Find a swap candidate in another pool with same band but different club
+                    // Find a swap candidate in another pool
                     for ($q = 0; $q < $aantalPoules; $q++) {
                         if ($q === $p) continue;
 
                         foreach ($poules[$q] as $kandidaatIdx => $kandidaat) {
-                            // Same band, different club, and that club is not already in target pool
-                            if ($kandidaat->band === $judokaBand &&
+                            // Check band compatibility
+                            $bandMatch = !$onlySwapSameBand || $kandidaat->band === $judokaBand;
+
+                            // Different club, that club is not already in target pool
+                            if ($bandMatch &&
                                 $kandidaat->club_id !== $clubId &&
                                 !$this->clubInPoule($poules[$p], $kandidaat->club_id, $judokaIdx)) {
 
                                 // Check if the kandidaat's club is not duplicated in their pool
-                                // (otherwise we'd make it worse)
                                 if (!$this->clubInPoule($poules[$q], $judoka->club_id, $kandidaatIdx)) {
                                     // Swap
                                     $poules[$p][$judokaIdx] = $kandidaat;
