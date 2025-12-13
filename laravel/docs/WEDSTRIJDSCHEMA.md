@@ -77,6 +77,34 @@ Enkelvoudige round-robin.
 | 14  | 2   | 6     |
 | 15  | 1   | 5     |
 
+## 7 judoka's (21 wedstrijden)
+
+Enkelvoudige round-robin.
+
+| Wed | Wit | Blauw |
+|-----|-----|-------|
+| 1   | 1   | 2     |
+| 2   | 3   | 4     |
+| 3   | 5   | 6     |
+| 4   | 1   | 7     |
+| 5   | 2   | 3     |
+| 6   | 4   | 5     |
+| 7   | 6   | 7     |
+| 8   | 1   | 3     |
+| 9   | 2   | 4     |
+| 10  | 5   | 7     |
+| 11  | 3   | 6     |
+| 12  | 1   | 4     |
+| 13  | 2   | 5     |
+| 14  | 3   | 7     |
+| 15  | 4   | 6     |
+| 16  | 1   | 5     |
+| 17  | 2   | 6     |
+| 18  | 4   | 7     |
+| 19  | 1   | 6     |
+| 20  | 3   | 5     |
+| 21  | 2   | 7     |
+
 ---
 
 ## Formule aantal wedstrijden
@@ -91,6 +119,7 @@ Enkelvoudige round-robin.
 | 4        | 6     | 12     |
 | 5        | 10    | 20     |
 | 6        | 15    | 30     |
+| 7        | 21    | 42     |
 
 ## Aanpassen door organisator
 
