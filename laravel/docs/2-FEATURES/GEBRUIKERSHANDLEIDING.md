@@ -101,7 +101,16 @@ De blokkenpagina heeft twee hoofddoelen:
 2. **Aansluiting gewichtscategorieën** - Opeenvolgende gewichtsklassen (-27, -30, -34, -38) in dezelfde of aansluitende blokken plaatsen
 
 **Waarom aansluiting belangrijk is:**
-Judoka's die te zwaar wegen worden overgepouled naar een zwaardere gewichtsklasse. Als die klasse in hetzelfde of aansluitend blok zit, hoeven ze niet lang te wachten.
+Judoka's die te zwaar wegen worden overgepouled naar een zwaardere gewichtsklasse. Als die klasse in hetzelfde of volgend blok zit, hoeven ze niet lang te wachten.
+
+**Aansluiting regels:**
+| Overgang | Beoordeling |
+|----------|-------------|
+| Zelfde blok | Perfect |
+| +1 blok (volgend) | Perfect |
+| +2 blokken | Acceptabel |
+| -1 blok (terug) | Slecht - blok is al geweest! |
+| +3+ blokken | Slecht - te lang wachten |
 
 ### Interface Layout
 
@@ -123,10 +132,16 @@ De blokkenpagina bestaat uit twee delen:
 2. Varianten verschijnen onder de blokken
 3. Elke variant toont: `#1 ±14 / 3b`
    - ±14 = maximale afwijking van gemiddelde
-   - 3b = aantal "breaks" (zelfde leeftijdsklasse over meerdere blokken)
+   - 3b = aantal "breaks" (slechte overgangen: +2, -1, of +3+ blokken)
 4. Klik op variant om preview te zien
 5. **Overzicht panel update direct** - check aansluiting gewichten
 6. Klik **Zet op Mat** om gekozen variant toe te passen
+
+**Sliders voor prioriteit:**
+- **Verdeling** (0-100): hogere waarde = meer focus op gelijke verdeling over blokken
+- **Aansluiting** (0-100): hogere waarde = meer focus op aansluiting gewichtscategorieën
+- Bij 100% aansluiting: alleen zelfde blok of +1 blok toegestaan
+- Pas sliders aan en klik opnieuw op **Bereken** voor nieuwe varianten
 
 ### Handmatig Aanpassen
 
