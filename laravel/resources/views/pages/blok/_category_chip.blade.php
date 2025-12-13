@@ -31,7 +31,7 @@
      data-sort="{{ $sortValue }}">
     <span class="font-semibold">{{ $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'] }}</span>
     <span class="{{ $textClass }}">{{ $cat['gewicht'] }}</span>
-    <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }})</span>
+    <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }}w)</span>
     @if(!$inSleepvak)
         @if($cat['vast'])
             <span class="pin-icon text-green-600 cursor-pointer ml-1" title="Vast - klik om los te maken">●</span>

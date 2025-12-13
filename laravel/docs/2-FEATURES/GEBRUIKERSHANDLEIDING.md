@@ -74,13 +74,48 @@ Het systeem:
 
 ## Blok/Mat Verdeling
 
-### Automatische Verdeling
+### Doel van de Blokverdeling
 
-1. Ga naar **Toernooi** > **Blokken** > **Genereer Verdeling**
-2. Het systeem:
-   - Verdeelt poules gelijkmatig over tijdsblokken
-   - Wijst matten toe voor gelijke belasting
-   - Houdt dezelfde leeftijdsklasse bij elkaar
+De blokkenpagina heeft twee hoofddoelen:
+
+1. **Gelijkmatige verdeling** - Elk tijdsblok krijgt ongeveer evenveel wedstrijden
+2. **Aansluiting gewichtscategorieën** - Opeenvolgende gewichtsklassen (-27, -30, -34, -38) in dezelfde of aansluitende blokken plaatsen
+
+**Waarom aansluiting belangrijk is:**
+Judoka's die te zwaar wegen worden overgepouled naar een zwaardere gewichtsklasse. Als die klasse in hetzelfde of aansluitend blok zit, hoeven ze niet lang te wachten.
+
+### Interface Layout
+
+De blokkenpagina bestaat uit twee delen:
+
+**Links - Blokken:**
+- Sleepvak met niet-verdeelde categorieën
+- Blok 1-6 met toegewezen categorieën (chips)
+- Per blok: actueel aantal wedstrijden en afwijking van gewenst
+
+**Rechts - Overzicht Panel:**
+- Per leeftijdsklasse alle gewichtscategorieën
+- Bloknummer per categorie (voor beoordeling aansluiting)
+- Kleurcodes: groen=vast, blauw=berekend, rood=niet verdeeld
+
+### Varianten Berekenen
+
+1. Klik **Bereken** - systeem genereert 5 varianten
+2. Varianten verschijnen onder de blokken
+3. Elke variant toont: `#1 ±14 / 3b`
+   - ±14 = maximale afwijking van gemiddelde
+   - 3b = aantal "breaks" (zelfde leeftijdsklasse over meerdere blokken)
+4. Klik op variant om preview te zien
+5. **Overzicht panel update direct** - check aansluiting gewichten
+6. Klik **Zet op Mat** om gekozen variant toe te passen
+
+### Handmatig Aanpassen
+
+- **Drag & drop** - Sleep categorie naar ander blok
+- **Vastzetten** - Klik 📌 om categorie vast te zetten (wordt niet door berekening verplaatst)
+- Bij elke wijziging updaten:
+  - Blok totalen en afwijkingen
+  - Overzicht panel bloktoewijzingen
 
 ### Zaaloverzicht
 
