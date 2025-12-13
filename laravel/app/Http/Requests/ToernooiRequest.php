@@ -26,6 +26,13 @@ class ToernooiRequest extends FormRequest
                 'verdeling_prioriteiten' => json_decode($this->verdeling_prioriteiten, true),
             ]);
         }
+
+        // Convert JSON string to array for wedstrijd_schemas
+        if ($this->has('wedstrijd_schemas') && is_string($this->wedstrijd_schemas)) {
+            $this->merge([
+                'wedstrijd_schemas' => json_decode($this->wedstrijd_schemas, true),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -50,6 +57,7 @@ class ToernooiRequest extends FormRequest
             'gewichtsklassen.*' => 'nullable|string',
             'verdeling_prioriteiten' => 'nullable|array',
             'verdeling_prioriteiten.*' => 'string|in:groepsgrootte,bandkleur,clubspreiding',
+            'wedstrijd_schemas' => 'nullable|array',
         ];
     }
 
