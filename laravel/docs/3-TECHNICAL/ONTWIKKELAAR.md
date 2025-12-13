@@ -187,6 +187,64 @@ Optimale volgorde om rust te geven:
 - **4 judoka's**: 1-2, 3-4, 1-3, 2-4, 1-4, 2-3
 - **5+ judoka's**: Round-robin
 
+### Blok Verdeling
+
+De blokverdeling heeft twee doelen:
+1. **Gelijkmatige verdeling** - evenveel wedstrijden per blok
+2. **Aansluiting gewichten** - opeenvolgende gewichtsklassen in zelfde/aansluitende blokken
+
+**Service:** `BlokMatVerdelingService`
+
+```php
+// Genereer 5 varianten met verschillende verdelingen
+$varianten = $service->genereerVarianten($toernooi);
+
+// Pas gekozen variant toe op database
+$service->pasVariantToe($toernooi, $variant['toewijzingen']);
+```
+
+**Scores per variant:**
+- `max_afwijking` - grootste verschil met gemiddelde wedstrijden/blok
+- `breaks` - aantal keer dat leeftijdsklasse over meerdere blokken verdeeld is
+
+**JavaScript Interactiviteit (index.blade.php):**
+
+De pagina gebruikt client-side JavaScript voor real-time updates:
+
+```javascript
+// Update bij elke wijziging (variant switch, drag & drop):
+updateAllStats();
+
+// Deze functie update:
+// 1. Blok totalen en afwijking badges
+// 2. Sleepvak statistieken
+// 3. Overzicht panel bloktoewijzingen (blok-badge elementen)
+```
+
+**Overzicht Panel (rechts):**
+- Toont per leeftijdsklasse alle gewichtscategorieën
+- Bloknummer per categorie voor beoordeling aansluiting
+- Update direct bij variant switch of drag & drop via `data-key` matching
+
+### Poule Statistieken Synchronisatie
+
+De velden `aantal_judokas` en `aantal_wedstrijden` in de poules tabel zijn gecached waarden:
+
+```php
+// Model methode om te herberekenen
+$poule->updateStatistieken();
+
+// Artisan command voor controle/correctie
+php artisan poules:herbereken --check  // Alleen controleren
+php artisan poules:herbereken          // Corrigeren
+```
+
+**Automatische update via helper methodes:**
+```php
+$poule->voegJudokaToe($judoka);    // attach + updateStatistieken
+$poule->verwijderJudoka($judoka);  // detach + updateStatistieken
+```
+
 ## Database Migraties
 
 ### Nieuwe Migratie

@@ -79,6 +79,25 @@ class Poule extends Model
             ->orderBy('poule_judoka.positie');
     }
 
+    /**
+     * Add judoka to poule and update statistics
+     */
+    public function voegJudokaToe(Judoka $judoka, ?int $positie = null): void
+    {
+        $positie = $positie ?? ($this->judokas()->count() + 1);
+        $this->judokas()->attach($judoka->id, ['positie' => $positie]);
+        $this->updateStatistieken();
+    }
+
+    /**
+     * Remove judoka from poule and update statistics
+     */
+    public function verwijderJudoka(Judoka $judoka): void
+    {
+        $this->judokas()->detach($judoka->id);
+        $this->updateStatistieken();
+    }
+
     public function wedstrijden(): HasMany
     {
         return $this->hasMany(Wedstrijd::class)->orderBy('volgorde');
@@ -105,12 +124,28 @@ class Poule extends Model
         return $enkelRonde;
     }
 
+    /**
+     * Update statistics: count ALL judokas in poule (for preparation/blokverdeling)
+     */
     public function updateStatistieken(): void
     {
-        // Clear cached relation and reload fresh from database
         $this->unsetRelation('judokas');
 
-        // Count only active judokas: not absent AND within weight class (if weighed)
+        $aantalJudokas = $this->judokas()->count();
+
+        $this->aantal_judokas = $aantalJudokas;
+        $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($aantalJudokas);
+        $this->save();
+    }
+
+    /**
+     * Update statistics for toernooidag: count only ACTIVE judokas
+     * (present AND within weight class)
+     */
+    public function updateStatistiekenToernooidag(): void
+    {
+        $this->unsetRelation('judokas');
+
         $activeJudokas = $this->judokas()
             ->where('aanwezigheid', '!=', 'afwezig')
             ->get()

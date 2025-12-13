@@ -118,7 +118,7 @@
                 <div class="flex items-center gap-3">
                     <span class="toggle-icon">▼</span>
                     <span class="font-bold">Sleepvak</span>
-                    <span class="text-purple-200" id="sleepvak-stats">({{ $nietVerdeeldCats->count() }} cat., {{ $nietVerdeeldCats->sum('wedstrijden') }} wed.)</span>
+                    <span class="text-purple-200" id="sleepvak-stats">({{ $nietVerdeeldCats->count() }} cat., {{ $nietVerdeeldCats->sum('wedstrijden') }}w)</span>
                 </div>
             </div>
             <div id="niet-verdeeld-content" class="p-2 blok-dropzone min-h-[40px]" data-blok="0">
@@ -132,7 +132,7 @@
                         <div class="leeftijd-groep" data-leeftijd="{{ $leeftijd }}">
                             <div class="font-semibold text-gray-700 text-xs mb-0.5">
                                 {{ $afkortingen[$leeftijd] ?? $leeftijd }}
-                                <span class="text-gray-400 font-normal">({{ $leeftijdCats->sum('wedstrijden') }})</span>
+                                <span class="text-gray-400 font-normal">({{ $leeftijdCats->sum('wedstrijden') }}w)</span>
                             </div>
                             <div class="leeftijd-content flex flex-wrap gap-0.5">
                                 @foreach($leeftijdCats->sortBy(fn($c) => (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0)) as $cat)
@@ -189,15 +189,18 @@
         </div>
         @endforeach
 
-        <!-- Varianten panel (in linker kolom, onder blokken) -->
+        <!-- Varianten panel (onder blokken) -->
         @if($toonVarianten)
         <div class="bg-white rounded-lg shadow p-3">
-            <div class="text-sm text-gray-700 mb-2 font-medium">{{ count($varianten) }} varianten berekend</div>
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">{{ count($varianten) }} varianten berekend</span>
+                <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+            </div>
             <div class="flex flex-wrap gap-2">
                 @foreach($varianten as $idx => $variant)
                 @php $scores = $variant['scores']; @endphp
                 <button type="button" onclick="toonVariant({{ $idx }})"
-                        class="variant-btn px-3 py-1.5 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
+                        class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
                         data-idx="{{ $idx }}">
                     <span class="font-bold">#{{ $idx + 1 }}</span>
                     <span class="{{ $scores['max_afwijking'] <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking'] }}</span>
@@ -206,9 +209,9 @@
                 </button>
                 @endforeach
             </div>
-            <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs mt-2 inline-block">✕ Annuleer</a>
         </div>
         @endif
+
     </div>
 
     <!-- Rechts: Overzicht -->
@@ -225,7 +228,7 @@
                         <div class="font-bold text-gray-700 border-b border-gray-200 pb-0.5 mb-1">{{ $afkortingen[$leeftijd] ?? $leeftijd }}</div>
                         @foreach($catsPerLeeftijd[$leeftijd]->sortBy(fn($c) => (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0)) as $cat)
                         <div class="flex justify-between items-center py-0.5 hover:bg-gray-50">
-                            <span>{{ $cat['gewicht'] }} <span class="text-gray-400">({{ $cat['wedstrijden'] }})</span></span>
+                            <span>{{ $cat['gewicht'] }} <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span></span>
                             @if($cat['blok'])
                                 @if($cat['vast'])
                                 <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}">●{{ $cat['blok'] }}</span>
@@ -402,7 +405,7 @@ function updateAllStats() {
             total += parseInt(chip.dataset.wedstrijden) || 0;
         });
         const stats = document.getElementById('sleepvak-stats');
-        if (stats) stats.textContent = `(${count} cat., ${total} wed.)`;
+        if (stats) stats.textContent = `(${count} cat., ${total}w)`;
 
         const header = document.getElementById('niet-verdeeld-header');
         if (header) {
