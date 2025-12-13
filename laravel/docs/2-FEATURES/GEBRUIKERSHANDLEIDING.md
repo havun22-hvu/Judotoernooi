@@ -193,15 +193,20 @@ Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden 
 
 1. Ga naar **Wedstrijddag** pagina
 2. Je ziet judoka's die buiten gewichtsklasse vallen (doorgestreept)
-3. Sleep judoka naar juiste poule in zwaardere gewichtsklasse
+3. Sleep judoka naar **wachtruimte**
 4. Of: markeer als afwezig
 5. Statistieken (aantal judoka's, wedstrijden) updaten automatisch
 
-### Tips
+### Jurytafel: Verdelen naar Poules
 
-- Plaats te zware judoka's in poules met nog ruimte (max 6)
-- Bij veel afwezigen: overweeg poules samenvoegen
-- Check de aansluiting: zwaardere klasse moet in zelfde/volgend blok zitten
+De jurytafel/organisator verdeelt judoka's uit de wachtruimte:
+
+1. Bekijk judoka's in wachtruimte
+2. Sleep naar juiste poule in zwaardere gewichtsklasse
+3. Let op: max 6 judoka's per poule
+4. Bij veel afwezigen: overweeg poules samenvoegen
+
+**Tip:** Check de aansluiting - zwaardere klasse moet in zelfde/volgend blok zitten
 
 ## Zaaloverzicht & Wedstrijdschema
 
