@@ -419,12 +419,11 @@
                 </div>
 
                 <!-- Max wegingen -->
-                <div>
-                    <label for="max_wegingen" class="block text-gray-700 font-medium mb-1">Max aantal wegingen</label>
-                    <input type="number" name="max_wegingen" id="max_wegingen"
+                <div class="flex items-center gap-2">
+                    <label for="max_wegingen" class="text-gray-700 font-medium">Max aantal wegingen:</label>
+                    <input type="text" name="max_wegingen" id="max_wegingen"
                            value="{{ old('max_wegingen', $toernooi->max_wegingen) }}"
-                           placeholder="Onbeperkt" class="w-full border rounded px-3 py-2" min="1" max="10">
-                    <p class="text-gray-500 text-sm mt-1">Leeg = onbeperkt. Bij sommige toernooien max 2-3x wegen.</p>
+                           placeholder="-" class="w-12 border rounded px-2 py-1 text-center">
                 </div>
             </div>
 
