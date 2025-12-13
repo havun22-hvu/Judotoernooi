@@ -19,6 +19,13 @@ class ToernooiRequest extends FormRequest
                 'poule_grootte_voorkeur' => json_decode($this->poule_grootte_voorkeur, true),
             ]);
         }
+
+        // Convert JSON string to array for verdeling_prioriteiten
+        if ($this->has('verdeling_prioriteiten') && is_string($this->verdeling_prioriteiten)) {
+            $this->merge([
+                'verdeling_prioriteiten' => json_decode($this->verdeling_prioriteiten, true),
+            ]);
+        }
     }
 
     public function rules(): array
@@ -41,6 +48,8 @@ class ToernooiRequest extends FormRequest
             'gewicht_tolerantie' => 'nullable|numeric|min:0|max:5',
             'gewichtsklassen' => 'nullable|array',
             'gewichtsklassen.*' => 'nullable|string',
+            'verdeling_prioriteiten' => 'nullable|array',
+            'verdeling_prioriteiten.*' => 'string|in:groepsgrootte,bandkleur,clubspreiding',
         ];
     }
 
