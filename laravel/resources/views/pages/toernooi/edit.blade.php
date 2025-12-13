@@ -193,37 +193,34 @@
                 <label class="block text-gray-700 font-medium mb-2">Prioriteit Volgorde bij Indeling</label>
                 <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Bovenste = hoogste prioriteit.</p>
 
-                @php
-                    $prioriteit = old('verdeling_prioriteiten', $toernooi->verdeling_prioriteiten);
-                    if (is_string($prioriteit)) {
-                        $prioriteit = json_decode($prioriteit, true);
-                    }
-                    if (empty($prioriteit)) {
-                        $prioriteit = ['groepsgrootte', 'bandkleur', 'clubspreiding'];
-                    }
-                    $prioriteitLabels = [
-                        'groepsgrootte' => ['label' => 'Groepsgrootte', 'desc' => 'Optimale poule grootte (5, 4, 6, 3)', 'icon' => '👥'],
-                        'bandkleur' => ['label' => 'Bandkleur', 'desc' => 'Zelfde banden bij elkaar', 'icon' => '🥋'],
-                        'clubspreiding' => ['label' => 'Clubspreiding', 'desc' => 'Clubleden verspreiden', 'icon' => '🏠'],
-                    ];
-                @endphp
-
                 <div id="prioriteit-container" class="space-y-2 mb-3">
-                    @foreach($prioriteit as $index => $key)
-                    @if(isset($prioriteitLabels[$key]))
-                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="{{ $key }}">
-                        <span class="text-xl mr-3">{{ $prioriteitLabels[$key]['icon'] }}</span>
+                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="groepsgrootte">
+                        <span class="text-xl mr-3">👥</span>
                         <div class="flex-1">
-                            <span class="font-bold text-gray-800">{{ $prioriteitLabels[$key]['label'] }}</span>
-                            <span class="block text-sm text-gray-500">{{ $prioriteitLabels[$key]['desc'] }}</span>
+                            <span class="font-bold text-gray-800">Groepsgrootte</span>
+                            <span class="block text-sm text-gray-500">Optimale poule grootte (5, 4, 6, 3)</span>
                         </div>
                         <span class="text-gray-400 text-lg">☰</span>
                     </div>
-                    @endif
-                    @endforeach
+                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="bandkleur">
+                        <span class="text-xl mr-3">🥋</span>
+                        <div class="flex-1">
+                            <span class="font-bold text-gray-800">Bandkleur</span>
+                            <span class="block text-sm text-gray-500">Zelfde banden bij elkaar</span>
+                        </div>
+                        <span class="text-gray-400 text-lg">☰</span>
+                    </div>
+                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="clubspreiding">
+                        <span class="text-xl mr-3">🏠</span>
+                        <div class="flex-1">
+                            <span class="font-bold text-gray-800">Clubspreiding</span>
+                            <span class="block text-sm text-gray-500">Clubleden verspreiden</span>
+                        </div>
+                        <span class="text-gray-400 text-lg">☰</span>
+                    </div>
                 </div>
 
-                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value="{{ json_encode($prioriteit) }}">
+                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='["groepsgrootte","bandkleur","clubspreiding"]'>
             </div>
 
             <!-- Wedstrijdsysteem per leeftijdsklasse -->
