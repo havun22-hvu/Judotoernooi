@@ -377,7 +377,11 @@ class BlokMatVerdelingService
     /**
      * Find best block using weighted strategy
      * Balances even distribution with continuity
-     * When strictAansluiting=true: force same block as previous (no breaks allowed)
+     *
+     * Aansluiting logic (for overpoelen):
+     * - Same block (0) or +1 block = PERFECT (no penalty)
+     * - +2 blocks = acceptable but less ideal
+     * - -1 block (backwards) or +3+ blocks = BAD
      */
     private function vindBesteBlokMetStrategie(
         int $vorigeBlokIndex,
@@ -390,11 +394,6 @@ class BlokMatVerdelingService
         float $randomFactor,
         bool $strictAansluiting = false
     ): int {
-        // STRICT MODE: always stay in same block (100% aansluiting = no breaks)
-        if ($strictAansluiting) {
-            return $vorigeBlokIndex;
-        }
-
         $opties = [];
 
         foreach ($blokken as $index => $blok) {
@@ -402,25 +401,41 @@ class BlokMatVerdelingService
             $nieuweActueel = $cap['actueel'] + $wedstrijden;
             $gewenst = max(1, $cap['gewenst']);
 
-            // Calculate how far from ideal this block is (can be negative = under, positive = over)
+            // Calculate how far from ideal this block is
             $afwijkingPct = ($nieuweActueel - $gewenst) / $gewenst;
 
-            // Distance penalty for continuity (0 = same block, 1 = adjacent, etc.)
-            $afstand = abs($index - $vorigeBlokIndex);
-
-            // Combined score calculation with DRAMATIC effect
-            // Verdeling: penalize being over gewenst
+            // Verdeling score: penalize being over gewenst
             $verdelingsScore = $afwijkingPct > 0
                 ? $afwijkingPct * 200  // Over capacity = big penalty
                 : abs($afwijkingPct) * 30;  // Under capacity = smaller penalty
 
-            // Aansluiting: HEAVY penalty for distance (exponential)
-            $aansluitingScore = $afstand * $afstand * 50;  // Exponential: 0, 50, 200, 450...
+            // Aansluiting score: based on direction and distance
+            // Same block (0) or +1 = perfect, +2 = ok, -1 or +3+ = bad
+            $verschil = $index - $vorigeBlokIndex;  // Can be negative (backwards)
 
-            // Total score (lower = better) - weights have STRONG effect
+            if ($verschil === 0 || $verschil === 1) {
+                // Same block or next block = PERFECT (no penalty)
+                $aansluitingScore = 0;
+            } elseif ($verschil === 2) {
+                // +2 blocks = acceptable but not ideal
+                $aansluitingScore = 30;
+            } elseif ($verschil < 0) {
+                // Going BACKWARDS = very bad (block already passed!)
+                $aansluitingScore = 200 + abs($verschil) * 100;
+            } else {
+                // +3 or more = bad
+                $aansluitingScore = 100 + ($verschil - 2) * 80;
+            }
+
+            // In strict mode (100% aansluiting): only allow 0 or +1
+            if ($strictAansluiting && $verschil !== 0 && $verschil !== 1) {
+                $aansluitingScore = 9999;  // Effectively block this option
+            }
+
+            // Total score (lower = better)
             $score = ($verdelingsScore * $verdelingGewicht) + ($aansluitingScore * $aansluitingGewicht);
 
-            // Bonus for blocks that are underfilled (only when verdeling matters)
+            // Bonus for underfilled blocks (only when verdeling matters)
             if ($verdelingGewicht > 0.3) {
                 $vulgraad = $cap['actueel'] / $gewenst;
                 if ($vulgraad < 0.7) {
@@ -439,7 +454,7 @@ class BlokMatVerdelingService
                 'index' => $index,
                 'score' => $score,
                 'nieuwe_actueel' => $nieuweActueel,
-                'afwijking_pct' => $afwijkingPct,
+                'verschil' => $verschil,
             ];
         }
 
@@ -475,7 +490,9 @@ class BlokMatVerdelingService
             ];
         }
 
-        // Aansluiting score: count of "breaks" (adjacent weights in different blocks)
+        // Aansluiting score: count "breaks" based on block transitions
+        // Same block (0) or +1 = perfect (no break)
+        // +2 = minor break, -1 or +3+ = major break
         $aansluitingScore = 0;
         $breaks = 0;
 
@@ -485,10 +502,24 @@ class BlokMatVerdelingService
                 $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
                 $blokNr = $toewijzingen[$key] ?? null;
 
-                if ($vorigBlok !== null && $blokNr !== null && $blokNr !== $vorigBlok) {
-                    // Adjacent weights in different blocks = break
-                    $breaks++;
-                    $aansluitingScore += abs($blokNr - $vorigBlok) * 5;
+                if ($vorigBlok !== null && $blokNr !== null) {
+                    $verschil = $blokNr - $vorigBlok;
+
+                    if ($verschil === 0 || $verschil === 1) {
+                        // Same block or +1 = PERFECT, no break
+                    } elseif ($verschil === 2) {
+                        // +2 blocks = minor break
+                        $breaks++;
+                        $aansluitingScore += 10;
+                    } elseif ($verschil < 0) {
+                        // Going BACKWARDS = major break!
+                        $breaks += 2;  // Count as 2 breaks (very bad)
+                        $aansluitingScore += 50 + abs($verschil) * 20;
+                    } else {
+                        // +3 or more = major break
+                        $breaks += 2;
+                        $aansluitingScore += 30 + ($verschil - 2) * 15;
+                    }
                 }
                 $vorigBlok = $blokNr;
             }
