@@ -218,22 +218,25 @@ class BlokMatVerdelingService
         // Use seed for reproducible randomness
         mt_srand($seed * 12345);
 
-        // User weights have STRONG effect - use exponential scaling
-        // At 100% aansluiting: force all weights together (no breaks allowed)
-        // At 100% verdeling: prioritize even distribution
-        $strictAansluiting = $userAansluitingGewicht >= 95;  // 95-100 = strict mode
+        // User weights: 0% = 0.0, 100% = 1.0 - NO exceptions!
+        // Direct conversion - user intent is respected exactly
+        $verdelingGewicht = $userVerdelingGewicht / 100.0;
+        $aansluitingGewicht = $userAansluitingGewicht / 100.0;
 
-        // Exponential scaling for dramatic effect (0-100 -> 0.0-1.0 with curve)
-        $verdelingGewicht = pow($userVerdelingGewicht / 100.0, 0.7);  // Slightly curved
-        $aansluitingGewicht = pow($userAansluitingGewicht / 100.0, 0.5);  // More sensitive
+        // Strict modes: 100% means ABSOLUTE priority
+        $strictVerdeling = $userVerdelingGewicht === 100;
+        $strictAansluiting = $userAansluitingGewicht === 100;
 
-        // Small seed variation for diversity (but respect user intent)
-        $variation = ($seed % 5) * 0.02;  // 0 to 0.08 variation
-        $verdelingGewicht = max(0.05, min(0.98, $verdelingGewicht + $variation));
-        $aansluitingGewicht = max(0.05, min(0.98, $aansluitingGewicht - $variation * 0.5));
+        // Only add tiny variation in middle range (20-80%), not at extremes
+        if ($userVerdelingGewicht > 20 && $userVerdelingGewicht < 80) {
+            $verdelingGewicht += ($seed % 5) * 0.01;  // max 0.04 variation
+        }
+        if ($userAansluitingGewicht > 20 && $userAansluitingGewicht < 80) {
+            $aansluitingGewicht += ($seed % 5) * 0.01;
+        }
 
-        // Add randomness for variety (less when strict mode)
-        $randomFactor = $strictAansluiting ? 0.0 : (($seed % 3 === 0) ? 0.05 + ($seed % 5) * 0.01 : 0.0);
+        // Randomness only in middle range
+        $randomFactor = ($userVerdelingGewicht > 20 && $userVerdelingGewicht < 80 && $seed % 3 === 0) ? 0.03 : 0.0;
 
         // Calculate total wedstrijden per leeftijd for smart distribution
         $leeftijdTotalen = [];
