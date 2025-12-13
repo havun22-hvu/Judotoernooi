@@ -347,7 +347,8 @@ class BlokMatVerdelingService
 
     /**
      * Find best block for a single weight category
-     * Balances aansluiting (stay close to previous) with capacity
+     * HARD LIMIT: block can NEVER exceed 25% deviation
+     * Aansluiting is secondary - breaks if necessary to respect limit
      */
     private function vindBesteBlokVoorGewicht(
         int $vorigeBlokIndex,
@@ -357,11 +358,11 @@ class BlokMatVerdelingService
         int $numBlokken,
         float $aansluitingGewicht
     ): int {
-        $besteBlok = $vorigeBlokIndex;
+        $besteBlok = null;
         $besteScore = PHP_INT_MAX;
 
-        // Check blocks in preference order: same, +1, +2, -1, +3, etc.
-        $checkOrder = [0, 1, 2, -1, 3, -2, 4, -3, 5];
+        // Check blocks in preference order: same, +1, +2, +3, +4, +5, -1, -2, etc.
+        $checkOrder = [0, 1, 2, 3, 4, 5, -1, -2, -3, -4, -5];
 
         foreach ($checkOrder as $offset) {
             $idx = $vorigeBlokIndex + $offset;
@@ -372,26 +373,26 @@ class BlokMatVerdelingService
             $gewenst = max(1, $cap['gewenst']);
             $nieuweActueel = $cap['actueel'] + $wedstrijden;
 
-            // Calculate deviation percentage
-            $afwijkingPct = abs(($nieuweActueel - $gewenst) / $gewenst);
+            // HARD LIMIT: NEVER exceed 25% over gewenst
+            $maxAllowed = $gewenst * 1.25;
+            if ($nieuweActueel > $maxAllowed) {
+                continue;  // Skip this block entirely - cannot use it
+            }
 
-            // Score based on aansluiting preference and capacity
-            // Same block or +1 = low aansluiting penalty
+            // Aansluiting score (only matters if within limit)
             if ($offset === 0 || $offset === 1) {
-                $aansluitingScore = 0;
+                $aansluitingScore = 0;  // Perfect
             } elseif ($offset === 2) {
-                $aansluitingScore = 20;
+                $aansluitingScore = 20;  // Acceptable
             } elseif ($offset < 0) {
-                $aansluitingScore = 100 + abs($offset) * 50;  // Backwards is bad
+                $aansluitingScore = 200 + abs($offset) * 100;  // Backwards = very bad
             } else {
-                $aansluitingScore = 50 + $offset * 20;
+                $aansluitingScore = 50 + $offset * 30;  // Forward gaps
             }
 
-            // Capacity score: prefer blocks that aren't overfilled
-            $capacityScore = $afwijkingPct * 100;
-            if ($nieuweActueel > $gewenst * 1.25) {
-                $capacityScore += 200;  // Penalty for exceeding 25%
-            }
+            // Prefer blocks with more room (further from 25% limit)
+            $vulgraad = $nieuweActueel / $gewenst;
+            $capacityScore = $vulgraad * 50;
 
             // Combined score
             $score = ($capacityScore * (1 - $aansluitingGewicht)) + ($aansluitingScore * $aansluitingGewicht);
@@ -402,7 +403,20 @@ class BlokMatVerdelingService
             }
         }
 
-        return $besteBlok;
+        // If no block found within limit, find the one with most room (emergency fallback)
+        if ($besteBlok === null) {
+            $maxRuimte = -PHP_INT_MAX;
+            foreach ($blokken as $idx => $blok) {
+                $cap = $capaciteit[$blok->id];
+                $ruimte = $cap['gewenst'] - $cap['actueel'];
+                if ($ruimte > $maxRuimte) {
+                    $maxRuimte = $ruimte;
+                    $besteBlok = $idx;
+                }
+            }
+        }
+
+        return $besteBlok ?? $vorigeBlokIndex;
     }
 
     /**
