@@ -212,20 +212,20 @@
                 @endforeach
             </div>
             <!-- Sliders voor gewichten -->
-            <div class="border-t pt-2 flex items-center gap-4 text-xs">
-                <div class="flex items-center gap-1">
-                    <span class="text-gray-500">Verdeling</span>
+            <div class="border-t pt-2 flex items-center gap-6 text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-600">Verdeling</span>
                     <input type="range" id="verdeling-slider" min="0" max="100" value="{{ session('blok_verdeling_gewicht', 50) }}"
-                           class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
+                           class="w-24 h-1.5 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
                            oninput="updateSliderValue('verdeling')">
-                    <span id="verdeling-value" class="font-mono text-gray-600 w-6">{{ session('blok_verdeling_gewicht', 50) }}</span>
+                    <span id="verdeling-value" class="font-mono text-gray-700 w-6">{{ session('blok_verdeling_gewicht', 50) }}</span>
                 </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-gray-500">Aansluiting</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-gray-600">Aansluiting</span>
                     <input type="range" id="aansluiting-slider" min="0" max="100" value="{{ session('blok_aansluiting_gewicht', 50) }}"
-                           class="w-16 h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-green-600"
+                           class="w-24 h-1.5 bg-gray-200 rounded appearance-none cursor-pointer accent-green-600"
                            oninput="updateSliderValue('aansluiting')">
-                    <span id="aansluiting-value" class="font-mono text-gray-600 w-6">{{ session('blok_aansluiting_gewicht', 50) }}</span>
+                    <span id="aansluiting-value" class="font-mono text-gray-700 w-6">{{ session('blok_aansluiting_gewicht', 50) }}</span>
                 </div>
             </div>
         </div>

@@ -223,9 +223,9 @@ class BlokMatVerdelingService
         $verdelingGewicht = $userVerdelingGewicht / 100.0;
         $aansluitingGewicht = $userAansluitingGewicht / 100.0;
 
-        // Strict modes: 100% means ABSOLUTE priority
-        $strictVerdeling = $userVerdelingGewicht === 100;
-        $strictAansluiting = $userAansluitingGewicht === 100;
+        // Strict modes: 100% means ABSOLUTE priority (use >= 100 to catch any rounding)
+        $strictVerdeling = $userVerdelingGewicht >= 100;
+        $strictAansluiting = $userAansluitingGewicht >= 100;
 
         // Only add tiny variation in middle range (20-80%), not at extremes
         if ($userVerdelingGewicht > 20 && $userVerdelingGewicht < 80) {
