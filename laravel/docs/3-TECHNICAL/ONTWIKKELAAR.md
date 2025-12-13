@@ -215,13 +215,11 @@ $varianten = $service->genereerVarianten($toernooi, $verdelingGewicht, $aansluit
 $service->pasVariantToe($toernooi, $variant['toewijzingen']);
 ```
 
-**Sliders (0-100):**
-- `verdeling` - toegestane afwijking van gemiddelde:
-  - 100% = alle blokken exact gelijk (0% tolerantie)
-  - 0% = max ±25% afwijking toegestaan
-- `aansluiting` - prioriteit voor aansluiting gewichtscategorieën:
-  - 100% = alleen 0 of +1 overgangen toegestaan
-  - 0% = aansluiting wordt genegeerd
+**Balans slider (0-100):**
+- Eén slider die balans bepaalt tussen verdeling en aansluiting
+- `balans = 0`: 100% verdeling, 0% aansluiting (perfecte spreiding)
+- `balans = 100`: 0% verdeling, 100% aansluiting (gewichten samen)
+- Controller berekent: `verdelingGewicht = 100 - balans`, `aansluitingGewicht = balans`
 
 **Scores per variant:**
 - `max_afwijking` - grootste verschil met gemiddelde wedstrijden/blok

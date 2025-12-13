@@ -82,8 +82,7 @@
     <div class="flex items-center gap-2">
         <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline" id="bereken-form">
             @csrf
-            <input type="hidden" name="verdeling_gewicht" id="verdeling-gewicht-input" value="{{ session('blok_verdeling_gewicht', 50) }}">
-            <input type="hidden" name="aansluiting_gewicht" id="aansluiting-gewicht-input" value="{{ session('blok_aansluiting_gewicht', 50) }}">
+            <input type="hidden" name="balans" id="balans-input" value="{{ session('blok_balans', 50) }}">
             <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                 Bereken
             </button>
@@ -211,21 +210,14 @@
                 </button>
                 @endforeach
             </div>
-            <!-- Sliders voor gewichten -->
-            <div class="border-t pt-2 flex items-center gap-6 text-xs">
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-600">Verdeling</span>
-                    <input type="range" id="verdeling-slider" min="0" max="100" value="{{ session('blok_verdeling_gewicht', 50) }}"
-                           class="w-24 h-1.5 bg-gray-200 rounded appearance-none cursor-pointer accent-blue-600"
-                           oninput="updateSliderValue('verdeling')">
-                    <span id="verdeling-value" class="font-mono text-gray-700 w-6">{{ session('blok_verdeling_gewicht', 50) }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-gray-600">Aansluiting</span>
-                    <input type="range" id="aansluiting-slider" min="0" max="100" value="{{ session('blok_aansluiting_gewicht', 50) }}"
-                           class="w-24 h-1.5 bg-gray-200 rounded appearance-none cursor-pointer accent-green-600"
-                           oninput="updateSliderValue('aansluiting')">
-                    <span id="aansluiting-value" class="font-mono text-gray-700 w-6">{{ session('blok_aansluiting_gewicht', 50) }}</span>
+            <!-- Balans slider -->
+            <div class="border-t pt-2">
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="text-gray-600 whitespace-nowrap">Verdeling blokken</span>
+                    <input type="range" id="balans-slider" min="0" max="100" value="{{ session('blok_balans', 50) }}"
+                           class="flex-1 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
+                           oninput="updateBalansSlider()">
+                    <span class="text-gray-600 whitespace-nowrap">Aansluiting gewichten</span>
                 </div>
             </div>
         </div>
@@ -282,14 +274,9 @@ const afkortingen = @json($afkortingen);
 @endif
 
 <script>
-function updateSliderValue(type) {
-    const slider = document.getElementById(type + '-slider');
-    const valueSpan = document.getElementById(type + '-value');
-    const hiddenInput = document.getElementById(type + '-gewicht-input');
-
-    if (slider && valueSpan) {
-        valueSpan.textContent = slider.value;
-    }
+function updateBalansSlider() {
+    const slider = document.getElementById('balans-slider');
+    const hiddenInput = document.getElementById('balans-input');
     if (slider && hiddenInput) {
         hiddenInput.value = slider.value;
     }
