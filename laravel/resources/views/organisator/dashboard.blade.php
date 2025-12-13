@@ -15,6 +15,9 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-gray-600">{{ $organisator->naam }}</span>
+                    @if($organisator->isSitebeheerder())
+                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">Sitebeheerder</span>
+                    @endif
                     <form action="{{ route('organisator.logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-gray-600 hover:text-gray-800">
@@ -34,7 +37,13 @@
         @endif
 
         <div class="mb-6 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">Mijn Toernooien</h2>
+            <h2 class="text-2xl font-bold text-gray-800">
+                @if($organisator->isSitebeheerder())
+                    Alle Toernooien
+                @else
+                    Mijn Toernooien
+                @endif
+            </h2>
             <a href="{{ route('toernooi.create') }}"
                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                 Nieuw Toernooi
@@ -58,11 +67,17 @@
                     {{ $toernooi->datum ? $toernooi->datum->format('d-m-Y') : 'Geen datum' }}
                 </p>
                 <div class="flex items-center justify-between">
+                    @if($organisator->isSitebeheerder())
+                    <span class="text-sm px-2 py-1 rounded bg-purple-100 text-purple-800">
+                        Sitebeheerder
+                    </span>
+                    @elseif($toernooi->pivot)
                     <span class="text-sm px-2 py-1 rounded
                         @if($toernooi->pivot->rol === 'eigenaar') bg-blue-100 text-blue-800
                         @else bg-gray-100 text-gray-800 @endif">
                         {{ ucfirst($toernooi->pivot->rol) }}
                     </span>
+                    @endif
                     <a href="{{ route('toernooi.show', $toernooi) }}"
                        class="text-blue-600 hover:text-blue-800 font-medium">
                         Beheer
