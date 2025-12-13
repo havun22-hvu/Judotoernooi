@@ -82,7 +82,7 @@
                             <tr class="border-b hover:bg-gray-50">
                                 <!-- Judoka naam -->
                                 <td class="px-3 py-2 font-medium sticky left-0 bg-white">
-                                    <span x-text="judoka.naam"></span>
+                                    <span x-text="judoka.naam"></span> <span class="text-gray-400 font-normal" x-text="'(' + judoka.gewichtsklasse + ')'"></span>
                                     <div class="text-xs text-gray-500" x-text="judoka.club || ''"></div>
                                 </td>
 
