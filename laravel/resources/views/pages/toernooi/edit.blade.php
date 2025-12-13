@@ -263,6 +263,7 @@
                     4 => [[1,2], [3,4], [2,3], [1,4], [2,4], [1,3]],
                     5 => [[1,2], [3,4], [1,5], [2,3], [4,5], [1,3], [2,4], [3,5], [1,4], [2,5]],
                     6 => [[1,2], [3,4], [5,6], [1,3], [2,5], [4,6], [3,5], [2,4], [1,6], [2,3], [4,5], [3,6], [1,4], [2,6], [1,5]],
+                    7 => [[1,2], [3,4], [5,6], [1,7], [2,3], [4,5], [6,7], [1,3], [2,4], [5,7], [3,6], [1,4], [2,5], [3,7], [4,6], [1,5], [2,6], [4,7], [1,6], [3,5], [2,7]],
                 ];
                 $opgeslagenSchemas = old('wedstrijd_schemas', $toernooi->wedstrijd_schemas) ?? [];
             @endphp
@@ -270,7 +271,7 @@
             <div class="space-y-4" x-data="wedstrijdSchemas()">
                 <!-- Tabs voor poulegrootte -->
                 <div class="flex border-b">
-                    @foreach([2,3,4,5,6] as $grootte)
+                    @foreach([2,3,4,5,6,7] as $grootte)
                     <button type="button"
                             @click="activeTab = {{ $grootte }}"
                             :class="activeTab === {{ $grootte }} ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -281,7 +282,7 @@
                 </div>
 
                 <!-- Schema per grootte -->
-                @foreach([2,3,4,5,6] as $grootte)
+                @foreach([2,3,4,5,6,7] as $grootte)
                 @php
                     $schema = $opgeslagenSchemas[$grootte] ?? $standaardSchemas[$grootte];
                     $aantalWed = count($schema);
