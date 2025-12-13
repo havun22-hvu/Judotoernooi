@@ -69,17 +69,26 @@ class PouleIndelingService
             foreach ($groepen as $sleutel => $judokas) {
                 if ($judokas->isEmpty()) continue;
 
-                // Parse group key: "Leeftijdsklasse|Gewichtsklasse" or "Leeftijdsklasse|Gewichtsklasse|Geslacht"
+                // Parse group key: "Leeftijdsklasse|Gewichtsklasse|BandGroep" or "Leeftijdsklasse|Gewichtsklasse|Geslacht|BandGroep"
                 $delen = explode('|', $sleutel);
                 $leeftijdsklasse = $delen[0];
                 $gewichtsklasse = $delen[1] ?? 'Onbekend';
-                $geslacht = $delen[2] ?? null;
+
+                // Last element is always bandGroep (1, 2, or 3)
+                $bandGroep = is_numeric(end($delen)) ? (int)end($delen) : null;
+
+                // For older categories: Leeftijd|Gewicht|Geslacht|BandGroep
+                // For younger: Leeftijd|Gewicht|BandGroep
+                $geslacht = null;
+                if (count($delen) === 4) {
+                    $geslacht = $delen[2];
+                }
 
                 // Split into optimal pools
                 $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
                 foreach ($pouleVerdelingen as $pouleJudokas) {
-                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer);
+                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $bandGroep);
 
                     $poule = Poule::create([
                         'toernooi_id' => $toernooi->id,
@@ -114,7 +123,10 @@ class PouleIndelingService
                     $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
 
                     // Track for kruisfinale per categorie (leeftijdsklasse + gewichtsklasse + geslacht)
-                    $categorieKey = $sleutel; // Use original group key
+                    // Note: bandGroep is NOT included - kruisfinale combines all band levels
+                    $categorieKey = $geslacht
+                        ? "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}"
+                        : "{$leeftijdsklasse}|{$gewichtsklasse}";
                     if (!isset($voorrondesPerCategorie[$categorieKey])) {
                         $voorrondesPerCategorie[$categorieKey] = [
                             'leeftijdsklasse' => $leeftijdsklasse,
@@ -237,32 +249,90 @@ class PouleIndelingService
     }
 
     /**
-     * Group judokas by age class, weight class, and (for U15+) gender
-     * Uses actual model fields instead of parsing judoka_code
+     * Group judokas by age class, weight class, band group, and (for U15+) gender
+     * Uses actual model fields and sorts by judoka_code for correct ordering
+     * Band groups: beginners (wit/geel), midden (oranje/groen), gevorderd (blauw/bruin/zwart)
      */
     private function groepeerJudokas(Toernooi $toernooi): Collection
     {
+        // Sort by judoka_code for correct poule numbering order
         $judokas = $toernooi->judokas()
-            ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
-            ->orderBy('geslacht')
-            ->orderBy('band')
+            ->orderBy('judoka_code')
             ->get();
 
-        return $judokas->groupBy(function (Judoka $judoka) {
+        $groepen = $judokas->groupBy(function (Judoka $judoka) {
             $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
             $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
             $geslacht = strtoupper($judoka->geslacht);
+            $bandGroep = $this->getBandGroep($judoka->band);
 
             // For U15, U18, U21 and Senioren: separate by gender
             $oudereCategorien = ['U15', 'U18', 'U21', 'Senioren'];
             if (in_array($leeftijdsklasse, $oudereCategorien)) {
-                return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
+                return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}|{$bandGroep}";
             }
 
-            // For younger categories (U9, U11, U13): mixed gender
-            return "{$leeftijdsklasse}|{$gewichtsklasse}";
+            // For younger categories (U9, U11, U13): mixed gender, but separate by band group
+            return "{$leeftijdsklasse}|{$gewichtsklasse}|{$bandGroep}";
         });
+
+        // Sort groups by leeftijd order, then gewicht, then bandgroep
+        return $groepen->sortBy(function ($judokas, $key) {
+            $delen = explode('|', $key);
+            $leeftijd = $delen[0] ?? '';
+            $gewicht = $delen[1] ?? '';
+            $bandGroep = end($delen);
+
+            // Leeftijd order: Mini's=1, A-pup=2, B-pup=3, etc.
+            $leeftijdOrder = $this->getLeeftijdOrder($leeftijd);
+
+            // Gewicht: numeriek sorteren
+            $gewichtNum = intval(preg_replace('/[^0-9]/', '', $gewicht));
+            $gewichtPlus = str_starts_with($gewicht, '+') ? 1000 : 0;
+
+            return sprintf('%02d%04d%d', $leeftijdOrder, $gewichtNum + $gewichtPlus, $bandGroep);
+        });
+    }
+
+    /**
+     * Get sort order for leeftijdsklasse
+     */
+    private function getLeeftijdOrder(string $leeftijd): int
+    {
+        $order = [
+            "Mini's" => 1,
+            'A-pupillen' => 2,
+            'B-pupillen' => 3,
+            'C-pupillen' => 4,
+            'Dames -15' => 5,
+            'Heren -15' => 6,
+            'Dames -18' => 7,
+            'Heren -18' => 8,
+            'Dames -21' => 9,
+            'Heren -21' => 10,
+            'Dames' => 11,
+            'Heren' => 12,
+        ];
+
+        return $order[$leeftijd] ?? 99;
+    }
+
+    /**
+     * Get band group for separation in poules
+     * 1 = beginners (wit/geel)
+     * 2 = midden (oranje/groen)
+     * 3 = gevorderd (blauw/bruin/zwart)
+     */
+    private function getBandGroep(?string $band): int
+    {
+        $band = strtolower($band ?? 'wit');
+
+        return match ($band) {
+            'wit', 'geel' => 1,
+            'oranje', 'groen' => 2,
+            'blauw', 'bruin', 'zwart' => 3,
+            default => 1,
+        };
     }
 
     /**
@@ -418,7 +488,7 @@ class PouleIndelingService
     /**
      * Create standardized pool title
      */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr): string
+    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, ?int $bandGroep = null): string
     {
         $lk = $leeftijdsklasse ?: 'Onbekend';
         $gk = $gewichtsklasse ?: 'Onbekend gewicht';
@@ -435,11 +505,21 @@ class PouleIndelingService
             default => null,
         };
 
-        if ($geslachtLabel) {
-            return "{$lk} {$geslachtLabel} {$gk} Poule {$pouleNr}";
-        }
+        // Add band group label
+        $bandLabel = match ($bandGroep) {
+            1 => 'Beginners',
+            2 => 'Midden',
+            3 => 'Gevorderd',
+            default => null,
+        };
 
-        return "{$lk} {$gk} Poule {$pouleNr}";
+        $parts = [$lk];
+        if ($geslachtLabel) $parts[] = $geslachtLabel;
+        $parts[] = $gk;
+        if ($bandLabel) $parts[] = $bandLabel;
+        $parts[] = "Poule {$pouleNr}";
+
+        return implode(' ', $parts);
     }
 
     /**
