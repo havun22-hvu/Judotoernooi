@@ -66,6 +66,7 @@ class Toernooi extends Model
         'code_weging',
         'code_mat',
         'code_spreker',
+        'wedstrijd_schemas',
     ];
 
     protected $hidden = [
@@ -97,6 +98,7 @@ class Toernooi extends Model
         'poule_grootte_voorkeur' => 'array',
         'mat_voorkeuren' => 'array',
         'verdeling_prioriteiten' => 'array',
+        'wedstrijd_schemas' => 'array',
     ];
 
     /**

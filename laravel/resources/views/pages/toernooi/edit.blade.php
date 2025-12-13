@@ -249,6 +249,90 @@
             </div>
         </div>
 
+        <!-- WEDSTRIJDSCHEMA'S -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Wedstrijdschema's</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Bepaal de volgorde van wedstrijden per poulegrootte. Sleep wedstrijden om de volgorde aan te passen.
+            </p>
+
+            @php
+                $standaardSchemas = [
+                    2 => [[1,2], [2,1]],
+                    3 => [[1,2], [1,3], [2,3], [2,1], [3,2], [3,1]],
+                    4 => [[1,2], [3,4], [2,3], [1,4], [2,4], [1,3]],
+                    5 => [[1,2], [3,4], [1,5], [2,3], [4,5], [1,3], [2,4], [3,5], [1,4], [2,5]],
+                    6 => [[1,2], [3,4], [5,6], [1,3], [2,5], [4,6], [3,5], [2,4], [1,6], [2,3], [4,5], [3,6], [1,4], [2,6], [1,5]],
+                ];
+                $opgeslagenSchemas = old('wedstrijd_schemas', $toernooi->wedstrijd_schemas) ?? [];
+            @endphp
+
+            <div class="space-y-4" x-data="wedstrijdSchemas()">
+                <!-- Tabs voor poulegrootte -->
+                <div class="flex border-b">
+                    @foreach([2,3,4,5,6] as $grootte)
+                    <button type="button"
+                            @click="activeTab = {{ $grootte }}"
+                            :class="activeTab === {{ $grootte }} ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                            class="px-4 py-2 font-medium border-b-2 -mb-px transition-colors text-sm">
+                        {{ $grootte }} judoka's
+                    </button>
+                    @endforeach
+                </div>
+
+                <!-- Schema per grootte -->
+                @foreach([2,3,4,5,6] as $grootte)
+                @php
+                    $schema = $opgeslagenSchemas[$grootte] ?? $standaardSchemas[$grootte];
+                    $aantalWed = count($schema);
+                @endphp
+                <div x-show="activeTab === {{ $grootte }}" x-cloak class="pt-2">
+                    <div class="flex items-start gap-6">
+                        <!-- Visueel schema -->
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-sm font-medium text-gray-700">{{ $aantalWed }} wedstrijden</span>
+                                <span class="text-xs text-gray-400">
+                                    @if($grootte <= 3)(dubbele round-robin)@else(enkelvoudige round-robin)@endif
+                                </span>
+                            </div>
+                            <div class="schema-container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2" data-grootte="{{ $grootte }}">
+                                @foreach($schema as $idx => $wed)
+                                <div class="wed-item flex items-center justify-center gap-1 bg-gray-100 border-2 border-gray-300 rounded-lg px-3 py-2 cursor-move hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                                     draggable="true" data-wit="{{ $wed[0] }}" data-blauw="{{ $wed[1] }}">
+                                    <span class="text-xs text-gray-400 mr-1">{{ $idx + 1 }}.</span>
+                                    <span class="font-bold text-gray-700">{{ $wed[0] }}</span>
+                                    <span class="text-gray-400">-</span>
+                                    <span class="font-bold text-blue-600">{{ $wed[1] }}</span>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Legenda -->
+                        <div class="w-32 flex-shrink-0">
+                            <div class="text-xs font-medium text-gray-500 mb-2">Positie in poule:</div>
+                            @for($i = 1; $i <= $grootte; $i++)
+                            <div class="flex items-center gap-2 text-sm py-0.5">
+                                <span class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded font-bold text-gray-700">{{ $i }}</span>
+                                <span class="text-gray-500">Judoka {{ $i }}</span>
+                            </div>
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+                <!-- Hidden inputs voor alle schemas -->
+                <input type="hidden" name="wedstrijd_schemas" id="wedstrijd_schemas_input"
+                       value='@json($opgeslagenSchemas ?: $standaardSchemas)'>
+
+                <div class="text-xs text-gray-400 mt-2">
+                    💡 Tip: De volgorde is geoptimaliseerd zodat judoka's rust krijgen tussen wedstrijden.
+                </div>
+            </div>
+        </div>
+
         <script>
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('voorkeur-container');
@@ -381,7 +465,72 @@
                 });
             });
 
+            // ========== WEDSTRIJDSCHEMA DRAG & DROP ==========
+            document.querySelectorAll('.schema-container').forEach(container => {
+                let draggedWed = null;
+
+                container.addEventListener('dragstart', function(e) {
+                    if (e.target.classList.contains('wed-item')) {
+                        draggedWed = e.target;
+                        e.target.style.opacity = '0.5';
+                    }
+                });
+
+                container.addEventListener('dragend', function(e) {
+                    if (e.target.classList.contains('wed-item')) {
+                        e.target.style.opacity = '1';
+                        draggedWed = null;
+                    }
+                });
+
+                container.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    const target = e.target.closest('.wed-item');
+                    if (target && target !== draggedWed) {
+                        const rect = target.getBoundingClientRect();
+                        const midX = rect.left + rect.width / 2;
+                        if (e.clientX < midX) {
+                            container.insertBefore(draggedWed, target);
+                        } else {
+                            container.insertBefore(draggedWed, target.nextSibling);
+                        }
+                    }
+                });
+
+                container.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    updateWedstrijdNumbers(container);
+                    updateWedstrijdSchemasInput();
+                });
+            });
+
+            function updateWedstrijdNumbers(container) {
+                const items = container.querySelectorAll('.wed-item');
+                items.forEach((item, idx) => {
+                    const numSpan = item.querySelector('span:first-child');
+                    if (numSpan) numSpan.textContent = `${idx + 1}.`;
+                });
+            }
+
+            function updateWedstrijdSchemasInput() {
+                const schemas = {};
+                document.querySelectorAll('.schema-container').forEach(container => {
+                    const grootte = parseInt(container.dataset.grootte);
+                    const wedstrijden = [];
+                    container.querySelectorAll('.wed-item').forEach(item => {
+                        wedstrijden.push([parseInt(item.dataset.wit), parseInt(item.dataset.blauw)]);
+                    });
+                    schemas[grootte] = wedstrijden;
+                });
+                document.getElementById('wedstrijd_schemas_input').value = JSON.stringify(schemas);
+            }
+
         });
+
+        // Alpine component voor tabs
+        function wedstrijdSchemas() {
+            return { activeTab: 4 };
+        }
         </script>
 
         <!-- GEWICHT -->
