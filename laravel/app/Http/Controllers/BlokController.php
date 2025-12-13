@@ -367,6 +367,37 @@ class BlokController extends Controller
     }
 
     /**
+     * Generate wedstrijden for a single poule (from zaaloverzicht)
+     */
+    public function genereerPouleWedstrijden(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this toernooi
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        // Check if wedstrijden already exist
+        if ($poule->wedstrijden()->count() > 0) {
+            return response()->json(['success' => false, 'error' => 'Poule heeft al wedstrijden'], 400);
+        }
+
+        // Generate wedstrijden
+        $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+
+        return response()->json([
+            'success' => true,
+            'wedstrijden' => count($wedstrijden),
+            'message' => count($wedstrijden) . ' wedstrijden gegenereerd',
+        ]);
+    }
+
+    /**
      * Reset blok toewijzingen - ALLES (ook vastgezette)
      */
     public function resetVerdeling(Toernooi $toernooi): JsonResponse

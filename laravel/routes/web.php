@@ -96,6 +96,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
         Route::post('blok/activeer-categorie', [BlokController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
         Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
+        Route::post('blok/genereer-poule-wedstrijden', [BlokController::class, 'genereerPouleWedstrijden'])->name('blok.genereer-poule-wedstrijden');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
 
         // Clubs management
@@ -146,6 +147,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('mat/wedstrijden', [MatController::class, 'getWedstrijden'])->name('mat.wedstrijden');
         Route::post('mat/uitslag', [MatController::class, 'registreerUitslag'])->name('mat.uitslag');
         Route::post('mat/poule-klaar', [MatController::class, 'pouleKlaar'])->name('mat.poule-klaar');
+        Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
     });
 
     // Spreker routes (spreker + admin)
