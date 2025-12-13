@@ -190,36 +190,15 @@
 
             <!-- Prioriteit volgorde -->
             <div class="border-t pt-4 mt-4">
-                <label class="block text-gray-700 font-medium mb-2">Prioriteit Volgorde bij Indeling</label>
-                <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Bovenste = hoogste prioriteit.</p>
-
-                <div id="prioriteit-container" class="space-y-2 mb-3">
-                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="groepsgrootte">
-                        <span class="text-xl mr-3">👥</span>
-                        <div class="flex-1">
-                            <span class="font-bold text-gray-800">Groepsgrootte</span>
-                            <span class="block text-sm text-gray-500">Optimale poule grootte (5, 4, 6, 3)</span>
-                        </div>
-                        <span class="text-gray-400 text-lg">☰</span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-gray-700 font-medium">Prioriteit:</span>
+                    <div id="prioriteit-container" class="flex gap-2">
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="groepsgrootte">1. Groepsgrootte</div>
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="bandkleur">2. Bandkleur</div>
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="clubspreiding">3. Clubspreiding</div>
                     </div>
-                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="bandkleur">
-                        <span class="text-xl mr-3">🥋</span>
-                        <div class="flex-1">
-                            <span class="font-bold text-gray-800">Bandkleur</span>
-                            <span class="block text-sm text-gray-500">Zelfde banden bij elkaar</span>
-                        </div>
-                        <span class="text-gray-400 text-lg">☰</span>
-                    </div>
-                    <div class="prioriteit-item flex items-center bg-gray-100 border-2 border-gray-300 rounded-lg px-4 py-3 cursor-move" draggable="true" data-key="clubspreiding">
-                        <span class="text-xl mr-3">🏠</span>
-                        <div class="flex-1">
-                            <span class="font-bold text-gray-800">Clubspreiding</span>
-                            <span class="block text-sm text-gray-500">Clubleden verspreiden</span>
-                        </div>
-                        <span class="text-gray-400 text-lg">☰</span>
-                    </div>
+                    <span class="text-gray-400 text-xs">(sleep om te wisselen)</span>
                 </div>
-
                 <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='["groepsgrootte","bandkleur","clubspreiding"]'>
             </div>
 
@@ -379,8 +358,8 @@
                 const target = e.target.closest('.prioriteit-item');
                 if (target && target !== draggedPrioriteitItem) {
                     const rect = target.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
+                    const midX = rect.left + rect.width / 2;
+                    if (e.clientX < midX) {
                         prioriteitContainer.insertBefore(draggedPrioriteitItem, target);
                     } else {
                         prioriteitContainer.insertBefore(draggedPrioriteitItem, target.nextSibling);
@@ -391,6 +370,12 @@
             prioriteitContainer.addEventListener('drop', function(e) {
                 e.preventDefault();
                 updatePrioriteitInput();
+                // Update numbers
+                const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
+                const labels = { groepsgrootte: 'Groepsgrootte', bandkleur: 'Bandkleur', clubspreiding: 'Clubspreiding' };
+                items.forEach((item, idx) => {
+                    item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
+                });
             });
 
         });
