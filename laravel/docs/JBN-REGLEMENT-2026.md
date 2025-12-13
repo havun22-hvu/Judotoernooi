@@ -6,13 +6,17 @@ Ingangsdatum: 1 januari 2026
 
 ## Leeftijdscategorieën
 
-| Categorie | Leeftijd |
-|-----------|----------|
-| -7 jaar | 6 jaar en jonger |
-| -9 jaar | 7-8 jaar |
-| -11 jaar | 9-10 jaar |
-| -13 jaar | 11-12 jaar |
-| -15 jaar | 13-14 jaar |
+**Let op:** De categorie "-X jaar" betekent max_leeftijd = X-1
+
+| Categorie | Leeftijd | max_leeftijd in code |
+|-----------|----------|---------------------|
+| -7 jaar | 6 jaar en jonger | 6 |
+| -9 jaar | 7-8 jaar | 8 |
+| -11 jaar | 9-10 jaar | 10 |
+| -13 jaar | 11-12 jaar | 12 |
+| -15 jaar | 13-14 jaar | 14 |
+| -18 jaar | 15-17 jaar | 17 |
+| -21 jaar | 18-20 jaar | 20 |
 
 ## Wedstrijdregels per categorie
 
