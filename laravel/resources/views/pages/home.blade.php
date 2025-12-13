@@ -27,14 +27,7 @@
     <main class="flex flex-col items-center justify-center min-h-screen px-4 text-center">
         <!-- Logo -->
         <div class="mb-8">
-            <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl mx-auto">
-                <svg class="w-20 h-20 text-blue-800" viewBox="0 0 100 100" fill="currentColor">
-                    <!-- Simplified judo icon -->
-                    <circle cx="50" cy="25" r="12" />
-                    <path d="M30 45 Q50 35 70 45 L65 85 Q50 90 35 85 Z" />
-                    <path d="M25 50 L10 65 M75 50 L90 65" stroke="currentColor" stroke-width="6" fill="none" stroke-linecap="round"/>
-                </svg>
-            </div>
+            <img src="/icon-512x512.png" alt="JudoToernooi Logo" class="w-32 h-32 rounded-full shadow-2xl mx-auto">
         </div>
 
         <!-- Title -->
