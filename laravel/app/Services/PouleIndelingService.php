@@ -360,12 +360,7 @@ class PouleIndelingService
             return [$judokasArray];
         }
 
-        // Now distribute judokas across pools with club spreading if enabled
-        if ($this->clubspreiding) {
-            return $this->verdeelMetClubspreiding($judokas, $bestePouleGroottes);
-        }
-
-        // Without club spreading: just slice the array
+        // Distribute by slicing (preserves band order from judoka_code sorting)
         $verdeling = [];
         $index = 0;
         foreach ($bestePouleGroottes as $grootte) {
@@ -373,52 +368,62 @@ class PouleIndelingService
             $index += $grootte;
         }
 
+        // Apply club spreading as refinement (swap within same band level if possible)
+        if ($this->clubspreiding && count($verdeling) > 1) {
+            $verdeling = $this->pasClubspreidingToe($verdeling);
+        }
+
         return $verdeling;
     }
 
     /**
-     * Distribute judokas across pools while spreading club members
-     * Judokas from the same club are placed in different pools where possible
+     * Apply club spreading as refinement without breaking band order
+     * Swaps judokas between pools only if they have the same band
      */
-    private function verdeelMetClubspreiding(Collection $judokas, array $pouleGroottes): array
+    private function pasClubspreidingToe(array $poules): array
     {
-        $aantalPoules = count($pouleGroottes);
+        $aantalPoules = count($poules);
 
-        // Group judokas by club
-        $perClub = $judokas->groupBy('club_id');
-
-        // Initialize empty pools
-        $poules = array_fill(0, $aantalPoules, []);
-        $pouleHuidig = array_map(fn($g) => 0, $pouleGroottes); // Current count per pool
-
-        // Sort clubs by size (largest first) for better distribution
-        $clubs = $perClub->sortByDesc(fn($j) => $j->count());
-
-        // Distribute judokas round-robin per club
-        foreach ($clubs as $clubId => $clubJudokas) {
-            $pouleIndex = 0;
-
-            foreach ($clubJudokas as $judoka) {
-                // Find next pool with space, starting from current index
-                $gevonden = false;
-                for ($i = 0; $i < $aantalPoules; $i++) {
-                    $idx = ($pouleIndex + $i) % $aantalPoules;
-                    if ($pouleHuidig[$idx] < $pouleGroottes[$idx]) {
-                        $poules[$idx][] = $judoka;
-                        $pouleHuidig[$idx]++;
-                        $pouleIndex = ($idx + 1) % $aantalPoules; // Next judoka starts at next pool
-                        $gevonden = true;
-                        break;
-                    }
+        // For each pool, check for club duplicates
+        for ($p = 0; $p < $aantalPoules; $p++) {
+            $clubCount = [];
+            foreach ($poules[$p] as $idx => $judoka) {
+                $clubId = $judoka->club_id ?? 0;
+                if (!isset($clubCount[$clubId])) {
+                    $clubCount[$clubId] = [];
                 }
+                $clubCount[$clubId][] = $idx;
+            }
 
-                // Fallback: shouldn't happen, but place in first available
-                if (!$gevonden) {
-                    for ($idx = 0; $idx < $aantalPoules; $idx++) {
-                        if ($pouleHuidig[$idx] < $pouleGroottes[$idx]) {
-                            $poules[$idx][] = $judoka;
-                            $pouleHuidig[$idx]++;
-                            break;
+            // For clubs with multiple judokas, try to swap one to another pool
+            foreach ($clubCount as $clubId => $indices) {
+                if (count($indices) <= 1) continue;
+
+                // Try to swap the second (and further) judoka(s) to other pools
+                for ($i = 1; $i < count($indices); $i++) {
+                    $judokaIdx = $indices[$i];
+                    $judoka = $poules[$p][$judokaIdx];
+                    $judokaBand = $judoka->band;
+
+                    // Find a swap candidate in another pool with same band but different club
+                    for ($q = 0; $q < $aantalPoules; $q++) {
+                        if ($q === $p) continue;
+
+                        foreach ($poules[$q] as $kandidaatIdx => $kandidaat) {
+                            // Same band, different club, and that club is not already in target pool
+                            if ($kandidaat->band === $judokaBand &&
+                                $kandidaat->club_id !== $clubId &&
+                                !$this->clubInPoule($poules[$p], $kandidaat->club_id, $judokaIdx)) {
+
+                                // Check if the kandidaat's club is not duplicated in their pool
+                                // (otherwise we'd make it worse)
+                                if (!$this->clubInPoule($poules[$q], $judoka->club_id, $kandidaatIdx)) {
+                                    // Swap
+                                    $poules[$p][$judokaIdx] = $kandidaat;
+                                    $poules[$q][$kandidaatIdx] = $judoka;
+                                    break 2; // Move to next duplicate
+                                }
+                            }
                         }
                     }
                 }
@@ -426,6 +431,19 @@ class PouleIndelingService
         }
 
         return $poules;
+    }
+
+    /**
+     * Check if a club is already in a pool (excluding a specific index)
+     */
+    private function clubInPoule(array $poule, ?int $clubId, int $excludeIdx): bool
+    {
+        foreach ($poule as $idx => $judoka) {
+            if ($idx !== $excludeIdx && ($judoka->club_id ?? 0) === $clubId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
