@@ -67,9 +67,9 @@
             @foreach($klassePoules as $poule)
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$poule->isKruisfinale() ? 'border-2 border-red-300' : '' }} {{ $poule->isKruisfinale() ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $poule->isKruisfinale() ? '1' : '0' }}">
                 <!-- Poule header -->
-                <div class="px-3 py-2 border-b {{ $poule->isKruisfinale() ? 'bg-purple-50' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-50' : 'bg-gray-50') }}">
+                <div class="px-3 py-2 border-b {{ $poule->isKruisfinale() ? 'bg-purple-100' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-100' : 'bg-blue-100') }}">
                     <div class="flex justify-between items-center">
-                        <div class="font-bold text-sm {{ $poule->isKruisfinale() ? 'text-purple-800' : 'text-gray-800' }}">
+                        <div class="font-bold text-sm {{ $poule->isKruisfinale() ? 'text-purple-800' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'text-red-800' : 'text-blue-800') }}">
                             @if($poule->isKruisfinale())
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
@@ -471,8 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Remove red border for empty poules (they're ok)
             pouleCard.classList.remove('border-2', 'border-red-300');
-            header?.classList.remove('bg-red-50');
-            header?.classList.add('bg-gray-50');
+            header?.classList.remove('bg-red-100');
+            header?.classList.add('bg-blue-100');
         } else {
             // Remove "Leeg" placeholder
             sortableContainer.querySelector('.empty-placeholder')?.remove();
@@ -483,12 +483,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update problematic styling (1-2 judokas = problematic, skip kruisfinale)
             if (pouleData.judokas_count < 3 && !isKruisfinale) {
                 pouleCard.classList.add('border-2', 'border-red-300');
-                header?.classList.add('bg-red-50');
-                header?.classList.remove('bg-gray-50');
+                header?.classList.add('bg-red-100');
+                header?.classList.remove('bg-blue-100');
             } else if (!isKruisfinale) {
                 pouleCard.classList.remove('border-2', 'border-red-300');
-                header?.classList.remove('bg-red-50');
-                header?.classList.add('bg-gray-50');
+                header?.classList.remove('bg-red-100');
+                header?.classList.add('bg-blue-100');
             }
         }
 
