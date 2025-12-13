@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ToernooiRequest;
 use App\Models\Toernooi;
 use App\Services\ToernooiService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,7 +50,7 @@ class ToernooiController extends Controller
         return view('pages.toernooi.edit', compact('toernooi', 'blokken'));
     }
 
-    public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse
+    public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
 
@@ -80,6 +81,11 @@ class ToernooiController extends Controller
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label']);
 
         $toernooi->update($data);
+
+        // Return JSON for AJAX requests (auto-save)
+        if ($request->ajax()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()
             ->route('toernooi.show', $toernooi)
