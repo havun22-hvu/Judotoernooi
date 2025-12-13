@@ -194,9 +194,12 @@
                 <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Bovenste = hoogste prioriteit.</p>
 
                 @php
-                    $prioriteit = old('verdeling_prioriteiten', $toernooi->verdeling_prioriteiten) ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+                    $prioriteit = old('verdeling_prioriteiten', $toernooi->verdeling_prioriteiten);
                     if (is_string($prioriteit)) {
-                        $prioriteit = json_decode($prioriteit, true) ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+                        $prioriteit = json_decode($prioriteit, true);
+                    }
+                    if (empty($prioriteit)) {
+                        $prioriteit = ['groepsgrootte', 'bandkleur', 'clubspreiding'];
                     }
                     $prioriteitLabels = [
                         'groepsgrootte' => ['label' => 'Groepsgrootte', 'desc' => 'Optimale poule grootte (5, 4, 6, 3)', 'icon' => '👥'],
