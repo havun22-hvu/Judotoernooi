@@ -428,22 +428,23 @@ class BlokMatVerdelingService
                 $aansluitingScore = 0;
             } elseif ($verschil === 2) {
                 // +2 blocks = acceptable but not ideal
-                $aansluitingScore = 30;
+                $aansluitingScore = 30 * $aansluitingGewicht;
             } elseif ($verschil < 0) {
                 // Going BACKWARDS = very bad (block already passed!)
-                $aansluitingScore = 200 + abs($verschil) * 100;
+                $aansluitingScore = (200 + abs($verschil) * 100) * $aansluitingGewicht;
             } else {
                 // +3 or more = bad
-                $aansluitingScore = 100 + ($verschil - 2) * 80;
+                $aansluitingScore = (100 + ($verschil - 2) * 80) * $aansluitingGewicht;
             }
 
-            // In strict mode (100% aansluiting): only allow 0 or +1
+            // At 100% aansluiting, strongly prefer 0 or +1, but NOT if it violates verdeling
             if ($strictAansluiting && $verschil !== 0 && $verschil !== 1) {
-                $aansluitingScore = 9999;  // Effectively block this option
+                $aansluitingScore = 5000;  // High but NOT higher than verdeling limit (9999)
             }
 
             // Total score (lower = better)
-            $score = $verdelingsScore + ($aansluitingScore * $aansluitingGewicht);
+            // VERDELING LIMIT (9999) ALWAYS WINS over aansluiting preference
+            $score = $verdelingsScore + $aansluitingScore;
 
             // Add randomness only if configured
             if ($randomFactor > 0) {
