@@ -137,22 +137,40 @@
                         <span class="text-xs bg-blue-800 px-2 py-0.5 rounded mat-wedstrijden">{{ $matWedstrijden }}w</span>
                     </div>
                     @php
-                        // Filter out poules with 0 wedstrijden
-                        $poulesMetWedstrijden = collect($matData['poules'])->filter(fn($p) => $p['wedstrijden'] > 0);
+                        // Filter poules zonder judoka's (lege poules)
+                        $allePoules = collect($matData['poules'])->filter(fn($p) => ($p['judokas'] ?? 0) > 0);
                     @endphp
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
-                        @forelse($poulesMetWedstrijden as $poule)
+                        @forelse($allePoules as $poule)
                         @php
                             // titel = "A-pupillen -30 kg Poule 11" -> split op "Poule"
                             $titelParts = explode(' Poule ', $poule['titel']);
                             $categorie = $titelParts[0] ?? $poule['titel'];
+                            $heeftWedstrijden = $poule['wedstrijden'] > 0;
                         @endphp
+                        @if($heeftWedstrijden)
                         <div class="poule-item text-xs border rounded p-1 bg-gray-50 cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
                             <div class="font-medium text-gray-800">{{ $categorie }}</div>
                             <div class="text-gray-500">Poule {{ $poule['nummer'] }} ({{ $poule['wedstrijden'] }}w)</div>
                         </div>
+                        @else
+                        {{-- Poule zonder wedstrijden: toon met knop om te genereren --}}
+                        <div class="poule-item text-xs border-2 border-orange-400 rounded p-1 bg-orange-50"
+                             data-poule-id="{{ $poule['id'] }}"
+                             data-wedstrijden="0">
+                            <div class="font-medium text-orange-800">{{ $categorie }}</div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-orange-600">Poule {{ $poule['nummer'] }} ({{ $poule['judokas'] ?? 0 }}j)</span>
+                                <button type="button"
+                                        class="genereer-btn px-1.5 py-0.5 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                                        data-poule-id="{{ $poule['id'] }}">
+                                    ▶ Genereer
+                                </button>
+                            </div>
+                        </div>
+                        @endif
                         @empty
                         <div class="text-gray-400 text-xs italic empty-message">Geen poules</div>
                         @endforelse
@@ -169,6 +187,7 @@
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi) }}';
+const genereerUrl = '{{ route('toernooi.blok.genereer-poule-wedstrijden', $toernooi) }}';
 
 document.querySelectorAll('.mat-container').forEach(container => {
     new Sortable(container, {
@@ -232,5 +251,59 @@ function updateMatCounts() {
         if (countEl) countEl.textContent = wedstrijden + 'w';
     });
 }
+
+// Genereer wedstrijden knoppen
+document.querySelectorAll('.genereer-btn').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+        e.stopPropagation();
+        const pouleId = this.dataset.pouleId;
+        const pouleEl = this.closest('.poule-item');
+
+        this.disabled = true;
+        this.textContent = '...';
+
+        try {
+            const response = await fetch(genereerUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ poule_id: pouleId })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                // Update UI: change orange to gray, update wedstrijden count
+                pouleEl.classList.remove('border-orange-400', 'border-2', 'bg-orange-50');
+                pouleEl.classList.add('border', 'bg-gray-50', 'cursor-move', 'hover:bg-blue-50');
+
+                // Update text content
+                const category = pouleEl.querySelector('.font-medium');
+                category.classList.remove('text-orange-800');
+                category.classList.add('text-gray-800');
+
+                const infoRow = pouleEl.querySelector('.flex');
+                const pouleNummer = infoRow.querySelector('span').textContent.match(/Poule (\d+)/)?.[1] || '';
+                infoRow.innerHTML = `<span class="text-gray-500">Poule ${pouleNummer} (${data.wedstrijden}w)</span>`;
+
+                // Update data attribute
+                pouleEl.dataset.wedstrijden = data.wedstrijden;
+
+                // Update mat counts
+                updateMatCounts();
+            } else {
+                alert('Fout: ' + (data.error || 'Onbekende fout'));
+                this.disabled = false;
+                this.textContent = '▶ Genereer';
+            }
+        } catch (err) {
+            alert('Fout bij genereren: ' + err.message);
+            this.disabled = false;
+            this.textContent = '▶ Genereer';
+        }
+    });
+});
 </script>
 @endsection

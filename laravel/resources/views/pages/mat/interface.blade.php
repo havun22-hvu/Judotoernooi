@@ -43,6 +43,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <!-- Geen wedstrijden: toon waarschuwing -->
+                    <div x-show="poule.wedstrijden.length === 0" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
+                        ⚠ Geen wedstrijden - genereer in zaaloverzicht
+                    </div>
+                    <!-- Wel wedstrijden: toon status -->
                     <div x-show="isPouleAfgerond(poule) && !poule.spreker_klaar" class="bg-green-500 text-white px-3 py-1 rounded text-sm font-medium">
                         ✓ Afgerond
                     </div>
@@ -330,7 +335,33 @@ function matInterface() {
         },
 
         isPouleAfgerond(poule) {
-            return poule.wedstrijden.every(w => w.is_gespeeld);
+            // Een poule is alleen afgerond als er wedstrijden zijn EN ze allemaal gespeeld zijn
+            return poule.wedstrijden.length > 0 && poule.wedstrijden.every(w => w.is_gespeeld);
+        },
+
+        async genereerWedstrijden(poule) {
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.genereer-wedstrijden', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Herlaad de wedstrijden
+                    await this.laadWedstrijden();
+                } else {
+                    alert('Fout: ' + (data.error || 'Onbekende fout'));
+                }
+            } catch (err) {
+                alert('Fout bij genereren: ' + err.message);
+            }
         },
 
         async markeerKlaar(poule) {
