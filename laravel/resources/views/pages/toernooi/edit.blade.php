@@ -446,13 +446,19 @@
                     <h2 class="text-xl font-bold text-gray-800">Leeftijds- en Gewichtsklassen</h2>
                     <p class="text-gray-600 text-sm mt-1">Pas leeftijdsgrenzen en gewichtsklassen aan per categorie.</p>
                 </div>
-                <div class="flex gap-2">
-                    <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
-                        JBN 2025
-                    </button>
-                    <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
-                        JBN 2026
-                    </button>
+                <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" id="gemengd-toggle" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                        <span>Gemengd tot 12 jaar</span>
+                    </label>
+                    <div class="flex gap-2">
+                        <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
+                            JBN 2025
+                        </button>
+                        <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                            JBN 2026
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -512,6 +518,9 @@
             // JBN presets
             const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
             const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
+            const jbn2025Gemengd = @json(\App\Models\Toernooi::getJbn2025GewichtsklassenGemengd());
+            const jbn2026Gemengd = @json(\App\Models\Toernooi::getJbn2026GewichtsklassenGemengd());
+            const gemengdToggle = document.getElementById('gemengd-toggle');
 
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
@@ -571,13 +580,13 @@
             // JBN buttons
             document.getElementById('btn-jbn-2025').addEventListener('click', () => {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
-                    renderCategorieen(jbn2025);
+                    renderCategorieen(gemengdToggle.checked ? jbn2025Gemengd : jbn2025);
                 }
             });
 
             document.getElementById('btn-jbn-2026').addEventListener('click', () => {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
-                    renderCategorieen(jbn2026);
+                    renderCategorieen(gemengdToggle.checked ? jbn2026Gemengd : jbn2026);
                 }
             });
 
