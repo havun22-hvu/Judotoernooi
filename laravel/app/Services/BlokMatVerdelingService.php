@@ -382,13 +382,21 @@ class BlokMatVerdelingService
             $idx = $vorigeBlokIndex + $offset;
             if ($idx < 0 || $idx >= $numBlokken) continue;
 
-            // HARD LIMIT bij 100% aansluiting: alleen 0 of +1 toegestaan
-            // (0 = zelfde blok, +1 = volgend blok - beide zijn perfect)
+            // HARD LIMITS gebaseerd op aansluiting gewicht:
+            // 100%: alleen 0 of +1 toegestaan
+            // ≥50%: vermijd -1 (terug) en +3+ (te ver vooruit)
             if ($aansluitingGewicht >= 0.99) {
+                // 100% aansluiting: alleen zelfde of volgend blok
                 if ($offset !== 0 && $offset !== 1) {
-                    continue;  // Skip - niet toegestaan bij 100% aansluiting
+                    continue;
+                }
+            } elseif ($aansluitingGewicht >= 0.50) {
+                // ≥50% aansluiting: geen -1 (terug) of +3+ (te ver)
+                if ($offset < 0 || $offset >= 3) {
+                    continue;
                 }
             }
+            // <50%: alles toegestaan via scoring
 
             $blok = $blokken[$idx];
             $cap = $capaciteit[$blok->id];
