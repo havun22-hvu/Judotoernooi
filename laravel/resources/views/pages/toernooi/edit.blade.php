@@ -193,9 +193,9 @@
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-gray-700 font-medium">Prioriteit:</span>
                     <div id="prioriteit-container" class="flex gap-2">
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="groepsgrootte">1. Groepsgrootte</div>
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="bandkleur">2. Bandkleur</div>
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="clubspreiding">3. Clubspreiding</div>
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="groepsgrootte">1. 👥 Groepsgrootte</div>
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="bandkleur">2. 🥋 Bandkleur</div>
+                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="clubspreiding">3. 🏠 Clubspreiding</div>
                     </div>
                     <span class="text-gray-400 text-xs">(sleep om te wisselen)</span>
                 </div>
@@ -372,7 +372,7 @@
                 updatePrioriteitInput();
                 // Update numbers
                 const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
-                const labels = { groepsgrootte: 'Groepsgrootte', bandkleur: 'Bandkleur', clubspreiding: 'Clubspreiding' };
+                const labels = { groepsgrootte: '👥 Groepsgrootte', bandkleur: '🥋 Bandkleur', clubspreiding: '🏠 Clubspreiding' };
                 items.forEach((item, idx) => {
                     item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
                 });
