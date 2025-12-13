@@ -969,7 +969,9 @@ class BlokMatVerdelingService
             ];
 
             foreach ($toernooi->matten as $mat) {
-                $poules = $blok->poules->where('mat_id', $mat->id);
+                $poules = $blok->poules
+                    ->where('mat_id', $mat->id)
+                    ->filter(fn($p) => $p->aantal_judokas > 0); // Filter empty poules
 
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
