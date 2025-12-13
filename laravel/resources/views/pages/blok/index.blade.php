@@ -80,9 +80,16 @@
         @endif
     </div>
     <div class="flex items-center gap-2">
-        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline" id="bereken-form">
+        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline flex items-center gap-2" id="bereken-form">
             @csrf
             <input type="hidden" name="balans" id="balans-input" value="{{ session('blok_balans', 50) }}">
+            <div class="flex items-center gap-2 text-xs bg-gray-100 px-3 py-1.5 rounded">
+                <span class="text-gray-600 whitespace-nowrap">Verdeling</span>
+                <input type="range" id="balans-slider-header" min="0" max="100" value="{{ session('blok_balans', 50) }}"
+                       class="w-24 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
+                       oninput="updateBalansSlider(this.value)">
+                <span class="text-gray-600 whitespace-nowrap">Aansluiting</span>
+            </div>
             <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                 Bereken
             </button>
@@ -216,7 +223,7 @@
                     <span class="text-gray-600 whitespace-nowrap">Verdeling blokken</span>
                     <input type="range" id="balans-slider" min="0" max="100" value="{{ session('blok_balans', 50) }}"
                            class="flex-1 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
-                           oninput="updateBalansSlider()">
+                           oninput="updateBalansSlider(this.value)">
                     <span class="text-gray-600 whitespace-nowrap">Aansluiting gewichten</span>
                 </div>
             </div>
@@ -274,12 +281,15 @@ const afkortingen = @json($afkortingen);
 @endif
 
 <script>
-function updateBalansSlider() {
-    const slider = document.getElementById('balans-slider');
+function updateBalansSlider(value) {
+    const headerSlider = document.getElementById('balans-slider-header');
+    const variantSlider = document.getElementById('balans-slider');
     const hiddenInput = document.getElementById('balans-input');
-    if (slider && hiddenInput) {
-        hiddenInput.value = slider.value;
-    }
+
+    // Sync all elements to the same value
+    if (hiddenInput) hiddenInput.value = value;
+    if (headerSlider) headerSlider.value = value;
+    if (variantSlider) variantSlider.value = value;
 }
 
 function resetAlleBlokken() {
