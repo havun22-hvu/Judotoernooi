@@ -137,14 +137,14 @@ De blokkenpagina bestaat uit twee delen:
 5. **Overzicht panel update direct** - check aansluiting gewichten
 6. Klik **Zet op Mat** om gekozen variant toe te passen
 
-**Sliders voor prioriteit:**
-- **Verdeling** (0-100):
-  - 100% = alle blokken exact gelijk aantal wedstrijden
-  - 0% = max ±25% afwijking van gemiddelde toegestaan
-- **Aansluiting** (0-100):
-  - 100% = alleen zelfde blok of +1 blok toegestaan
-  - 0% = aansluiting wordt genegeerd
-- Pas sliders aan en klik opnieuw op **Bereken** voor nieuwe varianten
+**Balans slider:**
+```
+Verdeling blokken |--------------------| Aansluiting gewichten
+```
+- **Links (0)**: Focus op gelijke verdeling wedstrijden over blokken
+- **Rechts (100)**: Focus op aansluiting gewichtscategorieën (voor overpoelen)
+- **Midden (50)**: Gebalanceerd
+- Pas slider aan en klik opnieuw op **Bereken** voor nieuwe varianten
 
 ### Handmatig Aanpassen
 
