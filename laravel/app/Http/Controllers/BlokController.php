@@ -51,6 +51,9 @@ class BlokController extends Controller
             // Store in session for persistence
             session(['blok_balans' => $balans]);
 
+            // Reset non-pinned categories so they can be redistributed
+            $toernooi->poules()->where('blok_vast', false)->update(['blok_id' => null]);
+
             // Calculate weights from balans
             $verdelingGewicht = 100 - $balans;  // 0 at right, 100 at left
             $aansluitingGewicht = $balans;       // 0 at left, 100 at right
