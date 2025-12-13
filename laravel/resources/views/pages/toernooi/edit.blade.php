@@ -5,7 +5,10 @@
 @section('content')
 <div class="max-w-4xl mx-auto" x-data="{ activeTab: 'toernooi' }">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
+        <div class="flex items-center gap-3">
+            <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
+            <span id="save-status" class="text-sm text-gray-400 hidden"></span>
+        </div>
         <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
             &larr; Terug naar Dashboard
         </a>
@@ -29,7 +32,7 @@
 
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
-    <form action="{{ route('toernooi.update', $toernooi) }}" method="POST">
+    <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form">
         @csrf
         @method('PUT')
 
@@ -871,4 +874,103 @@
     </div><!-- End TAB: ORGANISATIE -->
 
 </div>
+
+<script>
+// Auto-save for toernooi settings
+(function() {
+    const form = document.getElementById('toernooi-form');
+    if (!form) return;
+
+    const status = document.getElementById('save-status');
+    let saveTimeout = null;
+    let initialData = new FormData(form);
+    let initialValues = {};
+
+    // Store initial values
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.name && el.name !== '_token' && el.name !== '_method') {
+            if (el.type === 'checkbox') {
+                initialValues[el.name] = el.checked;
+            } else {
+                initialValues[el.name] = el.value;
+            }
+        }
+    });
+
+    function showStatus(text, type) {
+        status.textContent = text;
+        status.classList.remove('hidden', 'text-gray-400', 'text-green-600', 'text-red-600');
+        status.classList.add(type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-gray-400');
+    }
+
+    function hasChanges() {
+        let changed = false;
+        form.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.name && el.name !== '_token' && el.name !== '_method') {
+                const current = el.type === 'checkbox' ? el.checked : el.value;
+                if (initialValues[el.name] !== current) {
+                    changed = true;
+                }
+            }
+        });
+        return changed;
+    }
+
+    function autoSave() {
+        if (!hasChanges()) return;
+
+        showStatus('Opslaan...', 'default');
+
+        const formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok || response.redirected) {
+                showStatus('✓ Opgeslagen', 'success');
+                // Update initial values after successful save
+                form.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.name && el.name !== '_token' && el.name !== '_method') {
+                        initialValues[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+                    }
+                });
+                setTimeout(() => status.classList.add('hidden'), 2000);
+            } else {
+                showStatus('✗ Fout bij opslaan', 'error');
+            }
+        })
+        .catch(() => {
+            showStatus('✗ Fout bij opslaan', 'error');
+        });
+    }
+
+    // Listen for changes on all form elements
+    form.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('change', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(autoSave, 500);
+        });
+        // For text inputs, also listen to input event with longer debounce
+        if (el.type === 'text' || el.type === 'number' || el.tagName === 'TEXTAREA') {
+            el.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(autoSave, 1500);
+            });
+        }
+    });
+
+    // Warn before leaving if there are unsaved changes (backup for failed auto-save)
+    window.addEventListener('beforeunload', (e) => {
+        if (hasChanges()) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+})();
+</script>
 @endsection
