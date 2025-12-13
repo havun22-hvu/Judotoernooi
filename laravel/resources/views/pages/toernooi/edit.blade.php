@@ -1033,19 +1033,7 @@
 
     const status = document.getElementById('save-status');
     let saveTimeout = null;
-    let initialData = new FormData(form);
-    let initialValues = {};
-
-    // Store initial values
-    form.querySelectorAll('input, select, textarea').forEach(el => {
-        if (el.name && el.name !== '_token' && el.name !== '_method') {
-            if (el.type === 'checkbox') {
-                initialValues[el.name] = el.checked;
-            } else {
-                initialValues[el.name] = el.value;
-            }
-        }
-    });
+    let isDirty = false;  // Track if form has unsaved changes
 
     function showStatus(text, type) {
         status.textContent = text;
@@ -1053,21 +1041,16 @@
         status.classList.add(type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-gray-400');
     }
 
-    function hasChanges() {
-        let changed = false;
-        form.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.name && el.name !== '_token' && el.name !== '_method') {
-                const current = el.type === 'checkbox' ? el.checked : el.value;
-                if (initialValues[el.name] !== current) {
-                    changed = true;
-                }
-            }
-        });
-        return changed;
+    function markDirty() {
+        isDirty = true;
+    }
+
+    function markClean() {
+        isDirty = false;
     }
 
     function autoSave() {
-        if (!hasChanges()) return;
+        if (!isDirty) return;
 
         showStatus('Opslaan...', 'default');
 
@@ -1083,12 +1066,7 @@
         .then(response => {
             if (response.ok || response.redirected) {
                 showStatus('✓ Opgeslagen', 'success');
-                // Update initial values after successful save
-                form.querySelectorAll('input, select, textarea').forEach(el => {
-                    if (el.name && el.name !== '_token' && el.name !== '_method') {
-                        initialValues[el.name] = el.type === 'checkbox' ? el.checked : el.value;
-                    }
-                });
+                markClean();
                 setTimeout(() => status.classList.add('hidden'), 2000);
             } else {
                 showStatus('✗ Fout bij opslaan', 'error');
@@ -1102,21 +1080,23 @@
     // Listen for changes on all form elements
     form.querySelectorAll('input, select, textarea').forEach(el => {
         el.addEventListener('change', () => {
+            markDirty();
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, 500);
         });
         // For text inputs, also listen to input event with longer debounce
         if (el.type === 'text' || el.type === 'number' || el.tagName === 'TEXTAREA') {
             el.addEventListener('input', () => {
+                markDirty();
                 clearTimeout(saveTimeout);
                 saveTimeout = setTimeout(autoSave, 1500);
             });
         }
     });
 
-    // Warn before leaving if there are unsaved changes (backup for failed auto-save)
+    // Warn before leaving if there are unsaved changes
     window.addEventListener('beforeunload', (e) => {
-        if (hasChanges()) {
+        if (isDirty) {
             e.preventDefault();
             e.returnValue = '';
         }
