@@ -80,8 +80,10 @@
         @endif
     </div>
     <div class="flex items-center gap-2">
-        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline">
+        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline" id="bereken-form">
             @csrf
+            <input type="hidden" name="verdeling_gewicht" id="verdeling-gewicht-input" value="{{ session('blok_verdeling_gewicht', 50) }}">
+            <input type="hidden" name="aansluiting_gewicht" id="aansluiting-gewicht-input" value="{{ session('blok_aansluiting_gewicht', 50) }}">
             <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
                 Bereken
             </button>
@@ -196,7 +198,7 @@
                 <span class="text-sm font-medium text-gray-700">{{ count($varianten) }} varianten berekend</span>
                 <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-2 mb-3">
                 @foreach($varianten as $idx => $variant)
                 @php $scores = $variant['scores']; @endphp
                 <button type="button" onclick="toonVariant({{ $idx }})"
@@ -208,6 +210,24 @@
                     <span class="{{ $scores['breaks'] <= 5 ? 'text-green-600' : 'text-yellow-600' }}">{{ $scores['breaks'] }}b</span>
                 </button>
                 @endforeach
+            </div>
+            <!-- Sliders voor gewichten -->
+            <div class="border-t pt-3 space-y-2">
+                <div class="flex items-center gap-3">
+                    <label class="text-xs text-gray-600 w-24">Verdeling:</label>
+                    <input type="range" id="verdeling-slider" min="0" max="100" value="{{ session('blok_verdeling_gewicht', 50) }}"
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                           oninput="updateSliderValue('verdeling')">
+                    <span id="verdeling-value" class="text-xs font-mono w-8 text-right">{{ session('blok_verdeling_gewicht', 50) }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-xs text-gray-600 w-24">Aansluiting:</label>
+                    <input type="range" id="aansluiting-slider" min="0" max="100" value="{{ session('blok_aansluiting_gewicht', 50) }}"
+                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                           oninput="updateSliderValue('aansluiting')">
+                    <span id="aansluiting-value" class="text-xs font-mono w-8 text-right">{{ session('blok_aansluiting_gewicht', 50) }}</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Pas de gewichten aan en klik opnieuw op Bereken</p>
             </div>
         </div>
         @endif
@@ -263,6 +283,19 @@ const afkortingen = @json($afkortingen);
 @endif
 
 <script>
+function updateSliderValue(type) {
+    const slider = document.getElementById(type + '-slider');
+    const valueSpan = document.getElementById(type + '-value');
+    const hiddenInput = document.getElementById(type + '-gewicht-input');
+
+    if (slider && valueSpan) {
+        valueSpan.textContent = slider.value;
+    }
+    if (slider && hiddenInput) {
+        hiddenInput.value = slider.value;
+    }
+}
+
 function resetAlleBlokken() {
     if (!confirm('ALLE bloktoewijzingen verwijderen (ook vastgezette)?')) return;
     fetch('{{ route('toernooi.blok.reset-verdeling', $toernooi) }}', {

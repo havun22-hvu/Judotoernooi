@@ -43,7 +43,15 @@ class BlokController extends Controller
     public function genereerVerdeling(Request $request, Toernooi $toernooi): RedirectResponse
     {
         try {
-            $result = $this->verdelingService->genereerVarianten($toernooi);
+            // Get slider values from request (0-100 scale)
+            $verdelingGewicht = (int) $request->input('verdeling_gewicht', 50);
+            $aansluitingGewicht = (int) $request->input('aansluiting_gewicht', 50);
+
+            // Store in session for persistence
+            session(['blok_verdeling_gewicht' => $verdelingGewicht]);
+            session(['blok_aansluiting_gewicht' => $aansluitingGewicht]);
+
+            $result = $this->verdelingService->genereerVarianten($toernooi, $verdelingGewicht, $aansluitingGewicht);
 
             if (empty($result['varianten'])) {
                 return redirect()
