@@ -202,7 +202,12 @@
         <div class="bg-white rounded-lg shadow p-3">
             <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-gray-700">{{ count($varianten) }} varianten berekend</span>
-                <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
+                        ✓ Toepassen
+                    </button>
+                    <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+                </div>
             </div>
             <div class="flex flex-wrap gap-2 mb-3">
                 @foreach($varianten as $idx => $variant)
@@ -312,6 +317,16 @@ function updateGewenst(input) {
 
 @if($toonVarianten)
 let huidigeVariant = 0;
+
+function pasVariantToe() {
+    fetch('{{ route('toernooi.blok.kies-variant', $toernooi) }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ variant: huidigeVariant })
+    }).then(r => r.json()).then(result => {
+        if (result.success) location.reload();
+    });
+}
 
 function toonVariant(idx) {
     huidigeVariant = idx;
