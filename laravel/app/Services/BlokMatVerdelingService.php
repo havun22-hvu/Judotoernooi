@@ -197,7 +197,7 @@ class BlokMatVerdelingService
 
     /**
      * Simulate a distribution without saving to database
-     * Uses a smarter approach: balance blocks while keeping weight classes together
+     * SMARTER APPROACH: First distribute leeftijden to balance blocks, then place weights
      *
      * @param int $userVerdelingGewicht User-provided weight (0-100)
      * @param int $userAansluitingGewicht User-provided weight (0-100)
@@ -214,141 +214,56 @@ class BlokMatVerdelingService
         $capaciteit = $baseCapaciteit;  // Copy
         $toewijzingen = [];  // category_key => blok_nummer
         $numBlokken = $blokken->count();
+        $blokkenArray = $blokken->values()->all();
 
         // Use seed for reproducible randomness
         mt_srand($seed * 12345);
 
-        // User weights: 0% = 0.0, 100% = 1.0 - NO exceptions!
-        // Direct conversion - user intent is respected exactly
+        // User weights
         $verdelingGewicht = $userVerdelingGewicht / 100.0;
         $aansluitingGewicht = $userAansluitingGewicht / 100.0;
 
-        // Strict modes: 100% means ABSOLUTE priority (use >= 100 to catch any rounding)
-        $strictVerdeling = $userVerdelingGewicht >= 100;
-        $strictAansluiting = $userAansluitingGewicht >= 100;
-
-        // Only add tiny variation in middle range (20-80%), not at extremes
-        if ($userVerdelingGewicht > 20 && $userVerdelingGewicht < 80) {
-            $verdelingGewicht += ($seed % 5) * 0.01;  // max 0.04 variation
-        }
-        if ($userAansluitingGewicht > 20 && $userAansluitingGewicht < 80) {
-            $aansluitingGewicht += ($seed % 5) * 0.01;
-        }
-
-        // Randomness only in middle range
-        $randomFactor = ($userVerdelingGewicht > 20 && $userVerdelingGewicht < 80 && $seed % 3 === 0) ? 0.03 : 0.0;
-
-        // Calculate total wedstrijden per leeftijd for smart distribution
+        // Calculate total wedstrijden per leeftijd
         $leeftijdTotalen = [];
         foreach ($perLeeftijd as $leeftijd => $gewichten) {
             $leeftijdTotalen[$leeftijd] = array_sum(array_column($gewichten, 'wedstrijden'));
         }
 
-        // Vary the order of processing based on seed for different results
-        $leeftijdKeys = array_keys($leeftijdTotalen);
-        $orderStrategy = $seed % 8;  // More strategies
+        // STEP 1: Assign each leeftijd to starting block(s) using bin-packing
+        // Goal: distribute total wedstrijden evenly across blocks
+        $leeftijdBlokToewijzing = $this->verdeelLeeftijdenOverBlokken(
+            $leeftijdTotalen,
+            $capaciteit,
+            $blokkenArray,
+            $seed,
+            $verdelingGewicht
+        );
 
-        switch ($orderStrategy) {
-            case 0:
-                // Largest leeftijd first
-                arsort($leeftijdTotalen);
-                $leeftijdKeys = array_keys($leeftijdTotalen);
-                break;
-            case 1:
-                // Smallest leeftijd first
-                asort($leeftijdTotalen);
-                $leeftijdKeys = array_keys($leeftijdTotalen);
-                break;
-            case 2:
-                // Original order
-                break;
-            case 3:
-                // Reverse original order
-                $leeftijdKeys = array_reverse($leeftijdKeys);
-                break;
-            case 4:
-                // Random shuffle with seed
-                shuffle($leeftijdKeys);
-                break;
-            case 5:
-                // Alphabetical
-                sort($leeftijdKeys);
-                break;
-            case 6:
-                // Reverse alphabetical
-                rsort($leeftijdKeys);
-                break;
-            case 7:
-                // Middle-out (alternate from middle)
-                $mid = (int)(count($leeftijdKeys) / 2);
-                $newOrder = [];
-                for ($i = 0; $i <= $mid; $i++) {
-                    if ($mid + $i < count($leeftijdKeys)) $newOrder[] = $leeftijdKeys[$mid + $i];
-                    if ($mid - $i - 1 >= 0) $newOrder[] = $leeftijdKeys[$mid - $i - 1];
-                }
-                $leeftijdKeys = $newOrder;
-                break;
-        }
+        // STEP 2: Place individual weights within assigned blocks
+        // Respect aansluiting: consecutive weights in same/next block
+        foreach ($perLeeftijd as $leeftijd => $gewichten) {
+            $startBlokIndex = $leeftijdBlokToewijzing[$leeftijd] ?? 0;
+            $vorigeBlokIndex = $startBlokIndex;
 
-        // Assign starting blocks for each leeftijd - vary offset per seed
-        $leeftijdStartBlok = [];
-        $blokOffset = $seed % $numBlokken;  // Different starting point per seed
-
-        foreach ($leeftijdKeys as $idx => $leeftijd) {
-            // Check if this leeftijd has an anchor from already placed categories
-            $ankerBlokIndex = $this->vindAnkerBlok($leeftijd, $alleCategorieen, $blokken);
-
-            if ($ankerBlokIndex !== null) {
-                // Start near where this leeftijd already has categories
-                $leeftijdStartBlok[$leeftijd] = $ankerBlokIndex;
-            } else {
-                // Distribute starting points evenly, with seed-based offset
-                $leeftijdStartBlok[$leeftijd] = ($idx + $blokOffset) % $numBlokken;
-            }
-        }
-
-        // Process each leeftijd in the determined order
-        foreach ($leeftijdKeys as $leeftijd) {
-            if (!isset($perLeeftijd[$leeftijd])) continue;
-
-            $gewichten = $perLeeftijd[$leeftijd];
-            $vorigeBlokIndex = $leeftijdStartBlok[$leeftijd] ?? 0;
-
-            // Vary weight order based on seed
-            $weightStrategy = ($seed + array_search($leeftijd, $leeftijdKeys)) % 4;
-            if ($weightStrategy === 1) {
-                $gewichten = array_reverse($gewichten);  // Heavy first
-            } elseif ($weightStrategy === 2) {
-                // Start from middle
-                $mid = (int)(count($gewichten) / 2);
-                $reordered = [];
-                for ($w = 0; $w < count($gewichten); $w++) {
-                    $idx = ($mid + ($w % 2 === 0 ? $w/2 : -(($w+1)/2))) % count($gewichten);
-                    if ($idx < 0) $idx += count($gewichten);
-                    $reordered[] = $gewichten[(int)$idx];
-                }
-                $gewichten = $reordered;
-            }
-            // weightStrategy 0 and 3 = original order (light first)
+            // Sort weights by gewicht (light to heavy)
+            usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
 
             foreach ($gewichten as $cat) {
                 $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
 
-                // Find best block with current strategy
-                $besteBlokIndex = $this->vindBesteBlokMetStrategie(
+                // Find best block: prefer staying in same/next block (aansluiting)
+                // but respect capacity limits
+                $besteBlokIndex = $this->vindBesteBlokVoorGewicht(
                     $vorigeBlokIndex,
                     $cat['wedstrijden'],
                     $capaciteit,
-                    $blokken,
+                    $blokkenArray,
                     $numBlokken,
-                    $verdelingGewicht,
-                    $aansluitingGewicht,
-                    $randomFactor,
-                    $strictAansluiting
+                    $aansluitingGewicht
                 );
 
                 // Record assignment
-                $blok = $blokken[$besteBlokIndex];
+                $blok = $blokkenArray[$besteBlokIndex];
                 $toewijzingen[$key] = $blok->nummer;
 
                 // Update capacity
@@ -360,7 +275,7 @@ class BlokMatVerdelingService
         }
 
         // Calculate scores for this variant
-        $scores = $this->berekenScores($toewijzingen, $capaciteit, $blokken, $perLeeftijd);
+        $scores = $this->berekenScores($toewijzingen, $capaciteit, $blokkenArray, $perLeeftijd);
 
         return [
             'toewijzingen' => $toewijzingen,
@@ -372,6 +287,122 @@ class BlokMatVerdelingService
                 'aansluiting' => round($aansluitingGewicht * 100),
             ],
         ];
+    }
+
+    /**
+     * Distribute leeftijden to starting blocks using bin-packing approach
+     * Returns array of leeftijd => starting block index
+     */
+    private function verdeelLeeftijdenOverBlokken(
+        array $leeftijdTotalen,
+        array $capaciteit,
+        array $blokken,
+        int $seed,
+        float $verdelingGewicht
+    ): array {
+        $numBlokken = count($blokken);
+        $toewijzing = [];
+
+        // Sort leeftijden by total wedstrijden (largest first for better bin-packing)
+        arsort($leeftijdTotalen);
+
+        // Track wedstrijden per block
+        $blokWedstrijden = [];
+        foreach ($blokken as $idx => $blok) {
+            $blokWedstrijden[$idx] = $capaciteit[$blok->id]['actueel'];
+        }
+
+        // Calculate target per block
+        $totaal = array_sum($leeftijdTotalen) + array_sum($blokWedstrijden);
+        $targetPerBlok = $totaal / $numBlokken;
+
+        // Vary starting point based on seed
+        $startOffset = $seed % $numBlokken;
+
+        foreach ($leeftijdTotalen as $leeftijd => $totaalWed) {
+            // Find block with most remaining capacity (below target)
+            $besteBlok = 0;
+            $minWedstrijden = PHP_INT_MAX;
+
+            for ($i = 0; $i < $numBlokken; $i++) {
+                $idx = ($i + $startOffset) % $numBlokken;
+                $huidig = $blokWedstrijden[$idx];
+
+                // Prefer blocks that are furthest below target
+                if ($huidig < $minWedstrijden) {
+                    $minWedstrijden = $huidig;
+                    $besteBlok = $idx;
+                }
+            }
+
+            $toewijzing[$leeftijd] = $besteBlok;
+            $blokWedstrijden[$besteBlok] += $totaalWed;
+
+            // Rotate start for variety
+            $startOffset = ($besteBlok + 1) % $numBlokken;
+        }
+
+        return $toewijzing;
+    }
+
+    /**
+     * Find best block for a single weight category
+     * Balances aansluiting (stay close to previous) with capacity
+     */
+    private function vindBesteBlokVoorGewicht(
+        int $vorigeBlokIndex,
+        int $wedstrijden,
+        array $capaciteit,
+        array $blokken,
+        int $numBlokken,
+        float $aansluitingGewicht
+    ): int {
+        $besteBlok = $vorigeBlokIndex;
+        $besteScore = PHP_INT_MAX;
+
+        // Check blocks in preference order: same, +1, +2, -1, +3, etc.
+        $checkOrder = [0, 1, 2, -1, 3, -2, 4, -3, 5];
+
+        foreach ($checkOrder as $offset) {
+            $idx = $vorigeBlokIndex + $offset;
+            if ($idx < 0 || $idx >= $numBlokken) continue;
+
+            $blok = $blokken[$idx];
+            $cap = $capaciteit[$blok->id];
+            $gewenst = max(1, $cap['gewenst']);
+            $nieuweActueel = $cap['actueel'] + $wedstrijden;
+
+            // Calculate deviation percentage
+            $afwijkingPct = abs(($nieuweActueel - $gewenst) / $gewenst);
+
+            // Score based on aansluiting preference and capacity
+            // Same block or +1 = low aansluiting penalty
+            if ($offset === 0 || $offset === 1) {
+                $aansluitingScore = 0;
+            } elseif ($offset === 2) {
+                $aansluitingScore = 20;
+            } elseif ($offset < 0) {
+                $aansluitingScore = 100 + abs($offset) * 50;  // Backwards is bad
+            } else {
+                $aansluitingScore = 50 + $offset * 20;
+            }
+
+            // Capacity score: prefer blocks that aren't overfilled
+            $capacityScore = $afwijkingPct * 100;
+            if ($nieuweActueel > $gewenst * 1.25) {
+                $capacityScore += 200;  // Penalty for exceeding 25%
+            }
+
+            // Combined score
+            $score = ($capacityScore * (1 - $aansluitingGewicht)) + ($aansluitingScore * $aansluitingGewicht);
+
+            if ($score < $besteScore) {
+                $besteScore = $score;
+                $besteBlok = $idx;
+            }
+        }
+
+        return $besteBlok;
     }
 
     /**
