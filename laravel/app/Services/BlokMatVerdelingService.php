@@ -218,23 +218,22 @@ class BlokMatVerdelingService
         // Use seed for reproducible randomness
         mt_srand($seed * 12345);
 
-        // Use user-provided weights as base, with small variations per seed for diversity
-        // Convert from 0-100 scale to 0.0-1.0 scale
-        $baseVerdeling = $userVerdelingGewicht / 100.0;
-        $baseAansluiting = $userAansluitingGewicht / 100.0;
+        // User weights have STRONG effect - use exponential scaling
+        // At 100% aansluiting: force all weights together (no breaks allowed)
+        // At 100% verdeling: prioritize even distribution
+        $strictAansluiting = $userAansluitingGewicht >= 95;  // 95-100 = strict mode
 
-        // Normalize so they sum to 1.0 (with small seed-based variation)
-        $variation = ($seed % 10) * 0.02 - 0.1;  // -0.1 to +0.08 variation
-        $total = $baseVerdeling + $baseAansluiting;
-        if ($total > 0) {
-            $verdelingGewicht = max(0.1, min(0.95, ($baseVerdeling / $total) + $variation));
-        } else {
-            $verdelingGewicht = 0.5 + $variation;
-        }
-        $aansluitingGewicht = 1.0 - $verdelingGewicht;
+        // Exponential scaling for dramatic effect (0-100 -> 0.0-1.0 with curve)
+        $verdelingGewicht = pow($userVerdelingGewicht / 100.0, 0.7);  // Slightly curved
+        $aansluitingGewicht = pow($userAansluitingGewicht / 100.0, 0.5);  // More sensitive
 
-        // Add randomness more often for variety
-        $randomFactor = ($seed % 3 === 0) ? 0.1 + ($seed % 5) * 0.02 : 0.0;
+        // Small seed variation for diversity (but respect user intent)
+        $variation = ($seed % 5) * 0.02;  // 0 to 0.08 variation
+        $verdelingGewicht = max(0.05, min(0.98, $verdelingGewicht + $variation));
+        $aansluitingGewicht = max(0.05, min(0.98, $aansluitingGewicht - $variation * 0.5));
+
+        // Add randomness for variety (less when strict mode)
+        $randomFactor = $strictAansluiting ? 0.0 : (($seed % 3 === 0) ? 0.05 + ($seed % 5) * 0.01 : 0.0);
 
         // Calculate total wedstrijden per leeftijd for smart distribution
         $leeftijdTotalen = [];
@@ -341,7 +340,8 @@ class BlokMatVerdelingService
                     $numBlokken,
                     $verdelingGewicht,
                     $aansluitingGewicht,
-                    $randomFactor
+                    $randomFactor,
+                    $strictAansluiting
                 );
 
                 // Record assignment
@@ -374,6 +374,7 @@ class BlokMatVerdelingService
     /**
      * Find best block using weighted strategy
      * Balances even distribution with continuity
+     * When strictAansluiting=true: force same block as previous (no breaks allowed)
      */
     private function vindBesteBlokMetStrategie(
         int $vorigeBlokIndex,
@@ -383,8 +384,14 @@ class BlokMatVerdelingService
         int $numBlokken,
         float $verdelingGewicht,
         float $aansluitingGewicht,
-        float $randomFactor
+        float $randomFactor,
+        bool $strictAansluiting = false
     ): int {
+        // STRICT MODE: always stay in same block (100% aansluiting = no breaks)
+        if ($strictAansluiting) {
+            return $vorigeBlokIndex;
+        }
+
         $opties = [];
 
         foreach ($blokken as $index => $blok) {
@@ -398,29 +405,31 @@ class BlokMatVerdelingService
             // Distance penalty for continuity (0 = same block, 1 = adjacent, etc.)
             $afstand = abs($index - $vorigeBlokIndex);
 
-            // Combined score calculation
-            // Verdeling: penalize being over gewenst more than under
+            // Combined score calculation with DRAMATIC effect
+            // Verdeling: penalize being over gewenst
             $verdelingsScore = $afwijkingPct > 0
-                ? $afwijkingPct * 150  // Over capacity = big penalty
-                : abs($afwijkingPct) * 50;  // Under capacity = smaller penalty
+                ? $afwijkingPct * 200  // Over capacity = big penalty
+                : abs($afwijkingPct) * 30;  // Under capacity = smaller penalty
 
-            // Aansluiting: prefer staying close to previous block
-            $aansluitingScore = $afstand * 10;
+            // Aansluiting: HEAVY penalty for distance (exponential)
+            $aansluitingScore = $afstand * $afstand * 50;  // Exponential: 0, 50, 200, 450...
 
-            // Total score (lower = better)
+            // Total score (lower = better) - weights have STRONG effect
             $score = ($verdelingsScore * $verdelingGewicht) + ($aansluitingScore * $aansluitingGewicht);
 
-            // Bonus for blocks that are underfilled (prefer filling empty blocks first)
-            $vulgraad = $cap['actueel'] / $gewenst;
-            if ($vulgraad < 0.7) {
-                $score -= 15;  // Big bonus for empty blocks
-            } elseif ($vulgraad < 0.9) {
-                $score -= 5;   // Small bonus
+            // Bonus for blocks that are underfilled (only when verdeling matters)
+            if ($verdelingGewicht > 0.3) {
+                $vulgraad = $cap['actueel'] / $gewenst;
+                if ($vulgraad < 0.7) {
+                    $score -= 20 * $verdelingGewicht;
+                } elseif ($vulgraad < 0.9) {
+                    $score -= 8 * $verdelingGewicht;
+                }
             }
 
             // Add randomness only if configured
             if ($randomFactor > 0) {
-                $score += mt_rand(0, 30) * $randomFactor;
+                $score += mt_rand(0, 20) * $randomFactor;
             }
 
             $opties[] = [
