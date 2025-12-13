@@ -3,7 +3,7 @@
 @section('title', 'Mat Interface')
 
 @section('content')
-<div x-data="matInterface()" class="max-w-7xl mx-auto">
+<div x-data="matInterface()" x-init="init()" class="max-w-7xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 mb-8">🥋 Mat Interface</h1>
 
     <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -148,10 +148,26 @@
 
 <script>
 function matInterface() {
+    // Get blok from URL query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const blokNummer = urlParams.get('blok');
+
+    // Find blok ID by nummer
+    const blokkenData = @json($blokken->map(fn($b) => ['id' => $b->id, 'nummer' => $b->nummer]));
+    const voorgeselecteerdBlok = blokNummer ? blokkenData.find(b => b.nummer == blokNummer) : null;
+
     return {
-        blokId: '',
+        blokId: voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : '',
         matId: '',
         poules: [],
+
+        init() {
+            // Auto-select first mat if blok is preselected
+            if (this.blokId && @json($matten->count()) > 0) {
+                this.matId = '{{ $matten->first()?->id }}';
+                this.laadWedstrijden();
+            }
+        },
 
         async laadWedstrijden() {
             if (!this.blokId || !this.matId) {

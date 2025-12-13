@@ -85,8 +85,8 @@
                 }
             @endphp
             @if($isActivated)
-            {{-- Groen: al geactiveerd, klik gaat naar mat interface --}}
-            <a href="{{ route('toernooi.mat.interface', $toernooi) }}"
+            {{-- Groen: al geactiveerd, klik gaat naar mat interface met blok voorgeselecteerd --}}
+            <a href="{{ route('toernooi.mat.interface', ['toernooi' => $toernooi, 'blok' => $blok['nummer']]) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
                 ✓ {{ $catNaam }}
