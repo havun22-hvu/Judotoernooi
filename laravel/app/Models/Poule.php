@@ -125,7 +125,10 @@ class Poule extends Model
     }
 
     /**
-     * Update statistics: count ALL judokas in poule (for preparation/blokverdeling)
+     * Update statistics: count all judokas in poule
+     *
+     * Note: Filtering (absent, wrong weight class) is handled by MOVING judokas
+     * out of the poule, not by filtering during count. Who is in the poule, counts.
      */
     public function updateStatistieken(): void
     {
@@ -135,25 +138,6 @@ class Poule extends Model
 
         $this->aantal_judokas = $aantalJudokas;
         $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($aantalJudokas);
-        $this->save();
-    }
-
-    /**
-     * Update statistics for toernooidag: count only ACTIVE judokas
-     * (present AND within weight class)
-     */
-    public function updateStatistiekenToernooidag(): void
-    {
-        $this->unsetRelation('judokas');
-
-        $activeJudokas = $this->judokas()
-            ->where('aanwezigheid', '!=', 'afwezig')
-            ->get()
-            ->filter(fn($j) => $j->isGewichtBinnenKlasse())
-            ->count();
-
-        $this->aantal_judokas = $activeJudokas;
-        $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($activeJudokas);
         $this->save();
     }
 

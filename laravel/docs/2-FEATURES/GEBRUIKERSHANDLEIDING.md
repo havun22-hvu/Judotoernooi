@@ -8,15 +8,34 @@
 4. [Blok/Mat Verdeling](#blokmat-verdeling)
 5. [Toernooidag](#toernooidag)
 6. [Weging](#weging)
-7. [Mat Interface](#mat-interface)
+7. [Overpoelen](#overpoelen)
+8. [Zaaloverzicht & Wedstrijdschema](#zaaloverzicht--wedstrijdschema)
+9. [Mat Interface](#mat-interface)
+10. [Spreker & Prijsuitreiking](#spreker--prijsuitreiking)
 
 ## Overzicht
 
-Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proces van een judotoernooi:
+Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proces van een judotoernooi in twee fasen:
 
-1. **Voorbereiding**: Toernooi aanmaken, deelnemers importeren
-2. **Indeling**: Poules genereren, verdelen over blokken en matten
-3. **Toernooidag**: Weging, wedstrijden bijhouden, uitslagen registreren
+### Fase 1: Voorbereiding (weken/maanden voor toernooi)
+1. Toernooi aanmaken
+2. Deelnemers importeren
+3. Poules genereren
+4. Blokkenverdeling
+5. **Resultaat:** Weeglijst, weegkaarten, preview zaaloverzicht
+
+### Fase 2: Toernooidag
+1. Weging (gewicht registreren per judoka)
+2. Einde weegtijd per blok
+3. Overpoelen (te zware judoka's verplaatsen)
+4. Poules in orde maken
+5. Categorie naar zaaloverzicht sturen
+6. Wedstrijdschema genereren
+7. Wedstrijden op mat
+8. Poule klaar → spreker voor prijsuitreiking
+9. Eindoverzicht prijsuitreikingen
+
+**Belangrijk:** Tijdens de voorbereiding bestaat er geen "aanwezig/afwezig" status. Alle aangemelde judoka's worden meegeteld. De aanwezigheidsstatus wordt pas relevant op de toernooidag.
 
 ## Voorbereiding
 
@@ -126,13 +145,17 @@ Het Zaaloverzicht toont per blok en mat:
 
 ## Toernooidag
 
-### Workflow
+De toernooidag begint waar de voorbereiding eindigt. Nu worden judoka's daadwerkelijk gewogen en kunnen afwijkingen optreden.
 
-1. **Weging openen** - Judoka's melden zich
-2. **Gewicht registreren** - Via interface of QR scan
-3. **Weging sluiten per blok** - Wanneer klaar
-4. **Wedstrijdschema's genereren** - Na sluiten weging
-5. **Wedstrijden afwerken** - Uitslagen registreren
+### Dagflow per Blok
+
+1. **Weging** - Judoka's wegen zich in
+2. **Einde weegtijd** - Blok sluiten voor weging
+3. **Overpoelen** - Te zware/lichte judoka's verplaatsen
+4. **Poules controleren** - Afwezigen afhandelen
+5. **Naar zaaloverzicht** - Categorie klaarzetten
+6. **Wedstrijdschema genereren** - Per categorie
+7. **Naar mat** - Wedstrijden kunnen beginnen
 
 ## Weging
 
@@ -149,19 +172,55 @@ Het systeem controleert automatisch:
 - **Bovengrens**: Eigen gewichtsklasse + tolerantie
 
 Bij afwijking:
-- Rode markering
-- Suggestie voor alternatieve poule
-- Mogelijkheid tot verplaatsing
+- Rode markering (doorgestreept gewicht)
+- Judoka moet overgepouled worden naar andere gewichtsklasse
 
 ### Weging Sluiten
 
 1. Ga naar **Blokken** > **Blok X**
 2. Klik **Sluit Weging**
-3. Bevestig - dit is onomkeerbaar
+3. Bevestig
 
 Na sluiten:
-- Wedstrijdschema's kunnen worden gegenereerd
 - Geen weging meer mogelijk voor dit blok
+- Overpoelen kan beginnen
+
+## Overpoelen
+
+Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden verplaatst.
+
+### Workflow
+
+1. Ga naar **Wedstrijddag** pagina
+2. Je ziet judoka's die buiten gewichtsklasse vallen (doorgestreept)
+3. Sleep judoka naar juiste poule in zwaardere gewichtsklasse
+4. Of: markeer als afwezig
+5. Statistieken (aantal judoka's, wedstrijden) updaten automatisch
+
+### Tips
+
+- Plaats te zware judoka's in poules met nog ruimte (max 6)
+- Bij veel afwezigen: overweeg poules samenvoegen
+- Check de aansluiting: zwaardere klasse moet in zelfde/volgend blok zitten
+
+## Zaaloverzicht & Wedstrijdschema
+
+### Categorie naar Zaaloverzicht
+
+Wanneer een gewichtscategorie klaar is (alle judoka's gewogen, overgepouled):
+
+1. Klik **Naar Zaaloverzicht** bij de categorie
+2. Controleer of poules goed over matten verdeeld zijn
+3. Pas eventueel aan (sleep poule naar andere mat)
+
+### Wedstrijdschema Genereren
+
+Per categorie op zaaloverzicht:
+
+1. Klik **Genereer Wedstrijdschema**
+2. Systeem maakt wedstrijden aan per poule
+3. Optimale volgorde: elke judoka krijgt rust tussen wedstrijden
+4. Categorie is nu klaar voor de mat
 
 ## Mat Interface
 
@@ -191,3 +250,36 @@ De poulestand wordt automatisch bijgewerkt:
 - 10 punten per gewonnen wedstrijd
 - 5 punten bij gelijkspel
 - Rangschikking op punten, dan op gewonnen
+
+### Poule Afronden
+
+Wanneer alle wedstrijden in een poule gespeeld zijn:
+1. Klik **Poule Klaar**
+2. Poule wordt naar spreker gestuurd voor prijsuitreiking
+
+## Spreker & Prijsuitreiking
+
+### Spreker Interface
+
+De spreker ziet poules die klaar zijn voor prijsuitreiking:
+
+1. Ga naar **Spreker** > **Interface**
+2. Wachtrij met afgeronde poules
+3. Per poule:
+   - Eindstand met 1e, 2e, 3e plaats
+   - Judoka namen en clubs
+   - Categorie informatie
+
+### Prijsuitreiking Workflow
+
+1. Roep judoka's op (1e, 2e, 3e)
+2. Reik medailles uit
+3. Markeer als **Uitgereikt**
+4. Volgende poule verschijnt
+
+### Eindoverzicht
+
+Voor de organisator:
+- Overzicht alle prijsuitreikingen
+- Status per poule (uitgereikt/wachtend)
+- Totaal aantal medailles
