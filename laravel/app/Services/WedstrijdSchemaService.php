@@ -73,6 +73,7 @@ class WedstrijdSchemaService
                 'judokas' => $poule->judokas->map(fn($j) => [
                     'id' => $j->id,
                     'naam' => $j->naam,
+                    'gewichtsklasse' => $j->gewichtsklasse,
                     'club' => $j->club?->naam,
                     'band' => $j->band,
                 ])->toArray(),

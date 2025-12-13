@@ -62,12 +62,12 @@
                         <div class="flex flex-wrap gap-4 flex-1">
                             @foreach($category['poules'] as $poule)
                             <div
-                                class="border rounded-lg p-3 min-w-[200px] bg-white transition-colors poule-card"
+                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card"
                                 data-poule-id="{{ $poule->id }}"
                             >
-                                <div class="font-medium text-sm text-gray-600 mb-2 flex justify-between items-center pointer-events-none">
-                                    <span>Poule {{ $poule->nummer }}</span>
-                                    <span class="text-xs text-gray-400 poule-stats">{{ $poule->aantal_judokas }} judoka's ({{ $poule->aantal_wedstrijden }}w)</span>
+                                <div class="bg-blue-700 text-white px-3 py-2 flex justify-between items-center pointer-events-none">
+                                    <span class="font-bold">Poule {{ $poule->nummer }}</span>
+                                    <span class="text-xs text-blue-200 poule-stats">{{ $poule->aantal_judokas }}j / {{ $poule->aantal_wedstrijden }}w</span>
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
@@ -92,7 +92,7 @@
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
                                                 <div class="min-w-0">
-                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
@@ -124,13 +124,12 @@
                                         <div class="flex items-center gap-1 flex-1 min-w-0">
                                             <span class="text-red-500 text-xs flex-shrink-0">●</span>
                                             <div class="min-w-0">
-                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
                                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                             </div>
                                         </div>
                                         <div class="text-right text-xs ml-2 flex-shrink-0">
                                             <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen }} kg</div>
-                                            <div class="text-gray-400">was {{ $judoka->gewichtsklasse }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -282,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the stats in header
         const statsSpan = pouleCard.querySelector('.poule-stats');
         if (statsSpan) {
-            statsSpan.textContent = `${pouleData.aantal_judokas} judoka's (${pouleData.aantal_wedstrijden}w)`;
+            statsSpan.textContent = `${pouleData.aantal_judokas}j / ${pouleData.aantal_wedstrijden}w`;
         } else {
             console.warn('Stats span not found in poule card:', pouleData.id);
         }
