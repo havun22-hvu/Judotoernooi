@@ -173,40 +173,26 @@ class Poule extends Model
     /**
      * Get optimal match order for given number of judokas
      * Returns array of [judoka1, judoka2] pairs (1-based indices)
-     * Optimized to give each judoka rest between their matches
+     * Uses tournament settings if configured, otherwise defaults
      */
     private function getOptimaleWedstrijdvolgorde(int $aantal): array
     {
-        // Predefined optimal orders for common pool sizes
+        // First check if tournament has custom schemas
+        $toernooi = $this->toernooi;
+        $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
+
+        if (!empty($customSchemas[$aantal])) {
+            return $customSchemas[$aantal];
+        }
+
+        // Default optimized schemas
         $schema = match ($aantal) {
-            2 => [
-                [1, 2],
-                [1, 2],  // Double round
-            ],
-            3 => [
-                // Double round for 3: each pair plays twice
-                [1, 2], [1, 3], [2, 3],
-                [1, 2], [1, 3], [2, 3],
-            ],
-            4 => [
-                // Optimal: each judoka rests 1 match between games
-                [1, 2], [3, 4],  // 1,2 play; 3,4 play
-                [2, 3], [1, 4],  // 2,3 play; 1,4 play
-                [2, 4], [1, 3],  // 2,4 play; 1,3 play
-            ],
-            5 => [
-                // Optimal order with rest between matches
-                [1, 2], [3, 4], [1, 5], [2, 3], [4, 5],
-                [1, 3], [2, 4], [3, 5], [1, 4], [2, 5],
-            ],
-            6 => [
-                // 15 matches with optimal rest
-                [1, 2], [3, 4], [5, 6],
-                [1, 3], [2, 5], [4, 6],
-                [3, 5], [2, 4], [1, 6],
-                [2, 3], [4, 5], [3, 6],
-                [1, 4], [2, 6], [1, 5],
-            ],
+            2 => [[1, 2], [2, 1]],
+            3 => [[1, 2], [1, 3], [2, 3], [2, 1], [3, 2], [3, 1]],
+            4 => [[1, 2], [3, 4], [2, 3], [1, 4], [2, 4], [1, 3]],
+            5 => [[1, 2], [3, 4], [1, 5], [2, 3], [4, 5], [1, 3], [2, 4], [3, 5], [1, 4], [2, 5]],
+            6 => [[1, 2], [3, 4], [5, 6], [1, 3], [2, 5], [4, 6], [3, 5], [2, 4], [1, 6], [2, 3], [4, 5], [3, 6], [1, 4], [2, 6], [1, 5]],
+            7 => [[1, 2], [3, 4], [5, 6], [1, 7], [2, 3], [4, 5], [6, 7], [1, 3], [2, 4], [5, 7], [3, 6], [1, 4], [2, 5], [3, 7], [4, 6], [1, 5], [2, 6], [4, 7], [1, 6], [3, 5], [2, 7]],
             default => $this->genereerRoundRobinSchema($aantal),
         };
 
