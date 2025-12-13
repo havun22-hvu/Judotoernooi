@@ -230,6 +230,10 @@
                            class="flex-1 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
                            oninput="updateBalansSlider(this.value)">
                     <span class="text-gray-600 whitespace-nowrap">Aansluiting gewichten</span>
+                    <button type="button" onclick="document.getElementById('bereken-form').submit()"
+                            class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold px-2 py-1 rounded">
+                        Herbereken
+                    </button>
                 </div>
             </div>
         </div>
