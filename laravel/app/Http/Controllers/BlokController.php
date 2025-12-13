@@ -58,6 +58,12 @@ class BlokController extends Controller
             $result = $this->verdelingService->genereerVarianten($toernooi, $verdelingGewicht, $aansluitingGewicht);
 
             if (empty($result['varianten'])) {
+                // Check if there's an error (e.g., 25% limit exceeded)
+                if (isset($result['error'])) {
+                    return redirect()
+                        ->route('toernooi.blok.index', $toernooi)
+                        ->with('error', $result['error']);
+                }
                 return redirect()
                     ->route('toernooi.blok.index', $toernooi)
                     ->with('info', $result['message'] ?? 'Geen varianten gegenereerd');
@@ -68,9 +74,9 @@ class BlokController extends Controller
 
             // Build info message with best variant stats
             $beste = $result['varianten'][0];
-            $maxAfwijking = $beste['scores']['max_afwijking'] ?? 0;
+            $maxAfwijkingPct = $beste['scores']['max_afwijking_pct'] ?? 0;
             $breaks = $beste['scores']['breaks'] ?? 0;
-            $msg = count($result['varianten']) . " varianten berekend (beste: max afwijking {$maxAfwijking} wed., {$breaks} breaks)";
+            $msg = count($result['varianten']) . " varianten berekend (beste: max ±{$maxAfwijkingPct}%, {$breaks} breaks)";
 
             return redirect()
                 ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1])

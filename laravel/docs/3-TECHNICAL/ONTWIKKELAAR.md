@@ -193,6 +193,12 @@ De blokverdeling heeft twee doelen:
 1. **Gelijkmatige verdeling** - evenveel wedstrijden per blok
 2. **Aansluiting gewichten** - opeenvolgende gewichtsklassen in zelfde/aansluitende blokken
 
+**HARDE LIMIET: 25% afwijking**
+- Het algoritme mag NOOIT een blok meer dan 25% boven het gewenste aantal wedstrijden plaatsen
+- Bij overschrijding wordt het blok overgeslagen
+- Varianten die de limiet overschrijden worden als ongeldig verworpen
+- Hogere afwijking kan alleen handmatig door de organisator (via drag & drop)
+
 **Waarom aansluiting belangrijk is:**
 Bij overpoelen gaat een te zware judoka naar een zwaardere gewichtsklasse. Die klasse moet in hetzelfde of volgend blok zitten, anders moet de judoka lang wachten.
 
@@ -222,8 +228,9 @@ $service->pasVariantToe($toernooi, $variant['toewijzingen']);
 - Controller berekent: `verdelingGewicht = 100 - balans`, `aansluitingGewicht = balans`
 
 **Scores per variant:**
-- `max_afwijking` - grootste verschil met gemiddelde wedstrijden/blok
+- `max_afwijking_pct` - grootste percentage afwijking van gewenst (max 25%)
 - `breaks` - aantal slechte overgangen (+2, -1, of +3+)
+- `is_valid` - false als een blok >25% afwijkt
 
 **JavaScript Interactiviteit (index.blade.php):**
 

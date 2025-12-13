@@ -93,14 +93,21 @@ class BlokMatVerdelingService
 
             if (!isset($gezien[$hash])) {
                 $gezien[$hash] = true;
-                $alleVarianten[] = $variant;
 
-                // Log first few attempts for debugging
-                if ($poging < 5) {
-                    Log::info("Variant #{$poging}", [
-                        'max_afwijking' => $variant['scores']['max_afwijking'],
-                        'breaks' => $variant['scores']['breaks'],
-                        'blok_stats' => $variant['scores']['blok_stats'],
+                // Only add VALID variants (within 25% limit)
+                if ($variant['scores']['is_valid']) {
+                    $alleVarianten[] = $variant;
+
+                    // Log first few attempts for debugging
+                    if (count($alleVarianten) <= 5) {
+                        Log::info("Geldige variant #{$poging}", [
+                            'max_afwijking_pct' => $variant['scores']['max_afwijking_pct'] . '%',
+                            'breaks' => $variant['scores']['breaks'],
+                        ]);
+                    }
+                } else {
+                    Log::debug("Variant #{$poging} verworpen - overschrijdt 25% limiet", [
+                        'max_afwijking_pct' => $variant['scores']['max_afwijking_pct'] . '%',
                     ]);
                 }
             }
@@ -151,11 +158,18 @@ class BlokMatVerdelingService
         }
 
         Log::info("Blokverdeling klaar na {$poging} pogingen", [
-            'unieke_varianten' => count($alleVarianten),
-            'beste_afwijking' => $beste[0]['scores']['max_afwijking'] ?? 'N/A',
+            'geldige_varianten' => count($alleVarianten),
+            'beste_afwijking_pct' => isset($beste[0]) ? $beste[0]['scores']['max_afwijking_pct'] . '%' : 'N/A',
         ]);
 
         // Return top 5 unique variants
+        if (empty($beste)) {
+            return [
+                'varianten' => [],
+                'error' => 'Geen geldige verdeling mogelijk binnen 25% limiet. Pas het aantal blokken of categorieën aan.',
+            ];
+        }
+
         return ['varianten' => $beste];
     }
 
@@ -403,8 +417,15 @@ class BlokMatVerdelingService
             }
         }
 
-        // If no block found within limit, find the one with most room (emergency fallback)
+        // If no block found within 25% limit, log warning and use block with most room
+        // This variant will be rejected during scoring if it exceeds limits
         if ($besteBlok === null) {
+            Log::warning('Blokverdeling: geen blok beschikbaar binnen 25% limiet', [
+                'vorige_blok' => $vorigeBlokIndex,
+                'wedstrijden' => $wedstrijden,
+            ]);
+
+            // Return block with most room - variant will be marked as invalid
             $maxRuimte = -PHP_INT_MAX;
             foreach ($blokken as $idx => $blok) {
                 $cap = $capaciteit[$blok->id];
@@ -421,6 +442,7 @@ class BlokMatVerdelingService
 
     /**
      * Calculate quality scores for a variant
+     * Marks variant as invalid if any block exceeds 25% deviation
      */
     private function berekenScores(
         array $toewijzingen,
@@ -431,17 +453,30 @@ class BlokMatVerdelingService
         // Verdeling score: sum of absolute deviations from gewenst
         $verdelingScore = 0;
         $maxAfwijking = 0;
+        $maxAfwijkingPct = 0;
         $blokStats = [];
+        $isValid = true;  // Variant is valid unless a block exceeds 25% limit
 
         foreach ($blokken as $blok) {
             $cap = $capaciteit[$blok->id];
-            $afwijking = abs($cap['actueel'] - $cap['gewenst']);
+            $gewenst = max(1, $cap['gewenst']);
+            $afwijking = abs($cap['actueel'] - $gewenst);
+            $afwijkingPct = ($cap['actueel'] - $gewenst) / $gewenst * 100;
+
             $verdelingScore += $afwijking;
             $maxAfwijking = max($maxAfwijking, $afwijking);
+            $maxAfwijkingPct = max($maxAfwijkingPct, abs($afwijkingPct));
+
+            // HARD LIMIT: if any block exceeds 25%, variant is INVALID
+            if ($afwijkingPct > 25) {
+                $isValid = false;
+            }
+
             $blokStats[$blok->nummer] = [
                 'actueel' => $cap['actueel'],
-                'gewenst' => $cap['gewenst'],
+                'gewenst' => $gewenst,
                 'afwijking' => $afwijking,
+                'afwijking_pct' => round($afwijkingPct, 1),
             ];
         }
 
@@ -483,9 +518,11 @@ class BlokMatVerdelingService
         return [
             'verdeling_score' => $verdelingScore,
             'max_afwijking' => $maxAfwijking,
+            'max_afwijking_pct' => round($maxAfwijkingPct, 1),
             'aansluiting_score' => $aansluitingScore,
             'breaks' => $breaks,
             'blok_stats' => $blokStats,
+            'is_valid' => $isValid,
         ];
     }
 
