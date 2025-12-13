@@ -197,30 +197,49 @@
         </div>
         @endforeach
 
-        <!-- Varianten panel (onder blokken) -->
-        @if($toonVarianten)
+        <!-- Varianten panel (altijd zichtbaar) -->
         <div class="bg-white rounded-lg shadow p-3">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">{{ count($varianten) }} varianten berekend</span>
+                <span class="text-sm font-medium text-gray-700">
+                    @if($toonVarianten)
+                        {{ count($varianten) }} varianten berekend
+                    @else
+                        Varianten (klik Bereken)
+                    @endif
+                </span>
+                @if($toonVarianten)
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
                         ✓ Toepassen
                     </button>
                     <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
                 </div>
+                @endif
             </div>
             <div class="flex flex-wrap gap-2 mb-3">
-                @foreach($varianten as $idx => $variant)
-                @php $scores = $variant['scores']; @endphp
-                <button type="button" onclick="toonVariant({{ $idx }})"
-                        class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
-                        data-idx="{{ $idx }}">
-                    <span class="font-bold">#{{ $idx + 1 }}</span>
-                    <span class="{{ ($scores['max_afwijking_pct'] ?? 0) <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking_pct'] ?? 0 }}%</span>
-                    <span class="text-gray-400">/</span>
-                    <span class="{{ $scores['breaks'] <= 5 ? 'text-green-600' : 'text-yellow-600' }}">{{ $scores['breaks'] }}b</span>
-                </button>
-                @endforeach
+                @if($toonVarianten)
+                    @foreach($varianten as $idx => $variant)
+                    @php $scores = $variant['scores']; @endphp
+                    <button type="button" onclick="toonVariant({{ $idx }})"
+                            class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
+                            data-idx="{{ $idx }}">
+                        <span class="font-bold">#{{ $idx + 1 }}</span>
+                        <span class="{{ ($scores['max_afwijking_pct'] ?? 0) <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking_pct'] ?? 0 }}%</span>
+                        <span class="text-gray-400">/</span>
+                        <span class="{{ $scores['breaks'] <= 5 ? 'text-green-600' : 'text-yellow-600' }}">{{ $scores['breaks'] }}b</span>
+                    </button>
+                    @endforeach
+                @else
+                    @for($i = 1; $i <= 5; $i++)
+                    <button type="button" disabled
+                            class="px-3 py-2 rounded border text-sm border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed">
+                        <span class="font-bold">#{{ $i }}</span>
+                        <span>--%</span>
+                        <span>/</span>
+                        <span>--b</span>
+                    </button>
+                    @endfor
+                @endif
             </div>
             <!-- Balans slider -->
             <div class="border-t pt-2">
@@ -232,12 +251,11 @@
                     <span class="text-gray-600 whitespace-nowrap">Aansluiting gewichten</span>
                     <button type="button" onclick="document.getElementById('bereken-form').submit()"
                             class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold px-2 py-1 rounded">
-                        Herbereken
+                        {{ $toonVarianten ? 'Herbereken' : 'Bereken' }}
                     </button>
                 </div>
             </div>
         </div>
-        @endif
 
     </div>
 
