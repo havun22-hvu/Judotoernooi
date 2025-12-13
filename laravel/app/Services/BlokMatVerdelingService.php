@@ -21,9 +21,11 @@ class BlokMatVerdelingService
      * Generate distribution variants until we have 5 acceptable ones
      * Acceptable = max 25% deviation from gewenst per block (relaxed)
      *
+     * @param int $userVerdelingGewicht User-provided weight for distribution (0-100)
+     * @param int $userAansluitingGewicht User-provided weight for weight class continuity (0-100)
      * @return array ['varianten' => [...top 5...], 'huidige' => current state]
      */
-    public function genereerVarianten(Toernooi $toernooi): array
+    public function genereerVarianten(Toernooi $toernooi, int $userVerdelingGewicht = 50, int $userAansluitingGewicht = 50): array
     {
         $blokken = $toernooi->blokken->sortBy('nummer')->values();
 
@@ -76,7 +78,9 @@ class BlokMatVerdelingService
                 $blokken,
                 $baseCapaciteit,
                 $categories,  // For anchor detection
-                $poging
+                $poging,
+                $userVerdelingGewicht,
+                $userAansluitingGewicht
             );
 
             $variant['id'] = $poging + 1;
@@ -194,13 +198,18 @@ class BlokMatVerdelingService
     /**
      * Simulate a distribution without saving to database
      * Uses a smarter approach: balance blocks while keeping weight classes together
+     *
+     * @param int $userVerdelingGewicht User-provided weight (0-100)
+     * @param int $userAansluitingGewicht User-provided weight (0-100)
      */
     private function simuleerVerdeling(
         array $perLeeftijd,
         $blokken,
         array $baseCapaciteit,
         $alleCategorieen,
-        int $seed
+        int $seed,
+        int $userVerdelingGewicht = 50,
+        int $userAansluitingGewicht = 50
     ): array {
         $capaciteit = $baseCapaciteit;  // Copy
         $toewijzingen = [];  // category_key => blok_nummer
@@ -209,10 +218,21 @@ class BlokMatVerdelingService
         // Use seed for reproducible randomness
         mt_srand($seed * 12345);
 
-        // Vary strategy based on seed - more variation
-        $verdelingGewichten = [0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50];
-        $verdelingGewicht = $verdelingGewichten[$seed % count($verdelingGewichten)];
+        // Use user-provided weights as base, with small variations per seed for diversity
+        // Convert from 0-100 scale to 0.0-1.0 scale
+        $baseVerdeling = $userVerdelingGewicht / 100.0;
+        $baseAansluiting = $userAansluitingGewicht / 100.0;
+
+        // Normalize so they sum to 1.0 (with small seed-based variation)
+        $variation = ($seed % 10) * 0.02 - 0.1;  // -0.1 to +0.08 variation
+        $total = $baseVerdeling + $baseAansluiting;
+        if ($total > 0) {
+            $verdelingGewicht = max(0.1, min(0.95, ($baseVerdeling / $total) + $variation));
+        } else {
+            $verdelingGewicht = 0.5 + $variation;
+        }
         $aansluitingGewicht = 1.0 - $verdelingGewicht;
+
         // Add randomness more often for variety
         $randomFactor = ($seed % 3 === 0) ? 0.1 + ($seed % 5) * 0.02 : 0.0;
 
