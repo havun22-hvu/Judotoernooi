@@ -154,7 +154,7 @@
             $blokCats = $catsPerBlok->get($blok->nummer, collect());
             $blokWedstrijden = $blokCats->sum('wedstrijden');
             $gewenstWedstrijden = $blok->gewenst_wedstrijden ?? $gemiddeldPerBlok;
-            $afwijking = $blokWedstrijden - $gewenstWedstrijden;
+            $afwijkingPct = $gewenstWedstrijden > 0 ? round(($blokWedstrijden - $gewenstWedstrijden) / $gewenstWedstrijden * 100) : 0;
             $blokCatsSorted = $blokCats->sortBy(function($c) use ($leeftijdVolgorde) {
                 $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
                 return $leeftijdPos + (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0);
@@ -175,8 +175,8 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="blok-stats text-sm">Actueel: <strong class="blok-actueel">{{ $blokWedstrijden }}</strong> wed.</span>
-                    <span class="afwijking-badge text-xs px-2 py-0.5 rounded {{ abs($afwijking) <= 10 ? 'bg-green-500' : (abs($afwijking) <= 25 ? 'bg-yellow-500' : 'bg-red-500') }}">
-                        {{ $afwijking >= 0 ? '+' : '' }}{{ $afwijking }}
+                    <span class="afwijking-badge text-xs px-2 py-0.5 rounded {{ abs($afwijkingPct) <= 10 ? 'bg-green-500' : (abs($afwijkingPct) <= 25 ? 'bg-yellow-500' : 'bg-red-500') }}">
+                        {{ $afwijkingPct >= 0 ? '+' : '' }}{{ $afwijkingPct }}%
                     </span>
                     @if($blok->weging_gesloten)<span class="text-xs bg-red-500 px-2 py-0.5 rounded">Gesloten</span>@endif
                 </div>
@@ -204,7 +204,7 @@
                         class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
                         data-idx="{{ $idx }}">
                     <span class="font-bold">#{{ $idx + 1 }}</span>
-                    <span class="{{ $scores['max_afwijking'] <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking'] }}</span>
+                    <span class="{{ ($scores['max_afwijking_pct'] ?? 0) <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking_pct'] ?? 0 }}%</span>
                     <span class="text-gray-400">/</span>
                     <span class="{{ $scores['breaks'] <= 5 ? 'text-green-600' : 'text-yellow-600' }}">{{ $scores['breaks'] }}b</span>
                 </button>
@@ -392,7 +392,7 @@ function insertChipSorted(chip, targetZone) {
 }
 
 function updateAllStats() {
-    // Update each blok's total and afwijking
+    // Update each blok's total and afwijking (in percentage)
     document.querySelectorAll('.blok-container').forEach(container => {
         const dropzone = container.querySelector('.blok-dropzone');
         if (!dropzone) return;
@@ -405,13 +405,14 @@ function updateAllStats() {
         const actueel = container.querySelector('.blok-actueel');
         if (actueel) actueel.textContent = total;
 
-        const gewenst = parseInt(container.dataset.gewenst) || 0;
-        const afwijking = total - gewenst;
+        const gewenst = Math.max(1, parseInt(container.dataset.gewenst) || 1);
+        const afwijkingPct = Math.round((total - gewenst) / gewenst * 100);
         const badge = container.querySelector('.afwijking-badge');
         if (badge) {
-            badge.textContent = (afwijking >= 0 ? '+' : '') + afwijking;
+            badge.textContent = (afwijkingPct >= 0 ? '+' : '') + afwijkingPct + '%';
+            // Green <= 10%, Yellow <= 25%, Red > 25% (HARD LIMIT)
             badge.className = 'afwijking-badge text-xs px-2 py-0.5 rounded ' +
-                (Math.abs(afwijking) <= 10 ? 'bg-green-500' : (Math.abs(afwijking) <= 25 ? 'bg-yellow-500' : 'bg-red-500'));
+                (Math.abs(afwijkingPct) <= 10 ? 'bg-green-500' : (Math.abs(afwijkingPct) <= 25 ? 'bg-yellow-500' : 'bg-red-500'));
         }
     });
 
