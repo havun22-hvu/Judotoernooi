@@ -191,6 +191,32 @@
                 </div>
             </div>
 
+            <!-- Judoka code volgorde -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-2">Judoka Code Volgorde</h3>
+                <p class="text-gray-500 text-sm mb-3">Bepaalt de sortering bij poule-indeling en de judoka code.</p>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'border-blue-500 bg-blue-50' : '' }}">
+                        <input type="radio" name="judoka_code_volgorde" value="gewicht_band"
+                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium">Leeftijd → Gewicht → Band</span>
+                            <span class="block text-xs text-gray-500">Bijv. A23-4M (A-pup, -23kg, oranje, man)</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'border-blue-500 bg-blue-50' : '' }}">
+                        <input type="radio" name="judoka_code_volgorde" value="band_gewicht"
+                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'checked' : '' }}
+                               class="w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium">Leeftijd → Band → Gewicht</span>
+                            <span class="block text-xs text-gray-500">Bijv. A4-23M (A-pup, oranje, -23kg, man)</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <!-- Prioriteit volgorde -->
             <div class="border-t pt-4 mt-4">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -560,6 +586,15 @@
                            value="{{ old('max_wegingen', $toernooi->max_wegingen) }}"
                            placeholder="-" class="w-12 border rounded px-2 py-1 text-center">
                 </div>
+
+                <!-- Judoka's per coach -->
+                <div class="flex items-center gap-2">
+                    <label for="judokas_per_coach" class="text-gray-700 font-medium">Judoka's per coach kaart:</label>
+                    <input type="number" name="judokas_per_coach" id="judokas_per_coach"
+                           value="{{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }}"
+                           class="w-16 border rounded px-2 py-1 text-center" min="1" max="20">
+                    <span class="text-sm text-gray-500">(toegang tot dojo)</span>
+                </div>
             </div>
 
             <div class="max-w-md border-t pt-4">
@@ -816,6 +851,7 @@
                     'weging' => ['icon' => '⚖️', 'naam' => 'Weging', 'desc' => 'Weeglijst en registratie'],
                     'mat' => ['icon' => '🥋', 'naam' => 'Mat', 'desc' => 'Wedstrijden per mat'],
                     'spreker' => ['icon' => '🎙️', 'naam' => 'Spreker', 'desc' => 'Omroep interface'],
+                    'dojo' => ['icon' => '🚪', 'naam' => 'Dojo', 'desc' => 'Scanner bij ingang'],
                 ];
             @endphp
 
@@ -905,7 +941,7 @@
             </div>
 
             <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>Tip:</strong> De weging sluit automatisch wanneer de "Weging Einde" tijd is bereikt, of kan handmatig gesloten worden.
+                <strong>Tip:</strong> De weger ziet een countdown timer en krijgt een rode waarschuwing wanneer de weegtijd voorbij is. De weging wordt handmatig gesloten via de knop in de weging interface.
             </div>
 
             <div class="mt-4 text-right">

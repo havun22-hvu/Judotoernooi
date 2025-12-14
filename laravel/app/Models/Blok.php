@@ -60,5 +60,42 @@ class Blok extends Model
             'weging_gesloten' => true,
             'weging_gesloten_op' => now(),
         ]);
+
+        // Markeer alle niet-gewogen judoka's in dit blok als afwezig
+        $this->markeerNietGewogenAlsAfwezig();
+    }
+
+    /**
+     * Markeer alle judoka's in dit blok die niet gewogen zijn als afwezig
+     */
+    public function markeerNietGewogenAlsAfwezig(): void
+    {
+        // Haal alle judoka's in poules van dit blok
+        $judokaIds = $this->poules()
+            ->with('judokas')
+            ->get()
+            ->flatMap(fn($poule) => $poule->judokas->pluck('id'))
+            ->unique();
+
+        // Update alle judoka's die niet gewogen zijn naar afwezig
+        Judoka::whereIn('id', $judokaIds)
+            ->whereNull('gewicht_gewogen')
+            ->where('aanwezigheid', '!=', 'afwezig')
+            ->update(['aanwezigheid' => 'afwezig']);
+    }
+
+    /**
+     * Get alle judoka's in dit blok (via poules)
+     */
+    public function getJudokas()
+    {
+        return Judoka::whereHas('poules', function ($q) {
+            $q->where('blok_id', $this->id);
+        });
+    }
+
+    public function matten()
+    {
+        return $this->belongsToMany(Mat::class, 'blok_mat');
     }
 }

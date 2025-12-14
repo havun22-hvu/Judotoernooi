@@ -38,6 +38,7 @@ class RoleToegang extends Controller
             'weging' => redirect()->route('rol.weging'),
             'mat' => redirect()->route('rol.mat'),
             'spreker' => redirect()->route('rol.spreker'),
+            'dojo' => redirect()->route('rol.dojo'),
             default => abort(404),
         };
     }
@@ -117,6 +118,19 @@ class RoleToegang extends Controller
     }
 
     /**
+     * Dojo scanner interface (generic URL)
+     */
+    public function dojoInterface(Request $request): View
+    {
+        $toernooi = $this->getToernooiFromSession($request);
+        $this->checkRole($request, 'dojo');
+
+        return view('pages.dojo.scanner', [
+            'toernooi' => $toernooi,
+        ]);
+    }
+
+    /**
      * Get toernooi from session
      */
     private function getToernooiFromSession(Request $request): Toernooi
@@ -141,7 +155,7 @@ class RoleToegang extends Controller
      */
     private function findToernooiByCode(string $code): ?array
     {
-        $roles = ['hoofdjury', 'weging', 'mat', 'spreker'];
+        $roles = ['hoofdjury', 'weging', 'mat', 'spreker', 'dojo'];
 
         foreach ($roles as $rol) {
             $toernooi = Toernooi::where("code_{$rol}", $code)->first();
@@ -178,6 +192,7 @@ class RoleToegang extends Controller
             ->orWhere('code_weging', $code)
             ->orWhere('code_mat', $code)
             ->orWhere('code_spreker', $code)
+            ->orWhere('code_dojo', $code)
             ->exists();
     }
 }

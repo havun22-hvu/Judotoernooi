@@ -15,7 +15,7 @@ class WedstrijddagController extends Controller
     {
         // Get all poules with blok info
         $poules = $toernooi->poules()
-            ->with(['judokas.club', 'blok', 'mat'])
+            ->with(['judokas.club', 'judokas.toernooi', 'blok', 'mat'])
             ->get();
 
         // Find judokas that need to be re-pooled (weighed but outside weight class)
@@ -210,6 +210,42 @@ class WedstrijddagController extends Controller
         return response()->json([
             'success' => true,
             'poule' => $poule,
+        ]);
+    }
+
+    /**
+     * Verwijder judoka definitief uit poule (voor doorgestreepte judoka's)
+     */
+    public function verwijderUitPoule(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|exists:judokas,id',
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $judoka = Judoka::findOrFail($validated['judoka_id']);
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verwijder uit poule
+        $poule->judokas()->detach($judoka->id);
+
+        // Bereken actuele statistieken (alleen actieve judoka's)
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+        $actieveJudokas = $poule->judokas()
+            ->with('toernooi')
+            ->get()
+            ->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))
+            ->count();
+
+        $aantalWedstrijden = $actieveJudokas > 1 ? ($actieveJudokas * ($actieveJudokas - 1)) / 2 : 0;
+
+        return response()->json([
+            'success' => true,
+            'poule' => [
+                'id' => $poule->id,
+                'aantal_judokas' => $actieveJudokas,
+                'aantal_wedstrijden' => $aantalWedstrijden,
+            ],
         ]);
     }
 

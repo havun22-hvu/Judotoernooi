@@ -66,9 +66,8 @@
         @csrf
         <input type="text" name="naam" placeholder="Clubnaam *" required
                class="border rounded px-3 py-2 w-40 @error('naam') border-red-500 @enderror">
-        <input type="email" name="email" placeholder="Email 1" class="border rounded px-3 py-2 w-48">
-        <input type="email" name="email2" placeholder="Email 2" class="border rounded px-3 py-2 w-48">
-        <input type="text" name="contact_naam" placeholder="Contactpersoon" class="border rounded px-3 py-2 w-36">
+        <input type="text" name="plaats" placeholder="Plaats" class="border rounded px-3 py-2 w-32">
+        <input type="email" name="email" placeholder="Email" class="border rounded px-3 py-2 w-48">
         <input type="tel" name="telefoon" placeholder="Telefoon" class="border rounded px-3 py-2 w-32">
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
             + Toevoegen
@@ -127,100 +126,97 @@
 
         <!-- Expanded club panel -->
         <div x-show="openClub === {{ $club->id }}" x-collapse class="bg-gray-50 border-t px-4 py-4">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Club gegevens -->
-                <div>
-                    <h4 class="font-semibold text-gray-700 mb-3">Club Gegevens</h4>
-                    <form action="{{ route('toernooi.club.update', [$toernooi, $club]) }}" method="POST" class="space-y-2">
+            <!-- Club gegevens - compacte regel -->
+            <div class="flex flex-wrap gap-2 items-center mb-4">
+                <form action="{{ route('toernooi.club.update', [$toernooi, $club]) }}" method="POST" class="flex flex-wrap gap-2 items-center">
+                    @csrf
+                    @method('PUT')
+                    <input type="text" name="naam" value="{{ $club->naam }}" placeholder="Clubnaam *" required class="border rounded px-3 py-2 text-sm w-40">
+                    <input type="text" name="plaats" value="{{ $club->plaats }}" placeholder="Plaats" class="border rounded px-3 py-2 text-sm w-32">
+                    <input type="email" name="email" value="{{ $club->email }}" placeholder="Email" class="border rounded px-3 py-2 text-sm w-48">
+                    <input type="tel" name="telefoon" value="{{ $club->telefoon }}" placeholder="Telefoon" class="border rounded px-3 py-2 text-sm w-32">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Opslaan</button>
+                </form>
+                @if($club->email)
+                <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm">
+                        {{ $uitnodiging ? 'Opnieuw uitnodigen' : 'Uitnodigen' }}
+                    </button>
+                </form>
+                @endif
+                <form action="{{ route('toernooi.club.destroy', [$toernooi, $club]) }}" method="POST" class="inline ml-auto">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm"
+                            onclick="return confirm('Club {{ $club->naam }} verwijderen?{{ $club->judokas_count > 0 ? ' Let op: er zijn nog ' . $club->judokas_count . ' judoka\'s gekoppeld!' : '' }}')">
+                        Verwijderen
+                    </button>
+                </form>
+            </div>
+
+            <!-- Coaches - ingesprongen -->
+            <div class="ml-6 border-l-2 border-purple-200 pl-4">
+                <h4 class="font-semibold text-gray-600 text-sm mb-2">Coaches (max 3)</h4>
+
+                <!-- Bestaande coaches -->
+                <div class="space-y-2 mb-3">
+                    @forelse($coaches as $coach)
+                    <form action="{{ route('toernooi.club.coach.update', [$toernooi, $coach]) }}" method="POST"
+                          class="flex items-center gap-2 bg-white rounded border p-2"
+                          x-data="{ changed: false }">
                         @csrf
                         @method('PUT')
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" name="naam" value="{{ $club->naam }}" placeholder="Clubnaam" class="border rounded px-3 py-2 text-sm">
-                            <input type="text" name="contact_naam" value="{{ $club->contact_naam }}" placeholder="Contactpersoon" class="border rounded px-3 py-2 text-sm">
+                        <div class="flex-1 flex items-center gap-2">
+                            <input type="text" name="naam" value="{{ $coach->naam }}" required
+                                   @input="changed = true"
+                                   class="font-medium text-sm w-32 border rounded px-2 py-1">
+                            <input type="email" name="email" value="{{ $coach->email }}" placeholder="Email"
+                                   @input="changed = true"
+                                   class="text-sm w-44 border rounded px-2 py-1">
+                            <input type="tel" name="telefoon" value="{{ $coach->telefoon }}" placeholder="Telefoon"
+                                   @input="changed = true"
+                                   class="text-sm w-28 border rounded px-2 py-1">
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="email" name="email" value="{{ $club->email }}" placeholder="Email 1" class="border rounded px-3 py-2 text-sm">
-                            <input type="email" name="email2" value="{{ $club->email2 }}" placeholder="Email 2" class="border rounded px-3 py-2 text-sm">
-                        </div>
-                        <div class="flex gap-2">
-                            <input type="tel" name="telefoon" value="{{ $club->telefoon }}" placeholder="Telefoon" class="border rounded px-3 py-2 text-sm flex-1">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Opslaan</button>
-                        </div>
+                        <button type="submit" x-show="changed"
+                                class="px-2 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded text-xs">
+                            Opslaan
+                        </button>
+                        <button type="button"
+                            @click="navigator.clipboard.writeText('{{ $coach->getPortalUrl() }}'); copiedUrl = {{ $coach->id }}; setTimeout(() => copiedUrl = null, 2000)"
+                            class="px-2 py-1 rounded text-xs"
+                            :class="copiedUrl === {{ $coach->id }} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                        >
+                            <span x-text="copiedUrl === {{ $coach->id }} ? '✓' : 'URL'"></span>
+                        </button>
+                        <button type="button" class="px-2 py-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded text-xs"
+                                onclick="if(confirm('Nieuwe PIN genereren voor {{ $coach->naam }}?')) document.getElementById('regenerate-{{ $coach->id }}').submit()">
+                            Nieuwe PIN
+                        </button>
+                        <button type="button" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs"
+                                onclick="if(confirm('Coach {{ $coach->naam }} verwijderen?')) document.getElementById('delete-{{ $coach->id }}').submit()">
+                            ×
+                        </button>
                     </form>
-
-                    @if($club->email)
-                    <div class="mt-3 pt-3 border-t">
-                        <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm">
-                                {{ $uitnodiging ? 'Opnieuw uitnodigen' : 'Email uitnodiging versturen' }}
-                            </button>
-                        </form>
-                        @if($uitnodiging)
-                        <span class="text-sm text-gray-500 ml-2">
-                            Laatst: {{ $uitnodiging->uitgenodigd_op->format('d-m-Y H:i') }}
-                        </span>
-                        @endif
-                    </div>
-                    @endif
+                    <form id="regenerate-{{ $coach->id }}" action="{{ route('toernooi.club.coach.regenerate-pin', [$toernooi, $coach]) }}" method="POST" class="hidden">@csrf</form>
+                    <form id="delete-{{ $coach->id }}" action="{{ route('toernooi.club.coach.destroy', [$toernooi, $coach]) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
+                    @empty
+                    <p class="text-sm text-gray-400 italic">Nog geen coaches</p>
+                    @endforelse
                 </div>
 
-                <!-- Coaches -->
-                <div>
-                    <h4 class="font-semibold text-gray-700 mb-3">Coaches (max 3)</h4>
-
-                    <!-- Bestaande coaches -->
-                    <div class="space-y-2 mb-3">
-                        @forelse($coaches as $coach)
-                        <div class="flex items-center gap-2 bg-white rounded border p-2">
-                            <div class="flex-1">
-                                <div class="font-medium text-sm">{{ $coach->naam }}</div>
-                                <div class="text-xs text-gray-500">
-                                    @if($coach->email){{ $coach->email }}@endif
-                                    @if($coach->telefoon) · {{ $coach->telefoon }}@endif
-                                </div>
-                            </div>
-                            <button
-                                @click="navigator.clipboard.writeText('{{ $coach->getPortalUrl() }}'); copiedUrl = {{ $coach->id }}; setTimeout(() => copiedUrl = null, 2000)"
-                                class="px-2 py-1 rounded text-xs"
-                                :class="copiedUrl === {{ $coach->id }} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            >
-                                <span x-text="copiedUrl === {{ $coach->id }} ? '✓' : 'URL'"></span>
-                            </button>
-                            <form action="{{ route('toernooi.club.coach.regenerate-pin', [$toernooi, $coach]) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="px-2 py-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded text-xs"
-                                        onclick="return confirm('Nieuwe PIN genereren voor {{ $coach->naam }}?')">
-                                    Nieuwe PIN
-                                </button>
-                            </form>
-                            <form action="{{ route('toernooi.club.coach.destroy', [$toernooi, $coach]) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs"
-                                        onclick="return confirm('Coach {{ $coach->naam }} verwijderen?')">
-                                    ×
-                                </button>
-                            </form>
-                        </div>
-                        @empty
-                        <p class="text-sm text-gray-400 italic">Nog geen coaches</p>
-                        @endforelse
-                    </div>
-
-                    <!-- Nieuwe coach toevoegen -->
-                    @if($coaches->count() < 3)
-                    <form action="{{ route('toernooi.club.coach.store', [$toernooi, $club]) }}" method="POST" class="flex gap-2">
-                        @csrf
-                        <input type="text" name="naam" placeholder="Coach naam *" required class="border rounded px-2 py-1 text-sm flex-1">
-                        <input type="email" name="email" placeholder="Email" class="border rounded px-2 py-1 text-sm w-36">
-                        <input type="tel" name="telefoon" placeholder="Tel" class="border rounded px-2 py-1 text-sm w-24">
-                        <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm">+</button>
-                    </form>
-                    @else
-                    <p class="text-sm text-orange-600">Maximum aantal coaches bereikt</p>
-                    @endif
-                </div>
+                <!-- Nieuwe coach toevoegen -->
+                @if($coaches->count() < 3)
+                <form action="{{ route('toernooi.club.coach.store', [$toernooi, $club]) }}" method="POST" class="flex gap-2 items-center">
+                    @csrf
+                    <input type="text" name="naam" placeholder="Coach naam *" required class="border rounded px-2 py-1 text-sm w-32">
+                    <input type="email" name="email" placeholder="Email" class="border rounded px-2 py-1 text-sm w-44">
+                    <input type="tel" name="telefoon" placeholder="Telefoon" class="border rounded px-2 py-1 text-sm w-28">
+                    <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm">+</button>
+                </form>
+                @else
+                <p class="text-sm text-orange-600">Maximum aantal coaches bereikt</p>
+                @endif
             </div>
         </div>
     </div>

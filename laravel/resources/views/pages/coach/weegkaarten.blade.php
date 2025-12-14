@@ -16,22 +16,44 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
+                @if(isset($useCode) && $useCode)
+                <form action="{{ route('coach.portal.logout', $code) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
+                </form>
+                @else
                 <form action="{{ route('coach.logout', $uitnodiging->token) }}" method="POST">
                     @csrf
                     <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
                 </form>
+                @endif
             </div>
 
             <!-- Navigation tabs -->
             <div class="mt-4 flex space-x-4 border-t pt-4">
+                @if(isset($useCode) && $useCode)
+                <a href="{{ route('coach.portal.judokas', $code) }}"
+                   class="text-gray-600 hover:text-gray-800 px-3 py-1">
+                    Judoka's
+                </a>
+                <a href="{{ route('coach.portal.coachkaarten', $code) }}"
+                   class="text-gray-600 hover:text-gray-800 px-3 py-1">
+                    Coach Kaarten
+                </a>
+                <a href="{{ route('coach.portal.weegkaarten', $code) }}"
+                   class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1">
+                    Weegkaarten
+                </a>
+                @else
                 <a href="{{ route('coach.judokas', $uitnodiging->token) }}"
-                   class="text-gray-600 hover:text-gray-800 px-3 py-1 rounded">
+                   class="text-gray-600 hover:text-gray-800 px-3 py-1">
                     Judoka's
                 </a>
                 <a href="{{ route('coach.weegkaarten', $uitnodiging->token) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1">
                     Weegkaarten
                 </a>
+                @endif
             </div>
         </div>
 

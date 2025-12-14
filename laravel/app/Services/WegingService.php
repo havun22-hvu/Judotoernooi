@@ -60,10 +60,8 @@ class WegingService
                 'opmerking' => $opmerking,
             ]);
 
-            // Update poule statistics (counts may change if weight outside class)
-            foreach ($judoka->poules as $poule) {
-                $poule->updateStatistieken();
-            }
+            // Verwijder uit poules als gewicht buiten klasse (naar wachtruimte)
+            $judoka->verwijderUitPoulesIndienNodig();
 
             return [
                 'success' => true,
@@ -141,7 +139,7 @@ class WegingService
     }
 
     /**
-     * Mark judoka as absent
+     * Mark judoka as absent and remove from poules
      */
     public function markeerAfwezig(Judoka $judoka): void
     {
@@ -149,10 +147,8 @@ class WegingService
             'aanwezigheid' => AanwezigheidsStatus::AFWEZIG->value,
         ]);
 
-        // Update poule statistics
-        foreach ($judoka->poules as $poule) {
-            $poule->updateStatistieken();
-        }
+        // Verwijder uit poules (afwezig = niet mee tellen)
+        $judoka->verwijderUitPoulesIndienNodig();
     }
 
     /**

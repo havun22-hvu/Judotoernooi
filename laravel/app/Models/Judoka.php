@@ -111,7 +111,9 @@ class Judoka extends Model
 
     /**
      * Calculate the judoka base code for pool assignment (without volgnummer)
-     * Format: LLGGBG (Leeftijd-Gewicht-Band-Geslacht)
+     * Format depends on toernooi setting:
+     * - gewicht_band: LLGGBG (Leeftijd-Gewicht-Band-Geslacht) - default
+     * - band_gewicht: LLBGGG (Leeftijd-Band-Gewicht-Geslacht)
      */
     public function berekenBasisCode(): string
     {
@@ -129,6 +131,15 @@ class Judoka extends Model
         // Gender code
         $geslachtCode = strtoupper($this->geslacht);
 
+        // Check toernooi setting for code order
+        $volgorde = $this->toernooi?->judoka_code_volgorde ?? 'gewicht_band';
+
+        if ($volgorde === 'band_gewicht') {
+            // Leeftijd - Band - Gewicht - Geslacht
+            return "{$leeftijdCode}{$bandCode}{$gewichtCode}{$geslachtCode}";
+        }
+
+        // Default: Leeftijd - Gewicht - Band - Geslacht
         return "{$leeftijdCode}{$gewichtCode}{$bandCode}{$geslachtCode}";
     }
 
@@ -165,6 +176,56 @@ class Judoka extends Model
         } else {
             // -36 means maximum 36kg
             return $gewicht <= ($limiet + $tolerantie);
+        }
+    }
+
+    /**
+     * Check of judoka uit poules moet worden verwijderd
+     * Doorgestreept = afwezig OF gewogen maar buiten gewichtsklasse
+     */
+    public function moetUitPouleVerwijderd(?float $tolerantie = null): bool
+    {
+        // Afwezig
+        if ($this->aanwezigheid === 'afwezig') {
+            return true;
+        }
+
+        // Gewogen maar buiten gewichtsklasse
+        if ($this->gewicht_gewogen !== null) {
+            // Gebruik toernooi tolerantie als beschikbaar
+            $tol = $tolerantie ?? $this->toernooi?->gewicht_tolerantie ?? 0.5;
+            if (!$this->isGewichtBinnenKlasse(null, $tol)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check of judoka doorgestreept moet worden weergegeven
+     * Alias voor moetUitPouleVerwijderd
+     */
+    public function isDoorgestreept(?float $tolerantie = null): bool
+    {
+        return $this->moetUitPouleVerwijderd($tolerantie);
+    }
+
+    /**
+     * Verwijder judoka uit alle poules als doorgestreept en update statistieken
+     * Aanroepen bij elke mutatie (weging, aanwezigheid)
+     */
+    public function verwijderUitPoulesIndienNodig(): void
+    {
+        if (!$this->moetUitPouleVerwijderd()) {
+            return;
+        }
+
+        $poules = $this->poules;
+
+        foreach ($poules as $poule) {
+            $poule->judokas()->detach($this->id);
+            $poule->updateStatistieken();
         }
     }
 }

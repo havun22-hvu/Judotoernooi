@@ -43,6 +43,9 @@ class BlokController extends Controller
     public function genereerVerdeling(Request $request, Toernooi $toernooi): RedirectResponse
     {
         try {
+            // Clear old variants first
+            session()->forget(['blok_varianten', 'blok_stats']);
+
             // Get balans slider value (0-100)
             // 0 = 100% verdeling, 0% aansluiting
             // 100 = 0% verdeling, 100% aansluiting
@@ -81,19 +84,8 @@ class BlokController extends Controller
                 $this->verdelingService->pasVariantToe($toernooi, $result['varianten'][0]['toewijzingen']);
             }
 
-            // Build info message with stats
-            $stats = $result['stats'] ?? [];
-            $msg = sprintf(
-                "%d pogingen → %d uniek → %d geldig → top %d getoond",
-                $stats['pogingen'] ?? 0,
-                $stats['unieke_varianten'] ?? 0,
-                $stats['geldige_varianten'] ?? 0,
-                $stats['getoond'] ?? 0
-            );
-
             return redirect()
-                ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1])
-                ->with('success', $msg);
+                ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1]);
 
         } catch (\Exception $e) {
             \Log::error('genereerVerdeling failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
@@ -108,22 +100,28 @@ class BlokController extends Controller
      */
     public function kiesVariant(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
-        $variantIndex = (int) $request->input('variant', 0);
-        $varianten = session('blok_varianten', []);
+        // Accept either direct toewijzingen (from DOM) or variant index (legacy)
+        $toewijzingen = $request->input('toewijzingen');
 
-        if (!isset($varianten[$variantIndex])) {
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'error' => 'Variant niet gevonden'], 404);
+        if (!$toewijzingen) {
+            // Legacy: get from session by variant index
+            $variantIndex = (int) $request->input('variant', 0);
+            $varianten = session('blok_varianten', []);
+
+            if (!isset($varianten[$variantIndex])) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'error' => 'Variant niet gevonden'], 404);
+                }
+                return redirect()
+                    ->route('toernooi.blok.index', $toernooi)
+                    ->with('error', 'Variant niet gevonden');
             }
-            return redirect()
-                ->route('toernooi.blok.index', $toernooi)
-                ->with('error', 'Variant niet gevonden');
+
+            $toewijzingen = $varianten[$variantIndex]['toewijzingen'];
         }
 
-        $variant = $varianten[$variantIndex];
-
         try {
-            $this->verdelingService->pasVariantToe($toernooi, $variant['toewijzingen']);
+            $this->verdelingService->pasVariantToe($toernooi, $toewijzingen);
 
             // Clear session
             session()->forget('blok_varianten');
@@ -187,9 +185,10 @@ class BlokController extends Controller
     {
         $this->toernooiService->sluitWegingBlok($blok);
 
+        // Redirect back to weging interface
         return redirect()
-            ->route('toernooi.blok.show', [$toernooi, $blok])
-            ->with('success', "Weging voor {$blok->naam} gesloten");
+            ->route('toernooi.weging.interface', $toernooi)
+            ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");
     }
 
     public function genereerWedstrijdschemas(Toernooi $toernooi, Blok $blok): RedirectResponse
