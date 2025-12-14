@@ -506,22 +506,23 @@
                         <p class="text-gray-500 mt-4">Poules laden...</p>
                     </div>
 
-                    <!-- No poules yet -->
-                    <template x-if="!loadingPoules && favorietenPoules.length === 0 && !poulesGegenereerd">
-                        <div class="text-center py-12 text-gray-500">
-                            <p class="text-xl">Poules nog niet beschikbaar</p>
-                            <p class="text-sm mt-2">De poule-indeling wordt gemaakt zodra het toernooi begint.</p>
-                            <p class="text-sm mt-4">Je favorieten:</p>
-                            <div class="flex flex-wrap justify-center gap-2 mt-2">
-                                <template x-for="id in favorieten" :key="id">
-                                    <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
-                                        <span x-text="getFavorietNaam(id)"></span>
-                                        <button @click="toggleFavoriet(id)" class="text-yellow-600 hover:text-red-600">&times;</button>
-                                    </span>
-                                </template>
-                            </div>
+                    <!-- No poules yet or empty result -->
+                    <div x-show="!loadingPoules && favorietenPoules.length === 0" class="text-center py-12 text-gray-500">
+                        <p class="text-xl" x-text="poulesGegenereerd ? 'Geen poules gevonden' : 'Poules nog niet beschikbaar'"></p>
+                        <p class="text-sm mt-2" x-text="poulesGegenereerd ? 'De poules voor je favorieten worden geladen...' : 'De poule-indeling wordt gemaakt zodra het toernooi begint.'"></p>
+                        <p class="text-sm mt-4">Je favorieten:</p>
+                        <div class="flex flex-wrap justify-center gap-2 mt-2">
+                            <template x-for="id in favorieten" :key="id">
+                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                                    <span x-text="getFavorietNaam(id)"></span>
+                                    <button @click="toggleFavoriet(id)" class="text-yellow-600 hover:text-red-600">&times;</button>
+                                </span>
+                            </template>
                         </div>
-                    </template>
+                        <button @click="loadFavorieten()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Opnieuw laden
+                        </button>
+                    </div>
 
                     <!-- Poules -->
                     <div x-show="!loadingPoules && favorietenPoules.length > 0">
@@ -658,6 +659,7 @@
                 async loadFavorieten() {
                     if (this.favorieten.length === 0) {
                         this.favorietenPoules = [];
+                        this.loadingPoules = false;
                         return;
                     }
 
@@ -668,18 +670,22 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             },
                             body: JSON.stringify({ judoka_ids: this.favorieten }),
                         });
+
+                        if (!response.ok) {
+                            throw new Error('Response: ' + response.status);
+                        }
 
                         const data = await response.json();
                         this.favorietenPoules = data.poules || [];
                     } catch (error) {
                         console.error('Error loading poules:', error);
+                        this.favorietenPoules = [];
+                    } finally {
+                        this.loadingPoules = false;
                     }
-
-                    this.loadingPoules = false;
                 },
 
                 // Verkort leeftijdsklasse voor compacte weergave
