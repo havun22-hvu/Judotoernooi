@@ -538,14 +538,14 @@
                         <template x-for="poule in favorietenPoules" :key="poule.id">
                             <div class="bg-white rounded-lg shadow overflow-hidden">
                                 <div class="bg-blue-600 text-white px-4 py-3">
-                                    <div class="flex justify-between items-center">
+                                    <div class="flex justify-between items-center flex-wrap gap-2">
                                         <div>
-                                            <span class="font-bold">#<span x-text="poule.nummer"></span></span>
-                                            <span x-text="poule.leeftijdsklasse + ' / ' + poule.gewichtsklasse + ' kg'"></span>
+                                            <span class="font-bold">P<span x-text="poule.nummer"></span></span>
+                                            <span x-text="kortLeeftijd(poule.leeftijdsklasse) + ' / ' + poule.gewichtsklasse + ' kg'"></span>
+                                            <span x-show="poule.mat" class="text-blue-200">, mat <span x-text="poule.mat"></span></span>
                                         </div>
-                                        <div class="text-blue-200 text-sm">
-                                            <span x-show="poule.mat">Mat <span x-text="poule.mat"></span></span>
-                                            <span x-show="poule.blok"> - Blok <span x-text="poule.blok"></span></span>
+                                        <div x-show="poule.blok" class="text-blue-200 text-sm">
+                                            Blok <span x-text="poule.blok"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -615,14 +615,19 @@
                         }
                     }
 
-                    // Auto-refresh page every 60 seconds if on live tab
+                    // Auto-refresh: favorieten elke 15 sec, live page elke 60 sec
                     if (poulesGegenereerd) {
+                        // Favorieten: snelle refresh voor live updates
+                        setInterval(() => {
+                            if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
+                                this.loadFavorieten();
+                            }
+                        }, 15000);
+
+                        // Live matten: page reload elke 60 sec
                         setInterval(() => {
                             if (this.activeTab === 'live') {
                                 window.location.reload();
-                            }
-                            if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
-                                this.loadFavorieten();
                             }
                         }, 60000);
                     }
@@ -675,6 +680,25 @@
                     }
 
                     this.loadingPoules = false;
+                },
+
+                // Verkort leeftijdsklasse voor compacte weergave
+                kortLeeftijd(lk) {
+                    const map = {
+                        "Mini's": "Mini",
+                        "A-pupillen": "A-pup",
+                        "B-pupillen": "B-pup",
+                        "C-pupillen": "C-pup",
+                        "Dames -15": "D-15",
+                        "Heren -15": "H-15",
+                        "Dames -18": "D-18",
+                        "Heren -18": "H-18",
+                        "Dames -21": "D-21",
+                        "Heren -21": "H-21",
+                        "Dames": "Dames",
+                        "Heren": "Heren",
+                    };
+                    return map[lk] || lk;
                 },
 
                 async zoekJudokas() {
