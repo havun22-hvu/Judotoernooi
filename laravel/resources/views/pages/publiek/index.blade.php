@@ -10,9 +10,11 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
-        .favorite-star { cursor: pointer; transition: all 0.2s; }
-        .favorite-star:hover { transform: scale(1.2); }
+        /* Touch-friendly star buttons */
+        .favorite-star { cursor: pointer; transition: all 0.2s; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+        .favorite-star:hover { transform: scale(1.1); }
         .favorite-star.active { color: #f59e0b; }
+        /* Belt colors */
         .band-wit { background: #d4d4d4; color: #404040; }
         .band-geel { background: #FACC15; color: #000; }
         .band-oranje { background: #c2410c; color: white; }
@@ -20,6 +22,14 @@
         .band-blauw { background: #1d4ed8; color: white; }
         .band-bruin { background: #8B4513; color: white; }
         .band-zwart { background: #0a0a0a; color: white; }
+        /* Prevent zoom on input focus (iOS) */
+        input[type="text"] { font-size: 16px; }
+        /* Smooth scrolling */
+        html { scroll-behavior: smooth; }
+        /* Better touch targets */
+        @media (max-width: 640px) {
+            .touch-target { min-height: 48px; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
@@ -48,8 +58,8 @@
                 <input type="text"
                        x-model="zoekterm"
                        @input.debounce.300ms="zoekJudokas()"
-                       placeholder="Zoek judoka of club..."
-                       class="w-full px-4 py-2 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none">
+                       placeholder="🔍 Zoek judoka of club..."
+                       class="w-full px-4 py-3 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none text-base">
                 <div x-show="zoekLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
                     <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -86,18 +96,18 @@
             <div class="flex border-b border-blue-500 overflow-x-auto">
                 <button @click="activeTab = 'info'"
                         :class="activeTab === 'info' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
                     Info
                 </button>
                 <button @click="activeTab = 'deelnemers'"
                         :class="activeTab === 'deelnemers' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
                     Deelnemers
                 </button>
                 <button @click="activeTab = 'favorieten'; loadFavorieten()"
                         :class="activeTab === 'favorieten' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition relative whitespace-nowrap">
-                    Mijn Favorieten
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition relative whitespace-nowrap text-sm sm:text-base">
+                    <span class="hidden sm:inline">Mijn </span>Favorieten
                     <span x-show="favorieten.length > 0"
                           class="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
                           x-text="favorieten.length"></span>
@@ -105,15 +115,15 @@
                 @if($poulesGegenereerd)
                 <button @click="activeTab = 'live'"
                         :class="activeTab === 'live' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
-                    Live Matten
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
+                    <span class="hidden sm:inline">Live </span>Matten
                 </button>
                 @endif
             </div>
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow">
+    <main class="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6 flex-grow">
         <!-- Info Tab -->
         <div x-show="activeTab === 'info'" x-cloak>
             @php
@@ -442,10 +452,10 @@
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                     @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                     <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
-                            class="px-3 py-2 rounded-lg shadow transition flex items-center gap-2"
+                            class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
                             :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
-                        <span class="font-medium">{{ $gewichtsklasse }} kg</span>
-                        <span class="text-xs" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200' : 'text-gray-500'">{{ $judokas->count() }}</span>
+                        <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }} kg</span>
+                        <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
                     </button>
                     @endforeach
                 </div>
@@ -454,21 +464,21 @@
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                 @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
-                     class="bg-white rounded-lg shadow overflow-hidden max-w-md">
+                     class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} kg - {{ $judokas->count() }} judoka's</span>
                         <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
                         @foreach($judokas as $judoka)
-                        <div class="px-4 py-2 flex justify-between items-center hover:bg-gray-50">
-                            <div>
+                        <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100">
+                            <div class="flex-1 min-w-0">
                                 <span class="text-gray-800">{{ $judoka->naam }}</span>
                                 <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
-                                <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }}</span>
+                                <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
                             </div>
                             <button @click="toggleFavoriet({{ $judoka->id }})"
-                                    class="favorite-star text-xl"
+                                    class="favorite-star text-2xl flex-shrink-0"
                                     :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">
                                 &#9733;
                             </button>
