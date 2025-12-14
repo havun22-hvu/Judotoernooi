@@ -12,13 +12,13 @@
         .favorite-star { cursor: pointer; transition: all 0.2s; }
         .favorite-star:hover { transform: scale(1.2); }
         .favorite-star.active { color: #f59e0b; }
-        .band-wit { background: linear-gradient(135deg, #fff 0%, #e5e5e5 100%); }
-        .band-geel { background: linear-gradient(135deg, #fef08a 0%, #facc15 100%); }
-        .band-oranje { background: linear-gradient(135deg, #fed7aa 0%, #fb923c 100%); }
-        .band-groen { background: linear-gradient(135deg, #bbf7d0 0%, #22c55e 100%); }
-        .band-blauw { background: linear-gradient(135deg, #bfdbfe 0%, #3b82f6 100%); }
-        .band-bruin { background: linear-gradient(135deg, #d4a574 0%, #92400e 100%); }
-        .band-zwart { background: linear-gradient(135deg, #525252 0%, #171717 100%); color: white; }
+        .band-wit { background: #e5e5e5; border: 1px solid #a3a3a3; }
+        .band-geel { background: #eab308; }
+        .band-oranje { background: #ea580c; }
+        .band-groen { background: #16a34a; }
+        .band-blauw { background: #2563eb; }
+        .band-bruin { background: #78350f; }
+        .band-zwart { background: #171717; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
@@ -389,7 +389,7 @@
                             @foreach($mat->huidigePoule->judokas->take(6) as $judoka)
                             <div class="flex items-center gap-2 text-sm text-gray-600">
                                 <span class="w-2 h-2 rounded-full band-{{ $judoka->band }}"></span>
-                                <span>{{ $judoka->naam }}</span>
+                                <span>{{ $judoka->naam }} ({{ $judoka->band }})</span>
                             </div>
                             @endforeach
                             @if($mat->huidigePoule->judokas->count() > 6)
@@ -440,7 +440,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="w-3 h-3 rounded-full band-{{ $judoka->band }}"></span>
                                     <div>
-                                        <span class="text-gray-800">{{ $judoka->naam }}</span>
+                                        <span class="text-gray-800">{{ $judoka->naam }} <span class="text-gray-500">({{ $judoka->band }})</span></span>
                                         <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }}</span>
                                     </div>
                                 </div>
