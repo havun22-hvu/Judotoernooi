@@ -259,11 +259,11 @@ class BlokMatVerdelingService
         $aansluitingGewicht = $userAansluitingGewicht / 100.0;
 
         // Variatie parameters gebaseerd op seed
-        $startBlokOffset = $seed % 3;  // 0, 1, of 2 blokken offset voor Mini's
         $aansluitingVariant = $seed % 4;  // Welke aansluiting optie bij vol blok
 
         // STAP 1: Plaats grote leeftijdsklassen in volgorde
-        $huidigeBlokIndex = $startBlokOffset;  // Mini's start hier
+        // Mini's start ALTIJD in blok 1 (index 0)!
+        $huidigeBlokIndex = 0;
 
         foreach ($this->groteLeeftijden as $leeftijd) {
             if (!isset($perLeeftijd[$leeftijd])) continue;
