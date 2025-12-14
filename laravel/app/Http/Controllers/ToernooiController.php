@@ -105,7 +105,7 @@ class ToernooiController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.show', $toernooi)
+            ->route('toernooi.edit', $toernooi)
             ->with('success', 'Toernooi bijgewerkt' . $extraMessage);
     }
 
