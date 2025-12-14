@@ -14,6 +14,7 @@ use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
+use App\Http\Controllers\PubliekController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -210,4 +211,15 @@ Route::middleware('rol.sessie')->group(function () {
     Route::get('jury', [RoleToegang::class, 'juryInterface'])->name('rol.jury');
     Route::get('spreker', [RoleToegang::class, 'sprekerInterface'])->name('rol.spreker');
     Route::get('dojo', [RoleToegang::class, 'dojoInterface'])->name('rol.dojo');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Public Pages (no authentication required)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('live/{toernooi}')->name('publiek.')->group(function () {
+    Route::get('/', [PubliekController::class, 'index'])->name('index');
+    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
+    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
 });
