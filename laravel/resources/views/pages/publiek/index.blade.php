@@ -44,7 +44,7 @@
             </div>
 
             <!-- Search bar -->
-            <div class="mt-4 relative">
+            <div class="mt-4 relative" @click.outside="if(zoekResultaten.length > 0 || heeftGezocht) { zoekResultaten = []; zoekterm = ''; heeftGezocht = false; }">
                 <input type="text"
                        x-model="zoekterm"
                        @input.debounce.300ms="zoekJudokas()"
@@ -63,7 +63,6 @@
                 </div>
                 <!-- Resultaten -->
                 <div x-show="zoekResultaten.length > 0 && !zoekLoading" x-cloak
-                     @click.outside="zoekResultaten = []; zoekterm = ''"
                      class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 max-h-64 overflow-y-auto z-50">
                     <template x-for="judoka in zoekResultaten" :key="judoka.id">
                         <div class="px-4 py-3 hover:bg-blue-50 border-b flex justify-between items-center">
