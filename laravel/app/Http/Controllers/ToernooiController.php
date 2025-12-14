@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ToernooiRequest;
 use App\Models\Toernooi;
+use App\Services\PouleIndelingService;
 use App\Services\ToernooiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,8 @@ use Illuminate\View\View;
 class ToernooiController extends Controller
 {
     public function __construct(
-        private ToernooiService $toernooiService
+        private ToernooiService $toernooiService,
+        private PouleIndelingService $pouleIndelingService
     ) {}
 
     public function index(): View
@@ -80,16 +82,31 @@ class ToernooiController extends Controller
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label']);
 
+        // Check if judoka_code_volgorde changed
+        $volgordeGewijzigd = isset($data['judoka_code_volgorde'])
+            && $data['judoka_code_volgorde'] !== $toernooi->judoka_code_volgorde;
+
         $toernooi->update($data);
+
+        // Recalculate judoka codes if volgorde changed
+        if ($volgordeGewijzigd && $toernooi->judokas()->exists()) {
+            $aantal = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
+            $extraMessage = " ({$aantal} judoka codes bijgewerkt)";
+        } else {
+            $extraMessage = '';
+        }
 
         // Return JSON for AJAX requests (auto-save)
         if ($request->ajax()) {
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'codes_updated' => $volgordeGewijzigd ? ($aantal ?? 0) : 0,
+            ]);
         }
 
         return redirect()
             ->route('toernooi.show', $toernooi)
-            ->with('success', 'Toernooi bijgewerkt');
+            ->with('success', 'Toernooi bijgewerkt' . $extraMessage);
     }
 
     public function destroy(Toernooi $toernooi): RedirectResponse
