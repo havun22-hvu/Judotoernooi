@@ -63,17 +63,19 @@
                 </div>
                 <!-- Resultaten -->
                 <div x-show="zoekResultaten.length > 0 && !zoekLoading" x-cloak
+                     @click.outside="zoekResultaten = []; zoekterm = ''"
                      class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 max-h-64 overflow-y-auto z-50">
                     <template x-for="judoka in zoekResultaten" :key="judoka.id">
-                        <div @click="toggleFavoriet(judoka.id); zoekterm = ''; zoekResultaten = []"
-                             class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b flex justify-between items-center">
+                        <div class="px-4 py-3 hover:bg-blue-50 border-b flex justify-between items-center">
                             <div>
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
                                 <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full" :class="'band-' + judoka.band"></span><span class="text-gray-400">)</span>
                                 <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
                                 <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse + ' / ' + judoka.gewichtsklasse + ' kg'"></span>
                             </div>
-                            <span class="favorite-star text-2xl" :class="isFavoriet(judoka.id) ? 'active' : 'text-gray-300'">&#9733;</span>
+                            <button @click="toggleFavoriet(judoka.id)"
+                                    class="favorite-star text-2xl"
+                                    :class="isFavoriet(judoka.id) ? 'active' : 'text-gray-300'">&#9733;</button>
                         </div>
                     </template>
                 </div>
