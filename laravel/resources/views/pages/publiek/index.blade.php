@@ -524,7 +524,7 @@
                     </template>
 
                     <!-- Poules -->
-                    <div x-show="!loadingPoules && favorietenPoules.length > 0" class="space-y-6">
+                    <div x-show="!loadingPoules && favorietenPoules.length > 0">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-xl font-bold text-gray-800">Poules van mijn favorieten</h2>
                             <button @click="loadFavorieten()" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
@@ -536,7 +536,7 @@
                         </div>
 
                         <template x-for="poule in favorietenPoules" :key="poule.id">
-                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                            <div class="bg-white rounded-lg shadow overflow-hidden mb-4">
                                 <div class="bg-blue-600 text-white px-4 py-3">
                                     <div class="flex justify-between items-center flex-wrap gap-2">
                                         <div>
