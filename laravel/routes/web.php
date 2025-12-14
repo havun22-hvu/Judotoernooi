@@ -15,6 +15,7 @@ use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
+use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -119,6 +120,12 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         // Coach Kaarten (toegang dojo)
         Route::get('coach-kaarten', [CoachKaartController::class, 'index'])->name('coach-kaart.index');
         Route::post('coach-kaarten/genereer', [CoachKaartController::class, 'genereer'])->name('coach-kaart.genereer');
+
+        // Pagina Builder (publieke voorpagina bewerken)
+        Route::get('pagina-builder', [PaginaBuilderController::class, 'index'])->name('pagina-builder.index');
+        Route::post('pagina-builder/opslaan', [PaginaBuilderController::class, 'opslaan'])->name('pagina-builder.opslaan');
+        Route::post('pagina-builder/upload', [PaginaBuilderController::class, 'upload'])->name('pagina-builder.upload');
+        Route::delete('pagina-builder/afbeelding', [PaginaBuilderController::class, 'verwijderAfbeelding'])->name('pagina-builder.verwijder-afbeelding');
     });
 
     // Jury + Admin routes
