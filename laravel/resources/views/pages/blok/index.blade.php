@@ -544,18 +544,28 @@ function berekenLiveScore() {
     const blokken = {};
     const categoriePerBlok = {};  // key -> blokNr
 
+    // Zoek in blok-containers (bevat data-gewenst)
     document.querySelectorAll('.blok-container').forEach(container => {
         const blokNr = parseInt(container.dataset.blok);
-        const gewenst = parseInt(container.dataset.gewenst) || 1;
+        if (!blokNr || blokNr === 0) return;  // Skip sleepvak
+
+        const gewenst = parseInt(container.dataset.gewenst) || 100;
         let actueel = 0;
 
-        container.querySelectorAll('.category-chip').forEach(chip => {
-            actueel += parseInt(chip.dataset.wedstrijden) || 0;
-            categoriePerBlok[chip.dataset.key] = blokNr;
-        });
+        // Chips zitten in .blok-dropzone BINNEN de container
+        const dropzone = container.querySelector('.blok-dropzone');
+        if (dropzone) {
+            dropzone.querySelectorAll('.category-chip').forEach(chip => {
+                actueel += parseInt(chip.dataset.wedstrijden) || 0;
+                categoriePerBlok[chip.dataset.key] = blokNr;
+            });
+        }
 
         blokken[blokNr] = { gewenst, actueel };
     });
+
+    // Debug: log wat we vinden
+    console.log('Live score berekening:', { blokken, categoriePerBlok, verdelingGewicht, aansluitingGewicht });
 
     // 2. Bereken verdeling score: som van absolute % afwijkingen
     let verdelingScore = 0;
