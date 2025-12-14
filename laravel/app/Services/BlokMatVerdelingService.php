@@ -126,27 +126,13 @@ class BlokMatVerdelingService
             $poging++;
         }
 
-        // Sort all variants by score
-        usort($alleVarianten, function($a, $b) {
-            // First by max_afwijking (lower = better)
-            $afwijkingDiff = $a['scores']['max_afwijking'] - $b['scores']['max_afwijking'];
-            if ($afwijkingDiff !== 0) {
-                return $afwijkingDiff;
-            }
-            // Then by breaks (lower = better)
-            $breaksDiff = $a['scores']['breaks'] - $b['scores']['breaks'];
-            if ($breaksDiff !== 0) {
-                return $breaksDiff;
-            }
-            // Then by verdeling_score (lower = better)
-            return $a['scores']['verdeling_score'] - $b['scores']['verdeling_score'];
-        });
+        // Sort all variants by totaal_score (lower = better)
+        usort($alleVarianten, fn($a, $b) => $a['totaal_score'] <=> $b['totaal_score']);
 
         // Take top 5 UNIQUE variants (different toewijzingen)
         $beste = [];
         $gezienHashes = [];
         foreach ($alleVarianten as $variant) {
-            // Sort toewijzingen by key for consistent hash
             $toewijzingen = $variant['toewijzingen'];
             ksort($toewijzingen);
             $hash = md5(json_encode($toewijzingen));
@@ -157,9 +143,9 @@ class BlokMatVerdelingService
 
                 Log::debug("Variant toegevoegd aan top 5", [
                     'index' => count($beste),
-                    'hash' => substr($hash, 0, 8),
-                    'max_afwijking' => $variant['scores']['max_afwijking'],
-                    'breaks' => $variant['scores']['breaks'],
+                    'totaal_score' => $variant['totaal_score'],
+                    'verdeling' => $variant['scores']['verdeling_score'],
+                    'aansluiting' => $variant['scores']['aansluiting_score'],
                 ]);
 
                 if (count($beste) >= 5) {
@@ -170,7 +156,7 @@ class BlokMatVerdelingService
 
         Log::info("Blokverdeling klaar na {$poging} pogingen", [
             'geldige_varianten' => count($alleVarianten),
-            'beste_afwijking_pct' => isset($beste[0]) ? $beste[0]['scores']['max_afwijking_pct'] . '%' : 'N/A',
+            'beste_score' => isset($beste[0]) ? $beste[0]['totaal_score'] : 'N/A',
         ]);
 
         // Return top 5 unique variants with stats
@@ -376,19 +362,21 @@ class BlokMatVerdelingService
             }
         }
 
-        // Calculate scores for this variant
-        $scores = $this->berekenScores($toewijzingen, $capaciteit, $blokkenArray, $perLeeftijd);
+        // Calculate scores for this variant (met slider gewichten)
+        $scores = $this->berekenScores(
+            $toewijzingen,
+            $capaciteit,
+            $blokkenArray,
+            $perLeeftijd,
+            $verdelingGewicht,
+            $aansluitingGewicht
+        );
 
         return [
             'toewijzingen' => $toewijzingen,
             'capaciteit' => $capaciteit,
             'scores' => $scores,
-            'totaal_score' => $scores['verdeling_score'] + $scores['aansluiting_score'],
-            'strategie' => [
-                'verdeling' => round($verdelingGewicht * 100),
-                'aansluiting' => round($aansluitingGewicht * 100),
-                'start_offset' => $startBlokOffset,
-            ],
+            'totaal_score' => $scores['totaal_score'],  // Gewogen totaal
         ];
     }
 
@@ -475,30 +463,40 @@ class BlokMatVerdelingService
 
     /**
      * Calculate quality scores for a variant
-     * Marks variant as invalid if any block exceeds 25% deviation
+     *
+     * Verdeling: som van absolute % afwijkingen per blok (lager = beter)
+     * Aansluiting: punten per overgang tussen gewichtscategorieën
+     *   - Zelfde blok (0) = 0 punten
+     *   - Volgend blok (+1) = 10 punten
+     *   - Vorig blok (-1) = 20 punten
+     *   - 2 blokken later (+2) = 30 punten
+     *   - Anders = 50+ punten (slecht)
+     *
+     * Totaal = (verdelingGewicht * verdeling) + (aansluitingGewicht * aansluiting)
+     * Lager = beter
      */
     private function berekenScores(
         array $toewijzingen,
         array $capaciteit,
         $blokken,
-        array $perLeeftijd
+        array $perLeeftijd,
+        float $verdelingGewicht = 0.5,
+        float $aansluitingGewicht = 0.5
     ): array {
-        // Verdeling score: sum of absolute deviations from gewenst
+        // Verdeling score: SOM van absolute % afwijkingen per blok
         $verdelingScore = 0;
-        $maxAfwijking = 0;
         $maxAfwijkingPct = 0;
         $blokStats = [];
-        $isValid = true;  // Variant is valid unless a block exceeds 25% limit
+        $isValid = true;
 
         foreach ($blokken as $blok) {
             $cap = $capaciteit[$blok->id];
             $gewenst = max(1, $cap['gewenst']);
-            $afwijking = abs($cap['actueel'] - $gewenst);
-            $afwijkingPct = ($cap['actueel'] - $gewenst) / $gewenst * 100;
+            $afwijkingPct = abs(($cap['actueel'] - $gewenst) / $gewenst * 100);
 
-            $verdelingScore += $afwijking;
-            $maxAfwijking = max($maxAfwijking, $afwijking);
-            $maxAfwijkingPct = max($maxAfwijkingPct, abs($afwijkingPct));
+            // Verdeling score = som van alle % afwijkingen
+            $verdelingScore += $afwijkingPct;
+            $maxAfwijkingPct = max($maxAfwijkingPct, $afwijkingPct);
 
             // HARD LIMIT: if any block exceeds 25%, variant is INVALID
             if ($afwijkingPct > 25) {
@@ -508,16 +506,14 @@ class BlokMatVerdelingService
             $blokStats[$blok->nummer] = [
                 'actueel' => $cap['actueel'],
                 'gewenst' => $gewenst,
-                'afwijking' => $afwijking,
                 'afwijking_pct' => round($afwijkingPct, 1),
             ];
         }
 
-        // Aansluiting score: count "breaks" based on block transitions
-        // Same block (0) or +1 = perfect (no break)
-        // +2 = minor break, -1 or +3+ = major break
+        // Aansluiting score: punten per overgang tussen gewichtscategorieën
+        // Zelfde blok = 0, +1 = 10, -1 = 20, +2 = 30, anders = 50+
         $aansluitingScore = 0;
-        $breaks = 0;
+        $overgangen = 0;  // Totaal aantal overgangen
 
         foreach ($perLeeftijd as $leeftijd => $gewichten) {
             $vorigBlok = null;
@@ -527,35 +523,38 @@ class BlokMatVerdelingService
 
                 if ($vorigBlok !== null && $blokNr !== null) {
                     $verschil = $blokNr - $vorigBlok;
+                    $overgangen++;
 
-                    if ($verschil === 0 || $verschil === 1) {
-                        // Same block or +1 = PERFECT, no break
-                    } elseif ($verschil === 2) {
-                        // +2 blocks = minor break
-                        $breaks++;
-                        $aansluitingScore += 10;
-                    } elseif ($verschil < 0) {
-                        // Going BACKWARDS = major break!
-                        $breaks += 2;  // Count as 2 breaks (very bad)
-                        $aansluitingScore += 50 + abs($verschil) * 20;
-                    } else {
-                        // +3 or more = major break
-                        $breaks += 2;
-                        $aansluitingScore += 30 + ($verschil - 2) * 15;
-                    }
+                    $punten = match(true) {
+                        $verschil === 0 => 0,    // Zelfde blok = perfect
+                        $verschil === 1 => 10,   // Volgend blok = goed
+                        $verschil === -1 => 20,  // Vorig blok = matig
+                        $verschil === 2 => 30,   // 2 blokken later = acceptabel
+                        $verschil < -1 => 50 + abs($verschil) * 10,  // Ver terug = slecht
+                        default => 50 + $verschil * 10,  // Ver vooruit = slecht
+                    };
+                    $aansluitingScore += $punten;
                 }
                 $vorigBlok = $blokNr;
             }
         }
 
+        // Totaal score: gewogen som (lager = beter)
+        // Normaliseer aansluiting naar vergelijkbare schaal als verdeling
+        $totaalScore = ($verdelingGewicht * $verdelingScore) + ($aansluitingGewicht * $aansluitingScore);
+
         return [
-            'verdeling_score' => $verdelingScore,
-            'max_afwijking' => $maxAfwijking,
-            'max_afwijking_pct' => round($maxAfwijkingPct, 1),
+            'verdeling_score' => round($verdelingScore, 1),
             'aansluiting_score' => $aansluitingScore,
-            'breaks' => $breaks,
+            'totaal_score' => round($totaalScore, 1),
+            'max_afwijking_pct' => round($maxAfwijkingPct, 1),
+            'overgangen' => $overgangen,
             'blok_stats' => $blokStats,
             'is_valid' => $isValid,
+            'gewichten' => [
+                'verdeling' => round($verdelingGewicht * 100),
+                'aansluiting' => round($aansluitingGewicht * 100),
+            ],
         ];
     }
 

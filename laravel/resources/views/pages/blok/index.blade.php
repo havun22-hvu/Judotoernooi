@@ -200,11 +200,6 @@
         <!-- Varianten panel (altijd zichtbaar) -->
         @php
             $blokStats = session('blok_stats', []);
-            // Kwaliteitsscore berekening: 100 - (afwijking * 2) - (breaks * 5)
-            // Perfecte score = 100 (0% afwijking, 0 breaks)
-            $berekenKwaliteit = fn($scores) => max(0, min(100, round(
-                100 - (($scores['max_afwijking_pct'] ?? 0) * 2) - (($scores['breaks'] ?? 0) * 5)
-            )));
         @endphp
         <div class="bg-white rounded-lg shadow p-3">
             <div class="flex items-center justify-between mb-2">
@@ -237,16 +232,17 @@
                     @foreach($varianten as $idx => $variant)
                     @php
                         $scores = $variant['scores'];
-                        $kwaliteit = $berekenKwaliteit($scores);
-                        $kwaliteitKleur = $kwaliteit >= 70 ? 'text-green-600' : ($kwaliteit >= 50 ? 'text-yellow-600' : 'text-red-600');
+                        $totaal = $variant['totaal_score'] ?? 0;
+                        // Score kleur: lager = beter
+                        $scoreKleur = $totaal < 100 ? 'text-green-600' : ($totaal < 200 ? 'text-yellow-600' : 'text-red-600');
                     @endphp
                     <button type="button" onclick="toonVariant({{ $idx }})"
                             class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
                             data-idx="{{ $idx }}"
-                            title="Afwijking: ±{{ $scores['max_afwijking_pct'] ?? 0 }}% | Breaks: {{ $scores['breaks'] }} | Kwaliteit: {{ $kwaliteit }}%">
+                            title="Score: {{ $totaal }} (lager=beter)&#10;Verdeling: {{ $scores['verdeling_score'] ?? 0 }} (Σ%afwijking)&#10;Aansluiting: {{ $scores['aansluiting_score'] ?? 0 }} (0/10/20/30 per overgang)&#10;Weging: {{ $scores['gewichten']['verdeling'] ?? 50 }}% / {{ $scores['gewichten']['aansluiting'] ?? 50 }}%">
                         <span class="font-bold">#{{ $idx + 1 }}</span>
-                        <span class="{{ $kwaliteitKleur }} font-bold">{{ $kwaliteit }}%</span>
-                        <span class="text-gray-300 text-xs">(±{{ $scores['max_afwijking_pct'] ?? 0 }}% / {{ $scores['breaks'] }}b)</span>
+                        <span class="{{ $scoreKleur }} font-bold">{{ $totaal }}</span>
+                        <span class="text-gray-400 text-xs">(V{{ $scores['verdeling_score'] ?? 0 }}+A{{ $scores['aansluiting_score'] ?? 0 }})</span>
                     </button>
                     @endforeach
                 @else
@@ -254,7 +250,7 @@
                     <button type="button" disabled
                             class="px-3 py-2 rounded border text-sm border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed">
                         <span class="font-bold">#{{ $i }}</span>
-                        <span>--%</span>
+                        <span>--</span>
                     </button>
                     @endfor
                 @endif
