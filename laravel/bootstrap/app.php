@@ -12,6 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
         ]);
+
+        // Exclude public API routes from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'publiek/*/favorieten',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
