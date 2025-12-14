@@ -112,8 +112,9 @@ class BlokMatVerdelingService
                     // Log first few attempts for debugging
                     if (count($alleVarianten) <= 5) {
                         Log::info("Geldige variant #{$poging}", [
-                            'max_afwijking_pct' => $variant['scores']['max_afwijking_pct'] . '%',
-                            'breaks' => $variant['scores']['breaks'],
+                            'totaal_score' => $variant['totaal_score'],
+                            'verdeling' => $variant['scores']['verdeling_score'],
+                            'aansluiting' => $variant['scores']['aansluiting_score'],
                         ]);
                     }
                 } else {
