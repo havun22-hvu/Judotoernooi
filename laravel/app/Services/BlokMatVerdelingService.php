@@ -668,8 +668,8 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Apply a chosen variant to the database
-     * Only updates categories that are NOT yet assigned (respects manual placements)
+     * Apply toewijzingen to the database
+     * Updates all non-pinned categories to their assigned blocks
      */
     public function pasVariantToe(Toernooi $toernooi, array $toewijzingen): void
     {
@@ -680,11 +680,11 @@ class BlokMatVerdelingService
                 $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
 
                 if ($blok) {
-                    // Only update poules that are NOT yet assigned
+                    // Update all poules for this category (except pinned ones)
                     Poule::where('toernooi_id', $toernooi->id)
                         ->where('leeftijdsklasse', $leeftijd)
                         ->where('gewichtsklasse', $gewicht)
-                        ->whereNull('blok_id')
+                        ->where('blok_vast', false)
                         ->update(['blok_id' => $blok->id]);
                 }
             }

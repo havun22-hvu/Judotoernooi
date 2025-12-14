@@ -27,6 +27,9 @@ class Toernooi extends Model
             if (empty($toernooi->code_spreker)) {
                 $toernooi->code_spreker = RoleToegang::generateCode();
             }
+            if (empty($toernooi->code_dojo)) {
+                $toernooi->code_dojo = RoleToegang::generateCode();
+            }
         });
     }
 
@@ -49,8 +52,10 @@ class Toernooi extends Model
         'wedstrijd_systeem',
         'kruisfinales_aantal',
         'gewicht_tolerantie',
+        'judoka_code_volgorde',
         'weging_verplicht',
         'max_wegingen',
+        'judokas_per_coach',
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
@@ -79,6 +84,7 @@ class Toernooi extends Model
         'code_weging',
         'code_mat',
         'code_spreker',
+        'code_dojo',
     ];
 
     protected $casts = [
@@ -635,6 +641,7 @@ class Toernooi extends Model
             'weging' => $this->code_weging,
             'mat' => $this->code_mat,
             'spreker' => $this->code_spreker,
+            'dojo' => $this->code_dojo,
             default => null,
         };
 
@@ -644,7 +651,7 @@ class Toernooi extends Model
     public function regenerateRoleCode(string $rol): ?string
     {
         $veld = "code_{$rol}";
-        if (!in_array($veld, ['code_hoofdjury', 'code_weging', 'code_mat', 'code_spreker'])) {
+        if (!in_array($veld, ['code_hoofdjury', 'code_weging', 'code_mat', 'code_spreker', 'code_dojo'])) {
             return null;
         }
 

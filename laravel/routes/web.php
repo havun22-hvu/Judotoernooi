@@ -13,6 +13,7 @@ use App\Http\Controllers\ToernooiController;
 use App\Http\Controllers\WeegkaartController;
 use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WegingController;
+use App\Http\Controllers\CoachKaartController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -113,6 +114,10 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::put('coach/{coach}', [ClubController::class, 'updateCoach'])->name('club.coach.update');
         Route::delete('coach/{coach}', [ClubController::class, 'destroyCoach'])->name('club.coach.destroy');
         Route::post('coach/{coach}/regenerate-pin', [ClubController::class, 'regeneratePincode'])->name('club.coach.regenerate-pin');
+
+        // Coach Kaarten (toegang dojo)
+        Route::get('coach-kaarten', [CoachKaartController::class, 'index'])->name('coach-kaart.index');
+        Route::post('coach-kaarten/genereer', [CoachKaartController::class, 'genereer'])->name('coach-kaart.genereer');
     });
 
     // Jury + Admin routes
@@ -137,6 +142,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('wedstrijddag/verplaats-judoka', [WedstrijddagController::class, 'verplaatsJudoka'])->name('wedstrijddag.verplaats-judoka');
         Route::post('wedstrijddag/naar-zaaloverzicht', [WedstrijddagController::class, 'naarZaaloverzicht'])->name('wedstrijddag.naar-zaaloverzicht');
         Route::post('wedstrijddag/nieuwe-poule', [WedstrijddagController::class, 'nieuwePoule'])->name('wedstrijddag.nieuwe-poule');
+        Route::post('wedstrijddag/verwijder-uit-poule', [WedstrijddagController::class, 'verwijderUitPoule'])->name('wedstrijddag.verwijder-uit-poule');
     });
 
     // Mat routes (mat + admin)
@@ -180,10 +186,18 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::put('{code}/judoka/{judoka}', [CoachPortalController::class, 'updateJudokaCode'])->name('judoka.update');
     Route::delete('{code}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudokaCode'])->name('judoka.destroy');
     Route::get('{code}/weegkaarten', [CoachPortalController::class, 'weegkaartenCode'])->name('weegkaarten');
+    Route::get('{code}/coachkaarten', [CoachPortalController::class, 'coachkaartenCode'])->name('coachkaarten');
+    Route::post('{code}/coachkaart/{coachKaart}/toewijzen', [CoachPortalController::class, 'toewijzenCoachkaart'])->name('coachkaart.toewijzen');
 });
 
 // Weegkaart (public, accessed via QR code)
 Route::get('weegkaart/{token}', [WeegkaartController::class, 'show'])->name('weegkaart.show');
+
+// Coach Kaart (public, accessed via QR code - toegang tot dojo)
+Route::get('coach-kaart/{qrCode}', [CoachKaartController::class, 'show'])->name('coach-kaart.show');
+Route::get('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeer'])->name('coach-kaart.activeer');
+Route::post('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeerOpslaan'])->name('coach-kaart.activeer.opslaan');
+Route::get('coach-kaart/{qrCode}/scan', [CoachKaartController::class, 'scan'])->name('coach-kaart.scan');
 
 // Role access via secret code (vrijwilligers)
 Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
@@ -195,4 +209,5 @@ Route::middleware('rol.sessie')->group(function () {
     Route::get('mat/{mat}', [RoleToegang::class, 'matShow'])->name('rol.mat.show');
     Route::get('jury', [RoleToegang::class, 'juryInterface'])->name('rol.jury');
     Route::get('spreker', [RoleToegang::class, 'sprekerInterface'])->name('rol.spreker');
+    Route::get('dojo', [RoleToegang::class, 'dojoInterface'])->name('rol.dojo');
 });

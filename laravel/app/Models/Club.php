@@ -35,6 +35,31 @@ class Club extends Model
         return $this->coaches()->where('toernooi_id', $toernooiId);
     }
 
+    public function coachKaarten(): HasMany
+    {
+        return $this->hasMany(CoachKaart::class);
+    }
+
+    public function coachKaartenVoorToernooi(int $toernooiId): HasMany
+    {
+        return $this->coachKaarten()->where('toernooi_id', $toernooiId);
+    }
+
+    /**
+     * Calculate number of coach cards for this club in a tournament
+     */
+    public function berekenAantalCoachKaarten(Toernooi $toernooi): int
+    {
+        $aantalJudokas = $this->judokas()->where('toernooi_id', $toernooi->id)->count();
+        $perCoach = $toernooi->judokas_per_coach ?? 5;
+
+        if ($aantalJudokas === 0) {
+            return 0;
+        }
+
+        return (int) ceil($aantalJudokas / $perCoach);
+    }
+
     public static function findOrCreateByName(string $naam): self
     {
         return self::firstOrCreate(

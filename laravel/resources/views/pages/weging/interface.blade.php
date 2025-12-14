@@ -63,6 +63,60 @@
         </div>
     </div>
 
+    <!-- Countdown timer per blok -->
+    @foreach($toernooi->blokken as $blok)
+    @if($blok->weging_einde && !$blok->weging_gesloten)
+    <div x-data="countdownTimer('{{ $blok->weging_einde->toISOString() }}', {{ $blok->id }}, {{ $blok->nummer }})"
+         x-show="blokFilter === {{ $blok->nummer }} || blokFilter === null"
+         x-init="startCountdown()"
+         class="rounded-lg shadow p-4 mb-4 transition-colors"
+         :class="isExpired ? 'bg-red-100 border-2 border-red-500' : (isWarning ? 'bg-yellow-100 border-2 border-yellow-500' : 'bg-white')">
+        <div class="flex justify-between items-center">
+            <div>
+                <span class="font-bold" :class="isExpired ? 'text-red-800' : (isWarning ? 'text-yellow-800' : 'text-gray-800')">
+                    Blok {{ $blok->nummer }} weging
+                </span>
+                <span class="text-sm ml-2" :class="isExpired ? 'text-red-600' : (isWarning ? 'text-yellow-600' : 'text-gray-500')">
+                    ({{ $blok->weging_start?->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }})
+                </span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <template x-if="!isExpired">
+                        <div>
+                            <span class="text-sm" :class="isWarning ? 'text-yellow-700' : 'text-gray-500'">Nog</span>
+                            <span class="font-mono text-2xl font-bold ml-2" :class="isExpired ? 'text-red-700' : (isWarning ? 'text-yellow-700' : 'text-blue-600')" x-text="timeDisplay"></span>
+                        </div>
+                    </template>
+                    <template x-if="isExpired">
+                        <div class="text-red-700 font-bold text-lg">
+                            ⏰ Weegtijd voorbij!
+                        </div>
+                    </template>
+                </div>
+                <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                            onclick="return confirm('Weet je zeker dat je de weging voor Blok {{ $blok->nummer }} wilt afsluiten?')"
+                            class="px-4 py-2 rounded font-medium transition-colors"
+                            :class="isExpired ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'">
+                        Weging afsluiten
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    @elseif($blok->weging_gesloten)
+    <div x-show="blokFilter === {{ $blok->nummer }} || blokFilter === null"
+         class="bg-gray-200 rounded-lg shadow p-4 mb-4">
+        <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-600">Blok {{ $blok->nummer }} weging</span>
+            <span class="text-gray-500">✓ Weging gesloten</span>
+        </div>
+    </div>
+    @endif
+    @endforeach
+
     <div class="weging-container">
         <!-- Left: Search/Scan -->
         <div class="space-y-4">
@@ -260,6 +314,51 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script>
+// Countdown timer component
+function countdownTimer(eindtijd, blokId, blokNummer) {
+    return {
+        eindtijd: new Date(eindtijd),
+        timeDisplay: '',
+        isExpired: false,
+        isWarning: false,
+        interval: null,
+
+        startCountdown() {
+            this.updateTime();
+            this.interval = setInterval(() => this.updateTime(), 1000);
+        },
+
+        updateTime() {
+            const now = new Date();
+            const diff = this.eindtijd - now;
+
+            if (diff <= 0) {
+                this.isExpired = true;
+                this.isWarning = false;
+                this.timeDisplay = '0:00';
+                if (this.interval) {
+                    clearInterval(this.interval);
+                }
+                return;
+            }
+
+            // Warning at 5 minutes
+            this.isWarning = diff <= 5 * 60 * 1000;
+
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            if (minutes >= 60) {
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                this.timeDisplay = `${hours}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            } else {
+                this.timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
+            }
+        }
+    }
+}
+
 function wegingInterface() {
     return {
         modus: 'zoek',

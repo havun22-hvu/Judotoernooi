@@ -38,6 +38,11 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
+                            // Check of categorie actieve judoka's heeft
+                            $catTolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+                            $totaalActiefInCategorie = $category['poules']->sum(function($p) use ($catTolerantie) {
+                                return $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($catTolerantie))->count();
+                            });
                         @endphp
                         <button
                             @click="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
@@ -47,6 +52,7 @@
                             + Poule
                         </button>
                     </div>
+                    @if($totaalActiefInCategorie > 0)
                     <button
                         @click="naarZaaloverzicht('{{ $jsKey }}')"
                         :class="sentCategories['{{ $jsKey }}'] ? 'ring-2 ring-green-500 ring-offset-2' : ''"
@@ -54,6 +60,9 @@
                     >
                         Naar zaaloverzicht
                     </button>
+                    @else
+                    <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
+                    @endif
                 </div>
 
                 <div class="p-4">
@@ -61,44 +70,62 @@
                         {{-- Existing poules --}}
                         <div class="flex flex-wrap gap-4 flex-1">
                             @foreach($category['poules'] as $poule)
+                            @php
+                                // Tel alleen actieve judoka's (niet afwezig en binnen gewichtsklasse)
+                                $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+                                $actieveJudokas = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
+                                $aantalActief = $actieveJudokas->count();
+                                $aantalWedstrijden = $aantalActief > 1 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0;
+                                $heeftDoorgestreept = $poule->judokas->count() > $aantalActief;
+                            @endphp
                             <div
-                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card"
+                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }}"
                                 data-poule-id="{{ $poule->id }}"
+                                data-actief="{{ $aantalActief }}"
                             >
-                                <div class="bg-blue-700 text-white px-3 py-2 flex justify-between items-center pointer-events-none">
-                                    <span class="font-bold">Poule {{ $poule->nummer }}</span>
-                                    <span class="text-xs text-blue-200 poule-stats">{{ $poule->aantal_judokas }}j / {{ $poule->aantal_wedstrijden }}w</span>
+                                <div class="bg-blue-700 text-white px-3 py-2 pointer-events-none">
+                                    <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
+                                    <div class="text-xs text-blue-200 poule-stats">{{ $aantalActief }} judoka's {{ $aantalWedstrijden }} wedstrijden</div>
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
                                     @php
-                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig';
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
-                                        $isBinnenKlasse = $judoka->isGewichtBinnenKlasse();
-                                        $moetOverpoulen = $isGewogen && !$isBinnenKlasse;
+                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig';
+                                        $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                        $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
                                     @endphp
                                     <div
-                                        class="px-2 py-1.5 hover:bg-blue-50 cursor-move text-sm judoka-item {{ $isAfwezig || $moetOverpoulen ? 'line-through opacity-50' : '' }}"
+                                        class="px-2 py-1.5 text-sm judoka-item {{ $isDoorgestreept ? 'bg-gray-100 opacity-60' : 'hover:bg-blue-50 cursor-move' }}"
                                         data-judoka-id="{{ $judoka->id }}"
+                                        @if(!$isDoorgestreept) draggable="true" @endif
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
                                                 {{-- Status marker --}}
-                                                @if($isAfwezig)
-                                                    {{-- No dot --}}
-                                                @elseif($moetOverpoulen)
-                                                    <span class="text-red-500 text-xs flex-shrink-0">●</span>
-                                                @elseif($isGewogen && $isBinnenKlasse)
+                                                @if($isAfwijkendGewicht)
+                                                    <span class="text-red-500 text-xs flex-shrink-0" title="Afwijkend gewicht">●</span>
+                                                @elseif($isGewogen && !$isDoorgestreept)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
-                                                <div class="min-w-0">
-                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
+                                                <div class="min-w-0 {{ $isDoorgestreept ? 'line-through text-gray-400' : '' }}">
+                                                    <div class="font-medium {{ $isDoorgestreept ? 'text-gray-400' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
-                                            <div class="text-right text-xs ml-2 flex-shrink-0">
-                                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
-                                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="text-right text-xs flex-shrink-0">
+                                                    <div class="{{ $isAfwijkendGewicht ? 'text-red-600' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                    <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                                </div>
+                                                {{-- Verwijder knop voor doorgestreepte judoka's --}}
+                                                @if($isDoorgestreept)
+                                                <button
+                                                    @click="verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
+                                                    class="w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-xs font-bold"
+                                                    title="{{ $isAfwezig ? 'Afwezig - verwijder uit poule' : 'Afwijkend gewicht - verwijder uit poule' }}"
+                                                >−</button>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -159,6 +186,37 @@
 function wedstrijddagPoules() {
     return {
         sentCategories: @json($sentToZaaloverzicht ?? []),
+
+        async verwijderUitPoule(judokaId, pouleId) {
+            if (!confirm('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?')) return;
+
+            try {
+                const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ judoka_id: judokaId, poule_id: pouleId }),
+                });
+
+                if (response.ok) {
+                    // Verwijder het element uit de DOM
+                    const judokaEl = document.querySelector(`.judoka-item[data-judoka-id="${judokaId}"]`);
+                    if (judokaEl) {
+                        judokaEl.remove();
+                    }
+                    // Update stats
+                    const data = await response.json();
+                    if (data.poule) {
+                        updatePouleStats(data.poule);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Fout bij verwijderen');
+            }
+        },
 
         async naarZaaloverzicht(categoryKey) {
             try {
@@ -281,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the stats in header
         const statsSpan = pouleCard.querySelector('.poule-stats');
         if (statsSpan) {
-            statsSpan.textContent = `${pouleData.aantal_judokas}j / ${pouleData.aantal_wedstrijden}w`;
+            statsSpan.textContent = `${pouleData.aantal_judokas} judoka's ${pouleData.aantal_wedstrijden} wedstrijden`;
         } else {
             console.warn('Stats span not found in poule card:', pouleData.id);
         }

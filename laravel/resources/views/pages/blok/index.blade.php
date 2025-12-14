@@ -202,31 +202,18 @@
             $blokStats = session('blok_stats', []);
         @endphp
         <div class="bg-white rounded-lg shadow p-3">
-            <div class="flex items-center justify-between mb-2">
-                <div class="text-sm text-gray-700">
-                    @if($toonVarianten && !empty($blokStats))
-                        <span class="font-medium">{{ number_format($blokStats['pogingen'] ?? 0) }}</span>
-                        <span class="text-gray-400 text-xs">({{ $blokStats['tijd_sec'] ?? 0 }}s, {{ number_format($blokStats['per_seconde'] ?? 0) }}/s)</span>
-                        <span class="text-gray-400 mx-1">→</span>
-                        <span>{{ $blokStats['geldige_varianten'] ?? 0 }} geldig</span>
-                        <span class="text-gray-400 mx-1">→</span>
-                        <span class="font-bold text-blue-600">top {{ $blokStats['getoond'] ?? 0 }}</span>
-                    @elseif($toonVarianten)
-                        {{ count($varianten) }} varianten berekend
-                    @else
-                        Varianten (klik Bereken)
-                    @endif
-                </div>
-                @if($toonVarianten)
-                <div class="flex items-center gap-3">
-                    <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
-                        ✓ Toepassen
-                    </button>
-                    <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
-                </div>
-                @endif
+            <!-- Toepassen/Annuleer knoppen rechtsboven -->
+            @if($toonVarianten)
+            <div class="flex justify-end gap-3 mb-2">
+                <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
+                    ✓ Toepassen
+                </button>
+                <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
             </div>
-            <div class="flex flex-wrap gap-2 mb-3">
+            @endif
+
+            <!-- Variant knoppen -->
+            <div class="flex flex-wrap gap-2 mb-2">
                 @if($toonVarianten)
                     @foreach($varianten as $idx => $variant)
                     @php
@@ -253,6 +240,21 @@
                         <span>--</span>
                     </button>
                     @endfor
+                @endif
+            </div>
+
+            <!-- Stats onderaan -->
+            <div class="text-sm text-gray-500">
+                @if($toonVarianten && !empty($blokStats))
+                    <span class="font-medium">{{ number_format($blokStats['pogingen'] ?? 0) }}</span>
+                    <span class="text-gray-400 text-xs">({{ $blokStats['tijd_sec'] ?? 0 }}s, {{ number_format($blokStats['per_seconde'] ?? 0) }}/s)</span>
+                    <span class="text-gray-400 mx-1">→</span>
+                    <span>{{ $blokStats['geldige_varianten'] ?? 0 }} geldig</span>
+                    <span class="text-gray-400 mx-1">→</span>
+                    <span class="font-bold text-blue-600">top {{ $blokStats['getoond'] ?? 0 }}</span>
+                    <span id="live-score-display" class="ml-3 hidden"></span>
+                @else
+                    Varianten (klik Bereken)
                 @endif
             </div>
         </div>
@@ -346,10 +348,21 @@ function updateGewenst(input) {
 let huidigeVariant = 0;
 
 function pasVariantToe() {
+    // Lees huidige chip posities uit DOM (inclusief handmatige aanpassingen)
+    const toewijzingen = {};
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        const key = chip.dataset.key;
+        const blokZone = chip.closest('.blok-dropzone');
+        const blokNr = parseInt(blokZone?.dataset?.blok || 0);
+        if (blokNr > 0) {
+            toewijzingen[key] = blokNr;
+        }
+    });
+
     fetch('{{ route('toernooi.blok.kies-variant', $toernooi) }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ variant: huidigeVariant })
+        body: JSON.stringify({ toewijzingen: toewijzingen })
     }).then(r => r.json()).then(result => {
         if (result.success) location.reload();
     });
@@ -514,8 +527,10 @@ function updateAllStats() {
 // Leeftijd volgorde voor aansluiting berekening
 const leeftijdVolgorde = @json($leeftijdVolgorde);
 
+let heeftWijzigingen = false;
+
 function berekenLiveScore() {
-    const balans = parseInt(document.getElementById('balans-slider')?.value || 50);
+    const balans = parseInt(document.getElementById('balans-slider-header')?.value || 50);
     const verdelingGewicht = (100 - balans) / 100;
     const aansluitingGewicht = balans / 100;
 
@@ -576,12 +591,13 @@ function berekenLiveScore() {
         let laatsteBlok = null;
 
         for (const cat of cats) {
-            if (cat.blok) {
-                if (eersteBlok === null) eersteBlok = cat.blok;
-                laatsteBlok = cat.blok;
-            }
+            // Skip chips in sleepvak (geen blok toegewezen)
+            if (!cat.blok) continue;
 
-            if (vorigBlok !== null && cat.blok) {
+            if (eersteBlok === null) eersteBlok = cat.blok;
+            laatsteBlok = cat.blok;
+
+            if (vorigBlok !== null) {
                 const verschil = cat.blok - vorigBlok;
                 // Score per overgang: 0=0, +1=10, -1=20, +2=30, anders=50+
                 let punten = 0;
@@ -604,20 +620,26 @@ function berekenLiveScore() {
     // 4. Totaal score
     const totaalScore = Math.round(verdelingGewicht * verdelingScore + aansluitingGewicht * aansluitingScore);
 
-    // 5. Update de ACTIEVE variant knop (met ring-2) - vervang oude score met nieuwe
-    const actieveBtn = document.querySelector('.variant-btn.ring-2');
-    if (actieveBtn) {
-        // Update score display - gewoon de nieuwe score tonen
-        const scoreSpan = actieveBtn.querySelector('.variant-score');
-        if (scoreSpan) {
-            scoreSpan.textContent = totaalScore;
-            scoreSpan.className = 'variant-score font-bold ' + (totaalScore < 100 ? 'text-green-600' : totaalScore < 200 ? 'text-yellow-600' : 'text-red-600');
+    // 5. Toon live score achter statistieken (alleen als er wijzigingen zijn)
+    const liveScoreDisplay = document.getElementById('live-score-display');
+    if (liveScoreDisplay) {
+        if (!heeftWijzigingen) {
+            liveScoreDisplay.classList.add('hidden');
+            return;
         }
 
-        // Update detail
-        const detailSpan = actieveBtn.querySelector('.variant-detail');
-        if (detailSpan) {
-            detailSpan.textContent = `(V${Math.round(verdelingScore)}+A${aansluitingScore})`;
+        // Haal originele score van actieve variant
+        const actieveBtn = document.querySelector('.variant-btn.ring-2');
+        const origineelScore = actieveBtn ? parseFloat(actieveBtn.dataset.origineelScore) : null;
+
+        if (origineelScore !== null) {
+            const verschil = totaalScore - origineelScore;
+            const verschilText = verschil > 0 ? `+${verschil.toFixed(1)}` : verschil.toFixed(1);
+            const kleur = verschil < 0 ? 'text-green-600' : (verschil > 0 ? 'text-red-600' : 'text-gray-600');
+            const icon = verschil < 0 ? '↓' : (verschil > 0 ? '↑' : '=');
+
+            liveScoreDisplay.innerHTML = `| Huidige score: <span class="font-bold ${kleur}">${totaalScore}</span> <span class="${kleur}">(${icon}${verschilText})</span>`;
+            liveScoreDisplay.classList.remove('hidden');
         }
     }
 }
@@ -663,6 +685,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const blok = this.dataset.blok;
             const currentBlok = draggedChip.closest('.blok-dropzone')?.dataset?.blok;
             if (blok === currentBlok) return;
+
+            // Markeer dat er wijzigingen zijn voor live score
+            heeftWijzigingen = true;
 
             const placeholder = this.querySelector('.dropzone-placeholder');
             if (placeholder) placeholder.remove();

@@ -547,25 +547,38 @@ class PouleIndelingService
 
     /**
      * Recalculate all judoka codes for tournament
-     * Orders by leeftijdsklasse, gewichtsklasse, band (descending), naam
+     * Order depends on toernooi setting (judoka_code_volgorde)
      */
     public function herberekenJudokaCodes(Toernooi $toernooi): int
     {
-        $judokas = $toernooi->judokas()
-            ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
-            ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END")
-            ->orderByRaw("CASE band
-                WHEN 'zwart' THEN 0
-                WHEN 'bruin' THEN 1
-                WHEN 'blauw' THEN 2
-                WHEN 'groen' THEN 3
-                WHEN 'oranje' THEN 4
-                WHEN 'geel' THEN 5
-                WHEN 'wit' THEN 6
-                ELSE 7 END")
-            ->orderBy('naam')
-            ->get();
+        $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
+
+        $bandOrder = "CASE band
+            WHEN 'zwart' THEN 0
+            WHEN 'bruin' THEN 1
+            WHEN 'blauw' THEN 2
+            WHEN 'groen' THEN 3
+            WHEN 'oranje' THEN 4
+            WHEN 'geel' THEN 5
+            WHEN 'wit' THEN 6
+            ELSE 7 END";
+
+        $query = $toernooi->judokas()
+            ->orderBy('leeftijdsklasse');
+
+        if ($volgorde === 'band_gewicht') {
+            // Leeftijd → Band → Gewicht → Geslacht
+            $query->orderByRaw($bandOrder)
+                  ->orderBy('gewichtsklasse')
+                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
+        } else {
+            // Leeftijd → Gewicht → Band → Geslacht (default)
+            $query->orderBy('gewichtsklasse')
+                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END")
+                  ->orderByRaw($bandOrder);
+        }
+
+        $judokas = $query->orderBy('naam')->get();
 
         $vorigeCategorie = null;
         $volgnummer = 0;

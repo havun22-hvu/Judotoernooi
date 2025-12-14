@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Leeftijdsklasse;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
+use App\Models\CoachKaart;
 use App\Models\Judoka;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -564,5 +565,96 @@ class CoachPortalController extends Controller
             'useCode' => true,
             'code' => $code,
         ]);
+    }
+
+    public function coachkaartenCode(Request $request, string $code): View|RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            return redirect()->route('coach.portal.code', $code);
+        }
+
+        $toernooi = $coach->toernooi;
+        $club = $coach->club;
+
+        // Get number of judokas for this club
+        $aantalJudokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->count();
+
+        // Calculate how many coach cards they get
+        $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
+
+        // Get existing coach cards
+        $coachKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->orderBy('id')
+            ->get();
+
+        // Auto-generate cards if needed
+        if ($coachKaarten->count() < $benodigdAantal) {
+            for ($i = $coachKaarten->count(); $i < $benodigdAantal; $i++) {
+                CoachKaart::create([
+                    'toernooi_id' => $toernooi->id,
+                    'club_id' => $club->id,
+                ]);
+            }
+            // Refresh
+            $coachKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
+                ->where('club_id', $club->id)
+                ->orderBy('id')
+                ->get();
+        }
+
+        // Get organisation coaches for this club (to suggest names)
+        $organisatieCoaches = Coach::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->get();
+
+        return view('pages.coach.coachkaarten', [
+            'coach' => $coach,
+            'toernooi' => $toernooi,
+            'club' => $club,
+            'coachKaarten' => $coachKaarten,
+            'organisatieCoaches' => $organisatieCoaches,
+            'aantalJudokas' => $aantalJudokas,
+            'benodigdAantal' => $benodigdAantal,
+            'judokasPerCoach' => $toernooi->judokas_per_coach ?? 5,
+            'useCode' => true,
+            'code' => $code,
+        ]);
+    }
+
+    public function toewijzenCoachkaart(Request $request, string $code, CoachKaart $coachKaart): RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            abort(403);
+        }
+
+        // Check ownership
+        if ($coachKaart->club_id !== $coach->club_id || $coachKaart->toernooi_id !== $coach->toernooi_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'naam' => 'nullable|string|max:255',
+            'organisatie_coach_id' => 'nullable|exists:coaches,id',
+        ]);
+
+        // If organisatie coach selected, copy name
+        if (!empty($validated['organisatie_coach_id'])) {
+            $orgCoach = Coach::find($validated['organisatie_coach_id']);
+            if ($orgCoach && $orgCoach->club_id === $coach->club_id) {
+                $coachKaart->update(['naam' => $orgCoach->naam]);
+            }
+        } elseif (!empty($validated['naam'])) {
+            $coachKaart->update(['naam' => $validated['naam']]);
+        }
+
+        return redirect()->route('coach.portal.coachkaarten', $code)
+            ->with('success', 'Coach kaart bijgewerkt');
     }
 }
