@@ -56,7 +56,8 @@
                              class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b flex justify-between items-center">
                             <div>
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
-                                <span class="text-gray-500 text-sm" x-text="' - ' + judoka.club"></span>
+                                <span class="text-gray-500 text-sm" x-text="'(' + judoka.band + ')'"></span>
+                                <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
                                 <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse + ' / ' + judoka.gewichtsklasse + ' kg'"></span>
                             </div>
                             <span class="favorite-star text-2xl" :class="isFavoriet(judoka.id) ? 'active' : 'text-gray-300'">&#9733;</span>
