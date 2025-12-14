@@ -56,7 +56,7 @@
                              class="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b flex justify-between items-center">
                             <div>
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
-                                <span class="text-gray-500 text-sm" x-text="'(' + judoka.band + ')'"></span>
+                                <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full" :class="'band-' + judoka.band"></span><span class="text-gray-400">)</span>
                                 <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
                                 <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse + ' / ' + judoka.gewichtsklasse + ' kg'"></span>
                             </div>
@@ -388,9 +388,9 @@
                         </div>
                         <div class="space-y-1">
                             @foreach($mat->huidigePoule->judokas->take(6) as $judoka)
-                            <div class="flex items-center gap-2 text-sm text-gray-600">
+                            <div class="flex items-center gap-1 text-sm text-gray-600">
                                 <span>{{ $judoka->naam }}</span>
-                                <span class="text-xs px-1.5 py-0.5 rounded band-{{ $judoka->band }}">{{ $judoka->band }}</span>
+                                <span class="text-gray-400">(</span><span class="w-2.5 h-2.5 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
                             </div>
                             @endforeach
                             @if($mat->huidigePoule->judokas->count() > 6)
@@ -440,7 +440,7 @@
                             <div class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 border-b last:border-b-0">
                                 <div>
                                     <span class="text-gray-800">{{ $judoka->naam }}</span>
-                                    <span class="text-xs px-2 py-0.5 rounded band-{{ $judoka->band }}">{{ $judoka->band }}</span>
+                                    <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
                                     <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }}</span>
                                 </div>
                                 <button @click="toggleFavoriet({{ $judoka->id }})"
