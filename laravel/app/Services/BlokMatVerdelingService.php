@@ -173,15 +173,23 @@ class BlokMatVerdelingService
             'beste_afwijking_pct' => isset($beste[0]) ? $beste[0]['scores']['max_afwijking_pct'] . '%' : 'N/A',
         ]);
 
-        // Return top 5 unique variants
+        // Return top 5 unique variants with stats
+        $stats = [
+            'pogingen' => $poging,
+            'unieke_varianten' => count($gezien),
+            'geldige_varianten' => count($alleVarianten),
+            'getoond' => count($beste),
+        ];
+
         if (empty($beste)) {
             return [
                 'varianten' => [],
+                'stats' => $stats,
                 'error' => 'Geen geldige verdeling mogelijk binnen 25% limiet. Pas het aantal blokken of categorieën aan.',
             ];
         }
 
-        return ['varianten' => $beste];
+        return ['varianten' => $beste, 'stats' => $stats];
     }
 
     /**
