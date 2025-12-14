@@ -255,28 +255,6 @@
                     @endfor
                 @endif
             </div>
-            <!-- Balans slider -->
-            <div class="border-t pt-2">
-                <div class="flex items-center gap-3 text-xs">
-                    <span class="text-gray-600 whitespace-nowrap">Verdeling blokken</span>
-                    <input type="range" id="balans-slider" min="0" max="100" value="{{ session('blok_balans', 50) }}"
-                           class="flex-1 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
-                           oninput="updateBalansSlider(this.value)">
-                    <span class="text-gray-600 whitespace-nowrap">Aansluiting gewichten</span>
-                    <button type="button" onclick="document.getElementById('bereken-form').submit()"
-                            class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold px-2 py-1 rounded">
-                        {{ $toonVarianten ? 'Herbereken' : 'Bereken' }}
-                    </button>
-                </div>
-            </div>
-            <!-- Live score -->
-            <div class="border-t pt-2 mt-2">
-                <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-600">Huidige score:</span>
-                    <span id="live-score" class="font-bold text-lg">--</span>
-                    <span class="text-gray-400">(V<span id="live-verdeling">--</span> + A<span id="live-aansluiting">--</span>)</span>
-                </div>
-            </div>
         </div>
 
     </div>
@@ -626,19 +604,7 @@ function berekenLiveScore() {
     // 4. Totaal score
     const totaalScore = Math.round(verdelingGewicht * verdelingScore + aansluitingGewicht * aansluitingScore);
 
-    // 5. Update display - zowel live score ALS actieve variant knop
-    const scoreEl = document.getElementById('live-score');
-    const verdEl = document.getElementById('live-verdeling');
-    const aansEl = document.getElementById('live-aansluiting');
-
-    if (scoreEl) {
-        scoreEl.textContent = totaalScore;
-        scoreEl.className = 'font-bold text-lg ' + (totaalScore < 100 ? 'text-green-600' : totaalScore < 200 ? 'text-yellow-600' : 'text-red-600');
-    }
-    if (verdEl) verdEl.textContent = Math.round(verdelingScore);
-    if (aansEl) aansEl.textContent = aansluitingScore;
-
-    // 6. Update de ACTIEVE variant knop (met ring-2) - vervang oude score met nieuwe
+    // 5. Update de ACTIEVE variant knop (met ring-2) - vervang oude score met nieuwe
     const actieveBtn = document.querySelector('.variant-btn.ring-2');
     if (actieveBtn) {
         // Update score display - gewoon de nieuwe score tonen
