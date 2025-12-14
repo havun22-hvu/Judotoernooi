@@ -6,6 +6,7 @@ use App\Http\Controllers\RoleToegang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Toernooi extends Model
 {
@@ -14,6 +15,11 @@ class Toernooi extends Model
     protected static function booted(): void
     {
         static::creating(function (Toernooi $toernooi) {
+            // Generate slug from name
+            if (empty($toernooi->slug) && !empty($toernooi->naam)) {
+                $toernooi->slug = static::generateUniqueSlug($toernooi->naam);
+            }
+
             // Generate unique codes for each role
             if (empty($toernooi->code_hoofdjury)) {
                 $toernooi->code_hoofdjury = RoleToegang::generateCode();
@@ -31,12 +37,48 @@ class Toernooi extends Model
                 $toernooi->code_dojo = RoleToegang::generateCode();
             }
         });
+
+        static::updating(function (Toernooi $toernooi) {
+            // Update slug if name changed and slug not manually set
+            if ($toernooi->isDirty('naam') && !$toernooi->isDirty('slug')) {
+                $toernooi->slug = static::generateUniqueSlug($toernooi->naam, $toernooi->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $naam, ?int $excludeId = null): string
+    {
+        $baseSlug = Str::slug($naam);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        $query = static::where('slug', $slug);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        while ($query->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+            $query = static::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+        }
+
+        return $slug;
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
     }
 
     protected $table = 'toernooien';
 
     protected $fillable = [
         'naam',
+        'slug',
         'organisatie',
         'datum',
         'inschrijving_deadline',
