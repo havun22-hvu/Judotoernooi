@@ -205,9 +205,8 @@
             <div class="flex items-center justify-between mb-2">
                 <div class="text-sm text-gray-700">
                     @if($toonVarianten && !empty($blokStats))
-                        <span class="font-medium">{{ $blokStats['pogingen'] ?? 0 }} pogingen</span>
-                        <span class="text-gray-400 mx-1">→</span>
-                        <span>{{ $blokStats['unieke_varianten'] ?? 0 }} uniek</span>
+                        <span class="font-medium">{{ number_format($blokStats['pogingen'] ?? 0) }}</span>
+                        <span class="text-gray-400 text-xs">({{ $blokStats['tijd_sec'] ?? 0 }}s, {{ number_format($blokStats['per_seconde'] ?? 0) }}/s)</span>
                         <span class="text-gray-400 mx-1">→</span>
                         <span>{{ $blokStats['geldige_varianten'] ?? 0 }} geldig</span>
                         <span class="text-gray-400 mx-1">→</span>

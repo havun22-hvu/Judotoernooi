@@ -77,18 +77,20 @@ class BlokMatVerdelingService
             'gemiddeld_per_blok' => round($gemiddeld),
         ]);
 
-        // Keep generating until we have 5 acceptable unique variants
+        // Keep generating until time limit (3 sec) or enough good variants
         $alleVarianten = [];
         $gezien = [];
         $poging = 0;
-        $maxPogingen = 500;  // More attempts for better variety
+        $startTime = microtime(true);
+        $maxTijd = 3.0;  // 3 seconden max
+        $minGoedVarianten = 20;  // Minimaal 20 goede varianten zoeken
 
-        while ($poging < $maxPogingen) {
+        while (true) {
             $variant = $this->simuleerVerdeling(
                 $perLeeftijd,
                 $blokken,
                 $baseCapaciteit,
-                $categories,  // For anchor detection
+                $categories,
                 $poging,
                 $userVerdelingGewicht,
                 $userAansluitingGewicht
@@ -97,7 +99,7 @@ class BlokMatVerdelingService
             $variant['id'] = $poging + 1;
             $variant['poging'] = $poging;
 
-            // Check for duplicates - sort keys for consistent hash
+            // Check for duplicates
             $toewijzingenSorted = $variant['toewijzingen'];
             ksort($toewijzingenSorted);
             $hash = md5(json_encode($toewijzingenSorted));
@@ -108,24 +110,19 @@ class BlokMatVerdelingService
                 // Only add VALID variants (within 25% limit)
                 if ($variant['scores']['is_valid']) {
                     $alleVarianten[] = $variant;
-
-                    // Log first few attempts for debugging
-                    if (count($alleVarianten) <= 5) {
-                        Log::info("Geldige variant #{$poging}", [
-                            'totaal_score' => $variant['totaal_score'],
-                            'verdeling' => $variant['scores']['verdeling_score'],
-                            'aansluiting' => $variant['scores']['aansluiting_score'],
-                        ]);
-                    }
-                } else {
-                    Log::debug("Variant #{$poging} verworpen - overschrijdt 25% limiet", [
-                        'max_afwijking_pct' => $variant['scores']['max_afwijking_pct'] . '%',
-                    ]);
                 }
             }
 
             $poging++;
+
+            // Stop conditie: genoeg varianten EN tijd voorbij, OF hard limit
+            $elapsed = microtime(true) - $startTime;
+            if (($elapsed >= $maxTijd && count($alleVarianten) >= $minGoedVarianten) || $poging >= 50000) {
+                break;
+            }
         }
+
+        $elapsed = round(microtime(true) - $startTime, 2);
 
         // Sort all variants by totaal_score (lower = better)
         usort($alleVarianten, fn($a, $b) => $a['totaal_score'] <=> $b['totaal_score']);
@@ -155,7 +152,10 @@ class BlokMatVerdelingService
             }
         }
 
-        Log::info("Blokverdeling klaar na {$poging} pogingen", [
+        Log::info("Blokverdeling klaar", [
+            'pogingen' => $poging,
+            'tijd_sec' => $elapsed,
+            'per_seconde' => $elapsed > 0 ? round($poging / $elapsed) : $poging,
             'geldige_varianten' => count($alleVarianten),
             'beste_score' => isset($beste[0]) ? $beste[0]['totaal_score'] : 'N/A',
         ]);
@@ -163,6 +163,8 @@ class BlokMatVerdelingService
         // Return top 5 unique variants with stats
         $stats = [
             'pogingen' => $poging,
+            'tijd_sec' => $elapsed,
+            'per_seconde' => $elapsed > 0 ? round($poging / $elapsed) : $poging,
             'unieke_varianten' => count($gezien),
             'geldige_varianten' => count($alleVarianten),
             'getoond' => count($beste),
