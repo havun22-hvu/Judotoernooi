@@ -12,13 +12,13 @@
         .favorite-star { cursor: pointer; transition: all 0.2s; }
         .favorite-star:hover { transform: scale(1.2); }
         .favorite-star.active { color: #f59e0b; }
-        .band-wit { background: #e5e5e5; border: 1px solid #a3a3a3; }
-        .band-geel { background: #eab308; }
-        .band-oranje { background: #ea580c; }
-        .band-groen { background: #16a34a; }
-        .band-blauw { background: #2563eb; }
-        .band-bruin { background: #78350f; }
-        .band-zwart { background: #171717; }
+        .band-wit { background: #d4d4d4; color: #404040; }
+        .band-geel { background: #ca8a04; color: white; }
+        .band-oranje { background: #c2410c; color: white; }
+        .band-groen { background: #15803d; color: white; }
+        .band-blauw { background: #1d4ed8; color: white; }
+        .band-bruin { background: #5c2d0e; color: white; }
+        .band-zwart { background: #0a0a0a; color: white; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
@@ -389,8 +389,8 @@
                         <div class="space-y-1">
                             @foreach($mat->huidigePoule->judokas->take(6) as $judoka)
                             <div class="flex items-center gap-2 text-sm text-gray-600">
-                                <span class="w-2 h-2 rounded-full band-{{ $judoka->band }}"></span>
-                                <span>{{ $judoka->naam }} ({{ $judoka->band }})</span>
+                                <span>{{ $judoka->naam }}</span>
+                                <span class="text-xs px-1.5 py-0.5 rounded band-{{ $judoka->band }}">{{ $judoka->band }}</span>
                             </div>
                             @endforeach
                             @if($mat->huidigePoule->judokas->count() > 6)
@@ -438,12 +438,10 @@
                         <div x-show="open" x-collapse class="border-t">
                             @foreach($judokas as $judoka)
                             <div class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 border-b last:border-b-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full band-{{ $judoka->band }}"></span>
-                                    <div>
-                                        <span class="text-gray-800">{{ $judoka->naam }} <span class="text-gray-500">({{ $judoka->band }})</span></span>
-                                        <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }}</span>
-                                    </div>
+                                <div>
+                                    <span class="text-gray-800">{{ $judoka->naam }}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded band-{{ $judoka->band }}">{{ $judoka->band }}</span>
+                                    <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }}</span>
                                 </div>
                                 <button @click="toggleFavoriet({{ $judoka->id }})"
                                         class="favorite-star text-xl"
