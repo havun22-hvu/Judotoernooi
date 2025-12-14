@@ -634,7 +634,7 @@
                     this.loadingPoules = true;
 
                     try {
-                        const response = await fetch('{{ route('publiek.favorieten', $toernooi) }}', {
+                        const response = await fetch('/{{ $toernooi->slug }}/favorieten', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -658,9 +658,14 @@
                         return;
                     }
 
+                    const url = `/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
+                    console.log('Searching:', url);
+
                     try {
-                        const response = await fetch(`{{ route('publiek.zoeken', $toernooi) }}?q=${encodeURIComponent(this.zoekterm)}`);
+                        const response = await fetch(url);
+                        console.log('Response status:', response.status);
                         const data = await response.json();
+                        console.log('Data:', data);
                         this.zoekResultaten = data.judokas || [];
                     } catch (error) {
                         console.error('Error searching:', error);
