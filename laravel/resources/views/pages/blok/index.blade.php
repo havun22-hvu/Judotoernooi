@@ -268,6 +268,14 @@
                     </button>
                 </div>
             </div>
+            <!-- Live score -->
+            <div class="border-t pt-2 mt-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-gray-600">Huidige score:</span>
+                    <span id="live-score" class="font-bold text-lg">--</span>
+                    <span class="text-gray-400">(V<span id="live-verdeling">--</span> + A<span id="live-aansluiting">--</span>)</span>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -330,6 +338,11 @@ function updateBalansSlider(value) {
     if (hiddenInput) hiddenInput.value = value;
     if (headerSlider) headerSlider.value = value;
     if (variantSlider) variantSlider.value = value;
+
+    // Herbereken score met nieuwe gewichten
+    if (typeof berekenLiveScore === 'function') {
+        berekenLiveScore();
+    }
 }
 
 function resetAlleBlokken() {
@@ -514,9 +527,110 @@ function updateAllStats() {
             badge.className = 'bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge';
         }
     });
+
+    // Bereken en update live score
+    berekenLiveScore();
+}
+
+// Leeftijd volgorde voor aansluiting berekening
+const leeftijdVolgorde = @json($leeftijdVolgorde);
+
+function berekenLiveScore() {
+    const balans = parseInt(document.getElementById('balans-slider')?.value || 50);
+    const verdelingGewicht = (100 - balans) / 100;
+    const aansluitingGewicht = balans / 100;
+
+    // 1. Verzamel alle chips per blok
+    const blokken = {};
+    const categoriePerBlok = {};  // key -> blokNr
+
+    document.querySelectorAll('.blok-container').forEach(container => {
+        const blokNr = parseInt(container.dataset.blok);
+        const gewenst = parseInt(container.dataset.gewenst) || 1;
+        let actueel = 0;
+
+        container.querySelectorAll('.category-chip').forEach(chip => {
+            actueel += parseInt(chip.dataset.wedstrijden) || 0;
+            categoriePerBlok[chip.dataset.key] = blokNr;
+        });
+
+        blokken[blokNr] = { gewenst, actueel };
+    });
+
+    // 2. Bereken verdeling score: som van absolute % afwijkingen
+    let verdelingScore = 0;
+    for (const blokNr in blokken) {
+        const { gewenst, actueel } = blokken[blokNr];
+        const afwijkingPct = Math.abs((actueel - gewenst) / gewenst * 100);
+        verdelingScore += afwijkingPct;
+    }
+
+    // 3. Bereken aansluiting score per leeftijdsklasse
+    // Groepeer chips per leeftijd
+    const chipsPerLeeftijd = {};
+    document.querySelectorAll('.category-chip').forEach(chip => {
+        const leeftijd = chip.dataset.leeftijd;
+        if (!leeftijd) return;
+        if (!chipsPerLeeftijd[leeftijd]) chipsPerLeeftijd[leeftijd] = [];
+        chipsPerLeeftijd[leeftijd].push({
+            key: chip.dataset.key,
+            gewicht: parseInt(chip.dataset.sort) || 0,
+            blok: categoriePerBlok[chip.dataset.key]
+        });
+    });
+
+    let aansluitingScore = 0;
+    for (const leeftijd in chipsPerLeeftijd) {
+        const cats = chipsPerLeeftijd[leeftijd].sort((a, b) => a.gewicht - b.gewicht);
+        let vorigBlok = null;
+        let eersteBlok = null;
+        let laatsteBlok = null;
+
+        for (const cat of cats) {
+            if (cat.blok) {
+                if (eersteBlok === null) eersteBlok = cat.blok;
+                laatsteBlok = cat.blok;
+            }
+
+            if (vorigBlok !== null && cat.blok) {
+                const verschil = cat.blok - vorigBlok;
+                // Score per overgang: 0=0, +1=10, -1=20, +2=30, anders=50+
+                let punten = 0;
+                if (verschil === 0) punten = 0;
+                else if (verschil === 1) punten = 10;
+                else if (verschil === -1) punten = 20;
+                else if (verschil === 2) punten = 30;
+                else punten = 50 + Math.abs(verschil) * 10;
+                aansluitingScore += punten;
+            }
+            vorigBlok = cat.blok;
+        }
+
+        // Penalty voor aflopende leeftijdsklasse
+        if (eersteBlok !== null && laatsteBlok !== null && laatsteBlok < eersteBlok) {
+            aansluitingScore += 200;
+        }
+    }
+
+    // 4. Totaal score
+    const totaalScore = Math.round(verdelingGewicht * verdelingScore + aansluitingGewicht * aansluitingScore);
+
+    // 5. Update display
+    const scoreEl = document.getElementById('live-score');
+    const verdEl = document.getElementById('live-verdeling');
+    const aansEl = document.getElementById('live-aansluiting');
+
+    if (scoreEl) {
+        scoreEl.textContent = totaalScore;
+        scoreEl.className = 'font-bold text-lg ' + (totaalScore < 100 ? 'text-green-600' : totaalScore < 200 ? 'text-yellow-600' : 'text-red-600');
+    }
+    if (verdEl) verdEl.textContent = Math.round(verdelingScore);
+    if (aansEl) aansEl.textContent = aansluitingScore;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initial score calculation
+    berekenLiveScore();
     let draggedChip = null;
 
     // Make all chips draggable
