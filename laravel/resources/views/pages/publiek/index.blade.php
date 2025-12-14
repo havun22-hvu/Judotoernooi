@@ -28,7 +28,7 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 class="text-2xl font-bold">{{ $toernooi->naam }}</h1>
-                    <p class="text-blue-200">{{ $toernooi->datum->format('d F Y') }} - {{ $toernooi->locatie ?? 'Locatie onbekend' }}</p>
+                    <p class="text-blue-200">{{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="bg-blue-500 px-3 py-1 rounded-full text-sm">
@@ -41,25 +41,6 @@
                     @endif
                 </div>
             </div>
-
-            <!-- Blokken met tijden -->
-            @if($blokken->count() > 0)
-            <div class="mt-4 flex flex-wrap gap-3">
-                @foreach($blokken as $blok)
-                <div class="bg-blue-500/50 rounded-lg px-3 py-2 text-sm">
-                    <div class="font-medium">Blok {{ $blok->nummer }}</div>
-                    <div class="text-blue-200 text-xs">
-                        @if($blok->weging_start && $blok->weging_einde)
-                        Weging: {{ \Carbon\Carbon::parse($blok->weging_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($blok->weging_einde)->format('H:i') }}
-                        @endif
-                        @if($blok->starttijd)
-                        <span class="ml-2">Start: {{ \Carbon\Carbon::parse($blok->starttijd)->format('H:i') }}</span>
-                        @endif
-                    </div>
-                </div>
-                @endforeach
-            </div>
-            @endif
 
             <!-- Search bar -->
             <div class="mt-4 relative">
@@ -87,32 +68,135 @@
 
         <!-- Tabs -->
         <div class="max-w-6xl mx-auto px-4">
-            <div class="flex border-b border-blue-500">
-                @if($poulesGegenereerd)
-                <button @click="activeTab = 'live'"
-                        :class="activeTab === 'live' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-6 py-3 font-medium rounded-t-lg transition">
-                    Live Matten
+            <div class="flex border-b border-blue-500 overflow-x-auto">
+                <button @click="activeTab = 'info'"
+                        :class="activeTab === 'info' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
+                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
+                    Info
                 </button>
-                @endif
                 <button @click="activeTab = 'deelnemers'"
                         :class="activeTab === 'deelnemers' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-6 py-3 font-medium rounded-t-lg transition">
+                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
                     Deelnemers
                 </button>
                 <button @click="activeTab = 'favorieten'; loadFavorieten()"
                         :class="activeTab === 'favorieten' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
-                        class="px-6 py-3 font-medium rounded-t-lg transition relative">
+                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition relative whitespace-nowrap">
                     Mijn Favorieten
                     <span x-show="favorieten.length > 0"
                           class="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
                           x-text="favorieten.length"></span>
                 </button>
+                @if($poulesGegenereerd)
+                <button @click="activeTab = 'live'"
+                        :class="activeTab === 'live' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
+                        class="px-4 md:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap">
+                    Live Matten
+                </button>
+                @endif
             </div>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6">
+        <!-- Info Tab -->
+        <div x-show="activeTab === 'info'" x-cloak>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <!-- Hero section -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
+                    <h2 class="text-3xl font-bold mb-2">{{ $toernooi->naam }}</h2>
+                    @if($toernooi->organisatie)
+                    <p class="text-blue-200">Georganiseerd door {{ $toernooi->organisatie }}</p>
+                    @endif
+                </div>
+
+                <div class="p-6">
+                    <!-- Key info -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Datum</p>
+                                <p class="font-medium text-gray-800">{{ $toernooi->datum->format('l d F Y') }}</p>
+                            </div>
+                        </div>
+
+                        @if($toernooi->locatie)
+                        <div class="flex items-start gap-3">
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Locatie</p>
+                                <p class="font-medium text-gray-800">{{ $toernooi->locatie }}</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="flex items-start gap-3">
+                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-gray-500 text-sm">Deelnemers</p>
+                                <p class="font-medium text-gray-800">{{ $totaalJudokas }} aangemeld</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blokken / Tijdschema -->
+                    @if($blokken->count() > 0)
+                    <div class="border-t pt-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Tijdschema</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
+                            @foreach($blokken as $blok)
+                            <div class="bg-gray-50 rounded-lg p-4 border">
+                                <div class="font-bold text-blue-600 mb-2">Blok {{ $blok->nummer }}</div>
+                                @if($blok->weging_start && $blok->weging_einde)
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Weging:</span>
+                                    <span class="font-medium">{{ \Carbon\Carbon::parse($blok->weging_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($blok->weging_einde)->format('H:i') }}</span>
+                                </div>
+                                @endif
+                                @if($blok->starttijd)
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Start wedstrijden:</span>
+                                    <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($blok->starttijd)->format('H:i') }}</span>
+                                </div>
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Deadline -->
+                    @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
+                    <div class="border-t pt-6 mt-6">
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center gap-3">
+                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                <p class="font-medium text-orange-800">Inschrijving sluit op {{ $toernooi->inschrijving_deadline->format('d F Y') }}</p>
+                                <p class="text-sm text-orange-600">Nog {{ $toernooi->inschrijving_deadline->diffInDays(now()) }} dagen om in te schrijven</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <!-- Live Matten Tab -->
         @if($poulesGegenereerd && count($matten) > 0)
         <div x-show="activeTab === 'live'" x-cloak>
@@ -321,7 +405,7 @@
 
         function publiekApp() {
             return {
-                activeTab: poulesGegenereerd ? 'live' : 'deelnemers',
+                activeTab: 'info',
                 favorieten: [],
                 favorietenPoules: [],
                 loadingPoules: false,

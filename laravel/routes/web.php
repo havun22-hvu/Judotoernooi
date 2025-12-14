@@ -216,10 +216,18 @@ Route::middleware('rol.sessie')->group(function () {
 /*
 |--------------------------------------------------------------------------
 | Public Pages (no authentication required)
+| IMPORTANT: These routes must be LAST to avoid conflicts with other routes
 |--------------------------------------------------------------------------
 */
-Route::prefix('live/{toernooi}')->name('publiek.')->group(function () {
-    Route::get('/', [PubliekController::class, 'index'])->name('index');
-    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
-    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
-});
+// Short public URL: /toernooi-naam
+Route::get('/{toernooi}', [PubliekController::class, 'index'])
+    ->name('publiek.index')
+    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
+
+Route::post('/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
+    ->name('publiek.favorieten')
+    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
+
+Route::get('/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
+    ->name('publiek.zoeken')
+    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
