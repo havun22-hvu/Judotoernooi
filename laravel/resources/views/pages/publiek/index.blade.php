@@ -49,7 +49,19 @@
                        @input.debounce.300ms="zoekJudokas()"
                        placeholder="Zoek judoka of club..."
                        class="w-full px-4 py-2 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none">
-                <div x-show="zoekResultaten.length > 0" x-cloak
+                <div x-show="zoekLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <!-- Geen resultaten -->
+                <div x-show="heeftGezocht && zoekResultaten.length === 0 && !zoekLoading" x-cloak
+                     class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 p-4 text-center text-gray-500 z-50">
+                    Geen judoka's gevonden voor "<span x-text="zoekterm"></span>"
+                </div>
+                <!-- Resultaten -->
+                <div x-show="zoekResultaten.length > 0 && !zoekLoading" x-cloak
                      class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 max-h-64 overflow-y-auto z-50">
                     <template x-for="judoka in zoekResultaten" :key="judoka.id">
                         <div @click="toggleFavoriet(judoka.id); zoekterm = ''; zoekResultaten = []"
@@ -422,18 +434,16 @@
                     <span class="text-gray-400 text-sm font-normal">{{ $gewichtsklassen->flatten()->count() }} judoka's</span>
                 </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="flex flex-wrap gap-2">
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                     <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ open: false }">
                         <button @click="open = !open"
-                                class="w-full px-4 py-3 flex justify-between items-center hover:bg-gray-50 transition">
+                                class="px-3 py-2 flex items-center gap-2 hover:bg-gray-50 transition">
                             <span class="font-medium text-gray-700">{{ $gewichtsklasse }} kg</span>
-                            <span class="flex items-center gap-2">
-                                <span class="text-sm text-gray-500">{{ $judokas->count() }}</span>
-                                <svg :class="open ? 'rotate-180' : ''" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </span>
+                            <span class="text-xs text-gray-500">{{ $judokas->count() }}</span>
+                            <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
                         <div x-show="open" x-collapse class="border-t">
                             @foreach($judokas as $judoka)
@@ -577,6 +587,8 @@
                 loadingPoules: false,
                 zoekterm: '',
                 zoekResultaten: [],
+                zoekLoading: false,
+                heeftGezocht: false,
                 poulesGegenereerd: poulesGegenereerd,
 
                 init() {
@@ -655,21 +667,27 @@
                 async zoekJudokas() {
                     if (this.zoekterm.length < 2) {
                         this.zoekResultaten = [];
+                        this.zoekLoading = false;
+                        this.heeftGezocht = false;
                         return;
                     }
 
+                    this.zoekLoading = true;
                     const url = `/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
-                    console.log('Searching:', url);
 
                     try {
                         const response = await fetch(url);
-                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error('Response: ' + response.status);
+                        }
                         const data = await response.json();
-                        console.log('Data:', data);
                         this.zoekResultaten = data.judokas || [];
+                        this.heeftGezocht = true;
                     } catch (error) {
-                        console.error('Error searching:', error);
+                        console.error('Zoekfout:', error);
                         this.zoekResultaten = [];
+                    } finally {
+                        this.zoekLoading = false;
                     }
                 },
             }
