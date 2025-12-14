@@ -141,17 +141,52 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ## Solver Algoritme
 
-### Input
-- Categorieën waar `blok_vast = false` (sleepvak + niet-vastgezette in blokken)
-- Per blok: `restcapaciteit = gewenst - SUM(wedstrijden waar blok_vast = true)`
+### Plaatsing Volgorde
+1. **Grote leeftijden eerst** (in deze volgorde):
+   - Mini's → A-pupillen → B-pupillen → Heren -15 → Heren -18 → Heren
+   - Mini's start ALTIJD in blok 1
+   - Elke volgende leeftijd sluit aan waar vorige eindigde
 
-### Doel
-- Minimaliseer maximale afwijking per blok
-- Minimaliseer "breaks" (aansluitende gewichten in verschillende blokken)
+2. **Strikte aansluiting regels** per gewichtscategorie:
+   - Zelfde blok (0) = 0 punten
+   - Volgend blok (+1) = 10 punten
+   - Vorig blok (-1) = 20 punten
+   - 2 blokken later (+2) = 30 punten
+   - Verder = 50+ punten (slecht)
 
-### Output
-- 5 varianten, gesorteerd op kwaliteit
-- Variant 1 = beste (laagste max_afwijking, dan laagste breaks)
+3. **Kleine leeftijden als opvulling**:
+   - Dames -15, Dames -18, Dames
+   - Geplaatst in blokken met meeste ruimte
+
+4. **Penalty aflopende leeftijdsklasse**:
+   - Als laatste gewicht in lager blok zit dan eerste = +200 punten
+
+### Scoring Formule
+```
+Verdeling Score = Σ absolute % afwijkingen per blok
+Aansluiting Score = Σ punten per overgang (zie boven)
+Totaal Score = (slider_X% × Verdeling) + (slider_Y% × Aansluiting)
+```
+**Lager = beter**
+
+### Variatie Generatie
+- 3 seconden rekentijd (10.000-30.000 berekeningen)
+- 960.000+ mogelijke combinaties door:
+  - 6 aansluiting strategieën
+  - 100 random factors
+  - 10 sorteer strategieën
+  - 8 leeftijd shuffle opties
+  - Slider gewicht variatie (±10%)
+- Top 5 unieke varianten getoond
+
+### Live Score Update
+- Variant knop update direct bij handmatig verslepen
+- Zelfde formule als backend berekening
+- Slider beïnvloedt weging
+
+### Auto-Apply
+- Na Bereken/Herbereken wordt variant #1 automatisch toegepast
+- Chips tonen direct de nieuwe posities
 
 ---
 
