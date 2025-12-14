@@ -227,14 +227,13 @@ Route::middleware('rol.sessie')->group(function () {
 |--------------------------------------------------------------------------
 */
 // Short public URL: /toernooi-naam
+// Note: zoeken and favorieten must come BEFORE the single slug route
+Route::get('/publiek/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
+    ->name('publiek.zoeken');
+
+Route::post('/publiek/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
+    ->name('publiek.favorieten');
+
 Route::get('/{toernooi}', [PubliekController::class, 'index'])
     ->name('publiek.index')
-    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
-
-Route::post('/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
-    ->name('publiek.favorieten')
-    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
-
-Route::get('/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
-    ->name('publiek.zoeken')
-    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart).*$');
+    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek).*$');

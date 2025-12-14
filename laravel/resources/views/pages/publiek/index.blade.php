@@ -6,7 +6,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $toernooi->naam }} - Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         .favorite-star { cursor: pointer; transition: all 0.2s; }
@@ -646,7 +647,7 @@
                     this.loadingPoules = true;
 
                     try {
-                        const response = await fetch('/{{ $toernooi->slug }}/favorieten', {
+                        const response = await fetch('/publiek/{{ $toernooi->slug }}/favorieten', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -673,7 +674,7 @@
                     }
 
                     this.zoekLoading = true;
-                    const url = `/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
+                    const url = `/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
 
                     try {
                         const response = await fetch(url);
