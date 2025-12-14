@@ -76,6 +76,11 @@ class BlokController extends Controller
             session(['blok_varianten' => $result['varianten']]);
             session(['blok_stats' => $result['stats'] ?? []]);
 
+            // Auto-apply variant #1 direct na berekening
+            if (!empty($result['varianten'][0]['toewijzingen'])) {
+                $this->verdelingService->pasVariantToe($toernooi, $result['varianten'][0]['toewijzingen']);
+            }
+
             // Build info message with stats
             $stats = $result['stats'] ?? [];
             $msg = sprintf(
