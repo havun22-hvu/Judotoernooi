@@ -52,28 +52,11 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-4 mb-4">
-            <div>
-                <label for="min_judokas_poule" class="block text-gray-700 font-bold mb-2">Min/Poule</label>
-                <input type="number" name="min_judokas_poule" id="min_judokas_poule" value="{{ old('min_judokas_poule', 3) }}"
-                       class="w-full border rounded px-3 py-2" min="2" max="10">
-            </div>
-            <div>
-                <label for="optimal_judokas_poule" class="block text-gray-700 font-bold mb-2">Optimaal/Poule</label>
-                <input type="number" name="optimal_judokas_poule" id="optimal_judokas_poule" value="{{ old('optimal_judokas_poule', 5) }}"
-                       class="w-full border rounded px-3 py-2" min="3" max="10">
-            </div>
-            <div>
-                <label for="max_judokas_poule" class="block text-gray-700 font-bold mb-2">Max/Poule</label>
-                <input type="number" name="max_judokas_poule" id="max_judokas_poule" value="{{ old('max_judokas_poule', 6) }}"
-                       class="w-full border rounded px-3 py-2" min="4" max="12">
-            </div>
-        </div>
-
         <div class="mb-6">
-            <label for="gewicht_tolerantie" class="block text-gray-700 font-bold mb-2">Gewicht Tolerantie (kg)</label>
-            <input type="number" name="gewicht_tolerantie" id="gewicht_tolerantie" value="{{ old('gewicht_tolerantie', 0.5) }}"
-                   class="w-full border rounded px-3 py-2" min="0" max="5" step="0.1">
+            <label for="verwacht_aantal_judokas" class="block text-gray-700 font-bold mb-2">Verwacht aantal judoka's</label>
+            <input type="number" name="verwacht_aantal_judokas" id="verwacht_aantal_judokas" value="{{ old('verwacht_aantal_judokas', 300) }}"
+                   class="w-full border rounded px-3 py-2" min="10" max="2000">
+            <p class="text-gray-500 text-sm mt-1">Schatting voor planning (kan later aangepast worden)</p>
         </div>
 
         <div class="flex justify-end space-x-4">

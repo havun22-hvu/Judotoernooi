@@ -23,6 +23,7 @@ class ToernooiService
                 'organisatie' => $data['organisatie'] ?? 'Judoschool Cees Veen',
                 'datum' => $data['datum'],
                 'locatie' => $data['locatie'] ?? null,
+                'verwacht_aantal_judokas' => $data['verwacht_aantal_judokas'] ?? null,
                 'aantal_matten' => $data['aantal_matten'] ?? 7,
                 'aantal_blokken' => $data['aantal_blokken'] ?? 6,
                 'min_judokas_poule' => $data['min_judokas_poule'] ?? 3,
