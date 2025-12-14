@@ -440,7 +440,7 @@
                 <!-- Gewichtsklasse knoppen -->
                 <div class="flex flex-wrap gap-2 mb-3">
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
-                    @php $gewichtId = Str::slug($gewichtsklasse); @endphp
+                    @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                     <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
                             class="px-3 py-2 rounded-lg shadow transition flex items-center gap-2"
                             :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
@@ -452,7 +452,7 @@
 
                 <!-- Geselecteerde gewichtsklasse inhoud -->
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
-                @php $gewichtId = Str::slug($gewichtsklasse); @endphp
+                @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
                      class="bg-white rounded-lg shadow overflow-hidden max-w-md">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
