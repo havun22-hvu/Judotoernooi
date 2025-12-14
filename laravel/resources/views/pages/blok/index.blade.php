@@ -238,10 +238,11 @@
                     <button type="button" onclick="toonVariant({{ $idx }})"
                             class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
                             data-idx="{{ $idx }}"
+                            data-origineel-score="{{ $totaal }}"
                             title="Score: {{ $totaal }} (lager=beter)&#10;Verdeling: {{ $scores['verdeling_score'] ?? 0 }} (Σ%afwijking)&#10;Aansluiting: {{ $scores['aansluiting_score'] ?? 0 }} (0/10/20/30 per overgang)&#10;Weging: {{ $scores['gewichten']['verdeling'] ?? 50 }}% / {{ $scores['gewichten']['aansluiting'] ?? 50 }}%">
-                        <span class="font-bold">#{{ $idx + 1 }}</span>
-                        <span class="{{ $scoreKleur }} font-bold">{{ $totaal }}</span>
-                        <span class="text-gray-400 text-xs">(V{{ $scores['verdeling_score'] ?? 0 }}+A{{ $scores['aansluiting_score'] ?? 0 }})</span>
+                        <span class="font-bold variant-nummer">#{{ $idx + 1 }}</span>
+                        <span class="variant-score font-bold {{ $scoreKleur }}">{{ $totaal }}</span>
+                        <span class="variant-detail text-gray-400 text-xs">(V{{ $scores['verdeling_score'] ?? 0 }}+A{{ $scores['aansluiting_score'] ?? 0 }})</span>
                     </button>
                     @endforeach
                 @else
@@ -625,7 +626,7 @@ function berekenLiveScore() {
     // 4. Totaal score
     const totaalScore = Math.round(verdelingGewicht * verdelingScore + aansluitingGewicht * aansluitingScore);
 
-    // 5. Update display
+    // 5. Update display - zowel live score ALS actieve variant knop
     const scoreEl = document.getElementById('live-score');
     const verdEl = document.getElementById('live-verdeling');
     const aansEl = document.getElementById('live-aansluiting');
@@ -636,6 +637,27 @@ function berekenLiveScore() {
     }
     if (verdEl) verdEl.textContent = Math.round(verdelingScore);
     if (aansEl) aansEl.textContent = aansluitingScore;
+
+    // 6. Update de ACTIEVE variant knop (met ring-2)
+    const actieveBtn = document.querySelector('.variant-btn.ring-2');
+    if (actieveBtn) {
+        const origineelScore = parseInt(actieveBtn.dataset.origineelScore) || 0;
+        const verschil = totaalScore - origineelScore;
+        const verschilTekst = verschil === 0 ? '' : (verschil > 0 ? ` +${verschil}` : ` ${verschil}`);
+
+        // Update score display
+        const scoreSpan = actieveBtn.querySelector('.variant-score');
+        if (scoreSpan) {
+            scoreSpan.textContent = totaalScore + verschilTekst;
+            scoreSpan.className = 'variant-score font-bold ' + (totaalScore < 100 ? 'text-green-600' : totaalScore < 200 ? 'text-yellow-600' : 'text-red-600');
+        }
+
+        // Update detail
+        const detailSpan = actieveBtn.querySelector('.variant-detail');
+        if (detailSpan) {
+            detailSpan.textContent = `(V${Math.round(verdelingScore)}+A${aansluitingScore})`;
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
