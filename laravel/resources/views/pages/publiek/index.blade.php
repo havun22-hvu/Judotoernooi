@@ -39,6 +39,13 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
+    <!-- Splash Screen -->
+    <div id="splashScreen" class="fixed inset-0 z-[100] bg-blue-600 flex flex-col items-center justify-center transition-opacity duration-500">
+        <img src="/icon-512x512.png" alt="Logo" class="w-32 h-32 mb-6 animate-pulse">
+        <h1 class="text-white text-2xl font-bold text-center px-4">{{ $toernooi->naam }}</h1>
+        <p class="text-blue-200 mt-2">{{ $toernooi->datum->format('d F Y') }}</p>
+    </div>
+
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4">
@@ -52,8 +59,8 @@
                         {{ $totaalJudokas }} deelnemers
                     </span>
                     @if($poulesGegenereerd)
-                    <span class="bg-green-500 px-3 py-1 rounded-full text-sm animate-pulse">
-                        LIVE
+                    <span class="bg-green-500 px-3 py-1 rounded-full text-sm">
+                        🟢 LIVE
                     </span>
                     @endif
                 </div>
@@ -421,7 +428,7 @@
                         <div class="flex justify-between items-center">
                             <span class="text-2xl font-bold">Mat {{ $mat->nummer }}</span>
                             @if($mat->huidigePoule)
-                            <span class="bg-green-500 px-2 py-1 rounded text-xs animate-pulse">BEZIG</span>
+                            <span class="bg-green-500 px-2 py-1 rounded text-xs">BEZIG</span>
                             @else
                             <span class="bg-gray-500 px-2 py-1 rounded text-xs">WACHT</span>
                             @endif
@@ -882,6 +889,15 @@
         // Service Worker registration
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js');
+        }
+
+        // Hide splash screen after 2 seconds
+        const splash = document.getElementById('splashScreen');
+        if (splash) {
+            setTimeout(() => {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.remove(), 500);
+            }, 2000);
         }
     </script>
 </body>
