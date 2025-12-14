@@ -252,14 +252,16 @@ class BlokMatVerdelingService
         $blokkenArray = $blokken->values()->all();
 
         // Use seed for reproducible randomness
-        mt_srand($seed * 12345);
+        mt_srand($seed * 12345 + 67890);
 
         // User weights (slider)
         $verdelingGewicht = $userVerdelingGewicht / 100.0;
         $aansluitingGewicht = $userAansluitingGewicht / 100.0;
 
-        // Variatie parameters gebaseerd op seed
-        $aansluitingVariant = $seed % 4;  // Welke aansluiting optie bij vol blok
+        // VEEL variatie parameters voor unieke resultaten
+        $aansluitingVariant = $seed % 6;  // 6 verschillende aansluiting strategieën
+        $randomFactor = ($seed % 100) / 100.0;  // 0.00 - 0.99 random factor
+        $sorteerStrategie = $seed % 5;  // 5 sorteer strategieën
 
         // STAP 1: Plaats grote leeftijdsklassen in volgorde
         // Mini's start ALTIJD in blok 1 (index 0)!
@@ -269,13 +271,17 @@ class BlokMatVerdelingService
             if (!isset($perLeeftijd[$leeftijd])) continue;
 
             $gewichten = $perLeeftijd[$leeftijd];
-            // Sorteer gewichten (licht naar zwaar)
+
+            // Variatie in sortering (maar altijd licht→zwaar als basis)
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
 
-            // Variatie: soms start met grootste gewichtscategorie in andere positie
-            if ($seed % 7 === 0) {
-                // Start met de grootste gewichtscategorie eerst
-                usort($gewichten, fn($a, $b) => $b['wedstrijden'] <=> $a['wedstrijden']);
+            // Soms kleine shuffle voor variatie (maar behoud globale volgorde)
+            if ($sorteerStrategie >= 3 && count($gewichten) > 2) {
+                // Swap 2 aanliggende elementen random
+                $swapPos = mt_rand(0, count($gewichten) - 2);
+                $temp = $gewichten[$swapPos];
+                $gewichten[$swapPos] = $gewichten[$swapPos + 1];
+                $gewichten[$swapPos + 1] = $temp;
             }
 
             $vorigeBlokIndex = $huidigeBlokIndex;
@@ -283,7 +289,7 @@ class BlokMatVerdelingService
             foreach ($gewichten as $cat) {
                 $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
 
-                // Vind beste blok met aansluiting beperking (+1, -1, +2)
+                // Vind beste blok met aansluiting + random factor
                 $besteBlokIndex = $this->vindBesteBlokMetAansluiting(
                     $vorigeBlokIndex,
                     $cat['wedstrijden'],
@@ -291,7 +297,8 @@ class BlokMatVerdelingService
                     $blokkenArray,
                     $numBlokken,
                     $aansluitingVariant,
-                    $verdelingGewicht
+                    $verdelingGewicht,
+                    $randomFactor
                 );
 
                 // Record assignment
@@ -316,8 +323,13 @@ class BlokMatVerdelingService
             $gewichten = $perLeeftijd[$leeftijd];
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
 
-            // Start in blok met meeste ruimte
-            $startBlok = $this->vindBlokMetMeesteRuimte($capaciteit, $blokkenArray);
+            // Variatie: start in blok met meeste ruimte OF random blok met ruimte
+            if ($randomFactor > 0.5) {
+                $startBlok = $this->vindBlokMetMeesteRuimte($capaciteit, $blokkenArray);
+            } else {
+                // Random blok uit top 3 met meeste ruimte
+                $startBlok = $this->vindRandomBlokMetRuimte($capaciteit, $blokkenArray);
+            }
             $vorigeBlokIndex = $startBlok;
 
             foreach ($gewichten as $cat) {
@@ -330,7 +342,8 @@ class BlokMatVerdelingService
                     $blokkenArray,
                     $numBlokken,
                     $aansluitingVariant,
-                    $verdelingGewicht
+                    $verdelingGewicht,
+                    $randomFactor
                 );
 
                 $blok = $blokkenArray[$besteBlokIndex];
@@ -350,7 +363,7 @@ class BlokMatVerdelingService
             }
 
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
-            $startBlok = $this->vindBlokMetMeesteRuimte($capaciteit, $blokkenArray);
+            $startBlok = $this->vindRandomBlokMetRuimte($capaciteit, $blokkenArray);
             $vorigeBlokIndex = $startBlok;
 
             foreach ($gewichten as $cat) {
@@ -363,7 +376,8 @@ class BlokMatVerdelingService
                     $blokkenArray,
                     $numBlokken,
                     $aansluitingVariant,
-                    $verdelingGewicht
+                    $verdelingGewicht,
+                    $randomFactor
                 );
 
                 $blok = $blokkenArray[$besteBlokIndex];
@@ -396,6 +410,7 @@ class BlokMatVerdelingService
 
     /**
      * Vind beste blok met strikte aansluiting regels: +1, -1, +2 (max!)
+     * Random factor voegt variatie toe aan de keuze
      */
     private function vindBesteBlokMetAansluiting(
         int $vorigeBlokIndex,
@@ -404,19 +419,21 @@ class BlokMatVerdelingService
         array $blokken,
         int $numBlokken,
         int $aansluitingVariant,
-        float $verdelingGewicht
+        float $verdelingGewicht,
+        float $randomFactor = 0.0
     ): int {
-        // Aansluiting opties in volgorde: zelfde, +1, -1, +2
-        // Varieer de volgorde gebaseerd op variant
+        // 6 verschillende aansluiting strategieën voor variatie
         $opties = match($aansluitingVariant) {
             0 => [0, 1, -1, 2],   // Standaard: vooruit
             1 => [0, -1, 1, 2],   // Achteruit eerst
             2 => [0, 1, 2, -1],   // Vooruit, dan ver, dan terug
+            3 => [1, 0, 2, -1],   // +1 eerst (spread out)
+            4 => [0, 2, 1, -1],   // +2 als tweede optie
+            5 => [1, -1, 0, 2],   // Wissel eerst
             default => [0, 1, -1, 2],
         };
 
-        $besteBlok = null;
-        $besteScore = PHP_INT_MAX;
+        $kandidaten = [];  // Alle geldige opties verzamelen
 
         foreach ($opties as $offset) {
             $idx = $vorigeBlokIndex + $offset;
@@ -436,23 +453,31 @@ class BlokMatVerdelingService
             // Score: combinatie van vulgraad en aansluiting
             $vulgraad = $nieuweActueel / $gewenst;
             $aansluitingPenalty = abs($offset) * 20;
-
-            // Als verdeling belangrijk is: prefereer blokken met meer ruimte
-            // Als aansluiting belangrijk is: prefereer dichtbij vorige
             $score = ($vulgraad * 50 * $verdelingGewicht) + ($aansluitingPenalty * (1 - $verdelingGewicht));
 
-            if ($score < $besteScore) {
-                $besteScore = $score;
-                $besteBlok = $idx;
-            }
+            // Voeg random noise toe voor variatie
+            $score += mt_rand(0, 100) * $randomFactor * 0.5;
+
+            $kandidaten[] = ['idx' => $idx, 'score' => $score];
         }
 
-        // Als geen blok past binnen aansluiting opties, zoek blok met meeste ruimte
-        if ($besteBlok === null) {
-            $besteBlok = $this->vindBlokMetMeesteRuimte($capaciteit, $blokken);
+        if (empty($kandidaten)) {
+            // Geen geldige opties, zoek blok met meeste ruimte
+            return $this->vindBlokMetMeesteRuimte($capaciteit, $blokken);
         }
 
-        return $besteBlok ?? $vorigeBlokIndex;
+        // Sorteer op score (laagste eerst)
+        usort($kandidaten, fn($a, $b) => $a['score'] <=> $b['score']);
+
+        // Met random factor: soms niet de beste maar 2e of 3e kiezen
+        if ($randomFactor > 0.7 && count($kandidaten) > 1) {
+            return $kandidaten[1]['idx'];  // Kies 2e beste
+        }
+        if ($randomFactor > 0.9 && count($kandidaten) > 2) {
+            return $kandidaten[2]['idx'];  // Kies 3e beste
+        }
+
+        return $kandidaten[0]['idx'];
     }
 
     /**
@@ -472,6 +497,28 @@ class BlokMatVerdelingService
         }
 
         return $besteIndex;
+    }
+
+    /**
+     * Find a random block from top 3 with most space (for variation)
+     */
+    private function vindRandomBlokMetRuimte(array $capaciteit, $blokken): int
+    {
+        $blokkenMetRuimte = [];
+
+        foreach ($blokken as $index => $blok) {
+            $ruimte = $capaciteit[$blok->id]['ruimte'] ?? 0;
+            $blokkenMetRuimte[] = ['idx' => $index, 'ruimte' => $ruimte];
+        }
+
+        // Sorteer op ruimte (meeste eerst)
+        usort($blokkenMetRuimte, fn($a, $b) => $b['ruimte'] <=> $a['ruimte']);
+
+        // Kies random uit top 3
+        $topN = min(3, count($blokkenMetRuimte));
+        $keuze = mt_rand(0, $topN - 1);
+
+        return $blokkenMetRuimte[$keuze]['idx'];
     }
 
 
