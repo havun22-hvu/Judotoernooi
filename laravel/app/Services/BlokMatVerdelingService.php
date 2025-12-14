@@ -77,15 +77,22 @@ class BlokMatVerdelingService
             'gemiddeld_per_blok' => round($gemiddeld),
         ]);
 
-        // Keep generating until time limit (3 sec) or enough good variants
+        // Keep generating until time limit
         $alleVarianten = [];
+        $ongeligeVarianten = [];  // Backup als geen geldige gevonden
         $gezien = [];
         $poging = 0;
         $startTime = microtime(true);
         $maxTijd = 3.0;  // 3 seconden max
-        $minGoedVarianten = 20;  // Minimaal 20 goede varianten zoeken
 
         while (true) {
+            $elapsed = microtime(true) - $startTime;
+
+            // ALTIJD stoppen na max tijd of max pogingen
+            if ($elapsed >= $maxTijd || $poging >= 50000) {
+                break;
+            }
+
             $variant = $this->simuleerVerdeling(
                 $perLeeftijd,
                 $blokken,
@@ -107,22 +114,26 @@ class BlokMatVerdelingService
             if (!isset($gezien[$hash])) {
                 $gezien[$hash] = true;
 
-                // Only add VALID variants (within 25% limit)
                 if ($variant['scores']['is_valid']) {
                     $alleVarianten[] = $variant;
+                } else {
+                    // Bewaar ongeldige als backup
+                    $ongeligeVarianten[] = $variant;
                 }
             }
 
             $poging++;
-
-            // Stop conditie: genoeg varianten EN tijd voorbij, OF hard limit
-            $elapsed = microtime(true) - $startTime;
-            if (($elapsed >= $maxTijd && count($alleVarianten) >= $minGoedVarianten) || $poging >= 50000) {
-                break;
-            }
         }
 
         $elapsed = round(microtime(true) - $startTime, 2);
+
+        // Als geen geldige, gebruik beste ongeldige
+        if (empty($alleVarianten) && !empty($ongeligeVarianten)) {
+            $alleVarianten = $ongeligeVarianten;
+            Log::warning("Geen geldige varianten, gebruik beste ongeldige", [
+                'ongeldige_count' => count($ongeligeVarianten),
+            ]);
+        }
 
         // Sort all variants by totaal_score (lower = better)
         usort($alleVarianten, fn($a, $b) => $a['totaal_score'] <=> $b['totaal_score']);
