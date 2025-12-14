@@ -38,7 +38,21 @@ class PubliekController extends Controller
 
         // Group by leeftijdsklasse, then by gewichtsklasse
         $categorien = $judokas->groupBy('leeftijdsklasse')->map(function ($groep) {
-            return $groep->groupBy('gewichtsklasse')->sortKeys();
+            return $groep->groupBy('gewichtsklasse')
+                ->sortBy(function ($judokas, $gewichtsklasse) {
+                    // Sort weight classes numerically (light to heavy)
+                    // Handle formats like "-27", "+55", "27"
+                    $numericValue = (float) preg_replace('/[^0-9.]/', '', $gewichtsklasse);
+                    // Put "+" classes at the end
+                    if (str_starts_with($gewichtsklasse, '+')) {
+                        $numericValue += 1000;
+                    }
+                    return $numericValue;
+                })
+                ->map(function ($judokas) {
+                    // Sort judokas alphabetically within each weight class
+                    return $judokas->sortBy('naam')->values();
+                });
         });
 
         // Sort leeftijdsklassen
