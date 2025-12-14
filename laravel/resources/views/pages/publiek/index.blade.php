@@ -57,7 +57,7 @@
                     </svg>
                 </div>
                 <!-- Geen resultaten -->
-                <div x-show="heeftGezocht && zoekResultaten.length === 0 && !zoekLoading" x-cloak
+                <div x-show="heeftGezocht && zoekResultaten.length === 0 && !zoekLoading && zoekterm.length >= 2" x-cloak
                      class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 p-4 text-center text-gray-500 z-50">
                     Geen judoka's gevonden voor "<span x-text="zoekterm"></span>"
                 </div>
