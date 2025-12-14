@@ -558,7 +558,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-auto">
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-auto shrink-0">
         <p>{{ $toernooi->naam }} - Publiek overzicht</p>
     </footer>
 
