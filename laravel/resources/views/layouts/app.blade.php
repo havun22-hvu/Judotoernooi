@@ -81,7 +81,7 @@
         @yield('content')
     </main>
 
-    <footer class="bg-gray-800 text-white py-4 mt-auto">
+    <footer class="bg-gray-800 text-white py-4 mt-auto shrink-0">
         <div class="max-w-7xl mx-auto px-4 text-center text-sm">
             &copy; {{ date('Y') }} Havun - Judo Toernooi Management Systeem
         </div>
