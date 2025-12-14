@@ -97,7 +97,7 @@
                 <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
             </button>
 
-            <form action="{{ route('coach.judoka.store', $uitnodiging->token) }}" method="POST"
+            <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.store', $code) : route('coach.judoka.store', $uitnodiging->token) }}" method="POST"
                   x-show="open" x-collapse class="mt-4 pt-4 border-t">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,21 +107,21 @@
                                class="w-full border rounded px-3 py-2 @error('naam') border-red-500 @enderror">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geboortejaar *</label>
-                        <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" required min="1990" max="{{ date('Y') }}"
+                        <label class="block text-gray-700 font-medium mb-1">Geboortejaar</label>
+                        <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" min="1990" max="{{ date('Y') }}"
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geslacht *</label>
-                        <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" required class="w-full border rounded px-3 py-2">
+                        <label class="block text-gray-700 font-medium mb-1">Geslacht</label>
+                        <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="w-full border rounded px-3 py-2">
                             <option value="">Selecteer...</option>
                             <option value="M">Man</option>
                             <option value="V">Vrouw</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Band *</label>
-                        <select name="band" required class="w-full border rounded px-3 py-2">
+                        <label class="block text-gray-700 font-medium mb-1">Band</label>
+                        <select name="band" class="w-full border rounded px-3 py-2">
                             <option value="">Selecteer...</option>
                             <option value="wit">Wit</option>
                             <option value="geel">Geel</option>
@@ -133,16 +133,22 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Gewichtsklasse *</label>
-                        <select name="gewichtsklasse" x-model="gewichtsklasse" required class="w-full border rounded px-3 py-2">
-                            <option value="">Selecteer...</option>
-                            <template x-for="gewicht in gewichtsopties" :key="gewicht">
-                                <option :value="gewicht" x-text="gewicht + ' kg'"></option>
+                        <label class="block text-gray-700 font-medium mb-1">Gewicht (kg)</label>
+                        <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" min="10" max="200"
+                               class="w-full border rounded px-3 py-2" placeholder="bijv. 32.5">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Gewichtsklasse</label>
+                        <select name="gewichtsklasse" x-model="gewichtsklasse" class="w-full border rounded px-3 py-2">
+                            <option value="">Automatisch bepaald</option>
+                            <template x-for="gw in gewichtsopties" :key="gw">
+                                <option :value="gw" x-text="gw + ' kg'"></option>
                             </template>
                         </select>
                         <p x-show="leeftijdsklasse" class="text-xs text-blue-600 mt-1" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></p>
                     </div>
                 </div>
+                <p class="text-xs text-gray-500 mt-2">* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.</p>
                 <div class="mt-4">
                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded">
                         Toevoegen
@@ -153,35 +159,67 @@
         @endif
 
         <!-- Judokas List -->
+        @php
+            $volledigeJudokas = $judokas->filter(fn($j) => $j->isVolledig());
+            $onvolledigeJudokas = $judokas->filter(fn($j) => !$j->isVolledig());
+        @endphp
+
+        @if($onvolledigeJudokas->count() > 0)
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <span class="text-yellow-600 text-xl mr-2">⚠</span>
+                <div>
+                    <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
+                    <p class="text-sm text-yellow-700">Onvolledige judoka's worden niet doorgestuurd naar de organisator. Vul de ontbrekende gegevens aan.</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b bg-gray-50">
-                <h2 class="text-xl font-bold text-gray-800">Mijn Judoka's ({{ $judokas->count() }})</h2>
+                <h2 class="text-xl font-bold text-gray-800">Mijn Judoka's ({{ $volledigeJudokas->count() }} volledig, {{ $onvolledigeJudokas->count() }} onvolledig)</h2>
             </div>
 
             @if($judokas->count() > 0)
             <div class="divide-y">
                 @foreach($judokas as $judoka)
-                <div class="p-4 hover:bg-gray-50" x-data="{ editing: false }">
+                @php
+                    $isOnvolledig = !$judoka->isVolledig();
+                    $ontbrekend = $judoka->getOntbrekendeVelden();
+                @endphp
+                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : '' }}" x-data="{ editing: false }">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
                         <div>
-                            <p class="font-medium text-gray-800">{{ $judoka->naam }}</p>
+                            <p class="font-medium {{ $isOnvolledig ? 'text-yellow-800' : 'text-gray-800' }}">
+                                {{ $judoka->naam }}
+                                @if($isOnvolledig)
+                                <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
+                                @endif
+                            </p>
                             <p class="text-sm text-gray-600">
-                                {{ $judoka->geboortejaar }} |
-                                {{ $judoka->geslacht === 'M' ? 'Man' : 'Vrouw' }} |
-                                {{ ucfirst($judoka->band) }} |
-                                {{ $judoka->gewichtsklasse }} kg
+                                {{ $judoka->geboortejaar ?? '?' }} |
+                                {{ $judoka->geslacht === 'M' ? 'Man' : ($judoka->geslacht === 'V' ? 'Vrouw' : '?') }} |
+                                {{ $judoka->band ? ucfirst($judoka->band) : '?' }} |
+                                {{ $judoka->gewicht ? $judoka->gewicht . ' kg' : '?' }}
+                                @if($judoka->gewichtsklasse)
+                                ({{ $judoka->gewichtsklasse }} kg)
+                                @endif
                             </p>
-                            <p class="text-xs text-gray-500 mt-1">
-                                {{ $judoka->leeftijdsklasse }}
-                            </p>
+                            @if($judoka->leeftijdsklasse)
+                            <p class="text-xs text-gray-500 mt-1">{{ $judoka->leeftijdsklasse }}</p>
+                            @endif
+                            @if($isOnvolledig)
+                            <p class="text-xs text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>
+                            @endif
                         </div>
                         @if($inschrijvingOpen)
                         <div class="flex space-x-2">
                             <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">
-                                Bewerk
+                                {{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}
                             </button>
-                            <form action="{{ route('coach.judoka.destroy', [$uitnodiging->token, $judoka]) }}" method="POST"
+                            <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.destroy', [$code, $judoka]) : route('coach.judoka.destroy', [$uitnodiging->token, $judoka]) }}" method="POST"
                                   onsubmit="return confirm('Weet je zeker dat je deze judoka wilt verwijderen?')">
                                 @csrf
                                 @method('DELETE')
@@ -195,27 +233,32 @@
 
                     <!-- Edit mode -->
                     @if($inschrijvingOpen)
-                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar }}, '{{ $judoka->geslacht }}', '{{ $judoka->gewichtsklasse }}')">
-                        <form action="{{ route('coach.judoka.update', [$uitnodiging->token, $judoka]) }}" method="POST">
+                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }})">
+                        <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.update', [$code, $judoka]) : route('coach.judoka.update', [$uitnodiging->token, $judoka]) }}" method="POST">
                             @csrf
                             @method('PUT')
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                            <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
                                 <input type="text" name="naam" value="{{ $judoka->naam }}" required
-                                       class="border rounded px-2 py-1">
-                                <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" required
-                                       class="border rounded px-2 py-1">
-                                <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" required class="border rounded px-2 py-1">
+                                       class="border rounded px-2 py-1" placeholder="Naam">
+                                <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()"
+                                       class="border rounded px-2 py-1" placeholder="Geboortejaar">
+                                <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="border rounded px-2 py-1">
+                                    <option value="">Geslacht</option>
                                     <option value="M">Man</option>
                                     <option value="V">Vrouw</option>
                                 </select>
-                                <select name="band" required class="border rounded px-2 py-1">
+                                <select name="band" class="border rounded px-2 py-1">
+                                    <option value="">Band</option>
                                     @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $band)
                                     <option value="{{ $band }}" {{ $judoka->band === $band ? 'selected' : '' }}>{{ ucfirst($band) }}</option>
                                     @endforeach
                                 </select>
-                                <select name="gewichtsklasse" x-model="gewichtsklasse" required class="border rounded px-2 py-1">
-                                    <template x-for="gewicht in gewichtsopties" :key="gewicht">
-                                        <option :value="gewicht" x-text="gewicht + ' kg'" :selected="gewicht === gewichtsklasse"></option>
+                                <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1"
+                                       class="border rounded px-2 py-1" placeholder="Gewicht kg">
+                                <select name="gewichtsklasse" x-model="gewichtsklasse" class="border rounded px-2 py-1">
+                                    <option value="">Auto klasse</option>
+                                    <template x-for="gw in gewichtsopties" :key="gw">
+                                        <option :value="gw" x-text="gw + ' kg'"></option>
                                     </template>
                                 </select>
                             </div>
@@ -296,12 +339,33 @@
             return geslacht === 'V' ? 'dames' : 'heren';
         }
 
+        // Bepaal gewichtsklasse op basis van gewicht
+        function bepaalGewichtsklasse(gewicht, gewichtsopties) {
+            if (!gewicht || !gewichtsopties.length) return '';
+
+            const sorted = sortGewichten(gewichtsopties);
+            for (const klasse of sorted) {
+                const isPlusKlasse = klasse.startsWith('+');
+                const limiet = parseFloat(klasse.replace('+', '').replace('-', ''));
+
+                if (isPlusKlasse) {
+                    return klasse; // Last option
+                } else {
+                    if (gewicht <= limiet) {
+                        return klasse;
+                    }
+                }
+            }
+            return sorted[sorted.length - 1] || '';
+        }
+
         // Alpine.js component voor nieuw judoka formulier
         function judokaForm() {
             return {
                 open: false,
                 geboortejaar: '',
                 geslacht: '',
+                gewicht: '',
                 gewichtsklasse: '',
                 leeftijdsklasse: '',
                 gewichtsopties: [],
@@ -311,24 +375,31 @@
                     if (klasse && gewichtsklassenData[klasse]) {
                         this.leeftijdsklasse = gewichtsklassenData[klasse].label;
                         this.gewichtsopties = sortGewichten(gewichtsklassenData[klasse].gewichten);
-                        // Reset gewichtsklasse als niet meer in opties
-                        if (!this.gewichtsopties.includes(this.gewichtsklasse)) {
-                            this.gewichtsklasse = '';
+                        // Update gewichtsklasse als gewicht is ingevuld
+                        if (this.gewicht && !this.gewichtsklasse) {
+                            this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
                         }
                     } else {
                         this.leeftijdsklasse = '';
                         this.gewichtsopties = [];
                         this.gewichtsklasse = '';
                     }
+                },
+
+                updateGewichtsklasse() {
+                    if (this.gewicht && this.gewichtsopties.length) {
+                        this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
+                    }
                 }
             }
         }
 
         // Alpine.js component voor bewerk formulier
-        function judokaEditForm(geboortejaar, geslacht, gewichtsklasse) {
+        function judokaEditForm(geboortejaar, geslacht, gewichtsklasse, gewicht) {
             return {
                 geboortejaar: geboortejaar,
                 geslacht: geslacht,
+                gewicht: gewicht,
                 gewichtsklasse: gewichtsklasse,
                 leeftijdsklasse: '',
                 gewichtsopties: [],
@@ -342,13 +413,19 @@
                     if (klasse && gewichtsklassenData[klasse]) {
                         this.leeftijdsklasse = gewichtsklassenData[klasse].label;
                         this.gewichtsopties = sortGewichten(gewichtsklassenData[klasse].gewichten);
-                        // Behoud gewichtsklasse als nog in opties, anders reset
-                        if (!this.gewichtsopties.includes(this.gewichtsklasse)) {
-                            this.gewichtsklasse = this.gewichtsopties[0] || '';
+                        // Behoud gewichtsklasse als nog in opties, anders bepaal op basis van gewicht
+                        if (!this.gewichtsopties.includes(this.gewichtsklasse) && this.gewicht) {
+                            this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
                         }
                     } else {
                         this.leeftijdsklasse = '';
                         this.gewichtsopties = [];
+                    }
+                },
+
+                updateGewichtsklasse() {
+                    if (this.gewicht && this.gewichtsopties.length) {
+                        this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
                     }
                 }
             }

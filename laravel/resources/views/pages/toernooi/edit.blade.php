@@ -191,10 +191,10 @@
                 </div>
             </div>
 
-            <!-- Judoka code volgorde -->
+            <!-- Poule indeling sortering -->
             <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-2">Judoka Code Volgorde</h3>
-                <p class="text-gray-500 text-sm mb-3">Bepaalt de sortering bij poule-indeling en de judoka code.</p>
+                <h3 class="font-medium text-gray-700 mb-2">Poule Indeling Sortering</h3>
+                <p class="text-gray-500 text-sm mb-3">Bepaalt de volgorde waarin judoka's over poules worden verdeeld.</p>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'border-blue-500 bg-blue-50' : '' }}">
                         <input type="radio" name="judoka_code_volgorde" value="gewicht_band"
@@ -202,7 +202,7 @@
                                class="w-4 h-4 text-blue-600">
                         <div>
                             <span class="font-medium">Leeftijd → Gewicht → Band</span>
-                            <span class="block text-xs text-gray-500">Bijv. A23-4M (A-pup, -23kg, oranje, man)</span>
+                            <span class="block text-xs text-gray-500">Binnen gewichtsklasse: eerst zwarte banden, dan bruine, etc.</span>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'border-blue-500 bg-blue-50' : '' }}">
@@ -211,7 +211,7 @@
                                class="w-4 h-4 text-blue-600">
                         <div>
                             <span class="font-medium">Leeftijd → Band → Gewicht</span>
-                            <span class="block text-xs text-gray-500">Bijv. A4-23M (A-pup, oranje, -23kg, man)</span>
+                            <span class="block text-xs text-gray-500">Eerst hogere banden bij elkaar, dan lagere banden bij elkaar.</span>
                         </div>
                     </label>
                 </div>

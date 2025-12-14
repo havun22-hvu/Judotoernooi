@@ -228,4 +228,75 @@ class Judoka extends Model
             $poule->updateStatistieken();
         }
     }
+
+    /**
+     * Check of judoka volledig is ingevuld
+     * Vereist: naam, geboortejaar, geslacht, band, gewicht
+     */
+    public function isVolledig(): bool
+    {
+        return !empty($this->naam)
+            && !empty($this->geboortejaar)
+            && !empty($this->geslacht)
+            && !empty($this->band)
+            && $this->gewicht !== null && $this->gewicht > 0;
+    }
+
+    /**
+     * Get array of missing fields for incomplete judoka
+     */
+    public function getOntbrekendeVelden(): array
+    {
+        $ontbrekend = [];
+
+        if (empty($this->naam)) $ontbrekend[] = 'naam';
+        if (empty($this->geboortejaar)) $ontbrekend[] = 'geboortejaar';
+        if (empty($this->geslacht)) $ontbrekend[] = 'geslacht';
+        if (empty($this->band)) $ontbrekend[] = 'band';
+        if ($this->gewicht === null || $this->gewicht <= 0) $ontbrekend[] = 'gewicht';
+
+        return $ontbrekend;
+    }
+
+    /**
+     * Bepaal gewichtsklasse op basis van gewicht en leeftijdsklasse
+     * Returns bijv. "-34" voor 32.5 kg in categorie met [-30, -34, -38]
+     */
+    public static function bepaalGewichtsklasse(float $gewicht, array $gewichtsklassen): ?string
+    {
+        if (empty($gewichtsklassen)) {
+            return null;
+        }
+
+        // Sort weight classes by numeric value
+        usort($gewichtsklassen, function ($a, $b) {
+            $aNum = floatval(preg_replace('/[^0-9.]/', '', $a));
+            $bNum = floatval(preg_replace('/[^0-9.]/', '', $b));
+            $aPlus = str_starts_with($a, '+');
+            $bPlus = str_starts_with($b, '+');
+
+            if ($aPlus && !$bPlus) return 1;
+            if (!$aPlus && $bPlus) return -1;
+            return $aNum - $bNum;
+        });
+
+        // Find matching weight class
+        foreach ($gewichtsklassen as $klasse) {
+            $isPlusKlasse = str_starts_with($klasse, '+');
+            $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
+
+            if ($isPlusKlasse) {
+                // +XX means minimum weight, this is the last option
+                return $klasse;
+            } else {
+                // -XX means maximum weight
+                if ($gewicht <= $limiet) {
+                    return $klasse;
+                }
+            }
+        }
+
+        // If weight exceeds all classes, return the highest (+ class)
+        return end($gewichtsklassen);
+    }
 }

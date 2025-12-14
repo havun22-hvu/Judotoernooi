@@ -57,6 +57,24 @@ enum Leeftijdsklasse: string
     }
 
     /**
+     * Returns the config key used in gewichtsklassen array
+     */
+    public function configKey(): string
+    {
+        return match($this) {
+            self::MINIS => 'minis',
+            self::A_PUPILLEN => 'a_pupillen',
+            self::B_PUPILLEN => 'b_pupillen',
+            self::DAMES_15 => 'dames_15',
+            self::HEREN_15 => 'heren_15',
+            self::DAMES_18 => 'dames_18',
+            self::HEREN_18 => 'heren_18',
+            self::DAMES => 'dames',
+            self::HEREN => 'heren',
+        };
+    }
+
+    /**
      * Returns the default weight classes for this age category
      * Negative values = maximum weight, Positive values = minimum weight (plus category)
      */
