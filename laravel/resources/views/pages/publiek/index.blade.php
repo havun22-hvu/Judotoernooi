@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ $toernooi->naam }}">
     <title>{{ $toernooi->naam }} - Live</title>
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="{{ route('publiek.manifest', $toernooi) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>

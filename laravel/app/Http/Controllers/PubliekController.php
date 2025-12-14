@@ -157,6 +157,35 @@ class PubliekController extends Controller
     }
 
     /**
+     * Dynamic manifest.json for PWA per tournament
+     */
+    public function manifest(Toernooi $toernooi): JsonResponse
+    {
+        return response()->json([
+            'name' => $toernooi->naam,
+            'short_name' => substr($toernooi->naam, 0, 12),
+            'description' => 'Live informatie voor ' . $toernooi->naam,
+            'start_url' => '/' . $toernooi->slug,
+            'scope' => '/' . $toernooi->slug,
+            'display' => 'standalone',
+            'background_color' => '#2563eb',
+            'theme_color' => '#2563eb',
+            'icons' => [
+                [
+                    'src' => '/icon-192x192.png',
+                    'sizes' => '192x192',
+                    'type' => 'image/png',
+                ],
+                [
+                    'src' => '/icon-512x512.png',
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                ],
+            ],
+        ])->header('Content-Type', 'application/manifest+json');
+    }
+
+    /**
      * Search judokas (AJAX for quick search)
      */
     public function zoeken(Request $request, Toernooi $toernooi): JsonResponse
