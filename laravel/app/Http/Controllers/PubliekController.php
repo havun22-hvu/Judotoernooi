@@ -174,8 +174,8 @@ class PubliekController extends Controller
                       $q2->where('naam', 'like', "%{$query}%");
                   });
             })
-            ->whereNotNull('leeftijdsklasse')
             ->with('club')
+            ->orderBy('naam')
             ->limit(20)
             ->get()
             ->map(function ($j) {
@@ -183,9 +183,9 @@ class PubliekController extends Controller
                     'id' => $j->id,
                     'naam' => $j->naam,
                     'club' => $j->club?->naam,
-                    'leeftijdsklasse' => $j->leeftijdsklasse,
-                    'gewichtsklasse' => $j->gewichtsklasse,
-                    'band' => $j->band,
+                    'leeftijdsklasse' => $j->leeftijdsklasse ?? '-',
+                    'gewichtsklasse' => $j->gewichtsklasse ?? '-',
+                    'band' => $j->band ?? '-',
                 ];
             });
 
