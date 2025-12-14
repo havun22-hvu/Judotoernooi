@@ -72,7 +72,17 @@
                        x-model="zoekterm"
                        @input.debounce.300ms="zoekJudokas()"
                        placeholder="🔍 Zoek judoka of club..."
-                       class="w-full px-4 py-3 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none text-base">
+                       class="w-full px-4 py-3 pr-10 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none text-base">
+                <!-- Clear button -->
+                <button x-show="zoekterm.length > 0 && !zoekLoading"
+                        @click="zoekterm = ''; zoekResultaten = []; heeftGezocht = false;"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                        type="button">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <!-- Loading spinner -->
                 <div x-show="zoekLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
                     <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
