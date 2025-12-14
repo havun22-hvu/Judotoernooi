@@ -254,20 +254,31 @@ class BlokMatVerdelingService
         // Use seed for reproducible randomness
         mt_srand($seed * 12345 + 67890);
 
-        // User weights (slider)
-        $verdelingGewicht = $userVerdelingGewicht / 100.0;
-        $aansluitingGewicht = $userAansluitingGewicht / 100.0;
+        // User weights (slider) + kleine variatie per berekening
+        $gewichtVariatie = (($seed % 20) - 10) / 100.0;  // -10% tot +10%
+        $verdelingGewicht = max(0.1, min(0.9, ($userVerdelingGewicht / 100.0) + $gewichtVariatie));
+        $aansluitingGewicht = 1.0 - $verdelingGewicht;
 
         // VEEL variatie parameters voor unieke resultaten
         $aansluitingVariant = $seed % 6;  // 6 verschillende aansluiting strategieën
         $randomFactor = ($seed % 100) / 100.0;  // 0.00 - 0.99 random factor
-        $sorteerStrategie = $seed % 5;  // 5 sorteer strategieën
+        $sorteerStrategie = $seed % 10;  // 10 sorteer strategieën
+        $leeftijdShuffle = $seed % 8;  // 8 shuffle opties voor leeftijden
+
+        // Maak kopie van grote leeftijden en shuffle (behalve Mini's blijft eerst!)
+        $groteLeeftijdenVolgorde = $this->groteLeeftijden;
+        if ($leeftijdShuffle >= 4) {
+            // Shuffle alleen posities 1-5 (Mini's blijft op 0)
+            $rest = array_slice($groteLeeftijdenVolgorde, 1);
+            shuffle($rest);
+            $groteLeeftijdenVolgorde = array_merge([$groteLeeftijdenVolgorde[0]], $rest);
+        }
 
         // STAP 1: Plaats grote leeftijdsklassen in volgorde
         // Mini's start ALTIJD in blok 1 (index 0)!
         $huidigeBlokIndex = 0;
 
-        foreach ($this->groteLeeftijden as $leeftijd) {
+        foreach ($groteLeeftijdenVolgorde as $leeftijd) {
             if (!isset($perLeeftijd[$leeftijd])) continue;
 
             $gewichten = $perLeeftijd[$leeftijd];
@@ -275,13 +286,16 @@ class BlokMatVerdelingService
             // Variatie in sortering (maar altijd licht→zwaar als basis)
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
 
-            // Soms kleine shuffle voor variatie (maar behoud globale volgorde)
+            // Meer shuffle strategieën
             if ($sorteerStrategie >= 3 && count($gewichten) > 2) {
-                // Swap 2 aanliggende elementen random
-                $swapPos = mt_rand(0, count($gewichten) - 2);
-                $temp = $gewichten[$swapPos];
-                $gewichten[$swapPos] = $gewichten[$swapPos + 1];
-                $gewichten[$swapPos + 1] = $temp;
+                // Meerdere swaps mogelijk
+                $aantalSwaps = ($sorteerStrategie >= 7) ? 2 : 1;
+                for ($i = 0; $i < $aantalSwaps; $i++) {
+                    $swapPos = mt_rand(0, count($gewichten) - 2);
+                    $temp = $gewichten[$swapPos];
+                    $gewichten[$swapPos] = $gewichten[$swapPos + 1];
+                    $gewichten[$swapPos + 1] = $temp;
+                }
             }
 
             $vorigeBlokIndex = $huidigeBlokIndex;
@@ -317,11 +331,25 @@ class BlokMatVerdelingService
         }
 
         // STAP 2: Plaats kleine leeftijdsklassen als opvulling
-        foreach ($this->kleineLeeftijden as $leeftijd) {
+        // Shuffle ook de volgorde van kleine leeftijden
+        $kleineLeeftijdenVolgorde = $this->kleineLeeftijden;
+        if ($leeftijdShuffle >= 2 && $leeftijdShuffle < 6) {
+            shuffle($kleineLeeftijdenVolgorde);
+        }
+
+        foreach ($kleineLeeftijdenVolgorde as $leeftijd) {
             if (!isset($perLeeftijd[$leeftijd])) continue;
 
             $gewichten = $perLeeftijd[$leeftijd];
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
+
+            // Ook hier swaps voor variatie
+            if ($sorteerStrategie >= 5 && count($gewichten) > 2) {
+                $swapPos = mt_rand(0, count($gewichten) - 2);
+                $temp = $gewichten[$swapPos];
+                $gewichten[$swapPos] = $gewichten[$swapPos + 1];
+                $gewichten[$swapPos + 1] = $temp;
+            }
 
             // Variatie: start in blok met meeste ruimte OF random blok met ruimte
             if ($randomFactor > 0.5) {
