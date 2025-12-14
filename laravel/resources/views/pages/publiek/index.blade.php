@@ -18,7 +18,7 @@
         .band-oranje { background: #c2410c; color: white; }
         .band-groen { background: #15803d; color: white; }
         .band-blauw { background: #1d4ed8; color: white; }
-        .band-bruin { background: #5c2d0e; color: white; }
+        .band-bruin { background: #8B4513; color: white; }
         .band-zwart { background: #0a0a0a; color: white; }
     </style>
 </head>
