@@ -21,7 +21,7 @@
         .band-zwart { background: linear-gradient(135deg, #525252 0%, #171717 100%); color: white; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen" x-data="publiekApp()" x-init="init()">
+<body class="bg-gray-100 min-h-screen flex flex-col" x-data="publiekApp()" x-init="init()">
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-4">
@@ -98,7 +98,7 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 py-6">
+    <main class="max-w-6xl mx-auto px-4 py-6 flex-grow">
         <!-- Info Tab -->
         <div x-show="activeTab === 'info'" x-cloak>
             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -392,7 +392,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-auto">
         <p>{{ $toernooi->naam }} - Publiek overzicht</p>
     </footer>
 
