@@ -101,100 +101,267 @@
     <main class="max-w-6xl mx-auto px-4 py-6 flex-grow">
         <!-- Info Tab -->
         <div x-show="activeTab === 'info'" x-cloak>
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <!-- Hero section -->
-                <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
-                    <h2 class="text-3xl font-bold mb-2">{{ $toernooi->naam }}</h2>
-                    @if($toernooi->organisatie)
-                    <p class="text-blue-200">Georganiseerd door {{ $toernooi->organisatie }}</p>
-                    @endif
-                </div>
+            @php
+                $paginaBlokken = $toernooi->pagina_content['blokken'] ?? [];
+                $heeftCustomContent = !empty($paginaBlokken);
+            @endphp
 
-                <div class="p-6">
-                    <!-- Key info -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="flex items-start gap-3">
-                            <div class="bg-blue-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
+            @if($heeftCustomContent)
+                {{-- Custom Pagina Builder Content --}}
+                <div class="space-y-6">
+                    @foreach(collect($paginaBlokken)->sortBy('order') as $blok)
+                        @switch($blok['type'])
+                            @case('header')
+                                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
+                                        @if(!empty($blok['data']['logo']))
+                                            <img src="{{ asset('storage/' . $blok['data']['logo']) }}" alt="Logo" class="h-24 mb-4 object-contain">
+                                        @endif
+                                        @if(!empty($blok['data']['titel']))
+                                            <h2 class="text-3xl font-bold mb-2">{{ $blok['data']['titel'] }}</h2>
+                                        @endif
+                                        @if(!empty($blok['data']['subtitel']))
+                                            <p class="text-blue-200 text-lg">{{ $blok['data']['subtitel'] }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('tekst')
+                                <div class="bg-white rounded-lg shadow-lg p-6">
+                                    <div class="prose max-w-none">
+                                        {!! $blok['data']['html'] ?? '' !!}
+                                    </div>
+                                </div>
+                                @break
+
+                            @case('afbeelding')
+                                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                                    @if(!empty($blok['data']['src']))
+                                        <img src="{{ asset('storage/' . $blok['data']['src']) }}" alt="{{ $blok['data']['alt'] ?? '' }}" class="w-full object-cover max-h-96">
+                                    @endif
+                                    @if(!empty($blok['data']['caption']))
+                                        <div class="p-4 text-center text-gray-600 text-sm">{{ $blok['data']['caption'] }}</div>
+                                    @endif
+                                </div>
+                                @break
+
+                            @case('sponsors')
+                                @if(!empty($blok['data']['sponsors']))
+                                    <div class="bg-white rounded-lg shadow-lg p-6">
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Sponsors</h3>
+                                        <div class="flex flex-wrap justify-center items-center gap-8">
+                                            @foreach($blok['data']['sponsors'] as $sponsor)
+                                                @if(!empty($sponsor['logo']))
+                                                    @if(!empty($sponsor['url']))
+                                                        <a href="{{ $sponsor['url'] }}" target="_blank" rel="noopener" class="hover:opacity-80 transition">
+                                                            <img src="{{ asset('storage/' . $sponsor['logo']) }}" alt="{{ $sponsor['naam'] ?? 'Sponsor' }}" class="h-16 object-contain">
+                                                        </a>
+                                                    @else
+                                                        <img src="{{ asset('storage/' . $sponsor['logo']) }}" alt="{{ $sponsor['naam'] ?? 'Sponsor' }}" class="h-16 object-contain">
+                                                    @endif
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                                @break
+
+                            @case('video')
+                                @if(!empty($blok['data']['url']))
+                                    @php
+                                        $videoUrl = $blok['data']['url'];
+                                        $embedUrl = '';
+                                        if (preg_match('/youtube\.com\/watch\?v=([^&]+)/', $videoUrl, $matches)) {
+                                            $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                                        } elseif (preg_match('/youtu\.be\/([^?]+)/', $videoUrl, $matches)) {
+                                            $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                                        } elseif (preg_match('/vimeo\.com\/(\d+)/', $videoUrl, $matches)) {
+                                            $embedUrl = 'https://player.vimeo.com/video/' . $matches[1];
+                                        }
+                                    @endphp
+                                    @if($embedUrl)
+                                        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                                            @if(!empty($blok['data']['titel']))
+                                                <div class="p-4 border-b">
+                                                    <h3 class="font-bold text-gray-800">{{ $blok['data']['titel'] }}</h3>
+                                                </div>
+                                            @endif
+                                            <div class="aspect-video">
+                                                <iframe src="{{ $embedUrl }}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
+                                @break
+
+                            @case('info_kaart')
+                                {{-- Auto-filled tournament info --}}
+                                <div class="bg-white rounded-lg shadow-lg p-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                        <div class="flex items-start gap-3">
+                                            <div class="bg-blue-100 p-3 rounded-lg">
+                                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Datum</p>
+                                                <p class="font-medium text-gray-800">{{ $toernooi->datum->format('l d F Y') }}</p>
+                                            </div>
+                                        </div>
+                                        @if($toernooi->locatie)
+                                        <div class="flex items-start gap-3">
+                                            <div class="bg-green-100 p-3 rounded-lg">
+                                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Locatie</p>
+                                                <p class="font-medium text-gray-800">{{ $toernooi->locatie }}</p>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        <div class="flex items-start gap-3">
+                                            <div class="bg-yellow-100 p-3 rounded-lg">
+                                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <p class="text-gray-500 text-sm">Deelnemers</p>
+                                                <p class="font-medium text-gray-800">{{ $totaalJudokas }} aangemeld</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if($blokken->count() > 0)
+                                    <div class="border-t pt-6">
+                                        <h3 class="text-lg font-bold text-gray-800 mb-4">Tijdschema</h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
+                                            @foreach($blokken as $tijdblok)
+                                            <div class="bg-gray-50 rounded-lg p-4 border">
+                                                <div class="font-bold text-blue-600 mb-2">Blok {{ $tijdblok->nummer }}</div>
+                                                @if($tijdblok->weging_start && $tijdblok->weging_einde)
+                                                <div class="flex justify-between text-sm mb-1">
+                                                    <span class="text-gray-600">Weging:</span>
+                                                    <span class="font-medium">{{ \Carbon\Carbon::parse($tijdblok->weging_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($tijdblok->weging_einde)->format('H:i') }}</span>
+                                                </div>
+                                                @endif
+                                                @if($tijdblok->starttijd)
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-600">Start wedstrijden:</span>
+                                                    <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($tijdblok->starttijd)->format('H:i') }}</span>
+                                                </div>
+                                                @endif
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+                                @break
+                        @endswitch
+                    @endforeach
+                </div>
+            @else
+                {{-- Default Info Content (fallback) --}}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <!-- Hero section -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-8">
+                        <h2 class="text-3xl font-bold mb-2">{{ $toernooi->naam }}</h2>
+                        @if($toernooi->organisatie)
+                        <p class="text-blue-200">Georganiseerd door {{ $toernooi->organisatie }}</p>
+                        @endif
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Key info -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="flex items-start gap-3">
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Datum</p>
+                                    <p class="font-medium text-gray-800">{{ $toernooi->datum->format('l d F Y') }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-gray-500 text-sm">Datum</p>
-                                <p class="font-medium text-gray-800">{{ $toernooi->datum->format('l d F Y') }}</p>
+
+                            @if($toernooi->locatie)
+                            <div class="flex items-start gap-3">
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Locatie</p>
+                                    <p class="font-medium text-gray-800">{{ $toernooi->locatie }}</p>
+                                </div>
+                            </div>
+                            @endif
+
+                            <div class="flex items-start gap-3">
+                                <div class="bg-yellow-100 p-3 rounded-lg">
+                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Deelnemers</p>
+                                    <p class="font-medium text-gray-800">{{ $totaalJudokas }} aangemeld</p>
+                                </div>
                             </div>
                         </div>
 
-                        @if($toernooi->locatie)
-                        <div class="flex items-start gap-3">
-                            <div class="bg-green-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 text-sm">Locatie</p>
-                                <p class="font-medium text-gray-800">{{ $toernooi->locatie }}</p>
+                        <!-- Blokken / Tijdschema -->
+                        @if($blokken->count() > 0)
+                        <div class="border-t pt-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Tijdschema</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
+                                @foreach($blokken as $blok)
+                                <div class="bg-gray-50 rounded-lg p-4 border">
+                                    <div class="font-bold text-blue-600 mb-2">Blok {{ $blok->nummer }}</div>
+                                    @if($blok->weging_start && $blok->weging_einde)
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-600">Weging:</span>
+                                        <span class="font-medium">{{ \Carbon\Carbon::parse($blok->weging_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($blok->weging_einde)->format('H:i') }}</span>
+                                    </div>
+                                    @endif
+                                    @if($blok->starttijd)
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Start wedstrijden:</span>
+                                        <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($blok->starttijd)->format('H:i') }}</span>
+                                    </div>
+                                    @endif
+                                </div>
+                                @endforeach
                             </div>
                         </div>
                         @endif
 
-                        <div class="flex items-start gap-3">
-                            <div class="bg-yellow-100 p-3 rounded-lg">
-                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        <!-- Deadline -->
+                        @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
+                        <div class="border-t pt-6 mt-6">
+                            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center gap-3">
+                                <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                            </div>
-                            <div>
-                                <p class="text-gray-500 text-sm">Deelnemers</p>
-                                <p class="font-medium text-gray-800">{{ $totaalJudokas }} aangemeld</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Blokken / Tijdschema -->
-                    @if($blokken->count() > 0)
-                    <div class="border-t pt-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">Tijdschema</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
-                            @foreach($blokken as $blok)
-                            <div class="bg-gray-50 rounded-lg p-4 border">
-                                <div class="font-bold text-blue-600 mb-2">Blok {{ $blok->nummer }}</div>
-                                @if($blok->weging_start && $blok->weging_einde)
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-gray-600">Weging:</span>
-                                    <span class="font-medium">{{ \Carbon\Carbon::parse($blok->weging_start)->format('H:i') }} - {{ \Carbon\Carbon::parse($blok->weging_einde)->format('H:i') }}</span>
+                                <div>
+                                    <p class="font-medium text-orange-800">Inschrijving sluit op {{ $toernooi->inschrijving_deadline->format('d F Y') }}</p>
+                                    <p class="text-sm text-orange-600">Nog {{ $toernooi->inschrijving_deadline->diffInDays(now()) }} dagen om in te schrijven</p>
                                 </div>
-                                @endif
-                                @if($blok->starttijd)
-                                <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Start wedstrijden:</span>
-                                    <span class="font-medium text-green-600">{{ \Carbon\Carbon::parse($blok->starttijd)->format('H:i') }}</span>
-                                </div>
-                                @endif
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Deadline -->
-                    @if($toernooi->inschrijving_deadline && $toernooi->inschrijving_deadline->isFuture())
-                    <div class="border-t pt-6 mt-6">
-                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 flex items-center gap-3">
-                            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <div>
-                                <p class="font-medium text-orange-800">Inschrijving sluit op {{ $toernooi->inschrijving_deadline->format('d F Y') }}</p>
-                                <p class="text-sm text-orange-600">Nog {{ $toernooi->inschrijving_deadline->diffInDays(now()) }} dagen om in te schrijven</p>
                             </div>
                         </div>
+                        @endif
                     </div>
-                    @endif
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- Live Matten Tab -->
