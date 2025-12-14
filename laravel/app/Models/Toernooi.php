@@ -670,7 +670,14 @@ class Toernooi extends Model
 
     public function getAlleGewichtsklassen(): array
     {
-        return $this->gewichtsklassen ?? self::getStandaardGewichtsklassen();
+        $klassen = $this->gewichtsklassen ?? self::getStandaardGewichtsklassen();
+
+        // Sort by max_leeftijd (youngest first, seniors last)
+        uasort($klassen, function ($a, $b) {
+            return ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99);
+        });
+
+        return $klassen;
     }
 
     public function resetGewichtsklassenNaarStandaard(): void
