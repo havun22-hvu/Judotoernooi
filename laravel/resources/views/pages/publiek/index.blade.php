@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ $toernooi->naam }}">
     <title>{{ $toernooi->naam }} - Live</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -387,6 +393,22 @@
                     </div>
                 </div>
             @endif
+
+            <!-- QR Code voor delen -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+                <div class="flex flex-col sm:flex-row items-center gap-6">
+                    <div class="flex-shrink-0">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(url()->current()) }}"
+                             alt="QR Code"
+                             class="w-32 h-32 sm:w-40 sm:h-40">
+                    </div>
+                    <div class="text-center sm:text-left">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Scan voor live updates</h3>
+                        <p class="text-gray-600 text-sm mb-3">Scan deze QR code met je telefoon voor live poule-informatie en om je favoriete judoka's te volgen.</p>
+                        <p class="text-xs text-gray-400 break-all">{{ url()->current() }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Live Matten Tab -->
@@ -596,6 +618,58 @@
         <p>{{ $toernooi->naam }} - Publiek overzicht</p>
     </footer>
 
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="fixed bottom-0 left-0 right-0 bg-blue-600 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50" style="display: none;">
+        <div class="max-w-xl mx-auto flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-white rounded-lg p-2">
+                    <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-bold text-sm sm:text-base">Installeer de app!</p>
+                    <p class="text-blue-200 text-xs sm:text-sm">Snelle toegang op je startscherm</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="installBtn" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-50 active:scale-95 transition">
+                    Installeer
+                </button>
+                <button id="closeBanner" class="text-blue-200 hover:text-white p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- iOS Install Instructions -->
+    <div id="iosInstall" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 shadow-lg transform translate-y-full transition-transform duration-300 z-50" style="display: none;">
+        <div class="max-w-xl mx-auto">
+            <div class="flex justify-between items-start mb-3">
+                <p class="font-bold">Installeer op iPhone/iPad</p>
+                <button id="closeIos" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="bg-gray-700 rounded px-2 py-1">1.</span>
+                    <span>Tik op</span>
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="bg-gray-700 rounded px-2 py-1">2.</span>
+                    <span>Zet op beginscherm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const STORAGE_KEY = 'judotoernooi_favorieten_{{ $toernooi->id }}';
         const poulesGegenereerd = {{ $poulesGegenereerd ? 'true' : 'false' }};
@@ -744,6 +818,70 @@
                     }
                 },
             }
+        }
+
+        // PWA Install Logic
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const iosInstall = document.getElementById('iosInstall');
+        const installBtn = document.getElementById('installBtn');
+        const closeBanner = document.getElementById('closeBanner');
+        const closeIos = document.getElementById('closeIos');
+
+        // Check if already installed or dismissed
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isDismissed = localStorage.getItem('pwa_install_dismissed_{{ $toernooi->id }}');
+
+        function showBanner(banner) {
+            banner.style.display = 'block';
+            setTimeout(() => banner.classList.remove('translate-y-full'), 100);
+        }
+
+        function hideBanner(banner) {
+            banner.classList.add('translate-y-full');
+            setTimeout(() => banner.style.display = 'none', 300);
+        }
+
+        // Android/Chrome: beforeinstallprompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            if (!isInstalled && !isDismissed) {
+                setTimeout(() => showBanner(installBanner), 2000);
+            }
+        });
+
+        // iOS detection
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS && !isInstalled && !isDismissed) {
+            setTimeout(() => showBanner(iosInstall), 2000);
+        }
+
+        // Install button click
+        installBtn?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                hideBanner(installBanner);
+            }
+        });
+
+        // Close buttons
+        closeBanner?.addEventListener('click', () => {
+            hideBanner(installBanner);
+            localStorage.setItem('pwa_install_dismissed_{{ $toernooi->id }}', 'true');
+        });
+
+        closeIos?.addEventListener('click', () => {
+            hideBanner(iosInstall);
+            localStorage.setItem('pwa_install_dismissed_{{ $toernooi->id }}', 'true');
+        });
+
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
         }
     </script>
 </body>
