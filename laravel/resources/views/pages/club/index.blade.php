@@ -1,14 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Clubs Beheren')
+@section('title', 'Clubs')
 
 @section('content')
-<div x-data="{ copiedUrl: null, openClub: null }">
+<div x-data="{ copiedUrl: null }">
 
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Clubs & Uitnodigingen</h1>
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">Clubs</h1>
+        <p class="text-gray-600 mt-1">Voeg clubs toe en stuur ze een inschrijflink</p>
+    </div>
     <form action="{{ route('toernooi.club.verstuur-alle', $toernooi) }}" method="POST" class="inline"
-          onsubmit="return confirm('Weet je zeker dat je alle clubs wilt uitnodigen?')">
+          onsubmit="return confirm('Alle clubs met email uitnodigen?')">
         @csrf
         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,36 +21,6 @@
         </button>
     </form>
 </div>
-
-{{-- New coach modal --}}
-@if(session('new_coach_pin'))
-<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="this.remove()">
-    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4" onclick="event.stopPropagation()">
-        <h3 class="text-lg font-bold mb-4 text-green-600">Coach Toegevoegd!</h3>
-        <div class="space-y-3">
-            <div>
-                <label class="text-sm text-gray-600">PIN code:</label>
-                <div class="text-2xl font-mono font-bold tracking-widest">{{ session('new_coach_pin') }}</div>
-            </div>
-            <div>
-                <label class="text-sm text-gray-600">Portal URL:</label>
-                <div class="flex gap-2 mt-1">
-                    <input type="text" value="{{ session('new_coach_url') }}" readonly
-                           class="flex-1 border rounded px-3 py-2 text-sm font-mono bg-gray-50" id="new-coach-url">
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('new-coach-url').value); this.textContent='✓'"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm">
-                        Kopieer
-                    </button>
-                </div>
-            </div>
-        </div>
-        <p class="mt-4 text-sm text-gray-500">Bewaar deze gegevens! De PIN wordt niet meer getoond.</p>
-        <button onclick="this.closest('.fixed').remove()" class="mt-4 w-full bg-gray-200 hover:bg-gray-300 py-2 rounded">
-            Sluiten
-        </button>
-    </div>
-</div>
-@endif
 
 @if($toernooi->inschrijving_deadline)
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
@@ -60,172 +33,168 @@
 </div>
 @endif
 
+<!-- Clubs tabel -->
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-50 border-b">
+            <tr>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Club</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Plaats</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telefoon</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Judoka's</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600">Acties</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y">
+            @forelse($clubs->sortBy('naam') as $club)
+            @php
+                $uitnodiging = $uitnodigingen[$club->id] ?? null;
+                $inschrijfUrl = $uitnodiging ? route('coach.portal', $uitnodiging->token) : null;
+            @endphp
+            <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3">
+                    <span class="font-medium text-gray-800">{{ $club->naam }}</span>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ $club->plaats ?? '-' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ $club->email ?? '-' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ $club->telefoon ?? '-' }}</td>
+                <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    @if($uitnodiging)
+                    <span class="text-xs text-green-600">Uitgenodigd {{ $uitnodiging->uitgenodigd_op->format('d-m') }}</span>
+                    @else
+                    <span class="text-xs text-gray-400">Nog niet uitgenodigd</span>
+                    @endif
+                </td>
+                <td class="px-4 py-3 text-right">
+                    <div class="flex justify-end gap-2">
+                        @if($inschrijfUrl)
+                        <button @click="navigator.clipboard.writeText('{{ $inschrijfUrl }}'); copiedUrl = {{ $club->id }}; setTimeout(() => copiedUrl = null, 2000)"
+                                class="px-2 py-1 text-xs rounded"
+                                :class="copiedUrl === {{ $club->id }} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
+                            <span x-text="copiedUrl === {{ $club->id }} ? '✓ Gekopieerd' : 'Link'"></span>
+                        </button>
+                        @endif
+                        @if($club->email)
+                        <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded">
+                                Email
+                            </button>
+                        </form>
+                        @endif
+                        <button onclick="editClub({{ $club->id }}, '{{ $club->naam }}', '{{ $club->plaats }}', '{{ $club->email }}', '{{ $club->telefoon }}')"
+                                class="px-2 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded">
+                            Bewerk
+                        </button>
+                        <form action="{{ route('toernooi.club.destroy', [$toernooi, $club]) }}" method="POST" class="inline"
+                              onsubmit="return confirm('{{ $club->naam }} verwijderen?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded">×</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                    Nog geen clubs. Voeg hieronder een club toe.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
 <!-- Nieuwe club toevoegen -->
-<div class="bg-white rounded-lg shadow p-4 mb-4">
-    <form action="{{ route('toernooi.club.store', $toernooi) }}" method="POST" class="flex flex-wrap gap-2 items-center">
+<div class="bg-white rounded-lg shadow p-4 mt-4">
+    <h3 class="font-semibold text-gray-700 mb-3">Club toevoegen</h3>
+    <form action="{{ route('toernooi.club.store', $toernooi) }}" method="POST" class="flex flex-wrap gap-3 items-end">
         @csrf
-        <input type="text" name="naam" placeholder="Clubnaam *" required
-               class="border rounded px-3 py-2 w-40 @error('naam') border-red-500 @enderror">
-        <input type="text" name="plaats" placeholder="Plaats" class="border rounded px-3 py-2 w-32">
-        <input type="email" name="email" placeholder="Email" class="border rounded px-3 py-2 w-48">
-        <input type="tel" name="telefoon" placeholder="Telefoon" class="border rounded px-3 py-2 w-32">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
-            + Toevoegen
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">Clubnaam *</label>
+            <input type="text" name="naam" required class="border rounded px-3 py-2 w-48">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">Plaats</label>
+            <input type="text" name="plaats" class="border rounded px-3 py-2 w-36">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">Email</label>
+            <input type="email" name="email" class="border rounded px-3 py-2 w-56">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">Telefoon</label>
+            <input type="tel" name="telefoon" class="border rounded px-3 py-2 w-36">
+        </div>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded">
+            Toevoegen
         </button>
     </form>
 </div>
 
-<!-- Clubs lijst -->
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    @forelse($clubs->sortBy('naam') as $club)
-    @php
-        $uitnodiging = $uitnodigingen[$club->id] ?? null;
-        $coaches = $club->coaches ?? collect();
-        $eersteCoach = $coaches->first();
-    @endphp
-    <div class="border-b last:border-b-0">
-        <!-- Club row -->
-        <div class="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 cursor-pointer" @click="openClub = openClub === {{ $club->id }} ? null : {{ $club->id }}">
-            <!-- Expand icon -->
-            <svg class="w-5 h-5 text-gray-400 transition-transform" :class="{ 'rotate-90': openClub === {{ $club->id }} }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-
-            <!-- Club naam & badges -->
-            <div class="w-48 flex-shrink-0">
-                <div class="font-semibold text-gray-800">{{ $club->naam }}</div>
-                <div class="flex gap-1 mt-0.5">
-                    <span class="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }} judoka's</span>
-                    <span class="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded">{{ $coaches->count() }}/3 coaches</span>
+<!-- Edit modal -->
+<div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold mb-4">Club bewerken</h3>
+        <form id="editForm" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Clubnaam *</label>
+                    <input type="text" name="naam" id="editNaam" required class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Plaats</label>
+                    <input type="text" name="plaats" id="editPlaats" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Email</label>
+                    <input type="email" name="email" id="editEmail" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Telefoon</label>
+                    <input type="tel" name="telefoon" id="editTelefoon" class="w-full border rounded px-3 py-2">
                 </div>
             </div>
-
-            <!-- Eerste coach info -->
-            <div class="flex-1 text-sm text-gray-600">
-                @if($eersteCoach)
-                <span class="font-medium">{{ $eersteCoach->naam }}</span>
-                @if($eersteCoach->email) <span class="text-gray-400 ml-2">{{ $eersteCoach->email }}</span> @endif
-                @else
-                <span class="text-gray-400 italic">Geen coaches</span>
-                @endif
-            </div>
-
-            <!-- Quick actions -->
-            <div class="flex gap-2 flex-shrink-0" @click.stop>
-                @if($eersteCoach)
-                <button
-                    @click="navigator.clipboard.writeText('{{ $eersteCoach->getPortalUrl() }}'); copiedUrl = {{ $eersteCoach->id }}; setTimeout(() => copiedUrl = null, 2000)"
-                    class="px-3 py-1.5 rounded text-sm"
-                    :class="copiedUrl === {{ $eersteCoach->id }} ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'"
-                >
-                    <span x-text="copiedUrl === {{ $eersteCoach->id }} ? '✓ Gekopieerd' : 'Kopieer link'"></span>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded">
+                    Annuleren
                 </button>
-                @endif
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                    Opslaan
+                </button>
             </div>
-        </div>
-
-        <!-- Expanded club panel -->
-        <div x-show="openClub === {{ $club->id }}" x-collapse class="bg-gray-50 border-t px-4 py-4">
-            <!-- Club gegevens - compacte regel -->
-            <div class="flex flex-wrap gap-2 items-center mb-4">
-                <form action="{{ route('toernooi.club.update', [$toernooi, $club]) }}" method="POST" class="flex flex-wrap gap-2 items-center">
-                    @csrf
-                    @method('PUT')
-                    <input type="text" name="naam" value="{{ $club->naam }}" placeholder="Clubnaam *" required class="border rounded px-3 py-2 text-sm w-40">
-                    <input type="text" name="plaats" value="{{ $club->plaats }}" placeholder="Plaats" class="border rounded px-3 py-2 text-sm w-32">
-                    <input type="email" name="email" value="{{ $club->email }}" placeholder="Email" class="border rounded px-3 py-2 text-sm w-48">
-                    <input type="tel" name="telefoon" value="{{ $club->telefoon }}" placeholder="Telefoon" class="border rounded px-3 py-2 text-sm w-32">
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">Opslaan</button>
-                </form>
-                @if($club->email)
-                <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm">
-                        {{ $uitnodiging ? 'Opnieuw uitnodigen' : 'Uitnodigen' }}
-                    </button>
-                </form>
-                @endif
-                <form action="{{ route('toernooi.club.destroy', [$toernooi, $club]) }}" method="POST" class="inline ml-auto">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm"
-                            onclick="return confirm('Club {{ $club->naam }} verwijderen?{{ $club->judokas_count > 0 ? ' Let op: er zijn nog ' . $club->judokas_count . ' judoka\'s gekoppeld!' : '' }}')">
-                        Verwijderen
-                    </button>
-                </form>
-            </div>
-
-            <!-- Coaches - ingesprongen -->
-            <div class="ml-6 border-l-2 border-purple-200 pl-4">
-                <h4 class="font-semibold text-gray-600 text-sm mb-2">Coaches (max 3)</h4>
-
-                <!-- Bestaande coaches -->
-                <div class="space-y-2 mb-3">
-                    @forelse($coaches as $coach)
-                    <form action="{{ route('toernooi.club.coach.update', [$toernooi, $coach]) }}" method="POST"
-                          class="flex items-center gap-2 bg-white rounded border p-2"
-                          x-data="{ changed: false }">
-                        @csrf
-                        @method('PUT')
-                        <div class="flex-1 flex items-center gap-2">
-                            <input type="text" name="naam" value="{{ $coach->naam }}" required
-                                   @input="changed = true"
-                                   class="font-medium text-sm w-32 border rounded px-2 py-1">
-                            <input type="email" name="email" value="{{ $coach->email }}" placeholder="Email"
-                                   @input="changed = true"
-                                   class="text-sm w-44 border rounded px-2 py-1">
-                            <input type="tel" name="telefoon" value="{{ $coach->telefoon }}" placeholder="Telefoon"
-                                   @input="changed = true"
-                                   class="text-sm w-28 border rounded px-2 py-1">
-                        </div>
-                        <button type="submit" x-show="changed"
-                                class="px-2 py-1 bg-blue-600 text-white hover:bg-blue-700 rounded text-xs">
-                            Opslaan
-                        </button>
-                        <button type="button"
-                            @click="navigator.clipboard.writeText('{{ $coach->getPortalUrl() }}'); copiedUrl = {{ $coach->id }}; setTimeout(() => copiedUrl = null, 2000)"
-                            class="px-2 py-1 rounded text-xs"
-                            :class="copiedUrl === {{ $coach->id }} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                        >
-                            <span x-text="copiedUrl === {{ $coach->id }} ? '✓' : 'URL'"></span>
-                        </button>
-                        <button type="button" class="px-2 py-1 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 rounded text-xs"
-                                onclick="if(confirm('Nieuwe PIN genereren voor {{ $coach->naam }}?')) document.getElementById('regenerate-{{ $coach->id }}').submit()">
-                            Nieuwe PIN
-                        </button>
-                        <button type="button" class="px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs"
-                                onclick="if(confirm('Coach {{ $coach->naam }} verwijderen?')) document.getElementById('delete-{{ $coach->id }}').submit()">
-                            ×
-                        </button>
-                    </form>
-                    <form id="regenerate-{{ $coach->id }}" action="{{ route('toernooi.club.coach.regenerate-pin', [$toernooi, $coach]) }}" method="POST" class="hidden">@csrf</form>
-                    <form id="delete-{{ $coach->id }}" action="{{ route('toernooi.club.coach.destroy', [$toernooi, $coach]) }}" method="POST" class="hidden">@csrf @method('DELETE')</form>
-                    @empty
-                    <p class="text-sm text-gray-400 italic">Nog geen coaches</p>
-                    @endforelse
-                </div>
-
-                <!-- Nieuwe coach toevoegen -->
-                @if($coaches->count() < 3)
-                <form action="{{ route('toernooi.club.coach.store', [$toernooi, $club]) }}" method="POST" class="flex gap-2 items-center">
-                    @csrf
-                    <input type="text" name="naam" placeholder="Coach naam *" required class="border rounded px-2 py-1 text-sm w-32">
-                    <input type="email" name="email" placeholder="Email" class="border rounded px-2 py-1 text-sm w-44">
-                    <input type="tel" name="telefoon" placeholder="Telefoon" class="border rounded px-2 py-1 text-sm w-28">
-                    <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm">+</button>
-                </form>
-                @else
-                <p class="text-sm text-orange-600">Maximum aantal coaches bereikt</p>
-                @endif
-            </div>
-        </div>
+        </form>
     </div>
-    @empty
-    <div class="px-4 py-8 text-center text-gray-500">
-        Nog geen clubs. Voeg hierboven een club toe.
-    </div>
-    @endforelse
 </div>
 
 </div>
+
+<script>
+function editClub(id, naam, plaats, email, telefoon) {
+    document.getElementById('editForm').action = '{{ url("toernooi/{$toernooi->slug}/club") }}/' + id;
+    document.getElementById('editNaam').value = naam;
+    document.getElementById('editPlaats').value = plaats || '';
+    document.getElementById('editEmail').value = email || '';
+    document.getElementById('editTelefoon').value = telefoon || '';
+    document.getElementById('editModal').classList.remove('hidden');
+    document.getElementById('editModal').classList.add('flex');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.add('hidden');
+    document.getElementById('editModal').classList.remove('flex');
+}
+
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+</script>
 @endsection
