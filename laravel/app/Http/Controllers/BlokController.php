@@ -72,14 +72,19 @@ class BlokController extends Controller
                     ->with('info', $result['message'] ?? 'Geen varianten gegenereerd');
             }
 
-            // Store variants in session for selection
+            // Store variants and stats in session for selection
             session(['blok_varianten' => $result['varianten']]);
+            session(['blok_stats' => $result['stats'] ?? []]);
 
-            // Build info message with best variant stats
-            $beste = $result['varianten'][0];
-            $maxAfwijkingPct = $beste['scores']['max_afwijking_pct'] ?? 0;
-            $breaks = $beste['scores']['breaks'] ?? 0;
-            $msg = count($result['varianten']) . " varianten berekend (beste: max ±{$maxAfwijkingPct}%, {$breaks} breaks)";
+            // Build info message with stats
+            $stats = $result['stats'] ?? [];
+            $msg = sprintf(
+                "%d pogingen → %d uniek → %d geldig → top %d getoond",
+                $stats['pogingen'] ?? 0,
+                $stats['unieke_varianten'] ?? 0,
+                $stats['geldige_varianten'] ?? 0,
+                $stats['getoond'] ?? 0
+            );
 
             return redirect()
                 ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1])

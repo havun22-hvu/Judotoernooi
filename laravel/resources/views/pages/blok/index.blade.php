@@ -198,15 +198,31 @@
         @endforeach
 
         <!-- Varianten panel (altijd zichtbaar) -->
+        @php
+            $blokStats = session('blok_stats', []);
+            // Kwaliteitsscore berekening: 100 - (afwijking * 2) - (breaks * 5)
+            // Perfecte score = 100 (0% afwijking, 0 breaks)
+            $berekenKwaliteit = fn($scores) => max(0, min(100, round(
+                100 - (($scores['max_afwijking_pct'] ?? 0) * 2) - (($scores['breaks'] ?? 0) * 5)
+            )));
+        @endphp
         <div class="bg-white rounded-lg shadow p-3">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700">
-                    @if($toonVarianten)
+                <div class="text-sm text-gray-700">
+                    @if($toonVarianten && !empty($blokStats))
+                        <span class="font-medium">{{ $blokStats['pogingen'] ?? 0 }} pogingen</span>
+                        <span class="text-gray-400 mx-1">→</span>
+                        <span>{{ $blokStats['unieke_varianten'] ?? 0 }} uniek</span>
+                        <span class="text-gray-400 mx-1">→</span>
+                        <span>{{ $blokStats['geldige_varianten'] ?? 0 }} geldig</span>
+                        <span class="text-gray-400 mx-1">→</span>
+                        <span class="font-bold text-blue-600">top {{ $blokStats['getoond'] ?? 0 }}</span>
+                    @elseif($toonVarianten)
                         {{ count($varianten) }} varianten berekend
                     @else
                         Varianten (klik Bereken)
                     @endif
-                </span>
+                </div>
                 @if($toonVarianten)
                 <div class="flex items-center gap-3">
                     <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
@@ -219,14 +235,18 @@
             <div class="flex flex-wrap gap-2 mb-3">
                 @if($toonVarianten)
                     @foreach($varianten as $idx => $variant)
-                    @php $scores = $variant['scores']; @endphp
+                    @php
+                        $scores = $variant['scores'];
+                        $kwaliteit = $berekenKwaliteit($scores);
+                        $kwaliteitKleur = $kwaliteit >= 70 ? 'text-green-600' : ($kwaliteit >= 50 ? 'text-yellow-600' : 'text-red-600');
+                    @endphp
                     <button type="button" onclick="toonVariant({{ $idx }})"
                             class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
-                            data-idx="{{ $idx }}">
+                            data-idx="{{ $idx }}"
+                            title="Afwijking: ±{{ $scores['max_afwijking_pct'] ?? 0 }}% | Breaks: {{ $scores['breaks'] }} | Kwaliteit: {{ $kwaliteit }}%">
                         <span class="font-bold">#{{ $idx + 1 }}</span>
-                        <span class="{{ ($scores['max_afwijking_pct'] ?? 0) <= 15 ? 'text-green-600' : 'text-yellow-600' }}">±{{ $scores['max_afwijking_pct'] ?? 0 }}%</span>
-                        <span class="text-gray-400">/</span>
-                        <span class="{{ $scores['breaks'] <= 5 ? 'text-green-600' : 'text-yellow-600' }}">{{ $scores['breaks'] }}b</span>
+                        <span class="{{ $kwaliteitKleur }} font-bold">{{ $kwaliteit }}%</span>
+                        <span class="text-gray-300 text-xs">(±{{ $scores['max_afwijking_pct'] ?? 0 }}% / {{ $scores['breaks'] }}b)</span>
                     </button>
                     @endforeach
                 @else
@@ -235,8 +255,6 @@
                             class="px-3 py-2 rounded border text-sm border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed">
                         <span class="font-bold">#{{ $i }}</span>
                         <span>--%</span>
-                        <span>/</span>
-                        <span>--b</span>
                     </button>
                     @endfor
                 @endif
