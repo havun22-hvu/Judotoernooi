@@ -14,7 +14,7 @@
         .favorite-star:hover { transform: scale(1.2); }
         .favorite-star.active { color: #f59e0b; }
         .band-wit { background: #d4d4d4; color: #404040; }
-        .band-geel { background: #ca8a04; color: white; }
+        .band-geel { background: #EAB308; color: #000; }
         .band-oranje { background: #c2410c; color: white; }
         .band-groen { background: #15803d; color: white; }
         .band-blauw { background: #1d4ed8; color: white; }
