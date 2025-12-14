@@ -527,22 +527,33 @@ class BlokMatVerdelingService
         // Aansluiting score: punten per overgang tussen gewichtscategorieën
         // Zelfde blok = 0, +1 = 10, -1 = 20, +2 = 30, anders = 50+
         $aansluitingScore = 0;
-        $overgangen = 0;  // Totaal aantal overgangen
+        $overgangen = 0;
+        $aflopendeLeeftijden = 0;  // Leeftijden die meer achteruit dan vooruit gaan
 
         foreach ($perLeeftijd as $leeftijd => $gewichten) {
             $vorigBlok = null;
+            $eersteBlok = null;
+            $laatsteBlok = null;
+            $richting = 0;  // Som van alle overgangen binnen deze leeftijd
+
             foreach ($gewichten as $cat) {
                 $key = $cat['leeftijd'] . '|' . $cat['gewicht'];
                 $blokNr = $toewijzingen[$key] ?? null;
 
+                if ($blokNr !== null) {
+                    if ($eersteBlok === null) $eersteBlok = $blokNr;
+                    $laatsteBlok = $blokNr;
+                }
+
                 if ($vorigBlok !== null && $blokNr !== null) {
                     $verschil = $blokNr - $vorigBlok;
                     $overgangen++;
+                    $richting += $verschil;  // Track netto richting
 
                     $punten = match(true) {
                         $verschil === 0 => 0,    // Zelfde blok = perfect
                         $verschil === 1 => 10,   // Volgend blok = goed
-                        $verschil === -1 => 20,  // Vorig blok = matig
+                        $verschil === -1 => 20,  // Vorig blok = matig (1x is ok)
                         $verschil === 2 => 30,   // 2 blokken later = acceptabel
                         $verschil < -1 => 50 + abs($verschil) * 10,  // Ver terug = slecht
                         default => 50 + $verschil * 10,  // Ver vooruit = slecht
@@ -550,6 +561,14 @@ class BlokMatVerdelingService
                     $aansluitingScore += $punten;
                 }
                 $vorigBlok = $blokNr;
+            }
+
+            // Check: gaat deze leeftijd AFLOPEND? (laatste blok < eerste blok)
+            // Dit betekent dat de lichtste gewichten in een later blok zitten dan de zwaarste
+            if ($eersteBlok !== null && $laatsteBlok !== null && $laatsteBlok < $eersteBlok) {
+                $aflopendeLeeftijden++;
+                // Grote penalty voor aflopende leeftijdsklasse!
+                $aansluitingScore += 200;
             }
         }
 
@@ -563,6 +582,7 @@ class BlokMatVerdelingService
             'totaal_score' => round($totaalScore, 1),
             'max_afwijking_pct' => round($maxAfwijkingPct, 1),
             'overgangen' => $overgangen,
+            'aflopend' => $aflopendeLeeftijden,  // Leeftijden die verkeerd om lopen
             'blok_stats' => $blokStats,
             'is_valid' => $isValid,
             'gewichten' => [
