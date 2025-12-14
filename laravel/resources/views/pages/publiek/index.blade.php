@@ -454,7 +454,7 @@
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                 @php $gewichtId = Str::slug($gewichtsklasse); @endphp
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
-                     class="bg-white rounded-lg shadow overflow-hidden">
+                     class="bg-white rounded-lg shadow overflow-hidden max-w-md">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
                         <span class="font-medium text-gray-700">{{ $gewichtsklasse }} kg - {{ $judokas->count() }} judoka's</span>
                         <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
