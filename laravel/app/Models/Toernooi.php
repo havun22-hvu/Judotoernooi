@@ -84,6 +84,7 @@ class Toernooi extends Model
         'inschrijving_deadline',
         'max_judokas',
         'locatie',
+        'verwacht_aantal_judokas',
         'aantal_matten',
         'aantal_blokken',
         'poule_grootte_voorkeur',
