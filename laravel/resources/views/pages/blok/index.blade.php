@@ -638,17 +638,13 @@ function berekenLiveScore() {
     if (verdEl) verdEl.textContent = Math.round(verdelingScore);
     if (aansEl) aansEl.textContent = aansluitingScore;
 
-    // 6. Update de ACTIEVE variant knop (met ring-2)
+    // 6. Update de ACTIEVE variant knop (met ring-2) - vervang oude score met nieuwe
     const actieveBtn = document.querySelector('.variant-btn.ring-2');
     if (actieveBtn) {
-        const origineelScore = parseInt(actieveBtn.dataset.origineelScore) || 0;
-        const verschil = totaalScore - origineelScore;
-        const verschilTekst = verschil === 0 ? '' : (verschil > 0 ? ` +${verschil}` : ` ${verschil}`);
-
-        // Update score display
+        // Update score display - gewoon de nieuwe score tonen
         const scoreSpan = actieveBtn.querySelector('.variant-score');
         if (scoreSpan) {
-            scoreSpan.textContent = totaalScore + verschilTekst;
+            scoreSpan.textContent = totaalScore;
             scoreSpan.className = 'variant-score font-bold ' + (totaalScore < 100 ? 'text-green-600' : totaalScore < 200 ? 'text-yellow-600' : 'text-red-600');
         }
 
