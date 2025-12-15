@@ -25,10 +25,12 @@ class Poule extends Model
         'aantal_judokas',
         'aantal_wedstrijden',
         'spreker_klaar',
+        'afgeroepen_at',
     ];
 
     protected $casts = [
         'spreker_klaar' => 'datetime',
+        'afgeroepen_at' => 'datetime',
     ];
 
     public function isKruisfinale(): bool

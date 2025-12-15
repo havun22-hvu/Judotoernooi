@@ -164,6 +164,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     // Spreker routes (spreker + admin)
     Route::middleware(CheckToernooiRol::class . ':spreker')->group(function () {
         Route::get('spreker', [BlokController::class, 'sprekerInterface'])->name('spreker.interface');
+        Route::post('spreker/afgeroepen', [BlokController::class, 'markeerAfgeroepen'])->name('spreker.afgeroepen');
     });
 
 });
