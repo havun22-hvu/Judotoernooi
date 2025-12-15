@@ -22,8 +22,8 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 2. Deelnemers importeren
 3. Poules genereren
 4. Blokkenverdeling (categorieën over tijdsblokken)
-5. "Naar Zaaloverzicht" → preview + weeglijst maken
-6. **Resultaat:** Weeglijst, weegkaarten, zaaloverzicht (nog inactief)
+5. "Naar Zaaloverzicht" → **matten toewijzen** + preview
+6. **Resultaat:** Weeglijst, weegkaarten, zaaloverzicht met matverdeling (nog inactief)
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
@@ -254,11 +254,10 @@ Per blok zie je chips voor elke categorie:
 
 Klik op een **witte chip** om te activeren:
 
-1. Systeem wijst poules toe aan matten (load balanced)
-2. Wedstrijdschema wordt gegenereerd per poule
-3. Alleen actieve judoka's komen in schema (niet doorgestreepte!)
-4. Chip wordt **groen** met ✓
-5. Categorie is nu klaar voor de mat
+1. Wedstrijdschema wordt gegenereerd per poule (matten zijn al toegewezen in voorbereiding)
+2. Alleen actieve judoka's komen in schema (niet doorgestreepte!)
+3. Chip wordt **groen** met ✓
+4. Categorie is nu klaar voor de mat
 
 **Let op:** Doorgestreepte judoka's (afwezig/verkeerd gewicht) worden NIET meegenomen in het wedstrijdschema!
 
