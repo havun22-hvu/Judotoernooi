@@ -103,7 +103,7 @@
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
                                 <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full" :class="'band-' + judoka.band"></span><span class="text-gray-400">)</span>
                                 <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
-                                <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse + ' / ' + judoka.gewichtsklasse + ' kg'"></span>
+                                <span class="text-xs text-gray-400 block" x-text="(judoka.leeftijdsklasse || '-') + ' / ' + (judoka.gewichtsklasse || '-')"></span>
                             </div>
                             <button @click="toggleFavoriet(judoka.id)"
                                     class="favorite-star text-2xl"
@@ -453,7 +453,7 @@
                         </div>
                         @if($mat->huidigePoule)
                         <div class="text-blue-200 text-sm mt-1">
-                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse }} / {{ $mat->huidigePoule->gewichtsklasse }} kg
+                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }} / {{ $mat->huidigePoule->gewichtsklasse ?? '-' }}
                         </div>
                         @endif
                     </div>
@@ -643,7 +643,7 @@
                                     <div class="flex justify-between items-center flex-wrap gap-2">
                                         <div>
                                             <span class="font-bold">P<span x-text="poule.nummer"></span></span>
-                                            <span x-text="kortLeeftijd(poule.leeftijdsklasse) + ' / ' + poule.gewichtsklasse + ' kg'"></span>
+                                            <span x-text="kortLeeftijd(poule.leeftijdsklasse) + ' / ' + (poule.gewichtsklasse || '-')"></span>
                                             <span x-show="poule.mat" class="text-blue-200">, mat <span x-text="poule.mat"></span></span>
                                         </div>
                                         <div x-show="poule.blok" class="text-blue-200 text-sm">
@@ -667,7 +667,7 @@
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-3">
-                                                <span class="text-sm text-gray-600" x-text="judoka.gewicht + ' kg'"></span>
+                                                <span class="text-sm text-gray-600" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : ''"></span>
                                                 <span class="w-4 h-4 rounded-full" :class="'band-' + judoka.band"></span>
                                                 <span x-show="judoka.punten > 0" class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-sm font-medium" x-text="judoka.punten + ' pt'"></span>
                                             </div>
@@ -702,7 +702,7 @@
                     @foreach($poules as $poule)
                     <div class="bg-white rounded-lg shadow overflow-hidden">
                         <div class="bg-purple-600 text-white px-4 py-2">
-                            <span class="font-bold">{{ $poule->gewichtsklasse }} kg</span>
+                            <span class="font-bold">{{ $poule->gewichtsklasse ?? '-' }}</span>
                             <span class="text-purple-200 text-sm">- Poule {{ $poule->nummer }}</span>
                         </div>
                         <div class="divide-y">
