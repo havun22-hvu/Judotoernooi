@@ -73,22 +73,20 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ## Knoppen
 
-### Bereken
-1. Verzamel alle **niet-vastgezette** categorieën (in sleepvak OF al in blokken maar zonder 📍)
-2. Bereken restcapaciteit per blok (gewenst - actueel van vastgezette 📍 categorieën)
-3. Genereer 5 varianten met verschillende strategieën
-4. **Toon variant 1 direct in de blokken**
-5. Toon variant-keuze balk onderaan om te bladeren tussen varianten
+### (Her)bereken
+1. Reset alle **niet-vastgezette** categorieën (terug naar sleepvak)
+2. **Vastgezette categorieën (●) blijven staan** - moet eerst losgemaakt worden
+3. Bereken restcapaciteit per blok (gewenst - actueel van vastgezette categorieën)
+4. Genereer 5 varianten met verschillende strategieën
+5. **Toon variant 1 direct in de blokken**
+6. Toon variant-keuze balk onderaan om te bladeren tussen varianten
+
+**Tip:** Om een vastgezette categorie opnieuw in te delen, klik eerst op ● om los te maken, daarna (Her)bereken.
 
 ### Variant Bladeren (#1, #2, etc.)
 - Klikken op variant-knop toont die verdeling **direct in de blokken**
 - Geen page reload - JavaScript update
-- Vastgezette 📍 categorieën blijven altijd staan
-
-### Opnieuw
-- **Reset ALLES** - alle categorieën terug naar sleepvak
-- Ook vastgezette 📍 categorieën worden gereset
-- Schone lei om opnieuw te beginnen
+- Vastgezette ● categorieën blijven altijd staan
 
 ### Naar Zaaloverzicht →
 - Sla huidige blokverdeling op in database
@@ -121,11 +119,11 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ## Vastgezet (●) vs Niet-Vastgezet (📌)
 
-| Status | Weergave | Gedrag bij "Bereken" | Gedrag bij "Opnieuw" |
-|--------|----------|---------------------|---------------------|
-| In sleepvak | Paars, geen pin | Wordt verdeeld | Blijft in sleepvak |
-| In blok, niet vast | Blauw + rode 📌 | Wordt opnieuw verdeeld | Terug naar sleepvak |
-| In blok, vastgezet | Groen + groene ● | **Blijft staan** | Terug naar sleepvak |
+| Status | Weergave | Gedrag bij "(Her)bereken" |
+|--------|----------|---------------------------|
+| In sleepvak | Paars, geen pin | Wordt verdeeld |
+| In blok, niet vast | Blauw + rode 📌 | Wordt opnieuw verdeeld (terug naar sleepvak, dan herverdeeld) |
+| In blok, vastgezet | Groen + groene ● | **Blijft staan** (klik ● om los te maken) |
 
 ---
 

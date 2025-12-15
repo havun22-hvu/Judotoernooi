@@ -91,12 +91,9 @@
                 <span class="text-gray-600 whitespace-nowrap">Aansluiting</span>
             </div>
             <button type="submit" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">
-                Bereken
+                (Her)bereken
             </button>
         </form>
-        <button type="button" onclick="resetAlleBlokken()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-            Opnieuw
-        </button>
         <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -324,15 +321,6 @@ function updateBalansSlider(value) {
     if (typeof berekenLiveScore === 'function') {
         berekenLiveScore();
     }
-}
-
-function resetAlleBlokken() {
-    if (!confirm('ALLE bloktoewijzingen verwijderen (ook vastgezette)?')) return;
-    fetch('{{ route('toernooi.blok.reset-verdeling', $toernooi) }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-        body: JSON.stringify({ reset_all: true })
-    }).then(r => r.json()).then(result => { if (result.success) location.reload(); });
 }
 
 function updateGewenst(input) {
