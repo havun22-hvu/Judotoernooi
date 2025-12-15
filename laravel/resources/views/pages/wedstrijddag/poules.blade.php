@@ -79,11 +79,15 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
-                            // Check of categorie actieve judoka's heeft
+                            // Check of categorie actieve judoka's heeft en of er lege poules zijn
                             $catTolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-                            $totaalActiefInCategorie = $category['poules']->sum(function($p) use ($catTolerantie) {
-                                return $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($catTolerantie))->count();
-                            });
+                            $totaalActiefInCategorie = 0;
+                            $aantalLegePoules = 0;
+                            foreach ($category['poules'] as $p) {
+                                $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($catTolerantie))->count();
+                                $totaalActiefInCategorie += $actief;
+                                if ($actief === 0) $aantalLegePoules++;
+                            }
                         @endphp
                         <button
                             @click="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
@@ -93,15 +97,18 @@
                             + Poule
                         </button>
                     </div>
-                    @if($totaalActiefInCategorie > 0)
+                    @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
                     <button
                         @click="naarZaaloverzicht('{{ $jsKey }}')"
                         :class="sentCategories['{{ $jsKey }}'] ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
-                        class="text-white px-3 py-1.5 text-sm rounded transition-all"
+                        class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn"
+                        data-category="{{ $jsKey }}"
                     >
                         <span x-show="!sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
                         <span x-show="sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
                     </button>
+                    @elseif($aantalLegePoules > 0)
+                    <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
                     @else
                     <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
                     @endif
@@ -129,9 +136,18 @@
                                 data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}"
                                 data-actief="{{ $aantalActief }}"
                             >
-                                <div class="{{ $isProblematisch ? 'bg-red-600' : 'bg-blue-700' }} text-white px-3 py-2 pointer-events-none poule-header">
-                                    <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
-                                    <div class="text-xs {{ $isProblematisch ? 'text-red-200' : 'text-blue-200' }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
+                                    <div class="pointer-events-none">
+                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
+                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+                                    </div>
+                                    @if($aantalActief === 0)
+                                    <button
+                                        onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                        class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold flex-shrink-0"
+                                        title="Verwijder lege poule"
+                                    >−</button>
+                                    @endif
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
@@ -230,6 +246,95 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
+
+async function verwijderPoule(pouleId, pouleNummer) {
+    if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
+
+    try {
+        const response = await fetch(verwijderPouleUrl.replace(':id', pouleId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Remove the poule card from DOM
+            const pouleCard = document.getElementById('poule-' + pouleId);
+            if (pouleCard) {
+                const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
+                pouleCard.remove();
+
+                // Check if category now has no empty poules - show "Naar zaaloverzicht" button
+                updateCategoryStatus(categoryKey);
+            }
+        } else {
+            alert(data.message || 'Fout bij verwijderen');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij verwijderen');
+    }
+}
+
+function updateCategoryStatus(categoryKey) {
+    // Find all poules in this category
+    const [leeftijd, gewicht] = categoryKey.split('|');
+    const poules = document.querySelectorAll(`.poule-card[data-poule-leeftijdsklasse="${leeftijd}"][data-poule-gewichtsklasse="${gewicht}"]`);
+
+    let totaalActief = 0;
+    let aantalLeeg = 0;
+
+    poules.forEach(poule => {
+        const actief = parseInt(poule.dataset.actief) || 0;
+        totaalActief += actief;
+        if (actief === 0) aantalLeeg++;
+    });
+
+    // Find the category header
+    const categoryHeader = Array.from(document.querySelectorAll('.bg-gray-100.border-b')).find(header => {
+        const title = header.querySelector('h2');
+        return title && title.textContent.trim() === `${leeftijd} ${gewicht}`;
+    });
+
+    if (!categoryHeader) return;
+
+    // Find the right side of the header (where button/message goes)
+    const rightSide = categoryHeader.querySelector('.flex.items-center.gap-3')?.parentElement;
+    if (!rightSide) return;
+
+    // Remove existing button/message
+    const existingBtn = rightSide.querySelector('.naar-zaaloverzicht-btn');
+    const existingMsg = rightSide.querySelector('span.text-orange-600, span.text-gray-400');
+    if (existingBtn) existingBtn.remove();
+    if (existingMsg) existingMsg.remove();
+
+    // Add appropriate element
+    if (totaalActief > 0 && aantalLeeg === 0) {
+        const btn = document.createElement('button');
+        btn.className = 'text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn bg-blue-600 hover:bg-blue-700';
+        btn.dataset.category = categoryKey;
+        btn.innerHTML = 'Naar zaaloverzicht';
+        btn.onclick = function() {
+            Alpine.evaluate(this, `naarZaaloverzicht('${categoryKey}')`);
+        };
+        rightSide.appendChild(btn);
+    } else if (aantalLeeg > 0) {
+        const msg = document.createElement('span');
+        msg.className = 'text-orange-600 text-sm italic px-3 py-1.5';
+        msg.textContent = `${aantalLeeg} lege poule(s) - verwijder eerst`;
+        rightSide.appendChild(msg);
+    } else {
+        const msg = document.createElement('span');
+        msg.className = 'text-gray-400 text-sm italic px-3 py-1.5';
+        msg.textContent = 'Geen actieve judoka\'s';
+        rightSide.appendChild(msg);
+    }
+}
 
 async function verifieerPoules() {
     const resultaatDiv = document.getElementById('verificatie-resultaat');
@@ -447,34 +552,53 @@ document.addEventListener('DOMContentLoaded', function() {
         if (actiefSpan) actiefSpan.textContent = actief;
         if (wedstrijdenSpan) wedstrijdenSpan.textContent = wedstrijden;
 
-        // Update styling for problematic poules
+        // Update styling based on status: empty (grey), problematic (red), ok (blue)
         const header = pouleCard.querySelector('.poule-header');
         const statsDiv = pouleCard.querySelector('.poule-stats');
+        const isLeeg = actief === 0;
 
-        if (isProblematisch) {
+        // Reset all styling first
+        pouleCard.classList.remove('border-2', 'border-red-300', 'opacity-50');
+        if (header) header.classList.remove('bg-blue-700', 'bg-red-600', 'bg-gray-500');
+        if (statsDiv) statsDiv.classList.remove('text-blue-200', 'text-red-200', 'text-gray-300');
+
+        // Apply correct styling
+        if (isLeeg) {
+            pouleCard.classList.add('opacity-50');
+            if (header) header.classList.add('bg-gray-500');
+            if (statsDiv) statsDiv.classList.add('text-gray-300');
+        } else if (isProblematisch) {
             pouleCard.classList.add('border-2', 'border-red-300');
-            if (header) {
-                header.classList.remove('bg-blue-700');
-                header.classList.add('bg-red-600');
-            }
-            if (statsDiv) {
-                statsDiv.classList.remove('text-blue-200');
-                statsDiv.classList.add('text-red-200');
-            }
+            if (header) header.classList.add('bg-red-600');
+            if (statsDiv) statsDiv.classList.add('text-red-200');
         } else {
-            pouleCard.classList.remove('border-2', 'border-red-300');
-            if (header) {
-                header.classList.remove('bg-red-600');
-                header.classList.add('bg-blue-700');
-            }
-            if (statsDiv) {
-                statsDiv.classList.remove('text-red-200');
-                statsDiv.classList.add('text-blue-200');
-            }
+            if (header) header.classList.add('bg-blue-700');
+            if (statsDiv) statsDiv.classList.add('text-blue-200');
         }
 
         // Update problematic poules section
         updateProblematischePoules(pouleData, isProblematisch);
+
+        // Update delete button visibility for empty poules
+        let deleteBtn = pouleCard.querySelector('.delete-poule-btn');
+        if (isLeeg) {
+            // Show delete button if not present
+            if (!deleteBtn && header) {
+                const btn = document.createElement('button');
+                btn.className = 'delete-poule-btn w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold flex-shrink-0';
+                btn.title = 'Verwijder lege poule';
+                btn.innerHTML = '−';
+                btn.onclick = () => verwijderPoule(pouleData.id, pouleCard.dataset.pouleNummer);
+                header.appendChild(btn);
+            }
+        } else {
+            // Remove delete button
+            if (deleteBtn) deleteBtn.remove();
+        }
+
+        // Update category status (show/hide "Naar zaaloverzicht" button)
+        const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
+        updateCategoryStatus(categoryKey);
     }
 
     function updateProblematischePoules(pouleData, isProblematisch) {
