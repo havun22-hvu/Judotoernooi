@@ -170,15 +170,16 @@ class BlokController extends Controller
     }
 
     /**
-     * Distribute categories over mats and redirect to zaaloverzicht
+     * Redirect to zaaloverzicht (mat assignment happens at category activation)
      */
     public function zetOpMat(Toernooi $toernooi): RedirectResponse
     {
-        $this->verdelingService->verdeelOverMatten($toernooi);
+        // Don't assign mats here - that happens when activating categories in zaaloverzicht
+        // This just redirects to the next step in the workflow
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', 'Categorieën verdeeld over matten');
+            ->with('success', 'Ga naar Wedstrijddag Poules om te overpoulen');
     }
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
@@ -214,7 +215,7 @@ class BlokController extends Controller
     }
 
     /**
-     * Activate a category: generate match schedules and go to mat interface
+     * Activate a category: assign mats and generate match schedules
      */
     public function activeerCategorie(Request $request, Toernooi $toernooi): RedirectResponse
     {
@@ -233,13 +234,38 @@ class BlokController extends Controller
             ->where('gewichtsklasse', $gewichtsklasse)
             ->get();
 
-        // Generate match schedules for each poule using the service
+        // Get available mats and their current load
+        $matten = $toernooi->matten->sortBy('nummer');
+        $matIds = $matten->pluck('id')->toArray();
+
+        // Count existing wedstrijden per mat (for load balancing)
+        $wedstrijdenPerMat = [];
+        foreach ($matIds as $matId) {
+            $wedstrijdenPerMat[$matId] = $toernooi->poules()
+                ->where('mat_id', $matId)
+                ->withCount('wedstrijden')
+                ->get()
+                ->sum('wedstrijden_count');
+        }
+
+        // Assign mats and generate schedules for each poule
         $totaalWedstrijden = 0;
         foreach ($poules as $poule) {
-            // Only generate if no wedstrijden exist yet
+            // Assign mat if not already assigned (balance load)
+            if (!$poule->mat_id) {
+                $besteMat = array_keys($wedstrijdenPerMat, min($wedstrijdenPerMat))[0];
+                $poule->update(['mat_id' => $besteMat]);
+            }
+
+            // Generate wedstrijden if not already done
             if ($poule->wedstrijden()->count() === 0) {
                 $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
                 $totaalWedstrijden += count($wedstrijden);
+
+                // Update load tracking
+                if ($poule->mat_id) {
+                    $wedstrijdenPerMat[$poule->mat_id] += count($wedstrijden);
+                }
             }
         }
 
