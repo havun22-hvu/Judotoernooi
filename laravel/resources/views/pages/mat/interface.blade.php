@@ -2,10 +2,8 @@
 
 @section('title', 'Mat Interface')
 
-@section('main-class', 'max-w-full')
-
 @section('content')
-<div x-data="matInterface()" x-init="init()" class="w-full">
+<div x-data="matInterface()" x-init="init()">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">🥋 Mat Interface</h1>
 
     <div class="bg-white rounded-lg shadow p-4 mb-6">
