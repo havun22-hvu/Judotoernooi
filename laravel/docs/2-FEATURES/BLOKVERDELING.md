@@ -13,7 +13,7 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 +------------------------------------------------------------------+
 | HEADER                                                            |
 | Blokverdeling    6 blokken | 821 wed. | gem 137/blok              |
-|                                          [Bereken] [Opnieuw] [Zet op Mat →] |
+|                              [Bereken] [Opnieuw] [Naar Zaaloverzicht →] |
 +------------------------------------------------------------------+
 
 +------------------+----------------------------------------+----------+
@@ -90,10 +90,11 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 - Ook vastgezette 📍 categorieën worden gereset
 - Schone lei om opnieuw te beginnen
 
-### Zet op Mat →
-- Sla huidige verdeling op in database
-- Ga naar zaaloverzicht
-- Verdeel poules over matten binnen elk blok
+### Naar Zaaloverzicht →
+- Sla huidige blokverdeling op in database
+- Ga naar zaaloverzicht (preview)
+- **Let op:** Matten worden NIET hier toegewezen!
+- Matverdeling + wedstrijdschema's pas bij activatie op toernooidag
 
 ---
 
@@ -130,12 +131,19 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ## Workflow
 
+### Voorbereiding (voor toernooi)
 1. **Start**: Alle categorieën staan in sleepvak
 2. **Optioneel**: Sleep specifieke categorieën naar gewenste blokken (krijgen 📍)
 3. **Bereken**: Solver verdeelt rest optimaal, variant 1 direct zichtbaar
 4. **Blader**: Bekijk varianten #1-#5, kies de beste
 5. **Optioneel**: Pas handmatig aan met drag & drop
-6. **Zet op Mat**: Opslaan en door naar matverdeling
+6. **Naar Zaaloverzicht**: Opslaan blokverdeling → preview zaaloverzicht
+
+### Toernooidag
+1. **Wedstrijddag Poules**: Overpoelen (afwezigen/te zware judoka's)
+2. **"Naar zaaloverzicht"**: Per categorie doorsturen (knop wordt groen)
+3. **Zaaloverzicht**: Witte chip klikken → mat toewijzen + wedstrijdschema genereren
+4. **Mat Interface**: Wedstrijden afwerken
 
 ---
 
