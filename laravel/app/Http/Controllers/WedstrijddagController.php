@@ -89,8 +89,13 @@ class WedstrijddagController extends Controller
             ];
         });
 
-        // Get sent-to-zaaloverzicht status from session
-        $sentToZaaloverzicht = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
+        // Get sent-to-zaaloverzicht status from database (doorgestuurd_op column)
+        $sentToZaaloverzicht = $toernooi->poules()
+            ->whereNotNull('doorgestuurd_op')
+            ->get()
+            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->map(fn() => true)
+            ->toArray();
 
         return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht'));
     }
@@ -171,12 +176,16 @@ class WedstrijddagController extends Controller
             'category' => 'required|string',
         ]);
 
-        // Store in session that this category has been sent to zaaloverzicht
-        $sent = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
-        $sent[$validated['category']] = true;
-        session(["toernooi_{$toernooi->id}_wedstrijddag_sent" => $sent]);
+        // Parse category key (leeftijdsklasse|gewichtsklasse)
+        [$leeftijdsklasse, $gewichtsklasse] = explode('|', $validated['category']);
 
-        return response()->json(['success' => true]);
+        // Update all poules for this category with doorgestuurd_op timestamp
+        $updated = $toernooi->poules()
+            ->where('leeftijdsklasse', $leeftijdsklasse)
+            ->where('gewichtsklasse', $gewichtsklasse)
+            ->update(['doorgestuurd_op' => now()]);
+
+        return response()->json(['success' => true, 'updated' => $updated]);
     }
 
     public function nieuwePoule(Request $request, Toernooi $toernooi): JsonResponse
