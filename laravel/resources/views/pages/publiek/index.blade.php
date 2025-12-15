@@ -103,7 +103,7 @@
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
                                 <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full" :class="'band-' + judoka.band"></span><span class="text-gray-400">)</span>
                                 <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
-                                <span class="text-xs text-gray-400 block" x-text="(judoka.leeftijdsklasse || '-') + ' / ' + (judoka.gewichtsklasse || '-')"></span>
+                                <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse || '-'"></span>
                             </div>
                             <button @click="toggleFavoriet(judoka.id)"
                                     class="favorite-star text-2xl"
@@ -453,7 +453,10 @@
                         </div>
                         @if($mat->huidigePoule)
                         <div class="text-blue-200 text-sm mt-1">
-                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }} / {{ $mat->huidigePoule->gewichtsklasse ?? '-' }}
+                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }}
+                            @if($mat->huidigePoule->gewichtsklasse && $mat->huidigePoule->gewichtsklasse !== 'onbekend')
+                            / {{ $mat->huidigePoule->gewichtsklasse }}
+                            @endif
                         </div>
                         @endif
                     </div>
@@ -545,7 +548,7 @@
                     <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
                             class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
                             :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
-                        <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }} kg</span>
+                        <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse === 'onbekend' ? 'Onbekend gewicht' : $gewichtsklasse }}</span>
                         <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
                     </button>
                     @endforeach
@@ -557,7 +560,7 @@
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-                        <span class="font-medium text-gray-700">{{ $gewichtsklasse }} kg - {{ $judokas->count() }} judoka's</span>
+                        <span class="font-medium text-gray-700">{{ $gewichtsklasse === 'onbekend' ? 'Onbekend gewicht' : $gewichtsklasse }} - {{ $judokas->count() }} judoka's</span>
                         <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
@@ -643,7 +646,7 @@
                                     <div class="flex justify-between items-center flex-wrap gap-2">
                                         <div>
                                             <span class="font-bold">P<span x-text="poule.nummer"></span></span>
-                                            <span x-text="kortLeeftijd(poule.leeftijdsklasse) + ' / ' + (poule.gewichtsklasse || '-')"></span>
+                                            <span x-text="kortLeeftijd(poule.leeftijdsklasse) + (poule.gewichtsklasse && poule.gewichtsklasse !== 'onbekend' ? ' / ' + poule.gewichtsklasse : '')"></span>
                                             <span x-show="poule.mat" class="text-blue-200">, mat <span x-text="poule.mat"></span></span>
                                         </div>
                                         <div x-show="poule.blok" class="text-blue-200 text-sm">
@@ -702,8 +705,10 @@
                     @foreach($poules as $poule)
                     <div class="bg-white rounded-lg shadow overflow-hidden">
                         <div class="bg-purple-600 text-white px-4 py-2">
-                            <span class="font-bold">{{ $poule->gewichtsklasse ?? '-' }}</span>
-                            <span class="text-purple-200 text-sm">- Poule {{ $poule->nummer }}</span>
+                            @if($poule->gewichtsklasse && $poule->gewichtsklasse !== 'onbekend')
+                            <span class="font-bold">{{ $poule->gewichtsklasse }}</span> -
+                            @endif
+                            <span class="text-purple-200 text-sm">Poule {{ $poule->nummer }}</span>
                         </div>
                         <div class="divide-y">
                             @foreach($poule->standings as $index => $standing)
