@@ -65,30 +65,24 @@
                 <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="bg-gray-200 border-b-2 border-gray-400">
-                            <th class="px-2 py-2 text-center font-bold text-gray-700 w-10">Nr</th>
-                            <th class="px-3 py-2 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[220px]">Naam</th>
+                            <th class="px-1 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[180px]">Naam</th>
                             <template x-for="(w, idx) in poule.wedstrijden" :key="'h-' + idx">
-                                <th class="px-0 py-1 text-center font-bold text-gray-700 min-w-[52px] border-l border-gray-300" colspan="2">
+                                <th class="px-0 py-0.5 text-center font-bold text-gray-700 w-10 border-l border-gray-300" colspan="2">
                                     <div class="text-xs" x-text="(idx + 1)"></div>
-                                    <div class="text-xs text-gray-500 font-normal flex justify-center">
-                                        <span class="w-6">W</span><span class="w-6">J</span>
-                                    </div>
                                 </th>
                             </template>
-                            <th class="px-2 py-2 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-12">WP</th>
-                            <th class="px-2 py-2 text-center font-bold text-gray-700 bg-blue-100 w-12">JP</th>
-                            <th class="px-2 py-2 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-12">Plts</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-8 text-xs">W</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 w-8 text-xs">J</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-6 text-xs">#</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template x-for="(judoka, jIdx) in poule.judokas" :key="judoka.id">
                             <tr class="border-b">
-                                <!-- Nummer -->
-                                <td class="px-2 py-2 text-center font-bold text-gray-600" x-text="jIdx + 1"></td>
-                                <!-- Judoka naam -->
-                                <td class="px-3 py-2 font-medium sticky left-0 bg-white border-r border-gray-200">
-                                    <span class="font-bold" x-text="judoka.naam"></span>
-                                    <span class="text-gray-500 font-normal text-sm" x-text="judoka.club ? ' (' + judoka.club + ')' : ''"></span>
+                                <!-- Nr + Naam compact -->
+                                <td class="px-1 py-1 font-medium sticky left-0 bg-white border-r border-gray-200 text-xs">
+                                    <span class="font-bold" x-text="(jIdx + 1) + '. ' + judoka.naam"></span>
+                                    <span class="text-gray-400" x-text="judoka.club ? ' (' + judoka.club + ')' : ''"></span>
                                 </td>
 
                                 <!-- Wedstrijd cellen -->
@@ -103,9 +97,9 @@
                                                 type="text"
                                                 inputmode="numeric"
                                                 maxlength="1"
-                                                class="w-6 text-center border border-gray-300 rounded-sm text-xs py-0.5 font-bold"
-                                                :class="getWpClass(w.wpScores[judoka.id])"
-                                                :value="w.wpScores[judoka.id] ?? ''"
+                                                class="w-5 text-center border border-gray-300 rounded-sm text-xs py-0.5 font-bold"
+                                                :class="getWpClass(getWP(w, judoka.id))"
+                                                :value="getWP(w, judoka.id)"
                                                 @input="updateWP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
@@ -114,8 +108,8 @@
                                                 type="text"
                                                 inputmode="numeric"
                                                 maxlength="2"
-                                                class="w-6 text-center border border-gray-300 rounded-sm text-xs py-0.5"
-                                                :value="w.jpScores[judoka.id] ?? ''"
+                                                class="w-5 text-center border border-gray-300 rounded-sm text-xs py-0.5"
+                                                :value="getJP(w, judoka.id)"
                                                 @input="updateJP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
@@ -124,13 +118,13 @@
                                 </template>
 
                                 <!-- Totaal WP -->
-                                <td class="px-2 py-2 text-center font-bold bg-blue-50 border-l-2 border-blue-300 text-blue-800"
+                                <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 border-l-2 border-blue-300 text-blue-800 text-xs"
                                     x-text="getTotaalWP(poule, judoka.id)"></td>
                                 <!-- Totaal JP -->
-                                <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800"
+                                <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 text-blue-800 text-xs"
                                     x-text="getTotaalJP(poule, judoka.id)"></td>
                                 <!-- Plaats -->
-                                <td class="px-2 py-2 text-center font-bold border-l-2 border-yellow-300"
+                                <td class="px-0.5 py-0.5 text-center font-bold border-l-2 border-yellow-300 text-xs"
                                     :class="getPlaatsClass(getPlaats(poule, judoka.id))"
                                     x-text="getPlaats(poule, judoka.id)"></td>
                             </tr>
@@ -218,6 +212,17 @@ function matInterface() {
             return wedstrijd.wit.id == judokaId || wedstrijd.blauw.id == judokaId;
         },
 
+        // Getters voor reactieve waarden
+        getWP(wedstrijd, judokaId) {
+            const val = wedstrijd.wpScores?.[judokaId];
+            return val !== undefined ? val : '';
+        },
+
+        getJP(wedstrijd, judokaId) {
+            const val = wedstrijd.jpScores?.[judokaId];
+            return val !== undefined ? val : '';
+        },
+
         getWpClass(wp) {
             wp = parseInt(wp);
             if (wp === 2) return 'bg-green-200 text-green-800';
@@ -234,15 +239,16 @@ function matInterface() {
 
         updateWP(wedstrijd, judokaId, value) {
             const wp = parseInt(value) || 0;
-            const opponentId = wedstrijd.wit.id === judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
+            const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
-            wedstrijd.wpScores[judokaId] = wp;
+            // Reassign objects voor Alpine reactivity
+            wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
 
             // Auto-set opponent WP
             if (wp === 2) {
-                wedstrijd.wpScores[opponentId] = 0;
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 0 };
             } else if (wp === 0) {
-                wedstrijd.wpScores[opponentId] = 2;
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 2 };
             }
         },
 
@@ -250,13 +256,13 @@ function matInterface() {
             const jp = parseInt(value) || 0;
             const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
-            wedstrijd.jpScores[judokaId] = jp;
+            // Reassign objects voor Alpine reactivity
+            wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: jp };
 
             // Logica: als JP > 0, dan WP=2 voor winnaar, WP=0 en JP=0 voor verliezer
             if (jp > 0) {
-                wedstrijd.wpScores[judokaId] = 2;
-                wedstrijd.wpScores[opponentId] = 0;
-                wedstrijd.jpScores[opponentId] = 0;
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 2, [opponentId]: 0 };
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
             }
         },
 
