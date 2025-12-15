@@ -171,15 +171,23 @@ class BlokController extends Controller
 
     /**
      * Assign mats to poules and redirect to zaaloverzicht (voorbereiding)
+     * Removes any existing wedstrijden so categories are INACTIVE
      */
     public function zetOpMat(Toernooi $toernooi): RedirectResponse
     {
+        // Remove all existing wedstrijden (categories should be INACTIVE in voorbereiding)
+        // After overpoulen, judokas may have changed, so old wedstrijden are invalid
+        \App\Models\Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))->delete();
+
+        // Clear the session markers for sent categories
+        session()->forget("toernooi_{$toernooi->id}_wedstrijddag_sent");
+
         // Assign mats to poules (balanced distribution)
         $this->verdelingService->verdeelOverMatten($toernooi);
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', 'Poules verdeeld over matten');
+            ->with('success', 'Poules verdeeld over matten (inactief)');
     }
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
