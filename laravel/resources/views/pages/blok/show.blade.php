@@ -19,14 +19,10 @@
                 Sluit Weging
             </button>
         </form>
-        @else
-        <form action="{{ route('toernooi.blok.genereer-wedstrijdschemas', [$toernooi, $blok]) }}" method="POST" class="inline">
-            @csrf
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Genereer Schema's
-            </button>
-        </form>
         @endif
+        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
+            Naar Zaaloverzicht
+        </a>
     </div>
 </div>
 

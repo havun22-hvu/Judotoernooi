@@ -192,17 +192,6 @@ class BlokController extends Controller
             ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");
     }
 
-    public function genereerWedstrijdschemas(Toernooi $toernooi, Blok $blok): RedirectResponse
-    {
-        $gegenereerd = $this->wedstrijdService->genereerWedstrijdSchemas($blok);
-
-        $totaal = array_sum($gegenereerd);
-
-        return redirect()
-            ->route('toernooi.blok.show', [$toernooi, $blok])
-            ->with('success', "{$totaal} wedstrijden gegenereerd voor {$blok->naam}");
-    }
-
     public function zaaloverzicht(Toernooi $toernooi): View
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
@@ -376,37 +365,6 @@ class BlokController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Poule {$poule->nummer} verplaatst",
-        ]);
-    }
-
-    /**
-     * Generate wedstrijden for a single poule (from zaaloverzicht)
-     */
-    public function genereerPouleWedstrijden(Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $validated = $request->validate([
-            'poule_id' => 'required|exists:poules,id',
-        ]);
-
-        $poule = Poule::findOrFail($validated['poule_id']);
-
-        // Verify poule belongs to this toernooi
-        if ($poule->toernooi_id !== $toernooi->id) {
-            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
-        }
-
-        // Check if wedstrijden already exist
-        if ($poule->wedstrijden()->count() > 0) {
-            return response()->json(['success' => false, 'error' => 'Poule heeft al wedstrijden'], 400);
-        }
-
-        // Generate wedstrijden
-        $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
-
-        return response()->json([
-            'success' => true,
-            'wedstrijden' => count($wedstrijden),
-            'message' => count($wedstrijden) . ' wedstrijden gegenereerd',
         ]);
     }
 

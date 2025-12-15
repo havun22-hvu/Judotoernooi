@@ -95,11 +95,9 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('blok/update-gewenst', [BlokController::class, 'updateGewenst'])->name('blok.update-gewenst');
         Route::post('blok/zet-op-mat', [BlokController::class, 'zetOpMat'])->name('blok.zet-op-mat');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
-        Route::post('blok/{blok}/genereer-wedstrijdschemas', [BlokController::class, 'genereerWedstrijdschemas'])->name('blok.genereer-wedstrijdschemas');
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
         Route::post('blok/activeer-categorie', [BlokController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
         Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
-        Route::post('blok/genereer-poule-wedstrijden', [BlokController::class, 'genereerPouleWedstrijden'])->name('blok.genereer-poule-wedstrijden');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
 
         // Clubs management
