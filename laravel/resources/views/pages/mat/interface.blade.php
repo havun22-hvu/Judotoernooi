@@ -94,29 +94,29 @@
                                 <!-- Wedstrijd cellen -->
                                 <template x-for="(w, wIdx) in poule.wedstrijden" :key="'c-' + judoka.id + '-' + wIdx">
                                     <td class="px-0 py-1 text-center border-l"
-                                        :class="isJudokaInWedstrijd(judoka.id, w) ? 'border-gray-200 bg-white' : 'bg-gray-600 border-gray-500'"
+                                        :class="speeltInWedstrijd(judoka.id, w) ? 'border-gray-200 bg-white' : 'bg-gray-600 border-gray-500'"
                                         colspan="2">
                                         <!-- Alleen inputs tonen als judoka in deze wedstrijd speelt -->
-                                        <div x-show="isJudokaInWedstrijd(judoka.id, w)" class="flex justify-center gap-0.5">
-                                            <!-- WP: editable input -->
+                                        <div x-show="speeltInWedstrijd(judoka.id, w)" class="flex justify-center gap-0.5">
+                                            <!-- WP: editable input, geen pijltjes -->
                                             <input
-                                                type="number"
-                                                min="0"
-                                                max="2"
+                                                type="text"
+                                                inputmode="numeric"
+                                                maxlength="1"
                                                 class="w-8 text-center border border-gray-300 rounded text-sm py-1 font-bold"
                                                 :class="getWpClass(w.wpScores[judoka.id])"
-                                                :value="w.wpScores[judoka.id] || ''"
+                                                :value="w.wpScores[judoka.id] ?? ''"
                                                 @input="updateWP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
-                                            <!-- JP: input met datalist voor dropdown suggesties -->
+                                            <!-- JP: editable + dropdown suggesties, geen pijltjes -->
                                             <input
-                                                type="number"
-                                                min="0"
-                                                max="10"
+                                                type="text"
+                                                inputmode="numeric"
                                                 list="jp-options"
+                                                maxlength="2"
                                                 class="w-8 text-center border border-gray-300 rounded text-sm py-1"
-                                                :value="w.jpScores[judoka.id] || ''"
+                                                :value="w.jpScores[judoka.id] ?? ''"
                                                 @input="updateJP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
@@ -222,8 +222,9 @@ function matInterface() {
             });
         },
 
-        isJudokaInWedstrijd(judokaId, wedstrijd) {
-            return wedstrijd.wit.id === judokaId || wedstrijd.blauw.id === judokaId;
+        // Check of judoka in deze wedstrijd speelt (== voor type-onafhankelijk)
+        speeltInWedstrijd(judokaId, wedstrijd) {
+            return wedstrijd.wit.id == judokaId || wedstrijd.blauw.id == judokaId;
         },
 
         getWpClass(wp) {
@@ -299,7 +300,7 @@ function matInterface() {
         getTotaalWP(poule, judokaId) {
             let totaal = 0;
             poule.wedstrijden.forEach(w => {
-                if (this.isJudokaInWedstrijd(judokaId, w)) {
+                if (this.speeltInWedstrijd(judokaId, w)) {
                     totaal += parseInt(w.wpScores?.[judokaId]) || 0;
                 }
             });
@@ -309,7 +310,7 @@ function matInterface() {
         getTotaalJP(poule, judokaId) {
             let totaal = 0;
             poule.wedstrijden.forEach(w => {
-                if (this.isJudokaInWedstrijd(judokaId, w)) {
+                if (this.speeltInWedstrijd(judokaId, w)) {
                     totaal += parseInt(w.jpScores?.[judokaId]) || 0;
                 }
             });
