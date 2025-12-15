@@ -234,6 +234,52 @@ Zoekt judoka's op naam.
 }
 ```
 
+### Poule Klaar voor Spreker
+
+**POST** `/toernooi/{id}/mat/poule-klaar`
+
+Markeert een poule als klaar voor de spreker (alle wedstrijden gespeeld).
+
+**Body:**
+
+```json
+{
+  "poule_id": 5
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Poule 5 is klaar voor de spreker"
+}
+```
+
+### Poule Afgeroepen (Prijzen Uitgereikt)
+
+**POST** `/toernooi/{id}/spreker/afgeroepen`
+
+Markeert een poule als afgeroepen (prijzen zijn uitgereikt, naar archief).
+
+**Body:**
+
+```json
+{
+  "poule_id": 5
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Poule 5 afgeroepen"
+}
+```
+
 ## Error Responses
 
 Bij fouten wordt een JSON response met de volgende structuur geretourneerd:

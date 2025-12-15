@@ -150,6 +150,8 @@ Poules met judoka's.
 | gewichtsklasse | varchar(10) | Gewichtsklasse |
 | aantal_judokas | tinyint | Cached count |
 | aantal_wedstrijden | smallint | Cached count |
+| spreker_klaar | timestamp | Tijdstip klaar voor spreker |
+| afgeroepen_at | timestamp | Tijdstip prijzen uitgereikt |
 
 ### poule_judoka (pivot)
 
