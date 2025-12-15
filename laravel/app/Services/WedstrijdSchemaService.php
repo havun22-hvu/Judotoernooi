@@ -5,30 +5,11 @@ namespace App\Services;
 use App\Models\Blok;
 use App\Models\Mat;
 use App\Models\Poule;
-use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use Illuminate\Support\Facades\DB;
 
 class WedstrijdSchemaService
 {
-    /**
-     * Generate match schedules for all pools in a block
-     */
-    public function genereerWedstrijdSchemas(Blok $blok): array
-    {
-        return DB::transaction(function () use ($blok) {
-            $poules = $blok->poules()->with('judokas')->get();
-            $gegenereerd = [];
-
-            foreach ($poules as $poule) {
-                $wedstrijden = $this->genereerWedstrijdenVoorPoule($poule);
-                $gegenereerd[$poule->id] = count($wedstrijden);
-            }
-
-            return $gegenereerd;
-        });
-    }
-
     /**
      * Generate matches for a single pool
      * Only includes active judokas (not absent, weight within class)
