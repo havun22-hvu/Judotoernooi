@@ -243,11 +243,11 @@ class BlokController extends Controller
             }
         }
 
-        // Redirect to mat interface
+        // Stay on zaaloverzicht (chip turns green to indicate activation)
         return redirect()
-            ->route('toernooi.mat.interface', $toernooi)
-            ->with('success', "Categorie {$leeftijdsklasse} {$gewichtsklasse} geactiveerd" .
-                ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden gegenereerd)" : ""));
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} geactiveerd" .
+                ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden)" : ""));
     }
 
     /**
