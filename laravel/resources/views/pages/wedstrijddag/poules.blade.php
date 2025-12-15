@@ -43,7 +43,7 @@
         <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 actieve judoka's:</p>
         <div id="problematische-links" class="flex flex-wrap gap-2">
             @foreach($problematischePoules as $p)
-            <a href="#poule-{{ $p['id'] }}" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
+            <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                 #{{ $p['nummer'] }} {{ $p['leeftijdsklasse'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
@@ -247,6 +247,26 @@
 <script>
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
+
+function scrollToPoule(event, pouleId) {
+    event.preventDefault();
+    const pouleCard = document.getElementById('poule-' + pouleId);
+    if (pouleCard) {
+        // Scroll with offset so title is clearly visible (100px from top)
+        const offset = 100;
+        const elementPosition = pouleCard.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({
+            top: elementPosition - offset,
+            behavior: 'smooth'
+        });
+
+        // Flash effect to highlight the poule
+        pouleCard.classList.add('ring-4', 'ring-yellow-400');
+        setTimeout(() => {
+            pouleCard.classList.remove('ring-4', 'ring-yellow-400');
+        }, 2000);
+    }
+}
 
 async function verwijderPoule(pouleId, pouleNummer) {
     if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
