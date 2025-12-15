@@ -8,8 +8,8 @@
 4. [Blok/Mat Verdeling](#blokmat-verdeling)
 5. [Toernooidag](#toernooidag)
 6. [Weging](#weging)
-7. [Overpoelen](#overpoelen)
-8. [Zaaloverzicht & Wedstrijdschema](#zaaloverzicht--wedstrijdschema)
+7. [Overpoelen (Wedstrijddag Poules)](#overpoelen-wedstrijddag-poules)
+8. [Zaaloverzicht & Activatie](#zaaloverzicht--activatie)
 9. [Mat Interface](#mat-interface)
 10. [Spreker & Prijsuitreiking](#spreker--prijsuitreiking)
 
@@ -21,21 +21,23 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 1. Toernooi aanmaken
 2. Deelnemers importeren
 3. Poules genereren
-4. Blokkenverdeling
-5. **Resultaat:** Weeglijst, weegkaarten, preview zaaloverzicht
+4. Blokkenverdeling (categorieën over tijdsblokken)
+5. "Naar Zaaloverzicht" → preview + weeglijst maken
+6. **Resultaat:** Weeglijst, weegkaarten, zaaloverzicht (nog inactief)
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
 2. Einde weegtijd per blok
-3. Overpoelen (te zware judoka's verplaatsen)
-4. Poules in orde maken
-5. Categorie naar zaaloverzicht sturen
-6. Wedstrijdschema genereren
-7. Wedstrijden op mat
-8. Poule klaar → spreker voor prijsuitreiking
-9. Eindoverzicht prijsuitreikingen
+3. **Wedstrijddag Poules** → overpoelen (te zware/afwezige judoka's)
+4. Per categorie: **"Naar zaaloverzicht"** klikken (knop wordt groen)
+5. **Zaaloverzicht** → witte chip klikken → mat toewijzen + wedstrijdschema genereren (chip wordt groen)
+6. Wedstrijden op mat
+7. Poule klaar → spreker voor prijsuitreiking
 
-**Belangrijk:** Tijdens de voorbereiding bestaat er geen "aanwezig/afwezig" status. Alle aangemelde judoka's worden meegeteld. De aanwezigheidsstatus wordt pas relevant op de toernooidag.
+**Belangrijk:**
+- Tijdens voorbereiding: geen aanwezig/afwezig status
+- Matten worden PAS toegewezen bij activatie in zaaloverzicht (niet eerder!)
+- Wedstrijdschema's worden PAS gegenereerd bij activatie (chip klikken)
 
 ## Voorbereiding
 
@@ -203,47 +205,68 @@ Na sluiten:
 - Geen weging meer mogelijk voor dit blok
 - Overpoelen kan beginnen
 
-## Overpoelen
+## Overpoelen (Wedstrijddag Poules)
 
 Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden verplaatst.
 
-### Workflow
+### Pagina: Wedstrijddag Poules
 
-1. Ga naar **Wedstrijddag** pagina
-2. Je ziet judoka's die buiten gewichtsklasse vallen (doorgestreept)
-3. Sleep judoka naar **wachtruimte**
-4. Of: markeer als afwezig
-5. Statistieken (aantal judoka's, wedstrijden) updaten automatisch
+1. Ga naar **Wedstrijddag Poules** pagina
+2. Per blok zie je alle categorieën met hun poules
+3. **Doorgestreepte judoka's** = afwezig OF buiten gewichtsklasse
+4. **Wachtruimte** (rechts) = judoka's die overgepouled moeten worden
 
-### Jurytafel: Verdelen naar Poules
+### Workflow Overpoelen
 
-De jurytafel/organisator verdeelt judoka's uit de wachtruimte:
+1. Bekijk doorgestreepte judoka's in poules
+2. Klik **−** knop om uit poule te verwijderen (afwezigen)
+3. Sleep judoka's uit wachtruimte naar juiste poule
+4. Let op: max 6 judoka's per poule
+5. Statistieken updaten automatisch
 
-1. Bekijk judoka's in wachtruimte
-2. Sleep naar juiste poule in zwaardere gewichtsklasse
-3. Let op: max 6 judoka's per poule
-4. Bij veel afwezigen: overweeg poules samenvoegen
+### Naar Zaaloverzicht Sturen
 
-**Tip:** Check de aansluiting - zwaardere klasse moet in zelfde/volgend blok zitten
+Wanneer een categorie klaar is (overgepouled):
 
-## Zaaloverzicht & Wedstrijdschema
+1. Klik **"Naar zaaloverzicht"** knop bij de categorie
+2. Knop wordt **groen** met "✓ Doorgestuurd"
+3. In zaaloverzicht verschijnt de categorie als **witte chip**
 
-### Categorie naar Zaaloverzicht
+**Knop kleuren:**
+| Kleur | Status |
+|-------|--------|
+| Blauw | Nog niet doorgestuurd |
+| Groen "✓ Doorgestuurd" | Klaar voor zaaloverzicht |
 
-Wanneer een gewichtscategorie klaar is (alle judoka's gewogen, overgepouled):
+## Zaaloverzicht & Activatie
 
-1. Klik **Naar Zaaloverzicht** bij de categorie
-2. Controleer of poules goed over matten verdeeld zijn
-3. Pas eventueel aan (sleep poule naar andere mat)
+### Chip Kleuren in Zaaloverzicht
 
-### Wedstrijdschema Genereren
+Per blok zie je chips voor elke categorie:
 
-Per categorie op zaaloverzicht:
+| Chip kleur | Betekenis | Actie |
+|------------|-----------|-------|
+| **Grijs** | Niet doorgestuurd | Ga naar Wedstrijddag Poules |
+| **Wit** | Doorgestuurd, klaar voor activatie | Klik om te activeren |
+| **Groen** ✓ | Geactiveerd (wedstrijden op mat) | Klik voor mat interface |
 
-1. Klik **Genereer Wedstrijdschema**
-2. Systeem maakt wedstrijden aan per poule
-3. Optimale volgorde: elke judoka krijgt rust tussen wedstrijden
-4. Categorie is nu klaar voor de mat
+### Categorie Activeren
+
+Klik op een **witte chip** om te activeren:
+
+1. Systeem wijst poules toe aan matten (load balanced)
+2. Wedstrijdschema wordt gegenereerd per poule
+3. Alleen actieve judoka's komen in schema (niet doorgestreepte!)
+4. Chip wordt **groen** met ✓
+5. Categorie is nu klaar voor de mat
+
+**Let op:** Doorgestreepte judoka's (afwezig/verkeerd gewicht) worden NIET meegenomen in het wedstrijdschema!
+
+### Poules Verplaatsen
+
+Na activatie kun je poules nog verplaatsen tussen matten:
+1. Sleep poule naar andere mat
+2. Wedstrijden tellen worden automatisch bijgewerkt
 
 ## Mat Interface
 
