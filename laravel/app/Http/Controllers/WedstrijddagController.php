@@ -92,16 +92,7 @@ class WedstrijddagController extends Controller
         // Get sent-to-zaaloverzicht status from session
         $sentToZaaloverzicht = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
 
-        // Get activated categories (have wedstrijden generated)
-        $activatedCategories = $poules
-            ->filter(fn($p) => $p->wedstrijden()->count() > 0)
-            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
-            ->keys()
-            ->flip()
-            ->map(fn() => true)
-            ->toArray();
-
-        return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht', 'activatedCategories'));
+        return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht'));
     }
 
     public function verplaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
