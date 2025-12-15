@@ -369,21 +369,6 @@ class BlokController extends Controller
     }
 
     /**
-     * Reset blok toewijzingen - ALLES (ook vastgezette)
-     */
-    public function resetVerdeling(Toernooi $toernooi): JsonResponse
-    {
-        // Reset ALL categories (including pinned)
-        $updated = $toernooi->poules()
-            ->update(['blok_id' => null, 'blok_vast' => false]);
-
-        // Clear any variant session
-        session()->forget('blok_varianten');
-
-        return response()->json(['success' => true, 'reset' => $updated]);
-    }
-
-    /**
      * Verplaats een categorie naar een blok (drag & drop)
      * vast parameter determines if category is pinned
      */
