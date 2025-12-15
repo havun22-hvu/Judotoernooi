@@ -890,12 +890,14 @@ class BlokMatVerdelingService
 
     /**
      * Get hall overview (zaaloverzicht)
+     * Counts only active judoka's (not absent, weight within class)
      */
     public function getZaalOverzicht(Toernooi $toernooi): array
     {
         $overzicht = [];
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
-        foreach ($toernooi->blokken()->with('poules.mat')->get() as $blok) {
+        foreach ($toernooi->blokken()->with('poules.mat', 'poules.judokas')->get() as $blok) {
             $blokData = [
                 'nummer' => $blok->nummer,
                 'naam' => $blok->naam,
@@ -905,20 +907,29 @@ class BlokMatVerdelingService
 
             foreach ($toernooi->matten as $mat) {
                 $poules = $blok->poules
-                    ->where('mat_id', $mat->id)
-                    ->filter(fn($p) => $p->aantal_judokas > 0); // Filter empty poules
+                    ->where('mat_id', $mat->id);
 
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
-                    'poules' => $poules->map(fn($p) => [
-                        'id' => $p->id,
-                        'nummer' => $p->nummer,
-                        'titel' => $p->titel,
-                        'leeftijdsklasse' => $p->leeftijdsklasse,
-                        'gewichtsklasse' => $p->gewichtsklasse,
-                        'judokas' => $p->aantal_judokas,
-                        'wedstrijden' => $p->aantal_wedstrijden,
-                    ])->values()->toArray(),
+                    'poules' => $poules->map(function($p) use ($tolerantie) {
+                        // Count only active judoka's (not doorgestreept)
+                        $actieveJudokas = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
+                        $aantalActief = $actieveJudokas->count();
+                        $aantalWedstrijden = $aantalActief > 1 ? intval(($aantalActief * ($aantalActief - 1)) / 2) : 0;
+
+                        return [
+                            'id' => $p->id,
+                            'nummer' => $p->nummer,
+                            'titel' => $p->titel,
+                            'leeftijdsklasse' => $p->leeftijdsklasse,
+                            'gewichtsklasse' => $p->gewichtsklasse,
+                            'judokas' => $aantalActief,
+                            'wedstrijden' => $aantalWedstrijden,
+                        ];
+                    })
+                    ->filter(fn($p) => $p['judokas'] > 0) // Filter empty poules
+                    ->values()
+                    ->toArray(),
                 ];
             }
 

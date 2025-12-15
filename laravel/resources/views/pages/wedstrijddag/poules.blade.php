@@ -53,13 +53,24 @@
                         </button>
                     </div>
                     @if($totaalActiefInCategorie > 0)
+                    @php
+                        $isActivated = isset($activatedCategories[$category['key']]);
+                    @endphp
+                    @if($isActivated)
+                    {{-- Groen: categorie is geactiveerd in zaaloverzicht --}}
+                    <span class="bg-green-600 text-white px-3 py-1.5 text-sm rounded flex items-center gap-1">
+                        ✓ Actief
+                    </span>
+                    @else
                     <button
                         @click="naarZaaloverzicht('{{ $jsKey }}')"
-                        :class="sentCategories['{{ $jsKey }}'] ? 'ring-2 ring-green-500 ring-offset-2' : ''"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 text-sm rounded transition-all"
+                        :class="sentCategories['{{ $jsKey }}'] ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
+                        class="text-white px-3 py-1.5 text-sm rounded transition-all"
                     >
-                        Naar zaaloverzicht
+                        <span x-show="!sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
+                        <span x-show="sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
                     </button>
+                    @endif
                     @else
                     <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
                     @endif
