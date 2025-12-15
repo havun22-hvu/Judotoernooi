@@ -48,19 +48,19 @@
 
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-4">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold">{{ $toernooi->naam }}</h1>
-                    <p class="text-blue-200">{{ $toernooi->datum->format('d F Y') }}</p>
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-baseline gap-2 flex-wrap min-w-0">
+                    <h1 class="text-xl font-bold truncate">{{ $toernooi->naam }}</h1>
+                    <span class="text-blue-200 text-sm whitespace-nowrap">{{ $toernooi->datum->format('d M Y') }}</span>
                 </div>
-                <div class="flex items-center gap-4">
-                    <span class="bg-blue-500 px-3 py-1 rounded-full text-sm">
-                        {{ $totaalJudokas }} deelnemers
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="bg-blue-500 px-2 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap">
+                        {{ $totaalJudokas }} <span class="hidden sm:inline">deelnemers</span>
                     </span>
                     @if($poulesGegenereerd)
-                    <span class="bg-green-500 px-3 py-1 rounded-full text-sm">
-                        🟢 LIVE
+                    <span class="bg-green-500 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
+                        LIVE
                     </span>
                     @endif
                 </div>
