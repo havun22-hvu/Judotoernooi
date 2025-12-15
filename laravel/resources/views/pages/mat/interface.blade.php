@@ -68,10 +68,10 @@
                             <th class="px-2 py-2 text-center font-bold text-gray-700 w-10">Nr</th>
                             <th class="px-3 py-2 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[220px]">Naam</th>
                             <template x-for="(w, idx) in poule.wedstrijden" :key="'h-' + idx">
-                                <th class="px-0 py-2 text-center font-bold text-gray-700 min-w-[70px] border-l border-gray-300" colspan="2">
-                                    <div x-text="'Wed ' + (idx + 1)"></div>
+                                <th class="px-0 py-1 text-center font-bold text-gray-700 min-w-[52px] border-l border-gray-300" colspan="2">
+                                    <div class="text-xs" x-text="(idx + 1)"></div>
                                     <div class="text-xs text-gray-500 font-normal flex justify-center">
-                                        <span class="w-8">WP</span><span class="w-8">JP</span>
+                                        <span class="w-6">W</span><span class="w-6">J</span>
                                     </div>
                                 </th>
                             </template>
@@ -93,29 +93,28 @@
 
                                 <!-- Wedstrijd cellen -->
                                 <template x-for="(w, wIdx) in poule.wedstrijden" :key="'c-' + judoka.id + '-' + wIdx">
-                                    <td class="px-0 py-1 text-center border-l"
+                                    <td class="px-0 py-0.5 text-center border-l"
                                         :class="speeltInWedstrijd(judoka.id, w) ? 'border-gray-200 bg-white' : 'bg-gray-600 border-gray-500'"
                                         colspan="2">
                                         <!-- Alleen inputs tonen als judoka in deze wedstrijd speelt -->
-                                        <div x-show="speeltInWedstrijd(judoka.id, w)" class="flex justify-center gap-0.5">
-                                            <!-- WP: editable input, geen pijltjes -->
+                                        <div x-show="speeltInWedstrijd(judoka.id, w)" class="flex justify-center gap-0">
+                                            <!-- WP -->
                                             <input
                                                 type="text"
                                                 inputmode="numeric"
                                                 maxlength="1"
-                                                class="w-8 text-center border border-gray-300 rounded text-sm py-1 font-bold"
+                                                class="w-6 text-center border border-gray-300 rounded-sm text-xs py-0.5 font-bold"
                                                 :class="getWpClass(w.wpScores[judoka.id])"
                                                 :value="w.wpScores[judoka.id] ?? ''"
                                                 @input="updateWP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
-                                            <!-- JP: editable + dropdown suggesties, geen pijltjes -->
+                                            <!-- JP -->
                                             <input
                                                 type="text"
                                                 inputmode="numeric"
-                                                list="jp-options"
                                                 maxlength="2"
-                                                class="w-8 text-center border border-gray-300 rounded text-sm py-1"
+                                                class="w-6 text-center border border-gray-300 rounded-sm text-xs py-0.5"
                                                 :value="w.jpScores[judoka.id] ?? ''"
                                                 @input="updateJP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
@@ -145,14 +144,6 @@
     <div x-show="poules.length === 0 && blokId && matId" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
         Geen poules op deze mat in dit blok
     </div>
-
-    <!-- Datalist voor JP dropdown suggesties -->
-    <datalist id="jp-options">
-        <option value="0">
-        <option value="5">
-        <option value="7">
-        <option value="10">
-    </datalist>
 </div>
 
 <script>
@@ -257,14 +248,15 @@ function matInterface() {
 
         updateJP(wedstrijd, judokaId, value) {
             const jp = parseInt(value) || 0;
-            const opponentId = wedstrijd.wit.id === judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
+            const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
             wedstrijd.jpScores[judokaId] = jp;
 
-            // Logica: als JP > 0, dan WP automatisch 2
+            // Logica: als JP > 0, dan WP=2 voor winnaar, WP=0 en JP=0 voor verliezer
             if (jp > 0) {
                 wedstrijd.wpScores[judokaId] = 2;
                 wedstrijd.wpScores[opponentId] = 0;
+                wedstrijd.jpScores[opponentId] = 0;
             }
         },
 
