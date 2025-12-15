@@ -26,8 +26,10 @@ class WedstrijddagController extends Controller
             ->get()
             ->filter(fn($judoka) => !$judoka->isGewichtBinnenKlasse());
 
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
         // Group by blok first, then by category within each blok
-        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte) {
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
             // Group by category and sort
@@ -44,7 +46,8 @@ class WedstrijddagController extends Controller
             ];
 
             $categories = $blokPoules
-                ->filter(fn($poule) => $poule->judokas->count() > 0) // Filter lege poules
+                // Filter: toon alleen poules met actieve judoka's (doorgestreepte niet meetellen)
+                ->filter(fn($poule) => $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count() > 0)
                 ->groupBy(function ($poule) {
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
                 })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
@@ -89,7 +92,16 @@ class WedstrijddagController extends Controller
         // Get sent-to-zaaloverzicht status from session
         $sentToZaaloverzicht = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
 
-        return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht'));
+        // Get activated categories (have wedstrijden generated)
+        $activatedCategories = $poules
+            ->filter(fn($p) => $p->wedstrijden()->count() > 0)
+            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->keys()
+            ->flip()
+            ->map(fn() => true)
+            ->toArray();
+
+        return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht', 'activatedCategories'));
     }
 
     public function verplaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
