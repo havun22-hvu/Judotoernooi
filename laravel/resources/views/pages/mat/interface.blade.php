@@ -125,10 +125,10 @@
                                 <!-- Totaal JP -->
                                 <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 text-blue-800 text-xs"
                                     x-text="getTotaalJP(poule, judoka.id)"></td>
-                                <!-- Plaats -->
+                                <!-- Plaats - alleen tonen na alle wedstrijden -->
                                 <td class="px-0.5 py-0.5 text-center font-bold border-l-2 border-yellow-300 text-xs"
-                                    :class="getPlaatsClass(getPlaats(poule, judoka.id))"
-                                    x-text="getPlaats(poule, judoka.id)"></td>
+                                    :class="isPouleAfgerond(poule) ? getPlaatsClass(getPlaats(poule, judoka.id)) : 'bg-yellow-50'"
+                                    x-text="isPouleAfgerond(poule) ? getPlaats(poule, judoka.id) : '-'"></td>
                             </tr>
                         </template>
                     </tbody>
