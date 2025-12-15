@@ -63,8 +63,11 @@
     </button>
 
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            @foreach($klassePoules as $poule)
+        @foreach($klassePoules->groupBy('gewichtsklasse') as $gewichtsklasse => $gewichtPoules)
+        <div class="mb-4 last:mb-0">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtsklasse }} kg</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($gewichtPoules as $poule)
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$poule->isKruisfinale() ? 'border-2 border-red-300' : '' }} {{ $poule->isKruisfinale() ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $poule->isKruisfinale() ? '1' : '0' }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $poule->isKruisfinale() ? 'bg-purple-100' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-100' : 'bg-blue-100') }}">
@@ -123,7 +126,9 @@
                 </div>
             </div>
             @endforeach
+            </div>
         </div>
+        @endforeach
     </div>
 </div>
 @empty
