@@ -92,9 +92,9 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ### Naar Zaaloverzicht →
 - Sla huidige blokverdeling op in database
-- Ga naar zaaloverzicht (preview)
-- **Let op:** Matten worden NIET hier toegewezen!
-- Matverdeling + wedstrijdschema's pas bij activatie op toernooidag
+- **Wijs matten toe** aan poules (gebalanceerde verdeling)
+- Ga naar zaaloverzicht (preview met matverdeling)
+- Matten kunnen na overpoelen nog aangepast worden
 
 ---
 
