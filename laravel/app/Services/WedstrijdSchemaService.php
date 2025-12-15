@@ -31,13 +31,31 @@ class WedstrijdSchemaService
 
     /**
      * Generate matches for a single pool
+     * Only includes active judokas (not absent, weight within class)
      */
     public function genereerWedstrijdenVoorPoule(Poule $poule): array
     {
         // Delete existing matches
         $poule->wedstrijden()->delete();
 
-        $schema = $poule->genereerWedstrijdSchema();
+        // Get tolerance from toernooi settings
+        $tolerantie = $poule->toernooi?->gewicht_tolerantie ?? 0.5;
+
+        // Filter: only active judokas (not absent, weight within class)
+        $actieveJudokas = $poule->judokas->filter(function ($judoka) use ($tolerantie) {
+            // Skip if absent
+            if ($judoka->aanwezigheid === 'afwezig') {
+                return false;
+            }
+            // Skip if weighed and outside weight class
+            if ($judoka->gewicht_gewogen !== null && !$judoka->isGewichtBinnenKlasse(null, $tolerantie)) {
+                return false;
+            }
+            return true;
+        });
+
+        // Generate schema with only active judokas
+        $schema = $this->genereerSchemaVoorJudokas($poule, $actieveJudokas->pluck('id')->toArray());
         $wedstrijden = [];
 
         foreach ($schema as $index => $paar) {
@@ -48,6 +66,96 @@ class WedstrijdSchemaService
                 'volgorde' => $index + 1,
             ]);
             $wedstrijden[] = $wedstrijd;
+        }
+
+        return $wedstrijden;
+    }
+
+    /**
+     * Generate match schema for given judoka IDs
+     * Uses optimal match order to minimize consecutive matches for same judoka
+     */
+    private function genereerSchemaVoorJudokas(Poule $poule, array $judokaIds): array
+    {
+        $aantal = count($judokaIds);
+
+        if ($aantal < 2) {
+            return [];
+        }
+
+        // Get optimal order indices (1-based)
+        $volgorde = $this->getOptimaleWedstrijdvolgorde($poule, $aantal);
+
+        // Convert indices to actual judoka IDs
+        $wedstrijden = [];
+        foreach ($volgorde as $paar) {
+            $wedstrijden[] = [
+                $judokaIds[$paar[0] - 1],  // Convert 1-based to 0-based
+                $judokaIds[$paar[1] - 1],
+            ];
+        }
+
+        return $wedstrijden;
+    }
+
+    /**
+     * Get optimal match order for given number of judokas
+     */
+    private function getOptimaleWedstrijdvolgorde(Poule $poule, int $aantal): array
+    {
+        // Check if tournament has custom schemas
+        $toernooi = $poule->toernooi;
+        $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
+
+        if (!empty($customSchemas[$aantal])) {
+            return $customSchemas[$aantal];
+        }
+
+        // Check if we need double matches (2 or 3 judokas)
+        $dubbelBij2 = $toernooi?->dubbel_bij_2_judokas ?? true;
+        $dubbelBij3 = $toernooi?->dubbel_bij_3_judokas ?? true;
+
+        // Default optimized schemas
+        return match ($aantal) {
+            2 => $dubbelBij2 ? [[1, 2], [2, 1]] : [[1, 2]],
+            3 => $dubbelBij3 ? [[1, 2], [1, 3], [2, 3], [2, 1], [3, 2], [3, 1]] : [[1, 2], [1, 3], [2, 3]],
+            4 => [[1, 2], [3, 4], [2, 3], [1, 4], [2, 4], [1, 3]],
+            5 => [[1, 2], [3, 4], [1, 5], [2, 3], [4, 5], [1, 3], [2, 4], [3, 5], [1, 4], [2, 5]],
+            6 => [[1, 2], [3, 4], [5, 6], [1, 3], [2, 5], [4, 6], [3, 5], [2, 4], [1, 6], [2, 3], [4, 5], [3, 6], [1, 4], [2, 6], [1, 5]],
+            7 => [[1, 2], [3, 4], [5, 6], [1, 7], [2, 3], [4, 5], [6, 7], [1, 3], [2, 4], [5, 7], [3, 6], [1, 4], [2, 5], [3, 7], [4, 6], [1, 5], [2, 6], [4, 7], [1, 6], [3, 5], [2, 7]],
+            default => $this->genereerRoundRobinSchema($aantal),
+        };
+    }
+
+    /**
+     * Generate round-robin schema using circle method
+     */
+    private function genereerRoundRobinSchema(int $n): array
+    {
+        $wedstrijden = [];
+        $judokas = range(1, $n);
+
+        // Add dummy for odd numbers
+        if ($n % 2 !== 0) {
+            $judokas[] = null;
+        }
+
+        $totaal = count($judokas);
+
+        for ($ronde = 0; $ronde < $totaal - 1; $ronde++) {
+            for ($i = 0; $i < $totaal / 2; $i++) {
+                $j = $totaal - 1 - $i;
+                $judoka1 = $judokas[$i];
+                $judoka2 = $judokas[$j];
+
+                if ($judoka1 !== null && $judoka2 !== null) {
+                    $wedstrijden[] = [$judoka1, $judoka2];
+                }
+            }
+
+            // Rotate (first position stays fixed)
+            $laatste = array_pop($judokas);
+            array_splice($judokas, 1, 0, [$laatste]);
         }
 
         return $wedstrijden;

@@ -15,6 +15,10 @@
     </div>
 </div>
 
+@if(session('success'))
+<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
+@endif
+
 <p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
 
 @foreach($overzicht as $blok)
