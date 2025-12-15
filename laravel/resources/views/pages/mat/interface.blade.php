@@ -93,39 +93,35 @@
 
                                 <!-- Wedstrijd cellen -->
                                 <template x-for="(w, wIdx) in poule.wedstrijden" :key="'c-' + judoka.id + '-' + wIdx">
-                                    <template x-if="isJudokaInWedstrijd(judoka.id, w)">
-                                        <!-- Judoka speelt in deze wedstrijd (wit vlak) -->
-                                        <td class="px-0 py-1 text-center border-l border-gray-200 bg-white" colspan="2">
-                                            <div class="flex justify-center gap-0.5">
-                                                <!-- WP: editable input -->
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="2"
-                                                    class="w-8 text-center border border-gray-300 rounded text-sm py-1 font-bold"
-                                                    :class="getWpClass(w.wpScores[judoka.id])"
-                                                    :value="w.wpScores[judoka.id] || ''"
-                                                    @input="updateWP(w, judoka.id, $event.target.value)"
-                                                    @blur="saveScore(w)"
-                                                >
-                                                <!-- JP: input met datalist voor dropdown suggesties -->
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max="10"
-                                                    list="jp-options"
-                                                    class="w-8 text-center border border-gray-300 rounded text-sm py-1"
-                                                    :value="w.jpScores[judoka.id] || ''"
-                                                    @input="updateJP(w, judoka.id, $event.target.value)"
-                                                    @blur="saveScore(w)"
-                                                >
-                                            </div>
-                                        </td>
-                                    </template>
-                                    <template x-if="!isJudokaInWedstrijd(judoka.id, w)">
-                                        <!-- Judoka speelt niet in deze wedstrijd (donker vlak) -->
-                                        <td class="px-0 py-1 text-center bg-gray-700 border-l border-gray-600" colspan="2"></td>
-                                    </template>
+                                    <td class="px-0 py-1 text-center border-l"
+                                        :class="isJudokaInWedstrijd(judoka.id, w) ? 'border-gray-200 bg-white' : 'bg-gray-600 border-gray-500'"
+                                        colspan="2">
+                                        <!-- Alleen inputs tonen als judoka in deze wedstrijd speelt -->
+                                        <div x-show="isJudokaInWedstrijd(judoka.id, w)" class="flex justify-center gap-0.5">
+                                            <!-- WP: editable input -->
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="2"
+                                                class="w-8 text-center border border-gray-300 rounded text-sm py-1 font-bold"
+                                                :class="getWpClass(w.wpScores[judoka.id])"
+                                                :value="w.wpScores[judoka.id] || ''"
+                                                @input="updateWP(w, judoka.id, $event.target.value)"
+                                                @blur="saveScore(w)"
+                                            >
+                                            <!-- JP: input met datalist voor dropdown suggesties -->
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="10"
+                                                list="jp-options"
+                                                class="w-8 text-center border border-gray-300 rounded text-sm py-1"
+                                                :value="w.jpScores[judoka.id] || ''"
+                                                @input="updateJP(w, judoka.id, $event.target.value)"
+                                                @blur="saveScore(w)"
+                                            >
+                                        </div>
+                                    </td>
                                 </template>
 
                                 <!-- Totaal WP -->
