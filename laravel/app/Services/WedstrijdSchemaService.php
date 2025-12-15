@@ -149,7 +149,7 @@ class WedstrijdSchemaService
     {
         $poules = Poule::where('blok_id', $blok->id)
             ->where('mat_id', $mat->id)
-            ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw'])
+            ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'mat'])
             ->get();
 
         $schema = [];
@@ -157,8 +157,14 @@ class WedstrijdSchemaService
         foreach ($poules as $poule) {
             $pouleSchema = [
                 'poule_id' => $poule->id,
+                'poule_nummer' => $poule->nummer,
+                'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'gewichtsklasse' => $poule->gewichtsklasse,
+                'blok_nummer' => $blok->nummer,
+                'mat_nummer' => $mat->nummer,
                 'titel' => $poule->titel,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
+                'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
                 'judokas' => $poule->judokas->map(fn($j) => [
                     'id' => $j->id,
                     'naam' => $j->naam,
