@@ -100,7 +100,7 @@
         <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Zet op Mat →
+                Naar Zaaloverzicht →
             </button>
         </form>
     </div>
