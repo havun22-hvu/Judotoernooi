@@ -73,13 +73,16 @@
                 $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
                 $catData = ($categories ?? [])[$catKey] ?? null;
                 $isSent = $catData && ($catData['is_sent'] ?? false);
-                $isActivated = $catData && ($catData['is_activated'] ?? false);
+                $hasWedstrijden = $catData && ($catData['is_activated'] ?? false);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 
-                // Status flow:
-                // 1. Groen = geactiveerd (wedstrijdschema gegenereerd, op mat)
-                // 2. Wit = doorgestuurd vanuit wedstrijddagpoules (klaar voor activatie)
+                // Status flow (consistent with wedstrijddag):
+                // 1. Groen = doorgestuurd EN wedstrijdschema gegenereerd
+                // 2. Wit = doorgestuurd, klaar voor activatie
                 // 3. Grijs = NIET doorgestuurd (wacht op overpoulen)
+                // BELANGRIJK: kan alleen groen zijn als eerst doorgestuurd!
+                $isActivated = $isSent && $hasWedstrijden;
+
                 if ($isActivated) {
                     $btnClass = 'bg-green-500 text-white font-medium';
                 } elseif ($isSent) {
