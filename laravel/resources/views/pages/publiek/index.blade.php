@@ -438,38 +438,83 @@
         <!-- Live Matten Tab -->
         @if($poulesGegenereerd && count($matten) > 0)
         <div x-show="activeTab === 'live'" x-cloak>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 @foreach($matten as $mat)
                 <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <!-- Mat Header -->
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
                         <div class="flex justify-between items-center">
                             <span class="text-2xl font-bold">Mat {{ $mat->nummer }}</span>
                             @if($mat->huidigePoule)
-                            <span class="bg-green-500 px-2 py-1 rounded text-xs">BEZIG</span>
+                            <span class="bg-green-500 px-2 py-1 rounded text-xs">LIVE</span>
                             @else
                             <span class="bg-gray-500 px-2 py-1 rounded text-xs">WACHT</span>
                             @endif
                         </div>
-                    </div>
-                    @if($mat->huidigePoule)
-                    <div class="p-4">
-                        <div class="font-medium text-gray-800 mb-2">
-                            #{{ $mat->huidigePoule->nummer }} {{ $mat->huidigePoule->leeftijdsklasse }} / {{ $mat->huidigePoule->gewichtsklasse }} kg
+                        @if($mat->huidigePoule)
+                        <div class="text-blue-200 text-sm mt-1">
+                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse }} / {{ $mat->huidigePoule->gewichtsklasse }} kg
                         </div>
-                        <div class="space-y-1">
-                            @foreach($mat->huidigePoule->judokas->take(6) as $judoka)
-                            <div class="flex items-center gap-1 text-sm text-gray-600">
-                                <span>{{ $judoka->naam }}</span>
-                                <span class="text-gray-400">(</span><span class="w-2.5 h-2.5 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
+                        @endif
+                    </div>
+
+                    @if($mat->huidigePoule)
+                    <!-- Standings -->
+                    <div class="border-b bg-gray-50 px-4 py-2">
+                        <div class="text-xs font-bold text-gray-500 mb-1">STAND</div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                            @foreach($mat->huidigePoule->standings as $index => $standing)
+                            <div class="flex items-center gap-1">
+                                <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold
+                                    @if($index === 0) bg-yellow-400 text-yellow-900
+                                    @elseif($index === 1) bg-gray-300 text-gray-800
+                                    @elseif($index === 2) bg-orange-300 text-orange-900
+                                    @else bg-gray-200 text-gray-600
+                                    @endif">{{ $index + 1 }}</span>
+                                <span class="font-medium">{{ Str::limit($standing['judoka']->naam, 15) }}</span>
+                                <span class="text-blue-600 font-bold">{{ $standing['wp'] }}</span>
+                                <span class="text-gray-400 text-xs">({{ $standing['jp'] }})</span>
                             </div>
                             @endforeach
-                            @if($mat->huidigePoule->judokas->count() > 6)
-                            <div class="text-xs text-gray-400">+{{ $mat->huidigePoule->judokas->count() - 6 }} meer</div>
-                            @endif
                         </div>
                     </div>
+
+                    <!-- Wedstrijden -->
+                    <div class="divide-y max-h-64 overflow-y-auto">
+                        @foreach($mat->huidigePoule->wedstrijden as $wedstrijd)
+                        @php
+                            $wit = $mat->huidigePoule->judokas->firstWhere('id', $wedstrijd->judoka_wit_id);
+                            $blauw = $mat->huidigePoule->judokas->firstWhere('id', $wedstrijd->judoka_blauw_id);
+                        @endphp
+                        <div class="px-4 py-2 flex items-center gap-2 text-sm {{ $wedstrijd->is_gespeeld ? 'bg-green-50' : '' }}">
+                            <span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">{{ $wedstrijd->volgorde }}</span>
+                            <div class="flex-1 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-white border-2 border-gray-300"></span>
+                                    <span class="{{ $wedstrijd->winnaar_id === $wedstrijd->judoka_wit_id ? 'font-bold text-green-700' : '' }}">
+                                        {{ $wit?->naam ?? '?' }}
+                                    </span>
+                                    @if($wedstrijd->is_gespeeld)
+                                    <span class="text-blue-600 font-bold">{{ $wedstrijd->score_wit }}</span>
+                                    @endif
+                                </div>
+                                <span class="text-gray-400 mx-2">vs</span>
+                                <div class="flex items-center gap-2">
+                                    @if($wedstrijd->is_gespeeld)
+                                    <span class="text-blue-600 font-bold">{{ $wedstrijd->score_blauw }}</span>
+                                    @endif
+                                    <span class="{{ $wedstrijd->winnaar_id === $wedstrijd->judoka_blauw_id ? 'font-bold text-green-700' : '' }}">
+                                        {{ $blauw?->naam ?? '?' }}
+                                    </span>
+                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
                     @else
-                    <div class="p-4 text-center text-gray-500">
+                    <div class="p-8 text-center text-gray-500">
+                        <div class="text-4xl mb-2">⏳</div>
                         <p>Wacht op volgende poule</p>
                     </div>
                     @endif
@@ -478,7 +523,7 @@
             </div>
 
             <p class="text-center text-gray-500 text-sm mt-4">
-                Pagina wordt automatisch ververst
+                🔄 Pagina wordt elke 30 seconden ververst
             </p>
         </div>
         @endif
@@ -796,12 +841,12 @@
                             }
                         }, 15000);
 
-                        // Live matten: page reload elke 60 sec
+                        // Live matten: page reload elke 30 sec
                         setInterval(() => {
                             if (this.activeTab === 'live') {
                                 window.location.reload();
                             }
-                        }, 60000);
+                        }, 30000);
                     }
                 },
 
