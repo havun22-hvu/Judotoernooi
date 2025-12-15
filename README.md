@@ -44,8 +44,15 @@ php artisan serve
 ### 4. Toernooidag
 - **Weging Interface** met QR scanner
 - **Gewichtscontrole** met tolerantie
-- **Mat Interface** voor wedstrijden
-- **Uitslagen registratie**
+- **Mat Interface** voor wedstrijden en uitslagen
+  - WP/JP scoring met dropdown (0, 5, 7, 10)
+  - Automatische plaats berekening na alle wedstrijden
+  - Afronden knop stuurt poule naar spreker
+- **Spreker Interface** voor prijsuitreiking
+  - Begint met lege wachtpagina
+  - Afgeronde poules verschijnen automatisch (oudste eerst)
+  - Naam (club), WP, JP, plaats met medaille-kleuren
+  - Afgerond knop archiveert poule na prijsuitreiking
 
 ## Leeftijdsklassen
 
