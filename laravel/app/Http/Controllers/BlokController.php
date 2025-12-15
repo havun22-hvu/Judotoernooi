@@ -308,12 +308,12 @@ class BlokController extends Controller
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
-        // Get poules that are ready for spreker (with results)
+        // Get poules that are ready for spreker (with results) but not yet announced
         $klarePoules = $toernooi->poules()
             ->whereNotNull('spreker_klaar')
-            ->with(['mat', 'judokas.club', 'wedstrijden'])
-            ->orderBy('spreker_klaar', 'asc')
-            ->limit(10)
+            ->whereNull('afgeroepen_at')
+            ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
+            ->orderBy('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
             ->map(function ($poule) {
                 // Calculate WP and JP from wedstrijden for each judoka
@@ -363,7 +363,25 @@ class BlokController extends Controller
                 return $poule;
             });
 
-        return view('pages.spreker.interface', compact('toernooi', 'overzicht', 'klarePoules'));
+        return view('pages.spreker.interface', compact('toernooi', 'klarePoules'));
+    }
+
+    /**
+     * Mark poule as announced (prizes awarded) - moves to archive
+     */
+    public function markeerAfgeroepen(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+        $poule->update(['afgeroepen_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Poule {$poule->nummer} afgeroepen",
+        ]);
     }
 
     public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse
