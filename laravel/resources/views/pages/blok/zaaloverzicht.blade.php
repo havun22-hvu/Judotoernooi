@@ -72,7 +72,7 @@
                 $catNaam = $catInfo['naam'];
                 $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
                 $catData = ($categories ?? [])[$catKey] ?? null;
-                $isSent = isset(($sentToZaaloverzicht ?? [])[$catKey]);
+                $isSent = $catData && ($catData['is_sent'] ?? false);
                 $isActivated = $catData && ($catData['is_activated'] ?? false);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
 

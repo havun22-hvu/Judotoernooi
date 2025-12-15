@@ -179,8 +179,8 @@ class BlokController extends Controller
         // After overpoulen, judokas may have changed, so old wedstrijden are invalid
         \App\Models\Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))->delete();
 
-        // Clear the session markers for sent categories
-        session()->forget("toernooi_{$toernooi->id}_wedstrijddag_sent");
+        // Reset doorgestuurd_op for all poules (categories are now inactive)
+        $toernooi->poules()->update(['doorgestuurd_op' => null]);
 
         // Assign mats to poules (balanced distribution)
         $this->verdelingService->verdeelOverMatten($toernooi);
@@ -204,11 +204,10 @@ class BlokController extends Controller
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
-        // Get category statuses for wedstrijddag
+        // Get category statuses for wedstrijddag (includes doorgestuurd_op from database)
         $categories = $this->getCategoryStatuses($toernooi);
-        $sentToZaaloverzicht = session("toernooi_{$toernooi->id}_wedstrijddag_sent", []);
 
-        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories', 'sentToZaaloverzicht'));
+        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories'));
     }
 
     /**
@@ -250,7 +249,7 @@ class BlokController extends Controller
 
     /**
      * Get category statuses for wedstrijddag overview
-     * Returns: wachtruimte_count, is_activated (has wedstrijden)
+     * Returns: wachtruimte_count, is_activated (has wedstrijden), is_sent (doorgestuurd_op set)
      */
     private function getCategoryStatuses(Toernooi $toernooi): array
     {
@@ -275,14 +274,20 @@ class BlokController extends Controller
             $wachtruimtePerCategorie[$key] = ($wachtruimtePerCategorie[$key] ?? 0) + 1;
         }
 
-        // Group poules by category and check if any have wedstrijden
+        // Group poules by category and check status
         $wedstrijdenPerCategorie = [];
+        $doorgestuurdPerCategorie = [];
         foreach ($poules as $poule) {
             $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
             if (!isset($wedstrijdenPerCategorie[$key])) {
                 $wedstrijdenPerCategorie[$key] = 0;
             }
             $wedstrijdenPerCategorie[$key] += $poule->wedstrijden_count;
+
+            // If any poule in category has doorgestuurd_op set, category is sent
+            if ($poule->doorgestuurd_op) {
+                $doorgestuurdPerCategorie[$key] = true;
+            }
         }
 
         foreach ($poules->unique(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse) as $poule) {
@@ -292,6 +297,7 @@ class BlokController extends Controller
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'wachtruimte_count' => $wachtruimtePerCategorie[$key] ?? 0,
                 'is_activated' => ($wedstrijdenPerCategorie[$key] ?? 0) > 0,
+                'is_sent' => $doorgestuurdPerCategorie[$key] ?? false,
             ];
         }
 
