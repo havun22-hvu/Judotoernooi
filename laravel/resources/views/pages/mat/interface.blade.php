@@ -2,8 +2,10 @@
 
 @section('title', 'Mat Interface')
 
+@section('main-class', 'max-w-full')
+
 @section('content')
-<div x-data="matInterface()" x-init="init()" class="max-w-7xl mx-auto">
+<div x-data="matInterface()" x-init="init()" class="w-full">
     <h1 class="text-3xl font-bold text-gray-800 mb-6">🥋 Mat Interface</h1>
 
     <div class="bg-white rounded-lg shadow p-4 mb-6">
@@ -65,24 +67,24 @@
                 <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="bg-gray-200 border-b-2 border-gray-400">
-                            <th class="px-1 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[180px]">Naam</th>
+                            <th class="px-2 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[240px]">Naam</th>
                             <template x-for="(w, idx) in poule.wedstrijden" :key="'h-' + idx">
-                                <th class="px-0 py-0.5 text-center font-bold text-gray-700 w-10 border-l border-gray-300" colspan="2">
+                                <th class="px-0 py-1 text-center font-bold text-gray-700 w-14 border-l border-gray-300" colspan="2">
                                     <div class="text-xs" x-text="(idx + 1)"></div>
                                 </th>
                             </template>
-                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-8 text-xs">W</th>
-                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 w-8 text-xs">J</th>
-                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-6 text-xs">#</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-10 text-xs">WP</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 w-10 text-xs">JP</th>
+                            <th class="px-1 py-1 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-8 text-xs">#</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template x-for="(judoka, jIdx) in poule.judokas" :key="judoka.id">
                             <tr class="border-b">
-                                <!-- Nr + Naam compact -->
-                                <td class="px-1 py-1 font-medium sticky left-0 bg-white border-r border-gray-200 text-xs">
+                                <!-- Nr + Naam -->
+                                <td class="px-2 py-1 font-medium sticky left-0 bg-white border-r border-gray-200 text-sm">
                                     <span class="font-bold" x-text="(jIdx + 1) + '. ' + judoka.naam"></span>
-                                    <span class="text-gray-400" x-text="judoka.club ? ' (' + judoka.club + ')' : ''"></span>
+                                    <span class="text-gray-500 text-xs" x-text="judoka.club ? ' (' + judoka.club + ')' : ''"></span>
                                 </td>
 
                                 <!-- Wedstrijd cellen -->
@@ -103,16 +105,18 @@
                                                 @input="updateWP(w, judoka.id, $event.target.value)"
                                                 @blur="saveScore(w)"
                                             >
-                                            <!-- JP -->
-                                            <input
-                                                type="text"
-                                                inputmode="numeric"
-                                                maxlength="2"
-                                                class="w-5 text-center border border-gray-300 rounded-sm text-xs py-0.5"
+                                            <!-- JP met dropdown -->
+                                            <select
+                                                class="w-7 text-center border border-gray-300 rounded-sm text-xs py-0.5 appearance-none bg-white"
                                                 :value="getJP(w, judoka.id)"
-                                                @input="updateJP(w, judoka.id, $event.target.value)"
-                                                @blur="saveScore(w)"
+                                                @change="updateJP(w, judoka.id, $event.target.value); saveScore(w)"
                                             >
+                                                <option value=""></option>
+                                                <option value="0">0</option>
+                                                <option value="5">5</option>
+                                                <option value="7">7</option>
+                                                <option value="10">10</option>
+                                            </select>
                                         </div>
                                     </td>
                                 </template>

@@ -77,7 +77,7 @@
     </div>
     @endif
 
-    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow">
+    <main class="@yield('main-class', 'max-w-7xl mx-auto') px-4 py-8 flex-grow">
         @yield('content')
     </main>
 
