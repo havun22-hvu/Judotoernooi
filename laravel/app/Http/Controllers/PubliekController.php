@@ -8,6 +8,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class PubliekController extends Controller
@@ -95,6 +96,9 @@ class PubliekController extends Controller
                 });
         }
 
+        // Get completed poules (afgeroepen) with standings for results
+        $uitslagen = $this->getUitslagen($toernooi);
+
         return view('pages.publiek.index', [
             'toernooi' => $toernooi,
             'categorien' => $categorien,
@@ -102,7 +106,67 @@ class PubliekController extends Controller
             'poulesGegenereerd' => $poulesGegenereerd,
             'blokken' => $blokken,
             'matten' => $matten,
+            'uitslagen' => $uitslagen,
         ]);
+    }
+
+    /**
+     * Get results for completed poules, sorted by age class (young to old) and weight (light to heavy)
+     */
+    private function getUitslagen(Toernooi $toernooi): array
+    {
+        $leeftijdVolgorde = [
+            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3, 'C-pupillen' => 4,
+            'Dames -15' => 5, 'Heren -15' => 6, 'Dames -18' => 7, 'Heren -18' => 8,
+            'Dames -21' => 9, 'Heren -21' => 10, 'Dames' => 11, 'Heren' => 12,
+        ];
+
+        $poules = $toernooi->poules()
+            ->whereNotNull('afgeroepen_at')
+            ->with(['judokas.club', 'wedstrijden'])
+            ->get();
+
+        // Calculate standings for each poule
+        $poules = $poules->map(function ($poule) {
+            $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                $wp = 0;
+                $jp = 0;
+                foreach ($poule->wedstrijden as $w) {
+                    if ($w->judoka_wit_id === $judoka->id) {
+                        $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                        $jp += (int) $w->score_wit;
+                    } elseif ($w->judoka_blauw_id === $judoka->id) {
+                        $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                        $jp += (int) $w->score_blauw;
+                    }
+                }
+                return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
+            });
+
+            // Sort by WP desc, JP desc
+            $poule->standings = $standings->sortByDesc('wp')->sortByDesc(function ($s) {
+                return $s['wp'] * 1000 + $s['jp'];
+            })->values();
+
+            return $poule;
+        });
+
+        // Sort by leeftijdsklasse (young first), then gewichtsklasse (light first)
+        $poules = $poules->sort(function ($a, $b) use ($leeftijdVolgorde) {
+            $leeftijdA = $leeftijdVolgorde[$a->leeftijdsklasse] ?? 99;
+            $leeftijdB = $leeftijdVolgorde[$b->leeftijdsklasse] ?? 99;
+            if ($leeftijdA !== $leeftijdB) return $leeftijdA - $leeftijdB;
+
+            $gewichtA = (float) preg_replace('/[^0-9.]/', '', $a->gewichtsklasse);
+            $gewichtB = (float) preg_replace('/[^0-9.]/', '', $b->gewichtsklasse);
+            if (str_starts_with($a->gewichtsklasse, '+')) $gewichtA += 1000;
+            if (str_starts_with($b->gewichtsklasse, '+')) $gewichtB += 1000;
+
+            return $gewichtA <=> $gewichtB;
+        });
+
+        // Group by leeftijdsklasse
+        return $poules->groupBy('leeftijdsklasse')->toArray();
     }
 
     /**
@@ -219,5 +283,45 @@ class PubliekController extends Controller
             });
 
         return response()->json(['judokas' => $judokas]);
+    }
+
+    /**
+     * Export results as CSV for organizer
+     * Sorted by age class (young to old) and weight (light to heavy)
+     */
+    public function exportUitslagen(Toernooi $toernooi): Response
+    {
+        $uitslagen = $this->getUitslagen($toernooi);
+
+        $csv = "Leeftijdsklasse;Gewichtsklasse;Poule;Plaats;Naam;Club;WP;JP\n";
+
+        foreach ($uitslagen as $leeftijdsklasse => $poules) {
+            foreach ($poules as $poule) {
+                $plaats = 1;
+                foreach ($poule->standings as $standing) {
+                    $csv .= sprintf(
+                        "%s;%s;%d;%d;%s;%s;%d;%d\n",
+                        $leeftijdsklasse,
+                        $poule->gewichtsklasse,
+                        $poule->nummer,
+                        $plaats,
+                        $standing['judoka']->naam,
+                        $standing['judoka']->club?->naam ?? '-',
+                        $standing['wp'],
+                        $standing['jp']
+                    );
+                    $plaats++;
+                }
+            }
+        }
+
+        $filename = sprintf('uitslagen_%s_%s.csv',
+            \Illuminate\Support\Str::slug($toernooi->naam),
+            now()->format('Y-m-d_His')
+        );
+
+        return response($csv)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
 }

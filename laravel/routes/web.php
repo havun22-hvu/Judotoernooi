@@ -235,6 +235,9 @@ Route::post('/publiek/{toernooi}/favorieten', [PubliekController::class, 'favori
 Route::get('/publiek/{toernooi}/manifest.json', [PubliekController::class, 'manifest'])
     ->name('publiek.manifest');
 
+Route::get('/publiek/{toernooi}/uitslagen.csv', [PubliekController::class, 'exportUitslagen'])
+    ->name('publiek.export-uitslagen');
+
 Route::get('/{toernooi}', [PubliekController::class, 'index'])
     ->name('publiek.index')
     ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek).*$');
