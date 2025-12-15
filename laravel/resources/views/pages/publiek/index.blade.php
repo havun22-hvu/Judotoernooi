@@ -142,6 +142,13 @@
                     <span class="hidden sm:inline">Live </span>Matten
                 </button>
                 @endif
+                @if(count($uitslagen) > 0)
+                <button @click="activeTab = 'uitslagen'"
+                        :class="activeTab === 'uitslagen' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
+                        class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
+                    🏆 Uitslagen
+                </button>
+                @endif
             </div>
         </div>
     </header>
@@ -628,6 +635,69 @@
                 </div>
             </template>
         </div>
+
+        <!-- Uitslagen Tab -->
+        @if(count($uitslagen) > 0)
+        <div x-show="activeTab === 'uitslagen'" x-cloak>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">🏆 Uitslagen</h2>
+                <a href="{{ route('publiek.export-uitslagen', $toernooi) }}"
+                   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                    📥 Download CSV
+                </a>
+            </div>
+
+            @foreach($uitslagen as $leeftijdsklasse => $poules)
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($poules as $poule)
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="bg-purple-600 text-white px-4 py-2">
+                            <span class="font-bold">{{ $poule->gewichtsklasse }} kg</span>
+                            <span class="text-purple-200 text-sm">- Poule {{ $poule->nummer }}</span>
+                        </div>
+                        <div class="divide-y">
+                            @foreach($poule->standings as $index => $standing)
+                            @php $plaats = $index + 1; @endphp
+                            <div class="px-4 py-2 flex justify-between items-center
+                                @if($plaats === 1) bg-yellow-50
+                                @elseif($plaats === 2) bg-gray-50
+                                @elseif($plaats === 3) bg-orange-50
+                                @endif">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold
+                                        @if($plaats === 1) bg-yellow-400 text-yellow-900
+                                        @elseif($plaats === 2) bg-gray-300 text-gray-800
+                                        @elseif($plaats === 3) bg-orange-300 text-orange-900
+                                        @else bg-gray-200 text-gray-600
+                                        @endif">
+                                        {{ $plaats }}
+                                    </span>
+                                    <div>
+                                        <span class="font-medium text-gray-800">{{ $standing['judoka']->naam }}</span>
+                                        <span class="text-gray-500 text-xs block">{{ $standing['judoka']->club?->naam ?? '-' }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-right text-sm">
+                                    <span class="font-bold text-blue-600">{{ $standing['wp'] }}</span>
+                                    <span class="text-gray-400">WP</span>
+                                    <span class="text-gray-600 ml-1">{{ $standing['jp'] }}</span>
+                                    <span class="text-gray-400">JP</span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
     </main>
 
     <!-- Footer -->
