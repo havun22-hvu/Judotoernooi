@@ -23,14 +23,13 @@ class PubliekController extends Controller
             ->orderBy('nummer')
             ->get();
 
-        // Get all complete judokas grouped by age class and weight class
+        // Get total judoka count (all judokas)
+        $totaalJudokas = Judoka::where('toernooi_id', $toernooi->id)->count();
+
+        // Get judokas with complete data for category display
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('geboortejaar')
-            ->whereNotNull('geslacht')
-            ->whereNotNull('band')
-            ->where(function ($q) {
-                $q->whereNotNull('gewicht')->where('gewicht', '>', 0);
-            })
+            ->whereNotNull('leeftijdsklasse')
+            ->whereNotNull('gewichtsklasse')
             ->with('club')
             ->orderBy('leeftijdsklasse')
             ->orderBy('gewichtsklasse')
@@ -79,19 +78,38 @@ class PubliekController extends Controller
         // Check if poules are generated (tournament started)
         $poulesGegenereerd = $toernooi->poules()->exists();
 
-        // Get mat info with first unfinished poule per mat
+        // Get mat info with current poule, wedstrijden and standings
         $matten = [];
         if ($poulesGegenereerd) {
             $matten = $toernooi->matten()
                 ->with(['poules' => function ($q) {
-                    $q->with('judokas.club')
-                      ->orderBy('nummer')
-                      ->limit(1);
+                    $q->whereNull('afgeroepen_at')  // Not yet announced
+                      ->with(['judokas.club', 'wedstrijden'])
+                      ->orderBy('nummer');
                 }])
                 ->orderBy('nummer')
                 ->get()
                 ->map(function ($mat) {
-                    $mat->huidigePoule = $mat->poules->first();
+                    // Get first unfinished poule for this mat
+                    $poule = $mat->poules->first();
+                    if ($poule) {
+                        // Calculate standings for each judoka
+                        $poule->standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                            $wp = 0;
+                            $jp = 0;
+                            foreach ($poule->wedstrijden as $w) {
+                                if ($w->judoka_wit_id === $judoka->id) {
+                                    $wp += $w->winnaar_id === $judoka->id ? 2 : ($w->is_gespeeld ? 0 : 0);
+                                    $jp += (int) $w->score_wit;
+                                } elseif ($w->judoka_blauw_id === $judoka->id) {
+                                    $wp += $w->winnaar_id === $judoka->id ? 2 : ($w->is_gespeeld ? 0 : 0);
+                                    $jp += (int) $w->score_blauw;
+                                }
+                            }
+                            return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
+                        })->sortByDesc(fn($s) => $s['wp'] * 1000 + $s['jp'])->values();
+                    }
+                    $mat->huidigePoule = $poule;
                     return $mat;
                 });
         }
@@ -102,7 +120,7 @@ class PubliekController extends Controller
         return view('pages.publiek.index', [
             'toernooi' => $toernooi,
             'categorien' => $categorien,
-            'totaalJudokas' => $judokas->count(),
+            'totaalJudokas' => $totaalJudokas,
             'poulesGegenereerd' => $poulesGegenereerd,
             'blokken' => $blokken,
             'matten' => $matten,
