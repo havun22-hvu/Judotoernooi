@@ -757,6 +757,50 @@ class CoachPortalController extends Controller
             ->with('success', 'Coach kaart bijgewerkt');
     }
 
+    /**
+     * Sync judoka's - markeer complete judoka's als definitief ingeschreven
+     */
+    public function syncJudokasCode(Request $request, string $code): RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            return redirect()->route('coach.portal.code', $code);
+        }
+
+        $club = $coach->club;
+        $toernooi = $coach->toernooi;
+
+        // Get all judokas for this club
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->get();
+
+        $synced = 0;
+        $incomplete = 0;
+
+        foreach ($judokas as $judoka) {
+            if ($judoka->isVolledig()) {
+                // Only update if not synced or changed after sync
+                if (!$judoka->isSynced() || $judoka->isGewijzigdNaSync()) {
+                    $judoka->synced_at = now();
+                    $judoka->save();
+                    $synced++;
+                }
+            } else {
+                $incomplete++;
+            }
+        }
+
+        if ($incomplete > 0) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('warning', "{$synced} judoka(s) gesynced. {$incomplete} judoka(s) zijn incompleet en niet gesynced.");
+        }
+
+        return redirect()->route('coach.portal.judokas', $code)
+            ->with('success', "{$synced} judoka(s) succesvol gesynced!");
+    }
+
     public function resultatenCode(Request $request, string $code): View|RedirectResponse
     {
         $coach = $this->getLoggedInCoach($request, $code);

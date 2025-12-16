@@ -36,11 +36,13 @@ class Judoka extends Model
         'gewicht_gewogen',
         'opmerking',
         'qr_code',
+        'synced_at',
     ];
 
     protected $casts = [
         'gewicht' => 'decimal:1',
         'gewicht_gewogen' => 'decimal:1',
+        'synced_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -240,6 +242,22 @@ class Judoka extends Model
             && !empty($this->geslacht)
             && !empty($this->band)
             && $this->gewicht !== null && $this->gewicht > 0;
+    }
+
+    /**
+     * Check of judoka is gesynced (definitief ingeschreven)
+     */
+    public function isSynced(): bool
+    {
+        return $this->synced_at !== null;
+    }
+
+    /**
+     * Check of judoka is gewijzigd na sync (needs re-sync)
+     */
+    public function isGewijzigdNaSync(): bool
+    {
+        return $this->synced_at !== null && $this->updated_at > $this->synced_at;
     }
 
     /**
