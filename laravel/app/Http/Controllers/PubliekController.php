@@ -184,7 +184,7 @@ class PubliekController extends Controller
         });
 
         // Group by leeftijdsklasse
-        return $poules->groupBy('leeftijdsklasse')->toArray();
+        return $poules->groupBy('leeftijdsklasse')->all();
     }
 
     /**
