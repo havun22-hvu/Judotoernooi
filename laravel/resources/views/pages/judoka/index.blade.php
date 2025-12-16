@@ -57,7 +57,7 @@
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
     <!-- Zoekbalk -->
     <div class="px-4 py-3 bg-gray-50 border-b">
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
             <div class="relative flex-1">
                 <input type="text"
                        x-model="zoekterm"
@@ -72,7 +72,10 @@
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
                 Fuzzy <span x-text="fuzzyLevel ? 'aan' : 'uit'"></span>
             </button>
-            <span x-show="zoekterm" class="flex items-center text-sm text-gray-500" x-text="filteredJudokas.length + ' resultaten'"></span>
+            <div x-show="zoekterm" class="bg-green-100 border border-green-300 rounded-lg px-4 py-2 flex items-center gap-2">
+                <span class="text-green-800 font-bold text-lg" x-text="filteredJudokas.length"></span>
+                <span class="text-green-700 text-sm">resultaten</span>
+            </div>
         </div>
     </div>
     <table class="min-w-full">
