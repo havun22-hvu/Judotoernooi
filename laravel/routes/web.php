@@ -198,6 +198,7 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::get('{code}/coachkaarten', [CoachPortalController::class, 'coachkaartenCode'])->name('coachkaarten');
     Route::post('{code}/coachkaart/{coachKaart}/toewijzen', [CoachPortalController::class, 'toewijzenCoachkaart'])->name('coachkaart.toewijzen');
     Route::get('{code}/resultaten', [CoachPortalController::class, 'resultatenCode'])->name('resultaten');
+    Route::post('{code}/sync', [CoachPortalController::class, 'syncJudokasCode'])->name('sync');
 });
 
 // Weegkaart (public, accessed via QR code)

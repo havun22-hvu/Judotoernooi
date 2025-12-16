@@ -93,6 +93,12 @@
         </div>
         @endif
 
+        @if(session('warning'))
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-6">
+            {{ session('warning') }}
+        </div>
+        @endif
+
         <!-- Add Judoka Form -->
         @if($inschrijvingOpen && !$maxBereikt)
         <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm()">
@@ -166,7 +172,52 @@
         @php
             $volledigeJudokas = $judokas->filter(fn($j) => $j->isVolledig());
             $onvolledigeJudokas = $judokas->filter(fn($j) => !$j->isVolledig());
+            $syncedJudokas = $judokas->filter(fn($j) => $j->isSynced() && !$j->isGewijzigdNaSync());
+            $gewijzigdJudokas = $judokas->filter(fn($j) => $j->isGewijzigdNaSync());
+            $nietSyncedVolledig = $volledigeJudokas->filter(fn($j) => !$j->isSynced() || $j->isGewijzigdNaSync());
         @endphp
+
+        <!-- Sync Status Box -->
+        @if(isset($useCode) && $useCode)
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $syncedJudokas->count() }} gesynced</span>
+                    </span>
+                    @if($gewijzigdJudokas->count() > 0)
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $gewijzigdJudokas->count() }} gewijzigd</span>
+                    </span>
+                    @endif
+                    @if($onvolledigeJudokas->count() > 0)
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} incompleet</span>
+                    </span>
+                    @endif
+                    @if($nietSyncedVolledig->count() > 0)
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-gray-300 rounded-full"></span>
+                        <span class="text-gray-600">{{ $nietSyncedVolledig->count() }} klaar om te syncen</span>
+                    </span>
+                    @endif
+                </div>
+                <form action="{{ route('coach.portal.sync', $code) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2"
+                            {{ $nietSyncedVolledig->count() === 0 ? 'disabled' : '' }}
+                            @class(['opacity-50 cursor-not-allowed' => $nietSyncedVolledig->count() === 0])>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Sync Judoka's
+                    </button>
+                </form>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Sync stuurt alleen volledige judoka's door naar de organisator. Na sync kun je nog wijzigen, maar dan moet je opnieuw syncen.</p>
+        </div>
+        @endif
 
         @if($onvolledigeJudokas->count() > 0)
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -174,7 +225,7 @@
                 <span class="text-yellow-600 text-xl mr-2">⚠</span>
                 <div>
                     <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
-                    <p class="text-sm text-yellow-700">Onvolledige judoka's worden niet doorgestuurd naar de organisator. Vul de ontbrekende gegevens aan.</p>
+                    <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet gesynced worden. Vul de ontbrekende gegevens aan.</p>
                 </div>
             </div>
         </div>
@@ -191,17 +242,31 @@
                 @php
                     $isOnvolledig = !$judoka->isVolledig();
                     $ontbrekend = $judoka->getOntbrekendeVelden();
+                    $isSynced = $judoka->isSynced() && !$judoka->isGewijzigdNaSync();
+                    $isGewijzigd = $judoka->isGewijzigdNaSync();
                 @endphp
-                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : '' }}" x-data="{ editing: false }">
+                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')) }}" x-data="{ editing: false }">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
-                        <div>
-                            <p class="font-medium {{ $isOnvolledig ? 'text-yellow-800' : 'text-gray-800' }}">
-                                {{ $judoka->naam }}
-                                @if($isOnvolledig)
-                                <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
-                                @endif
-                            </p>
+                        <div class="flex items-start gap-2">
+                            @if($isSynced)
+                            <span class="text-green-500 mt-1" title="Gesynced">✓</span>
+                            @elseif($isGewijzigd)
+                            <span class="text-orange-500 mt-1" title="Gewijzigd na sync">⟳</span>
+                            @elseif($isOnvolledig)
+                            <span class="text-yellow-500 mt-1" title="Incompleet">!</span>
+                            @else
+                            <span class="text-gray-300 mt-1" title="Nog niet gesynced">○</span>
+                            @endif
+                            <div>
+                                <p class="font-medium {{ $isOnvolledig ? 'text-yellow-800' : 'text-gray-800' }}">
+                                    {{ $judoka->naam }}
+                                    @if($isOnvolledig)
+                                    <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
+                                    @elseif($isGewijzigd)
+                                    <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded ml-2">Gewijzigd</span>
+                                    @endif
+                                </p>
                             <p class="text-sm text-gray-600">
                                 {{ $judoka->geboortejaar ?? '?' }} |
                                 {{ $judoka->geslacht === 'M' ? 'Man' : ($judoka->geslacht === 'V' ? 'Vrouw' : '?') }} |
@@ -217,6 +282,7 @@
                             @if($isOnvolledig)
                             <p class="text-xs text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>
                             @endif
+                            </div>
                         </div>
                         @if($inschrijvingOpen)
                         <div class="flex space-x-2">
