@@ -10,6 +10,7 @@ use App\Models\Judoka;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Http\Controllers\PubliekController;
 
 class CoachPortalController extends Controller
 {
@@ -754,5 +755,59 @@ class CoachPortalController extends Controller
 
         return redirect()->route('coach.portal.coachkaarten', $code)
             ->with('success', 'Coach kaart bijgewerkt');
+    }
+
+    public function resultatenCode(Request $request, string $code): View|RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            return redirect()->route('coach.portal.code', $code);
+        }
+
+        $toernooi = $coach->toernooi;
+        $club = $coach->club;
+
+        // Get results for this club using PubliekController
+        $publiekController = new PubliekController();
+        $clubResultaten = $publiekController->getClubResultaten($toernooi, $club->id);
+        $clubRanking = $publiekController->getClubRanking($toernooi);
+
+        // Find this club's position in rankings
+        $clubPositieAbsoluut = null;
+        $clubPositieRelatief = null;
+        foreach ($clubRanking['absoluut'] as $index => $c) {
+            if ($c['naam'] === $club->naam) {
+                $clubPositieAbsoluut = $index + 1;
+                break;
+            }
+        }
+        foreach ($clubRanking['relatief'] as $index => $c) {
+            if ($c['naam'] === $club->naam) {
+                $clubPositieRelatief = $index + 1;
+                break;
+            }
+        }
+
+        // Count medals for this club
+        $medailles = ['goud' => 0, 'zilver' => 0, 'brons' => 0];
+        foreach ($clubResultaten as $r) {
+            if ($r['plaats'] === 1) $medailles['goud']++;
+            if ($r['plaats'] === 2) $medailles['zilver']++;
+            if ($r['plaats'] === 3) $medailles['brons']++;
+        }
+
+        return view('pages.coach.resultaten', [
+            'coach' => $coach,
+            'toernooi' => $toernooi,
+            'club' => $club,
+            'resultaten' => $clubResultaten,
+            'clubRanking' => $clubRanking,
+            'clubPositieAbsoluut' => $clubPositieAbsoluut,
+            'clubPositieRelatief' => $clubPositieRelatief,
+            'medailles' => $medailles,
+            'useCode' => true,
+            'code' => $code,
+        ]);
     }
 }

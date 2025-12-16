@@ -123,6 +123,9 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('pagina-builder/opslaan', [PaginaBuilderController::class, 'opslaan'])->name('pagina-builder.opslaan');
         Route::post('pagina-builder/upload', [PaginaBuilderController::class, 'upload'])->name('pagina-builder.upload');
         Route::delete('pagina-builder/afbeelding', [PaginaBuilderController::class, 'verwijderAfbeelding'])->name('pagina-builder.verwijder-afbeelding');
+
+        // Resultaten overzicht (organisator)
+        Route::get('resultaten', [PubliekController::class, 'organisatorResultaten'])->name('resultaten.index');
     });
 
     // Jury + Admin routes
@@ -194,6 +197,7 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::get('{code}/weegkaarten', [CoachPortalController::class, 'weegkaartenCode'])->name('weegkaarten');
     Route::get('{code}/coachkaarten', [CoachPortalController::class, 'coachkaartenCode'])->name('coachkaarten');
     Route::post('{code}/coachkaart/{coachKaart}/toewijzen', [CoachPortalController::class, 'toewijzenCoachkaart'])->name('coachkaart.toewijzen');
+    Route::get('{code}/resultaten', [CoachPortalController::class, 'resultatenCode'])->name('resultaten');
 });
 
 // Weegkaart (public, accessed via QR code)
