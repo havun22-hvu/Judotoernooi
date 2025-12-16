@@ -342,4 +342,116 @@ class PubliekController extends Controller
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
     }
+
+    /**
+     * Organisator resultaten pagina - alle uitslagen + club ranking
+     */
+    public function organisatorResultaten(Toernooi $toernooi): View
+    {
+        $uitslagen = $this->getUitslagen($toernooi);
+        $clubRanking = $this->getClubRanking($toernooi);
+
+        return view('pages.resultaten.organisator', [
+            'toernooi' => $toernooi,
+            'uitslagen' => $uitslagen,
+            'clubRanking' => $clubRanking,
+        ]);
+    }
+
+    /**
+     * Calculate club ranking with medals (absolute and relative)
+     */
+    public function getClubRanking(Toernooi $toernooi): array
+    {
+        $uitslagen = $this->getUitslagen($toernooi);
+        $clubs = [];
+
+        // Count medals per club
+        foreach ($uitslagen as $leeftijdsklasse => $poules) {
+            foreach ($poules as $poule) {
+                foreach ($poule->standings as $index => $standing) {
+                    $plaats = $index + 1;
+                    $clubNaam = $standing['judoka']->club?->naam ?? 'Geen club';
+                    $clubId = $standing['judoka']->club_id ?? 0;
+
+                    if (!isset($clubs[$clubId])) {
+                        $clubs[$clubId] = [
+                            'naam' => $clubNaam,
+                            'goud' => 0,
+                            'zilver' => 0,
+                            'brons' => 0,
+                            'totaal_medailles' => 0,
+                            'totaal_judokas' => 0,
+                        ];
+                    }
+
+                    if ($plaats === 1) $clubs[$clubId]['goud']++;
+                    if ($plaats === 2) $clubs[$clubId]['zilver']++;
+                    if ($plaats === 3) $clubs[$clubId]['brons']++;
+                }
+            }
+        }
+
+        // Get total judokas per club (for relative ranking)
+        $judokasPerClub = Judoka::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('club_id')
+            ->selectRaw('club_id, COUNT(*) as aantal')
+            ->groupBy('club_id')
+            ->pluck('aantal', 'club_id');
+
+        foreach ($clubs as $clubId => &$club) {
+            $club['totaal_medailles'] = $club['goud'] + $club['zilver'] + $club['brons'];
+            $club['totaal_judokas'] = $judokasPerClub[$clubId] ?? 1;
+            // Relative score: medals per judoka (percentage)
+            $club['relatief'] = $club['totaal_judokas'] > 0
+                ? round(($club['totaal_medailles'] / $club['totaal_judokas']) * 100, 1)
+                : 0;
+            // Weighted score for sorting (gold=3, silver=2, bronze=1)
+            $club['punten'] = ($club['goud'] * 3) + ($club['zilver'] * 2) + ($club['brons'] * 1);
+        }
+
+        // Sort by weighted points (descending)
+        uasort($clubs, fn($a, $b) => $b['punten'] <=> $a['punten']);
+
+        // Create relative ranking (sorted by relative score)
+        $clubsRelatief = $clubs;
+        uasort($clubsRelatief, fn($a, $b) => $b['relatief'] <=> $a['relatief']);
+
+        return [
+            'absoluut' => array_values($clubs),
+            'relatief' => array_values($clubsRelatief),
+        ];
+    }
+
+    /**
+     * Get results for a specific club (for coach portal)
+     */
+    public function getClubResultaten(Toernooi $toernooi, int $clubId): array
+    {
+        $uitslagen = $this->getUitslagen($toernooi);
+        $resultaten = [];
+
+        foreach ($uitslagen as $leeftijdsklasse => $poules) {
+            foreach ($poules as $poule) {
+                foreach ($poule->standings as $index => $standing) {
+                    if ($standing['judoka']->club_id === $clubId) {
+                        $resultaten[] = [
+                            'judoka' => $standing['judoka'],
+                            'plaats' => $index + 1,
+                            'wp' => $standing['wp'],
+                            'jp' => $standing['jp'],
+                            'leeftijdsklasse' => $leeftijdsklasse,
+                            'gewichtsklasse' => $poule->gewichtsklasse,
+                            'poule_nummer' => $poule->nummer,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Sort by plaats (best first)
+        usort($resultaten, fn($a, $b) => $a['plaats'] <=> $b['plaats']);
+
+        return $resultaten;
+    }
 }
