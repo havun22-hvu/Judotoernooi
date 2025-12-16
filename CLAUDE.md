@@ -104,6 +104,12 @@ Naam,Geboortedatum,Geslacht,Band,Club,Gewicht
 Jan Jansen,2015-03-15,M,Oranje,Cees Veen,32.5
 ```
 
+## Test Accounts (Local)
+
+| Rol | URL | Code/PIN |
+|-----|-----|----------|
+| **Coach Havun** | `/school/2JzfLbjWXvuv` | PIN: `08130` |
+
 ## Documentatie
 
 Zie `laravel/docs/` voor:
