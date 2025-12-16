@@ -80,9 +80,14 @@
 
 <!-- Legend -->
 <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-    <strong>Toelichting:</strong>
-    <ul class="mt-2 space-y-1">
-        <li><strong>Absoluut:</strong> Gerangschikt op totaal punten (goud=3, zilver=2, brons=1)</li>
-        <li><strong>Relatief:</strong> Gemiddelde punten per aangemelde judoka. Zo maken kleine clubs ook kans!</li>
+    <strong>Puntentelling:</strong>
+    <div class="flex gap-4 mt-2 mb-3">
+        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">🥇 Goud = 3 punten</span>
+        <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded">🥈 Zilver = 2 punten</span>
+        <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">🥉 Brons = 1 punt</span>
+    </div>
+    <ul class="space-y-1">
+        <li><strong>Absoluut:</strong> Totaal punten van alle medailles bij elkaar opgeteld</li>
+        <li><strong>Relatief:</strong> Totaal punten gedeeld door aantal aangemelde judoka's. Zo maken kleine clubs ook kans!</li>
     </ul>
 </div>
