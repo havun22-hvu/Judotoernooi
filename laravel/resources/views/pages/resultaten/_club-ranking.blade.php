@@ -43,7 +43,7 @@
     <div class="bg-white rounded-lg shadow overflow-hidden avoid-break">
         <div class="bg-green-500 text-white px-4 py-3">
             <h3 class="font-bold text-lg">Relatief Klassement</h3>
-            <p class="text-green-100 text-sm">Medailles per aangemelde judoka (%)</p>
+            <p class="text-green-100 text-sm">Punten per aangemelde judoka</p>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -52,8 +52,8 @@
                         <th class="px-3 py-2 text-left">#</th>
                         <th class="px-3 py-2 text-left">Club</th>
                         <th class="px-3 py-2 text-center w-16">Judoka's</th>
-                        <th class="px-3 py-2 text-center w-16">Medailles</th>
-                        <th class="px-3 py-2 text-center w-16">Score</th>
+                        <th class="px-3 py-2 text-center w-16">Punten</th>
+                        <th class="px-3 py-2 text-center w-20">Gem.</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y">
@@ -64,8 +64,8 @@
                         </td>
                         <td class="px-3 py-2 font-medium">{{ $club['naam'] }}</td>
                         <td class="px-3 py-2 text-center text-gray-600">{{ $club['totaal_judokas'] }}</td>
-                        <td class="px-3 py-2 text-center text-gray-600">{{ $club['totaal_medailles'] }}</td>
-                        <td class="px-3 py-2 text-center font-bold text-green-600">{{ $club['relatief'] }}%</td>
+                        <td class="px-3 py-2 text-center text-gray-600">{{ $club['punten'] }}</td>
+                        <td class="px-3 py-2 text-center font-bold text-green-600">{{ $club['relatief'] }}</td>
                     </tr>
                     @empty
                     <tr>
@@ -82,7 +82,7 @@
 <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
     <strong>Toelichting:</strong>
     <ul class="mt-2 space-y-1">
-        <li><strong>Absoluut:</strong> Gerangschikt op gewogen punten (goud=3, zilver=2, brons=1)</li>
-        <li><strong>Relatief:</strong> Percentage medailles t.o.v. aantal aangemelde judoka's. Zo maken kleine clubs ook kans!</li>
+        <li><strong>Absoluut:</strong> Gerangschikt op totaal punten (goud=3, zilver=2, brons=1)</li>
+        <li><strong>Relatief:</strong> Gemiddelde punten per aangemelde judoka. Zo maken kleine clubs ook kans!</li>
     </ul>
 </div>

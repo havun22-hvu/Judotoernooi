@@ -402,12 +402,12 @@ class PubliekController extends Controller
         foreach ($clubs as $clubId => &$club) {
             $club['totaal_medailles'] = $club['goud'] + $club['zilver'] + $club['brons'];
             $club['totaal_judokas'] = $judokasPerClub[$clubId] ?? 1;
-            // Relative score: medals per judoka (percentage)
-            $club['relatief'] = $club['totaal_judokas'] > 0
-                ? round(($club['totaal_medailles'] / $club['totaal_judokas']) * 100, 1)
-                : 0;
-            // Weighted score for sorting (gold=3, silver=2, bronze=1)
+            // Weighted score (gold=3, silver=2, bronze=1)
             $club['punten'] = ($club['goud'] * 3) + ($club['zilver'] * 2) + ($club['brons'] * 1);
+            // Relative score: weighted points per judoka
+            $club['relatief'] = $club['totaal_judokas'] > 0
+                ? round($club['punten'] / $club['totaal_judokas'], 2)
+                : 0;
         }
 
         // Sort by weighted points (descending)
