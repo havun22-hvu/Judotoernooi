@@ -9,61 +9,111 @@
 
 Het noodplan biedt organisators de mogelijkheid om alle essentiële toernooigegevens te printen als backup voor technische problemen.
 
+**Toegang:** Admin, Organisator, Hoofdjury
+
 ---
 
-## 1. Routes
+## 1. Functionaliteit
+
+### VOOR HET TOERNOOI (Backup)
+
+| Print | Beschrijving |
+|-------|--------------|
+| **Poules per blok** | Alle poules van 1 blok, of alle blokken tegelijk |
+| **Weeglijst** | Alle judoka's met gewichtsklasse |
+| **Zaaloverzicht** | Welke poule op welke mat in welk blok |
+| **Weegkaarten** | Per judoka (QR + gegevens) |
+| **Coachkaarten** | Per coach (toegang dojo) |
+| **Lege wedstrijdschema's** | Templates voor 2, 3, 4, 5, 6, 7 judoka's |
+
+### TIJDENS DE WEDSTRIJD (Live)
+
+| Print | Beschrijving |
+|-------|--------------|
+| **Gecorrigeerde poules** | Na overpoulen - per blok of alle blokken |
+| **Aangepast zaaloverzicht** | Na overpoulen/nieuwe matverdeling |
+| **Ingevulde wedstrijdschema's** | Per blok - met scores |
+| **Actief wedstrijdschema** | Huidige staat van lopende poule |
+
+---
+
+## 2. Routes
 
 **Bestand:** `routes/web.php`
 
 ```php
-// Noodplan routes (alleen admin/hoofdjury)
-Route::middleware(['toernooi.rol:admin,hoofdjury'])->group(function () {
-    Route::get('noodplan', [NoodplanController::class, 'index'])->name('toernooi.noodplan.index');
-    Route::get('noodplan/poules', [NoodplanController::class, 'printPoules'])->name('toernooi.noodplan.poules');
-    Route::get('noodplan/blokken', [NoodplanController::class, 'printBlokken'])->name('toernooi.noodplan.blokken');
-    Route::get('noodplan/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('toernooi.noodplan.weeglijst');
-    Route::get('noodplan/blok/{blok}/poules', [NoodplanController::class, 'printBlokPoules'])->name('toernooi.noodplan.blok-poules');
-    Route::get('noodplan/blok/{blok}/wedstrijden', [NoodplanController::class, 'printBlokWedstrijden'])->name('toernooi.noodplan.blok-wedstrijden');
-    Route::get('noodplan/leeg-schema/{aantal}', [NoodplanController::class, 'printLeegSchema'])->name('toernooi.noodplan.leeg-schema');
+// Noodplan routes (admin/organisator/hoofdjury)
+Route::prefix('noodplan')->name('noodplan.')->group(function () {
+    Route::get('/', [NoodplanController::class, 'index'])->name('index');
+
+    // Voor het toernooi
+    Route::get('/poules/{blok?}', [NoodplanController::class, 'printPoules'])->name('poules');
+    Route::get('/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
+    Route::get('/zaaloverzicht', [NoodplanController::class, 'printZaaloverzicht'])->name('zaaloverzicht');
+    Route::get('/weegkaarten/{club?}', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
+    Route::get('/coachkaarten/{club?}', [NoodplanController::class, 'printCoachkaarten'])->name('coachkaarten');
+    Route::get('/leeg-schema/{aantal}', [NoodplanController::class, 'printLeegSchema'])->name('leeg-schema');
+
+    // Tijdens wedstrijd
+    Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
+    Route::get('/poule/{poule}/schema', [NoodplanController::class, 'printPouleSchema'])->name('poule-schema');
 });
 ```
 
 ---
 
-## 2. Print knop bij wedstrijdschema (organisator)
+## 3. Noodplan Index Layout
 
-**Bestand:** `resources/views/pages/mat/interface.blade.php`
-
-- Conditie: alleen tonen als rol = admin of hoofdjury (NIET mat)
-- Print knop per poule wedstrijdschema
-- Print huidige staat (ingevulde scores)
-
----
-
-## 3. Lege wedstrijdschema templates
-
-**Functionaliteit:**
-- Templates voor 2, 3, 4, 5, 6, 7 judokas
-- Lege cellen voor handmatig invullen
-- Standaard wedstrijdvolgorde uit toernooi instellingen
-- WP/JP kolommen leeg
+```
++----------------------------------------------------------+
+| NOODPLAN - [Toernooi Naam]                               |
+| Momentopname: 14:32:15                                   |
++----------------------------------------------------------+
+|                                                          |
+| VOOR HET TOERNOOI (backup)                              |
+| ┌─────────────────────────────────────────────────────┐ |
+| │ Poules:     [Blok 1] [Blok 2] [Blok 3] [Alle]      │ |
+| │ Overzichten: [Weeglijst] [Zaaloverzicht]            │ |
+| │ Kaarten:    [Weegkaarten ▼] [Coachkaarten ▼]       │ |
+| │ Templates:  [2] [3] [4] [5] [6] [7] judoka's       │ |
+| └─────────────────────────────────────────────────────┘ |
+|                                                          |
+| TIJDENS DE WEDSTRIJD (live)                             |
+| ┌─────────────────────────────────────────────────────┐ |
+| │ Gecorrigeerde poules: [Blok 1] [Blok 2] [Alle]     │ |
+| │ Aangepast zaaloverzicht: [Print]                    │ |
+| │ Ingevulde schema's: [Blok 1] [Blok 2] [Blok 3]     │ |
+| └─────────────────────────────────────────────────────┘ |
+|                                                          |
+| ACTIEVE POULES (klik voor huidige staat)                |
+| ┌─────────────────────────────────────────────────────┐ |
+| │ Mat 1: Poule A - Mini's -26kg [Print]              │ |
+| │ Mat 2: Poule B - A-pup -30kg [Print]               │ |
+| │ Mat 3: Poule C - B-pup -34kg [Print]               │ |
+| └─────────────────────────────────────────────────────┘ |
+|                                                          |
++----------------------------------------------------------+
+```
 
 ---
 
 ## 4. Kritieke Bestanden
 
-| Bestand                                       | Actie                     |
-|-----------------------------------------------|---------------------------|
-| `app/Http/Controllers/NoodplanController.php` | NIEUW                     |
-| `resources/views/pages/noodplan/index.blade.php` | NIEUW                  |
-| `resources/views/pages/noodplan/poules.blade.php` | NIEUW                 |
-| `resources/views/pages/noodplan/blokken.blade.php` | NIEUW                |
-| `resources/views/pages/noodplan/weeglijst.blade.php` | NIEUW              |
-| `resources/views/pages/noodplan/blok-poules.blade.php` | NIEUW            |
-| `resources/views/pages/noodplan/blok-wedstrijden.blade.php` | NIEUW       |
-| `resources/views/pages/noodplan/leeg-schema.blade.php` | NIEUW            |
-| `resources/views/pages/mat/interface.blade.php` | Print knop toevoegen   |
-| `routes/web.php`                              | Routes toevoegen          |
+| Bestand | Actie |
+|---------|-------|
+| `app/Http/Controllers/NoodplanController.php` | NIEUW |
+| `resources/views/pages/noodplan/index.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/poules.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/weeglijst.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/zaaloverzicht.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/weegkaarten.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/coachkaarten.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/leeg-schema.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/wedstrijdschemas.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/poule-schema.blade.php` | NIEUW |
+| `resources/views/layouts/print.blade.php` | NIEUW (basis print layout) |
+| `resources/views/pages/toernooi/edit.blade.php` | Toggle toevoegen |
+| `routes/web.php` | Routes toevoegen |
 
 ---
 
@@ -83,52 +133,38 @@ Route::middleware(['toernooi.rol:admin,hoofdjury'])->group(function () {
 
     /* Tabel borders zichtbaar */
     table, th, td { border: 1px solid black !important; }
+
+    /* A4 marges */
+    @page { margin: 1cm; }
 }
 ```
 
 ---
 
-## 6. Noodplan Index Layout
-
-```
-+--------------------------------------------------+
-| NOODPLAN - [Toernooi Naam]                       |
-| Momentopname: 14:32:15                           |
-+--------------------------------------------------+
-|                                                  |
-| VOOR HET TOERNOOI                               |
-| [Print Alle Poules]  [Print Weeglijst]          |
-| [Print Blokverdeling]                           |
-|                                                  |
-| PER BLOK                                        |
-| Blok 1: [Poules] [Wedstrijdschema's]            |
-| Blok 2: [Poules] [Wedstrijdschema's]            |
-| Blok 3: [Poules] [Wedstrijdschema's]            |
-|                                                  |
-| LEGE TEMPLATES                                  |
-| [2 judoka's] [3] [4] [5] [6] [7 judoka's]       |
-|                                                  |
-+--------------------------------------------------+
-```
-
----
-
-## 7. Implementatie Volgorde
+## 6. Implementatie Volgorde
 
 - [ ] 1. NoodplanController basis
-- [ ] 2. Routes toevoegen
-- [ ] 3. Print layout + CSS
+- [ ] 2. Routes toevoegen (met middleware)
+- [ ] 3. Print layout (`layouts/print.blade.php`)
 - [ ] 4. Noodplan index pagina
-- [ ] 5. Print views (poules, blokken, weeglijst)
-- [ ] 6. Print views (blok-specifiek)
-- [ ] 7. Lege templates (2-7 judokas)
-- [ ] 8. Print knop mat interface
+- [ ] 5. Toggle in instellingen (onder Pagina Builder)
+- [ ] 6. Print: Poules per blok
+- [ ] 7. Print: Weeglijst
+- [ ] 8. Print: Zaaloverzicht
+- [ ] 9. Print: Weegkaarten
+- [ ] 10. Print: Coachkaarten
+- [ ] 11. Print: Lege templates (2-7 judokas)
+- [ ] 12. Print: Ingevulde wedstrijdschema's
+- [ ] 13. Print: Actieve poule (huidige staat)
 
 ---
 
-## 8. Notities
+## 7. Notities
 
-- Toegang alleen voor admin en hoofdjury
+- Toegang alleen voor admin, organisator en hoofdjury
 - Alle prints moeten werken zonder JavaScript
 - Inktvriendelijk: wit achtergrond, zwarte tekst
-- Elke poule/blok op nieuwe pagina (page-break)
+- Elke poule op nieuwe pagina (page-break)
+- Weegkaarten/coachkaarten: meerdere per A4 pagina
+- Dropdown voor club selectie bij weeg/coachkaarten
+- {blok?} parameter: optioneel, zonder = alle blokken
