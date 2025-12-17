@@ -42,8 +42,8 @@
     }
     @media screen {
         .print-container {
-            max-width: {{ $aantal >= 6 ? 'none' : '210mm' }} !important;
-            width: {{ $aantal >= 6 ? '297mm' : 'auto' }};
+            max-width: 210mm !important;
+            overflow-x: auto;
         }
     }
     .schema-table {
