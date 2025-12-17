@@ -33,7 +33,7 @@
                 </div>
                 <div class="flex gap-2">
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.poules', [$toernooi, $blok]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.poules', [$toernooi, $blok->nummer]) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
                         Blok {{ $blok->nummer }}
                     </a>
@@ -163,7 +163,7 @@
                 </div>
                 <div class="flex gap-2">
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.poules', [$toernooi, $blok]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.poules', [$toernooi, $blok->nummer]) }}" target="_blank"
                        class="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
                         Blok {{ $blok->nummer }}
                     </a>
@@ -197,7 +197,7 @@
                 </div>
                 <div class="flex gap-2">
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', [$toernooi, $blok]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', [$toernooi, $blok->nummer]) }}" target="_blank"
                        class="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
                         Blok {{ $blok->nummer }}
                     </a>
