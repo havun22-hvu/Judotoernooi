@@ -17,7 +17,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <span class="font-bold text-lg">
-                        #{{ $poule->id }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}
+                        #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}
                         @if($poule->naam) - {{ $poule->naam }} @endif
                     </span>
                     @if($poule->blok || $poule->mat_nummer)
