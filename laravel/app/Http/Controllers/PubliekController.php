@@ -208,28 +208,37 @@ class PubliekController extends Controller
             ->map(function ($poule) use ($judokaIds, $toernooi) {
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
-                // Find current and next match based on last played
-                // Logic: if match 4 just got points, match 5 = green (current), match 6 = yellow (next)
+                // Find current and next match
+                // Priority: manual override > automatic (based on last played)
                 $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
-
-                // Find last played match (highest volgorde with status 'gespeeld')
-                $laatstGespeeld = $wedstrijden->filter(fn($w) => $w->status === 'gespeeld')->last();
 
                 $huidigeWedstrijd = null;
                 $volgendeWedstrijd = null;
 
-                if ($laatstGespeeld) {
-                    // Current = first unplayed after last played
-                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $laatstGespeeld->volgorde && $w->status !== 'gespeeld');
-                    // Next = second unplayed after last played
+                // Check for manual override
+                if ($poule->huidige_wedstrijd_id) {
+                    $huidigeWedstrijd = $wedstrijden->firstWhere('id', $poule->huidige_wedstrijd_id);
                     if ($huidigeWedstrijd) {
                         $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
                     }
                 } else {
-                    // No matches played yet - first is current, second is next
-                    $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
-                    $huidigeWedstrijd = $ongespeeld->get(0);
-                    $volgendeWedstrijd = $ongespeeld->get(1);
+                    // Automatic: based on last played match
+                    // Logic: if match 4 just got points, match 5 = green (current), match 6 = yellow (next)
+                    $laatstGespeeld = $wedstrijden->filter(fn($w) => $w->status === 'gespeeld')->last();
+
+                    if ($laatstGespeeld) {
+                        // Current = first unplayed after last played
+                        $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $laatstGespeeld->volgorde && $w->status !== 'gespeeld');
+                        // Next = second unplayed after last played
+                        if ($huidigeWedstrijd) {
+                            $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
+                        }
+                    } else {
+                        // No matches played yet - first is current, second is next
+                        $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
+                        $huidigeWedstrijd = $ongespeeld->get(0);
+                        $volgendeWedstrijd = $ongespeeld->get(1);
+                    }
                 }
 
                 // IDs of judokas in current/next match

@@ -165,6 +165,7 @@ class WedstrijdSchemaService
                 'titel' => $poule->titel,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
+                'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
                 'judokas' => $poule->judokas->map(fn($j) => [
                     'id' => $j->id,
                     'naam' => $j->naam,
