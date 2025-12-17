@@ -132,9 +132,7 @@
             @for($i = 1; $i <= $aantal; $i++)
             <tr class="judoka-row">
                 <td class="px-1 text-center font-bold">{{ $i }}</td>
-                <td class="px-2 naam-cel">
-                    <span class="inline-block border-b border-gray-300 w-full">&nbsp;</span>
-                </td>
+                <td class="px-2 naam-cel"></td>
                 @foreach($schema as $idx => $wedstrijd)
                     @if(in_array($i, $wedstrijd))
                     <td class="score-cel border-r-0"></td>
