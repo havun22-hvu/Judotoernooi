@@ -115,17 +115,25 @@ class WedstrijddagController extends Controller
         $nieuwePoule = Poule::findOrFail($validated['poule_id']);
         $oudePouleData = null;
 
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
         // Remove from old poule(s)
         if (!empty($validated['from_poule_id'])) {
             // From specific poule (drag within poules)
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
-            $oudePoule->refresh(); // Ensure we have fresh data
+            $oudePoule->load('judokas'); // Reload judokas relation
+
+            // Count ACTIVE judokas (not absent, within weight class)
+            $actieveJudokas = $oudePoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
+            $aantalActief = $actieveJudokas->count();
+            $aantalWedstrijden = $oudePoule->berekenAantalWedstrijden($aantalActief);
+
             $oudePouleData = [
                 'id' => $oudePoule->id,
-                'aantal_judokas' => $oudePoule->aantal_judokas,
-                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
+                'aantal_judokas' => $aantalActief,
+                'aantal_wedstrijden' => $aantalWedstrijden,
             ];
         } else {
             // From wachtruimte - detach from ALL current poules
@@ -157,15 +165,20 @@ class WedstrijddagController extends Controller
         }
 
         $nieuwePoule->updateStatistieken();
-        $nieuwePoule->refresh(); // Ensure we have fresh data
+        $nieuwePoule->load('judokas'); // Reload judokas relation
+
+        // Count ACTIVE judokas for nieuwe poule
+        $actieveNieuw = $nieuwePoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
+        $aantalActiefNieuw = $actieveNieuw->count();
+        $aantalWedstrijdenNieuw = $nieuwePoule->berekenAantalWedstrijden($aantalActiefNieuw);
 
         return response()->json([
             'success' => true,
             'van_poule' => $oudePouleData,
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
-                'aantal_judokas' => $nieuwePoule->aantal_judokas,
-                'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
+                'aantal_judokas' => $aantalActiefNieuw,
+                'aantal_wedstrijden' => $aantalWedstrijdenNieuw,
             ],
         ]);
     }
