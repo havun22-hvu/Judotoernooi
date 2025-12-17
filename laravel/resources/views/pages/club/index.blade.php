@@ -33,6 +33,15 @@
 </div>
 @endif
 
+<!-- PIN Warning -->
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+    <span class="text-amber-600">⚠️</span>
+    <div class="text-sm text-amber-800">
+        <strong>Let op:</strong> De PIN geeft volledige toegang tot het aanmelden en wijzigen van judoka's.
+        Stuur de URL + PIN alleen naar de verantwoordelijke coach en vraag om deze veilig te bewaren.
+    </div>
+</div>
+
 <!-- Clubs tabel -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <table class="w-full">
@@ -43,7 +52,7 @@
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telefoon</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Judoka's</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Status</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Coach Portal</th>
                 <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600">Acties</th>
             </tr>
         </thead>
@@ -52,10 +61,17 @@
             @php
                 $uitnodiging = $uitnodigingen[$club->id] ?? null;
                 $inschrijfUrl = $uitnodiging ? route('coach.portal', $uitnodiging->token) : null;
+                $coach = $club->coaches->first();
+                $portalUrl = $coach ? url('/school/' . $coach->portal_code) : null;
             @endphp
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3">
                     <span class="font-medium text-gray-800">{{ $club->naam }}</span>
+                    @if($coach)
+                    <div class="text-xs text-gray-500 mt-1">
+                        Coach: {{ $coach->naam }}
+                    </div>
+                    @endif
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->plaats ?? '-' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->email ?? '-' }}</td>
@@ -64,21 +80,25 @@
                     <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }}</span>
                 </td>
                 <td class="px-4 py-3">
-                    @if($uitnodiging)
-                    <span class="text-xs text-green-600">Uitgenodigd {{ $uitnodiging->uitgenodigd_op->format('d-m') }}</span>
+                    @if($coach)
+                    <div class="flex items-center gap-2">
+                        <button @click="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                                class="px-2 py-1 text-xs rounded"
+                                :class="copiedUrl === 'url-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
+                            <span x-text="copiedUrl === 'url-{{ $club->id }}' ? '✓ URL' : 'URL'"></span>
+                        </button>
+                        <button @click="navigator.clipboard.writeText('{{ $coach->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                                class="px-2 py-1 text-xs rounded"
+                                :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'">
+                            <span x-text="copiedUrl === 'pin-{{ $club->id }}' ? '✓ PIN' : 'PIN: {{ $coach->pincode }}'"></span>
+                        </button>
+                    </div>
                     @else
-                    <span class="text-xs text-gray-400">Nog niet uitgenodigd</span>
+                    <span class="text-xs text-gray-400">Geen coach</span>
                     @endif
                 </td>
                 <td class="px-4 py-3 text-right">
                     <div class="flex justify-end gap-2">
-                        @if($inschrijfUrl)
-                        <button @click="navigator.clipboard.writeText('{{ $inschrijfUrl }}'); copiedUrl = {{ $club->id }}; setTimeout(() => copiedUrl = null, 2000)"
-                                class="px-2 py-1 text-xs rounded"
-                                :class="copiedUrl === {{ $club->id }} ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'">
-                            <span x-text="copiedUrl === {{ $club->id }} ? '✓ Gekopieerd' : 'Link'"></span>
-                        </button>
-                        @endif
                         @if($club->email)
                         <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
                             @csrf
