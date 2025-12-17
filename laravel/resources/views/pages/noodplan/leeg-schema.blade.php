@@ -21,27 +21,44 @@
     }
     .schema-table {
         width: 100%;
-        table-layout: fixed;
         border-collapse: collapse;
     }
     .schema-table th,
     .schema-table td {
-        border: 1px solid #000;
+        border: 1px solid #333;
     }
-    .wedstrijd-cel {
-        position: relative;
-        height: 32px;
+    .header-row {
+        background: #1f2937;
+        color: white;
     }
-    .wedstrijd-cel.actief::after {
-        content: '';
-        position: absolute;
-        top: 4px;
-        bottom: 4px;
-        left: 50%;
-        border-left: 1px solid #999;
+    .header-row th {
+        border-color: #374151;
     }
-    .wedstrijd-cel.inactief {
-        background: #000;
+    .sub-header {
+        font-size: 10px;
+        font-weight: normal;
+        color: #9ca3af;
+    }
+    .judoka-row td {
+        height: 28px;
+    }
+    .naam-cel {
+        min-width: 160px;
+    }
+    .score-cel {
+        width: 18px;
+        text-align: center;
+    }
+    .score-cel.inactief {
+        background: #1f2937;
+    }
+    .totaal-cel {
+        width: 32px;
+        background: #f3f4f6;
+    }
+    .plts-cel {
+        width: 28px;
+        background: #fef9c3;
     }
 </style>
 @endpush
@@ -59,36 +76,42 @@
         </div>
     </div>
 
-    <!-- Matrix tabel -->
-    <table class="schema-table text-sm">
+    <!-- Matrix tabel zoals online versie -->
+    <table class="schema-table text-xs">
         <thead>
-            <tr class="bg-gray-200">
-                <th class="px-2 py-1 text-center font-bold" style="width: 30px;">Nr</th>
-                <th class="px-2 py-1 text-left font-bold" style="width: 180px;">Naam (Club)</th>
+            <tr class="header-row">
+                <th class="px-1 py-1 text-center" style="width: 24px;">Nr</th>
+                <th class="px-2 py-1 text-left naam-cel">Naam</th>
                 @foreach($schema as $idx => $wedstrijd)
-                <th class="px-0 py-1 text-center font-bold text-xs">
-                    <div>{{ $idx + 1 }}</div>
-                    <div class="text-gray-500 font-normal" style="font-size: 9px;">W | J</div>
+                <th class="py-1 text-center" colspan="2" style="min-width: 36px;">
+                    <div class="font-bold">{{ $idx + 1 }}</div>
+                    <div class="sub-header">W &nbsp; J</div>
                 </th>
                 @endforeach
-                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 35px;">WP</th>
-                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 35px;">JP</th>
-                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 30px;">Plts</th>
+                <th class="px-1 py-1 text-center totaal-cel">WP</th>
+                <th class="px-1 py-1 text-center totaal-cel">JP</th>
+                <th class="px-1 py-1 text-center plts-cel">Plts</th>
             </tr>
         </thead>
         <tbody>
             @for($i = 1; $i <= $aantal; $i++)
-            <tr>
-                <td class="px-2 py-0 text-center font-bold text-lg">{{ $i }}</td>
-                <td class="px-2 py-0">
-                    <span class="inline-block border-b border-gray-400 w-full" style="min-height: 20px;"></span>
+            <tr class="judoka-row">
+                <td class="px-1 text-center font-bold">{{ $i }}</td>
+                <td class="px-2 naam-cel">
+                    <span class="inline-block border-b border-gray-300 w-full">&nbsp;</span>
                 </td>
                 @foreach($schema as $idx => $wedstrijd)
-                <td class="wedstrijd-cel {{ in_array($i, $wedstrijd) ? 'actief' : 'inactief' }}"></td>
+                    @if(in_array($i, $wedstrijd))
+                    <td class="score-cel border-r-0"></td>
+                    <td class="score-cel border-l-0"></td>
+                    @else
+                    <td class="score-cel inactief border-r-0"></td>
+                    <td class="score-cel inactief border-l-0"></td>
+                    @endif
                 @endforeach
-                <td class="px-1 py-0 text-center bg-gray-100"></td>
-                <td class="px-1 py-0 text-center bg-gray-100"></td>
-                <td class="px-1 py-0 text-center bg-gray-100"></td>
+                <td class="totaal-cel text-center"></td>
+                <td class="totaal-cel text-center"></td>
+                <td class="plts-cel text-center"></td>
             </tr>
             @endfor
         </tbody>
