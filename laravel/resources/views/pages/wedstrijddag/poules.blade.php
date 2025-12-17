@@ -144,9 +144,10 @@
                                     @if($aantalActief === 0)
                                     <button
                                         onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
-                                        class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold flex-shrink-0"
+                                        class="delete-poule-btn w-8 h-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2"
                                         title="Verwijder lege poule"
-                                    >−</button>
+                                        style="min-width: 32px"
+                                    >×</button>
                                     @endif
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
@@ -602,13 +603,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update delete button visibility for empty poules
         let deleteBtn = pouleCard.querySelector('.delete-poule-btn');
+        console.log('updatePouleStats:', { id: pouleData.id, actief, isLeeg, hasDeleteBtn: !!deleteBtn, hasHeader: !!header });
+
         if (isLeeg) {
             // Show delete button if not present
             if (!deleteBtn && header) {
+                console.log('Creating delete button for poule', pouleData.id);
                 const btn = document.createElement('button');
-                btn.className = 'delete-poule-btn w-6 h-6 flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold flex-shrink-0';
+                btn.className = 'delete-poule-btn w-8 h-8 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2';
                 btn.title = 'Verwijder lege poule';
-                btn.innerHTML = '−';
+                btn.innerHTML = '×';
+                btn.style.minWidth = '32px';
                 btn.onclick = () => verwijderPoule(pouleData.id, pouleCard.dataset.pouleNummer);
                 header.appendChild(btn);
             }
