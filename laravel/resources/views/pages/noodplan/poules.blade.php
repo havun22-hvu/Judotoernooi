@@ -53,10 +53,10 @@
                     <td class="p-2">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="p-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
                     <td class="p-2 text-center">
-                        @if($judoka->gewogen_gewicht)
-                            {{ number_format($judoka->gewogen_gewicht, 1) }} kg
-                        @elseif($judoka->geschat_gewicht)
-                            ~{{ number_format($judoka->geschat_gewicht, 1) }} kg
+                        @if($judoka->gewicht_gewogen)
+                            {{ number_format($judoka->gewicht_gewogen, 1) }} kg
+                        @elseif($judoka->gewicht)
+                            ~{{ number_format($judoka->gewicht, 1) }} kg
                         @else
                             -
                         @endif

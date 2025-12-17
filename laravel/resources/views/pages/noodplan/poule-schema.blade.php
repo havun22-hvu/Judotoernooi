@@ -48,7 +48,7 @@
                     <td class="p-2">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="p-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
                     <td class="p-2 text-center">
-                        {{ $judoka->gewogen_gewicht ? number_format($judoka->gewogen_gewicht, 1) . ' kg' : '-' }}
+                        {{ $judoka->gewicht_gewogen ? number_format($judoka->gewicht_gewogen, 1) . ' kg' : '-' }}
                     </td>
                 </tr>
                 @endforeach
