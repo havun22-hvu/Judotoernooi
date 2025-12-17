@@ -66,24 +66,27 @@
         color: #9ca3af;
     }
     .judoka-row td {
-        height: 28px;
+        height: 32px;
     }
     .naam-cel {
-        min-width: 160px;
+        min-width: 180px;
     }
     .score-cel {
-        width: 18px;
+        width: 24px;
+        min-width: 24px;
         text-align: center;
     }
     .score-cel.inactief {
         background: #1f2937;
     }
     .totaal-cel {
-        width: 32px;
+        width: 40px;
+        min-width: 40px;
         background: #f3f4f6;
     }
     .plts-cel {
-        width: 28px;
+        width: 36px;
+        min-width: 36px;
         background: #fef9c3;
     }
 </style>
