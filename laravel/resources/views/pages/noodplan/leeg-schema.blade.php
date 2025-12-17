@@ -4,91 +4,113 @@
 
 @section('content')
 <div class="mb-6">
-    <h2 class="text-xl font-bold mb-2">Wedstrijdschema voor {{ $aantal }} judoka's</h2>
-    <p class="text-sm text-gray-600">
-        {{ count($schema) }} wedstrijden
-        @if($aantal <= 3) (dubbele round-robin) @else (enkelvoudige round-robin) @endif
-    </p>
+    <!-- Header met invulvelden -->
+    <div class="bg-green-700 text-white px-4 py-3 mb-4">
+        <div class="flex gap-8 text-sm">
+            <div>Poule #: <span class="inline-block border-b border-white w-12"></span></div>
+            <div>Leeftijdsklasse: <span class="inline-block border-b border-white w-24"></span></div>
+            <div>Gewichtsklasse: <span class="inline-block border-b border-white w-20"></span></div>
+            <div>Blok: <span class="inline-block border-b border-white w-8"></span></div>
+            <div>Mat: <span class="inline-block border-b border-white w-8"></span></div>
+        </div>
+    </div>
+
+    <!-- Matrix tabel -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse border">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="px-2 py-2 text-left font-bold border min-w-[200px]">Naam</th>
+                    <th class="px-2 py-2 text-left font-bold border w-32">Club</th>
+                    @foreach($schema as $idx => $wedstrijd)
+                    <th class="px-1 py-2 text-center font-bold border w-16" colspan="2">
+                        <div class="text-xs">{{ $idx + 1 }}</div>
+                        <div class="text-xs text-gray-500">{{ $wedstrijd[0] }}-{{ $wedstrijd[1] }}</div>
+                    </th>
+                    @endforeach
+                    <th class="px-1 py-2 text-center font-bold bg-blue-100 border w-10 text-xs">WP</th>
+                    <th class="px-1 py-2 text-center font-bold bg-blue-100 border w-10 text-xs">JP</th>
+                    <th class="px-1 py-2 text-center font-bold bg-yellow-100 border w-8 text-xs">#</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for($i = 1; $i <= $aantal; $i++)
+                <tr>
+                    <!-- Nr + Naam -->
+                    <td class="px-2 py-2 border">
+                        <span class="font-bold">{{ $i }}.</span>
+                        <span class="inline-block border-b border-gray-400 w-32 ml-1"></span>
+                    </td>
+                    <!-- Club -->
+                    <td class="px-2 py-2 border">
+                        <span class="inline-block border-b border-gray-400 w-24"></span>
+                    </td>
+                    <!-- Wedstrijd cellen -->
+                    @foreach($schema as $idx => $wedstrijd)
+                    <td class="px-0 py-1 text-center border {{ in_array($i, $wedstrijd) ? 'bg-white' : 'bg-gray-400' }}" colspan="2">
+                        @if(in_array($i, $wedstrijd))
+                        <div class="flex justify-center gap-1">
+                            <span class="inline-block border border-gray-400 w-5 h-5"></span>
+                            <span class="inline-block border border-gray-400 w-6 h-5"></span>
+                        </div>
+                        @endif
+                    </td>
+                    @endforeach
+                    <!-- Totaal WP -->
+                    <td class="px-1 py-1 text-center bg-blue-50 border"></td>
+                    <!-- Totaal JP -->
+                    <td class="px-1 py-1 text-center bg-blue-50 border"></td>
+                    <!-- Plaats -->
+                    <td class="px-1 py-1 text-center bg-yellow-50 border"></td>
+                </tr>
+                @endfor
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Legenda -->
+    <div class="mt-4 text-xs text-gray-600">
+        <p><strong>Legenda:</strong> Eerste vakje = WP (0-10), Tweede vakje = JP (0, 5, 7, 10)</p>
+        <p>Grijze cellen = judoka speelt niet in deze wedstrijd</p>
+    </div>
 </div>
 
-<!-- Deelnemers invullen -->
-<div class="mb-6 p-4 bg-gray-50 border rounded">
-    <h3 class="font-bold mb-3">Deelnemers</h3>
-    <table class="w-full text-sm">
-        @for($i = 1; $i <= $aantal; $i++)
-        <tr>
-            <td class="py-2 w-12 font-bold">{{ $i }}.</td>
-            <td class="py-2 border-b border-dotted">Naam: _________________________________</td>
-            <td class="py-2 border-b border-dotted w-32">Club: ______________</td>
-        </tr>
-        @endfor
-    </table>
-</div>
-
-<!-- Wedstrijden -->
-<table class="w-full text-sm">
-    <thead>
-        <tr class="bg-gray-200">
-            <th class="p-2 text-center w-12">#</th>
-            <th class="p-2 text-center w-16">Wit</th>
-            <th class="p-2 text-center w-8">-</th>
-            <th class="p-2 text-center w-16">Blauw</th>
-            <th class="p-2 text-center w-20">WP Wit</th>
-            <th class="p-2 text-center w-20">WP Blauw</th>
-            <th class="p-2 text-center w-20">Winnaar</th>
-            <th class="p-2 text-left">Opmerkingen</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($schema as $idx => $wedstrijd)
-        <tr class="{{ $idx % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
-            <td class="p-3 text-center font-bold">{{ $idx + 1 }}</td>
-            <td class="p-3 text-center font-bold text-lg">{{ $wedstrijd[0] }}</td>
-            <td class="p-3 text-center text-gray-400">-</td>
-            <td class="p-3 text-center font-bold text-lg text-blue-600">{{ $wedstrijd[1] }}</td>
-            <td class="p-3 text-center border-l"></td>
-            <td class="p-3 text-center border-l"></td>
-            <td class="p-3 text-center border-l"></td>
-            <td class="p-3 border-l"></td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
-<!-- Klassement -->
+<!-- Klassement tabel -->
 <div class="mt-8 p-4 bg-gray-50 border rounded">
-    <h3 class="font-bold mb-3">Klassement</h3>
-    <table class="w-full text-sm">
+    <h3 class="font-bold mb-3">Eindklassement</h3>
+    <table class="w-full text-sm border">
         <thead>
             <tr class="bg-gray-200">
-                <th class="p-2 text-center w-12">Plaats</th>
-                <th class="p-2 text-center w-12">#</th>
-                <th class="p-2 text-left">Naam</th>
-                <th class="p-2 text-center w-16">Gewonnen</th>
-                <th class="p-2 text-center w-16">Verloren</th>
-                <th class="p-2 text-center w-16">WP</th>
+                <th class="p-2 text-center border w-12">Plaats</th>
+                <th class="p-2 text-center border w-8">#</th>
+                <th class="p-2 text-left border">Naam</th>
+                <th class="p-2 text-left border w-32">Club</th>
+                <th class="p-2 text-center border w-12">WP</th>
+                <th class="p-2 text-center border w-12">JP</th>
             </tr>
         </thead>
         <tbody>
             @for($i = 1; $i <= $aantal; $i++)
             <tr>
-                <td class="p-2 text-center font-bold">{{ $i }}</td>
-                <td class="p-2 text-center"></td>
-                <td class="p-2"></td>
-                <td class="p-2 text-center"></td>
-                <td class="p-2 text-center"></td>
-                <td class="p-2 text-center"></td>
+                <td class="p-2 text-center border font-bold">
+                    @if($i == 1) 🥇 @elseif($i == 2) 🥈 @elseif($i == 3) 🥉 @else {{ $i }} @endif
+                </td>
+                <td class="p-2 text-center border"></td>
+                <td class="p-2 border"></td>
+                <td class="p-2 border"></td>
+                <td class="p-2 text-center border"></td>
+                <td class="p-2 text-center border"></td>
             </tr>
             @endfor
         </tbody>
     </table>
 </div>
 
-<!-- Meerdere kopieën printen -->
+<!-- Print tip -->
 <div class="no-print mt-6 p-4 bg-blue-50 rounded">
     <p class="text-sm text-blue-800">
-        <strong>Tip:</strong> Print meerdere kopieën van dit schema als backup.
-        Gebruik Ctrl+P en stel het aantal exemplaren in.
+        <strong>Tip:</strong> Print meerdere kopieën (Ctrl+P → aantal exemplaren).
+        Schema voor {{ $aantal }} judoka's = {{ count($schema) }} wedstrijden.
     </p>
 </div>
 @endsection
