@@ -13,6 +13,30 @@
             max-width: none !important;
             padding: 0 !important;
         }
+        /* Override layout print styles voor schema */
+        .schema-table,
+        .schema-table * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+        .header-row,
+        .header-row th {
+            background: #1f2937 !important;
+            color: white !important;
+        }
+        .sub-header {
+            color: #9ca3af !important;
+        }
+        .score-cel.inactief {
+            background: #1f2937 !important;
+        }
+        .totaal-cel {
+            background: #f3f4f6 !important;
+        }
+        .plts-cel {
+            background: #fef9c3 !important;
+        }
     }
     @media screen {
         .print-container {
