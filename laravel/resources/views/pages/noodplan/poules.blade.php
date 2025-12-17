@@ -43,7 +43,7 @@
                     <td class="p-2 font-bold">{{ $idx + 1 }}</td>
                     <td class="p-2 font-medium">{{ $judoka->naam }}</td>
                     <td class="p-2">{{ $judoka->club?->naam ?? '-' }}</td>
-                    <td class="p-2 text-center">{{ $judoka->band?->label() ?? '-' }}</td>
+                    <td class="p-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
                     <td class="p-2 text-center">
                         @if($judoka->gewogen_gewicht)
                             {{ number_format($judoka->gewogen_gewicht, 1) }} kg
