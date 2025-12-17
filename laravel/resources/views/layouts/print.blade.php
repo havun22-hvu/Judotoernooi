@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Print') - {{ $toernooi->naam }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    @stack('styles')
     <style>
         @media print {
             /* Verberg niet-printbare elementen */
@@ -74,6 +73,7 @@
             color: #666;
         }
     </style>
+    @stack('styles')
 </head>
 <body class="min-h-screen">
     <!-- Print toolbar -->
