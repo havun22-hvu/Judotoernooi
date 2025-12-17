@@ -450,7 +450,7 @@ function matInterface() {
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
 
             if (wedstrijd.is_gespeeld) return 'Gespeeld';
-            if (huidige && wedstrijd.id === huidige.id) return 'Aan de beurt';
+            if (huidige && wedstrijd.id === huidige.id) return 'Aan de beurt - klik om uit te stellen';
             if (volgende && wedstrijd.id === volgende.id) {
                 return poule.huidige_wedstrijd_id === wedstrijd.id
                     ? 'Handmatig geselecteerd - klik om te deselecteren'
@@ -464,8 +464,33 @@ function matInterface() {
             // Niet toestaan voor gespeelde wedstrijden
             if (wedstrijd.is_gespeeld) return;
 
-            // Als dit al de handmatig geselecteerde is, deselecteer
-            const nieuweId = poule.huidige_wedstrijd_id === wedstrijd.id ? null : wedstrijd.id;
+            const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
+            let nieuweId = null;
+
+            // Klik op GROENE (huidige) wedstrijd = uitstellen
+            if (huidige && wedstrijd.id === huidige.id) {
+                if (!confirm('Wedstrijd uitstellen?')) return;
+
+                // Zoek de volgende niet-gespeelde wedstrijd NA deze
+                const wedstrijden = poule.wedstrijden;
+                const huidigeIdx = wedstrijden.findIndex(w => w.id === huidige.id);
+                const volgendeNietGespeeld = wedstrijden.find((w, idx) => idx > huidigeIdx && !w.is_gespeeld);
+
+                if (volgendeNietGespeeld) {
+                    nieuweId = volgendeNietGespeeld.id;
+                } else {
+                    alert('Geen volgende wedstrijd om naar over te slaan');
+                    return;
+                }
+            }
+            // Klik op GELE (volgende) wedstrijd = deselecteren als handmatig geselecteerd
+            else if (volgende && wedstrijd.id === volgende.id && poule.huidige_wedstrijd_id === wedstrijd.id) {
+                nieuweId = null; // Terug naar automatisch
+            }
+            // Klik op andere wedstrijd = selecteer als volgende
+            else {
+                nieuweId = wedstrijd.id;
+            }
 
             try {
                 const response = await fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
