@@ -81,11 +81,11 @@
     </div>
 </div>
 
-<!-- Print tip -->
+<!-- Info -->
 <div class="no-print mt-6 p-4 bg-blue-50 rounded">
     <p class="text-sm text-blue-800">
-        <strong>Tip:</strong> Print meerdere kopieën (Ctrl+P → aantal exemplaren).
         Schema voor {{ $aantal }} judoka's = {{ count($schema) }} wedstrijden.
+        Gebruik de Print knop hierboven om meerdere kopieën te printen.
     </p>
 </div>
 @endsection
