@@ -11,19 +11,27 @@
     @endif
 
     @foreach($blokPoules as $index => $poule)
+    @if($poule->judokas->count() > 0)
     <div class="mb-6 no-break {{ !$loop->last ? 'page-break' : '' }}">
-        <div class="bg-gray-100 p-3 mb-2">
+        <div class="bg-blue-600 text-white p-3 mb-2">
             <div class="flex justify-between items-center">
                 <div>
                     <span class="font-bold text-lg">
-                        {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                        #{{ $poule->id }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}
                         @if($poule->naam) - {{ $poule->naam }} @endif
                     </span>
-                    @if($poule->mat_nummer)
-                    <span class="ml-2 text-sm bg-blue-600 text-white px-2 py-1 rounded">Mat {{ $poule->mat_nummer }}</span>
+                    @if($poule->blok || $poule->mat_nummer)
+                    <span class="ml-2 text-sm text-blue-200">
+                        @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
+                        @if($poule->blok && $poule->mat_nummer) - @endif
+                        @if($poule->mat_nummer)Mat {{ $poule->mat_nummer }}@endif
+                    </span>
                     @endif
                 </div>
-                <span class="text-sm text-gray-600">{{ $poule->judokas->count() }} judoka's</span>
+                <div class="text-right text-sm">
+                    <div>{{ $poule->judokas->count() }} judoka's</div>
+                    <div class="text-blue-200">{{ $poule->wedstrijden->count() }} wedstrijden</div>
+                </div>
             </div>
         </div>
 
@@ -58,6 +66,7 @@
             </tbody>
         </table>
     </div>
+    @endif
     @endforeach
 @endforeach
 
