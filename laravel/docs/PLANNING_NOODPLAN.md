@@ -1,6 +1,6 @@
 # Noodplan - Implementatie Plan
 
-> **Status:** Te implementeren
+> **Status:** Geïmplementeerd (2024-12-17)
 > **Doel:** Print-ready backup systeem voor wanneer techniek faalt tijdens toernooi
 
 ---
@@ -153,21 +153,21 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 
 ## 6. Implementatie Volgorde
 
-- [ ] 1. NoodplanController basis
-- [ ] 2. Routes toevoegen (met middleware)
-- [ ] 3. Print layout (`layouts/print.blade.php`)
-- [ ] 4. Noodplan index pagina
-- [ ] 5. Toggle in instellingen (onder Pagina Builder)
-- [ ] 6. Print: Poules per blok
-- [ ] 7. Print: Weeglijst
-- [ ] 8. Print: Zaaloverzicht
-- [ ] 9. Print: Weegkaarten
-- [ ] 10. Print: Coachkaarten
-- [ ] 11. Print: Lege templates (2-7 judokas)
-- [ ] 12. Print: Instellingen samenvatting
-- [ ] 13. Print: Contactlijst coaches
-- [ ] 14. Print: Ingevulde wedstrijdschema's
-- [ ] 15. Print: Actieve poule (huidige staat)
+- [x] 1. NoodplanController basis
+- [x] 2. Routes toevoegen (met middleware)
+- [x] 3. Print layout (`layouts/print.blade.php`)
+- [x] 4. Noodplan index pagina
+- [x] 5. Toggle in instellingen (onder Pagina Builder)
+- [x] 6. Print: Poules per blok
+- [x] 7. Print: Weeglijst
+- [x] 8. Print: Zaaloverzicht
+- [x] 9. Print: Weegkaarten
+- [x] 10. Print: Coachkaarten
+- [x] 11. Print: Lege templates (2-7 judokas)
+- [x] 12. Print: Instellingen samenvatting
+- [x] 13. Print: Contactlijst coaches
+- [x] 14. Print: Ingevulde wedstrijdschema's
+- [x] 15. Print: Actieve poule (huidige staat)
 
 ---
 
