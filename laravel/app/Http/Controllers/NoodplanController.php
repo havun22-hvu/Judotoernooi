@@ -37,9 +37,14 @@ class NoodplanController extends Controller
     /**
      * Print poules per blok of alle blokken
      */
-    public function printPoules(Toernooi $toernooi, ?Blok $blok = null): View
+    public function printPoules(Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        if ($blok) {
+        $blok = null;
+        if ($blokNummer) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if (!$blok) {
+                abort(404, 'Blok niet gevonden');
+            }
             $poules = $blok->poules()->with(['judokas.club', 'categorie'])->get();
             $titel = "Poules Blok {$blok->nummer}";
         } else {
@@ -195,9 +200,14 @@ class NoodplanController extends Controller
     /**
      * Print ingevulde wedstrijdschema's per blok
      */
-    public function printWedstrijdschemas(Toernooi $toernooi, ?Blok $blok = null): View
+    public function printWedstrijdschemas(Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        if ($blok) {
+        $blok = null;
+        if ($blokNummer) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if (!$blok) {
+                abort(404, 'Blok niet gevonden');
+            }
             $poules = $blok->poules()
                 ->with(['judokas', 'wedstrijden', 'categorie'])
                 ->get();
