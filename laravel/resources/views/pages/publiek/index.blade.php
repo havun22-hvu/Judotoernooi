@@ -628,55 +628,70 @@
                         </button>
                     </div>
 
-                    <!-- Poules -->
-                    <div x-show="!loadingPoules && favorietenPoules.length > 0">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold text-gray-800">Poules van mijn favorieten</h2>
-                            <button @click="loadFavorieten()" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+                    <!-- Poules met tabs per favoriet -->
+                    <div x-show="!loadingPoules && favorietenPoules.length > 0" x-data="{ activeFavoriet: null }" x-init="$watch('favorietenPoules', () => { if(favorietenPoules.length > 0 && !activeFavoriet) activeFavoriet = getFirstFavorietId() })">
+                        <!-- Tabs voor favorieten (max 10) -->
+                        <div class="flex gap-1 mb-3 overflow-x-auto pb-2">
+                            <template x-for="id in favorieten.slice(0, 10)" :key="id">
+                                <button @click="activeFavoriet = id"
+                                        class="px-3 py-2 rounded-t-lg text-sm font-medium whitespace-nowrap transition-colors"
+                                        :class="activeFavoriet === id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
+                                    <span x-text="getFavorietNaam(id).split(' ')[0]"></span>
+                                </button>
+                            </template>
+                            <button @click="loadFavorieten()" class="px-2 py-2 text-blue-600 hover:text-blue-800" title="Ververs">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                 </svg>
-                                Ververs
                             </button>
                         </div>
 
-                        <template x-for="poule in favorietenPoules" :key="poule.id">
-                            <div class="bg-white rounded-lg shadow overflow-hidden mb-4">
-                                <div class="bg-blue-600 text-white px-4 py-3">
-                                    <div class="flex justify-between items-center flex-wrap gap-2">
-                                        <div>
+                        <!-- Actieve poule -->
+                        <template x-for="poule in favorietenPoules.filter(p => p.judokas.some(j => j.id === activeFavoriet))" :key="poule.id">
+                            <div class="bg-white rounded-lg shadow overflow-hidden">
+                                <div class="bg-blue-600 text-white px-4 py-2">
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm">
                                             <span class="font-bold">P<span x-text="poule.nummer"></span></span>
                                             <span x-text="kortLeeftijd(poule.leeftijdsklasse) + (poule.gewichtsklasse && poule.gewichtsklasse !== 'onbekend' ? ' / ' + poule.gewichtsklasse : '')"></span>
-                                            <span x-show="poule.mat" class="text-blue-200">, mat <span x-text="poule.mat"></span></span>
+                                            <span x-show="poule.mat" class="text-blue-200 ml-1">Mat <span x-text="poule.mat"></span></span>
                                         </div>
-                                        <div x-show="poule.blok" class="text-blue-200 text-sm">
+                                        <div x-show="poule.blok" class="text-blue-200 text-xs">
                                             Blok <span x-text="poule.blok"></span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="divide-y">
                                     <template x-for="(judoka, index) in poule.judokas" :key="judoka.id">
-                                        <div class="px-4 py-3 flex justify-between items-center"
+                                        <div class="px-3 py-2 flex justify-between items-center"
                                              :class="{
-                                                 'bg-yellow-50 border-l-4 border-yellow-400': judoka.is_favoriet,
+                                                 'bg-yellow-50 border-l-4 border-yellow-400': judoka.id === activeFavoriet,
                                                  'opacity-50 line-through': judoka.is_doorgestreept
                                              }">
-                                            <div class="flex items-center gap-3">
-                                                <span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium"
+                                            <div class="flex items-center gap-2">
+                                                <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                                                      :class="index === 0 ? 'bg-yellow-400 text-yellow-900' : (index === 1 ? 'bg-gray-300' : (index === 2 ? 'bg-orange-300' : 'bg-gray-200'))"
                                                       x-text="judoka.eindpositie || (index + 1)"></span>
                                                 <div>
-                                                    <span class="font-medium" :class="judoka.is_favoriet ? 'text-yellow-800' : 'text-gray-800'" x-text="judoka.naam"></span>
-                                                    <span class="text-sm text-gray-500 block" x-text="judoka.club"></span>
+                                                    <span class="font-medium text-sm" :class="judoka.id === activeFavoriet ? 'text-yellow-800' : 'text-gray-800'" x-text="judoka.naam"></span>
+                                                    <span class="text-xs text-gray-500 block" x-text="judoka.club"></span>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-3">
-                                                <span class="text-sm text-gray-600" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : ''"></span>
-                                                <span class="w-4 h-4 rounded-full" :class="'band-' + judoka.band"></span>
-                                                <span x-show="judoka.punten > 0" class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-sm font-medium" x-text="judoka.punten + ' pt'"></span>
+                                            <div class="flex items-center gap-2 text-xs">
+                                                <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
+                                                <span class="w-3 h-3 rounded-full" :class="'band-' + judoka.band"></span>
+                                                <span x-show="judoka.punten > 0" class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.punten + 'pt'"></span>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
+                            </div>
+                        </template>
+
+                        <!-- Geen poule voor deze favoriet -->
+                        <template x-if="activeFavoriet && !favorietenPoules.some(p => p.judokas.some(j => j.id === activeFavoriet))">
+                            <div class="bg-gray-100 rounded-lg p-4 text-center text-gray-500 text-sm">
+                                Nog geen poule voor deze judoka
                             </div>
                         </template>
                     </div>
@@ -875,6 +890,10 @@
 
                 getFavorietNaam(id) {
                     return judokaNamen[id] || 'Judoka #' + id;
+                },
+
+                getFirstFavorietId() {
+                    return this.favorieten.length > 0 ? this.favorieten[0] : null;
                 },
 
                 async loadFavorieten() {
