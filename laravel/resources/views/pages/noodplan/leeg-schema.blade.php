@@ -42,7 +42,8 @@
     }
     @media screen {
         .print-container {
-            max-width: 297mm !important;
+            max-width: {{ $aantal >= 6 ? 'none' : '210mm' }} !important;
+            width: {{ $aantal >= 6 ? '297mm' : 'auto' }};
         }
     }
     .schema-table {
