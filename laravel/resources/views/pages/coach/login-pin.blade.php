@@ -56,6 +56,17 @@
         <p class="mt-6 text-xs text-gray-500 text-center">
             PIN vergeten? Neem contact op met de organisatie.
         </p>
+
+        <!-- Security warning -->
+        <div class="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div class="flex items-start gap-2">
+                <span class="text-amber-600 text-lg">⚠️</span>
+                <div class="text-xs text-amber-800">
+                    <p class="font-bold mb-1">Beveiligingswaarschuwing</p>
+                    <p>Deze PIN geeft toegang om judoka's aan te melden en te wijzigen. Deel deze code niet met anderen en bewaar hem veilig.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
