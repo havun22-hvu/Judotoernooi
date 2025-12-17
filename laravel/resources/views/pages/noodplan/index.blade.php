@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Noodplan')
+@section('title', 'Case of Emergency')
 
 @section('content')
 <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Noodplan</h1>
-            <p class="text-gray-600 mt-1">Print backup documenten voor wanneer techniek faalt</p>
+            <h1 class="text-3xl font-bold text-gray-800">Case of Emergency</h1>
+            <p class="text-gray-600 mt-1">In case of emergency - break glass (print backup documenten)</p>
         </div>
         <div class="text-right text-sm text-gray-500">
             <p>Momentopname: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
