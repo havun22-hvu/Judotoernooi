@@ -209,34 +209,35 @@ class PubliekController extends Controller
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
                 // Find current and next match
-                // Priority: manual override > automatic (based on last played)
+                // Huidige (groen) = always automatic (first unplayed after last played)
+                // Volgende (geel) = manual override OR automatic (second unplayed)
                 $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
 
                 $huidigeWedstrijd = null;
                 $volgendeWedstrijd = null;
 
-                // Check for manual override
-                if ($poule->huidige_wedstrijd_id) {
-                    $huidigeWedstrijd = $wedstrijden->firstWhere('id', $poule->huidige_wedstrijd_id);
-                    if ($huidigeWedstrijd) {
+                // Automatic: based on last played match
+                $laatstGespeeld = $wedstrijden->filter(fn($w) => $w->status === 'gespeeld')->last();
+
+                if ($laatstGespeeld) {
+                    // Current (green) = first unplayed after last played
+                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $laatstGespeeld->volgorde && $w->status !== 'gespeeld');
+                    // Next (yellow) = manual override OR second unplayed after last played
+                    if ($poule->huidige_wedstrijd_id) {
+                        $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
+                    }
+                    if (!$volgendeWedstrijd && $huidigeWedstrijd) {
                         $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
                     }
                 } else {
-                    // Automatic: based on last played match
-                    // Logic: if match 4 just got points, match 5 = green (current), match 6 = yellow (next)
-                    $laatstGespeeld = $wedstrijden->filter(fn($w) => $w->status === 'gespeeld')->last();
-
-                    if ($laatstGespeeld) {
-                        // Current = first unplayed after last played
-                        $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $laatstGespeeld->volgorde && $w->status !== 'gespeeld');
-                        // Next = second unplayed after last played
-                        if ($huidigeWedstrijd) {
-                            $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
-                        }
-                    } else {
-                        // No matches played yet - first is current, second is next
-                        $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
-                        $huidigeWedstrijd = $ongespeeld->get(0);
+                    // No matches played yet - first is current
+                    $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
+                    $huidigeWedstrijd = $ongespeeld->get(0);
+                    // Next (yellow) = manual override OR second unplayed
+                    if ($poule->huidige_wedstrijd_id) {
+                        $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
+                    }
+                    if (!$volgendeWedstrijd) {
                         $volgendeWedstrijd = $ongespeeld->get(1);
                     }
                 }

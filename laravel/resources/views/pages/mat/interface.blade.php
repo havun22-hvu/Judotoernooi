@@ -398,17 +398,6 @@ function matInterface() {
             const wedstrijden = poule.wedstrijden;
             if (!wedstrijden || wedstrijden.length === 0) return { huidige: null, volgende: null };
 
-            // Handmatige selectie?
-            if (poule.huidige_wedstrijd_id) {
-                const volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id);
-                if (volgende) {
-                    // Huidige = de wedstrijd ervoor (of null als dit de eerste is)
-                    const volgIdx = wedstrijden.indexOf(volgende);
-                    const huidige = volgIdx > 0 ? wedstrijden[volgIdx - 1] : null;
-                    return { huidige, volgende };
-                }
-            }
-
             // Automatisch: zoek laatste gespeelde wedstrijd
             let laatsteGespeeldIdx = -1;
             for (let i = wedstrijden.length - 1; i >= 0; i--) {
@@ -418,15 +407,23 @@ function matInterface() {
                 }
             }
 
-            // Huidige = eerste niet gespeelde na laatst gespeelde
-            // Volgende = de tweede niet gespeelde
+            // Huidige (groen) = altijd automatisch: eerste niet gespeelde na laatst gespeelde
             const huidigeIdx = laatsteGespeeldIdx + 1;
-            const volgendeIdx = laatsteGespeeldIdx + 2;
+            const huidige = huidigeIdx < wedstrijden.length ? wedstrijden[huidigeIdx] : null;
 
-            return {
-                huidige: huidigeIdx < wedstrijden.length ? wedstrijden[huidigeIdx] : null,
-                volgende: volgendeIdx < wedstrijden.length ? wedstrijden[volgendeIdx] : null
-            };
+            // Volgende (geel) = handmatig geselecteerd OF automatisch de tweede niet gespeelde
+            let volgende = null;
+            if (poule.huidige_wedstrijd_id) {
+                // Handmatige selectie voor volgende wedstrijd
+                volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id && !w.is_gespeeld);
+            }
+            if (!volgende) {
+                // Automatisch: tweede niet gespeelde
+                const volgendeIdx = laatsteGespeeldIdx + 2;
+                volgende = volgendeIdx < wedstrijden.length ? wedstrijden[volgendeIdx] : null;
+            }
+
+            return { huidige, volgende };
         },
 
         // CSS class voor wedstrijd header
@@ -450,7 +447,7 @@ function matInterface() {
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
 
             if (wedstrijd.is_gespeeld) return 'Gespeeld';
-            if (huidige && wedstrijd.id === huidige.id) return 'Aan de beurt - klik om uit te stellen';
+            if (huidige && wedstrijd.id === huidige.id) return 'Nu aan de beurt';
             if (volgende && wedstrijd.id === volgende.id) {
                 return poule.huidige_wedstrijd_id === wedstrijd.id
                     ? 'Handmatig geselecteerd - klik om te deselecteren'
@@ -467,21 +464,9 @@ function matInterface() {
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
             let nieuweId = null;
 
-            // Klik op GROENE (huidige) wedstrijd = uitstellen
+            // Klik op GROENE (huidige) wedstrijd = geen actie (groen beweegt alleen door score)
             if (huidige && wedstrijd.id === huidige.id) {
-                if (!confirm('Wedstrijd uitstellen?')) return;
-
-                // Zoek de volgende niet-gespeelde wedstrijd NA deze
-                const wedstrijden = poule.wedstrijden;
-                const huidigeIdx = wedstrijden.findIndex(w => w.id === huidige.id);
-                const volgendeNietGespeeld = wedstrijden.find((w, idx) => idx > huidigeIdx && !w.is_gespeeld);
-
-                if (volgendeNietGespeeld) {
-                    nieuweId = volgendeNietGespeeld.id;
-                } else {
-                    alert('Geen volgende wedstrijd om naar over te slaan');
-                    return;
-                }
+                return; // Groen is automatisch, geen actie
             }
             // Klik op GELE (volgende) wedstrijd = deselecteren als handmatig geselecteerd
             else if (volgende && wedstrijd.id === volgende.id && poule.huidige_wedstrijd_id === wedstrijd.id) {
