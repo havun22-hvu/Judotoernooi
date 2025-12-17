@@ -123,7 +123,7 @@
                                 // Tel alleen actieve judoka's (niet afwezig en binnen gewichtsklasse)
                                 $actieveJudokas = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
                                 $aantalActief = $actieveJudokas->count();
-                                $aantalWedstrijden = $aantalActief > 1 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0;
+                                $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
                                 $heeftDoorgestreept = $poule->judokas->count() > $aantalActief;
                                 $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
                             @endphp
