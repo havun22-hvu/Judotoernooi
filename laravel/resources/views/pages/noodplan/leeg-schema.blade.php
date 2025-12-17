@@ -16,31 +16,32 @@
     }
     @media screen {
         .print-container {
-            max-width: 297mm !important; /* A4 landscape width */
+            max-width: 297mm !important;
         }
     }
     .schema-table {
         width: 100%;
         table-layout: fixed;
+        border-collapse: collapse;
     }
-    .schema-table .naam-col {
-        width: 18%;
+    .schema-table th,
+    .schema-table td {
+        border: 1px solid #000;
     }
-    .schema-table .totaal-col {
-        width: 4%;
+    .wedstrijd-cel {
+        position: relative;
+        height: 32px;
     }
-    .schema-table .plaats-col {
-        width: 3%;
+    .wedstrijd-cel.actief::after {
+        content: '';
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 50%;
+        border-left: 1px solid #999;
     }
-    .invulvak {
-        display: inline-block;
-        border: 1px solid #333;
-        min-width: 20px;
-        height: 22px;
-        vertical-align: middle;
-    }
-    .invulvak-breed {
-        min-width: 28px;
+    .wedstrijd-cel.inactief {
+        background: #000;
     }
 </style>
 @endpush
@@ -59,54 +60,43 @@
     </div>
 
     <!-- Matrix tabel -->
-    <table class="schema-table text-sm border-collapse border border-gray-400">
+    <table class="schema-table text-sm">
         <thead>
             <tr class="bg-gray-200">
-                <th class="naam-col px-2 py-2 text-left font-bold border border-gray-400">Naam (Club)</th>
+                <th class="px-2 py-1 text-center font-bold" style="width: 30px;">Nr</th>
+                <th class="px-2 py-1 text-left font-bold" style="width: 180px;">Naam (Club)</th>
                 @foreach($schema as $idx => $wedstrijd)
-                <th class="px-1 py-2 text-center font-bold border border-gray-400">
-                    <div class="font-bold">{{ $idx + 1 }}</div>
-                    <div class="text-xs text-gray-600">{{ $wedstrijd[0] }}-{{ $wedstrijd[1] }}</div>
+                <th class="px-0 py-1 text-center font-bold text-xs">
+                    <div>{{ $idx + 1 }}</div>
+                    <div class="text-gray-500 font-normal" style="font-size: 9px;">W | J</div>
                 </th>
                 @endforeach
-                <th class="totaal-col px-1 py-2 text-center font-bold border border-gray-400 bg-gray-300">WP</th>
-                <th class="totaal-col px-1 py-2 text-center font-bold border border-gray-400 bg-gray-300">JP</th>
-                <th class="plaats-col px-1 py-2 text-center font-bold border border-gray-400 bg-gray-300">#</th>
+                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 35px;">WP</th>
+                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 35px;">JP</th>
+                <th class="px-1 py-1 text-center font-bold bg-gray-300" style="width: 30px;">Plts</th>
             </tr>
         </thead>
         <tbody>
             @for($i = 1; $i <= $aantal; $i++)
             <tr>
-                <!-- Nr + Naam (Club) -->
-                <td class="px-2 py-3 border border-gray-400">
-                    <span class="font-bold text-lg">{{ $i }}.</span>
-                    <span class="inline-block border-b border-gray-400 ml-2" style="width: 85%;"></span>
+                <td class="px-2 py-0 text-center font-bold text-lg">{{ $i }}</td>
+                <td class="px-2 py-0">
+                    <span class="inline-block border-b border-gray-400 w-full" style="min-height: 20px;"></span>
                 </td>
-                <!-- Wedstrijd cellen -->
                 @foreach($schema as $idx => $wedstrijd)
-                <td class="py-2 text-center border border-gray-400 {{ in_array($i, $wedstrijd) ? 'bg-white' : 'bg-gray-500' }}">
-                    @if(in_array($i, $wedstrijd))
-                    <div class="flex justify-center gap-0">
-                        <span class="invulvak"></span>
-                        <span class="invulvak invulvak-breed"></span>
-                    </div>
-                    @endif
-                </td>
+                <td class="wedstrijd-cel {{ in_array($i, $wedstrijd) ? 'actief' : 'inactief' }}"></td>
                 @endforeach
-                <!-- Totaal WP -->
-                <td class="py-2 text-center border border-gray-400 bg-gray-100"></td>
-                <!-- Totaal JP -->
-                <td class="py-2 text-center border border-gray-400 bg-gray-100"></td>
-                <!-- Plaats -->
-                <td class="py-2 text-center border border-gray-400 bg-gray-100"></td>
+                <td class="px-1 py-0 text-center bg-gray-100"></td>
+                <td class="px-1 py-0 text-center bg-gray-100"></td>
+                <td class="px-1 py-0 text-center bg-gray-100"></td>
             </tr>
             @endfor
         </tbody>
     </table>
 
     <!-- Legenda -->
-    <div class="mt-3 text-sm text-gray-600">
-        <strong>Legenda:</strong> Eerste vakje = WP (0-10), Tweede vakje = JP (0, 5, 7, 10) &nbsp;|&nbsp; Grijze cellen = speelt niet
+    <div class="mt-3 text-xs text-gray-600">
+        <strong>W</strong> = Wazari punten (0-10) &nbsp;|&nbsp; <strong>J</strong> = Judo punten (0, 5, 7, 10) &nbsp;|&nbsp; Zwart = speelt niet in deze wedstrijd
     </div>
 </div>
 
@@ -114,7 +104,6 @@
 <div class="no-print mt-6 p-4 bg-blue-50 rounded">
     <p class="text-sm text-blue-800">
         Schema voor {{ $aantal }} judoka's = {{ count($schema) }} wedstrijden.
-        Gebruik de Print knop hierboven om meerdere kopieën te printen.
     </p>
 </div>
 @endsection
