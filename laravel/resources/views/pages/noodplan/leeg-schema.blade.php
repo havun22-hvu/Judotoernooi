@@ -35,20 +35,26 @@
         }
         .totaal-cel {
             background: #f3f4f6 !important;
+            color: #000 !important;
         }
         .plts-cel {
             background: #fef9c3 !important;
+            color: #000 !important;
         }
     }
     @media screen {
         .print-container {
             max-width: none !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     }
     .schema-table {
         width: auto;
         border-collapse: collapse;
         table-layout: fixed;
+        margin: 0 auto;
     }
     .schema-table th,
     .schema-table td {
@@ -70,7 +76,7 @@
         height: 32px;
     }
     .naam-cel {
-        width: 180px;
+        width: 220px;
     }
     .score-cel {
         width: 24px;
@@ -82,10 +88,12 @@
     .totaal-cel {
         width: 40px;
         background: #f3f4f6;
+        color: #000;
     }
     .plts-cel {
         width: 36px;
         background: #fef9c3;
+        color: #000;
     }
 </style>
 @endpush
