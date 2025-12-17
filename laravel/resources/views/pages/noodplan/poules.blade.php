@@ -42,7 +42,7 @@
                     <th class="p-2 text-left">Naam</th>
                     <th class="p-2 text-left">Club</th>
                     <th class="p-2 text-center w-16">Band</th>
-                    <th class="p-2 text-center w-20">Gewicht</th>
+                    <th class="p-2 text-center w-20">Klasse</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,15 +52,7 @@
                     <td class="p-2 font-medium">{{ $judoka->naam }}</td>
                     <td class="p-2">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="p-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
-                    <td class="p-2 text-center">
-                        @if($judoka->gewicht_gewogen)
-                            {{ number_format($judoka->gewicht_gewogen, 1) }} kg
-                        @elseif($judoka->gewicht)
-                            ~{{ number_format($judoka->gewicht, 1) }} kg
-                        @else
-                            -
-                        @endif
-                    </td>
+                    <td class="p-2 text-center">{{ $judoka->gewichtsklasse ?? '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>
