@@ -82,6 +82,13 @@
         width: 24px;
         text-align: center;
     }
+    .score-cel.w-cel {
+        border-right: 1px solid #ccc;
+    }
+    .score-cel.j-cel {
+        border-left: none;
+        border-right: 2px solid #333;
+    }
     .score-cel.inactief {
         background: #1f2937;
     }
@@ -135,11 +142,11 @@
                 <td class="px-2 naam-cel"></td>
                 @foreach($schema as $idx => $wedstrijd)
                     @if(in_array($i, $wedstrijd))
-                    <td class="score-cel border-r-0"></td>
-                    <td class="score-cel border-l-0"></td>
+                    <td class="score-cel w-cel"></td>
+                    <td class="score-cel j-cel"></td>
                     @else
-                    <td class="score-cel inactief border-r-0"></td>
-                    <td class="score-cel inactief border-l-0"></td>
+                    <td class="score-cel w-cel inactief"></td>
+                    <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
                 <td class="totaal-cel text-center"></td>
