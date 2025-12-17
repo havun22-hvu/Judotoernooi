@@ -161,6 +161,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('mat/wedstrijden', [MatController::class, 'getWedstrijden'])->name('mat.wedstrijden');
         Route::post('mat/uitslag', [MatController::class, 'registreerUitslag'])->name('mat.uitslag');
         Route::post('mat/poule-klaar', [MatController::class, 'pouleKlaar'])->name('mat.poule-klaar');
+        Route::post('mat/huidige-wedstrijd', [MatController::class, 'setHuidigeWedstrijd'])->name('mat.huidige-wedstrijd');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
     });
 

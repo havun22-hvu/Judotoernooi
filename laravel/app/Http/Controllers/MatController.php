@@ -109,4 +109,35 @@ class MatController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Manually set current match for a poule (override automatic order)
+     * Used when table staff needs to change order due to injuries etc.
+     */
+    public function setHuidigeWedstrijd(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this toernooi
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        // Verify wedstrijd belongs to this poule (if provided)
+        if ($validated['wedstrijd_id']) {
+            $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+            if ($wedstrijd->poule_id !== $poule->id) {
+                return response()->json(['success' => false, 'error' => 'Wedstrijd hoort niet bij deze poule'], 403);
+            }
+        }
+
+        $poule->update(['huidige_wedstrijd_id' => $validated['wedstrijd_id']]);
+
+        return response()->json(['success' => true]);
+    }
 }

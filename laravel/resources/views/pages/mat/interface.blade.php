@@ -67,8 +67,12 @@
                         <tr class="bg-gray-200 border-b-2 border-gray-400">
                             <th class="px-2 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[240px]">Naam</th>
                             <template x-for="(w, idx) in poule.wedstrijden" :key="'h-' + idx">
-                                <th class="px-0 py-1 text-center font-bold text-gray-700 w-14 border-l border-gray-300" colspan="2">
-                                    <div class="text-xs" x-text="(idx + 1)"></div>
+                                <th class="px-0 py-1 text-center font-bold w-14 border-l border-gray-300 cursor-pointer select-none transition-colors"
+                                    :class="getWedstrijdKleurClass(poule, w, idx)"
+                                    @click="toggleVolgendeWedstrijd(poule, w)"
+                                    :title="getWedstrijdTitel(poule, w, idx)"
+                                    colspan="2">
+                                    <div class="text-xs font-bold" x-text="(idx + 1)"></div>
                                 </th>
                             </template>
                             <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-10 text-xs">WP</th>
@@ -101,13 +105,13 @@
                                                 :class="getWpClass(getWP(w, judoka.id))"
                                                 :value="getWP(w, judoka.id)"
                                                 @input="updateWP(w, judoka.id, $event.target.value)"
-                                                @blur="saveScore(w)"
+                                                @blur="saveScore(w, poule)"
                                             >
                                             <!-- JP met dropdown -->
                                             <select
                                                 class="w-7 text-center border border-gray-300 rounded-sm text-xs py-0.5 appearance-none bg-white"
                                                 :value="getJP(w, judoka.id)"
-                                                @change="updateJP(w, judoka.id, $event.target.value); saveScore(w)"
+                                                @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
                                             >
                                                 <option value=""></option>
                                                 <option value="0">0</option>
@@ -268,7 +272,7 @@ function matInterface() {
             }
         },
 
-        async saveScore(wedstrijd) {
+        async saveScore(wedstrijd, poule) {
             // Determine winner based on WP
             let winnaarId = null;
             if (wedstrijd.wpScores[wedstrijd.wit.id] === 2) {
@@ -293,8 +297,26 @@ function matInterface() {
                 })
             });
 
+            const wasGespeeld = wedstrijd.is_gespeeld;
             wedstrijd.is_gespeeld = !!(winnaarId || (wedstrijd.jpScores[wedstrijd.wit.id] !== undefined && wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined));
             wedstrijd.winnaar_id = winnaarId;
+
+            // Clear manual override when match is completed (auto-advance)
+            if (!wasGespeeld && wedstrijd.is_gespeeld && poule && poule.huidige_wedstrijd_id) {
+                poule.huidige_wedstrijd_id = null;
+                // Notify backend
+                fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id,
+                        wedstrijd_id: null
+                    })
+                });
+            }
         },
 
         getTotaalWP(poule, judokaId) {
@@ -368,6 +390,102 @@ function matInterface() {
                 }
             } catch (err) {
                 alert('Fout bij markeren: ' + err.message);
+            }
+        },
+
+        // Bepaal huidige en volgende wedstrijd
+        getHuidigeEnVolgende(poule) {
+            const wedstrijden = poule.wedstrijden;
+            if (!wedstrijden || wedstrijden.length === 0) return { huidige: null, volgende: null };
+
+            // Handmatige selectie?
+            if (poule.huidige_wedstrijd_id) {
+                const volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id);
+                if (volgende) {
+                    // Huidige = de wedstrijd ervoor (of null als dit de eerste is)
+                    const volgIdx = wedstrijden.indexOf(volgende);
+                    const huidige = volgIdx > 0 ? wedstrijden[volgIdx - 1] : null;
+                    return { huidige, volgende };
+                }
+            }
+
+            // Automatisch: zoek laatste gespeelde wedstrijd
+            let laatsteGespeeldIdx = -1;
+            for (let i = wedstrijden.length - 1; i >= 0; i--) {
+                if (wedstrijden[i].is_gespeeld) {
+                    laatsteGespeeldIdx = i;
+                    break;
+                }
+            }
+
+            // Huidige = eerste niet gespeelde na laatst gespeelde
+            // Volgende = de tweede niet gespeelde
+            const huidigeIdx = laatsteGespeeldIdx + 1;
+            const volgendeIdx = laatsteGespeeldIdx + 2;
+
+            return {
+                huidige: huidigeIdx < wedstrijden.length ? wedstrijden[huidigeIdx] : null,
+                volgende: volgendeIdx < wedstrijden.length ? wedstrijden[volgendeIdx] : null
+            };
+        },
+
+        // CSS class voor wedstrijd header
+        getWedstrijdKleurClass(poule, wedstrijd, idx) {
+            const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
+
+            if (wedstrijd.is_gespeeld) {
+                return 'bg-gray-300 text-gray-600'; // Gespeeld
+            }
+            if (huidige && wedstrijd.id === huidige.id) {
+                return 'bg-green-500 text-white'; // Huidige (groen)
+            }
+            if (volgende && wedstrijd.id === volgende.id) {
+                return 'bg-yellow-400 text-yellow-900'; // Volgende (geel)
+            }
+            return 'bg-gray-200 text-gray-700'; // Nog niet aan de beurt
+        },
+
+        // Tooltip voor wedstrijd header
+        getWedstrijdTitel(poule, wedstrijd, idx) {
+            const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
+
+            if (wedstrijd.is_gespeeld) return 'Gespeeld';
+            if (huidige && wedstrijd.id === huidige.id) return 'Aan de beurt';
+            if (volgende && wedstrijd.id === volgende.id) {
+                return poule.huidige_wedstrijd_id === wedstrijd.id
+                    ? 'Handmatig geselecteerd - klik om te deselecteren'
+                    : 'Volgende - klik om te wijzigen';
+            }
+            return 'Klik om als volgende te selecteren';
+        },
+
+        // Toggle volgende wedstrijd selectie
+        async toggleVolgendeWedstrijd(poule, wedstrijd) {
+            // Niet toestaan voor gespeelde wedstrijden
+            if (wedstrijd.is_gespeeld) return;
+
+            // Als dit al de handmatig geselecteerde is, deselecteer
+            const nieuweId = poule.huidige_wedstrijd_id === wedstrijd.id ? null : wedstrijd.id;
+
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id,
+                        wedstrijd_id: nieuweId
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    poule.huidige_wedstrijd_id = nieuweId;
+                }
+            } catch (err) {
+                console.error('Fout bij selecteren wedstrijd:', err);
             }
         }
     }
