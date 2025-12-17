@@ -225,7 +225,7 @@
                 <div>
                     <span class="font-bold text-yellow-800">Mat {{ $poule->mat_nummer }}</span>
                     <span class="text-gray-600 ml-2">
-                        {{ $poule->categorie?->naam ?? 'Poule ' . $poule->id }}
+                        {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                         @if($poule->naam)
                         - {{ $poule->naam }}
                         @endif

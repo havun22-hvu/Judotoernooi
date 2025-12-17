@@ -43,7 +43,7 @@
                         @else
                             @foreach($matPoules as $poule)
                                 <div class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-1 mb-1">
-                                    {{ $poule->categorie?->naam ?? 'Poule' }}
+                                    {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                                     @if($poule->naam) ({{ $poule->naam }}) @endif
                                 </div>
                             @endforeach
