@@ -559,9 +559,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const actief = pouleData.aantal_judokas;
-        const wedstrijden = pouleData.aantal_wedstrijden;
+        // Ensure numbers (not strings)
+        const actief = parseInt(pouleData.aantal_judokas) || 0;
+        const wedstrijden = parseInt(pouleData.aantal_wedstrijden) || 0;
         const isProblematisch = actief > 0 && actief < 3;
+        const isLeeg = actief === 0;
 
         // Update data attribute
         pouleCard.dataset.actief = actief;
@@ -575,7 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update styling based on status: empty (grey), problematic (red), ok (blue)
         const header = pouleCard.querySelector('.poule-header');
         const statsDiv = pouleCard.querySelector('.poule-stats');
-        const isLeeg = actief === 0;
 
         // Reset all styling first
         pouleCard.classList.remove('border-2', 'border-red-300', 'opacity-50');
