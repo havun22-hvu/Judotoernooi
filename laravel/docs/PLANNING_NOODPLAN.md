@@ -22,8 +22,8 @@ Het noodplan biedt organisators de mogelijkheid om alle essentiële toernooigege
 | **Poules per blok** | Alle poules van 1 blok, of alle blokken tegelijk |
 | **Weeglijst** | Alle judoka's met gewichtsklasse |
 | **Zaaloverzicht** | Welke poule op welke mat in welk blok |
-| **Weegkaarten** | Per judoka (QR + gegevens) |
-| **Coachkaarten** | Per coach (toegang dojo) |
+| **Weegkaarten** | Alle / per club / 1 specifieke judoka |
+| **Coachkaarten** | Alle / per club / 1 specifieke coach |
 | **Lege wedstrijdschema's** | Templates voor 2, 3, 4, 5, 6, 7 judoka's |
 
 ### TIJDENS DE WEDSTRIJD (Live)
@@ -50,8 +50,12 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
     Route::get('/poules/{blok?}', [NoodplanController::class, 'printPoules'])->name('poules');
     Route::get('/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
     Route::get('/zaaloverzicht', [NoodplanController::class, 'printZaaloverzicht'])->name('zaaloverzicht');
-    Route::get('/weegkaarten/{club?}', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
-    Route::get('/coachkaarten/{club?}', [NoodplanController::class, 'printCoachkaarten'])->name('coachkaarten');
+    Route::get('/weegkaarten', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
+    Route::get('/weegkaarten/club/{club}', [NoodplanController::class, 'printWeegkaartenClub'])->name('weegkaarten.club');
+    Route::get('/weegkaarten/judoka/{judoka}', [NoodplanController::class, 'printWeegkaart'])->name('weegkaart');
+    Route::get('/coachkaarten', [NoodplanController::class, 'printCoachkaarten'])->name('coachkaarten');
+    Route::get('/coachkaarten/club/{club}', [NoodplanController::class, 'printCoachkaartenClub'])->name('coachkaarten.club');
+    Route::get('/coachkaarten/coach/{coach}', [NoodplanController::class, 'printCoachkaart'])->name('coachkaart');
     Route::get('/leeg-schema/{aantal}', [NoodplanController::class, 'printLeegSchema'])->name('leeg-schema');
 
     // Tijdens wedstrijd
@@ -166,5 +170,8 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 - Inktvriendelijk: wit achtergrond, zwarte tekst
 - Elke poule op nieuwe pagina (page-break)
 - Weegkaarten/coachkaarten: meerdere per A4 pagina
-- Dropdown voor club selectie bij weeg/coachkaarten
+- Weeg/coachkaarten opties:
+  - **Alle**: eind inschrijving, print alles in één keer
+  - **Per club**: dropdown selectie
+  - **1 specifieke**: bij calamiteiten (coach ziek, plotselinge wijziging)
 - {blok?} parameter: optioneel, zonder = alle blokken
