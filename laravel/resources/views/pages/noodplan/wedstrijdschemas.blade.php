@@ -17,7 +17,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <span class="font-bold text-lg">
-                        {{ $poule->categorie?->naam ?? 'Poule' }}
+                        {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                         @if($poule->naam) - {{ $poule->naam }} @endif
                     </span>
                     @if($poule->mat_nummer)

@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', 'Poule Schema - ' . ($poule->categorie?->naam ?? 'Poule'))
+@section('title', 'Poule Schema - ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse)
 
 @section('content')
 <div class="mb-6">
@@ -9,7 +9,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <h2 class="text-2xl font-bold">
-                    {{ $poule->categorie?->naam ?? 'Poule' }}
+                    {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                     @if($poule->naam) - {{ $poule->naam }} @endif
                 </h2>
                 <p class="text-gray-600">

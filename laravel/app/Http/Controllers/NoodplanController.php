@@ -28,7 +28,7 @@ class NoodplanController extends Controller
         $actievePoules = Poule::where('toernooi_id', $toernooi->id)
             ->whereNotNull('mat_nummer')
             ->where('status', 'bezig')
-            ->with(['judokas', 'categorie'])
+            ->with(['judokas'])
             ->get();
 
         return view('pages.noodplan.index', compact('toernooi', 'blokken', 'clubs', 'actievePoules'));
@@ -45,11 +45,11 @@ class NoodplanController extends Controller
             if (!$blok) {
                 abort(404, 'Blok niet gevonden');
             }
-            $poules = $blok->poules()->with(['judokas.club', 'categorie'])->get();
+            $poules = $blok->poules()->with(['judokas.club'])->get();
             $titel = "Poules Blok {$blok->nummer}";
         } else {
             $poules = Poule::where('toernooi_id', $toernooi->id)
-                ->with(['judokas.club', 'categorie', 'blok'])
+                ->with(['judokas.club', 'blok'])
                 ->orderBy('blok_id')
                 ->get();
             $titel = "Alle Poules";
@@ -209,12 +209,12 @@ class NoodplanController extends Controller
                 abort(404, 'Blok niet gevonden');
             }
             $poules = $blok->poules()
-                ->with(['judokas', 'wedstrijden', 'categorie'])
+                ->with(['judokas', 'wedstrijden'])
                 ->get();
             $titel = "Wedstrijdschema's Blok {$blok->nummer}";
         } else {
             $poules = Poule::where('toernooi_id', $toernooi->id)
-                ->with(['judokas', 'wedstrijden', 'categorie', 'blok'])
+                ->with(['judokas', 'wedstrijden', 'blok'])
                 ->orderBy('blok_id')
                 ->get();
             $titel = "Alle Wedstrijdschema's";
@@ -228,7 +228,7 @@ class NoodplanController extends Controller
      */
     public function printPouleSchema(Toernooi $toernooi, Poule $poule): View
     {
-        $poule->load(['judokas', 'wedstrijden', 'categorie']);
+        $poule->load(['judokas', 'wedstrijden']);
 
         return view('pages.noodplan.poule-schema', compact('toernooi', 'poule'));
     }
