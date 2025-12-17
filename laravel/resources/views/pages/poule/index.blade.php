@@ -3,7 +3,7 @@
 @section('title', 'Poules')
 
 @section('content')
-<div class="flex justify-between items-center mb-6">
+<div class="flex justify-between items-center mb-6 no-print">
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
@@ -583,6 +583,103 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
 .sortable-ghost {
     opacity: 0.4;
+}
+
+/* Print styles */
+@media print {
+    /* Hide interactive elements */
+    .no-print,
+    #verificatie-resultaat,
+    #toast,
+    #nieuwe-poule-modal,
+    #problematische-poules-container,
+    button,
+    form,
+    .delete-empty-btn,
+    select {
+        display: none !important;
+    }
+
+    /* Reset page margins */
+    @page {
+        margin: 1cm;
+    }
+
+    /* Remove shadows and make backgrounds printable */
+    * {
+        box-shadow: none !important;
+    }
+
+    .bg-blue-800 {
+        background-color: #1e40af !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .bg-blue-100 {
+        background-color: #dbeafe !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Prevent page breaks inside weight class sections */
+    .mb-4.last\\:mb-0 {
+        page-break-inside: avoid;
+    }
+
+    /* Prevent page breaks inside poule cards */
+    [data-poule-id] {
+        page-break-inside: avoid;
+    }
+
+    /* Allow page breaks between age classes */
+    .mb-8 {
+        page-break-after: auto;
+    }
+
+    /* Ensure accordion content is visible */
+    [x-show] {
+        display: block !important;
+    }
+
+    /* Full width layout */
+    .grid {
+        display: block !important;
+    }
+
+    .grid > div {
+        display: inline-block;
+        width: 48%;
+        vertical-align: top;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Smaller text for print */
+    .text-3xl {
+        font-size: 1.5rem !important;
+    }
+
+    .text-lg {
+        font-size: 0.9rem !important;
+    }
+
+    .text-sm {
+        font-size: 0.75rem !important;
+    }
+
+    .text-xs {
+        font-size: 0.65rem !important;
+    }
+
+    /* Compact padding */
+    .px-3, .py-2, .p-4, .px-4, .py-3 {
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    /* Page title */
+    h1::after {
+        content: " - Print " attr(data-print-date);
+    }
 }
 </style>
 @endsection

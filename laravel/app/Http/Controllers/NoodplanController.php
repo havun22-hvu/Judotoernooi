@@ -35,27 +35,12 @@ class NoodplanController extends Controller
     }
 
     /**
-     * Print poules per blok of alle blokken
+     * Print poules - redirect naar reguliere poules pagina
      */
-    public function printPoules(Toernooi $toernooi, ?int $blokNummer = null): View
+    public function printPoules(Toernooi $toernooi, ?int $blokNummer = null)
     {
-        $blok = null;
-        if ($blokNummer) {
-            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
-            if (!$blok) {
-                abort(404, 'Blok niet gevonden');
-            }
-            $poules = $blok->poules()->with(['judokas.club'])->get();
-            $titel = "Poules Blok {$blok->nummer}";
-        } else {
-            $poules = Poule::where('toernooi_id', $toernooi->id)
-                ->with(['judokas.club', 'blok'])
-                ->orderBy('blok_id')
-                ->get();
-            $titel = "Alle Poules";
-        }
-
-        return view('pages.noodplan.poules', compact('toernooi', 'poules', 'titel', 'blok'));
+        // Redirect naar de reguliere poules pagina (heeft print CSS)
+        return redirect()->route('toernooi.poule.index', $toernooi);
     }
 
     /**
