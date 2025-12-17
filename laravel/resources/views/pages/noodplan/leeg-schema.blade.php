@@ -6,7 +6,7 @@
 <style>
     @media print {
         @page {
-            size: A4 landscape;
+            size: {{ $aantal >= 6 ? 'A4 landscape' : 'A4 portrait' }};
             margin: 0.5cm;
         }
         .print-container {
@@ -21,11 +21,13 @@
             color-adjust: exact !important;
         }
         .header-row,
-        .header-row th {
+        .header-row th,
+        .header-row th div,
+        .header-row th * {
             background: #1f2937 !important;
             color: white !important;
         }
-        .sub-header {
+        .header-row .sub-header {
             color: #9ca3af !important;
         }
         .score-cel.inactief {
