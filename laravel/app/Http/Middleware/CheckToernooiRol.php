@@ -24,6 +24,19 @@ class CheckToernooiRol
             return redirect()->route('dashboard');
         }
 
+        // Check of organisator ingelogd is via auth guard
+        $organisator = auth('organisator')->user();
+        if ($organisator) {
+            // Sitebeheerder heeft altijd toegang
+            if ($organisator->isSitebeheerder()) {
+                return $next($request);
+            }
+            // Organisator heeft toegang tot eigen toernooien
+            if ($organisator->toernooien->contains($toernooi)) {
+                return $next($request);
+            }
+        }
+
         $huidigeRol = AuthController::getRol($request, $toernooi);
 
         // Niet ingelogd
