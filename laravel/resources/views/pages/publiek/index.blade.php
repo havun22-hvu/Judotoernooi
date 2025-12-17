@@ -630,13 +630,42 @@
 
                     <!-- Poules met tabs per favoriet -->
                     <div x-show="!loadingPoules && favorietenPoules.length > 0" x-data="{ activeFavoriet: null }" x-init="$watch('favorietenPoules', () => { if(favorietenPoules.length > 0 && !activeFavoriet) activeFavoriet = getFirstFavorietId() })">
+                        <!-- Alert voor favoriet die volgende is -->
+                        <template x-for="poule in favorietenPoules" :key="'alert-'+poule.id">
+                            <template x-if="poule.judokas.some(j => j.is_favoriet && j.is_volgende)">
+                                <div class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg mb-3 flex items-center gap-2 animate-pulse">
+                                    <span class="text-xl">⚡</span>
+                                    <span class="font-bold">Maak je klaar!</span>
+                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_volgende)?.naam + ' is bijna aan de beurt'"></span>
+                                </div>
+                            </template>
+                        </template>
+
+                        <!-- Alert voor favoriet die nu aan de beurt is -->
+                        <template x-for="poule in favorietenPoules" :key="'now-'+poule.id">
+                            <template x-if="poule.judokas.some(j => j.is_favoriet && j.is_aan_de_beurt)">
+                                <div class="bg-green-500 text-white px-4 py-2 rounded-lg mb-3 flex items-center gap-2">
+                                    <span class="text-xl">🥋</span>
+                                    <span class="font-bold">NU!</span>
+                                    <span x-text="poule.judokas.find(j => j.is_favoriet && j.is_aan_de_beurt)?.naam + ' is aan het vechten!'"></span>
+                                </div>
+                            </template>
+                        </template>
+
                         <!-- Tabs voor favorieten (max 10) -->
                         <div class="flex gap-1 mb-3 overflow-x-auto pb-2">
                             <template x-for="id in favorieten.slice(0, 10)" :key="id">
                                 <button @click="activeFavoriet = id"
-                                        class="px-3 py-2 rounded-t-lg text-sm font-medium whitespace-nowrap transition-colors"
+                                        class="px-3 py-2 rounded-t-lg text-sm font-medium whitespace-nowrap transition-colors relative"
                                         :class="activeFavoriet === id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
                                     <span x-text="getFavorietNaam(id).split(' ')[0]"></span>
+                                    <!-- Indicator voor volgende/bezig -->
+                                    <template x-if="favorietenPoules.some(p => p.judokas.some(j => j.id === id && j.is_aan_de_beurt))">
+                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                                    </template>
+                                    <template x-if="favorietenPoules.some(p => p.judokas.some(j => j.id === id && j.is_volgende && !j.is_aan_de_beurt))">
+                                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
+                                    </template>
                                 </button>
                             </template>
                             <button @click="loadFavorieten()" class="px-2 py-2 text-blue-600 hover:text-blue-800" title="Ververs">
@@ -665,22 +694,28 @@
                                     <template x-for="(judoka, index) in poule.judokas" :key="judoka.id">
                                         <div class="px-3 py-2 flex justify-between items-center"
                                              :class="{
-                                                 'bg-yellow-50 border-l-4 border-yellow-400': judoka.id === activeFavoriet,
+                                                 'bg-green-100 border-l-4 border-green-500': judoka.id === activeFavoriet && judoka.is_aan_de_beurt,
+                                                 'bg-yellow-100 border-l-4 border-yellow-400': judoka.id === activeFavoriet && judoka.is_volgende && !judoka.is_aan_de_beurt,
+                                                 'bg-green-50 border-l-4 border-green-300': judoka.id === activeFavoriet && !judoka.is_volgende && !judoka.is_aan_de_beurt,
+                                                 'bg-green-50': judoka.is_aan_de_beurt && judoka.id !== activeFavoriet,
+                                                 'bg-yellow-50': judoka.is_volgende && !judoka.is_aan_de_beurt && judoka.id !== activeFavoriet,
                                                  'opacity-50 line-through': judoka.is_doorgestreept
                                              }">
                                             <div class="flex items-center gap-2">
                                                 <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
-                                                      :class="index === 0 ? 'bg-yellow-400 text-yellow-900' : (index === 1 ? 'bg-gray-300' : (index === 2 ? 'bg-orange-300' : 'bg-gray-200'))"
-                                                      x-text="judoka.eindpositie || (index + 1)"></span>
+                                                      :class="judoka.is_aan_de_beurt ? 'bg-green-500 text-white' : (judoka.is_volgende ? 'bg-yellow-400 text-yellow-900' : (index === 0 ? 'bg-yellow-400 text-yellow-900' : (index === 1 ? 'bg-gray-300' : (index === 2 ? 'bg-orange-300' : 'bg-gray-200'))))"
+                                                      x-text="judoka.is_aan_de_beurt ? '🥋' : (judoka.is_volgende ? '⏳' : (judoka.eindpositie || (index + 1)))"></span>
                                                 <div>
-                                                    <span class="font-medium text-sm" :class="judoka.id === activeFavoriet ? 'text-yellow-800' : 'text-gray-800'" x-text="judoka.naam"></span>
+                                                    <span class="font-medium text-sm" :class="judoka.id === activeFavoriet ? 'text-green-800' : 'text-gray-800'" x-text="judoka.naam"></span>
                                                     <span class="text-xs text-gray-500 block" x-text="judoka.club"></span>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-2 text-xs">
+                                                <span x-show="judoka.is_aan_de_beurt" class="bg-green-500 text-white px-1.5 py-0.5 rounded font-bold">NU</span>
+                                                <span x-show="judoka.is_volgende && !judoka.is_aan_de_beurt" class="bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded font-bold">KLAAR</span>
                                                 <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
                                                 <span class="w-3 h-3 rounded-full" :class="'band-' + judoka.band"></span>
-                                                <span x-show="judoka.punten > 0" class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.punten + 'pt'"></span>
+                                                <span x-show="judoka.punten > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.punten + 'pt'"></span>
                                             </div>
                                         </div>
                                     </template>
