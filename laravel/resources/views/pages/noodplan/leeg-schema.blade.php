@@ -22,7 +22,7 @@
                 <tr class="bg-gray-200">
                     <th class="px-2 py-2 text-left font-bold border min-w-[240px]">Naam (Club)</th>
                     @foreach($schema as $idx => $wedstrijd)
-                    <th class="px-1 py-2 text-center font-bold border w-16" colspan="2">
+                    <th class="px-1 py-2 text-center font-bold border-l-2 border-gray-400 border-y border-r w-16" colspan="2">
                         <div class="text-xs">{{ $idx + 1 }}</div>
                         <div class="text-xs text-gray-500">{{ $wedstrijd[0] }}-{{ $wedstrijd[1] }}</div>
                     </th>
@@ -42,7 +42,7 @@
                     </td>
                     <!-- Wedstrijd cellen -->
                     @foreach($schema as $idx => $wedstrijd)
-                    <td class="px-0 py-1 text-center border {{ in_array($i, $wedstrijd) ? 'bg-white' : 'bg-gray-400' }}" colspan="2">
+                    <td class="px-0 py-1 text-center border-l-2 border-gray-400 border-y border-r {{ in_array($i, $wedstrijd) ? 'bg-white' : 'bg-gray-600' }}" colspan="2">
                         @if(in_array($i, $wedstrijd))
                         <div class="flex justify-center gap-1">
                             <span class="inline-block border border-gray-400 w-5 h-5"></span>
