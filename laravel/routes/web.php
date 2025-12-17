@@ -15,6 +15,7 @@ use App\Http\Controllers\WedstrijddagController;
 use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
+use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
@@ -126,6 +127,29 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Resultaten overzicht (organisator)
         Route::get('resultaten', [PubliekController::class, 'organisatorResultaten'])->name('resultaten.index');
+    });
+
+    // Noodplan routes (admin + jury/hoofdjury + organisator)
+    Route::middleware(CheckToernooiRol::class . ':jury')->prefix('noodplan')->name('noodplan.')->group(function () {
+        Route::get('/', [NoodplanController::class, 'index'])->name('index');
+
+        // Voor het toernooi (backup)
+        Route::get('/poules/{blok?}', [NoodplanController::class, 'printPoules'])->name('poules');
+        Route::get('/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
+        Route::get('/zaaloverzicht', [NoodplanController::class, 'printZaaloverzicht'])->name('zaaloverzicht');
+        Route::get('/weegkaarten', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
+        Route::get('/weegkaarten/club/{club}', [NoodplanController::class, 'printWeegkaartenClub'])->name('weegkaarten.club');
+        Route::get('/weegkaarten/judoka/{judoka}', [NoodplanController::class, 'printWeegkaart'])->name('weegkaart');
+        Route::get('/coachkaarten', [NoodplanController::class, 'printCoachkaarten'])->name('coachkaarten');
+        Route::get('/coachkaarten/club/{club}', [NoodplanController::class, 'printCoachkaartenClub'])->name('coachkaarten.club');
+        Route::get('/coachkaarten/coach/{coachKaart}', [NoodplanController::class, 'printCoachkaart'])->name('coachkaart');
+        Route::get('/leeg-schema/{aantal}', [NoodplanController::class, 'printLeegSchema'])->name('leeg-schema');
+        Route::get('/instellingen', [NoodplanController::class, 'printInstellingen'])->name('instellingen');
+        Route::get('/contactlijst', [NoodplanController::class, 'printContactlijst'])->name('contactlijst');
+
+        // Tijdens wedstrijd (live)
+        Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
+        Route::get('/poule/{poule}/schema', [NoodplanController::class, 'printPouleSchema'])->name('poule-schema');
     });
 
     // Jury + Admin routes
