@@ -128,3 +128,55 @@ Dit is handig wanneer:
 - Er specifieke rustmomenten nodig zijn
 - De mat-indeling bepaalde volgordes vereist
 - Lokale reglementen een andere volgorde voorschrijven
+
+---
+
+## Mat Interface - Huidige en Volgende Wedstrijd
+
+De mat interface toont per poule welke wedstrijd "aan de beurt" is (groen) en welke "volgende" is (geel).
+
+### Visuele weergave
+
+| Kleur | Betekenis | Database |
+|-------|-----------|----------|
+| **Groen** | Nu aan de beurt | Automatisch bepaald |
+| **Geel** | Volgende wedstrijd | Handmatig of automatisch |
+| **Grijs** | Gespeeld | `wedstrijden.status = 'gespeeld'` |
+| **Wit** | Nog niet aan de beurt | - |
+
+### Logica
+
+**Groen (huidige wedstrijd)** - altijd automatisch:
+- Eerste niet-gespeelde wedstrijd na de laatst gespeelde
+- Beweegt alleen wanneer een wedstrijd wordt gescoord
+- Kan NIET handmatig worden verplaatst
+
+**Geel (volgende wedstrijd)**:
+- Standaard: tweede niet-gespeelde wedstrijd na laatst gespeelde
+- Kan handmatig worden overschreven via `poules.huidige_wedstrijd_id`
+- Klik op geel (als handmatig) om terug te gaan naar automatisch
+- Klik op andere niet-gespeelde wedstrijd om die als volgende te selecteren
+
+### Database
+
+```
+poules.huidige_wedstrijd_id (nullable foreignId)
+```
+- `NULL` = automatische modus (standaard)
+- `wedstrijd_id` = handmatige override voor volgende (gele) wedstrijd
+
+### Bestanden
+
+- `resources/views/pages/mat/interface.blade.php` - Mat interface (Alpine.js)
+- `app/Http/Controllers/MatController.php` - API endpoint `setHuidigeWedstrijd()`
+- `app/Http/Controllers/PubliekController.php` - Favorieten pagina gebruikt dezelfde logica
+
+### Favorieten pagina
+
+De publieke favorieten pagina toont per favoriet:
+- **Groene stip** op tab = judoka is nu aan de beurt
+- **Gele stip** op tab = judoka is bijna aan de beurt
+- **Alert "NU!"** (groen) = favoriet is aan het vechten
+- **Alert "Maak je klaar!"** (geel) = favoriet is bijna aan de beurt
+
+De status wordt elke 15 seconden automatisch ververst.
