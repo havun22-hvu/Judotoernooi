@@ -25,6 +25,8 @@ Het noodplan biedt organisators de mogelijkheid om alle essentiële toernooigege
 | **Weegkaarten** | Alle / per club / 1 specifieke judoka |
 | **Coachkaarten** | Alle / per club / 1 specifieke coach |
 | **Lege wedstrijdschema's** | Templates voor 2, 3, 4, 5, 6, 7 judoka's |
+| **Instellingen samenvatting** | Weegtijden en starttijden per blok |
+| **Contactlijst coaches** | Telefoonnummers voor noodgevallen |
 
 ### TIJDENS DE WEDSTRIJD (Live)
 
@@ -57,6 +59,8 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
     Route::get('/coachkaarten/club/{club}', [NoodplanController::class, 'printCoachkaartenClub'])->name('coachkaarten.club');
     Route::get('/coachkaarten/coach/{coach}', [NoodplanController::class, 'printCoachkaart'])->name('coachkaart');
     Route::get('/leeg-schema/{aantal}', [NoodplanController::class, 'printLeegSchema'])->name('leeg-schema');
+    Route::get('/instellingen', [NoodplanController::class, 'printInstellingen'])->name('instellingen');
+    Route::get('/contactlijst', [NoodplanController::class, 'printContactlijst'])->name('contactlijst');
 
     // Tijdens wedstrijd
     Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
@@ -113,6 +117,8 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 | `resources/views/pages/noodplan/weegkaarten.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/coachkaarten.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/leeg-schema.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/instellingen.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/contactlijst.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/wedstrijdschemas.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/poule-schema.blade.php` | NIEUW |
 | `resources/views/layouts/print.blade.php` | NIEUW (basis print layout) |
@@ -158,8 +164,10 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 - [ ] 9. Print: Weegkaarten
 - [ ] 10. Print: Coachkaarten
 - [ ] 11. Print: Lege templates (2-7 judokas)
-- [ ] 12. Print: Ingevulde wedstrijdschema's
-- [ ] 13. Print: Actieve poule (huidige staat)
+- [ ] 12. Print: Instellingen samenvatting
+- [ ] 13. Print: Contactlijst coaches
+- [ ] 14. Print: Ingevulde wedstrijdschema's
+- [ ] 15. Print: Actieve poule (huidige staat)
 
 ---
 
