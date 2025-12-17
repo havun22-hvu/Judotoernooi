@@ -16,13 +16,13 @@
 @section('content')
 <div class="mb-6">
     <!-- Header met invulvelden -->
-    <div class="bg-green-700 text-white px-4 py-2 mb-4">
+    <div class="border-2 border-black px-4 py-2 mb-4">
         <div class="flex gap-6 text-xs">
-            <div>Poule: <span class="inline-block border-b border-white w-16"></span></div>
-            <div>Leeftijd: <span class="inline-block border-b border-white w-28"></span></div>
-            <div>Gewicht: <span class="inline-block border-b border-white w-24"></span></div>
-            <div>Blok: <span class="inline-block border-b border-white w-12"></span></div>
-            <div>Mat: <span class="inline-block border-b border-white w-12"></span></div>
+            <div>Poule: <span class="inline-block border-b border-black w-16"></span></div>
+            <div>Leeftijd: <span class="inline-block border-b border-black w-28"></span></div>
+            <div>Gewicht: <span class="inline-block border-b border-black w-24"></span></div>
+            <div>Blok: <span class="inline-block border-b border-black w-12"></span></div>
+            <div>Mat: <span class="inline-block border-b border-black w-12"></span></div>
         </div>
     </div>
 
