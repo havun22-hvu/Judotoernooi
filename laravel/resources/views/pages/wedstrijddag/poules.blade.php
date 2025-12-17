@@ -144,7 +144,7 @@
                                     @if($aantalActief === 0)
                                     <button
                                         onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
-                                        class="delete-poule-btn w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-200 text-gray-800 rounded-full text-lg font-bold flex-shrink-0 ml-2 shadow"
+                                        class="delete-poule-btn w-8 h-8 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2"
                                         title="Verwijder lege poule"
                                         style="min-width: 32px"
                                     >×</button>
@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!deleteBtn && header) {
                 console.log('Creating delete button for poule', pouleData.id);
                 const btn = document.createElement('button');
-                btn.className = 'delete-poule-btn w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-200 text-gray-800 rounded-full text-lg font-bold flex-shrink-0 ml-2 shadow';
+                btn.className = 'delete-poule-btn w-8 h-8 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2';
                 btn.title = 'Verwijder lege poule';
                 btn.innerHTML = '×';
                 btn.style.minWidth = '32px';
