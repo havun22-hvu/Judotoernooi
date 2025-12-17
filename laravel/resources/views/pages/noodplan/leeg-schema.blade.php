@@ -85,6 +85,9 @@
     .score-cel.w-cel {
         border-right: 1px solid #ccc;
     }
+    .score-cel.w-cel.inactief {
+        border-right: none;
+    }
     .score-cel.j-cel {
         border-left: none;
         border-right: 2px solid #333;
