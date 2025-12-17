@@ -127,7 +127,69 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 
 ---
 
-## 5. Print CSS Strategie
+## 5. Lege Wedstrijdschema's - Print Specificaties
+
+Het lege wedstrijdschema moet exact de online mat-interface nabootsen.
+
+### Layout
+
+| Kolom | Beschrijving |
+|-------|--------------|
+| **Nr** | Judoka nummer (1-7) |
+| **Naam** | Leeg veld om naam+club in te vullen (220px) |
+| **1-21** | Wedstrijdkolommen met W en J subkolommen |
+| **WP** | Totaal wedstrijdpunten |
+| **JP** | Totaal judopunten |
+| **Plts** | Eindplaats |
+
+### Orientatie
+
+| Judoka's | Wedstrijden | Orientatie |
+|----------|-------------|------------|
+| 2 | 1 | Portrait |
+| 3 | 3 | Portrait |
+| 4 | 6 | Portrait |
+| 5 | 10 | Portrait |
+| 6 | 15 | Landscape |
+| 7 | 21 | Landscape |
+
+### Styling Details
+
+- **Header**: Donkere achtergrond (#1f2937) met witte tekst
+- **Actieve cellen**: Wit met dunne scheidingslijn tussen W en J (#ccc)
+- **Inactieve cellen**: Zwart (#1f2937), geen scheidingslijn
+- **Tussen wedstrijden**: Dikke zwarte lijn (2px)
+- **WP/JP kolommen**: Grijze achtergrond (#f3f4f6), zwarte tekst
+- **Plts kolom**: Gele achtergrond (#fef9c3), zwarte tekst
+
+### Print Color Override
+
+```css
+@media print {
+    /* Force kleuren printen */
+    .schema-table, .schema-table * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Override layout default die alles zwart maakt */
+    .header-row, .header-row th, .header-row th * {
+        background: #1f2937 !important;
+        color: white !important;
+    }
+}
+```
+
+### Legenda
+
+```
+W = Wedstrijdpunten (0 of 2)
+J = Judopunten (Yuko=5, Waza-Ari=7, Ippon=10)
+```
+
+---
+
+## 6. Print CSS Strategie (Algemeen)
 
 ```css
 @media print {
@@ -149,9 +211,11 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 }
 ```
 
+**Let op:** `@stack('styles')` moet NA de layout styles komen zodat pagina-specifieke `@page` directives (zoals landscape) de defaults kunnen overriden.
+
 ---
 
-## 6. Implementatie Volgorde
+## 7. Implementatie Volgorde
 
 - [x] 1. NoodplanController basis
 - [x] 2. Routes toevoegen (met middleware)
@@ -171,7 +235,7 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 
 ---
 
-## 7. Notities
+## 8. Notities
 
 - Toegang alleen voor admin, organisator en hoofdjury
 - Alle prints moeten werken zonder JavaScript

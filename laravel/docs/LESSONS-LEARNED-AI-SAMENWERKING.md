@@ -241,5 +241,43 @@ session()->forget('varianten');
 - ❌ Live score altijd tonen → verwarrend bij verse berekening
 - ❌ Chips in sleepvak meetellen → NaN in berekening
 
+---
+
+## Les: Visuele Componenten Nabouwen
+
+> Bron: Lege wedstrijdschema's print versie (dec 2025)
+
+### Probleem
+
+Bij het bouwen van een print-versie van het wedstrijdschema ging veel tijd verloren door:
+- Zelf oplossingen verzinnen i.p.v. het voorbeeld volgen
+- Niet goed kijken naar het getoonde voorbeeld
+- Domeinkennis veronderstellen (judopunten verkeerd)
+
+### Aanpak bij visuele componenten
+
+1. **Analyseer het voorbeeld eerst grondig**
+   - Welke kolommen/rijen?
+   - Welke kleuren/borders?
+   - Wat zijn de verhoudingen?
+
+2. **Vraag bij twijfel, verzin niets**
+   - Judopunten: Yuko=5, Waza-Ari=7, Ippon=10 (niet zelf invullen!)
+   - Wedstrijdpunten: 0 of 2 (niet 0-10)
+
+3. **Print ≠ Screen**
+   - Browser print CSS override achtergrondkleuren
+   - `print-color-adjust: exact` nodig voor kleuren
+   - `@stack('styles')` volgorde belangrijk voor `@page` overrides
+
+4. **Test beide: screen preview EN daadwerkelijke print**
+   - Screen preview kan correct zijn terwijl print fout is
+   - Landscape/portrait werkt anders in print
+
+### Anti-pattern
+
+❌ "Ik maak wel iets dat lijkt op..." → Kost veel iteraties
+✅ "Ik bouw exact na wat ik zie" → Direct goed
+
 
 
