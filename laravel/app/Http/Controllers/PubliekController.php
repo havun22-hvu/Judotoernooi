@@ -203,10 +203,27 @@ class PubliekController extends Controller
             ->whereHas('judokas', function ($q) use ($judokaIds) {
                 $q->whereIn('judokas.id', $judokaIds);
             })
-            ->with(['judokas.club', 'mat', 'blok'])
+            ->with(['judokas.club', 'mat', 'blok', 'wedstrijden'])
             ->get()
             ->map(function ($poule) use ($judokaIds, $toernooi) {
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
+                // Find current and next match
+                $wedstrijden = $poule->wedstrijden->sortBy('volgorde');
+                $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->status === 'bezig');
+                $volgendeWedstrijd = null;
+
+                if ($huidigeWedstrijd) {
+                    // Next match after current
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
+                } else {
+                    // First unplayed match
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->status !== 'gespeeld');
+                }
+
+                // IDs of judokas in current/next match
+                $huidigeJudokaIds = $huidigeWedstrijd ? [$huidigeWedstrijd->judoka1_id, $huidigeWedstrijd->judoka2_id] : [];
+                $volgendeJudokaIds = $volgendeWedstrijd ? [$volgendeWedstrijd->judoka1_id, $volgendeWedstrijd->judoka2_id] : [];
 
                 return [
                     'id' => $poule->id,
@@ -217,7 +234,15 @@ class PubliekController extends Controller
                     'mat' => $poule->mat?->nummer,
                     'blok' => $poule->blok?->nummer,
                     'type' => $poule->type,
-                    'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie) {
+                    'huidige_wedstrijd' => $huidigeWedstrijd ? [
+                        'judoka1_id' => $huidigeWedstrijd->judoka1_id,
+                        'judoka2_id' => $huidigeWedstrijd->judoka2_id,
+                    ] : null,
+                    'volgende_wedstrijd' => $volgendeWedstrijd ? [
+                        'judoka1_id' => $volgendeWedstrijd->judoka1_id,
+                        'judoka2_id' => $volgendeWedstrijd->judoka2_id,
+                    ] : null,
+                    'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds) {
                         return [
                             'id' => $j->id,
                             'naam' => $j->naam,
@@ -227,6 +252,8 @@ class PubliekController extends Controller
                             'is_favoriet' => in_array($j->id, $judokaIds),
                             'is_afwezig' => $j->aanwezigheid === 'afwezig',
                             'is_doorgestreept' => $j->moetUitPouleVerwijderd($tolerantie),
+                            'is_aan_de_beurt' => in_array($j->id, $huidigeJudokaIds),
+                            'is_volgende' => in_array($j->id, $volgendeJudokaIds),
                             'positie' => $j->pivot->positie ?? null,
                             'punten' => $j->pivot->punten ?? 0,
                             'eindpositie' => $j->pivot->eindpositie ?? null,
