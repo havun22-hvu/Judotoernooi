@@ -96,7 +96,7 @@
 
     <!-- Legenda -->
     <div class="mt-3 text-xs text-gray-600">
-        <strong>W</strong> = Wedstrijdpunten (0 of 2) &nbsp;|&nbsp; <strong>J</strong> = Judopunten (0, 1, 7, 10)
+        <strong>W</strong> = Wedstrijdpunten (0 of 2) &nbsp;|&nbsp; <strong>J</strong> = Judopunten (0, 5, 7, 10)
     </div>
 </div>
 
