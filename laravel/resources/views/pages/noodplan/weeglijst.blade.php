@@ -33,8 +33,8 @@
                 <td class="p-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
                 <td class="p-2 text-center">{{ $judoka->gewichtsklasse ?? '-' }}</td>
                 <td class="p-2 text-center">
-                    @if($judoka->gewogen_gewicht)
-                        <span class="text-green-600 font-bold">{{ number_format($judoka->gewogen_gewicht, 1) }} kg</span>
+                    @if($judoka->gewicht_gewogen)
+                        <span class="text-green-600 font-bold">{{ number_format($judoka->gewicht_gewogen, 1) }} kg</span>
                     @else
                         <span class="text-gray-400">-</span>
                     @endif
@@ -48,7 +48,7 @@
 
 <div class="mt-6 text-sm text-gray-600">
     <p><strong>Totaal:</strong> {{ $judokas->count() }} judoka's</p>
-    <p><strong>Gewogen:</strong> {{ $judokas->whereNotNull('gewogen_gewicht')->count() }}</p>
-    <p><strong>Nog te wegen:</strong> {{ $judokas->whereNull('gewogen_gewicht')->count() }}</p>
+    <p><strong>Gewogen:</strong> {{ $judokas->whereNotNull('gewicht_gewogen')->count() }}</p>
+    <p><strong>Nog te wegen:</strong> {{ $judokas->whereNull('gewicht_gewogen')->count() }}</p>
 </div>
 @endsection

@@ -47,8 +47,8 @@
             <tr class="border-t">
                 <td class="py-1 text-gray-500">Gewogen:</td>
                 <td class="py-1 font-bold text-lg">
-                    @if($judoka->gewogen_gewicht)
-                        {{ number_format($judoka->gewogen_gewicht, 1) }} kg
+                    @if($judoka->gewicht_gewogen)
+                        {{ number_format($judoka->gewicht_gewogen, 1) }} kg
                     @else
                         ______ kg
                     @endif
