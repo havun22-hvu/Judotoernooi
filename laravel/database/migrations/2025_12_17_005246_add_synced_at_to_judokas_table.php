@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('judokas', function (Blueprint $table) {
-            $table->timestamp('synced_at')->nullable()->after('gewogen_gewicht');
+            $table->timestamp('synced_at')->nullable();
         });
     }
 
