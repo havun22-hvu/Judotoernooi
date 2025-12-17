@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-3xl font-bold text-gray-800">Case of Emergency</h1>
-            <p class="text-gray-600 mt-1">In case of emergency - break glass (print backup documenten)</p>
+            <p class="text-gray-600 mt-1 italic">Not in Vane - print your backup</p>
         </div>
         <div class="text-right text-sm text-gray-500">
             <p>Momentopname: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
