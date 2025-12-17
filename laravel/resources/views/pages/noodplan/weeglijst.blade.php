@@ -30,7 +30,7 @@
                 <td class="p-2 text-sm text-gray-600">{{ $judoka->club?->naam ?? '-' }}</td>
                 <td class="p-2 text-center">{{ $judoka->geslacht?->value ?? '-' }}</td>
                 <td class="p-2 text-center">{{ $judoka->geboortedatum?->age ?? '-' }}</td>
-                <td class="p-2 text-center">{{ $judoka->band?->korteNaam() ?? '-' }}</td>
+                <td class="p-2 text-center">{{ $judoka->band?->label() ?? '-' }}</td>
                 <td class="p-2 text-center">{{ $judoka->gewichtsklasse ?? '-' }}</td>
                 <td class="p-2 text-center">
                     @if($judoka->gewogen_gewicht)
