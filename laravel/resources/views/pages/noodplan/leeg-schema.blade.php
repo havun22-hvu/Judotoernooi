@@ -42,8 +42,7 @@
     }
     @media screen {
         .print-container {
-            max-width: 210mm !important;
-            overflow-x: auto;
+            max-width: none !important;
         }
     }
     .schema-table {
