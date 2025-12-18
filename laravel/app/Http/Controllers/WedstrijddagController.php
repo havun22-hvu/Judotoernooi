@@ -325,4 +325,154 @@ class WedstrijddagController extends Controller
 
         return null;
     }
+
+    /**
+     * Convert elimination poule to regular poules (with or without kruisfinale)
+     */
+    public function zetOmNaarPoules(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'systeem' => 'required|in:poules,poules_kruisfinale',
+        ]);
+
+        $elimPoule = Poule::with('judokas')->findOrFail($validated['poule_id']);
+        $judokas = $elimPoule->judokas;
+        $aantalJudokas = $judokas->count();
+
+        if ($aantalJudokas < 2) {
+            return response()->json(['success' => false, 'message' => 'Te weinig judoka\'s'], 400);
+        }
+
+        // Determine optimal pool sizes based on tournament settings
+        $voorkeur = $toernooi->getPouleGrootteVoorkeurOfDefault();
+        $minPoule = $toernooi->min_judokas_poule ?? 3;
+        $maxPoule = $toernooi->max_judokas_poule ?? 6;
+
+        // Calculate how to split judokas into poules
+        $pouleGroottes = $this->berekenPouleGroottes($aantalJudokas, $voorkeur, $minPoule, $maxPoule);
+        $aantalPoules = count($pouleGroottes);
+
+        // Sort judokas by club for spreading (simple alternating)
+        $gesorteerd = $judokas->sortBy('club_id')->values();
+
+        // Create new poules
+        $nieuwePoules = [];
+        $judokaIndex = 0;
+
+        for ($i = 0; $i < $aantalPoules; $i++) {
+            $poule = Poule::create([
+                'toernooi_id' => $toernooi->id,
+                'blok_id' => $elimPoule->blok_id,
+                'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
+                'gewichtsklasse' => $elimPoule->gewichtsklasse,
+                'nummer' => $i + 1,
+                'titel' => $elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse . ' Poule ' . ($i + 1),
+                'type' => 'voorronde',
+                'aantal_judokas' => $pouleGroottes[$i],
+                'aantal_wedstrijden' => ($pouleGroottes[$i] * ($pouleGroottes[$i] - 1)) / 2,
+            ]);
+
+            // Attach judokas to this poule (alternating to spread clubs)
+            for ($j = 0; $j < $pouleGroottes[$i]; $j++) {
+                $idx = $judokaIndex + ($j * $aantalPoules);
+                if ($idx < $aantalJudokas) {
+                    $judoka = $gesorteerd[$idx % $aantalJudokas];
+                    // Skip if already attached
+                    if (!in_array($judoka->id, array_column($nieuwePoules, 'judokas_attached') ?: [])) {
+                        $poule->judokas()->attach($judoka->id, ['positie' => $j + 1]);
+                    }
+                }
+            }
+            $judokaIndex++;
+
+            $nieuwePoules[] = $poule;
+        }
+
+        // Redistribute judokas properly (the above is simplified, let's fix it)
+        // Reset and distribute properly
+        foreach ($nieuwePoules as $poule) {
+            $poule->judokas()->detach();
+        }
+
+        $judokaArray = $gesorteerd->values()->all();
+        $pouleIdx = 0;
+        $positie = [];
+
+        foreach ($judokaArray as $judoka) {
+            $targetPoule = $nieuwePoules[$pouleIdx % $aantalPoules];
+            $positie[$targetPoule->id] = ($positie[$targetPoule->id] ?? 0) + 1;
+            $targetPoule->judokas()->attach($judoka->id, ['positie' => $positie[$targetPoule->id]]);
+            $pouleIdx++;
+        }
+
+        // Update statistics
+        foreach ($nieuwePoules as $poule) {
+            $poule->updateStatistieken();
+        }
+
+        // Create kruisfinale if requested
+        if ($validated['systeem'] === 'poules_kruisfinale' && $aantalPoules >= 2) {
+            Poule::create([
+                'toernooi_id' => $toernooi->id,
+                'blok_id' => $elimPoule->blok_id,
+                'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
+                'gewichtsklasse' => $elimPoule->gewichtsklasse,
+                'nummer' => $aantalPoules + 1,
+                'titel' => $elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse . ' Kruisfinale',
+                'type' => 'kruisfinale',
+                'aantal_judokas' => min($aantalPoules * 2, $aantalJudokas), // Top 2 from each poule
+                'aantal_wedstrijden' => 0,
+            ]);
+        }
+
+        // Delete original elimination poule
+        $elimPoule->judokas()->detach();
+        $elimPoule->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Eliminatie omgezet naar ' . ($validated['systeem'] === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'poules'),
+        ]);
+    }
+
+    /**
+     * Calculate optimal poule sizes for given number of judokas
+     */
+    private function berekenPouleGroottes(int $totaal, array $voorkeur, int $min, int $max): array
+    {
+        // Try preferred size first
+        foreach ($voorkeur as $grootte) {
+            if ($grootte < $min || $grootte > $max) continue;
+
+            if ($totaal <= $grootte) {
+                return [$totaal]; // Single poule
+            }
+
+            $aantalPoules = ceil($totaal / $grootte);
+            $basisGrootte = floor($totaal / $aantalPoules);
+            $extra = $totaal % $aantalPoules;
+
+            // Check if all poules would be valid
+            if ($basisGrootte >= $min && ($basisGrootte + ($extra > 0 ? 1 : 0)) <= $max) {
+                $groottes = array_fill(0, (int)$aantalPoules, (int)$basisGrootte);
+                for ($i = 0; $i < $extra; $i++) {
+                    $groottes[$i]++;
+                }
+                return $groottes;
+            }
+        }
+
+        // Fallback: just split evenly
+        $aantalPoules = max(1, ceil($totaal / $max));
+        $basisGrootte = floor($totaal / $aantalPoules);
+        $extra = $totaal % $aantalPoules;
+
+        $groottes = array_fill(0, (int)$aantalPoules, (int)$basisGrootte);
+        for ($i = 0; $i < $extra; $i++) {
+            $groottes[$i]++;
+        }
+
+        return $groottes;
+    }
 }
