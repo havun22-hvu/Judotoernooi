@@ -73,7 +73,7 @@
                 $isKruisfinale = $poule->isKruisfinale();
                 $isProbleem = $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$isKruisfinale && !$isEliminatie;
             @endphp
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $isEliminatie ? 'bg-orange-100' : ($isKruisfinale ? 'bg-purple-100' : ($isProbleem ? 'bg-red-100' : 'bg-blue-100')) }}">
                     <div class="flex justify-between items-center">
@@ -114,15 +114,15 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="{{ $isEliminatie ? 'grid grid-cols-4 gap-1 p-2' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @if($isEliminatie)
-                    {{-- Compacte weergave voor eliminatie: 4 kolommen --}}
-                    <div class="px-2 py-1 bg-gray-50 rounded text-xs judoka-item hover:bg-orange-50"
+                    {{-- Compacte weergave voor eliminatie: meerdere kolommen over volle breedte --}}
+                    <div class="px-2 py-1.5 bg-gray-50 rounded text-sm judoka-item hover:bg-orange-50 border border-gray-200"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}">
                         <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
-                        <div class="text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                        <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                     </div>
                     @else
                     {{-- Normale weergave voor poules --}}
@@ -144,7 +144,7 @@
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-4' : '' }}">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-full' : '' }}">Leeg</div>
                     @endif
                 </div>
             </div>
