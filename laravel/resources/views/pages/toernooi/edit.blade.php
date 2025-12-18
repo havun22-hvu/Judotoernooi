@@ -255,6 +255,7 @@
 
                 @php
                     $wedstrijdSysteem = old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? [];
+                    $eliminatieGewichtsklassen = old('eliminatie_gewichtsklassen', $toernooi->eliminatie_gewichtsklassen) ?? [];
                     $leeftijdsklassen = [
                         'minis' => "Mini's",
                         'a_pupillen' => 'A-pupillen',
@@ -266,17 +267,62 @@
                         'dames' => 'Dames',
                         'heren' => 'Heren',
                     ];
+
+                    // Get weight classes with judoka counts per age class
+                    $gewichtsklassenPerLeeftijd = [];
+                    foreach ($toernooi->judokas()->get()->groupBy('leeftijdsklasse') as $lk => $judokas) {
+                        $lkKey = str_replace([' ', '-'], ['_', '_'], strtolower($lk));
+                        $lkKey = str_replace("'s", 's', $lkKey);
+                        $gewichtsklassenPerLeeftijd[$lkKey] = $judokas->groupBy('gewichtsklasse')
+                            ->map(fn($g) => $g->count())
+                            ->sortKeys()
+                            ->toArray();
+                    }
                 @endphp
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div class="space-y-2">
                     @foreach($leeftijdsklassen as $key => $label)
-                    <div class="flex items-center justify-between p-2 border rounded bg-gray-50">
-                        <span class="text-sm font-medium">{{ $label }}</span>
-                        <select name="wedstrijd_systeem[{{ $key }}]" class="border rounded px-2 py-1 text-sm bg-white">
-                            <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
-                            <option value="poules_kruisfinale" {{ ($wedstrijdSysteem[$key] ?? '') == 'poules_kruisfinale' ? 'selected' : '' }}>Poules + Kruisfinale</option>
-                            <option value="eliminatie" {{ ($wedstrijdSysteem[$key] ?? '') == 'eliminatie' ? 'selected' : '' }}>Direct eliminatie</option>
-                        </select>
+                    <div class="p-2 border rounded bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium">{{ $label }}</span>
+                            <select name="wedstrijd_systeem[{{ $key }}]"
+                                    class="wedstrijd-systeem-select border rounded px-2 py-1 text-sm bg-white"
+                                    data-leeftijdsklasse="{{ $key }}"
+                                    onchange="toggleEliminatieGewichtsklassen(this)">
+                                <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
+                                <option value="poules_kruisfinale" {{ ($wedstrijdSysteem[$key] ?? '') == 'poules_kruisfinale' ? 'selected' : '' }}>Poules + Kruisfinale</option>
+                                <option value="eliminatie" {{ ($wedstrijdSysteem[$key] ?? '') == 'eliminatie' ? 'selected' : '' }}>Direct eliminatie</option>
+                            </select>
+                        </div>
+
+                        <!-- Gewichtsklassen selectie (alleen zichtbaar bij eliminatie) -->
+                        <div id="eliminatie-gewichtsklassen-{{ $key }}"
+                             class="eliminatie-gewichtsklassen mt-2 pt-2 border-t border-gray-200 {{ ($wedstrijdSysteem[$key] ?? '') !== 'eliminatie' ? 'hidden' : '' }}">
+                            @if(isset($gewichtsklassenPerLeeftijd[$key]) && count($gewichtsklassenPerLeeftijd[$key]) > 0)
+                                <p class="text-xs text-gray-500 mb-1">Selecteer gewichtsklassen voor eliminatie (min. 8 deelnemers aanbevolen):</p>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach($gewichtsklassenPerLeeftijd[$key] as $gewicht => $aantal)
+                                        @php
+                                            $isGeschikt = $aantal >= 4;
+                                            $isSelected = in_array($gewicht, $eliminatieGewichtsklassen[$key] ?? []);
+                                        @endphp
+                                        <label class="inline-flex items-center text-xs {{ $isGeschikt ? '' : 'opacity-50' }}">
+                                            <input type="checkbox"
+                                                   name="eliminatie_gewichtsklassen[{{ $key }}][]"
+                                                   value="{{ $gewicht }}"
+                                                   {{ $isSelected ? 'checked' : '' }}
+                                                   {{ !$isGeschikt ? 'disabled' : '' }}
+                                                   class="mr-1 rounded text-orange-500">
+                                            <span class="{{ $isGeschikt ? ($aantal >= 8 ? 'text-green-700' : 'text-orange-600') : 'text-gray-400' }}">
+                                                {{ $gewicht }} ({{ $aantal }})
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-xs text-gray-400 italic">Geen judoka's in deze leeftijdsklasse</p>
+                            @endif
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -284,7 +330,7 @@
                 <div class="mt-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
                     <strong>Poules:</strong> Iedereen tegen iedereen, elke poule eigen podium<br>
                     <strong>Poules + Kruisfinale:</strong> Na poules strijden top X om overall klassering<br>
-                    <strong>Direct eliminatie:</strong> Knock-out systeem (2 x verlies = uit)
+                    <strong>Direct eliminatie:</strong> Knock-out systeem met herkansing (gedeelde 3e plaats)
                 </div>
             </div>
         </div>
@@ -1074,6 +1120,28 @@
     </div><!-- End TAB: ORGANISATIE -->
 
 </div>
+
+<script>
+// Toggle eliminatie gewichtsklassen visibility
+function toggleEliminatieGewichtsklassen(selectElement) {
+    const leeftijdsklasse = selectElement.dataset.leeftijdsklasse;
+    const container = document.getElementById('eliminatie-gewichtsklassen-' + leeftijdsklasse);
+    if (container) {
+        if (selectElement.value === 'eliminatie') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.wedstrijd-systeem-select').forEach(function(select) {
+        toggleEliminatieGewichtsklassen(select);
+    });
+});
+</script>
 
 <script>
 // Auto-save for toernooi settings
