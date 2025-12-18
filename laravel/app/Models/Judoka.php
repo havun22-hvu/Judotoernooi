@@ -147,9 +147,10 @@ class Judoka extends Model
 
     /**
      * Calculate the judoka base code for pool assignment (without volgnummer)
-     * Format depends on toernooi setting:
-     * - gewicht_band: LLGGBG (Leeftijd-Gewicht-Band-Geslacht) - default
-     * - band_gewicht: LLBGGG (Leeftijd-Band-Gewicht-Geslacht)
+     * Format: LLGGBG (Leeftijd-Gewicht-Band-Geslacht) for both settings
+     * Band code differs based on toernooi setting:
+     * - gewicht_band: wit=6, zwart=0 (high belts first)
+     * - band_gewicht: wit=0, zwart=6 (low belts first)
      */
     public function berekenBasisCode(): string
     {
@@ -160,22 +161,22 @@ class Judoka extends Model
         $gewichtNum = abs(intval(str_replace(['-', '+', 'kg', ' '], '', $this->gewichtsklasse)));
         $gewichtCode = str_pad($gewichtNum, 2, '0', STR_PAD_LEFT);
 
-        // Band code (1 digit): wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
-        $bandEnum = $this->band_enum;
-        $bandCode = $bandEnum ? $bandEnum->kyu() : 'X';
-
         // Gender code
         $geslachtCode = strtoupper($this->geslacht);
 
-        // Check toernooi setting for code order
+        // Check toernooi setting for band order
         $volgorde = $this->toernooi?->judoka_code_volgorde ?? 'gewicht_band';
+        $bandEnum = $this->band_enum;
 
         if ($volgorde === 'band_gewicht') {
-            // Leeftijd - Band - Gewicht - Geslacht
-            return "{$leeftijdCode}{$bandCode}{$gewichtCode}{$geslachtCode}";
+            // Band code reversed: wit=0, geel=1, oranje=2, groen=3, blauw=4, bruin=5, zwart=6
+            $bandCode = $bandEnum ? (6 - $bandEnum->kyu()) : 'X';
+        } else {
+            // Default band code: wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
+            $bandCode = $bandEnum ? $bandEnum->kyu() : 'X';
         }
 
-        // Default: Leeftijd - Gewicht - Band - Geslacht
+        // Always: Leeftijd - Gewicht - Band - Geslacht
         return "{$leeftijdCode}{$gewichtCode}{$bandCode}{$geslachtCode}";
     }
 
