@@ -79,9 +79,14 @@
                                 #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg
                             @endif
                         </div>
-                        @if($poule->judokas_count === 0 && !$poule->isKruisfinale())
-                        <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
-                        @endif
+                        <div class="flex items-center gap-2">
+                            @if($poule->judokas_count >= 2 && !$poule->isKruisfinale())
+                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="text-orange-500 hover:text-orange-700 text-xs font-medium" title="Eliminatie bracket">⚔️</a>
+                            @endif
+                            @if($poule->judokas_count === 0 && !$poule->isKruisfinale())
+                            <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
+                            @endif
+                        </div>
                     </div>
                     <div class="flex justify-between items-center text-xs text-gray-500">
                         @if($poule->isKruisfinale())

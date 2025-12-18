@@ -88,6 +88,11 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::delete('poule/{poule}', [PouleController::class, 'destroy'])->name('poule.destroy');
         Route::get('poule', [PouleController::class, 'index'])->name('poule.index');
 
+        // Eliminatie bracket
+        Route::get('poule/{poule}/eliminatie', [PouleController::class, 'eliminatie'])->name('poule.eliminatie');
+        Route::post('poule/{poule}/eliminatie/genereer', [PouleController::class, 'genereerEliminatie'])->name('poule.eliminatie.genereer');
+        Route::post('poule/{poule}/eliminatie/uitslag', [PouleController::class, 'opslaanEliminatieUitslag'])->name('poule.eliminatie.uitslag');
+
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
         Route::post('blok/kies-variant', [BlokController::class, 'kiesVariant'])->name('blok.kies-variant');
