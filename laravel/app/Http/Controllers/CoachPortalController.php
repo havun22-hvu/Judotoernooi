@@ -157,6 +157,8 @@ class CoachPortalController extends Controller
             'bezettingsPercentage' => $toernooi->bezettings_percentage,
             'plaatsenOver' => $toernooi->plaatsen_over,
             'totaalJudokas' => $toernooi->judokas()->count(),
+            'eliminatieGewichtsklassen' => $toernooi->eliminatie_gewichtsklassen ?? [],
+            'wedstrijdSysteem' => $toernooi->wedstrijd_systeem ?? [],
         ]);
     }
 
@@ -473,6 +475,8 @@ class CoachPortalController extends Controller
             'totaalJudokas' => $toernooi->judokas()->count(),
             'useCode' => true,
             'code' => $code,
+            'eliminatieGewichtsklassen' => $toernooi->eliminatie_gewichtsklassen ?? [],
+            'wedstrijdSysteem' => $toernooi->wedstrijd_systeem ?? [],
         ]);
     }
 
