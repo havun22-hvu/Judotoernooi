@@ -88,7 +88,11 @@
                         </div>
                         <div class="flex items-center gap-2">
                             @if($isEliminatie)
-                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer schema">Schema →</a>
+                                @if($poule->mat_id)
+                                <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer schema">Schema →</a>
+                                @else
+                                <span class="bg-gray-300 text-gray-500 text-xs font-medium px-2 py-1 rounded cursor-not-allowed" title="Eerst op mat plaatsen in zaaloverzicht">Geen mat</span>
+                                @endif
                             @endif
                             @if($poule->judokas_count === 0 && !$isKruisfinale && !$isEliminatie)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
