@@ -553,7 +553,8 @@ class PouleIndelingService
     {
         $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
 
-        $bandOrder = "CASE band
+        // Band order: high to low (zwart first) for default
+        $bandOrderHighToLow = "CASE band
             WHEN 'zwart' THEN 0
             WHEN 'bruin' THEN 1
             WHEN 'blauw' THEN 2
@@ -563,19 +564,31 @@ class PouleIndelingService
             WHEN 'wit' THEN 6
             ELSE 7 END";
 
+        // Band order: low to high (wit first) for band_gewicht
+        $bandOrderLowToHigh = "CASE band
+            WHEN 'wit' THEN 0
+            WHEN 'geel' THEN 1
+            WHEN 'oranje' THEN 2
+            WHEN 'groen' THEN 3
+            WHEN 'blauw' THEN 4
+            WHEN 'bruin' THEN 5
+            WHEN 'zwart' THEN 6
+            ELSE 7 END";
+
         $query = $toernooi->judokas()
             ->orderBy('leeftijdsklasse');
 
         if ($volgorde === 'band_gewicht') {
-            // Leeftijd → Band → Gewicht → Geslacht
-            $query->orderByRaw($bandOrder)
-                  ->orderBy('gewichtsklasse')
+            // Leeftijd → Gewicht → Band (laag naar hoog) → Geslacht
+            // Band sortering binnen gewichtsklasse, lage banden eerst
+            $query->orderBy('gewichtsklasse')
+                  ->orderByRaw($bandOrderLowToHigh)
                   ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
         } else {
-            // Leeftijd → Gewicht → Band → Geslacht (default)
+            // Leeftijd → Gewicht → Band (hoog naar laag) → Geslacht (default)
             $query->orderBy('gewichtsklasse')
                   ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END")
-                  ->orderByRaw($bandOrder);
+                  ->orderByRaw($bandOrderHighToLow);
         }
 
         $judokas = $query->orderBy('naam')->get();
