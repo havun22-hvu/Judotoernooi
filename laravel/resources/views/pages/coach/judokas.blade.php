@@ -79,6 +79,25 @@
                 Totaal aangemeld: {{ $totaalJudokas }} / {{ $toernooi->max_judokas }} ({{ $bezettingsPercentage }}%)
             </div>
             @endif
+
+            @php
+                $heeftEliminatie = !empty($eliminatieGewichtsklassen) && collect($eliminatieGewichtsklassen)->flatten()->isNotEmpty();
+            @endphp
+            @if($heeftEliminatie)
+            <div class="mt-4 bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded text-sm">
+                <strong>Eliminatie (afvalsysteem):</strong> Bij sommige categorieën wordt er met eliminatie gespeeld i.p.v. poules.
+                <details class="mt-2">
+                    <summary class="cursor-pointer text-orange-700 hover:text-orange-900">Welke categorieën?</summary>
+                    <ul class="mt-2 ml-4 list-disc space-y-1">
+                        @foreach($eliminatieGewichtsklassen as $lkKey => $gewichten)
+                            @if(!empty($gewichten))
+                            <li>{{ $gewichtsklassen[$lkKey]['label'] ?? $lkKey }}: {{ implode(', ', array_map(fn($g) => $g . ' kg', $gewichten)) }}</li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </details>
+            </div>
+            @endif
         </div>
 
         @if(session('error'))
@@ -155,7 +174,10 @@
                                 <option :value="gw" x-text="gw + ' kg'"></option>
                             </template>
                         </select>
-                        <p x-show="leeftijdsklasse" class="text-xs text-blue-600 mt-1" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></p>
+                        <p x-show="leeftijdsklasse" class="text-xs mt-1">
+                            <span class="text-blue-600" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></span>
+                            <span x-show="isElim" class="ml-1 text-orange-600 font-medium">(Eliminatie)</span>
+                        </p>
                     </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.</p>
@@ -244,6 +266,14 @@
                     $ontbrekend = $judoka->getOntbrekendeVelden();
                     $isSynced = $judoka->isSynced() && !$judoka->isGewijzigdNaSync();
                     $isGewijzigd = $judoka->isGewijzigdNaSync();
+                    // Check of judoka in eliminatie categorie zit
+                    $lkKey = null;
+                    if ($judoka->geboortejaar && $judoka->geslacht) {
+                        $leeftijd = date('Y') - $judoka->geboortejaar;
+                        $lkEnum = \App\Enums\Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
+                        $lkKey = $lkEnum->configKey();
+                    }
+                    $isEliminatie = $lkKey && $judoka->gewichtsklasse && isset($eliminatieGewichtsklassen[$lkKey]) && in_array($judoka->gewichtsklasse, $eliminatieGewichtsklassen[$lkKey]);
                 @endphp
                 <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')) }}" x-data="{ editing: false }">
                     <!-- View mode -->
@@ -277,7 +307,12 @@
                                 @endif
                             </p>
                             @if($judoka->leeftijdsklasse)
-                            <p class="text-xs text-gray-500 mt-1">{{ $judoka->leeftijdsklasse }}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ $judoka->leeftijdsklasse }}
+                                @if($isEliminatie)
+                                <span class="ml-1 text-orange-600 font-medium" title="Eliminatie systeem">(Elim.)</span>
+                                @endif
+                            </p>
                             @endif
                             @if($isOnvolledig)
                             <p class="text-xs text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>
@@ -332,7 +367,10 @@
                                     </template>
                                 </select>
                             </div>
-                            <p x-show="leeftijdsklasse" class="text-xs text-blue-600 mt-1" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></p>
+                            <p x-show="leeftijdsklasse" class="text-xs mt-1">
+                                <span class="text-blue-600" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></span>
+                                <span x-show="isElim" class="ml-1 text-orange-600 font-medium">(Eliminatie)</span>
+                            </p>
                             <div class="mt-2 flex space-x-2">
                                 <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded text-sm">Opslaan</button>
                                 <button type="button" @click="editing = false" class="bg-gray-300 px-3 py-1 rounded text-sm">Annuleer</button>
@@ -369,6 +407,8 @@
     <script>
         // Gewichtsklassen per leeftijdsklasse - gesorteerd oplopend (- eerst, dan +)
         const gewichtsklassenData = @json($gewichtsklassen);
+        // Eliminatie gewichtsklassen per leeftijdsklasse
+        const eliminatieGewichtsklassen = @json($eliminatieGewichtsklassen ?? []);
 
         // Sorteer gewichten correct: -20, -23, -26, +26 etc.
         function sortGewichten(gewichten) {
@@ -385,6 +425,13 @@
                 // Anders sorteer op nummer
                 return aNum - bNum;
             });
+        }
+
+        // Check of een gewichtsklasse eliminatie is
+        function isEliminatieCategorie(leeftijdsklasseKey, gewichtsklasse) {
+            if (!leeftijdsklasseKey || !gewichtsklasse) return false;
+            const elimGewichten = eliminatieGewichtsklassen[leeftijdsklasseKey];
+            return elimGewichten && elimGewichten.includes(gewichtsklasse);
         }
 
         // Bepaal leeftijdsklasse op basis van geboortejaar en geslacht
@@ -438,10 +485,13 @@
                 gewicht: '',
                 gewichtsklasse: '',
                 leeftijdsklasse: '',
+                leeftijdsklasseKey: '',
                 gewichtsopties: [],
+                isElim: false,
 
                 updateLeeftijdsklasse() {
                     const klasse = bepaalLeeftijdsklasse(this.geboortejaar, this.geslacht);
+                    this.leeftijdsklasseKey = klasse;
                     if (klasse && gewichtsklassenData[klasse]) {
                         this.leeftijdsklasse = gewichtsklassenData[klasse].label;
                         this.gewichtsopties = sortGewichten(gewichtsklassenData[klasse].gewichten);
@@ -454,12 +504,18 @@
                         this.gewichtsopties = [];
                         this.gewichtsklasse = '';
                     }
+                    this.updateIsElim();
                 },
 
                 updateGewichtsklasse() {
                     if (this.gewicht && this.gewichtsopties.length) {
                         this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
                     }
+                    this.updateIsElim();
+                },
+
+                updateIsElim() {
+                    this.isElim = isEliminatieCategorie(this.leeftijdsklasseKey, this.gewichtsklasse);
                 }
             }
         }
@@ -472,7 +528,9 @@
                 gewicht: gewicht,
                 gewichtsklasse: gewichtsklasse,
                 leeftijdsklasse: '',
+                leeftijdsklasseKey: '',
                 gewichtsopties: [],
+                isElim: false,
 
                 init() {
                     this.updateLeeftijdsklasse();
@@ -480,6 +538,7 @@
 
                 updateLeeftijdsklasse() {
                     const klasse = bepaalLeeftijdsklasse(this.geboortejaar, this.geslacht);
+                    this.leeftijdsklasseKey = klasse;
                     if (klasse && gewichtsklassenData[klasse]) {
                         this.leeftijdsklasse = gewichtsklassenData[klasse].label;
                         this.gewichtsopties = sortGewichten(gewichtsklassenData[klasse].gewichten);
@@ -491,12 +550,18 @@
                         this.leeftijdsklasse = '';
                         this.gewichtsopties = [];
                     }
+                    this.updateIsElim();
                 },
 
                 updateGewichtsklasse() {
                     if (this.gewicht && this.gewichtsopties.length) {
                         this.gewichtsklasse = bepaalGewichtsklasse(parseFloat(this.gewicht), this.gewichtsopties);
                     }
+                    this.updateIsElim();
+                },
+
+                updateIsElim() {
+                    this.isElim = isEliminatieCategorie(this.leeftijdsklasseKey, this.gewichtsklasse);
                 }
             }
         }

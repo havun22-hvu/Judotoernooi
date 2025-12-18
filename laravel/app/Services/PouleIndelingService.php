@@ -64,6 +64,7 @@ class PouleIndelingService
                 'totaal_wedstrijden' => 0,
                 'totaal_kruisfinales' => 0,
                 'per_leeftijdsklasse' => [],
+                'waarschuwingen' => [],
             ];
 
             // Track voorrondepoules per categorie (leeftijdsklasse + gewichtsklasse) for kruisfinale creation
@@ -90,6 +91,25 @@ class PouleIndelingService
 
                 // For elimination: create one group with all judokas (no pool splitting)
                 if ($isEliminatie) {
+                    $aantalDeelnemers = $judokas->count();
+
+                    // Check for minimum participants (warning: < 8, error: < 4)
+                    if ($aantalDeelnemers < 4) {
+                        $statistieken['waarschuwingen'][] = [
+                            'type' => 'error',
+                            'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
+                            'bericht' => "Te weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Minimaal 4 vereist. Overweeg poule-systeem.",
+                            'aantal' => $aantalDeelnemers,
+                        ];
+                    } elseif ($aantalDeelnemers < 8) {
+                        $statistieken['waarschuwingen'][] = [
+                            'type' => 'warning',
+                            'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
+                            'bericht' => "Weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Ideaal is 8+. Overweeg poule-systeem.",
+                            'aantal' => $aantalDeelnemers,
+                        ];
+                    }
+
                     $titel = "{$leeftijdsklasse} {$gewichtsklasse} - Eliminatie";
 
                     $poule = Poule::create([
@@ -99,7 +119,7 @@ class PouleIndelingService
                         'type' => 'eliminatie',
                         'leeftijdsklasse' => $leeftijdsklasse,
                         'gewichtsklasse' => $gewichtsklasse,
-                        'aantal_judokas' => $judokas->count(),
+                        'aantal_judokas' => $aantalDeelnemers,
                     ]);
 
                     // Attach all judokas to elimination group

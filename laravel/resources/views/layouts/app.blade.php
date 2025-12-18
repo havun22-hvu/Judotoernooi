@@ -77,6 +77,14 @@
     </div>
     @endif
 
+    @if(session('warning'))
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+        <div class="bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded">
+            {{ session('warning') }}
+        </div>
+    </div>
+    @endif
+
     <main class="@yield('main-class', 'max-w-7xl mx-auto') px-4 py-8 flex-grow">
         @yield('content')
     </main>

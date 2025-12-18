@@ -139,9 +139,36 @@ class PouleController extends Controller
         $message = "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, " .
                    "{$statistieken['totaal_wedstrijden']} wedstrijden.";
 
-        return redirect()
-            ->route('toernooi.poule.index', $toernooi)
-            ->with('success', $message);
+        $redirect = redirect()->route('toernooi.poule.index', $toernooi);
+
+        // Check for warnings about elimination participant counts
+        $waarschuwingen = $statistieken['waarschuwingen'] ?? [];
+        if (!empty($waarschuwingen)) {
+            $errorMessages = [];
+            $warningMessages = [];
+
+            foreach ($waarschuwingen as $w) {
+                if ($w['type'] === 'error') {
+                    $errorMessages[] = $w['bericht'];
+                } else {
+                    $warningMessages[] = $w['bericht'];
+                }
+            }
+
+            if (!empty($errorMessages)) {
+                return $redirect
+                    ->with('success', $message)
+                    ->with('error', implode(' ', $errorMessages));
+            }
+
+            if (!empty($warningMessages)) {
+                return $redirect
+                    ->with('success', $message)
+                    ->with('warning', implode(' ', $warningMessages));
+            }
+        }
+
+        return $redirect->with('success', $message);
     }
 
     /**
