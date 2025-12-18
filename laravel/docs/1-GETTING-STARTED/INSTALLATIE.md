@@ -54,7 +54,7 @@ Open `.env` en pas de volgende waarden aan:
 
 ```env
 APP_NAME="WestFries Open JudoToernooi"
-APP_URL=https://judotoernooi.havun.nl
+APP_URL=https://staging.judotournament.org
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -107,7 +107,7 @@ De standaard Laravel `.htaccess` in `public/` zou moeten werken.
 ```nginx
 server {
     listen 80;
-    server_name judotoernooi.havun.nl;
+    server_name staging.judotournament.org;
     root /var/www/judotoernooi/laravel/public;
 
     add_header X-Frame-Options "SAMEORIGIN";
