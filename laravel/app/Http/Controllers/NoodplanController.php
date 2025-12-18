@@ -44,39 +44,26 @@ class NoodplanController extends Controller
     }
 
     /**
-     * Print weeglijst (optioneel per blok)
+     * Print weeglijst - alle judoka's gegroepeerd per blok, alfabetisch gesorteerd
      */
-    public function printWeeglijst(Toernooi $toernooi, ?int $blokNummer = null): View
+    public function printWeeglijst(Toernooi $toernooi): View
     {
-        $blok = null;
-        $titel = 'Weeglijst';
+        $blokken = $toernooi->blokken()
+            ->with(['poules.judokas.club'])
+            ->orderBy('nummer')
+            ->get();
 
-        if ($blokNummer) {
-            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
-            if (!$blok) {
-                abort(404, 'Blok niet gevonden');
-            }
+        // Bouw lijst per blok met judoka's alfabetisch gesorteerd
+        $judokasPerBlok = $blokken->mapWithKeys(function ($blok) {
+            $judokas = $blok->poules
+                ->flatMap(fn($p) => $p->judokas)
+                ->unique('id')
+                ->sortBy('naam')
+                ->values();
+            return [$blok->nummer => $judokas];
+        });
 
-            // Haal judoka's op die in poules van dit blok zitten
-            $judokaIds = $blok->poules()->with('judokas')->get()
-                ->flatMap(fn($p) => $p->judokas->pluck('id'))
-                ->unique();
-
-            $judokas = Judoka::whereIn('id', $judokaIds)
-                ->with('club')
-                ->orderBy('naam')
-                ->get();
-
-            $titel = "Weeglijst Blok {$blok->nummer}";
-        } else {
-            $judokas = $toernooi->judokas()
-                ->with('club')
-                ->orderBy('club_id')
-                ->orderBy('naam')
-                ->get();
-        }
-
-        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokas', 'titel', 'blok'));
+        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokasPerBlok'));
     }
 
     /**
