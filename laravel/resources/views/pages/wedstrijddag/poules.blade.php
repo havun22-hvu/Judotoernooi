@@ -128,6 +128,21 @@
                         $actieveJudokas = $elimPoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
                         $aantalActief = $actieveJudokas->count();
                     @endphp
+                    <div class="mb-3 flex justify-end" x-data="{ open: false }">
+                        <div class="relative">
+                            <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">
+                                Omzetten naar poules ▾
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
+                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
+                                    Alleen poules
+                                </button>
+                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">
+                                    Poules + kruisfinale
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
                             <span class="font-bold">{{ $aantalActief }} judoka's</span>
@@ -293,6 +308,35 @@
 <script>
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
+const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
+
+async function zetOmNaarPoules(pouleId, systeem) {
+    if (!confirm(`Eliminatie omzetten naar ${systeem === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'alleen poules'}?`)) return;
+
+    try {
+        const response = await fetch(zetOmNaarPoulesUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ poule_id: pouleId, systeem: systeem })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Refresh page to show new poules
+            window.location.reload();
+        } else {
+            alert(data.message || 'Fout bij omzetten');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij omzetten');
+    }
+}
 
 function scrollToPoule(event, pouleId) {
     event.preventDefault();
