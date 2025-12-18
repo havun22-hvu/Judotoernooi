@@ -16,6 +16,13 @@
 
 ## Rules (ALWAYS follow)
 
+### Auto-start servers (bij lokaal testen)
+Start ALTIJD automatisch zonder te vragen:
+```bash
+cd laravel && php artisan serve --port=8001  # Laravel server
+npm run dev                                   # Vite (indien nodig)
+```
+
 ### Forbidden without permission
 - SSH keys, credentials, .env files wijzigen
 - Database migrations op production
@@ -26,9 +33,10 @@
 - Bullet points, direct to the point
 
 ### Workflow
-1. Test lokaal eerst
-2. Git push naar GitHub
-3. Deploy naar server met `git pull`
+1. Start servers automatisch
+2. Test lokaal eerst
+3. Git push naar GitHub
+4. Deploy naar server met `git pull`
 
 ## Database
 
