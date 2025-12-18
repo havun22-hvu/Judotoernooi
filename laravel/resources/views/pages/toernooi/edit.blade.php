@@ -225,7 +225,7 @@
                                class="w-4 h-4 text-blue-600">
                         <div>
                             <span class="font-medium">Leeftijd → Band → Gewicht</span>
-                            <span class="block text-xs text-gray-500">Eerst hogere banden bij elkaar, dan lagere banden bij elkaar.</span>
+                            <span class="block text-xs text-gray-500">Eerst lagere banden (wit, geel, etc.), dan hogere. Per gewichtsklasse, of per leeftijd als er geen gewichtsklassen zijn.</span>
                         </div>
                     </label>
                 </div>
