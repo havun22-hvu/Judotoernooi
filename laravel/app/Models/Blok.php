@@ -63,6 +63,32 @@ class Blok extends Model
 
         // Markeer alle niet-gewogen judoka's in dit blok als afwezig
         $this->markeerNietGewogenAlsAfwezig();
+
+        // Herbereken statistieken voor alle poules in dit blok
+        $this->herberekenPouleStatistieken();
+    }
+
+    /**
+     * Herbereken statistieken voor alle poules na weging sluiting
+     * Voor eliminatie poules: verwijder afwezige judoka's
+     */
+    public function herberekenPouleStatistieken(): void
+    {
+        foreach ($this->poules as $poule) {
+            // Voor eliminatie poules: verwijder afwezige judoka's uit de groep
+            if ($poule->type === 'eliminatie') {
+                $afwezigeIds = $poule->judokas()
+                    ->where('aanwezigheid', 'afwezig')
+                    ->pluck('judokas.id');
+
+                if ($afwezigeIds->isNotEmpty()) {
+                    $poule->judokas()->detach($afwezigeIds);
+                }
+            }
+
+            // Herbereken statistieken (aantal judoka's en wedstrijden)
+            $poule->updateStatistieken();
+        }
     }
 
     /**

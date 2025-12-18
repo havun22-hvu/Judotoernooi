@@ -6,6 +6,7 @@ use App\Models\Blok;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
+use App\Services\EliminatieService;
 use App\Services\ToernooiService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,8 @@ class BlokController extends Controller
     public function __construct(
         private BlokMatVerdelingService $verdelingService,
         private WedstrijdSchemaService $wedstrijdService,
-        private ToernooiService $toernooiService
+        private ToernooiService $toernooiService,
+        private EliminatieService $eliminatieService
     ) {}
 
     public function index(Toernooi $toernooi): View
@@ -232,18 +234,29 @@ class BlokController extends Controller
 
         // Generate match schedules for each poule (mats already assigned)
         $totaalWedstrijden = 0;
+        $isEliminatie = false;
+
         foreach ($poules as $poule) {
             // Only generate if no wedstrijden exist yet
             if ($poule->wedstrijden()->count() === 0) {
-                $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
-                $totaalWedstrijden += count($wedstrijden);
+                if ($poule->type === 'eliminatie') {
+                    // Generate elimination bracket
+                    $isEliminatie = true;
+                    $stats = $this->eliminatieService->genereerBracket($poule);
+                    $totaalWedstrijden += $stats['totaal_wedstrijden'] ?? 0;
+                } else {
+                    // Generate round-robin matches
+                    $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+                    $totaalWedstrijden += count($wedstrijden);
+                }
             }
         }
 
         // Stay on zaaloverzicht (chip turns green to indicate activation)
+        $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poules';
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} geactiveerd" .
+            ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} geactiveerd - {$typeLabel}" .
                 ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden)" : ""));
     }
 
