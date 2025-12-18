@@ -88,7 +88,7 @@
                         </div>
                         <div class="flex items-center gap-2">
                             @if($isEliminatie)
-                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer bracket">Bracket →</a>
+                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer schema">Schema →</a>
                             @endif
                             @if($poule->judokas_count === 0 && !$isKruisfinale && !$isEliminatie)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
@@ -114,8 +114,18 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="{{ $isEliminatie ? 'grid grid-cols-4 gap-1 p-2' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
+                    @if($isEliminatie)
+                    {{-- Compacte weergave voor eliminatie: 4 kolommen --}}
+                    <div class="px-2 py-1 bg-gray-50 rounded text-xs judoka-item hover:bg-orange-50"
+                         data-judoka-id="{{ $judoka->id }}"
+                         data-poule-id="{{ $poule->id }}">
+                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
+                        <div class="text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                    </div>
+                    @else
+                    {{-- Normale weergave voor poules --}}
                     <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}">
@@ -130,10 +140,11 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-4' : '' }}">Leeg</div>
                     @endif
                 </div>
             </div>
