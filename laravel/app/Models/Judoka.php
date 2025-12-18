@@ -51,7 +51,41 @@ class Judoka extends Model
             if (empty($judoka->qr_code)) {
                 $judoka->qr_code = Str::uuid()->toString();
             }
+            // Auto-format naam bij aanmaken
+            if (!empty($judoka->naam)) {
+                $judoka->naam = self::formatNaam($judoka->naam);
+            }
         });
+
+        static::updating(function (Judoka $judoka) {
+            // Auto-format naam bij wijzigen
+            if ($judoka->isDirty('naam') && !empty($judoka->naam)) {
+                $judoka->naam = self::formatNaam($judoka->naam);
+            }
+        });
+    }
+
+    /**
+     * Format naam met correcte hoofdletters
+     * Tussenvoegsels klein (van, de, etc.), namen met hoofdletter
+     */
+    public static function formatNaam(string $naam): string
+    {
+        $tussenvoegsels = ['van', 'de', 'den', 'der', 'het', 'ter', 'ten', 'te', 'op', 'in', "'t"];
+
+        $delen = explode(' ', trim($naam));
+        $result = [];
+
+        foreach ($delen as $i => $deel) {
+            $lower = mb_strtolower($deel);
+            if (in_array($lower, $tussenvoegsels) && $i > 0) {
+                $result[] = $lower;
+            } else {
+                $result[] = mb_convert_case($deel, MB_CASE_TITLE);
+            }
+        }
+
+        return implode(' ', $result);
     }
 
     public function toernooi(): BelongsTo

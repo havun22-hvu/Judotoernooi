@@ -288,7 +288,7 @@ class JudokaController extends Controller
 
             // Correct name capitalization (Jan de Vries, Anna van den Berg)
             $naamOud = $judoka->naam;
-            $naamNieuw = $this->formatNaam($naamOud);
+            $naamNieuw = Judoka::formatNaam($naamOud);
             if ($naamOud !== $naamNieuw) {
                 $wijzigingen['naam'] = $naamNieuw;
             }
@@ -353,23 +353,4 @@ class JudokaController extends Controller
             ->with('success', $message);
     }
 
-    private function formatNaam(string $naam): string
-    {
-        // Dutch name prefixes that should stay lowercase
-        $tussenvoegsels = ['van', 'de', 'den', 'der', 'het', 'ter', 'ten', 'te', 'op', 'in', "'t"];
-
-        $delen = explode(' ', trim($naam));
-        $result = [];
-
-        foreach ($delen as $i => $deel) {
-            $lower = mb_strtolower($deel);
-            if (in_array($lower, $tussenvoegsels) && $i > 0) {
-                $result[] = $lower;
-            } else {
-                $result[] = mb_convert_case($deel, MB_CASE_TITLE);
-            }
-        }
-
-        return implode(' ', $result);
-    }
 }
