@@ -301,7 +301,7 @@
                              class="eliminatie-gewichtsklassen mt-2 pt-2 border-t border-gray-200 {{ ($wedstrijdSysteem[$key] ?? '') !== 'eliminatie' ? 'hidden' : '' }}">
                             @if(isset($gewichtsklassenPerLeeftijd[$key]) && count($gewichtsklassenPerLeeftijd[$key]) > 0)
                                 <p class="text-xs text-gray-500 mb-1">Selecteer gewichtsklassen voor eliminatie (min. 8 deelnemers aanbevolen):</p>
-                                <div class="flex flex-wrap gap-1">
+                                <div class="grid grid-cols-4 gap-x-4 gap-y-1">
                                     @foreach($gewichtsklassenPerLeeftijd[$key] as $gewicht => $aantal)
                                         @php
                                             $isGeschikt = $aantal >= 4;
