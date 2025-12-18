@@ -1,7 +1,7 @@
 # JudoToernooi - Claude Instructions
 
 > **Type:** Laravel 11 toernooi management systeem
-> **URL:** https://judotoernooi.havun.nl
+> **URL:** https://staging.judotournament.org
 > **Doel:** WestFries Open Judo Toernooi beheren
 
 ## Quick Reference
