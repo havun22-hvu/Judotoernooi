@@ -56,24 +56,24 @@
         @endif
 
         <!-- Info -->
-        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
-            <div class="flex items-center gap-4">
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+            <div class="flex items-center gap-3">
                 <div class="text-center">
-                    <p class="text-3xl font-bold text-purple-600">{{ $aantalJudokas }}</p>
-                    <p class="text-sm text-purple-700">Judoka's</p>
+                    <p class="text-xl font-bold text-purple-600">{{ $aantalJudokas }}</p>
+                    <p class="text-xs text-purple-700">Judoka's</p>
                 </div>
-                <div class="text-purple-400 text-2xl">÷</div>
+                <div class="text-purple-400 text-lg">÷</div>
                 <div class="text-center">
-                    <p class="text-3xl font-bold text-purple-600">{{ $judokasPerCoach }}</p>
-                    <p class="text-sm text-purple-700">Per coach</p>
+                    <p class="text-xl font-bold text-purple-600">{{ $judokasPerCoach }}</p>
+                    <p class="text-xs text-purple-700">Per coach</p>
                 </div>
-                <div class="text-purple-400 text-2xl">=</div>
+                <div class="text-purple-400 text-lg">=</div>
                 <div class="text-center">
-                    <p class="text-3xl font-bold text-purple-600">{{ $benodigdAantal }}</p>
-                    <p class="text-sm text-purple-700">Coach kaarten</p>
+                    <p class="text-xl font-bold text-purple-600">{{ $benodigdAantal }}</p>
+                    <p class="text-xs text-purple-700">Coach kaarten</p>
                 </div>
             </div>
-            <p class="text-sm text-purple-600 mt-3">
+            <p class="text-xs text-purple-600 mt-2">
                 Elke coach kaart geeft toegang tot de dojo (judozaal). Deel de link met de begeleider zodat zij hun foto kunnen toevoegen.
             </p>
         </div>
