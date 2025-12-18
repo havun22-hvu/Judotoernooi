@@ -55,27 +55,10 @@
         </div>
         @endif
 
-        <!-- Info -->
-        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
-            <div class="flex items-center gap-3">
-                <div class="text-center">
-                    <p class="text-xl font-bold text-purple-600">{{ $aantalJudokas }}</p>
-                    <p class="text-xs text-purple-700">Judoka's</p>
-                </div>
-                <div class="text-purple-400 text-lg">÷</div>
-                <div class="text-center">
-                    <p class="text-xl font-bold text-purple-600">{{ $judokasPerCoach }}</p>
-                    <p class="text-xs text-purple-700">Per coach</p>
-                </div>
-                <div class="text-purple-400 text-lg">=</div>
-                <div class="text-center">
-                    <p class="text-xl font-bold text-purple-600">{{ $benodigdAantal }}</p>
-                    <p class="text-xs text-purple-700">Coach kaarten</p>
-                </div>
-            </div>
-            <p class="text-xs text-purple-600 mt-2">
-                Elke coach kaart geeft toegang tot de dojo (judozaal). Deel de link met de begeleider zodat zij hun foto kunnen toevoegen.
-            </p>
+        <!-- Info box -->
+        <div class="bg-purple-50 border border-purple-200 text-purple-800 px-4 py-3 rounded mb-6">
+            <p class="font-medium">Coach kaarten voor je begeleiders</p>
+            <p class="text-sm mt-1">Elke coach kaart geeft toegang tot de dojo (judozaal). Deel de link met de begeleider zodat zij hun foto kunnen toevoegen.</p>
         </div>
 
         <!-- Coach Kaarten -->
