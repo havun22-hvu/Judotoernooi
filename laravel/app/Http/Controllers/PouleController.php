@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Models\Wedstrijd;
+use App\Services\EliminatieService;
 use App\Services\PouleIndelingService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +18,8 @@ class PouleController extends Controller
 {
     public function __construct(
         private PouleIndelingService $pouleService,
-        private WedstrijdSchemaService $wedstrijdService
+        private WedstrijdSchemaService $wedstrijdService,
+        private EliminatieService $eliminatieService
     ) {}
 
     public function index(Toernooi $toernooi): View
@@ -288,6 +291,87 @@ class PouleController extends Controller
             'message' => "Kruisfinale aangepast: top {$kruisfinalesPlaatsen} door ({$aantalJudokas} judoka's)",
             'aantal_judokas' => $aantalJudokas,
             'aantal_wedstrijden' => $aantalWedstrijden,
+        ]);
+    }
+
+    /**
+     * Show elimination bracket for a poule
+     */
+    public function eliminatie(Toernooi $toernooi, Poule $poule): View
+    {
+        $poule->load(['judokas.club', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar']);
+
+        $bracket = $this->eliminatieService->getBracketStructuur($poule);
+        $heeftEliminatie = $poule->wedstrijden()->where('groep', 'A')->exists();
+
+        return view('pages.poule.eliminatie', compact('toernooi', 'poule', 'bracket', 'heeftEliminatie'));
+    }
+
+    /**
+     * Generate elimination bracket for a poule
+     */
+    public function genereerEliminatie(Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $judokas = $poule->judokas;
+
+        if ($judokas->count() < 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimaal 2 judoka\'s nodig voor eliminatie',
+            ], 400);
+        }
+
+        $statistieken = $this->eliminatieService->genereerBracket($poule, $judokas);
+
+        if (isset($statistieken['error'])) {
+            return response()->json([
+                'success' => false,
+                'message' => $statistieken['error'],
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Eliminatie bracket gegenereerd: {$statistieken['totaal_wedstrijden']} wedstrijden",
+            'statistieken' => $statistieken,
+        ]);
+    }
+
+    /**
+     * Save match result in elimination bracket
+     */
+    public function opslaanEliminatieUitslag(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $validated = $request->validate([
+            'wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'winnaar_id' => 'required|exists:judokas,id',
+            'uitslag_type' => 'nullable|string|in:ippon,wazari,yuko,beslissing,opgave',
+        ]);
+
+        $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Verify the winner is one of the participants
+        if ($validated['winnaar_id'] != $wedstrijd->judoka_wit_id &&
+            $validated['winnaar_id'] != $wedstrijd->judoka_blauw_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Winnaar moet een van de deelnemers zijn',
+            ], 400);
+        }
+
+        // Update the match
+        $wedstrijd->update([
+            'winnaar_id' => $validated['winnaar_id'],
+            'is_gespeeld' => true,
+            'uitslag_type' => $validated['uitslag_type'] ?? 'ippon',
+        ]);
+
+        // Process advancement
+        $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Uitslag opgeslagen',
         ]);
     }
 }
