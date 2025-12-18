@@ -54,6 +54,8 @@ class WedstrijddagController extends Controller
                     [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
                     // Extract numeric weight for sorting
                     $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
+                    // Check if this is an elimination category
+                    $isEliminatie = $categoryPoules->first()?->type === 'eliminatie';
                     return [
                         'key' => $key,
                         'leeftijdsklasse' => $leeftijdsklasse,
@@ -62,6 +64,7 @@ class WedstrijddagController extends Controller
                         'gewicht_sort' => $gewichtNum,
                         'poules' => $categoryPoules->sortBy('nummer'),
                         'wachtruimte' => [],
+                        'is_eliminatie' => $isEliminatie,
                     ];
                 })->sortBy([
                 ['leeftijd_sort', 'asc'],
