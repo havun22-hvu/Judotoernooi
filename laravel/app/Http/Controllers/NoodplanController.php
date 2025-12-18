@@ -44,17 +44,39 @@ class NoodplanController extends Controller
     }
 
     /**
-     * Print weeglijst
+     * Print weeglijst (optioneel per blok)
      */
-    public function printWeeglijst(Toernooi $toernooi): View
+    public function printWeeglijst(Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        $judokas = $toernooi->judokas()
-            ->with('club')
-            ->orderBy('club_id')
-            ->orderBy('naam')
-            ->get();
+        $blok = null;
+        $titel = 'Weeglijst';
 
-        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokas'));
+        if ($blokNummer) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if (!$blok) {
+                abort(404, 'Blok niet gevonden');
+            }
+
+            // Haal judoka's op die in poules van dit blok zitten
+            $judokaIds = $blok->poules()->with('judokas')->get()
+                ->flatMap(fn($p) => $p->judokas->pluck('id'))
+                ->unique();
+
+            $judokas = Judoka::whereIn('id', $judokaIds)
+                ->with('club')
+                ->orderBy('naam')
+                ->get();
+
+            $titel = "Weeglijst Blok {$blok->nummer}";
+        } else {
+            $judokas = $toernooi->judokas()
+                ->with('club')
+                ->orderBy('club_id')
+                ->orderBy('naam')
+                ->get();
+        }
+
+        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokas', 'titel', 'blok'));
     }
 
     /**
