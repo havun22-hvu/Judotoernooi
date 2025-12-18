@@ -68,22 +68,29 @@
             <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtsklasse }} kg</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($gewichtPoules as $poule)
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$poule->isKruisfinale() ? 'border-2 border-red-300' : '' }} {{ $poule->isKruisfinale() ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $poule->isKruisfinale() ? '1' : '0' }}">
+            @php
+                $isEliminatie = $poule->type === 'eliminatie';
+                $isKruisfinale = $poule->isKruisfinale();
+                $isProbleem = $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$isKruisfinale && !$isEliminatie;
+            @endphp
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
-                <div class="px-3 py-2 border-b {{ $poule->isKruisfinale() ? 'bg-purple-100' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'bg-red-100' : 'bg-blue-100') }}">
+                <div class="px-3 py-2 border-b {{ $isEliminatie ? 'bg-orange-100' : ($isKruisfinale ? 'bg-purple-100' : ($isProbleem ? 'bg-red-100' : 'bg-blue-100')) }}">
                     <div class="flex justify-between items-center">
-                        <div class="font-bold text-sm {{ $poule->isKruisfinale() ? 'text-purple-800' : ($poule->judokas_count > 0 && $poule->judokas_count < 3 ? 'text-red-800' : 'text-blue-800') }}">
-                            @if($poule->isKruisfinale())
+                        <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
+                            @if($isEliminatie)
+                                #{{ $poule->nummer }} ⚔️ {{ $poule->gewichtsklasse }} kg - Eliminatie
+                            @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
                                 #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
-                            @if($poule->judokas_count >= 2 && !$poule->isKruisfinale())
-                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="text-orange-500 hover:text-orange-700 text-xs font-medium" title="Eliminatie bracket">⚔️</a>
+                            @if($isEliminatie)
+                            <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer bracket">Bracket →</a>
                             @endif
-                            @if($poule->judokas_count === 0 && !$poule->isKruisfinale())
+                            @if($poule->judokas_count === 0 && !$isKruisfinale && !$isEliminatie)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                             @endif
                         </div>

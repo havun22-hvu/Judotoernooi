@@ -69,6 +69,9 @@ class PouleIndelingService
             // Track voorrondepoules per categorie (leeftijdsklasse + gewichtsklasse) for kruisfinale creation
             $voorrondesPerCategorie = [];
 
+            // Get eliminatie gewichtsklassen settings
+            $eliminatieGewichtsklassen = $toernooi->eliminatie_gewichtsklassen ?? [];
+
             foreach ($groepen as $sleutel => $judokas) {
                 if ($judokas->isEmpty()) continue;
 
@@ -78,7 +81,51 @@ class PouleIndelingService
                 $gewichtsklasse = $delen[1] ?? 'Onbekend';
                 $geslacht = $delen[2] ?? null;
 
-                // Split into optimal pools
+                // Check if this is an elimination weight class
+                $klasseKey = $this->getLeeftijdsklasseKey($leeftijdsklasse);
+                $systeem = $wedstrijdSysteem[$klasseKey] ?? 'poules';
+                $isEliminatie = $systeem === 'eliminatie' &&
+                    isset($eliminatieGewichtsklassen[$klasseKey]) &&
+                    in_array($gewichtsklasse, $eliminatieGewichtsklassen[$klasseKey]);
+
+                // For elimination: create one group with all judokas (no pool splitting)
+                if ($isEliminatie) {
+                    $titel = "{$leeftijdsklasse} {$gewichtsklasse} - Eliminatie";
+
+                    $poule = Poule::create([
+                        'toernooi_id' => $toernooi->id,
+                        'nummer' => $pouleNummer,
+                        'titel' => $titel,
+                        'type' => 'eliminatie',
+                        'leeftijdsklasse' => $leeftijdsklasse,
+                        'gewichtsklasse' => $gewichtsklasse,
+                        'aantal_judokas' => $judokas->count(),
+                    ]);
+
+                    // Attach all judokas to elimination group
+                    $positie = 1;
+                    foreach ($judokas as $judoka) {
+                        $poule->judokas()->attach($judoka->id, ['positie' => $positie++]);
+                    }
+
+                    $poule->updateStatistieken();
+
+                    $statistieken['totaal_poules']++;
+                    if (!isset($statistieken['per_leeftijdsklasse'][$leeftijdsklasse])) {
+                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse] = [
+                            'poules' => 0,
+                            'wedstrijden' => 0,
+                            'kruisfinales' => 0,
+                            'eliminatie' => 0,
+                        ];
+                    }
+                    $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['eliminatie'] = ($statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['eliminatie'] ?? 0) + 1;
+
+                    $pouleNummer++;
+                    continue; // Skip normal pool creation
+                }
+
+                // Split into optimal pools (normal flow)
                 $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
                 foreach ($pouleVerdelingen as $pouleJudokas) {
