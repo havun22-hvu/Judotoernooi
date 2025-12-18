@@ -108,11 +108,20 @@ class Poule extends Model
 
     /**
      * Calculate number of matches for a given number of judokas
-     * Formula: n*(n-1)/2 for round-robin, doubled if dubbel spel enabled
+     * Formula depends on poule type:
+     * - voorronde/kruisfinale: n*(n-1)/2 for round-robin, doubled if dubbel spel enabled
+     * - eliminatie: double elimination with repechage
      */
     public function berekenAantalWedstrijden(?int $aantalJudokas = null): int
     {
         $aantal = $aantalJudokas ?? $this->aantal_judokas;
+
+        // Elimination bracket calculation
+        if ($this->type === 'eliminatie') {
+            return $this->berekenEliminatieWedstrijden($aantal);
+        }
+
+        // Round-robin calculation
         $enkelRonde = intval(($aantal * ($aantal - 1)) / 2);
 
         // Get toernooi settings
@@ -125,6 +134,34 @@ class Poule extends Model
         if ($aantal === 4 && $dubbelBij4) return $enkelRonde * 2; // 12
 
         return $enkelRonde;
+    }
+
+    /**
+     * Calculate number of matches for elimination bracket
+     * Double elimination with repechage and 2 bronze matches
+     */
+    private function berekenEliminatieWedstrijden(int $aantal): int
+    {
+        if ($aantal < 2) return 0;
+        if ($aantal === 2) return 1; // Just finale
+
+        // Calculate bracket size (smallest power of 2 >= aantal)
+        $bracketGrootte = 1;
+        while ($bracketGrootte < $aantal) {
+            $bracketGrootte *= 2;
+        }
+
+        // Main bracket (Groep A): bracketGrootte - 1 matches
+        $hoofdboom = $bracketGrootte - 1;
+
+        // Repechage (Groep B): roughly half of main bracket
+        // Losers from each round feed into repechage
+        $herkansing = max(0, intval($hoofdboom / 2));
+
+        // Bronze matches: 2 (semi-final losers vs repechage winners)
+        $brons = $aantal >= 4 ? 2 : 0;
+
+        return $hoofdboom + $herkansing + $brons;
     }
 
     /**
