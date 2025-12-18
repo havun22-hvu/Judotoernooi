@@ -45,29 +45,17 @@
                 </div>
             </div>
 
-            <!-- Weeglijst per blok -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <div>
-                    <h3 class="font-medium">Weeglijst per blok</h3>
-                    <p class="text-sm text-gray-500">Alfabetisch op naam, voor weging + afwezigen</p>
-                </div>
-                <div class="flex gap-2">
-                    @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.weeglijst', [$toernooi, $blok->nummer]) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                        Blok {{ $blok->nummer }}
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-
             <!-- Overzichten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                     <h3 class="font-medium">Overzichten</h3>
-                    <p class="text-sm text-gray-500">Zaaloverzicht, instellingen, contactlijst</p>
+                    <p class="text-sm text-gray-500">Weeglijst, zaaloverzicht, instellingen, contactlijst</p>
                 </div>
                 <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi) }}" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        Weeglijst
+                    </a>
                     <a href="{{ route('toernooi.noodplan.zaaloverzicht', $toernooi) }}" target="_blank"
                        class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
                         Zaaloverzicht

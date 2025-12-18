@@ -135,7 +135,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Voor het toernooi (backup)
         Route::get('/poules/{blok?}', [NoodplanController::class, 'printPoules'])->name('poules');
-        Route::get('/weeglijst/{blok?}', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
+        Route::get('/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
         Route::get('/zaaloverzicht', [NoodplanController::class, 'printZaaloverzicht'])->name('zaaloverzicht');
         Route::get('/weegkaarten', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
         Route::get('/weegkaarten/club/{club}', [NoodplanController::class, 'printWeegkaartenClub'])->name('weegkaarten.club');
