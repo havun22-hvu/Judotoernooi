@@ -68,12 +68,16 @@
         {{-- Categories within blok --}}
         <div x-show="open" x-collapse class="divide-y">
             @forelse($blok['categories'] as $category)
+            @php
+                $isEliminatie = $category['is_eliminatie'] ?? false;
+            @endphp
             <div class="bg-white">
                 {{-- Category header --}}
-                <div class="flex justify-between items-center px-4 py-3 bg-gray-100 border-b">
+                <div class="flex justify-between items-center px-4 py-3 {{ $isEliminatie ? 'bg-orange-100' : 'bg-gray-100' }} border-b">
                     <div class="flex items-center gap-3">
-                        <h2 class="text-lg font-bold">
-                            {{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
+                        <h2 class="text-lg font-bold {{ $isEliminatie ? 'text-orange-800' : '' }}">
+                            @if($isEliminatie)⚔️ @endif{{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
+                            @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">(Eliminatie)</span>@endif
                         </h2>
                         @php
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
@@ -89,6 +93,7 @@
                                 if ($actief === 0) $aantalLegePoules++;
                             }
                         @endphp
+                        @if(!$isEliminatie)
                         <button
                             @click="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
@@ -96,6 +101,7 @@
                         >
                             + Poule
                         </button>
+                        @endif
                     </div>
                     @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
                     <button
@@ -107,14 +113,52 @@
                         <span x-show="!sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
                         <span x-show="sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
                     </button>
-                    @elseif($aantalLegePoules > 0)
+                    @elseif($aantalLegePoules > 0 && !$isEliminatie)
                     <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
-                    @else
+                    @elseif($totaalActiefInCategorie === 0)
                     <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
                     @endif
                 </div>
 
                 <div class="p-4">
+                    @if($isEliminatie)
+                    {{-- Eliminatie: één grote box met alle judoka's in grid --}}
+                    @php
+                        $elimPoule = $category['poules']->first();
+                        $actieveJudokas = $elimPoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
+                        $aantalActief = $actieveJudokas->count();
+                    @endphp
+                    <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
+                        <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
+                            <span class="font-bold">{{ $aantalActief }} judoka's</span>
+                            <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActief) }} wedstrijden</span>
+                        </div>
+                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                            @foreach($elimPoule->judokas as $judoka)
+                            @php
+                                $isGewogen = $judoka->gewicht_gewogen !== null;
+                                $isAfwezig = $judoka->aanwezigheid === 'afwezig';
+                                $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
+                            @endphp
+                            <div class="px-2 py-1.5 rounded text-sm {{ $isDoorgestreept ? 'bg-gray-100 opacity-60' : 'bg-orange-50 border border-orange-200' }}">
+                                <div class="flex items-center gap-1">
+                                    @if($isAfwijkendGewicht)
+                                        <span class="text-red-500 text-xs">●</span>
+                                    @elseif($isGewogen && !$isDoorgestreept)
+                                        <span class="text-green-500 text-xs">●</span>
+                                    @endif
+                                    <div class="min-w-0 {{ $isDoorgestreept ? 'line-through text-gray-400' : '' }}">
+                                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
+                                        <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @else
+                    {{-- Normale poules --}}
                     <div class="flex gap-4">
                         {{-- Existing poules --}}
                         <div class="flex flex-wrap gap-4 flex-1">
@@ -229,6 +273,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
             @empty

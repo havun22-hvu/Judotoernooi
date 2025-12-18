@@ -88,8 +88,13 @@
                         </div>
                         <div class="flex items-center gap-2">
                             @if($isEliminatie)
-                                @if($poule->mat_id)
-                                <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 text-xs font-medium px-2 py-1 rounded" title="Bekijk/genereer schema">Schema →</a>
+                                @php
+                                    $heeftWedstrijden = $poule->wedstrijden()->count() > 0;
+                                @endphp
+                                @if($poule->mat_id && $heeftWedstrijden)
+                                <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-2 py-1 rounded" title="Bekijk schema">Schema →</a>
+                                @elseif($poule->mat_id)
+                                <a href="{{ route('toernooi.poule.eliminatie', [$toernooi, $poule]) }}" class="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 text-xs font-medium px-2 py-1 rounded" title="Genereer schema">Schema →</a>
                                 @else
                                 <span class="bg-gray-500 text-gray-300 text-xs font-medium px-2 py-1 rounded cursor-not-allowed" title="Eerst op mat plaatsen in zaaloverzicht">Niet geplaatst</span>
                                 @endif
