@@ -149,15 +149,18 @@ class WedstrijdSchemaService
     {
         $poules = Poule::where('blok_id', $blok->id)
             ->where('mat_id', $mat->id)
-            ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'mat'])
+            ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar', 'mat'])
             ->get();
 
         $schema = [];
 
         foreach ($poules as $poule) {
+            $isEliminatie = $poule->type === 'eliminatie';
+
             $pouleSchema = [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
+                'type' => $poule->type ?? 'poule',
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'blok_nummer' => $blok->nummer,
@@ -173,22 +176,35 @@ class WedstrijdSchemaService
                     'club' => $j->club?->naam,
                     'band' => $j->band,
                 ])->toArray(),
-                'wedstrijden' => $poule->wedstrijden->map(fn($w) => [
-                    'id' => $w->id,
-                    'volgorde' => $w->volgorde,
-                    'wit' => [
-                        'id' => $w->judokaWit->id,
-                        'naam' => $w->judokaWit->naam,
-                    ],
-                    'blauw' => [
-                        'id' => $w->judokaBlauw->id,
-                        'naam' => $w->judokaBlauw->naam,
-                    ],
-                    'is_gespeeld' => $w->is_gespeeld,
-                    'winnaar_id' => $w->winnaar_id,
-                    'score_wit' => $w->score_wit,
-                    'score_blauw' => $w->score_blauw,
-                ])->toArray(),
+                'wedstrijden' => $poule->wedstrijden->map(function ($w) use ($isEliminatie) {
+                    $wedstrijd = [
+                        'id' => $w->id,
+                        'volgorde' => $w->volgorde,
+                        'wit' => $w->judokaWit ? [
+                            'id' => $w->judokaWit->id,
+                            'naam' => $w->judokaWit->naam,
+                        ] : null,
+                        'blauw' => $w->judokaBlauw ? [
+                            'id' => $w->judokaBlauw->id,
+                            'naam' => $w->judokaBlauw->naam,
+                        ] : null,
+                        'is_gespeeld' => $w->is_gespeeld,
+                        'winnaar_id' => $w->winnaar_id,
+                        'score_wit' => $w->score_wit,
+                        'score_blauw' => $w->score_blauw,
+                    ];
+
+                    // Add elimination-specific fields
+                    if ($isEliminatie) {
+                        $wedstrijd['groep'] = $w->groep;
+                        $wedstrijd['ronde'] = $w->ronde;
+                        $wedstrijd['bracket_positie'] = $w->bracket_positie;
+                        $wedstrijd['volgende_wedstrijd_id'] = $w->volgende_wedstrijd_id;
+                        $wedstrijd['uitslag_type'] = $w->uitslag_type;
+                    }
+
+                    return $wedstrijd;
+                })->toArray(),
             ];
 
             $schema[] = $pouleSchema;

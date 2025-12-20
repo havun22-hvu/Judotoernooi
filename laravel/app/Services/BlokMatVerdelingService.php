@@ -915,7 +915,16 @@ class BlokMatVerdelingService
                         // Count only active judoka's (not doorgestreept)
                         $actieveJudokas = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
                         $aantalActief = $actieveJudokas->count();
-                        $aantalWedstrijden = $aantalActief > 1 ? intval(($aantalActief * ($aantalActief - 1)) / 2) : 0;
+
+                        // Calculate matches based on type
+                        if ($p->type === 'eliminatie') {
+                            // For elimination: use actual count if available, otherwise estimate
+                            // Double elimination with repechage: roughly 2n - 2 matches
+                            $aantalWedstrijden = $p->wedstrijden()->count() ?: ($aantalActief > 1 ? (2 * $aantalActief - 2) : 0);
+                        } else {
+                            // Round-robin: n * (n - 1) / 2
+                            $aantalWedstrijden = $aantalActief > 1 ? intval(($aantalActief * ($aantalActief - 1)) / 2) : 0;
+                        }
 
                         return [
                             'id' => $p->id,

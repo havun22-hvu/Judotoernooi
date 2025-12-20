@@ -7,6 +7,7 @@ use App\Models\Mat;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
+use App\Services\EliminatieService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,8 @@ use Illuminate\View\View;
 class MatController extends Controller
 {
     public function __construct(
-        private WedstrijdSchemaService $wedstrijdService
+        private WedstrijdSchemaService $wedstrijdService,
+        private EliminatieService $eliminatieService
     ) {}
 
     public function index(Toernooi $toernooi): View
@@ -78,13 +80,27 @@ class MatController extends Controller
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
 
-        $this->wedstrijdService->registreerUitslag(
-            $wedstrijd,
-            $validated['winnaar_id'],
-            $validated['score_wit'] ?? '',
-            $validated['score_blauw'] ?? '',
-            $validated['uitslag_type'] ?? 'beslissing'
-        );
+        // Check if this is an elimination match (has groep field)
+        if ($wedstrijd->groep) {
+            // Update the match - NO auto-advance, mat does it manually
+            $wedstrijd->update([
+                'winnaar_id' => $validated['winnaar_id'],
+                'is_gespeeld' => (bool) $validated['winnaar_id'],
+                'uitslag_type' => $validated['uitslag_type'] ?? 'eliminatie',
+                'gespeeld_op' => $validated['winnaar_id'] ? now() : null,
+            ]);
+
+            return response()->json(['success' => true]);
+        } else {
+            // Regular pool match
+            $this->wedstrijdService->registreerUitslag(
+                $wedstrijd,
+                $validated['winnaar_id'],
+                $validated['score_wit'] ?? '',
+                $validated['score_blauw'] ?? '',
+                $validated['uitslag_type'] ?? 'beslissing'
+            );
+        }
 
         return response()->json(['success' => true]);
     }
@@ -137,6 +153,51 @@ class MatController extends Controller
         }
 
         $poule->update(['huidige_wedstrijd_id' => $validated['wedstrijd_id']]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Place a judoka in an elimination bracket slot (manual drag & drop)
+     */
+    public function plaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'judoka_id' => 'required|exists:judokas,id',
+            'positie' => 'required|in:wit,blauw',
+        ]);
+
+        $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Update the appropriate slot
+        if ($validated['positie'] === 'wit') {
+            $wedstrijd->update(['judoka_wit_id' => $validated['judoka_id']]);
+        } else {
+            $wedstrijd->update(['judoka_blauw_id' => $validated['judoka_id']]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Remove a judoka from an elimination bracket slot (drag to trash)
+     */
+    public function verwijderJudoka(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'judoka_id' => 'required|exists:judokas,id',
+        ]);
+
+        $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Remove judoka from the slot they were in
+        if ($wedstrijd->judoka_wit_id == $validated['judoka_id']) {
+            $wedstrijd->update(['judoka_wit_id' => null]);
+        } elseif ($wedstrijd->judoka_blauw_id == $validated['judoka_id']) {
+            $wedstrijd->update(['judoka_blauw_id' => null]);
+        }
 
         return response()->json(['success' => true]);
     }

@@ -93,19 +93,12 @@ class PouleIndelingService
                 if ($isEliminatie) {
                     $aantalDeelnemers = $judokas->count();
 
-                    // Check for minimum participants (warning: < 8, error: < 4)
-                    if ($aantalDeelnemers < 4) {
-                        $statistieken['waarschuwingen'][] = [
-                            'type' => 'error',
-                            'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
-                            'bericht' => "Te weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Minimaal 4 vereist. Overweeg poule-systeem.",
-                            'aantal' => $aantalDeelnemers,
-                        ];
-                    } elseif ($aantalDeelnemers < 8) {
+                    // Warn if less than 8 participants (ideal for elimination)
+                    if ($aantalDeelnemers < 8) {
                         $statistieken['waarschuwingen'][] = [
                             'type' => 'warning',
                             'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
-                            'bericht' => "Weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Ideaal is 8+. Overweeg poule-systeem.",
+                            'bericht' => "Weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Ideaal is 8+.",
                             'aantal' => $aantalDeelnemers,
                         ];
                     }
