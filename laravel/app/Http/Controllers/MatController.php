@@ -90,11 +90,15 @@ class MatController extends Controller
             ]);
 
             // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
+            $correcties = [];
             if ($validated['winnaar_id']) {
-                $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
+                $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
             }
 
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'correcties' => $correcties,
+            ]);
         } else {
             // Regular pool match
             $this->wedstrijdService->registreerUitslag(
@@ -163,6 +167,8 @@ class MatController extends Controller
 
     /**
      * Place a judoka in an elimination bracket slot (manual drag & drop)
+     * Als bron_wedstrijd_id is meegegeven, registreer ook de uitslag
+     * Bij correctie worden foute plaatsingen automatisch opgeruimd
      */
     public function plaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
     {
@@ -170,9 +176,11 @@ class MatController extends Controller
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'judoka_id' => 'required|exists:judokas,id',
             'positie' => 'required|in:wit,blauw',
+            'bron_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+        $correcties = [];
 
         // Update the appropriate slot
         if ($validated['positie'] === 'wit') {
@@ -181,7 +189,81 @@ class MatController extends Controller
             $wedstrijd->update(['judoka_blauw_id' => $validated['judoka_id']]);
         }
 
-        return response()->json(['success' => true]);
+        // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
+        if (!empty($validated['bron_wedstrijd_id'])) {
+            $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
+
+            if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
+                $winnaarId = $validated['judoka_id'];
+
+                // Markeer de bron wedstrijd als gespeeld
+                $bronWedstrijd->update([
+                    'winnaar_id' => $winnaarId,
+                    'is_gespeeld' => true,
+                    'gespeeld_op' => now(),
+                ]);
+
+                // Gebruik EliminatieService voor correcte afhandeling (incl. correcties)
+                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'correcties' => $correcties,
+        ]);
+    }
+
+    /**
+     * Plaats verliezer direct in de B-groep
+     */
+    private function plaatsVerliezerInB(Wedstrijd $bronWedstrijd, int $verliezerId): void
+    {
+        $pouleId = $bronWedstrijd->poule_id;
+
+        // Bepaal target B-ronde op basis van A-ronde
+        $targetRonde = match ($bronWedstrijd->ronde) {
+            'voorronde' => 'b_achtste_finale',
+            'achtste_finale', 'zestiende_finale' => 'b_voorronde',
+            'kwartfinale' => 'b_kwartfinale',
+            'halve_finale' => 'b_brons',
+            default => null,
+        };
+
+        if (!$targetRonde) {
+            return;
+        }
+
+        // Zoek lege plek in B-groep
+        $legeWedstrijd = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('ronde', $targetRonde)
+            ->where(function ($q) {
+                $q->whereNull('judoka_wit_id')
+                  ->orWhereNull('judoka_blauw_id');
+            })
+            ->first();
+
+        // Fallback naar andere B-ronde als primaire vol is
+        if (!$legeWedstrijd) {
+            $fallbackRonde = $targetRonde === 'b_voorronde' ? 'b_achtste_finale' : 'b_voorronde';
+            $legeWedstrijd = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', $fallbackRonde)
+                ->where(function ($q) {
+                    $q->whereNull('judoka_wit_id')
+                      ->orWhereNull('judoka_blauw_id');
+                })
+                ->first();
+        }
+
+        if ($legeWedstrijd) {
+            if ($legeWedstrijd->judoka_wit_id === null) {
+                $legeWedstrijd->update(['judoka_wit_id' => $verliezerId]);
+            } else {
+                $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
+            }
+        }
     }
 
     /**
@@ -204,5 +286,29 @@ class MatController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Verwerk byes in B-groep: judoka's zonder tegenstander automatisch doorschuiven
+     */
+    public function verwerkByes(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this toernooi
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        $verwerkt = $this->eliminatieService->verwerkBByes($poule->id);
+
+        return response()->json([
+            'success' => true,
+            'verwerkt' => $verwerkt,
+        ]);
     }
 }

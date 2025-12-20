@@ -93,6 +93,8 @@ class EliminatieService
         }
 
         // === EERSTE RONDE ===
+        // Elke bye-judoka moet gekoppeld worden aan een voorronde-winnaar
+        // Resterende voorronde-winnaars spelen tegen elkaar
         $rondeWedstrijden = $doel / 2;
         $rondeNaam = $this->getRondeNaam($rondeWedstrijden);
         $huidigeRonde = [];
@@ -106,16 +108,31 @@ class EliminatieService
             $witVanVoorronde = null;
             $blauwVanVoorronde = null;
 
-            if ($byeIdx < count($byeJudokas)) {
+            // Prioriteit: koppel bye aan voorronde-winnaar
+            if ($byeIdx < count($byeJudokas) && $voorrondeIdx < count($voorrondeWeds)) {
+                // Bye vs Voorronde winnaar
                 $witId = $byeJudokas[$byeIdx++]->id;
-            } elseif ($voorrondeIdx < count($voorrondeWeds)) {
-                $witVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
-            }
-
-            if ($byeIdx < count($byeJudokas)) {
-                $blauwId = $byeJudokas[$byeIdx++]->id;
-            } elseif ($voorrondeIdx < count($voorrondeWeds)) {
                 $blauwVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
+            } elseif ($voorrondeIdx + 1 < count($voorrondeWeds)) {
+                // Twee voorronde winnaars tegen elkaar
+                $witVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
+                $blauwVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
+            } elseif ($byeIdx + 1 < count($byeJudokas)) {
+                // Twee bye-judokas (alleen als meer byes dan voorrondes)
+                $witId = $byeJudokas[$byeIdx++]->id;
+                $blauwId = $byeJudokas[$byeIdx++]->id;
+            } else {
+                // Restanten opvullen
+                if ($byeIdx < count($byeJudokas)) {
+                    $witId = $byeJudokas[$byeIdx++]->id;
+                } elseif ($voorrondeIdx < count($voorrondeWeds)) {
+                    $witVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
+                }
+                if ($byeIdx < count($byeJudokas)) {
+                    $blauwId = $byeJudokas[$byeIdx++]->id;
+                } elseif ($voorrondeIdx < count($voorrondeWeds)) {
+                    $blauwVanVoorronde = $voorrondeWeds[$voorrondeIdx++];
+                }
             }
 
             $wed = Wedstrijd::create([
@@ -128,16 +145,20 @@ class EliminatieService
                 'bracket_positie' => $i + 1,
             ]);
 
+            // Update voorronde wedstrijden met koppeling EN juiste bracket_positie
+            // De bracket_positie moet overeenkomen met de 1/8 wedstrijd voor visuele alignment
             if ($witVanVoorronde) {
                 $witVanVoorronde->update([
                     'volgende_wedstrijd_id' => $wed->id,
                     'winnaar_naar_slot' => 'wit',
+                    'bracket_positie' => ($i + 1) * 2 - 1, // Bovenste helft van 1/8 wedstrijd i
                 ]);
             }
             if ($blauwVanVoorronde) {
                 $blauwVanVoorronde->update([
                     'volgende_wedstrijd_id' => $wed->id,
                     'winnaar_naar_slot' => 'blauw',
+                    'bracket_positie' => ($i + 1) * 2, // Onderste helft van 1/8 wedstrijd i
                 ]);
             }
 
@@ -179,105 +200,145 @@ class EliminatieService
     }
 
     /**
-     * Genereer B-poule structuur met lege plekken
-     * B moet naar 2 komen, daarna bronswedstrijden met A 1/2 verliezers
+     * Genereer B-poule structuur met correcte capaciteit
+     *
+     * Structuur:
+     * - B voorronde: voor ALLE A 1/8 verliezers (bye + voorronde-spelers)
+     * - B 1/8: B voorronde winnaars + A voorronde verliezers
+     * - B 1/4: B 1/8 winnaars + A 1/4 verliezers
+     * - B 1/2: B 1/4 winnaars -> 2 winnaars
+     * - Brons: 2 B-winnaars vs 2 A 1/2 verliezers
+     *
+     * Key insight: A 1/8 verliezers (8) gaan naar B voorronde,
+     * A voorronde verliezers (13) gaan naar B 1/8
      */
     private function genereerBPoule(Poule $poule, int $aCount, int $doelA, int $voorrondeA): array
     {
         $wedstrijden = [];
         $volgorde = $aCount + 1;
 
-        // Bereken B-structuur gebaseerd op bracket grootte
-        // 1/8 verliezers: doelA/2 judokas → doelA/4 wedstrijden
-        // Plus voorronde verliezers (gespaard naar R2)
-        $achtsteVerliezers = $doelA / 2;
-        $kwartVerliezers = $doelA / 4;
-        $halveVerliezers = 2;
+        // Bereken verliezers per A-ronde
+        $achtsteVerliezers = $doelA / 2;  // 8 bij doel=16
+        $kwartVerliezers = $doelA / 4;    // 4 bij doel=16
 
-        // B-ronde 1: helft van 1/8 verliezers (bye judokas)
-        $bRonde1Weds = intdiv($achtsteVerliezers, 2);
+        // === B VOORRONDE ===
+        // Alle A 1/8 verliezers gaan naar B voorronde
+        // Dit geeft ze een eerlijke extra wedstrijd
+        $bVoorrondeAantal = ceil($achtsteVerliezers / 2);  // 8 / 2 = 4 wedstrijden
+        $bVoorrondeWinnaars = $bVoorrondeAantal;  // 4 winnaars
 
-        // B-ronde 2: R1 winnaars + voorronde verliezers + rest 1/8 verliezers
-        $r2Deelnemers = $bRonde1Weds + $voorrondeA + intdiv($achtsteVerliezers, 2);
-        $bRonde2Weds = intdiv($r2Deelnemers, 2);
+        // === B 1/8 capaciteit ===
+        // B voorronde winnaars + A voorronde verliezers
+        $naarB18 = $bVoorrondeWinnaars + $voorrondeA;  // 4 + 13 = 17
+        $doelB18 = $this->berekenDoelGrootte($naarB18);  // 16
+        $extraVoorB = $naarB18 - $doelB18;  // 17 - 16 = 1 extra
 
-        // B-ronde 3: R2 winnaars + kwartfinale verliezers
-        $r3Deelnemers = $bRonde2Weds + $kwartVerliezers;
-        $bRonde3Weds = intdiv($r3Deelnemers, 2);
+        // Als er meer zijn dan B 1/8 aankan, maak B voorronde groter
+        if ($extraVoorB > 0) {
+            $bVoorrondeAantal += ceil($extraVoorB / 2);  // +1 wedstrijd voor de overflow
+        }
 
-        $rondeNr = 0;
-        $huidigeWinnaars = 0;
+        $bVoorrondeWeds = [];
 
-        // Ronde 1
-        if ($bRonde1Weds > 0) {
-            $rondeNr++;
-            for ($i = 0; $i < $bRonde1Weds; $i++) {
-                $wedstrijden[] = Wedstrijd::create([
+        if ($bVoorrondeAantal > 0) {
+            for ($i = 0; $i < $bVoorrondeAantal; $i++) {
+                $wed = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'volgorde' => $volgorde++,
-                    'ronde' => 'b_ronde_1',
+                    'ronde' => 'b_voorronde',
                     'groep' => 'B',
                     'bracket_positie' => $i + 1,
                 ]);
+                $bVoorrondeWeds[] = $wed;
+                $wedstrijden[] = $wed;
             }
-            $huidigeWinnaars = $bRonde1Weds;
         }
 
-        // Ronde 2
-        if ($bRonde2Weds > 0) {
-            $rondeNr++;
-            for ($i = 0; $i < $bRonde2Weds; $i++) {
-                $wedstrijden[] = Wedstrijd::create([
-                    'poule_id' => $poule->id,
-                    'volgorde' => $volgorde++,
-                    'ronde' => 'b_ronde_2',
-                    'groep' => 'B',
-                    'bracket_positie' => $i + 1,
-                ]);
-            }
-            $huidigeWinnaars = $bRonde2Weds;
-        }
+        // === B BRACKET ===
+        // Bereken de B 1/8 grootte: moet passen met B voorronde winnaars + voorronde verliezers + overflow
+        $b18Wedstrijden = max(4, $doelB18 / 2);  // Minimaal 4 (voor 8 plekken)
 
-        // Ronde 3
-        if ($bRonde3Weds > 0) {
-            $rondeNr++;
-            for ($i = 0; $i < $bRonde3Weds; $i++) {
-                $wedstrijden[] = Wedstrijd::create([
-                    'poule_id' => $poule->id,
-                    'volgorde' => $volgorde++,
-                    'ronde' => 'b_ronde_3',
-                    'groep' => 'B',
-                    'bracket_positie' => $i + 1,
-                ]);
-            }
-            $huidigeWinnaars = $bRonde3Weds;
-        }
+        $huidigeRonde = [];
+        $aantalInRonde = $b18Wedstrijden * 2;  // Aantal judoka's voor deze ronde
 
-        // Extra rondes om naar 2 te komen (vóór brons)
-        while ($huidigeWinnaars > 2) {
-            $rondeNr++;
-            $aantalWedstrijden = intdiv($huidigeWinnaars, 2);
+        // B eindigt bij 2 halve finales (niet 1 finale)
+        while ($aantalInRonde >= 4) {
+            $aantalWedstrijden = $aantalInRonde / 2;
+            $rondeNaam = $this->getBRondeNaam($aantalWedstrijden);
 
+            $nieuweRonde = [];
             for ($i = 0; $i < $aantalWedstrijden; $i++) {
-                $wedstrijden[] = Wedstrijd::create([
+                $wed = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'volgorde' => $volgorde++,
-                    'ronde' => "b_ronde_{$rondeNr}",
+                    'ronde' => $rondeNaam,
                     'groep' => 'B',
                     'bracket_positie' => $i + 1,
                 ]);
+                $nieuweRonde[] = $wed;
+                $wedstrijden[] = $wed;
             }
-            $huidigeWinnaars = $aantalWedstrijden;
+
+            // Koppel vorige ronde aan deze ronde
+            if (count($huidigeRonde) > 0) {
+                for ($i = 0; $i < count($huidigeRonde); $i++) {
+                    $volgendeIdx = intdiv($i, 2);
+                    if (isset($nieuweRonde[$volgendeIdx])) {
+                        $huidigeRonde[$i]->update([
+                            'volgende_wedstrijd_id' => $nieuweRonde[$volgendeIdx]->id,
+                            'winnaar_naar_slot' => ($i % 2 === 0) ? 'wit' : 'blauw',
+                        ]);
+                    }
+                }
+            }
+
+            // Koppel B voorronde aan eerste ronde (B 1/8)
+            if ($aantalInRonde === $b18Wedstrijden * 2 && count($bVoorrondeWeds) > 0) {
+                // Voorronde wedstrijden koppelen aan eerste echte ronde
+                foreach ($bVoorrondeWeds as $idx => $voorrondeWed) {
+                    $volgendeIdx = intdiv($idx, 2);
+                    if (isset($nieuweRonde[$volgendeIdx])) {
+                        $voorrondeWed->update([
+                            'volgende_wedstrijd_id' => $nieuweRonde[$volgendeIdx]->id,
+                            'winnaar_naar_slot' => ($idx % 2 === 0) ? 'wit' : 'blauw',
+                        ]);
+                    }
+                }
+            }
+
+            $huidigeRonde = $nieuweRonde;
+            $aantalInRonde = $aantalWedstrijden;
+
+            // Stop als we bij 2 halve finales zijn (B eindigt hier, geen finale)
+            if ($aantalWedstrijden === 2) {
+                break;
+            }
         }
 
-        // Bronswedstrijden: 2 B-winnaars + 2 A 1/2 verliezers = 2 wedstrijden
+        // === BRONSWEDSTRIJDEN ===
+        // 2 B-winnaars vs 2 A 1/2 verliezers = 2 wedstrijden
+        $bronsWeds = [];
         for ($i = 0; $i < 2; $i++) {
-            $wedstrijden[] = Wedstrijd::create([
+            $wed = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_brons',
                 'groep' => 'B',
                 'bracket_positie' => $i + 1,
+            ]);
+            $bronsWeds[] = $wed;
+            $wedstrijden[] = $wed;
+        }
+
+        // Koppel B 1/2 finale aan bronswedstrijden
+        if (count($huidigeRonde) === 2) {
+            $huidigeRonde[0]->update([
+                'volgende_wedstrijd_id' => $bronsWeds[0]->id,
+                'winnaar_naar_slot' => 'blauw', // B-winnaar is blauw in brons
+            ]);
+            $huidigeRonde[1]->update([
+                'volgende_wedstrijd_id' => $bronsWeds[1]->id,
+                'winnaar_naar_slot' => 'blauw',
             ]);
         }
 
@@ -285,11 +346,38 @@ class EliminatieService
     }
 
     /**
-     * Verwerk uitslag en zet winnaar/verliezer door
-     * Winnaar direct door, verliezers wachten tot ronde compleet
+     * Geef B-ronde naam op basis van aantal wedstrijden
+     * B eindigt bij 2 halve finales (2 bronzen), geen finale
      */
-    public function verwerkUitslag(Wedstrijd $wedstrijd, int $winnaarId): void
+    private function getBRondeNaam(int $aantalWedstrijden): string
     {
+        return match ($aantalWedstrijden) {
+            2 => 'b_halve_finale',      // 2 matches = eindpunt B, 2 winnaars = 2x brons
+            4 => 'b_kwartfinale',
+            8 => 'b_achtste_finale',
+            16 => 'b_zestiende_finale',
+            default => "b_ronde_{$aantalWedstrijden}",
+        };
+    }
+
+    /**
+     * Verwerk uitslag en zet winnaar/verliezer door
+     * Handelt ook correcties af: verwijdert oude plaatsingen eerst
+     * Returns array met correctie-informatie voor admin
+     */
+    public function verwerkUitslag(Wedstrijd $wedstrijd, int $winnaarId): array
+    {
+        $correcties = [];
+        $oudeWinnaarId = $wedstrijd->getOriginal('winnaar_id');
+        $verliezerId = $wedstrijd->judoka_wit_id == $winnaarId
+            ? $wedstrijd->judoka_blauw_id
+            : $wedstrijd->judoka_wit_id;
+
+        // Bij correctie: verwijder oude winnaar uit volgende ronde en oude verliezer uit B
+        if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
+            $correcties = $this->verwijderOudePlaatsingen($wedstrijd, $oudeWinnaarId);
+        }
+
         // Winnaar naar volgende A-wedstrijd (direct)
         if ($wedstrijd->volgende_wedstrijd_id && $wedstrijd->winnaar_naar_slot) {
             $volgende = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
@@ -298,132 +386,225 @@ class EliminatieService
             }
         }
 
-        // Check of A-ronde compleet is → batch-indelen verliezers in B-poule
-        if ($wedstrijd->groep === 'A' && $wedstrijd->ronde !== 'finale') {
-            $this->checkEnVulBPoule($wedstrijd->poule_id, $wedstrijd->ronde);
+        // Verliezer direct naar B (niet wachten op ronde compleet)
+        if ($wedstrijd->groep === 'A' && $wedstrijd->ronde !== 'finale' && $verliezerId) {
+            $this->plaatsVerliezerInB($wedstrijd, $verliezerId);
         }
 
         // B-wedstrijd winnaar naar volgende B-ronde (direct)
         if ($wedstrijd->groep === 'B' && $wedstrijd->ronde !== 'b_brons') {
             $this->schuifBWinnaarDoor($wedstrijd, $winnaarId);
         }
+
+        return $correcties;
     }
 
     /**
-     * Check of een A-ronde compleet is en vul dan B-poule
+     * Verwijder oude plaatsingen bij correctie van uitslag
+     * Returns array met correctie-informatie
      */
-    private function checkEnVulBPoule(int $pouleId, string $ronde): void
+    private function verwijderOudePlaatsingen(Wedstrijd $wedstrijd, int $oudeWinnaarId): array
     {
-        // Check of alle wedstrijden in deze ronde gespeeld zijn
-        $rondeWedstrijden = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'A')
-            ->where('ronde', $ronde)
-            ->get();
+        $correcties = [];
 
-        $alleGespeeld = $rondeWedstrijden->every(fn($w) => $w->is_gespeeld);
-        if (!$alleGespeeld) {
-            return; // Wacht tot ronde compleet is
-        }
+        // Haal judoka namen op voor melding
+        $oudeWinnaar = \App\Models\Judoka::find($oudeWinnaarId);
+        $nieuweWinnaarId = $wedstrijd->judoka_wit_id == $oudeWinnaarId
+            ? $wedstrijd->judoka_blauw_id
+            : $wedstrijd->judoka_wit_id;
+        $nieuweWinnaar = \App\Models\Judoka::find($nieuweWinnaarId);
 
-        // Verzamel verliezers
-        $verliezers = [];
-        foreach ($rondeWedstrijden as $wed) {
-            if ($wed->winnaar_id) {
-                $verliezerId = $wed->judoka_wit_id == $wed->winnaar_id
-                    ? $wed->judoka_blauw_id
-                    : $wed->judoka_wit_id;
-
-                if ($verliezerId) {
-                    // Check of verliezer al in voorronde speelde
-                    $speeldeVoorronde = Wedstrijd::where('poule_id', $pouleId)
-                        ->where('ronde', 'voorronde')
-                        ->where('groep', 'A')
-                        ->where(function ($q) use ($verliezerId) {
-                            $q->where('judoka_wit_id', $verliezerId)
-                              ->orWhere('judoka_blauw_id', $verliezerId);
-                        })
-                        ->exists();
-
-                    $verliezers[] = [
-                        'id' => $verliezerId,
-                        'had_bye' => !$speeldeVoorronde,
-                        'ronde' => $ronde,
-                    ];
+        // Oude winnaar was eigenlijk verliezer - verwijder uit volgende A-ronde
+        if ($wedstrijd->volgende_wedstrijd_id) {
+            $volgende = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
+            if ($volgende) {
+                $verwijderdUitA = false;
+                if ($volgende->judoka_wit_id == $oudeWinnaarId) {
+                    $volgende->update(['judoka_wit_id' => null]);
+                    $verwijderdUitA = true;
+                }
+                if ($volgende->judoka_blauw_id == $oudeWinnaarId) {
+                    $volgende->update(['judoka_blauw_id' => null]);
+                    $verwijderdUitA = true;
+                }
+                if ($verwijderdUitA && $oudeWinnaar) {
+                    $correcties[] = "{$oudeWinnaar->naam} verwijderd uit A {$volgende->ronde}";
                 }
             }
         }
 
-        // Sorteer: bye-judokas eerst
-        usort($verliezers, fn($a, $b) => $b['had_bye'] <=> $a['had_bye']);
+        // Nieuwe winnaar stond misschien in B - verwijderen
+        if ($nieuweWinnaarId) {
+            $verwijderdUitB = $this->verwijderUitB($wedstrijd->poule_id, $nieuweWinnaarId);
+            if ($verwijderdUitB && $nieuweWinnaar) {
+                $correcties[] = "{$nieuweWinnaar->naam} verwijderd uit B-groep (was foutief geplaatst)";
+            }
+        }
 
-        // Shuffle binnen elke groep voor randomness
-        $byeVerliezers = array_filter($verliezers, fn($v) => $v['had_bye']);
-        $voorrondeVerliezers = array_filter($verliezers, fn($v) => !$v['had_bye']);
-        shuffle($byeVerliezers);
-        shuffle($voorrondeVerliezers);
-        $verliezers = array_merge(array_values($byeVerliezers), array_values($voorrondeVerliezers));
+        return $correcties;
+    }
 
-        // Bepaal target B-ronde
-        $bRonde = $this->getBRondeVoorARonde($ronde);
-        if (!$bRonde) {
+    /**
+     * Verwijder judoka uit alle B-wedstrijden
+     * Returns true als er iets verwijderd is
+     */
+    public function verwijderUitB(int $pouleId, int $judokaId): bool
+    {
+        $count1 = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('judoka_wit_id', $judokaId)
+            ->update(['judoka_wit_id' => null]);
+
+        $count2 = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('judoka_blauw_id', $judokaId)
+            ->update(['judoka_blauw_id' => null]);
+
+        return ($count1 + $count2) > 0;
+    }
+
+    /**
+     * Plaats verliezer direct in B-groep
+     *
+     * Routing:
+     * - A voorronde verliezers → B 1/8 (gespaard)
+     * - ALLE A 1/8 verliezers → B voorronde (extra wedstrijd)
+     * - A 1/4 verliezers → B 1/4
+     * - A 1/2 verliezers → B brons
+     */
+    private function plaatsVerliezerInB(Wedstrijd $wedstrijd, int $verliezerId): void
+    {
+        // Check of verliezer al in B zit
+        $alInB = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+            ->where('groep', 'B')
+            ->where(function ($q) use ($verliezerId) {
+                $q->where('judoka_wit_id', $verliezerId)
+                  ->orWhere('judoka_blauw_id', $verliezerId);
+            })
+            ->exists();
+
+        if ($alInB) {
             return;
         }
 
-        // Vul B-poule: bye-judokas eerst, dan voorronde verliezers
-        foreach ($verliezers as $verliezer) {
-            // Check of deze judoka al in B-poule zit
-            $alInB = Wedstrijd::where('poule_id', $pouleId)
-                ->where('groep', 'B')
-                ->where(function ($q) use ($verliezer) {
-                    $q->where('judoka_wit_id', $verliezer['id'])
-                      ->orWhere('judoka_blauw_id', $verliezer['id']);
-                })
-                ->exists();
+        // Bepaal target B-ronde op basis van A-ronde
+        $targetRonde = $this->getBRondeVoorARonde($wedstrijd->ronde);
+        if (!$targetRonde) {
+            return;
+        }
 
-            if ($alInB) {
-                continue;
+        // Zoek lege plek in target ronde
+        $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $targetRonde);
+
+        // Fallback naar andere rondes als vol
+        if (!$legeWedstrijd) {
+            $fallbacks = $this->getFallbackRondes($targetRonde);
+            foreach ($fallbacks as $fallback) {
+                $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $fallback);
+                if ($legeWedstrijd) break;
+            }
+        }
+
+        if ($legeWedstrijd) {
+            if ($legeWedstrijd->judoka_wit_id === null) {
+                $legeWedstrijd->update(['judoka_wit_id' => $verliezerId]);
+            } else {
+                $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
             }
 
-            // Bepaal ronde: bye naar primaire, voorronde-spelers naar secundaire
-            $targetRonde = $verliezer['had_bye'] ? $bRonde : $this->getSecundaireBRonde($bRonde);
-
-            // Zoek lege plek in target ronde
-            $legeWedstrijd = $this->zoekLegePlek($pouleId, $targetRonde);
-
-            // Fallback naar andere ronde als vol
-            if (!$legeWedstrijd && $verliezer['had_bye']) {
-                $legeWedstrijd = $this->zoekLegePlek($pouleId, $this->getSecundaireBRonde($bRonde));
-            } elseif (!$legeWedstrijd) {
-                $legeWedstrijd = $this->zoekLegePlek($pouleId, $bRonde);
-            }
-
-            if ($legeWedstrijd) {
-                if ($legeWedstrijd->judoka_wit_id === null) {
-                    $legeWedstrijd->update(['judoka_wit_id' => $verliezer['id']]);
-                } else {
-                    $legeWedstrijd->update(['judoka_blauw_id' => $verliezer['id']]);
-                }
-            }
+            // Check voor byes in B en verwerk ze
+            $this->verwerkBByes($wedstrijd->poule_id);
         }
     }
 
-    private function getBRondeVoorARonde(string $aRonde): ?string
+    /**
+     * Geef fallback rondes als primaire vol is
+     */
+    private function getFallbackRondes(string $ronde): array
     {
-        return match ($aRonde) {
-            'voorronde' => 'b_ronde_2',      // Voorronde verliezers gespaard
-            'achtste_finale' => 'b_ronde_1', // 1/8 verliezers
-            'kwartfinale' => 'b_ronde_3',
-            'halve_finale' => 'b_brons',
-            default => null,
+        return match ($ronde) {
+            'b_voorronde' => ['b_achtste_finale', 'b_kwartfinale'],
+            'b_achtste_finale' => ['b_voorronde', 'b_kwartfinale'],
+            'b_kwartfinale' => ['b_halve_finale'],
+            default => [],
         };
     }
 
-    private function getSecundaireBRonde(string $bRonde): string
+    /**
+     * Verwerk byes in B-groep: judoka's zonder tegenstander schuiven automatisch door
+     * Returns array met verwerkte byes
+     */
+    public function verwerkBByes(int $pouleId): array
     {
-        return match ($bRonde) {
-            'b_ronde_1' => 'b_ronde_2',
-            'b_ronde_2' => 'b_ronde_1',
-            default => $bRonde,
+        $verwerkt = [];
+        $rondeVolgorde = ['b_voorronde', 'b_achtste_finale', 'b_kwartfinale', 'b_halve_finale'];
+
+        foreach ($rondeVolgorde as $ronde) {
+            $wedstrijden = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', $ronde)
+                ->where('is_gespeeld', false)
+                ->get();
+
+            foreach ($wedstrijden as $wed) {
+                $heeftWit = $wed->judoka_wit_id !== null;
+                $heeftBlauw = $wed->judoka_blauw_id !== null;
+
+                // Bye: precies 1 judoka, geen tegenstander
+                if (($heeftWit xor $heeftBlauw) && $wed->volgende_wedstrijd_id) {
+                    $byeJudokaId = $heeftWit ? $wed->judoka_wit_id : $wed->judoka_blauw_id;
+                    $judoka = \App\Models\Judoka::find($byeJudokaId);
+
+                    // Markeer als gespeeld (bye)
+                    $wed->update([
+                        'winnaar_id' => $byeJudokaId,
+                        'is_gespeeld' => true,
+                        'uitslag_type' => 'bye',
+                    ]);
+
+                    // Plaats in volgende ronde
+                    $volgende = Wedstrijd::find($wed->volgende_wedstrijd_id);
+                    if ($volgende && $wed->winnaar_naar_slot) {
+                        $volgende->update(["judoka_{$wed->winnaar_naar_slot}_id" => $byeJudokaId]);
+                        $verwerkt[] = ($judoka ? $judoka->naam : "Judoka $byeJudokaId") . " → bye naar " . $this->getRondeDisplayNaam($volgende->ronde);
+                    }
+                }
+            }
+        }
+
+        return $verwerkt;
+    }
+
+    /**
+     * Geef leesbare ronde naam
+     */
+    private function getRondeDisplayNaam(string $ronde): string
+    {
+        return match ($ronde) {
+            'b_voorronde' => 'B voorronde',
+            'b_achtste_finale' => 'B 1/8',
+            'b_kwartfinale' => 'B 1/4',
+            'b_halve_finale' => 'B 1/2',
+            'b_brons' => 'Brons',
+            default => $ronde,
+        };
+    }
+
+    /**
+     * Bepaal B-ronde voor A-ronde verliezers
+     *
+     * Alle A 1/8 verliezers → B voorronde (eerlijke extra wedstrijd)
+     * A voorronde verliezers → B 1/8 (gespaard, hebben al 1 wedstrijd)
+     */
+    private function getBRondeVoorARonde(string $aRonde): ?string
+    {
+        return match ($aRonde) {
+            'voorronde' => 'b_achtste_finale',    // Voorronde verliezers gespaard naar B 1/8
+            'achtste_finale' => 'b_voorronde',    // ALLE 1/8 verliezers naar B voorronde
+            'zestiende_finale' => 'b_voorronde',  // 1/16 verliezers naar B voorronde
+            'kwartfinale' => 'b_kwartfinale',     // 1/4 verliezers naar B 1/4
+            'halve_finale' => 'b_brons',
+            default => null,
         };
     }
 
@@ -462,9 +643,13 @@ class EliminatieService
 
     private function getVolgendeBRonde(string $huidigeRonde): ?string
     {
-        if (preg_match('/b_ronde_(\d+)/', $huidigeRonde, $matches)) {
-            return "b_ronde_" . ((int) $matches[1] + 1);
-        }
-        return null;
+        return match ($huidigeRonde) {
+            'b_voorronde' => 'b_achtste_finale',
+            'b_zestiende_finale' => 'b_achtste_finale',
+            'b_achtste_finale' => 'b_kwartfinale',
+            'b_kwartfinale' => 'b_halve_finale',
+            'b_halve_finale' => 'b_brons',
+            default => null,
+        };
     }
 }
