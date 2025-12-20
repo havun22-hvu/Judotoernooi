@@ -643,50 +643,42 @@ function matInterface() {
                 rondesMap[w.ronde].push(w);
             });
 
-            // Sorteer rondes: voorronde eerst, herkansing op nummer, anders op aantal wedstrijden
+            // Sorteer rondes
             const rondes = Object.entries(rondesMap)
                 .sort((a, b) => {
-                    // Voorronde altijd eerst
-                    if (a[0] === 'voorronde') return -1;
-                    if (b[0] === 'voorronde') return 1;
-                    // Herkansing rondes: sorteer op nummer (r1, r2, r3...)
-                    if (a[0].startsWith('herkansing_r') && b[0].startsWith('herkansing_r')) {
-                        const numA = parseInt(a[0].replace('herkansing_r', ''));
-                        const numB = parseInt(b[0].replace('herkansing_r', ''));
+                    // Voorronde altijd eerst (A en B)
+                    if (a[0] === 'voorronde' || a[0] === 'b_voorronde') return -1;
+                    if (b[0] === 'voorronde' || b[0] === 'b_voorronde') return 1;
+                    // B-ronde op nummer (b_ronde_1, b_ronde_2...)
+                    if (a[0].startsWith('b_ronde_') && b[0].startsWith('b_ronde_')) {
+                        const numA = parseInt(a[0].replace('b_ronde_', ''));
+                        const numB = parseInt(b[0].replace('b_ronde_', ''));
                         return numA - numB;
                     }
                     // Normale rondes: meeste wedstrijden eerst
                     return b[1].length - a[1].length;
                 })
                 .map(([ronde, weds]) => {
-                    // Sorteer wedstrijden binnen ronde op bracket_positie
                     weds.sort((a, b) => (a.bracket_positie || 0) - (b.bracket_positie || 0));
 
-                    // Bepaal ronde naam
                     const aantalWeds = weds.length;
                     let naam = ronde;
 
-                    // Voorronde
-                    if (ronde === 'voorronde') {
-                        naam = 'Voorronde';
-                    }
-                    // Herkansing rondes
-                    else if (ronde.startsWith('herkansing_r')) {
-                        const rondeNr = ronde.replace('herkansing_r', '');
-                        naam = `R${rondeNr}`;
-                    }
-                    // Normale eliminatie rondes op basis van aantal
-                    else if (aantalWeds === 1) naam = 'Finale';
-                    else if (aantalWeds === 2) naam = '1/2';
-                    else if (aantalWeds <= 4) naam = '1/4';
+                    // A-bracket ronde namen
+                    if (ronde === 'voorronde') naam = 'Voorronde';
+                    else if (aantalWeds === 1 && ronde === 'finale') naam = 'Finale';
+                    else if (aantalWeds === 2 && ronde === 'halve_finale') naam = '1/2';
+                    else if (aantalWeds <= 4 && ronde === 'kwartfinale') naam = '1/4';
                     else if (aantalWeds <= 8) naam = '1/8';
                     else if (aantalWeds <= 16) naam = '1/16';
+                    // B-poule ronde namen
+                    else if (ronde === 'b_voorronde') naam = 'Voorronde';
+                    else if (ronde.startsWith('b_ronde_')) {
+                        const nr = ronde.replace('b_ronde_', '');
+                        naam = `R${nr}`;
+                    }
 
-                    return {
-                        naam: naam,
-                        ronde: ronde,
-                        wedstrijden: weds
-                    };
+                    return { naam, ronde, wedstrijden: weds };
                 });
 
             return rondes;
