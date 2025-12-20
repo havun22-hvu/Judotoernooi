@@ -4,39 +4,23 @@
 
 @section('content')
 <div x-data="matInterface()" x-init="init()">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">🥋 Mat Interface</h1>
-
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-gray-700 font-bold mb-2">Blok</label>
-                <select x-model="blokId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2">
-                    <option value="">Selecteer blok...</option>
-                    @foreach($blokken as $blok)
-                    <option value="{{ $blok->id }}">Blok {{ $blok->nummer }}
-                        @if($blok->weging_gesloten) (gesloten) @endif
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-gray-700 font-bold mb-2">Mat</label>
-                <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2">
-                    <option value="">Selecteer mat...</option>
-                    @foreach($matten as $mat)
-                    <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
-                    @endforeach
-                </select>
-            </div>
+    <!-- Compacte header met huidige selectie -->
+    <div class="flex items-center justify-between mb-1">
+        <h1 class="text-lg font-bold text-gray-800">🥋 Mat Interface</h1>
+        <div class="text-sm text-gray-600" x-show="blokId && matId">
+            <span class="font-bold">Blok <span x-text="blokkenData.find(b => b.id == blokId)?.nummer"></span></span>
+            &bull;
+            <span class="font-bold">Mat <span x-text="mattenData.find(m => m.id == matId)?.nummer"></span></span>
+            <a href="#blok-mat-keuze" class="ml-2 text-purple-600 hover:underline">(wijzig)</a>
         </div>
     </div>
 
     <template x-for="poule in poules" :key="poule.poule_id">
-        <div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
+        <div class="bg-white rounded-lg shadow mb-3 overflow-hidden">
             <!-- Header -->
-            <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <h2 class="text-lg font-bold">
+            <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-bold">
                         <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
                     </h2>
                 </div>
@@ -60,13 +44,28 @@
                 </div>
             </div>
 
-            <!-- ELIMINATIE WEERGAVE - Drag & Drop Bracket -->
+            <!-- ELIMINATIE WEERGAVE - Drag & Drop Bracket met A/B Tabs -->
             <template x-if="poule.type === 'eliminatie'">
-                <div class="p-4">
+                <div class="p-1" x-data="{ activeTab: 'A' }">
+                    <!-- Tabs -->
+                    <div class="flex mb-1 border-b border-gray-200">
+                        <button @click="activeTab = 'A'"
+                                :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
+                            Groep A (Hoofdboom)
+                        </button>
+                        <template x-if="heeftHerkansing(poule)">
+                            <button @click="activeTab = 'B'"
+                                    :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                    class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
+                                Groep B (Herkansing)
+                            </button>
+                        </template>
+                    </div>
+
                     <!-- Groep A - Hoofdboom -->
-                    <div class="mb-6">
-                        <div class="flex justify-between items-start mb-3">
-                            <h3 class="text-sm font-bold text-purple-800">Groep A</h3>
+                    <div x-show="activeTab === 'A'">
+                        <div class="flex justify-end">
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
@@ -78,20 +77,21 @@
                     </div>
 
                     <!-- Groep B - Herkansing -->
-                    <template x-if="heeftHerkansing(poule)">
-                        <div class="mb-6 pt-4 border-t">
-                            <div class="flex justify-between items-start mb-3">
-                                <h3 class="text-sm font-bold text-purple-800">Groep B (Herkansing)</h3>
-                                <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
-                                     ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
-                                     ondragleave="this.classList.remove('text-red-600','font-bold')"
-                                     ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
-                                    🗑️ verwijder
-                                </div>
+                    <div x-show="activeTab === 'B'">
+                        <div class="flex justify-between items-center">
+                            <button @click="verwerkByes(poule)"
+                                    class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded">
+                                ⏩ Verwerk Byes
+                            </button>
+                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
+                                 ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
+                                 ondragleave="this.classList.remove('text-red-600','font-bold')"
+                                 ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
+                                🗑️ verwijder
                             </div>
-                            <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
                         </div>
-                    </template>
+                        <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
+                    </div>
 
                 </div>
             </template>
@@ -182,13 +182,64 @@
     <div x-show="poules.length === 0 && blokId && matId" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
         Geen poules op deze mat in dit blok
     </div>
+
+    <!-- Blok/Mat keuze onderaan -->
+    <div id="blok-mat-keuze" class="bg-gray-100 rounded-lg p-4 mt-8 border border-gray-300">
+        <h3 class="text-sm font-bold text-gray-600 mb-3">Blok & Mat selectie</h3>
+        <div class="flex gap-4">
+            <div class="w-40">
+                <label class="block text-gray-600 text-sm mb-1">Blok</label>
+                <select x-model="blokId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
+                    <option value="">Selecteer...</option>
+                    @foreach($blokken as $blok)
+                    <option value="{{ $blok->id }}">Blok {{ $blok->nummer }}
+                        @if($blok->weging_gesloten) (gesloten) @endif
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="w-40">
+                <label class="block text-gray-600 text-sm mb-1">Mat</label>
+                <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
+                    <option value="">Selecteer...</option>
+                    @foreach($matten as $mat)
+                    <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
 // Global drop handler - plaats judoka in slot
+// Als judoka vanuit een vorige wedstrijd komt, stuur bron_wedstrijd_id mee
+// Check of positie correct is volgens schema, anders waarschuwing
 window.dropJudoka = async function(event, targetWedstrijdId, positie) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+
+    // Check of dit de juiste positie is volgens het schema
+    if (data.volgendeWedstrijdId && data.winnaarNaarSlot) {
+        // Dit is een doorschuif vanuit een vorige wedstrijd
+        if (data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot !== positie) {
+            // Verkeerde positie! Toon waarschuwing
+            const naam = data.judokaNaam || 'Deze judoka';
+            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT' : 'BLAUW';
+            const gekozenPositie = positie === 'wit' ? 'WIT' : 'BLAUW';
+
+            const bevestig = confirm(
+                `⚠️ Let op: verkeerde positie!\n\n` +
+                `${naam} moet volgens het schema op ${juistePositie} staan.\n` +
+                `U plaatst nu op ${gekozenPositie}.\n\n` +
+                `Weet u het zeker?`
+            );
+
+            if (!bevestig) {
+                return; // Annuleer de actie
+            }
+        }
+    }
 
     try {
         const response = await fetch(`{{ route('toernooi.mat.plaats-judoka', $toernooi) }}`, {
@@ -200,11 +251,24 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
             body: JSON.stringify({
                 wedstrijd_id: targetWedstrijdId,
                 judoka_id: data.judokaId,
-                positie: positie
+                positie: positie,
+                bron_wedstrijd_id: data.wedstrijdId || null  // Stuur bron wedstrijd mee voor uitslag registratie
             })
         });
 
         if (response.ok) {
+            const result = await response.json();
+
+            // Toon waarschuwingen aan admin (verkeerde plaatsing)
+            if (result.waarschuwingen && result.waarschuwingen.length > 0) {
+                alert('⚠️ WAARSCHUWING - Mogelijke fout:\n\n• ' + result.waarschuwingen.join('\n• '));
+            }
+
+            // Toon correcties aan admin als die er zijn
+            if (result.correcties && result.correcties.length > 0) {
+                alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
+            }
+
             Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
         }
     } catch (err) {
@@ -242,12 +306,15 @@ function matInterface() {
     const urlParams = new URLSearchParams(window.location.search);
     const blokNummer = urlParams.get('blok');
     const blokkenData = @json($blokken->map(fn($b) => ['id' => $b->id, 'nummer' => $b->nummer]));
+    const mattenData = @json($matten->map(fn($m) => ['id' => $m->id, 'nummer' => $m->nummer]));
     const voorgeselecteerdBlok = blokNummer ? blokkenData.find(b => b.nummer == blokNummer) : null;
 
     return {
         blokId: voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : '',
         matId: '',
         poules: [],
+        blokkenData,
+        mattenData,
 
         init() {
             if (this.blokId && @json($matten->count()) > 0) {
@@ -489,6 +556,33 @@ function matInterface() {
             }
         },
 
+        async verwerkByes(poule) {
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.verwerk-byes', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    if (data.verwerkt && data.verwerkt.length > 0) {
+                        alert('✅ Byes verwerkt:\n\n• ' + data.verwerkt.join('\n• '));
+                    } else {
+                        alert('ℹ️ Geen byes gevonden om te verwerken');
+                    }
+                    this.laadWedstrijden();
+                }
+            } catch (err) {
+                alert('Fout bij verwerken byes: ' + err.message);
+            }
+        },
+
         // Bepaal huidige en volgende wedstrijd
         getHuidigeEnVolgende(poule) {
             const wedstrijden = poule.wedstrijden;
@@ -622,9 +716,19 @@ function matInterface() {
             return rondeKey.replace('_', ' ').replace('ronde ', 'R');
         },
 
+        // Ronde volgorde voor sorteren (kleinste eerst = meeste wedstrijden)
+        rondeVolgordeLookup: {
+            'voorronde': 0, 'b_voorronde': 0,
+            'zestiende_finale': 1, 'b_zestiende_finale': 1,
+            'achtste_finale': 2, 'b_achtste_finale': 2,
+            'kwartfinale': 3, 'b_kwartfinale': 3,
+            'halve_finale': 4, 'b_halve_finale': 4,
+            'finale': 5, 'b_brons': 5,
+        },
+
         // Get bracket als array van rondes met wedstrijden
         getEliminatieBracket(poule, groep) {
-            const wedstrijden = poule.wedstrijden.filter(w => w.groep === groep && w.ronde !== 'brons');
+            const wedstrijden = poule.wedstrijden.filter(w => w.groep === groep && w.ronde !== 'b_brons');
             if (wedstrijden.length === 0) return [];
 
             // Groepeer op ronde
@@ -636,45 +740,42 @@ function matInterface() {
                 rondesMap[w.ronde].push(w);
             });
 
-            // Sorteer rondes
+            // Sorteer rondes op volgorde (voorronde eerst, finale/halve laatst)
             const rondes = Object.entries(rondesMap)
                 .sort((a, b) => {
-                    // Voorronde altijd eerst (A en B)
-                    if (a[0] === 'voorronde' || a[0] === 'b_voorronde') return -1;
-                    if (b[0] === 'voorronde' || b[0] === 'b_voorronde') return 1;
-                    // B-ronde op nummer (b_ronde_1, b_ronde_2...)
-                    if (a[0].startsWith('b_ronde_') && b[0].startsWith('b_ronde_')) {
-                        const numA = parseInt(a[0].replace('b_ronde_', ''));
-                        const numB = parseInt(b[0].replace('b_ronde_', ''));
-                        return numA - numB;
-                    }
-                    // Normale rondes: meeste wedstrijden eerst
-                    return b[1].length - a[1].length;
+                    const volgordeA = this.rondeVolgordeLookup[a[0]] ?? 99;
+                    const volgordeB = this.rondeVolgordeLookup[b[0]] ?? 99;
+                    return volgordeA - volgordeB;
                 })
                 .map(([ronde, weds]) => {
                     weds.sort((a, b) => (a.bracket_positie || 0) - (b.bracket_positie || 0));
 
-                    const aantalWeds = weds.length;
-                    let naam = ronde;
-
-                    // A-bracket ronde namen
-                    if (ronde === 'voorronde') naam = 'Voorronde';
-                    else if (aantalWeds === 1 && ronde === 'finale') naam = 'Finale';
-                    else if (aantalWeds === 2 && ronde === 'halve_finale') naam = '1/2';
-                    else if (aantalWeds <= 4 && ronde === 'kwartfinale') naam = '1/4';
-                    else if (aantalWeds <= 8) naam = '1/8';
-                    else if (aantalWeds <= 16) naam = '1/16';
-                    // B-poule ronde namen
-                    else if (ronde === 'b_voorronde') naam = 'Voorronde';
-                    else if (ronde.startsWith('b_ronde_')) {
-                        const nr = ronde.replace('b_ronde_', '');
-                        naam = `R${nr}`;
-                    }
+                    // Bepaal leesbare naam
+                    let naam = this.getRondeDisplayNaam(ronde, weds.length);
 
                     return { naam, ronde, wedstrijden: weds };
                 });
 
             return rondes;
+        },
+
+        // Geef leesbare naam voor ronde
+        getRondeDisplayNaam(ronde, aantalWeds) {
+            const namen = {
+                'voorronde': 'Voorronde',
+                'zestiende_finale': '1/16',
+                'achtste_finale': '1/8',
+                'kwartfinale': '1/4',
+                'halve_finale': '1/2',
+                'finale': 'Finale',
+                'b_voorronde': 'Voorronde',
+                'b_zestiende_finale': '1/16',
+                'b_achtste_finale': '1/8',
+                'b_kwartfinale': '1/4',
+                'b_halve_finale': '1/2',
+                'b_brons': 'Brons',
+            };
+            return namen[ronde] || ronde.replace('b_', '').replace('_', ' ');
         },
 
         // Check of poule herkansing (groep B) heeft
@@ -808,7 +909,7 @@ function matInterface() {
             const rondes = this.getEliminatieBracket(poule, groep);
             if (rondes.length === 0) return '<div class="text-gray-500">Geen wedstrijden</div>';
 
-            const h = 24; // slot height
+            const h = 28; // slot height
             let html = '';
 
             // Kleuren op basis van groep
@@ -816,107 +917,263 @@ function matInterface() {
             const ringColor = 'ring-purple-400';
             const winIcon = groep === 'A' ? '🏆' : '→ Brons';
 
-            // Header met ronde namen (zelfde structuur als body)
-            html += '<div class="flex mb-2">';
+            // Bepaal of er een voorronde is
+            const voorrondeIdx = rondes.findIndex(r => r.ronde === 'voorronde' || r.ronde === 'b_voorronde');
+            const heeftVoorrondeInBracket = voorrondeIdx >= 0;
+
+            // Header met ronde namen
+            html += '<div class="flex mb-1">';
             rondes.forEach((ronde, rondeIdx) => {
-                html += `<div class="w-28 flex-shrink-0 text-center text-xs font-bold ${headerColor}">${ronde.naam}</div>`;
-                // Connector ruimte (zelfde als in body: w-3)
+                const isVoorrondeHeader = ronde.ronde === 'voorronde' || ronde.ronde === 'b_voorronde';
+                const headerWidth = isVoorrondeHeader ? 'w-36' : 'w-32';
+                const aantalWeds = ronde.wedstrijden.length;
+                const headerTekst = isVoorrondeHeader ? `${ronde.naam} (${aantalWeds})` : ronde.naam;
+                html += `<div class="${headerWidth} flex-shrink-0 text-center text-xs font-bold ${headerColor}">${headerTekst}</div>`;
                 if (rondeIdx < rondes.length - 1) {
-                    html += '<div class="w-3 flex-shrink-0"></div>';
+                    html += '<div class="w-2 flex-shrink-0"></div>';
                 }
             });
-            // Winnaar kolom header
-            html += `<div class="w-28 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
+            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
             html += '</div>';
 
-            html += '<div class="flex">';
+            // Simpele berekening met absolute positioning
+            const potjeHeight = 2 * h; // 56px (wit + blauw)
+            const potjeGap = 8; // marge tussen potjes
+
+            // Bereken posities voor elke ronde
+            // Ronde 0: potje i op positie i * (potjeHeight + potjeGap)
+            // Ronde 1: potje i gecentreerd tussen potje 2i en 2i+1 van ronde 0
+            // etc.
+            const berekenPotjeTop = (rondeIdx, potjeIdx) => {
+                if (rondeIdx === 0) {
+                    return potjeIdx * (potjeHeight + potjeGap);
+                }
+                // Gecentreerd tussen 2 potjes van vorige ronde
+                const prevPotje1 = potjeIdx * 2;
+                const prevPotje2 = potjeIdx * 2 + 1;
+                const top1 = berekenPotjeTop(rondeIdx - 1, prevPotje1);
+                const top2 = berekenPotjeTop(rondeIdx - 1, prevPotje2);
+                // Center tussen de 2 potjes
+                const center1 = top1 + potjeHeight / 2;
+                const center2 = top2 + potjeHeight / 2;
+                const center = (center1 + center2) / 2;
+                return center - potjeHeight / 2;
+            };
+
+            // Bepaal totale hoogte (gebaseerd op eerste ronde)
+            const eersteRonde = rondes[0];
+            const heeftVoorronde = eersteRonde.ronde === 'voorronde' || eersteRonde.ronde === 'b_voorronde';
+            const aantalEersteRonde = heeftVoorronde
+                ? (rondes[1]?.wedstrijden.length || 8) * 2  // 16 voor voorronde
+                : eersteRonde.wedstrijden.length;
+            const totaleHoogte = aantalEersteRonde * (potjeHeight + potjeGap);
+
+            html += `<div class="flex" style="height: ${totaleHoogte}px;">`;
 
             rondes.forEach((ronde, rondeIdx) => {
-                // Standaard bracket symmetrie: elke ronde halveert
-                const factor = Math.pow(2, rondeIdx) - 1;
-                const gap = factor * h;
-                const marginTop = factor * (h / 2);
+                const isVoorronde = ronde.ronde === 'voorronde' || ronde.ronde === 'b_voorronde';
 
-                html += `<div class="flex flex-col flex-shrink-0 w-28" style="gap: ${gap}px; margin-top: ${marginTop}px;">`;
+                if (isVoorronde) {
+                    // VOORRONDE = 1/16 finale: 16 potjes met absolute positioning
+                    const eersteRonde = rondes[1]; // 1/8 finale
+                    const aantal1_8 = eersteRonde ? eersteRonde.wedstrijden.length : 8;
+                    const aantalVoorondePotjes = aantal1_8 * 2; // 16 potjes voor 8 1/8 matches
 
-                ronde.wedstrijden.forEach((wed, wedIdx) => {
-                    const isLastRound = rondeIdx === rondes.length - 1;
+                    // Tel echte voorronde wedstrijden voor nummering
+                    let wedstrijdTeller = 0;
 
-                    // Wit slot met bracket lijn rechts
-                    html += `<div class="relative">`;
-                    html += `<div class="w-28 h-6 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
-                                  ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                                  ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                                  ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit')">`;
-                    if (wed.wit) {
-                        html += `<div class="w-full h-full px-2 flex items-center cursor-move truncate" draggable="true"
-                                      ondragstart="event.dataTransfer.setData('text/plain', JSON.stringify({judokaId:${wed.wit.id}, wedstrijdId:${wed.id}}))">
-                                    ${wed.wit.naam}
-                                 </div>`;
+                    html += `<div class="relative flex-shrink-0 w-36">`; // iets breder voor nummer
+
+                    // Map voorronde wedstrijden op bracket_positie
+                    const voorrondeMap = {};
+                    ronde.wedstrijden.forEach(w => {
+                        voorrondeMap[w.bracket_positie] = w;
+                    });
+
+                    // Render 16 potjes met absolute positioning
+                    const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
+
+                    for (let potjeNr = 1; potjeNr <= aantalVoorondePotjes; potjeNr++) {
+                        const wed = voorrondeMap[potjeNr];
+                        const topPos = berekenPotjeTop(0, potjeNr - 1); // 0-indexed
+
+                        // Check winnaar status (niet bij bye)
+                        const isBye = wed?.uitslag_type === 'bye';
+                        const isWitWinnaar = wed?.is_gespeeld && wed?.winnaar_id === wed?.wit?.id && !isBye;
+                        const isBlauwWinnaar = wed?.is_gespeeld && wed?.winnaar_id === wed?.blauw?.id && !isBye;
+
+                        // Wedstrijdnummer alleen als er een wedstrijd is
+                        if (wed) wedstrijdTeller++;
+                        const wedNr = wed ? wedstrijdTeller : '';
+
+                        // Drag data met volgende wedstrijd info voor validatie
+                        const witDragData = wed ? JSON.stringify({
+                            judokaId: wed.wit?.id,
+                            wedstrijdId: wed.id,
+                            judokaNaam: wed.wit?.naam || '',
+                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
+                            winnaarNaarSlot: wed.winnaar_naar_slot
+                        }).replace(/"/g, '&quot;') : '';
+
+                        const blauwDragData = wed ? JSON.stringify({
+                            judokaId: wed.blauw?.id,
+                            wedstrijdId: wed.id,
+                            judokaNaam: wed.blauw?.naam || '',
+                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
+                            winnaarNaarSlot: wed.winnaar_naar_slot
+                        }).replace(/"/g, '&quot;') : '';
+
+                        // Potje container met absolute positie - flex voor nummer + slots
+                        html += `<div class="absolute w-36 flex items-center" style="top: ${topPos}px;">`;
+                        // Nummer links van potje (verticaal gecentreerd)
+                        html += `<div class="w-4 text-xs text-gray-500 font-medium text-right pr-1">${wedNr}</div>`;
+                        // Slots container
+                        html += `<div class="flex-1">`;
+
+                        // Wit slot
+                        html += `<div class="relative">`;
+                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
+                        if (wed && wed.wit) {
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                                       ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
+                                     <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
+                                  </div>`;
+                        }
+                        html += '</div>';
+                        html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
+                        html += '</div>';
+
+                        // Blauw slot
+                        html += `<div class="relative">`;
+                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
+                        if (wed && wed.blauw) {
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                                       ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
+                                     <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
+                                  </div>`;
+                        }
+                        html += '</div>';
+                        html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
+                        html += '</div>';
+
+                        html += '</div>'; // einde slots container (flex-1)
+                        html += '</div>'; // einde potje container (absolute)
                     }
-                    html += '</div>';
-                    // Bracket lijn rechts (bovenste helft)
-                    if (!isLastRound) {
-                        html += `<div class="absolute right-0 top-0 w-3 h-full border-t border-r border-gray-400"></div>`;
-                    }
-                    html += '</div>';
 
-                    // Blauw slot met bracket lijn rechts
-                    html += `<div class="relative">`;
-                    html += `<div class="w-28 h-6 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
-                                  ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                                  ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                                  ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw')">`;
-                    if (wed.blauw) {
-                        html += `<div class="w-full h-full px-2 flex items-center cursor-move truncate" draggable="true"
-                                      ondragstart="event.dataTransfer.setData('text/plain', JSON.stringify({judokaId:${wed.blauw.id}, wedstrijdId:${wed.id}}))">
-                                    ${wed.blauw.naam}
-                                 </div>`;
-                    }
                     html += '</div>';
-                    // Bracket lijn rechts (onderste helft)
-                    if (!isLastRound) {
-                        html += `<div class="absolute right-0 top-0 w-3 h-full border-b border-r border-gray-400"></div>`;
-                    }
+                } else {
+                    // Normale ronde rendering met absolute positioning
+                    html += `<div class="relative flex-shrink-0 w-32">`;
+
+                    // Sorteer wedstrijden op bracket_positie voor correcte volgorde
+                    const sortedWeds = [...ronde.wedstrijden].sort((a, b) => a.bracket_positie - b.bracket_positie);
+                    sortedWeds.forEach((wed, wedIdx) => {
+                        const isLastRound = rondeIdx === rondes.length - 1;
+                        const topPos = berekenPotjeTop(rondeIdx, wedIdx);
+
+                        // Potje container met absolute positie
+                        html += `<div class="absolute w-32" style="top: ${topPos}px;">`;
+
+                        // Helper: groen cirkeltje voor winnaar (niet bij bye)
+                        const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
+                        const isBye = wed.uitslag_type === 'bye';
+                        const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
+                        const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
+
+                        // Drag data met volgende wedstrijd info voor validatie
+                        const witDragData = JSON.stringify({
+                            judokaId: wed.wit?.id,
+                            wedstrijdId: wed.id,
+                            judokaNaam: wed.wit?.naam || '',
+                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
+                            winnaarNaarSlot: wed.winnaar_naar_slot
+                        }).replace(/"/g, '&quot;');
+
+                        const blauwDragData = JSON.stringify({
+                            judokaId: wed.blauw?.id,
+                            wedstrijdId: wed.id,
+                            judokaNaam: wed.blauw?.naam || '',
+                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
+                            winnaarNaarSlot: wed.winnaar_naar_slot
+                        }).replace(/"/g, '&quot;');
+
+                        // Wit slot
+                        html += `<div class="relative">`;
+                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                                      ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
+                                      ondragleave="this.classList.remove('ring-2','${ringColor}')"
+                                      ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit')">`;
+                        if (wed.wit) {
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                                          ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
+                                        <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
+                                     </div>`;
+                        }
+                        html += '</div>';
+                        if (!isLastRound) {
+                            html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
+                        }
+                        html += '</div>';
+
+                        // Blauw slot
+                        html += `<div class="relative">`;
+                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                                      ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
+                                      ondragleave="this.classList.remove('ring-2','${ringColor}')"
+                                      ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw')">`;
+                        if (wed.blauw) {
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                                          ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
+                                        <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
+                                     </div>`;
+                        }
+                        html += '</div>';
+                        if (!isLastRound) {
+                            html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
+                        }
+                        html += '</div>';
+
+                        html += '</div>'; // einde potje
+                    });
+
                     html += '</div>';
-                });
+                }
 
-                html += '</div>';
-
-                // Ruimte voor connector naar volgende ronde
+                // Ruimte voor connector
                 if (rondeIdx < rondes.length - 1) {
-                    html += '<div class="w-3 flex-shrink-0"></div>';
+                    html += '<div class="w-2 flex-shrink-0"></div>';
                 }
             });
 
-            // Winnaar slot(s)
+            // Winnaar slot(s) met absolute positioning
             const laatsteRondeWedstrijden = rondes[rondes.length - 1]?.wedstrijden || [];
-            const factorWinnaar = Math.pow(2, rondes.length) - 1;
-            const marginTopWinnaar = factorWinnaar * (h / 2);
+            const laatsteRondeIdx = rondes.length - 1;
 
             if (groep === 'A') {
-                // Groep A: 1 winnaar (finale winnaar)
                 const finale = laatsteRondeWedstrijden[0];
                 const winnaar = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw) : null;
-                html += `<div class="flex flex-col flex-shrink-0" style="margin-top: ${marginTopWinnaar}px;">`;
-                html += `<div class="w-28 h-6 bg-yellow-100 border border-yellow-400 rounded flex items-center px-2 text-xs font-bold truncate">`;
+                // Winnaar gecentreerd naast finale
+                const winnaarTop = berekenPotjeTop(laatsteRondeIdx, 0) + h / 2;
+                html += `<div class="relative flex-shrink-0 w-32">`;
+                html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
+                html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate">`;
                 html += winnaar ? winnaar.naam : '';
-                html += '</div></div>';
+                html += '</div></div></div>';
             } else {
-                // Groep B: 2 winnaars (halve finale winnaars gaan naar brons)
-                const gapWinnaar = (Math.pow(2, rondes.length - 1) - 1) * h;
-                const marginTopHF = (Math.pow(2, rondes.length - 1) - 1) * (h / 2);
-                html += `<div class="flex flex-col flex-shrink-0" style="margin-top: ${marginTopHF}px; gap: ${gapWinnaar}px;">`;
-                laatsteRondeWedstrijden.forEach(wed => {
+                // B groep: 2 bronzen winnaars (1 per halve finale)
+                html += `<div class="relative flex-shrink-0 w-32">`;
+                laatsteRondeWedstrijden.forEach((wed, wedIdx) => {
                     const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
-                    html += `<div class="w-28 h-6 bg-amber-100 border border-amber-400 rounded flex items-center px-2 text-xs truncate">`;
+                    const winnaarTop = berekenPotjeTop(laatsteRondeIdx, wedIdx) + h / 2;
+                    html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
+                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate">`;
                     html += winnaar ? `${winnaar.naam} →🥉` : '→ 🥉';
-                    html += '</div>';
+                    html += '</div></div>';
                 });
                 html += '</div>';
             }
 
-            html += '</div>'; // sluit bracket body
+            html += '</div>';
 
             return html;
         },
