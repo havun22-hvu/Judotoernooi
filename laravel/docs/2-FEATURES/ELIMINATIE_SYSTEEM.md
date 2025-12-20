@@ -6,295 +6,201 @@ Dit document beschrijft het double elimination systeem voor judotoernooien.
 
 Het eliminatiesysteem werkt met twee groepen:
 - **Groep A (Hoofdboom)**: Winnaars bracket naar de finale
-- **Groep B (Herkansing)**: Verliezers krijgen een tweede kans voor brons
+- **Groep B (Herkansing/B-poule)**: Verliezers krijgen een tweede kans voor brons
 
-## Complete Flow
+## Bracket Structuur
 
-### Voorbereiding (dagen/weken voor toernooi)
+### Groep A - Hoofdboom
 
-1. **Instellingen invullen** - Organisator configureert toernooi
-   - Leeftijdsklassen, gewichtsklassen
-   - Per categorie: poule-systeem of eliminatie-systeem
+#### Voorronde (indien nodig)
+Als het aantal judokas geen macht van 2 is, worden er **voorronde wedstrijden** gespeeld:
 
-2. **Aanmeldingen** - Deelnemers registreren
-   - Via coach-portal (judocoaches melden hun judoka's aan)
-   - Via import (Excel, CSV, TXT bestand)
+| Judokas | Doel (power of 2) | Voorronde weds | Voorronde judokas |
+|---------|-------------------|----------------|-------------------|
+| 23      | 16                | 7              | 14                |
+| 18      | 16                | 2              | 4                 |
+| 29      | 16                | 13             | 26                |
+| 10      | 8                 | 2              | 4                 |
 
-3. **Poules maken** - Op basis van instellingen
-   - Judoka's worden ingedeeld in gewichtscategorieën per leeftijdsgroep
-   - Bij eliminatie: alle judoka's in één groep (geen poule-splits)
-   - **Nog geen wedstrijdschema's!** Alleen groepering van deelnemers
-
-4. **Blokken verdelen** - Gewichtscategorieën over tijdsblokken
-   - Per leeftijdsgroep de gewichtscategorieën toewijzen aan blokken
-
-5. **Zaaloverzicht** - Verdeling over matten
-   - Gewichtscategorieën toewijzen aan matten binnen elk blok
-
-→ **Hierna:** Weeglijst, weegkaarten en coachkaarten aanmaken
-
----
-
-### Toernooidag (per blok)
-
-6. **Wegen** - Judoka's worden gewogen
-   - Registratie van daadwerkelijk gewicht
-
-7. **Ompoulen** (na sluiting wegingstijd) - In Wedstrijddag
-   - Afwezige judoka's verwijderen
-   - Judoka's met afwijkend gewicht verplaatsen naar juiste categorie
-   - Eventueel nieuwe poules maken of samenvoegen
-
-8. **Zaaloverzicht** - Per gewichtscategorie die klaar is met ompoulen
-   - Controleren/aanpassen verdeling over matten
-   - Zorgen voor goede spreiding
-
-9. **"Op de mat zetten"** - **HIER wordt het schema aangemaakt!**
-   - Vanuit zaaloverzicht: gewichtscategorie "op de mat zetten"
-   - Bij poule-systeem: wedstrijdschema (round-robin) wordt gegenereerd
-   - Bij eliminatie: bracket (Groep A + Groep B + brons) wordt gegenereerd
-   - Schema verschijnt op de juiste mat in het juiste blok
-
-10. **Wedstrijden** - Uitvoering
-    - Wedstrijden spelen volgens schema
-    - Uitslagen invoeren
-    - Bij eliminatie: winnaars/verliezers stromen automatisch door
-
-11. **Einde** - Afronding per gewichtscategorie
-    - Resultaat naar spreker (voor uitreiking)
-    - Overzicht naar judoschool/organisator
-
----
-
-### Belangrijk principe
-
-**Schema's worden ALLEEN aangemaakt vanuit Zaaloverzicht bij "op de mat zetten":**
-- Pas dan is bekend WIE er daadwerkelijk meedoet (na weging/ompoulen)
-- Pas dan is bekend op WELKE MAT ze staan
-- Nieuwe poules in Wedstrijddag → eerst naar Zaaloverzicht → dan pas schema
-
-## Groep A - Hoofdboom
-
-### Structuur
+**Berekening:**
 ```
-Ronde 1 (indien nodig voor byes)
-    ↓
-1/8 finale (bij 9-16 judoka's)
-    ↓
-1/4 finale (kwartfinale)
-    ↓
-1/2 finale (halve finale)
-    ↓
+doel = grootste macht van 2 <= aantal judokas
+voorronde_wedstrijden = aantal - doel
+voorronde_judokas = voorronde_wedstrijden * 2
+bye_judokas = doel - voorronde_wedstrijden (gaan direct naar 1/8)
+```
+
+#### Rondes na voorronde
+```
+Voorronde (indien nodig)
+    ↓ winnaars
+1/8 finale (bij doel=16)
+    ↓ winnaars
+Kwartfinale
+    ↓ winnaars
+Halve finale
+    ↓ winnaars
 Finale → 1e plaats (winnaar) en 2e plaats (verliezer)
 ```
 
-### Byes (Vrijstellingen)
-Als het aantal judoka's geen macht van 2 is (2, 4, 8, 16, 32), krijgen sommige judoka's een bye:
+### Groep B - Herkansing (B-poule)
 
-| Judoka's | Bracket grootte | Byes | Ronde 1 wedstrijden |
-|----------|-----------------|------|---------------------|
-| 3        | 4               | 1    | 2                   |
-| 5-6      | 8               | 3-2  | 2-3                 |
-| 7        | 8               | 1    | 3                   |
-| 9-12     | 16              | 7-4  | 4-6                 |
-| 13-15    | 16              | 3-1  | 6-7                 |
+De B-poule groeit elke ronde met verliezers uit de A-poule.
 
-**Berekening:**
-- Bracket grootte = kleinste macht van 2 >= aantal judoka's
-- Aantal byes = bracket grootte - aantal judoka's
-- Byes worden verdeeld over de hoogst geplaatste/gelote judoka's
+#### Structuur bij 23 judokas (doel=16, voorronde=7)
 
-### Seeding
-Judoka's worden geplaatst op basis van:
-1. Band (hoogste band = hoogste seed)
-2. Gewicht (indien relevant)
-3. Loting voor gelijke posities
+| B-ronde   | Deelnemers                                      | Wedstrijden |
+|-----------|-------------------------------------------------|-------------|
+| b_ronde_1 | Bye-judokas die 1/8 verliezen                   | 4           |
+| b_ronde_2 | R1 winnaars + voorronde verliezers + rest 1/8   | ~8          |
+| b_ronde_3 | R2 winnaars + kwartfinale verliezers            | ~6          |
+| b_ronde_4 | (extra rondes tot 2 overblijven)                | ~3          |
+| b_brons   | 2 B-winnaars + 2 halve finale verliezers uit A  | 2           |
 
-## Groep B - Herkansing
+#### Fairness Regel
 
-### Instroom
-Verliezers uit Groep A stromen in bij de herkansing:
-- Verliezers ronde 1 → Start herkansing ronde 1
-- Verliezers 1/4 finale → Instroom bij herkansing ronde 2
-- etc.
+**Wie al gespeeld heeft krijgt een bye in de B-poule:**
 
-### Structuur Herkansing
-```
-Herkansing R1: Verliezers R1 Groep A
-    ↓
-Herkansing R2: Winnaars H-R1 + Verliezers 1/4 finale
-    ↓
-Herkansing R3: Winnaars H-R2 + Verliezers 1/2 finale (optioneel)
-    ↓
-Herkansing finale
-```
+1. **Voorronde verliezers** → worden gespaard, gaan naar `b_ronde_2` (niet b_ronde_1)
+2. **Bye-judokas die 1/8 verliezen** → gaan naar `b_ronde_1` (moeten daar hun eerste extra wedstrijd spelen)
 
-## Strijd om Brons (Gedeelde 3e plaats)
+Dit zorgt ervoor dat iedereen in de B-poule ongeveer evenveel wedstrijden speelt.
 
-### Belangrijk principe
-De winnaars van de herkansing vechten NIET tegen elkaar voor één bronzen medaille.
+#### Batch-indeling
 
-### Wedstrijden om brons
-Er zijn **twee aparte wedstrijden** om de 3e plaats:
+Verliezers worden **niet direct** ingedeeld bij elke uitslag, maar:
+
+1. **Wacht** tot een complete A-ronde klaar is (bijv. alle 1/8 finales gespeeld)
+2. **Sorteer** verliezers: bye-judokas eerst
+3. **Shuffle** binnen elke groep (at random)
+4. **Vul** B-poule: bye-judokas naar b_ronde_1, voorronde-spelers naar b_ronde_2
+5. Als een ronde vol is → fallback naar andere ronde
+
+Dit zorgt voor eerlijke verdeling wanneer er niet precies genoeg plekken zijn.
+
+## Bronswedstrijden
+
+De bronswedstrijden maken onderdeel uit van de B-poule (ronde `b_brons`):
 
 ```
-Brons wedstrijd 1:
-  Verliezer halve finale A  vs  Winnaar herkansing tak A
-
-Brons wedstrijd 2:
-  Verliezer halve finale B  vs  Winnaar herkansing tak B
+B-poule halve finale winnaar 1  vs  A halve finale verliezer 1  → BRONS 1
+B-poule halve finale winnaar 2  vs  A halve finale verliezer 2  → BRONS 2
 ```
 
-### Resultaat
-- **2 bronzen medailles** (gedeelde 3e plaats)
-- Winnaars van beide brons-wedstrijden krijgen brons
-- Verliezers eindigen op 5e plaats
+**Resultaat:** 2 bronzen medailles (gedeelde 3e plaats)
 
-## Voorbeeld: 8 Judoka's
+## Voorbeeld: 23 Judokas
 
-### Groep A (Hoofdboom)
+### A-bracket generatie
 ```
-        1/4 finale              1/2 finale           Finale
-
-Judoka 1 ─┐
-          ├─ Winnaar A ─┐
-Judoka 8 ─┘             │
-                        ├─ Winnaar E ─┐
-Judoka 4 ─┐             │             │
-          ├─ Winnaar B ─┘             │
-Judoka 5 ─┘                           │
-                                      ├─ FINALE → 1e/2e
-Judoka 3 ─┐                           │
-          ├─ Winnaar C ─┐             │
-Judoka 6 ─┘             │             │
-                        ├─ Winnaar F ─┘
-Judoka 2 ─┐             │
-          ├─ Winnaar D ─┘
-Judoka 7 ─┘
+23 judokas
+├── doel = 16 (grootste macht van 2 <= 23)
+├── voorronde = 23 - 16 = 7 wedstrijden (14 judokas)
+├── bye judokas = 16 - 7 = 9 (gaan direct naar 1/8)
+└── A-wedstrijden: 7 + 8 + 4 + 2 + 1 = 22 wedstrijden
 ```
 
-### Groep B (Herkansing)
+### B-poule generatie
 ```
-Verliezer 1/4 A ─┐
-                 ├─ Winnaar H1 ─┐
-Verliezer 1/4 D ─┘              │
-                                ├─ Winnaar H3 ─┐
-Verliezer 1/4 B ─┐              │              │
-                 ├─ Winnaar H2 ─┘              │
-Verliezer 1/4 C ─┘                             │
-                                               ├→ vs Verliezer 1/2 E → BRONS 1
-                                               │
-                    (zelfde structuur)         ├→ vs Verliezer 1/2 F → BRONS 2
+B-poule
+├── b_ronde_1: 4 weds (max 8 bye-verliezers)
+├── b_ronde_2: ~8 weds (R1 winnaars + 7 voorronde verliezers + rest 1/8)
+├── b_ronde_3: ~6 weds (R2 winnaars + 4 kwartfinale verliezers)
+├── extra rondes tot 2 B-winnaars overblijven
+└── b_brons: 2 weds (2 B-winnaars + 2 A halve finale verliezers)
 ```
+
+## Automatische Doorschuiving
+
+### Bij uitslag registratie
+
+1. **Winnaar in A-poule** → direct doorgeschoven naar volgende A-wedstrijd
+2. **Verliezer in A-poule** → wacht tot ronde compleet, dan batch-indeling in B-poule
+3. **Winnaar in B-poule** → direct doorgeschoven naar volgende B-ronde
+
+### Judokas verplaatsbaar
+
+Na automatische indeling kunnen tafelleiding judokas nog **handmatig verplaatsen** via drag & drop. Dit is nodig voor:
+- Blessures (volgorde aanpassen)
+- Correcties (verkeerde indeling)
+- Speciale situaties
 
 ## Database Model
 
-### Wedstrijd velden voor eliminatie
+### Wedstrijd velden
 ```php
-'type' => 'eliminatie',           // Type wedstrijd
-'ronde' => 'kwartfinale',         // finale, halve_finale, kwartfinale, achtste_finale, etc.
+'ronde' => 'kwartfinale',         // voorronde, achtste_finale, kwartfinale, halve_finale, finale
 'groep' => 'A',                   // A = hoofdboom, B = herkansing
-'bracket_positie' => 1,           // Positie in de bracket (1-based)
-'volgende_wedstrijd_id' => null,  // Winnaar gaat naar deze wedstrijd
-'herkansing_wedstrijd_id' => null,// Verliezer gaat naar deze wedstrijd (herkansing)
+'bracket_positie' => 1,           // Positie in de ronde (1-based)
+'volgende_wedstrijd_id' => null,  // Winnaar gaat naar deze wedstrijd (A-poule)
+'winnaar_naar_slot' => 'wit',     // Winnaar wordt wit of blauw in volgende wedstrijd
 ```
 
 ### Ronde namen
-| Ronde code        | Nederlandse naam    |
-|-------------------|---------------------|
-| `finale`          | Finale              |
-| `halve_finale`    | Halve finale        |
-| `kwartfinale`     | Kwartfinale         |
-| `achtste_finale`  | Achtste finale      |
-| `zestiende_finale`| Zestiende finale    |
-| `brons`           | Strijd om brons     |
-| `herkansing_r1`   | Herkansing ronde 1  |
-| `herkansing_r2`   | Herkansing ronde 2  |
 
-## Wedstrijd Volgorde
+| Groep A             | Groep B           |
+|---------------------|-------------------|
+| `voorronde`         | `b_ronde_1`       |
+| `achtste_finale`    | `b_ronde_2`       |
+| `kwartfinale`       | `b_ronde_3`       |
+| `halve_finale`      | `b_ronde_4` (etc) |
+| `finale`            | `b_brons`         |
 
-De wedstrijden worden gespeeld in deze volgorde:
-1. Eerste rondes Groep A
-2. Herkansing rondes (gelijk met volgende Groep A rondes)
-3. Kwartfinales Groep A
-4. Herkansing rondes
-5. Halve finales Groep A
-6. Herkansing finales
-7. Strijd om brons (2 wedstrijden)
-8. Finale
+## EliminatieService
 
-## Speciale situaties
+### Belangrijke methodes
 
-### 3 Judoka's
-Bij 3 judoka's is eliminatie niet ideaal. Overweeg:
-- Poule met dubbele ronde (6 wedstrijden)
-- Of: 1 bye, 1 wedstrijd ronde 1, dan finale
-
-### 2 Judoka's
-Directe finale (1 wedstrijd).
-
-### Walk-over / Opgave
-- Bij walk-over in Groep A: tegenstander naar volgende ronde
-- Verliezer (walk-over) gaat NIET naar herkansing
-
-## Implementatie notities
-
-### Bracket generatie algoritme
-1. Bepaal bracket grootte (kleinste macht van 2 >= n)
-2. Bereken aantal byes
-3. Seed judoka's (band, gewicht, loting)
-4. Plaats byes bij hoogste seeds
-5. Genereer wedstrijden voor ronde 1
-6. Koppel wedstrijden aan volgende rondes
-7. Genereer herkansing structuur
-
-### Judoka plaatsing bij winst/verlies
 ```php
-// Bij resultaat invoer:
-if ($wedstrijd->groep === 'A') {
-    // Winnaar naar volgende wedstrijd in Groep A
-    $winnaar->plaatsIn($wedstrijd->volgende_wedstrijd);
+// Genereer complete bracket (A + B)
+$service->genereerBracket($poule, $judokas);
 
-    // Verliezer naar herkansing (Groep B)
-    if ($wedstrijd->herkansing_wedstrijd) {
-        $verliezer->plaatsIn($wedstrijd->herkansing_wedstrijd);
-    }
-}
+// Verwerk uitslag (winnaar door, verliezer naar B bij ronde compleet)
+$service->verwerkUitslag($wedstrijd, $winnaarId);
 ```
 
-## Mat Interface: Eliminatie Weergave
+### Flow bij verwerkUitslag
 
-De mat interface moet een eliminatie-categorie anders tonen dan een poule (round-robin):
+1. Winnaar direct doorschuiven naar `volgende_wedstrijd_id`
+2. Check of huidige A-ronde compleet is (alle wedstrijden gespeeld)
+3. Zo ja: batch-indeling van alle verliezers in B-poule
+   - Bye-judokas eerst → b_ronde_1
+   - Voorronde-spelers → b_ronde_2
+   - At random binnen elke groep
+4. B-winnaar direct doorschuiven naar volgende B-ronde
 
-### Weergave structuur
-- **Hoofdboom (Groep A)**: Eliminatieschema van links naar rechts
-  - Per ronde een kolom (kwartfinale → halve finale → finale)
-  - Winnaars schuiven visueel naar rechts
-- **Herkansing (Groep B)**: Apart schema onder de hoofdboom
-  - Verliezers stromen in vanuit Groep A
-- **Bronswedstrijden**: Twee aparte wedstrijd-kaarten
+## Mapping A-ronde → B-ronde
 
-### Interactie
-- Klik op wedstrijd → uitslag invoeren
-- Winnaar selecteren → automatisch doorschuiven naar volgende wedstrijd
-- Verliezer (Groep A) → automatisch naar herkansing
-
-### Judoka verplaatsen (voor "op de mat zetten")
-- Judoka's moeten verplaatsbaar zijn naar andere categorie (net als bij poule-indeling)
-- Dit kan alleen VOORDAT het bracket gegenereerd is
-- Na generatie: bracket opnieuw genereren indien nodig
+| A-ronde verliezers  | Gaan naar B-ronde |
+|---------------------|-------------------|
+| voorronde           | b_ronde_2 (gespaard) |
+| achtste_finale (bye)| b_ronde_1         |
+| achtste_finale (voorronde gespeeld) | b_ronde_2 |
+| kwartfinale         | b_ronde_3         |
+| halve_finale        | b_brons           |
 
 ## Implementatie Status
 
 ### Gereed
-- [x] EliminatieService: schema generatie (hoofdboom, herkansing, brons)
-- [x] EliminatieService: uitslag verwerking (doorschuiven winnaars/verliezers)
-- [x] Zaaloverzicht: "op de mat zetten" genereert eliminatieschema
-- [x] Database velden: groep, ronde, bracket_positie, volgende_wedstrijd_id, etc.
+- [x] EliminatieService: bracket generatie (A + B met correcte structuur)
+- [x] EliminatieService: batch-indeling verliezers na complete ronde
+- [x] EliminatieService: fairness regel (bye-judokas eerst)
+- [x] EliminatieService: winnaar doorschuiven (A en B)
+- [x] MatController: auto-advance bij uitslag registratie
+- [x] Database velden: groep, ronde, bracket_positie, volgende_wedstrijd_id
 
-### Nog te implementeren
-- [ ] Mat Interface: eliminatieschema weergave (ipv matrix)
-- [ ] Mat Interface: uitslag invoer met automatisch doorschuiven
-- [ ] Mat Interface: visuele feedback welke wedstrijden speelbaar zijn
-- [ ] Wedstrijddag: judoka verplaatsen voor eliminatie-categorieën
-- [ ] Spreker view: eindstand tonen voor eliminatie (1e, 2e, 2x 3e)
+### Nog te testen
+- [ ] Interface weergave met nieuwe ronde-namen
+- [ ] Batch-indeling bij complete rondes
+- [ ] Drag & drop verplaatsing in B-poule
+- [ ] Bronswedstrijden flow
+
+## Test Script
+
+Voor het testen van bracket generatie:
+
+```bash
+cd laravel
+php test_regen.php
+```
+
+Dit genereert brackets voor alle eliminatie-poules en toont de structuur.
