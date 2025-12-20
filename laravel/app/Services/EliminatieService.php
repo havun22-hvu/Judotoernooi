@@ -42,15 +42,17 @@ class EliminatieService
             // Delete existing matches for this poule
             $poule->wedstrijden()->delete();
 
-            // Calculate bracket size (smallest power of 2 >= aantal)
-            $bracketGrootte = $this->berekenBracketGrootte($aantal);
-            $aantalByes = $bracketGrootte - $aantal;
+            // Calculate target size (largest power of 2 <= aantal)
+            $doelGrootte = $this->berekenDoelGrootte($aantal);
 
-            // Seed judokas (by band, then random)
+            // How many need to be eliminated in preliminary round?
+            $aantalVoorronde = $aantal - $doelGrootte;
+
+            // Seed judokas (random)
             $geseededJudokas = $this->seedJudokas($judokas);
 
-            // Generate main bracket (Groep A)
-            $hoofdboomWedstrijden = $this->genereerHoofdboom($poule, $geseededJudokas, $bracketGrootte, $aantalByes);
+            // Generate main bracket (Groep A) with optional preliminary round
+            $hoofdboomWedstrijden = $this->genereerHoofdboom($poule, $geseededJudokas, $doelGrootte, $aantalVoorronde);
 
             // Generate repechage bracket (Groep B)
             $herkansingsWedstrijden = $this->genereerHerkansing($poule, $hoofdboomWedstrijden);
@@ -65,8 +67,8 @@ class EliminatieService
             ]);
 
             return [
-                'bracket_grootte' => $bracketGrootte,
-                'aantal_byes' => $aantalByes,
+                'doel_grootte' => $doelGrootte,
+                'voorronde_wedstrijden' => $aantalVoorronde,
                 'hoofdboom_wedstrijden' => count($hoofdboomWedstrijden),
                 'herkansing_wedstrijden' => count($herkansingsWedstrijden),
                 'brons_wedstrijden' => count($bronsWedstrijden),
@@ -76,7 +78,20 @@ class EliminatieService
     }
 
     /**
-     * Calculate smallest power of 2 >= n
+     * Calculate largest power of 2 <= n
+     * We want to reduce TO this number via preliminary round
+     */
+    private function berekenDoelGrootte(int $n): int
+    {
+        $power = 1;
+        while ($power * 2 <= $n) {
+            $power *= 2;
+        }
+        return $power;
+    }
+
+    /**
+     * Calculate smallest power of 2 >= n (for herkansing)
      */
     private function berekenBracketGrootte(int $n): int
     {
@@ -96,85 +111,109 @@ class EliminatieService
     }
 
     /**
-     * Seed judokas by band (highest first), then random
+     * Seed judokas - eerlijke loting (puur random)
      */
     private function seedJudokas(Collection $judokas): array
     {
-        $bandVolgorde = [
-            'zwart' => 0,
-            'bruin' => 1,
-            'blauw' => 2,
-            'groen' => 3,
-            'oranje' => 4,
-            'geel' => 5,
-            'wit' => 6,
-        ];
-
-        return $judokas->sortBy(function ($judoka) use ($bandVolgorde) {
-            $bandScore = $bandVolgorde[$judoka->band] ?? 7;
-            return [$bandScore, random_int(0, 1000)];
-        })->values()->all();
+        return $judokas->shuffle()->values()->all();
     }
 
     /**
      * Generate main bracket (Groep A)
+     * Met optionele voorronde om naar doelGrootte te komen
      */
-    private function genereerHoofdboom(Poule $poule, array $judokas, int $bracketGrootte, int $aantalByes): array
+    private function genereerHoofdboom(Poule $poule, array $judokas, int $doelGrootte, int $aantalVoorronde): array
     {
         $wedstrijden = [];
         $volgorde = 1;
 
-        // Place judokas in bracket positions with byes for top seeds
-        $bracketPosities = $this->verdeelInBracket($judokas, $bracketGrootte, $aantalByes);
+        // Judokas voor voorronde (2x aantalVoorronde spelen, rest krijgt bye)
+        $voorrondeJudokas = array_slice($judokas, 0, $aantalVoorronde * 2);
+        $byeJudokas = array_slice($judokas, $aantalVoorronde * 2);
 
-        // Generate matches round by round, starting from first round
-        $huidigeRondeWedstrijden = [];
-        $aantalWedstrijdenInRonde = $bracketGrootte / 2;
+        $hoofdboomJudokas = $byeJudokas; // Start met judokas die voorronde skippen
 
-        // First round
+        // === VOORRONDE (indien nodig) ===
+        if ($aantalVoorronde > 0) {
+            for ($i = 0; $i < $aantalVoorronde; $i++) {
+                $judokaWit = $voorrondeJudokas[$i * 2] ?? null;
+                $judokaBlauw = $voorrondeJudokas[$i * 2 + 1] ?? null;
+
+                $wedstrijd = Wedstrijd::create([
+                    'poule_id' => $poule->id,
+                    'judoka_wit_id' => $judokaWit?->id,
+                    'judoka_blauw_id' => $judokaBlauw?->id,
+                    'volgorde' => $volgorde++,
+                    'ronde' => 'voorronde',
+                    'groep' => 'A',
+                    'bracket_positie' => $i + 1,
+                ]);
+
+                $wedstrijden[] = $wedstrijd;
+            }
+        }
+
+        // === HOOFDBRACKET (vanaf doelGrootte) ===
+        // Bouw bracket van doelGrootte naar finale
+        $aantalWedstrijdenInRonde = $doelGrootte / 2;
         $rondeNaam = $this->getRondeNaam($aantalWedstrijdenInRonde);
 
+        $huidigeRondeWedstrijden = [];
+
+        // Eerste ronde van hoofdbracket
+        // Slots worden gevuld door: byeJudokas + winnaars voorronde
+        $byeIndex = 0;
+        $voorrondeWedstrijdIndex = 0;
+        $voorrondeWedstrijden = array_filter($wedstrijden, fn($w) => $w->ronde === 'voorronde');
+
         for ($i = 0; $i < $aantalWedstrijdenInRonde; $i++) {
-            $positieWit = $i * 2;
-            $positieBlauw = $i * 2 + 1;
-
-            $judokaWit = $bracketPosities[$positieWit] ?? null;
-            $judokaBlauw = $bracketPosities[$positieBlauw] ?? null;
-
-            // Skip if both are bye (shouldn't happen with proper distribution)
-            if ($judokaWit === null && $judokaBlauw === null) {
-                continue;
-            }
-
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
-                'judoka_wit_id' => $judokaWit?->id,
-                'judoka_blauw_id' => $judokaBlauw?->id,
+                'judoka_wit_id' => null,
+                'judoka_blauw_id' => null,
                 'volgorde' => $volgorde++,
                 'ronde' => $rondeNaam,
                 'groep' => 'A',
                 'bracket_positie' => $i + 1,
             ]);
 
+            // Vul wit slot
+            if ($byeIndex < count($byeJudokas)) {
+                // Bye judoka gaat direct naar dit slot
+                $wedstrijd->update(['judoka_wit_id' => $byeJudokas[$byeIndex]->id]);
+                $byeIndex++;
+            } elseif ($voorrondeWedstrijdIndex < count($voorrondeWedstrijden)) {
+                // Link voorronde winnaar naar dit slot
+                $voorrondeWed = array_values($voorrondeWedstrijden)[$voorrondeWedstrijdIndex];
+                $voorrondeWed->update([
+                    'volgende_wedstrijd_id' => $wedstrijd->id,
+                    'winnaar_naar_slot' => 'wit',
+                ]);
+                $voorrondeWedstrijdIndex++;
+            }
+
+            // Vul blauw slot
+            if ($byeIndex < count($byeJudokas)) {
+                $wedstrijd->update(['judoka_blauw_id' => $byeJudokas[$byeIndex]->id]);
+                $byeIndex++;
+            } elseif ($voorrondeWedstrijdIndex < count($voorrondeWedstrijden)) {
+                $voorrondeWed = array_values($voorrondeWedstrijden)[$voorrondeWedstrijdIndex];
+                $voorrondeWed->update([
+                    'volgende_wedstrijd_id' => $wedstrijd->id,
+                    'winnaar_naar_slot' => 'blauw',
+                ]);
+                $voorrondeWedstrijdIndex++;
+            }
+
             $huidigeRondeWedstrijden[] = $wedstrijd;
             $wedstrijden[] = $wedstrijd;
-
-            // If one is a bye, mark winner automatically
-            if ($judokaWit === null || $judokaBlauw === null) {
-                $winnaarId = $judokaWit?->id ?? $judokaBlauw?->id;
-                $wedstrijd->update([
-                    'winnaar_id' => $winnaarId,
-                    'is_gespeeld' => true,
-                    'uitslag_type' => 'bye',
-                ]);
-            }
         }
 
-        // Generate subsequent rounds
+        // === VOLGENDE RONDES ===
         while (count($huidigeRondeWedstrijden) > 1) {
             $volgendeRondeWedstrijden = [];
-            $aantalWedstrijdenInRonde = count($huidigeRondeWedstrijden) / 2;
-            $rondeNaam = $this->getRondeNaam((int)$aantalWedstrijdenInRonde);
+            $aantalWedstrijdenInRonde = (int) floor(count($huidigeRondeWedstrijden) / 2);
+            $rondeNaam = $this->getRondeNaam($aantalWedstrijdenInRonde);
 
             for ($i = 0; $i < $aantalWedstrijdenInRonde; $i++) {
                 $wedstrijd1 = $huidigeRondeWedstrijden[$i * 2];
@@ -182,7 +221,7 @@ class EliminatieService
 
                 $volgendeWedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
-                    'judoka_wit_id' => null, // Filled when previous matches complete
+                    'judoka_wit_id' => null,
                     'judoka_blauw_id' => null,
                     'volgorde' => $volgorde++,
                     'ronde' => $rondeNaam,
@@ -190,7 +229,6 @@ class EliminatieService
                     'bracket_positie' => $i + 1,
                 ]);
 
-                // Link previous matches to this one
                 $wedstrijd1->update([
                     'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                     'winnaar_naar_slot' => 'wit',
@@ -199,10 +237,6 @@ class EliminatieService
                     'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                     'winnaar_naar_slot' => 'blauw',
                 ]);
-
-                // Auto-advance bye winners
-                $this->processAutoAdvance($wedstrijd1, $volgendeWedstrijd, 'wit');
-                $this->processAutoAdvance($wedstrijd2, $volgendeWedstrijd, 'blauw');
 
                 $volgendeRondeWedstrijden[] = $volgendeWedstrijd;
                 $wedstrijden[] = $volgendeWedstrijd;
@@ -286,110 +320,116 @@ class EliminatieService
 
     /**
      * Generate repechage bracket (Groep B)
+     * Verliezers uit voorronde (of eerste ronde als geen voorronde) vormen apart afvalsysteem
      */
     private function genereerHerkansing(Poule $poule, array $hoofdboomWedstrijden): array
     {
         $herkansingsWedstrijden = [];
         $volgorde = count($hoofdboomWedstrijden) + 1;
 
-        // Group hoofdboom matches by round
-        $perRonde = collect($hoofdboomWedstrijden)->groupBy('ronde');
+        // Check of er voorronde wedstrijden zijn
+        $voorrondeWedstrijden = collect($hoofdboomWedstrijden)->where('ronde', 'voorronde');
 
-        // Skip finale - no repechage for finale loser (they get silver)
-        $rondesVoorHerkansing = $perRonde->except(['finale']);
-
-        if ($rondesVoorHerkansing->isEmpty()) {
-            return [];
+        if ($voorrondeWedstrijden->count() > 0) {
+            // Verliezers van voorronde gaan naar herkansing
+            $bronWedstrijden = $voorrondeWedstrijden;
+        } else {
+            // Geen voorronde - gebruik eerste ronde van hoofdboom
+            $perRonde = collect($hoofdboomWedstrijden)->groupBy('ronde');
+            $eersteRondeNaam = $perRonde->sortByDesc(fn($weds) => $weds->count())->keys()->first();
+            $bronWedstrijden = $perRonde->get($eersteRondeNaam);
         }
 
+        // Filter alleen wedstrijden met 2 judoka's (geen byes)
+        $echteWedstrijden = $bronWedstrijden->filter(fn($w) => $w->judoka_wit_id && $w->judoka_blauw_id);
+
+        if ($echteWedstrijden->count() < 2) {
+            return []; // Niet genoeg verliezers voor herkansing
+        }
+
+        // Aantal verliezers = aantal echte wedstrijden
+        $aantalVerliezers = $echteWedstrijden->count();
+        $echteWedstrijdenArray = $echteWedstrijden->values()->all();
+
+        // Herkansing: direct koppelen, geen byes nodig
+        $huidigeRondeWedstrijden = [];
+        $aantalWedstrijdenInRonde = intdiv($aantalVerliezers, 2);
         $herkansingRonde = 1;
-        $vorigeHerkansingWedstrijden = [];
 
-        foreach ($rondesVoorHerkansing as $rondeNaam => $wedstrijden) {
-            $verliezersUitRonde = $wedstrijden->count();
+        // Eerste ronde: verliezers direct koppelen
+        for ($i = 0; $i < $aantalWedstrijdenInRonde; $i++) {
+            $wedstrijd = Wedstrijd::create([
+                'poule_id' => $poule->id,
+                'judoka_wit_id' => null,
+                'judoka_blauw_id' => null,
+                'volgorde' => $volgorde++,
+                'ronde' => "herkansing_r{$herkansingRonde}",
+                'groep' => 'B',
+                'bracket_positie' => $i + 1,
+            ]);
 
-            // Matches in this repechage round
-            $nieuweHerkansingWedstrijden = [];
+            // Link verliezers uit hoofdboom
+            $bronWedstrijd1 = $echteWedstrijdenArray[$i * 2] ?? null;
+            $bronWedstrijd2 = $echteWedstrijdenArray[$i * 2 + 1] ?? null;
 
-            if (empty($vorigeHerkansingWedstrijden)) {
-                // First repechage round: losers face each other
-                $aantalWedstrijden = intdiv($verliezersUitRonde, 2);
-
-                for ($i = 0; $i < $aantalWedstrijden; $i++) {
-                    $wedstrijd = Wedstrijd::create([
-                        'poule_id' => $poule->id,
-                        'judoka_wit_id' => null, // Filled when loser is determined
-                        'judoka_blauw_id' => null,
-                        'volgorde' => $volgorde++,
-                        'ronde' => "herkansing_r{$herkansingRonde}",
-                        'groep' => 'B',
-                        'bracket_positie' => $i + 1,
-                    ]);
-
-                    // Link main bracket losers to this repechage match
-                    $bronWedstrijd1 = $wedstrijden[$i * 2] ?? null;
-                    $bronWedstrijd2 = $wedstrijden[$i * 2 + 1] ?? null;
-
-                    if ($bronWedstrijd1) {
-                        $bronWedstrijd1->update([
-                            'herkansing_wedstrijd_id' => $wedstrijd->id,
-                            'verliezer_naar_slot' => 'wit',
-                        ]);
-                    }
-                    if ($bronWedstrijd2) {
-                        $bronWedstrijd2->update([
-                            'herkansing_wedstrijd_id' => $wedstrijd->id,
-                            'verliezer_naar_slot' => 'blauw',
-                        ]);
-                    }
-
-                    $nieuweHerkansingWedstrijden[] = $wedstrijd;
-                    $herkansingsWedstrijden[] = $wedstrijd;
-                }
-            } else {
-                // Subsequent repechage rounds: previous winners + new losers
-                $aantalVorigeWinnaars = count($vorigeHerkansingWedstrijden);
-                $aantalNieuwVerliezers = $verliezersUitRonde;
-
-                // Create matches: vorige winnaar vs nieuwe verliezer
-                $aantalWedstrijden = min($aantalVorigeWinnaars, $aantalNieuwVerliezers);
-
-                for ($i = 0; $i < $aantalWedstrijden; $i++) {
-                    $wedstrijd = Wedstrijd::create([
-                        'poule_id' => $poule->id,
-                        'judoka_wit_id' => null,
-                        'judoka_blauw_id' => null,
-                        'volgorde' => $volgorde++,
-                        'ronde' => "herkansing_r{$herkansingRonde}",
-                        'groep' => 'B',
-                        'bracket_positie' => $i + 1,
-                    ]);
-
-                    // Link previous repechage winner
-                    $vorigeWedstrijd = $vorigeHerkansingWedstrijden[$i] ?? null;
-                    if ($vorigeWedstrijd) {
-                        $vorigeWedstrijd->update([
-                            'volgende_wedstrijd_id' => $wedstrijd->id,
-                            'winnaar_naar_slot' => 'wit',
-                        ]);
-                    }
-
-                    // Link main bracket loser
-                    $bronWedstrijd = $wedstrijden->values()[$i] ?? null;
-                    if ($bronWedstrijd) {
-                        $bronWedstrijd->update([
-                            'herkansing_wedstrijd_id' => $wedstrijd->id,
-                            'verliezer_naar_slot' => 'blauw',
-                        ]);
-                    }
-
-                    $nieuweHerkansingWedstrijden[] = $wedstrijd;
-                    $herkansingsWedstrijden[] = $wedstrijd;
-                }
+            if ($bronWedstrijd1) {
+                $bronWedstrijd1->update([
+                    'herkansing_wedstrijd_id' => $wedstrijd->id,
+                    'verliezer_naar_slot' => 'wit',
+                ]);
+            }
+            if ($bronWedstrijd2) {
+                $bronWedstrijd2->update([
+                    'herkansing_wedstrijd_id' => $wedstrijd->id,
+                    'verliezer_naar_slot' => 'blauw',
+                ]);
             }
 
-            $vorigeHerkansingWedstrijden = $nieuweHerkansingWedstrijden;
+            $huidigeRondeWedstrijden[] = $wedstrijd;
+            $herkansingsWedstrijden[] = $wedstrijd;
+        }
+
+        // Volgende rondes: winnaars tegen elkaar (standaard halvering)
+        // STOP bij 2 wedstrijden (halve finales) - geen finale in Groep B
+        // Die winnaars gaan naar bronswedstrijden
+        while (count($huidigeRondeWedstrijden) > 2) {
             $herkansingRonde++;
+            $volgendeRondeWedstrijden = [];
+            $aantalWedstrijdenInRonde = intdiv(count($huidigeRondeWedstrijden), 2);
+
+            for ($i = 0; $i < $aantalWedstrijdenInRonde; $i++) {
+                $wedstrijd = Wedstrijd::create([
+                    'poule_id' => $poule->id,
+                    'judoka_wit_id' => null,
+                    'judoka_blauw_id' => null,
+                    'volgorde' => $volgorde++,
+                    'ronde' => "herkansing_r{$herkansingRonde}",
+                    'groep' => 'B',
+                    'bracket_positie' => $i + 1,
+                ]);
+
+                // Link vorige ronde winnaars
+                $vorigeWedstrijd1 = $huidigeRondeWedstrijden[$i * 2] ?? null;
+                $vorigeWedstrijd2 = $huidigeRondeWedstrijden[$i * 2 + 1] ?? null;
+
+                if ($vorigeWedstrijd1) {
+                    $vorigeWedstrijd1->update([
+                        'volgende_wedstrijd_id' => $wedstrijd->id,
+                        'winnaar_naar_slot' => 'wit',
+                    ]);
+                }
+                if ($vorigeWedstrijd2) {
+                    $vorigeWedstrijd2->update([
+                        'volgende_wedstrijd_id' => $wedstrijd->id,
+                        'winnaar_naar_slot' => 'blauw',
+                    ]);
+                }
+
+                $volgendeRondeWedstrijden[] = $wedstrijd;
+                $herkansingsWedstrijden[] = $wedstrijd;
+            }
+
+            $huidigeRondeWedstrijden = $volgendeRondeWedstrijden;
         }
 
         return $herkansingsWedstrijden;

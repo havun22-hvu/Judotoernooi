@@ -8,6 +8,71 @@ Het eliminatiesysteem werkt met twee groepen:
 - **Groep A (Hoofdboom)**: Winnaars bracket naar de finale
 - **Groep B (Herkansing)**: Verliezers krijgen een tweede kans voor brons
 
+## Complete Flow
+
+### Voorbereiding (dagen/weken voor toernooi)
+
+1. **Instellingen invullen** - Organisator configureert toernooi
+   - Leeftijdsklassen, gewichtsklassen
+   - Per categorie: poule-systeem of eliminatie-systeem
+
+2. **Aanmeldingen** - Deelnemers registreren
+   - Via coach-portal (judocoaches melden hun judoka's aan)
+   - Via import (Excel, CSV, TXT bestand)
+
+3. **Poules maken** - Op basis van instellingen
+   - Judoka's worden ingedeeld in gewichtscategorieën per leeftijdsgroep
+   - Bij eliminatie: alle judoka's in één groep (geen poule-splits)
+   - **Nog geen wedstrijdschema's!** Alleen groepering van deelnemers
+
+4. **Blokken verdelen** - Gewichtscategorieën over tijdsblokken
+   - Per leeftijdsgroep de gewichtscategorieën toewijzen aan blokken
+
+5. **Zaaloverzicht** - Verdeling over matten
+   - Gewichtscategorieën toewijzen aan matten binnen elk blok
+
+→ **Hierna:** Weeglijst, weegkaarten en coachkaarten aanmaken
+
+---
+
+### Toernooidag (per blok)
+
+6. **Wegen** - Judoka's worden gewogen
+   - Registratie van daadwerkelijk gewicht
+
+7. **Ompoulen** (na sluiting wegingstijd) - In Wedstrijddag
+   - Afwezige judoka's verwijderen
+   - Judoka's met afwijkend gewicht verplaatsen naar juiste categorie
+   - Eventueel nieuwe poules maken of samenvoegen
+
+8. **Zaaloverzicht** - Per gewichtscategorie die klaar is met ompoulen
+   - Controleren/aanpassen verdeling over matten
+   - Zorgen voor goede spreiding
+
+9. **"Op de mat zetten"** - **HIER wordt het schema aangemaakt!**
+   - Vanuit zaaloverzicht: gewichtscategorie "op de mat zetten"
+   - Bij poule-systeem: wedstrijdschema (round-robin) wordt gegenereerd
+   - Bij eliminatie: bracket (Groep A + Groep B + brons) wordt gegenereerd
+   - Schema verschijnt op de juiste mat in het juiste blok
+
+10. **Wedstrijden** - Uitvoering
+    - Wedstrijden spelen volgens schema
+    - Uitslagen invoeren
+    - Bij eliminatie: winnaars/verliezers stromen automatisch door
+
+11. **Einde** - Afronding per gewichtscategorie
+    - Resultaat naar spreker (voor uitreiking)
+    - Overzicht naar judoschool/organisator
+
+---
+
+### Belangrijk principe
+
+**Schema's worden ALLEEN aangemaakt vanuit Zaaloverzicht bij "op de mat zetten":**
+- Pas dan is bekend WIE er daadwerkelijk meedoet (na weging/ompoulen)
+- Pas dan is bekend op WELKE MAT ze staan
+- Nieuwe poules in Wedstrijddag → eerst naar Zaaloverzicht → dan pas schema
+
 ## Groep A - Hoofdboom
 
 ### Structuur
@@ -196,3 +261,40 @@ if ($wedstrijd->groep === 'A') {
     }
 }
 ```
+
+## Mat Interface: Eliminatie Weergave
+
+De mat interface moet een eliminatie-categorie anders tonen dan een poule (round-robin):
+
+### Weergave structuur
+- **Hoofdboom (Groep A)**: Eliminatieschema van links naar rechts
+  - Per ronde een kolom (kwartfinale → halve finale → finale)
+  - Winnaars schuiven visueel naar rechts
+- **Herkansing (Groep B)**: Apart schema onder de hoofdboom
+  - Verliezers stromen in vanuit Groep A
+- **Bronswedstrijden**: Twee aparte wedstrijd-kaarten
+
+### Interactie
+- Klik op wedstrijd → uitslag invoeren
+- Winnaar selecteren → automatisch doorschuiven naar volgende wedstrijd
+- Verliezer (Groep A) → automatisch naar herkansing
+
+### Judoka verplaatsen (voor "op de mat zetten")
+- Judoka's moeten verplaatsbaar zijn naar andere categorie (net als bij poule-indeling)
+- Dit kan alleen VOORDAT het bracket gegenereerd is
+- Na generatie: bracket opnieuw genereren indien nodig
+
+## Implementatie Status
+
+### Gereed
+- [x] EliminatieService: schema generatie (hoofdboom, herkansing, brons)
+- [x] EliminatieService: uitslag verwerking (doorschuiven winnaars/verliezers)
+- [x] Zaaloverzicht: "op de mat zetten" genereert eliminatieschema
+- [x] Database velden: groep, ronde, bracket_positie, volgende_wedstrijd_id, etc.
+
+### Nog te implementeren
+- [ ] Mat Interface: eliminatieschema weergave (ipv matrix)
+- [ ] Mat Interface: uitslag invoer met automatisch doorschuiven
+- [ ] Mat Interface: visuele feedback welke wedstrijden speelbaar zijn
+- [ ] Wedstrijddag: judoka verplaatsen voor eliminatie-categorieën
+- [ ] Spreker view: eindstand tonen voor eliminatie (1e, 2e, 2x 3e)
