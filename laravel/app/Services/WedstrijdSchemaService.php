@@ -200,6 +200,7 @@ class WedstrijdSchemaService
                         $wedstrijd['ronde'] = $w->ronde;
                         $wedstrijd['bracket_positie'] = $w->bracket_positie;
                         $wedstrijd['volgende_wedstrijd_id'] = $w->volgende_wedstrijd_id;
+                        $wedstrijd['winnaar_naar_slot'] = $w->winnaar_naar_slot;
                         $wedstrijd['uitslag_type'] = $w->uitslag_type;
                     }
 
