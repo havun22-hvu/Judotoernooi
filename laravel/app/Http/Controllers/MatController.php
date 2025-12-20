@@ -82,13 +82,17 @@ class MatController extends Controller
 
         // Check if this is an elimination match (has groep field)
         if ($wedstrijd->groep) {
-            // Update the match - NO auto-advance, mat does it manually
             $wedstrijd->update([
                 'winnaar_id' => $validated['winnaar_id'],
                 'is_gespeeld' => (bool) $validated['winnaar_id'],
                 'uitslag_type' => $validated['uitslag_type'] ?? 'eliminatie',
                 'gespeeld_op' => $validated['winnaar_id'] ? now() : null,
             ]);
+
+            // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
+            if ($validated['winnaar_id']) {
+                $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
+            }
 
             return response()->json(['success' => true]);
         } else {
