@@ -148,9 +148,10 @@ class Judoka extends Model
     /**
      * Calculate the judoka base code for pool assignment (without volgnummer)
      * Format: LLGGBG (Leeftijd-Gewicht-Band-Geslacht) for both settings
-     * Band code differs based on toernooi setting:
-     * - gewicht_band: wit=6, zwart=0 (high belts first)
-     * - band_gewicht: wit=0, zwart=6 (low belts first)
+     * Band code logic:
+     * - gebruik_gewichtsklassen ON: always wit=0, zwart=6 (low belts first within weight class)
+     * - gebruik_gewichtsklassen OFF + band_gewicht: wit=0, zwart=6 (low belts first)
+     * - gebruik_gewichtsklassen OFF + gewicht_band: wit=6, zwart=0 (sorted by weight, band secondary)
      */
     public function berekenBasisCode(): string
     {
@@ -164,15 +165,21 @@ class Judoka extends Model
         // Gender code
         $geslachtCode = strtoupper($this->geslacht);
 
-        // Check toernooi setting for band order
+        // Check toernooi settings
+        $gebruikGewichtsklassen = $this->toernooi?->gebruik_gewichtsklassen ?? true;
         $volgorde = $this->toernooi?->judoka_code_volgorde ?? 'gewicht_band';
         $bandEnum = $this->band_enum;
 
-        if ($volgorde === 'band_gewicht') {
-            // Band code reversed: wit=0, geel=1, oranje=2, groen=3, blauw=4, bruin=5, zwart=6
+        // Determine band code order
+        // If using weight classes: always low belts first (wit=0)
+        // If not using weight classes: follow judoka_code_volgorde setting
+        $bandLaagEerst = $gebruikGewichtsklassen || $volgorde === 'band_gewicht';
+
+        if ($bandLaagEerst) {
+            // Band code: wit=0, geel=1, oranje=2, groen=3, blauw=4, bruin=5, zwart=6
             $bandCode = $bandEnum ? (6 - $bandEnum->kyu()) : 'X';
         } else {
-            // Default band code: wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
+            // Band code reversed: wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
             $bandCode = $bandEnum ? $bandEnum->kyu() : 'X';
         }
 

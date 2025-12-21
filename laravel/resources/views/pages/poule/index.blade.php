@@ -7,19 +7,19 @@
     <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
-        <button onclick="openNieuwePouleModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            + Nieuwe poule
-        </button>
-        <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            Verifieer poules
-        </button>
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
               onsubmit="return confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
-                Herindelen
+                (her)Verdelen
             </button>
         </form>
+        <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            Verifieer poules
+        </button>
+        <button onclick="openNieuwePouleModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            + Nieuwe poule
+        </button>
     </div>
 </div>
 

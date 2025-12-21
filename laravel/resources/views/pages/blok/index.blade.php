@@ -91,7 +91,7 @@
                 <span class="text-gray-600 whitespace-nowrap">Aansluiting</span>
             </div>
             <button type="submit" id="bereken-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded min-w-[160px]">
-                <span id="bereken-tekst">(Her)bereken</span>
+                <span id="bereken-tekst">(her)Bereken</span>
                 <span id="bereken-loading" style="display: none;">
                     <svg class="animate-spin inline-block w-4 h-4 align-middle" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

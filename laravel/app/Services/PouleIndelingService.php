@@ -158,8 +158,12 @@ class PouleIndelingService
                 // Split into optimal pools (normal flow)
                 $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
+                // Get sorting mode for title generation
+                $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
+                $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
+
                 foreach ($pouleVerdelingen as $pouleJudokas) {
-                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer);
+                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde);
 
                     $poule = Poule::create([
                         'toernooi_id' => $toernooi->id,
@@ -317,32 +321,47 @@ class PouleIndelingService
     }
 
     /**
-     * Group judokas by age class, weight class, and (for U15+) gender
-     * Sorted by judoka_code (leeftijd → gewicht → band) for correct ordering
+     * Group judokas by age class, (optionally) weight class, and (for U15+) gender
+     * Sorted by judoka_code for correct ordering
+     *
+     * If gebruik_gewichtsklassen is OFF: group only by leeftijd (+ geslacht for older)
+     * If gebruik_gewichtsklassen is ON: group by leeftijd + gewichtsklasse (+ geslacht for older)
      */
     private function groepeerJudokas(Toernooi $toernooi): Collection
     {
-        // Sort by judoka_code: leeftijd → gewicht → band → geslacht
+        // Default to true if null (for backwards compatibility)
+        $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
+
+        // Sort by judoka_code (already sorted correctly based on settings)
         $judokas = $toernooi->judokas()
             ->orderBy('judoka_code')
             ->get();
 
-        $groepen = $judokas->groupBy(function (Judoka $judoka) {
+        $groepen = $judokas->groupBy(function (Judoka $judoka) use ($gebruikGewichtsklassen) {
             $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
-            $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
             $geslacht = strtoupper($judoka->geslacht);
 
             // For U15, U18, U21 and Senioren: separate by gender
             $oudereCategorien = ['U15', 'U18', 'U21', 'Senioren'];
-            if (in_array($leeftijdsklasse, $oudereCategorien)) {
-                return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
-            }
+            $includeGeslacht = in_array($leeftijdsklasse, $oudereCategorien);
 
-            // For younger categories (U9, U11, U13): mixed gender
-            return "{$leeftijdsklasse}|{$gewichtsklasse}";
+            if ($gebruikGewichtsklassen) {
+                // Met gewichtsklassen: groepeer per leeftijd + gewichtsklasse
+                $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
+                if ($includeGeslacht) {
+                    return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
+                }
+                return "{$leeftijdsklasse}|{$gewichtsklasse}";
+            } else {
+                // Zonder gewichtsklassen: groepeer alleen per leeftijd
+                if ($includeGeslacht) {
+                    return "{$leeftijdsklasse}||{$geslacht}";
+                }
+                return "{$leeftijdsklasse}|";
+            }
         });
 
-        // Sort groups by leeftijd order, then gewicht
+        // Sort groups by leeftijd order, then gewicht (if applicable)
         return $groepen->sortBy(function ($judokas, $key) {
             $delen = explode('|', $key);
             $leeftijd = $delen[0] ?? '';
@@ -351,7 +370,7 @@ class PouleIndelingService
             // Leeftijd order: Mini's=1, A-pup=2, B-pup=3, etc.
             $leeftijdOrder = $this->getLeeftijdOrder($leeftijd);
 
-            // Gewicht: numeriek sorteren
+            // Gewicht: numeriek sorteren (0 if no weight class)
             $gewichtNum = intval(preg_replace('/[^0-9]/', '', $gewicht));
             $gewichtPlus = str_starts_with($gewicht, '+') ? 1000 : 0;
 
@@ -564,16 +583,13 @@ class PouleIndelingService
 
     /**
      * Create standardized pool title
+     * - With weight classes: "A-pupillen -30 kg"
+     * - Without weight classes + gewicht_band: "A-pupillen 23-26 kg"
+     * - Without weight classes + band_gewicht: "A-pupillen wit-geel"
      */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr): string
+    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band'): string
     {
         $lk = $leeftijdsklasse ?: 'Onbekend';
-        $gk = $gewichtsklasse ?: 'Onbekend gewicht';
-
-        // Format weight class
-        if (!str_contains($gk, 'kg')) {
-            $gk .= ' kg';
-        }
 
         // Add gender for older categories
         $geslachtLabel = match ($geslacht) {
@@ -582,11 +598,48 @@ class PouleIndelingService
             default => null,
         };
 
-        if ($geslachtLabel) {
-            return "{$lk} {$geslachtLabel} {$gk} Poule {$pouleNr}";
+        // Determine the range/class label
+        $rangeLabel = '';
+
+        if ($gebruikGewichtsklassen && !empty($gewichtsklasse)) {
+            // With weight classes: show weight class
+            $rangeLabel = $gewichtsklasse;
+            if (!str_contains($rangeLabel, 'kg')) {
+                $rangeLabel .= ' kg';
+            }
+        } elseif (!empty($pouleJudokas)) {
+            // Without weight classes: calculate range from judokas
+            if ($volgorde === 'band_gewicht') {
+                // Band-first: show band range
+                $banden = array_map(fn($j) => $j->band, $pouleJudokas);
+                $bandOrder = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
+                usort($banden, fn($a, $b) => ($bandOrder[$a] ?? 99) <=> ($bandOrder[$b] ?? 99));
+                $minBand = ucfirst($banden[0] ?? 'wit');
+                $maxBand = ucfirst(end($banden) ?: 'wit');
+                $rangeLabel = $minBand === $maxBand ? $minBand : "{$minBand}-{$maxBand}";
+            } else {
+                // Weight-first: show weight range
+                $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                if (!empty($gewichten)) {
+                    $minGewicht = min($gewichten);
+                    $maxGewicht = max($gewichten);
+                    $rangeLabel = $minGewicht == $maxGewicht
+                        ? "{$minGewicht} kg"
+                        : "{$minGewicht}-{$maxGewicht} kg";
+                }
+            }
         }
 
-        return "{$lk} {$gk} Poule {$pouleNr}";
+        // Build title
+        $parts = [$lk];
+        if ($geslachtLabel) {
+            $parts[] = $geslachtLabel;
+        }
+        if ($rangeLabel) {
+            $parts[] = $rangeLabel;
+        }
+
+        return implode(' ', $parts);
     }
 
     /**
@@ -624,24 +677,18 @@ class PouleIndelingService
 
     /**
      * Recalculate all judoka codes for tournament
-     * Order depends on toernooi setting (judoka_code_volgorde)
+     * Order depends on toernooi settings:
+     * - gebruik_gewichtsklassen ON: Leeftijd → Gewichtsklasse → Band (laag→hoog)
+     * - gebruik_gewichtsklassen OFF + gewicht_band: Leeftijd → Werkelijk gewicht → Band
+     * - gebruik_gewichtsklassen OFF + band_gewicht: Leeftijd → Band → Werkelijk gewicht
      */
     public function herberekenJudokaCodes(Toernooi $toernooi): int
     {
+        // Default to true if null (for backwards compatibility)
+        $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
         $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
 
-        // Band order: high to low (zwart first) for default
-        $bandOrderHighToLow = "CASE band
-            WHEN 'zwart' THEN 0
-            WHEN 'bruin' THEN 1
-            WHEN 'blauw' THEN 2
-            WHEN 'groen' THEN 3
-            WHEN 'oranje' THEN 4
-            WHEN 'geel' THEN 5
-            WHEN 'wit' THEN 6
-            ELSE 7 END";
-
-        // Band order: low to high (wit first) for band_gewicht
+        // Band order: low to high (wit first) - always used now
         $bandOrderLowToHigh = "CASE band
             WHEN 'wit' THEN 0
             WHEN 'geel' THEN 1
@@ -655,17 +702,21 @@ class PouleIndelingService
         $query = $toernooi->judokas()
             ->orderBy('leeftijdsklasse');
 
-        if ($volgorde === 'band_gewicht') {
-            // Leeftijd → Gewicht → Band (laag naar hoog) → Geslacht
-            // Band sortering binnen gewichtsklasse, lage banden eerst
+        if ($gebruikGewichtsklassen) {
+            // Gewichtsklassen AAN: Leeftijd → Gewichtsklasse → Band (laag→hoog) → Geslacht
             $query->orderBy('gewichtsklasse')
                   ->orderByRaw($bandOrderLowToHigh)
                   ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
+        } elseif ($volgorde === 'band_gewicht') {
+            // Gewichtsklassen UIT + band_gewicht: Leeftijd → Band → Werkelijk gewicht → Geslacht
+            $query->orderByRaw($bandOrderLowToHigh)
+                  ->orderBy('gewicht')
+                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
         } else {
-            // Leeftijd → Gewicht → Band (hoog naar laag) → Geslacht (default)
-            $query->orderBy('gewichtsklasse')
-                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END")
-                  ->orderByRaw($bandOrderHighToLow);
+            // Gewichtsklassen UIT + gewicht_band: Leeftijd → Werkelijk gewicht → Band → Geslacht
+            $query->orderBy('gewicht')
+                  ->orderByRaw($bandOrderLowToHigh)
+                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
         }
 
         $judokas = $query->orderBy('naam')->get();
