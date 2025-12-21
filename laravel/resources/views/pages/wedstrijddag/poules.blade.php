@@ -258,10 +258,10 @@
                         </div>
 
                         {{-- Wachtruimte (rechts) --}}
-                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0">
+                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
                                 <span>Wachtruimte</span>
-                                <span class="text-xs text-orange-400">{{ count($category['wachtruimte']) }}</span>
+                                <span class="text-xs text-orange-400 wachtruimte-count">{{ count($category['wachtruimte']) }}</span>
                             </div>
                             <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
                                 @forelse($category['wachtruimte'] as $judoka)
@@ -616,6 +616,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Update stats without full reload
                         if (data.van_poule) updatePouleStats(data.van_poule);
                         if (data.naar_poule) updatePouleStats(data.naar_poule);
+
+                        // Update wachtruimte count if dragged from wachtruimte
+                        if (evt.from.classList.contains('sortable-wachtruimte')) {
+                            const wachtruimteContainer = evt.from.closest('.wachtruimte-container');
+                            const countEl = wachtruimteContainer?.querySelector('.wachtruimte-count');
+                            if (countEl) {
+                                const newCount = Math.max(0, parseInt(countEl.textContent) - 1);
+                                countEl.textContent = newCount;
+                            }
+                        }
                     } else {
                         alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
                         window.location.reload();
