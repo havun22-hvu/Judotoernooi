@@ -126,17 +126,11 @@ class WedstrijddagController extends Controller
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
-            $oudePoule->load('judokas'); // Reload judokas relation
-
-            // Count ACTIVE judokas (not absent, within weight class)
-            $actieveJudokas = $oudePoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
-            $aantalActief = $actieveJudokas->count();
-            $aantalWedstrijden = $oudePoule->berekenAantalWedstrijden($aantalActief);
 
             $oudePouleData = [
                 'id' => $oudePoule->id,
-                'aantal_judokas' => $aantalActief,
-                'aantal_wedstrijden' => $aantalWedstrijden,
+                'aantal_judokas' => $oudePoule->aantal_judokas,
+                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
             ];
         } else {
             // From wachtruimte - detach from ALL current poules
@@ -168,20 +162,15 @@ class WedstrijddagController extends Controller
         }
 
         $nieuwePoule->updateStatistieken();
-        $nieuwePoule->load('judokas'); // Reload judokas relation
 
-        // Count ACTIVE judokas for nieuwe poule
-        $actieveNieuw = $nieuwePoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
-        $aantalActiefNieuw = $actieveNieuw->count();
-        $aantalWedstrijdenNieuw = $nieuwePoule->berekenAantalWedstrijden($aantalActiefNieuw);
-
+        // Return stored values from database (single source of truth)
         return response()->json([
             'success' => true,
             'van_poule' => $oudePouleData,
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
-                'aantal_judokas' => $aantalActiefNieuw,
-                'aantal_wedstrijden' => $aantalWedstrijdenNieuw,
+                'aantal_judokas' => $nieuwePoule->aantal_judokas,
+                'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
             ],
         ]);
     }
@@ -214,19 +203,20 @@ class WedstrijddagController extends Controller
         // Find max nummer across entire tournament (nummer must be unique per toernooi)
         $maxNummer = Poule::where('toernooi_id', $toernooi->id)->max('nummer') ?? 0;
 
-        // Find the blok/mat for this category (same leeftijdsklasse + gewichtsklasse)
-        // Must have mat_id to copy from (avoid copying from empty new poules)
+        // Find the blok for this category (same leeftijdsklasse + gewichtsklasse)
         $existingPoule = Poule::where('toernooi_id', $toernooi->id)
             ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
             ->where('gewichtsklasse', $validated['gewichtsklasse'])
             ->whereNotNull('blok_id')
-            ->whereNotNull('mat_id')
             ->first();
+
+        // New poules always go to mat 1 (will be redistributed in zaaloverzicht)
+        $mat1 = $toernooi->matten()->orderBy('nummer')->first();
 
         $poule = Poule::create([
             'toernooi_id' => $toernooi->id,
             'blok_id' => $existingPoule?->blok_id,
-            'mat_id' => $existingPoule?->mat_id,
+            'mat_id' => $mat1?->id,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $validated['gewichtsklasse'],
             'nummer' => $maxNummer + 1,

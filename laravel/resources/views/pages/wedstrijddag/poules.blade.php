@@ -83,14 +83,12 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
-                            // Check of categorie actieve judoka's heeft en of er lege poules zijn
-                            $catTolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-                            $totaalActiefInCategorie = 0;
+                            // Use stored database values (single source of truth)
+                            $totaalJudokasInCategorie = 0;
                             $aantalLegePoules = 0;
                             foreach ($category['poules'] as $p) {
-                                $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($catTolerantie))->count();
-                                $totaalActiefInCategorie += $actief;
-                                if ($actief === 0) $aantalLegePoules++;
+                                $totaalJudokasInCategorie += $p->aantal_judokas;
+                                if ($p->aantal_judokas === 0) $aantalLegePoules++;
                             }
                         @endphp
                         @if(!$isEliminatie)
@@ -103,7 +101,7 @@
                         </button>
                         @endif
                     </div>
-                    @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
+                    @if($totaalJudokasInCategorie > 0 && $aantalLegePoules === 0)
                     @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
                     <button
                         onclick="naarZaaloverzicht('{{ $jsKey }}')"
@@ -114,7 +112,7 @@
                     </button>
                     @elseif($aantalLegePoules > 0 && !$isEliminatie)
                     <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
-                    @elseif($totaalActiefInCategorie === 0)
+                    @elseif($totaalJudokasInCategorie === 0)
                     <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
                     @endif
                 </div>
@@ -124,8 +122,8 @@
                     {{-- Eliminatie: één grote box met alle judoka's in grid --}}
                     @php
                         $elimPoule = $category['poules']->first();
-                        $actieveJudokas = $elimPoule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
-                        $aantalActief = $actieveJudokas->count();
+                        // Use stored database values
+                        $aantalJudokasElim = $elimPoule->aantal_judokas;
                     @endphp
                     <div class="mb-3 flex justify-end" x-data="{ open: false }">
                         <div class="relative">
@@ -144,8 +142,8 @@
                     </div>
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
-                            <span class="font-bold">{{ $aantalActief }} judoka's</span>
-                            <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActief) }} wedstrijden</span>
+                            <span class="font-bold">{{ $aantalJudokasElim }} judoka's</span>
+                            <span class="text-sm text-orange-200">~{{ $elimPoule->aantal_wedstrijden }} wedstrijden</span>
                         </div>
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             @foreach($elimPoule->judokas as $judoka)
@@ -178,28 +176,26 @@
                         <div class="flex flex-wrap gap-4 flex-1">
                             @foreach($category['poules'] as $poule)
                             @php
-                                // Tel alleen actieve judoka's (niet afwezig en binnen gewichtsklasse)
-                                $actieveJudokas = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
-                                $aantalActief = $actieveJudokas->count();
-                                $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
-                                $heeftDoorgestreept = $poule->judokas->count() > $aantalActief;
-                                $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
+                                // Use stored database values (single source of truth)
+                                $aantalJudokas = $poule->aantal_judokas;
+                                $aantalWedstrijden = $poule->aantal_wedstrijden;
+                                $isProblematisch = $aantalJudokas > 0 && $aantalJudokas < 3;
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
-                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }}"
+                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card {{ $aantalJudokas === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }}"
                                 data-poule-id="{{ $poule->id }}"
                                 data-poule-nummer="{{ $poule->nummer }}"
                                 data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}"
                                 data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}"
-                                data-actief="{{ $aantalActief }}"
+                                data-actief="{{ $aantalJudokas }}"
                             >
-                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
+                                <div class="{{ $aantalJudokas === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
                                     <div class="pointer-events-none">
                                         <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
-                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+                                        <div class="text-xs {{ $aantalJudokas === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalJudokas }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
-                                    @if($aantalActief === 0)
+                                    @if($aantalJudokas === 0)
                                     <button
                                         onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                                         class="delete-poule-btn w-8 h-8 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2"

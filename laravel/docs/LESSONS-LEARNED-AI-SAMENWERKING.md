@@ -279,5 +279,81 @@ Bij het bouwen van een print-versie van het wedstrijdschema ging veel tijd verlo
 ❌ "Ik maak wel iets dat lijkt op..." → Kost veel iteraties
 ✅ "Ik bouw exact na wat ik zie" → Direct goed
 
+---
 
+## Les: Single Source of Truth voor Counts
+
+> Bron: Judoka/wedstrijden count mismatch (dec 2025)
+
+### Probleem
+
+De judoka count in poules werd inconsistent weergegeven:
+- Database telde 5 judoka's
+- Frontend toonde 4 judoka's
+- Dit probleem keerde 10+ keer terug ondanks "fixes"
+
+### Oorzaak
+
+Er waren **twee bronnen** voor dezelfde data:
+
+1. **Database** (`Poule::updateStatistieken()`) → telde ALLE judoka's
+2. **Frontend filter** → telde alleen ACTIEVE judoka's (niet afwezig, correct gewicht)
+
+```php
+// FOUT: filtering in de view
+$actieveJudokas = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd());
+$aantal = $actieveJudokas->count();
+
+// GOED: database waarde gebruiken
+$aantal = $poule->aantal_judokas;
+```
+
+### Oplossing: Single Source of Truth
+
+**Database is altijd de bron.** Nooit filteren of herberekenen in de view.
+
+| Wat | Gebruik |
+|-----|---------|
+| Aantal judoka's | `$poule->aantal_judokas` |
+| Aantal wedstrijden | `$poule->aantal_wedstrijden` |
+| Totaal categorie | `sum($poule->aantal_judokas)` |
+
+### Implementatie
+
+```php
+// In Poule model - updateStatistieken()
+public function updateStatistieken(): void
+{
+    $this->update([
+        'aantal_judokas' => $this->judokas()->count(),
+        'aantal_wedstrijden' => $this->berekenAantalWedstrijden(),
+    ]);
+}
+
+// In Controller - bij elke mutatie
+$poule->updateStatistieken();
+
+// Return stored values, never recalculate
+return response()->json([
+    'aantal_judokas' => $poule->aantal_judokas,
+    'aantal_wedstrijden' => $poule->aantal_wedstrijden,
+]);
+```
+
+### Regels
+
+1. **Nooit** `->count()` of `->filter()->count()` in views
+2. **Altijd** `updateStatistieken()` aanroepen na mutatie
+3. **Altijd** database waarden returnen in API responses
+4. **Nooit** herberekenen wat al opgeslagen is
+
+### Anti-pattern
+
+❌ `$poule->judokas->filter(...)->count()` in view
+❌ `berekenAantalWedstrijden($aantalActief)` met gefilterde count
+❌ Verschillende tellingen op verschillende plekken
+
+✅ `$poule->aantal_judokas` overal
+✅ `$poule->aantal_wedstrijden` overal
+✅ Eén plek die de waarheid bepaalt (database)
 
