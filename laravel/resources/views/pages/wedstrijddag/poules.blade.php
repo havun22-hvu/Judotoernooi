@@ -726,6 +726,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the stats in header
         const actiefSpan = pouleCard.querySelector('.poule-actief');
         const wedstrijdenSpan = pouleCard.querySelector('.poule-wedstrijden');
+
+        console.log('Spans found:', {
+            actiefSpan: !!actiefSpan,
+            wedstrijdenSpan: !!wedstrijdenSpan,
+            actiefSpanText: actiefSpan?.textContent,
+            newActief: actief,
+            newWedstrijden: wedstrijden
+        });
+
         if (actiefSpan) actiefSpan.textContent = actief;
         if (wedstrijdenSpan) wedstrijdenSpan.textContent = wedstrijden;
 
