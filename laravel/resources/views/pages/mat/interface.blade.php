@@ -1152,13 +1152,21 @@ function matInterface() {
             if (groep === 'A') {
                 const finale = laatsteRondeWedstrijden[0];
                 const winnaar = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw) : null;
-                // Winnaar gecentreerd naast finale
-                const winnaarTop = berekenPotjeTop(laatsteRondeIdx, 0) + h / 2;
+                const verliezer = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.blauw : finale.wit) : null;
+                // Winnaar (goud) en verliezer (zilver) naast finale
+                const winnaarTop = berekenPotjeTop(laatsteRondeIdx, 0) + h / 2 - 16; // Iets hoger voor goud
                 html += `<div class="relative flex-shrink-0 w-32">`;
+                // Goud (1e plaats)
                 html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
                 html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate">`;
-                html += winnaar ? winnaar.naam : '';
-                html += '</div></div></div>';
+                html += winnaar ? `🥇 ${winnaar.naam}` : '🥇';
+                html += '</div></div>';
+                // Zilver (2e plaats)
+                html += `<div class="absolute w-32" style="top: ${winnaarTop + 30}px;">`;
+                html += `<div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate">`;
+                html += verliezer ? `🥈 ${verliezer.naam}` : '🥈';
+                html += '</div></div>';
+                html += '</div>';
             } else {
                 // B groep: 2 bronzen winnaars (1 per halve finale)
                 html += `<div class="relative flex-shrink-0 w-32">`;
