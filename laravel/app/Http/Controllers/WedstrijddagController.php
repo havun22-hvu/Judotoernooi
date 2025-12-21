@@ -214,15 +214,17 @@ class WedstrijddagController extends Controller
         // Find max nummer across entire tournament (nummer must be unique per toernooi)
         $maxNummer = Poule::where('toernooi_id', $toernooi->id)->max('nummer') ?? 0;
 
-        // Find the blok for this category
+        // Find the blok for this category (same leeftijdsklasse + gewichtsklasse)
         $existingPoule = Poule::where('toernooi_id', $toernooi->id)
             ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
+            ->where('gewichtsklasse', $validated['gewichtsklasse'])
             ->whereNotNull('blok_id')
             ->first();
 
         $poule = Poule::create([
             'toernooi_id' => $toernooi->id,
             'blok_id' => $existingPoule?->blok_id,
+            'mat_id' => $existingPoule?->mat_id,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $validated['gewichtsklasse'],
             'nummer' => $maxNummer + 1,
