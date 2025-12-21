@@ -205,32 +205,6 @@
                 </div>
             </div>
 
-            <!-- Poule indeling sortering -->
-            <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-2">Poule Indeling Sortering</h3>
-                <p class="text-gray-500 text-sm mb-3">Bepaalt de volgorde waarin judoka's over poules worden verdeeld.</p>
-                <div class="flex gap-4">
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'border-blue-500 bg-blue-50' : '' }}">
-                        <input type="radio" name="judoka_code_volgorde" value="gewicht_band"
-                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600">
-                        <div>
-                            <span class="font-medium">Leeftijd → Gewicht → Band</span>
-                            <span class="block text-xs text-gray-500">Binnen gewichtsklasse: eerst zwarte banden, dan bruine, etc.</span>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'border-blue-500 bg-blue-50' : '' }}">
-                        <input type="radio" name="judoka_code_volgorde" value="band_gewicht"
-                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600">
-                        <div>
-                            <span class="font-medium">Leeftijd → Band → Gewicht</span>
-                            <span class="block text-xs text-gray-500">Eerst lagere banden (wit, geel, etc.), dan hogere. Per gewichtsklasse, of per leeftijd als er geen gewichtsklassen zijn.</span>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
             <!-- Prioriteit volgorde -->
             <div class="border-t pt-4 mt-4">
                 <div class="flex items-center gap-2 flex-wrap">
@@ -671,17 +645,27 @@
         </div>
 
         <!-- GEWICHTSKLASSEN PER LEEFTIJD -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ gebruikGewichtsklassen: {{ ($toernooi->gebruik_gewichtsklassen ?? true) ? 'true' : 'false' }} }">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Leeftijds- en Gewichtsklassen</h2>
                     <p class="text-gray-600 text-sm mt-1">Pas leeftijdsgrenzen en gewichtsklassen aan per categorie.</p>
                 </div>
                 <div class="flex items-center gap-4">
-                    <label class="flex items-center gap-2 text-sm">
-                        <input type="checkbox" id="gescheiden-toggle" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
-                        <span>Jongens/meiden gescheiden (Mini's & Pupillen)</span>
-                    </label>
+                    <div class="flex flex-col gap-1 text-sm">
+                        <label class="flex items-center gap-2">
+                            <input type="hidden" name="gebruik_gewichtsklassen" value="0">
+                            <input type="checkbox" name="gebruik_gewichtsklassen" value="1"
+                                   x-model="gebruikGewichtsklassen"
+                                   {{ old('gebruik_gewichtsklassen', $toernooi->gebruik_gewichtsklassen ?? true) ? 'checked' : '' }}
+                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                            <span>Gewichtsklassen gebruiken</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="gescheiden-toggle" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                            <span>Jongens/meiden gescheiden (Mini's & Pupillen)</span>
+                        </label>
+                    </div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
                             JBN 2025
@@ -690,6 +674,33 @@
                             JBN 2026
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Sortering alleen tonen als gewichtsklassen UIT staan -->
+            <div x-show="!gebruikGewichtsklassen" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-yellow-800 text-sm mb-2">
+                    <strong>Zonder gewichtsklassen:</strong> Judoka's worden alleen per leeftijdsgroep ingedeeld. Kies de sorteervolgorde:
+                </p>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-yellow-100 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'border-yellow-500 bg-yellow-100' : 'bg-white' }}">
+                        <input type="radio" name="judoka_code_volgorde" value="gewicht_band"
+                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'checked' : '' }}
+                               class="w-4 h-4 text-yellow-600">
+                        <div>
+                            <span class="font-medium text-sm">Gewicht → Band</span>
+                            <span class="block text-xs text-gray-500">Sorteer op werkelijk gewicht, dan band</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-yellow-100 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'border-yellow-500 bg-yellow-100' : 'bg-white' }}">
+                        <input type="radio" name="judoka_code_volgorde" value="band_gewicht"
+                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'checked' : '' }}
+                               class="w-4 h-4 text-yellow-600">
+                        <div>
+                            <span class="font-medium text-sm">Band → Gewicht</span>
+                            <span class="block text-xs text-gray-500">Sorteer op band (laag→hoog), dan gewicht</span>
+                        </div>
+                    </label>
                 </div>
             </div>
 

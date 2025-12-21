@@ -36,12 +36,15 @@
         ->map(function($p) use ($leeftijdVolgorde) {
             $lk = $p['leeftijdsklasse'] ?? '';
             $gk = $p['gewichtsklasse'] ?? '';
+            // Sorteer: nummer + 1000 als het een + categorie is (zodat +60 na -60 komt)
+            $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gk));
+            $isPlus = str_starts_with($gk, '+');
             return [
                 'leeftijdsklasse' => $lk,
                 'gewichtsklasse' => $gk,
                 'naam' => $lk . ' ' . $gk,
                 'leeftijd_sort' => $leeftijdVolgorde[$lk] ?? 99,
-                'gewicht_sort' => floatval(preg_replace('/[^0-9.]/', '', $gk)),
+                'gewicht_sort' => $gewichtNum + ($isPlus ? 1000 : 0),
             ];
         })
         ->unique('naam')
@@ -53,9 +56,14 @@
         <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
                 <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
+                @php
+                    $blokPoules = collect($blok['matten'])->sum(fn($m) => count($m['poules']));
+                    $blokWedstrijden = collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden'));
+                    $aantalMatten = count($blok['matten']);
+                    $gemPerMat = $aantalMatten > 0 ? round($blokWedstrijden / $aantalMatten, 1) : 0;
+                @endphp
                 <span class="text-gray-300 text-sm">
-                    {{ collect($blok['matten'])->sum(fn($m) => count($m['poules'])) }} poules |
-                    {{ collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden')) }} wedstrijden
+                    {{ $blokPoules }} poules | {{ $blokWedstrijden }} wedstrijden ({{ $gemPerMat }} wed/mat)
                 </span>
                 @if($blok['weging_gesloten'])
                 <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>

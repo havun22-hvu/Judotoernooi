@@ -82,14 +82,20 @@ class ToernooiController extends Controller
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label']);
 
-        // Check if judoka_code_volgorde changed
+        // Check if sorting settings changed
         $volgordeGewijzigd = isset($data['judoka_code_volgorde'])
             && $data['judoka_code_volgorde'] !== $toernooi->judoka_code_volgorde;
 
+        // Handle gebruik_gewichtsklassen checkbox (0 from hidden field, 1 from checkbox)
+        $nieuweGebruikGewichtsklassen = (bool) ($data['gebruik_gewichtsklassen'] ?? 1);
+        $oudeGebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
+        $gewichtsklassenGewijzigd = $nieuweGebruikGewichtsklassen !== $oudeGebruikGewichtsklassen;
+        $data['gebruik_gewichtsklassen'] = $nieuweGebruikGewichtsklassen;
+
         $toernooi->update($data);
 
-        // Recalculate judoka codes if volgorde changed
-        if ($volgordeGewijzigd && $toernooi->judokas()->exists()) {
+        // Recalculate judoka codes if sorting settings changed
+        if (($volgordeGewijzigd || $gewichtsklassenGewijzigd) && $toernooi->judokas()->exists()) {
             $aantal = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
             $extraMessage = " ({$aantal} judoka codes bijgewerkt)";
         } else {
