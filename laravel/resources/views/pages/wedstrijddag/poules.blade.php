@@ -633,9 +633,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const naarPouleId = evt.to.dataset.pouleId;
                 const newIndex = evt.newIndex;
 
+                console.log('Drag end:', { judokaId, vanPouleId, naarPouleId, newIndex });
+
                 // Calculate positions of all judokas in the target poule
                 const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
                     .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
+
+                console.log('Positions:', positions);
 
                 try {
                     const response = await fetch(verplaatsUrl, {
@@ -654,11 +658,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     const data = await response.json();
+                    console.log('API response:', data);
 
                     if (data.success) {
                         // Update stats without full reload
-                        if (data.van_poule) updatePouleStats(data.van_poule);
-                        if (data.naar_poule) updatePouleStats(data.naar_poule);
+                        if (data.van_poule) {
+                            console.log('Updating van_poule:', data.van_poule);
+                            updatePouleStats(data.van_poule);
+                        }
+                        if (data.naar_poule) {
+                            console.log('Updating naar_poule:', data.naar_poule);
+                            updatePouleStats(data.naar_poule);
+                        }
 
                         // Update wachtruimte count if dragged from wachtruimte
                         if (evt.from.classList.contains('sortable-wachtruimte')) {
