@@ -95,7 +95,7 @@
                         @endphp
                         @if(!$isEliminatie)
                         <button
-                            onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
+                            onclick="alert('test'); nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
                             title="Nieuwe poule toevoegen"
                         >
