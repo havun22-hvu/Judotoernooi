@@ -615,6 +615,8 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
     }
 }
 
+console.log('=== POULES.JS LOADED ===', new Date().toISOString());
+
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}';
 
