@@ -297,6 +297,7 @@ class MatController extends Controller
 
     /**
      * Remove a judoka from an elimination bracket slot (drag to trash)
+     * Als deze judoka winnaar was van een vorige wedstrijd, reset die ook
      */
     public function verwijderJudoka(Request $request, Toernooi $toernooi): JsonResponse
     {
@@ -306,13 +307,32 @@ class MatController extends Controller
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+        $judokaId = $validated['judoka_id'];
 
         // Remove judoka from the slot they were in
-        if ($wedstrijd->judoka_wit_id == $validated['judoka_id']) {
+        if ($wedstrijd->judoka_wit_id == $judokaId) {
             $wedstrijd->update(['judoka_wit_id' => null]);
-        } elseif ($wedstrijd->judoka_blauw_id == $validated['judoka_id']) {
+        } elseif ($wedstrijd->judoka_blauw_id == $judokaId) {
             $wedstrijd->update(['judoka_blauw_id' => null]);
         }
+
+        // Zoek bronwedstrijd waarvan deze judoka de winnaar was
+        $bronWedstrijd = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+            ->where('volgende_wedstrijd_id', $wedstrijd->id)
+            ->where('winnaar_id', $judokaId)
+            ->first();
+
+        // Reset bronwedstrijd als gevonden
+        if ($bronWedstrijd) {
+            $bronWedstrijd->update([
+                'winnaar_id' => null,
+                'is_gespeeld' => false,
+                'gespeeld_op' => null,
+            ]);
+        }
+
+        // Verwijder judoka ook uit B-groep als die daar stond
+        $this->eliminatieService->verwijderUitB($wedstrijd->poule_id, $judokaId);
 
         return response()->json(['success' => true]);
     }
