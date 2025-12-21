@@ -95,7 +95,7 @@
                         @endphp
                         @if(!$isEliminatie)
                         <button
-                            onclick="alert('test'); nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
+                            onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
                             title="Nieuwe poule toevoegen"
                         >
@@ -563,7 +563,6 @@ async function naarZaaloverzicht(categoryKey) {
 }
 
 async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
-    console.log('nieuwePoule called:', leeftijdsklasse, gewichtsklasse);
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
             method: 'POST',
