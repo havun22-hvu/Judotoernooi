@@ -895,9 +895,8 @@ class BlokMatVerdelingService
     public function getZaalOverzicht(Toernooi $toernooi): array
     {
         $overzicht = [];
-        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
-        foreach ($toernooi->blokken()->with('poules.mat', 'poules.judokas')->get() as $blok) {
+        foreach ($toernooi->blokken()->with('poules.mat')->get() as $blok) {
             $blokData = [
                 'nummer' => $blok->nummer,
                 'naam' => $blok->naam,
@@ -911,22 +910,15 @@ class BlokMatVerdelingService
 
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
-                    'poules' => $poules->map(function($p) use ($tolerantie) {
-                        // Count only active judoka's (not doorgestreept)
-                        $actieveJudokas = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie));
-                        $aantalActief = $actieveJudokas->count();
-
-                        // Use Poule model's calculation (respects dubbele ronde settings)
-                        $aantalWedstrijden = $p->berekenAantalWedstrijden($aantalActief);
-
+                    'poules' => $poules->map(function($p) {
                         return [
                             'id' => $p->id,
                             'nummer' => $p->nummer,
                             'titel' => $p->titel,
                             'leeftijdsklasse' => $p->leeftijdsklasse,
                             'gewichtsklasse' => $p->gewichtsklasse,
-                            'judokas' => $aantalActief,
-                            'wedstrijden' => $aantalWedstrijden,
+                            'judokas' => $p->aantal_judokas,
+                            'wedstrijden' => $p->aantal_wedstrijden,
                         ];
                     })
                     ->filter(fn($p) => $p['judokas'] > 0) // Filter empty poules
