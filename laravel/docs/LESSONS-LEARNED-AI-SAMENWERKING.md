@@ -357,3 +357,55 @@ return response()->json([
 ✅ `$poule->aantal_wedstrijden` overal
 ✅ Eén plek die de waarheid bepaalt (database)
 
+---
+
+## Les: Sortable.js onEnd Handler Locatie
+
+> Bron: Drag & drop wachtruimte naar poule werkte niet (dec 2025)
+
+### Probleem
+
+Bij drag & drop van wachtruimte naar poule werden de poule stats niet bijgewerkt. Debug logging toonde dat de code niet werd uitgevoerd.
+
+### Oorzaak
+
+**Sortable.js roept de `onEnd` handler aan van de SOURCE container, niet de TARGET!**
+
+```
+Drag van: wachtruimte (container A)
+Drag naar: poule (container B)
+
+→ A's onEnd wordt aangeroepen, NIET B's onEnd
+```
+
+### Foute aanname
+
+```javascript
+// Poule container - verwachtte dat dit werd aangeroepen
+new Sortable(pouleContainer, {
+    onEnd: function(evt) {
+        // Deze code draait NIET bij drag VAN wachtruimte
+    }
+});
+```
+
+### Correcte oplossing
+
+```javascript
+// Wachtruimte container - HIER zit de logica voor drag naar poule
+new Sortable(wachtruimteContainer, {
+    group: { name: 'shared', pull: true, put: false },
+    onEnd: function(evt) {
+        const naarPouleId = evt.to.dataset.pouleId;
+        updatePouleFromDOM(naarPouleId);  // Update TARGET poule
+    }
+});
+```
+
+### Regel
+
+Bij Sortable.js met meerdere containers:
+- `onEnd` wordt aangeroepen op de **bron** container
+- Gebruik `evt.from` voor source, `evt.to` voor target
+- Zet de update logica in de container waar je **vandaan** sleept
+

@@ -615,8 +615,6 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
     }
 }
 
-console.log('=== POULES.JS LOADED ===', new Date().toISOString());
-
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}';
 
@@ -629,25 +627,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper: update poule titelbalk direct vanuit DOM
     function updatePouleFromDOM(pouleId) {
-        console.log('updatePouleFromDOM called with:', pouleId);
         const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleId}"]`);
-        if (!pouleCard) {
-            console.log('pouleCard NOT found for id:', pouleId);
-            return;
-        }
-        console.log('pouleCard found:', pouleCard);
+        if (!pouleCard) return;
 
         const container = pouleCard.querySelector('.sortable-poule');
-        if (!container) {
-            console.log('sortable-poule container NOT found');
-            return;
-        }
+        if (!container) return;
 
         // Tel judoka's in de DOM
-        const judokaItems = container.querySelectorAll('.judoka-item');
-        const aantalJudokas = judokaItems.length;
+        const aantalJudokas = container.querySelectorAll('.judoka-item').length;
         const aantalWedstrijden = berekenWedstrijden(aantalJudokas);
-        console.log('Counted:', aantalJudokas, 'judokas,', aantalWedstrijden, 'wedstrijden');
 
         // Update data attribute
         pouleCard.dataset.actief = aantalJudokas;
@@ -655,7 +643,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update tekst in header
         const actiefSpan = pouleCard.querySelector('.poule-actief');
         const wedstrijdenSpan = pouleCard.querySelector('.poule-wedstrijden');
-        console.log('Spans:', actiefSpan, wedstrijdenSpan);
         if (actiefSpan) actiefSpan.textContent = aantalJudokas;
         if (wedstrijdenSpan) wedstrijdenSpan.textContent = aantalWedstrijden;
 
@@ -687,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCategoryStatus(categoryKey);
     }
 
-    // Initialize sortable on all poule containers
+    // Initialize sortable on all poule containers (voor drag TUSSEN poules)
     document.querySelectorAll('.sortable-poule').forEach(container => {
         new Sortable(container, {
             group: 'wedstrijddag-poules',
@@ -700,26 +687,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;
 
-                console.log('=== DRAG END ===');
-                console.log('vanPouleId:', vanPouleId, 'naarPouleId:', naarPouleId);
-                console.log('from wachtruimte?', evt.from.classList.contains('sortable-wachtruimte'));
-
-                // Direct DOM update - geen wachten op API
-                if (vanPouleId) {
-                    console.log('Updating van poule:', vanPouleId);
-                    updatePouleFromDOM(vanPouleId);
-                }
-                if (naarPouleId) {
-                    console.log('Updating naar poule:', naarPouleId);
-                    updatePouleFromDOM(naarPouleId);
-                }
-
-                // Update wachtruimte count
-                if (evt.from.classList.contains('sortable-wachtruimte')) {
-                    const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
-                    console.log('Wachtruimte countEl:', countEl, 'current:', countEl?.textContent);
-                    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
-                }
+                // Direct DOM update
+                if (vanPouleId) updatePouleFromDOM(vanPouleId);
+                if (naarPouleId) updatePouleFromDOM(naarPouleId);
 
                 // API call voor database sync (op achtergrond)
                 const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
@@ -755,7 +725,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize sortable on wachtruimte (only as source, not drop target)
+    // Initialize sortable on wachtruimte (voor drag VAN wachtruimte NAAR poule)
+    // BELANGRIJK: Bij drag van A naar B wordt A's onEnd aangeroepen, niet B's!
     document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
         new Sortable(container, {
             group: {
@@ -765,7 +736,53 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             animation: 150,
             ghostClass: 'bg-orange-200',
-            sort: false
+            sort: false,
+            onEnd: async function(evt) {
+                const judokaId = evt.item.dataset.judokaId;
+                const naarPouleId = evt.to.dataset.pouleId;
+
+                // Update poule stats in DOM
+                if (naarPouleId) {
+                    updatePouleFromDOM(naarPouleId);
+                }
+
+                // Update wachtruimte count
+                const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
+                if (countEl) {
+                    countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+                }
+
+                // API call voor database sync
+                const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
+                    .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
+
+                try {
+                    const response = await fetch(verplaatsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            judoka_id: judokaId,
+                            poule_id: naarPouleId,
+                            from_poule_id: null,
+                            positions: positions
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!data.success) {
+                        alert('Fout: ' + (data.error || data.message));
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Fout bij verplaatsen');
+                    window.location.reload();
+                }
+            }
         });
     });
 
