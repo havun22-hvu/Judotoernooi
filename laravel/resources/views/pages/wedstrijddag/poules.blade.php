@@ -278,7 +278,8 @@
                                             </div>
                                         </div>
                                         <div class="text-right text-xs ml-2 flex-shrink-0">
-                                            <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen }} kg</div>
+                                            <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
+                                            <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                                         </div>
                                     </div>
                                 </div>
