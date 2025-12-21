@@ -563,6 +563,7 @@ async function naarZaaloverzicht(categoryKey) {
 }
 
 async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
+    console.log('nieuwePoule called:', leeftijdsklasse, gewichtsklasse);
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
             method: 'POST',
@@ -575,9 +576,14 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
 
         if (response.ok) {
             window.location.reload();
+        } else {
+            const data = await response.json().catch(() => ({}));
+            console.error('Server error:', response.status, data);
+            alert('Fout bij aanmaken poule: ' + (data.message || response.status));
         }
     } catch (error) {
         console.error('Error creating poule:', error);
+        alert('Fout bij aanmaken poule: ' + error.message);
     }
 }
 
