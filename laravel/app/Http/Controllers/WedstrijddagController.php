@@ -211,11 +211,8 @@ class WedstrijddagController extends Controller
             'gewichtsklasse' => 'required|string',
         ]);
 
-        // Find max nummer for this category
-        $maxNummer = Poule::where('toernooi_id', $toernooi->id)
-            ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
-            ->where('gewichtsklasse', $validated['gewichtsklasse'])
-            ->max('nummer') ?? 0;
+        // Find max nummer across entire tournament (nummer must be unique per toernooi)
+        $maxNummer = Poule::where('toernooi_id', $toernooi->id)->max('nummer') ?? 0;
 
         // Find the blok for this category
         $existingPoule = Poule::where('toernooi_id', $toernooi->id)
