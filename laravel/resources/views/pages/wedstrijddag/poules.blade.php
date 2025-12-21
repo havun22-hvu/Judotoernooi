@@ -95,7 +95,7 @@
                         @endphp
                         @if(!$isEliminatie)
                         <button
-                            @click="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
+                            @click="$root.nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
                             title="Nieuwe poule toevoegen"
                         >
@@ -105,13 +105,13 @@
                     </div>
                     @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
                     <button
-                        @click="naarZaaloverzicht('{{ $jsKey }}')"
-                        :class="sentCategories['{{ $jsKey }}'] ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
+                        @click="$root.naarZaaloverzicht('{{ $jsKey }}')"
+                        :class="$root.sentCategories['{{ $jsKey }}'] ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
                         class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn"
                         data-category="{{ $jsKey }}"
                     >
-                        <span x-show="!sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
-                        <span x-show="sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
+                        <span x-show="!$root.sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
+                        <span x-show="$root.sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
                     </button>
                     @elseif($aantalLegePoules > 0 && !$isEliminatie)
                     <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
@@ -243,7 +243,7 @@
                                                 {{-- Verwijder knop voor doorgestreepte judoka's --}}
                                                 @if($isDoorgestreept)
                                                 <button
-                                                    @click="verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
+                                                    @click="$root.verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
                                                     class="w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-xs font-bold"
                                                     title="{{ $isAfwezig ? 'Afwezig - verwijder uit poule' : 'Afwijkend gewicht - verwijder uit poule' }}"
                                                 >−</button>
