@@ -4,56 +4,75 @@
 > Lees dit EERST bij een nieuwe sessie.
 
 ## Laatste sessie
-**Datum:** 2024-12-20
+**Datum:** 2024-12-21
 **Door:** Claude
 
 ---
 
-## Huidige status: Eliminatie Systeem
+## URGENT: Reset knop 404 fixen
 
-### Wat werkt
-- [x] EliminatieService: bracket generatie (A + B)
-- [x] Voorronde berekening: `doel = 2^n`, `voorronde = aantal - doel`
-- [x] Fairness regel: bye-judokas naar b_ronde_1, voorronde-spelers naar b_ronde_2
-- [x] Winnaar doorschuiven (A en B)
-- [x] Mat interface toont bracket met drag & drop
-- [x] Database velden: groep, ronde, bracket_positie, volgende_wedstrijd_id
+### Probleem
+Reset knop op `/toernooi` pagina geeft 404, maar route bestaat WEL (bewezen door 419 CSRF response bij directe POST).
 
-### Nog te doen
-- [ ] **Mat interface testen** met K.O. poules (blok 5, mat 1 + mat 2)
-- [ ] Bracket weergave verbeteren (lijnen tussen rondes)
-- [ ] Batch-indeling verliezers bij complete rondes testen
-- [ ] Bronswedstrijden flow testen
-- [ ] Uitslag registreren in bracket testen
+### Waar te debuggen
+1. Open F12 -> Network tab
+2. Klik Reset knop bij toernooi
+3. Check welke URL wordt aangeroepen
+
+### Gewijzigde bestanden
+- `app/Http/Controllers/ToernooiController.php` - reset() en destroy() methodes toegevoegd
+- `routes/web.php` - reset route in toernooi group
+- `resources/views/pages/toernooi/index.blade.php` - knoppen + JavaScript
+
+### JavaScript code (mogelijk probleem)
+```javascript
+function confirmReset(id, naam) {
+    if (confirm(...)) {
+        const form = document.getElementById('reset-form');
+        form.action = `/toernooi/${id}/reset`;  // <-- check dit!
+        form.submit();
+    }
+}
+```
 
 ---
 
-## Voorronde Logica (ter referentie)
+## Wat vandaag gedaan
 
-```
-Voorbeeld: 23 judoka's
-├── doel = 16 (grootste 2^n <= 23)
-├── voorronde = 23 - 16 = 7 wedstrijden
-├── voorronde_judokas = 7 × 2 = 14
-├── bye_judokas = 16 - 7 = 9 (direct naar 1/8)
-└── A-wedstrijden: 7 + 8 + 4 + 2 + 1 = 22
-```
+### 1. Toernooi Reset/Delete functionaliteit
+- **Start knop** - Gaat naar toernooi dashboard (werkt)
+- **Reset knop** - Verwijdert poules/wedstrijden, behoudt judoka's (404 probleem)
+- **Delete knop** - Alleen voor sitebeheerder (verborgen tot login werkt)
 
-| Judokas | Doel | Voorronde | Bye |
-|---------|------|-----------|-----|
-| 5       | 4    | 1         | 3   |
-| 10      | 8    | 2         | 6   |
-| 15      | 8    | 7         | 1   |
-| 20      | 16   | 4         | 12  |
-| 23      | 16   | 7         | 9   |
+### 2. SQLite sequence reset
+- Fix in `PouleIndelingService.php` - IDs worden gereset bij herindeling
+- Database handmatig gereset met PHP script
+
+### 3. Weging interface error
+- `aantal_wegingen` null error gefixed met optional chaining
 
 ---
 
-## Context vandaag
+## Nog te doen
 
-- 2 categorieën met K.O. in **blok 5** op **mat 1** en **mat 2**
-- Laravel server: http://127.0.0.1:8001
-- Database: SQLite lokaal, MySQL op server
+1. **Reset knop 404 fixen** - Debug met F12 Network tab
+2. **Eliminatie bracket testen** - Met schone data na reset
+3. **Delete knop activeren** - Na organisator login implementatie
+
+---
+
+## Test commando's
+
+```bash
+# Route cache clearen
+cd laravel && php artisan route:clear
+
+# Check reset route (moet POST tonen)
+php artisan route:list --name=reset
+
+# Direct test (419 = route werkt, 404 = probleem)
+curl -X POST http://127.0.0.1:8001/toernooi/1/reset -d "_token=test"
+```
 
 ---
 
@@ -61,13 +80,16 @@ Voorbeeld: 23 judoka's
 
 | Bestand | Doel |
 |---------|------|
-| `app/Services/EliminatieService.php` | Bracket generatie + uitslag verwerking |
-| `resources/views/pages/mat/interface.blade.php` | Mat interface (incl. eliminatie) |
-| `resources/views/pages/poule/eliminatie.blade.php` | Bracket preview pagina |
-| `docs/2-FEATURES/ELIMINATIE_SYSTEEM.md` | Volledige documentatie |
+| `app/Http/Controllers/ToernooiController.php` | reset() en destroy() methodes |
+| `routes/web.php` | Route definitie (regel 70-71) |
+| `resources/views/pages/toernooi/index.blade.php` | Knoppen en JavaScript |
+| `app/Services/EliminatieService.php` | Bracket generatie |
+| `resources/views/pages/mat/interface.blade.php` | Mat interface |
 
 ---
 
-## Notities vorige sessie
+## Context
 
-(Vul hier aan het einde van de sessie in wat belangrijk is voor morgen)
+- Laravel server: http://127.0.0.1:8001
+- Database: SQLite lokaal
+- Toernooi ID 1 = "Open Westfries Judotoernooi"

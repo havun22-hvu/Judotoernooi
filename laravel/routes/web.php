@@ -58,12 +58,18 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
 Route::get('/dashboard', [ToernooiController::class, 'dashboard'])->name('dashboard');
 
 // Toernooi management
-Route::resource('toernooi', ToernooiController::class);
+Route::resource('toernooi', ToernooiController::class)->except(['destroy']);
+Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])
+    ->middleware('auth:organisator')
+    ->name('toernooi.destroy');
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 
 // Toernooi sub-routes
 Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
+    // Reset route
+    Route::post('reset', [ToernooiController::class, 'reset'])->name('reset');
+
     // Auth routes (public)
     Route::get('login', [AuthController::class, 'loginForm'])->name('auth.login');
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
