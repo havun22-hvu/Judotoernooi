@@ -95,7 +95,7 @@
                         @endphp
                         @if(!$isEliminatie)
                         <button
-                            @click="$root.nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
+                            onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
                             title="Nieuwe poule toevoegen"
                         >
@@ -104,14 +104,13 @@
                         @endif
                     </div>
                     @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
+                    @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
                     <button
-                        @click="$root.naarZaaloverzicht('{{ $jsKey }}')"
-                        :class="$root.sentCategories['{{ $jsKey }}'] ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'"
-                        class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn"
+                        onclick="naarZaaloverzicht('{{ $jsKey }}')"
+                        class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
                         data-category="{{ $jsKey }}"
                     >
-                        <span x-show="!$root.sentCategories['{{ $jsKey }}']">Naar zaaloverzicht</span>
-                        <span x-show="$root.sentCategories['{{ $jsKey }}']">✓ Doorgestuurd</span>
+                        {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
                     </button>
                     @elseif($aantalLegePoules > 0 && !$isEliminatie)
                     <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
@@ -243,7 +242,7 @@
                                                 {{-- Verwijder knop voor doorgestreepte judoka's --}}
                                                 @if($isDoorgestreept)
                                                 <button
-                                                    @click="$root.verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
+                                                    onclick="verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
                                                     class="w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-xs font-bold"
                                                     title="{{ $isAfwezig ? 'Afwezig - verwijder uit poule' : 'Afwijkend gewicht - verwijder uit poule' }}"
                                                 >−</button>
@@ -497,78 +496,88 @@ async function verifieerPoules() {
     }
 }
 
+// Global state for sent categories
+const sentCategories = @json($sentToZaaloverzicht ?? []);
+
 function wedstrijddagPoules() {
     return {
-        sentCategories: @json($sentToZaaloverzicht ?? []),
+        sentCategories: sentCategories,
+    }
+}
 
-        async verwijderUitPoule(judokaId, pouleId) {
-            if (!confirm('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?')) return;
+async function verwijderUitPoule(judokaId, pouleId) {
+    if (!confirm('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?')) return;
 
-            try {
-                const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({ judoka_id: judokaId, poule_id: pouleId }),
-                });
+    try {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ judoka_id: judokaId, poule_id: pouleId }),
+        });
 
-                if (response.ok) {
-                    // Verwijder het element uit de DOM
-                    const judokaEl = document.querySelector(`.judoka-item[data-judoka-id="${judokaId}"]`);
-                    if (judokaEl) {
-                        judokaEl.remove();
-                    }
-                    // Update stats
-                    const data = await response.json();
-                    if (data.poule) {
-                        updatePouleStats(data.poule);
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Fout bij verwijderen');
+        if (response.ok) {
+            // Verwijder het element uit de DOM
+            const judokaEl = document.querySelector(`.judoka-item[data-judoka-id="${judokaId}"]`);
+            if (judokaEl) {
+                judokaEl.remove();
             }
-        },
-
-        async naarZaaloverzicht(categoryKey) {
-            try {
-                const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({ category: categoryKey }),
-                });
-
-                if (response.ok) {
-                    this.sentCategories[categoryKey] = true;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        },
-
-        async nieuwePoule(leeftijdsklasse, gewichtsklasse) {
-            try {
-                const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({ leeftijdsklasse, gewichtsklasse }),
-                });
-
-                if (response.ok) {
-                    window.location.reload();
-                }
-            } catch (error) {
-                console.error('Error creating poule:', error);
+            // Update stats
+            const data = await response.json();
+            if (data.poule) {
+                updatePouleStats(data.poule);
             }
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij verwijderen');
+    }
+}
+
+async function naarZaaloverzicht(categoryKey) {
+    try {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ category: categoryKey }),
+        });
+
+        if (response.ok) {
+            sentCategories[categoryKey] = true;
+            // Update button appearance
+            const btn = document.querySelector(`.naar-zaaloverzicht-btn[data-category="${categoryKey}"]`);
+            if (btn) {
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                btn.innerHTML = '✓ Doorgestuurd';
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
+    try {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ leeftijdsklasse, gewichtsklasse }),
+        });
+
+        if (response.ok) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Error creating poule:', error);
     }
 }
 
