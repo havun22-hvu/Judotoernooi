@@ -161,13 +161,13 @@
                     </div>
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
-                            <span class="font-bold flex items-center gap-1">
-                                {{ $aantalActiefElim }} judoka's
+                            <span class="font-bold">{{ $aantalActiefElim }} judoka's</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-orange-200">~{{ $elimPoule->aantal_wedstrijden }} wedstrijden</span>
                                 @if($verwijderdeTekstElim->isNotEmpty())
-                                <span class="info-icon cursor-help text-xs opacity-70 hover:opacity-100" title="{{ $verwijderdeTekstElim->join("\n") }}">ⓘ</span>
+                                <span class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100" title="{{ $verwijderdeTekstElim->join("\n") }}" onclick="alert(this.title)">ⓘ</span>
                                 @endif
-                            </span>
-                            <span class="text-sm text-orange-200">~{{ $elimPoule->aantal_wedstrijden }} wedstrijden</span>
+                            </div>
                         </div>
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             @foreach($elimPoule->judokas as $judoka)
@@ -230,22 +230,21 @@
                             >
                                 <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
                                     <div class="pointer-events-none flex-1">
-                                        <div class="font-bold text-sm flex items-center gap-1">
-                                            #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}
-                                            @if($verwijderdeTekst->isNotEmpty())
-                                            <span class="info-icon cursor-help text-xs opacity-70 hover:opacity-100 pointer-events-auto" title="{{ $verwijderdeTekst->join("\n") }}">ⓘ</span>
-                                            @endif
-                                        </div>
+                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
                                         <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
-                                    @if($aantalActief === 0)
-                                    <button
-                                        onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
-                                        class="delete-poule-btn w-8 h-8 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-lg font-bold flex-shrink-0 ml-2"
-                                        title="Verwijder lege poule"
-                                        style="min-width: 32px"
-                                    >×</button>
-                                    @endif
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        @if($verwijderdeTekst->isNotEmpty())
+                                        <span class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100" title="{{ $verwijderdeTekst->join("\n") }}" onclick="alert(this.title)">ⓘ</span>
+                                        @endif
+                                        @if($aantalActief === 0)
+                                        <button
+                                            onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                            class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
+                                            title="Verwijder lege poule"
+                                        >×</button>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
