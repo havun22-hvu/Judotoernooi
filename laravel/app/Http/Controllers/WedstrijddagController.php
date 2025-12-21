@@ -126,10 +126,18 @@ class WedstrijddagController extends Controller
             $oudePoule = Poule::findOrFail($validated['from_poule_id']);
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
+            $oudePoule->load('judokas'); // Refresh judokas collection
+
+            // Calculate active count for old poule
+            $actieveJudokasOud = $oudePoule->judokas->filter(function($j) use ($tolerantie) {
+                $isAfwezig = $j->aanwezigheid === 'afwezig';
+                $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
+                return !$isAfwezig && !$isAfwijkend;
+            })->count();
 
             $oudePouleData = [
                 'id' => $oudePoule->id,
-                'aantal_judokas' => $oudePoule->aantal_judokas,
+                'aantal_judokas' => $actieveJudokasOud,
                 'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
             ];
         } else {
@@ -162,14 +170,21 @@ class WedstrijddagController extends Controller
         }
 
         $nieuwePoule->updateStatistieken();
+        $nieuwePoule->load('judokas'); // Refresh judokas collection
 
-        // Return stored values from database (single source of truth)
+        // Calculate active count (excluding afwezig/afwijkend gewicht)
+        $actieveJudokasNieuw = $nieuwePoule->judokas->filter(function($j) use ($tolerantie) {
+            $isAfwezig = $j->aanwezigheid === 'afwezig';
+            $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
+            return !$isAfwezig && !$isAfwijkend;
+        })->count();
+
         return response()->json([
             'success' => true,
             'van_poule' => $oudePouleData,
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
-                'aantal_judokas' => $nieuwePoule->aantal_judokas,
+                'aantal_judokas' => $actieveJudokasNieuw,
                 'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
             ],
         ]);
