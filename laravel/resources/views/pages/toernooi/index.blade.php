@@ -34,9 +34,22 @@
                     <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inactief</span>
                     @endif
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800 mr-3">Bekijk</a>
-                    <a href="{{ route('toernooi.edit', $toernooi) }}" class="text-gray-600 hover:text-gray-800">Bewerk</a>
+                <td class="px-6 py-4 whitespace-nowrap space-x-2">
+                    <a href="{{ route('toernooi.show', $toernooi) }}" class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded" title="Start toernooi">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Start
+                    </a>
+                    <button onclick="confirmReset({{ $toernooi->id }}, '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded" title="Reset toernooi (behoud judoka's)">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Reset
+                    </button>
+                    {{-- Delete alleen voor sitebeheerder - later activeren --}}
+                    @if(auth('organisator')->user()?->isSitebeheerder())
+                    <button onclick="confirmDelete({{ $toernooi->id }}, '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded" title="Verwijder toernooi permanent">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Delete
+                    </button>
+                    @endif
                 </td>
             </tr>
             @empty
@@ -53,4 +66,35 @@
 <div class="mt-4">
     {{ $toernooien->links() }}
 </div>
+
+<!-- Hidden forms for reset and delete -->
+<form id="reset-form" method="POST" style="display:none;">
+    @csrf
+</form>
+<form id="delete-form" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
+
+<script>
+function confirmReset(id, naam) {
+    if (confirm(`⚠️ RESET TOERNOOI\n\nWeet je zeker dat je "${naam}" wilt resetten?\n\nDit verwijdert:\n• Alle poules en wedstrijden\n• Alle weeg-resultaten\n• Alle uitslagen\n\nDit behoudt:\n• Alle judoka's\n• Toernooi instellingen\n• Blokken en matten`)) {
+        const form = document.getElementById('reset-form');
+        form.action = `/toernooi/${id}/reset`;
+        form.submit();
+    }
+}
+
+function confirmDelete(id, naam) {
+    const bevestig = prompt(`🚨 VERWIJDER TOERNOOI PERMANENT\n\nDit verwijdert ALLES:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!\n\nTyp de naam van het toernooi om te bevestigen:`);
+
+    if (bevestig === naam) {
+        const form = document.getElementById('delete-form');
+        form.action = `/toernooi/${id}`;
+        form.submit();
+    } else if (bevestig !== null) {
+        alert('Naam komt niet overeen. Toernooi NIET verwijderd.');
+    }
+}
+</script>
 @endsection

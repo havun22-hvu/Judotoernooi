@@ -49,8 +49,25 @@ class PouleIndelingService
         $this->initializeFromToernooi($toernooi);
 
         return DB::transaction(function () use ($toernooi) {
-            // Delete existing pools
+            // Delete existing pools and their matches
+            $pouleIds = $toernooi->poules()->pluck('id');
+            \App\Models\Wedstrijd::whereIn('poule_id', $pouleIds)->delete();
             $toernooi->poules()->delete();
+
+            // Reset SQLite auto-increment sequences for clean IDs
+            if (DB::getDriverName() === 'sqlite') {
+                // Only reset if tables are empty for this tournament
+                if ($toernooi->poules()->count() === 0) {
+                    $minPouleId = Poule::min('id') ?? 0;
+                    $minWedstrijdId = \App\Models\Wedstrijd::min('id') ?? 0;
+                    if ($minPouleId > 0) {
+                        DB::statement("UPDATE sqlite_sequence SET seq = ? WHERE name = 'poules'", [$minPouleId - 1]);
+                    }
+                    if ($minWedstrijdId > 0) {
+                        DB::statement("UPDATE sqlite_sequence SET seq = ? WHERE name = 'wedstrijden'", [$minWedstrijdId - 1]);
+                    }
+                }
+            }
 
             // Get all judokas grouped by category
             $groepen = $this->groepeerJudokas($toernooi);
