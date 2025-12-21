@@ -627,15 +627,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper: update poule titelbalk direct vanuit DOM
     function updatePouleFromDOM(pouleId) {
+        console.log('updatePouleFromDOM called with:', pouleId);
         const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleId}"]`);
-        if (!pouleCard) return;
+        if (!pouleCard) {
+            console.log('pouleCard NOT found for id:', pouleId);
+            return;
+        }
+        console.log('pouleCard found:', pouleCard);
 
         const container = pouleCard.querySelector('.sortable-poule');
-        if (!container) return;
+        if (!container) {
+            console.log('sortable-poule container NOT found');
+            return;
+        }
 
         // Tel judoka's in de DOM
-        const aantalJudokas = container.querySelectorAll('.judoka-item').length;
+        const judokaItems = container.querySelectorAll('.judoka-item');
+        const aantalJudokas = judokaItems.length;
         const aantalWedstrijden = berekenWedstrijden(aantalJudokas);
+        console.log('Counted:', aantalJudokas, 'judokas,', aantalWedstrijden, 'wedstrijden');
 
         // Update data attribute
         pouleCard.dataset.actief = aantalJudokas;
@@ -643,6 +653,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update tekst in header
         const actiefSpan = pouleCard.querySelector('.poule-actief');
         const wedstrijdenSpan = pouleCard.querySelector('.poule-wedstrijden');
+        console.log('Spans:', actiefSpan, wedstrijdenSpan);
         if (actiefSpan) actiefSpan.textContent = aantalJudokas;
         if (wedstrijdenSpan) wedstrijdenSpan.textContent = aantalWedstrijden;
 
@@ -687,13 +698,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;
 
+                console.log('=== DRAG END ===');
+                console.log('vanPouleId:', vanPouleId, 'naarPouleId:', naarPouleId);
+                console.log('from wachtruimte?', evt.from.classList.contains('sortable-wachtruimte'));
+
                 // Direct DOM update - geen wachten op API
-                if (vanPouleId) updatePouleFromDOM(vanPouleId);
-                if (naarPouleId) updatePouleFromDOM(naarPouleId);
+                if (vanPouleId) {
+                    console.log('Updating van poule:', vanPouleId);
+                    updatePouleFromDOM(vanPouleId);
+                }
+                if (naarPouleId) {
+                    console.log('Updating naar poule:', naarPouleId);
+                    updatePouleFromDOM(naarPouleId);
+                }
 
                 // Update wachtruimte count
                 if (evt.from.classList.contains('sortable-wachtruimte')) {
                     const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
+                    console.log('Wachtruimte countEl:', countEl, 'current:', countEl?.textContent);
                     if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
                 }
 
