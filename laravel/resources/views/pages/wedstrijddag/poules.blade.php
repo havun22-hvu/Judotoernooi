@@ -124,6 +124,16 @@
                         $elimPoule = $category['poules']->first();
                         // Use stored database values
                         $aantalJudokasElim = $elimPoule->aantal_judokas;
+
+                        // Collect removed judokas for info tooltip
+                        $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie) {
+                            $isAfwezig = $j->aanwezigheid === 'afwezig';
+                            $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
+                            return $isAfwezig || $isAfwijkend;
+                        })->map(function($j) use ($tolerantie) {
+                            $reden = $j->aanwezigheid === 'afwezig' ? 'afwezig' : 'afwijkend gewicht';
+                            return $j->naam . ' (' . $reden . ')';
+                        });
                     @endphp
                     <div class="mb-3 flex justify-end" x-data="{ open: false }">
                         <div class="relative">
@@ -142,7 +152,12 @@
                     </div>
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
-                            <span class="font-bold">{{ $aantalJudokasElim }} judoka's</span>
+                            <span class="font-bold flex items-center gap-1">
+                                {{ $aantalJudokasElim }} judoka's
+                                @if($verwijderdeElim->isNotEmpty())
+                                <span class="info-icon cursor-help text-xs opacity-70 hover:opacity-100" title="{{ $verwijderdeElim->join("\n") }}">ⓘ</span>
+                                @endif
+                            </span>
                             <span class="text-sm text-orange-200">~{{ $elimPoule->aantal_wedstrijden }} wedstrijden</span>
                         </div>
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
@@ -153,14 +168,15 @@
                                 $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
                                 $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
                             @endphp
-                            <div class="px-2 py-1.5 rounded text-sm {{ $isDoorgestreept ? 'bg-gray-100 opacity-60' : 'bg-orange-50 border border-orange-200' }}">
+                            @if($isDoorgestreept)
+                                @continue
+                            @endif
+                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
                                 <div class="flex items-center gap-1">
-                                    @if($isAfwijkendGewicht)
-                                        <span class="text-red-500 text-xs">●</span>
-                                    @elseif($isGewogen && !$isDoorgestreept)
+                                    @if($isGewogen)
                                         <span class="text-green-500 text-xs">●</span>
                                     @endif
-                                    <div class="min-w-0 {{ $isDoorgestreept ? 'line-through text-gray-400' : '' }}">
+                                    <div class="min-w-0">
                                         <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
                                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                     </div>
@@ -180,6 +196,16 @@
                                 $aantalJudokas = $poule->aantal_judokas;
                                 $aantalWedstrijden = $poule->aantal_wedstrijden;
                                 $isProblematisch = $aantalJudokas > 0 && $aantalJudokas < 3;
+
+                                // Collect removed judokas for info tooltip
+                                $verwijderdeJudokas = $poule->judokas->filter(function($j) use ($tolerantie) {
+                                    $isAfwezig = $j->aanwezigheid === 'afwezig';
+                                    $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
+                                    return $isAfwezig || $isAfwijkend;
+                                })->map(function($j) use ($tolerantie) {
+                                    $reden = $j->aanwezigheid === 'afwezig' ? 'afwezig' : 'afwijkend gewicht';
+                                    return $j->naam . ' (' . $reden . ')';
+                                });
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
@@ -191,8 +217,13 @@
                                 data-actief="{{ $aantalJudokas }}"
                             >
                                 <div class="{{ $aantalJudokas === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
-                                    <div class="pointer-events-none">
-                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
+                                    <div class="pointer-events-none flex-1">
+                                        <div class="font-bold text-sm flex items-center gap-1">
+                                            #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}
+                                            @if($verwijderdeJudokas->isNotEmpty())
+                                            <span class="info-icon cursor-help text-xs opacity-70 hover:opacity-100 pointer-events-auto" title="{{ $verwijderdeJudokas->join("\n") }}">ⓘ</span>
+                                            @endif
+                                        </div>
                                         <div class="text-xs {{ $aantalJudokas === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalJudokas }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
                                     @if($aantalJudokas === 0)
@@ -212,37 +243,28 @@
                                         $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
                                         $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
                                     @endphp
+                                    @if($isDoorgestreept)
+                                        @continue
+                                    @endif
                                     <div
-                                        class="px-2 py-1.5 text-sm judoka-item {{ $isDoorgestreept ? 'bg-gray-100 opacity-60' : 'hover:bg-blue-50 cursor-move' }}"
+                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move"
                                         data-judoka-id="{{ $judoka->id }}"
-                                        @if(!$isDoorgestreept) draggable="true" @endif
+                                        draggable="true"
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
-                                                {{-- Status marker --}}
-                                                @if($isAfwijkendGewicht)
-                                                    <span class="text-red-500 text-xs flex-shrink-0" title="Afwijkend gewicht">●</span>
-                                                @elseif($isGewogen && !$isDoorgestreept)
+                                                {{-- Status marker: green = gewogen --}}
+                                                @if($isGewogen)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
-                                                <div class="min-w-0 {{ $isDoorgestreept ? 'line-through text-gray-400' : '' }}">
-                                                    <div class="font-medium {{ $isDoorgestreept ? 'text-gray-400' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
+                                                <div class="min-w-0">
+                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-2">
-                                                <div class="text-right text-xs flex-shrink-0">
-                                                    <div class="{{ $isAfwijkendGewicht ? 'text-red-600' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
-                                                    <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
-                                                </div>
-                                                {{-- Verwijder knop voor doorgestreepte judoka's --}}
-                                                @if($isDoorgestreept)
-                                                <button
-                                                    onclick="verwijderUitPoule({{ $judoka->id }}, {{ $poule->id }})"
-                                                    class="w-6 h-6 flex items-center justify-center bg-red-100 hover:bg-red-200 text-red-600 rounded-full text-xs font-bold"
-                                                    title="{{ $isAfwezig ? 'Afwezig - verwijder uit poule' : 'Afwijkend gewicht - verwijder uit poule' }}"
-                                                >−</button>
-                                                @endif
+                                            <div class="text-right text-xs flex-shrink-0">
+                                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                                             </div>
                                         </div>
                                     </div>
