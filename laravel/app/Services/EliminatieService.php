@@ -512,8 +512,8 @@ class EliminatieService
                 $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
             }
 
-            // Check voor byes in B en verwerk ze
-            $this->verwerkBByes($wedstrijd->poule_id);
+            // NIET automatisch byes verwerken - dit veroorzaakt cascade doorschuiven
+            // Gebruik de "Verwerk Byes" knop handmatig als een ronde compleet is
         }
     }
 
