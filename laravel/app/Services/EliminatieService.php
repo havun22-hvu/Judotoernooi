@@ -367,13 +367,18 @@ class EliminatieService
      */
     public function verwerkUitslag(Wedstrijd $wedstrijd, int $winnaarId, ?int $oudeWinnaarId = null): array
     {
+        \Log::info("verwerkUitslag: wedstrijd={$wedstrijd->id}, winnaar={$winnaarId}, oudeWinnaar={$oudeWinnaarId}, groep={$wedstrijd->groep}, ronde={$wedstrijd->ronde}");
+
         $correcties = [];
         $verliezerId = $wedstrijd->judoka_wit_id == $winnaarId
             ? $wedstrijd->judoka_blauw_id
             : $wedstrijd->judoka_wit_id;
 
+        \Log::info("verwerkUitslag: verliezer={$verliezerId} (wit={$wedstrijd->judoka_wit_id}, blauw={$wedstrijd->judoka_blauw_id})");
+
         // Bij correctie: verwijder oude winnaar uit volgende ronde en oude verliezer uit B
         if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
+            \Log::info("verwerkUitslag: correctie detecteerd, oude winnaar verwijderen");
             $correcties = $this->verwijderOudePlaatsingen($wedstrijd, $oudeWinnaarId);
         }
 
@@ -382,12 +387,16 @@ class EliminatieService
             $volgende = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
             if ($volgende) {
                 $volgende->update(["judoka_{$wedstrijd->winnaar_naar_slot}_id" => $winnaarId]);
+                \Log::info("verwerkUitslag: winnaar {$winnaarId} naar volgende wedstrijd {$volgende->id} slot {$wedstrijd->winnaar_naar_slot}");
             }
         }
 
         // Verliezer direct naar B (niet wachten op ronde compleet)
         if ($wedstrijd->groep === 'A' && $wedstrijd->ronde !== 'finale' && $verliezerId) {
+            \Log::info("verwerkUitslag: plaatsVerliezerInB aanroepen voor {$verliezerId}");
             $this->plaatsVerliezerInB($wedstrijd, $verliezerId);
+        } else {
+            \Log::info("verwerkUitslag: SKIP plaatsVerliezerInB - groep={$wedstrijd->groep}, ronde={$wedstrijd->ronde}, verliezerId={$verliezerId}");
         }
 
         // B-wedstrijd winnaar naar volgende B-ronde (direct)
@@ -481,6 +490,8 @@ class EliminatieService
      */
     private function plaatsVerliezerInB(Wedstrijd $wedstrijd, int $verliezerId): void
     {
+        \Log::info("plaatsVerliezerInB: verliezer={$verliezerId}, wedstrijd={$wedstrijd->id}, ronde={$wedstrijd->ronde}, groep={$wedstrijd->groep}");
+
         // Check of verliezer al in B zit
         $alInB = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
             ->where('groep', 'B')
@@ -491,32 +502,40 @@ class EliminatieService
             ->exists();
 
         if ($alInB) {
+            \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} zit al in B-groep, skip");
             return;
         }
 
         // Bepaal target B-ronde op basis van A-ronde
         $targetRonde = $this->getBRondeVoorARonde($wedstrijd->ronde);
+        \Log::info("plaatsVerliezerInB: targetRonde={$targetRonde}");
         if (!$targetRonde) {
+            \Log::info("plaatsVerliezerInB: geen target ronde voor {$wedstrijd->ronde}");
             return;
         }
 
         // Zoek lege plek in target ronde
         $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $targetRonde);
+        \Log::info("plaatsVerliezerInB: legeWedstrijd in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
 
         // Als target ronde vol is, probeer ALLEEN de vorige ronde (niet verdere rondes!)
         // Dit voorkomt dat verliezers in een te late ronde terechtkomen
         if (!$legeWedstrijd) {
             $fallback = $this->getVorigeRonde($targetRonde);
+            \Log::info("plaatsVerliezerInB: fallback ronde = {$fallback}");
             if ($fallback) {
                 $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $fallback);
+                \Log::info("plaatsVerliezerInB: legeWedstrijd in fallback = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
             }
         }
 
         if ($legeWedstrijd) {
             if ($legeWedstrijd->judoka_wit_id === null) {
                 $legeWedstrijd->update(['judoka_wit_id' => $verliezerId]);
+                \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als WIT in wedstrijd {$legeWedstrijd->id}");
             } else {
                 $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
+                \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als BLAUW in wedstrijd {$legeWedstrijd->id}");
             }
         } else {
             // Log warning - er is geen plek in de B-groep

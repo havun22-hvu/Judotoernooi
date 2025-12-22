@@ -184,36 +184,35 @@ class MatController extends Controller
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
         $correcties = [];
-        $waarschuwingen = [];
 
-        // Als dit een doorschuif is vanuit een vorige wedstrijd, valideer eerst
+        // Als dit een doorschuif is vanuit een vorige wedstrijd, valideer STRENG
         if (!empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
             $judokaId = $validated['judoka_id'];
 
             if ($bronWedstrijd) {
-                // Check 1: Zit de judoka wel in de bron wedstrijd?
+                // Check 1: Zit de judoka wel in de bron wedstrijd? → BLOKKEER
                 $judokaInBron = $bronWedstrijd->judoka_wit_id == $judokaId ||
                                 $bronWedstrijd->judoka_blauw_id == $judokaId;
 
                 if (!$judokaInBron) {
-                    $waarschuwingen[] = "Deze judoka zat niet in de geselecteerde wedstrijd!";
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Deze judoka zat niet in de geselecteerde wedstrijd!',
+                    ], 400);
                 }
 
-                // Check 2: Is dit de correcte volgende wedstrijd?
+                // Check 2: Is dit de correcte volgende wedstrijd? → BLOKKEER
                 if ($bronWedstrijd->volgende_wedstrijd_id && $bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
-                    $waarschuwingen[] = "Dit is niet het juiste vak voor deze wedstrijd! Verwacht vak: " . $bronWedstrijd->volgende_wedstrijd_id;
-                }
-
-                // Check 3: Was deze judoka de verliezer? (als wedstrijd al gespeeld)
-                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id && $bronWedstrijd->winnaar_id != $judokaId) {
-                    $verliezer = \App\Models\Judoka::find($judokaId);
-                    $waarschuwingen[] = ($verliezer ? $verliezer->naam : "Deze judoka") . " heeft verloren en hoort in de B-groep, niet in de volgende A-ronde!";
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Dit is niet het juiste vak! Plaats de winnaar alleen in het correcte volgende vak.',
+                    ], 400);
                 }
             }
         }
 
-        // Update the appropriate slot (ook bij waarschuwingen, admin mag overrulen)
+        // Update the appropriate slot
         if ($validated['positie'] === 'wit') {
             $wedstrijd->update(['judoka_wit_id' => $validated['judoka_id']]);
         } else {
@@ -247,7 +246,6 @@ class MatController extends Controller
         return response()->json([
             'success' => true,
             'correcties' => $correcties,
-            'waarschuwingen' => $waarschuwingen,
         ]);
     }
 

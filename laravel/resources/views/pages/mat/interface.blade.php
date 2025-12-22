@@ -256,23 +256,23 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
             })
         });
 
-        if (response.ok) {
-            const result = await response.json();
+        const result = await response.json();
 
-            // Toon waarschuwingen aan admin (verkeerde plaatsing)
-            if (result.waarschuwingen && result.waarschuwingen.length > 0) {
-                alert('⚠️ WAARSCHUWING - Mogelijke fout:\n\n• ' + result.waarschuwingen.join('\n• '));
-            }
-
-            // Toon correcties aan admin als die er zijn
-            if (result.correcties && result.correcties.length > 0) {
-                alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
-            }
-
-            Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
+        if (!response.ok) {
+            // Toon foutmelding - actie geblokkeerd
+            alert('❌ GEBLOKKEERD:\n\n' + (result.error || 'Onbekende fout'));
+            return;
         }
+
+        // Toon correcties aan admin als die er zijn
+        if (result.correcties && result.correcties.length > 0) {
+            alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
+        }
+
+        Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
     } catch (err) {
         console.error('Drop error:', err);
+        alert('❌ Fout bij plaatsen: ' + err.message);
     }
 };
 
