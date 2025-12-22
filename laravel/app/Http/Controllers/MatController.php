@@ -209,6 +209,14 @@ class MatController extends Controller
                         'error' => 'Dit is niet het juiste vak! Plaats de winnaar alleen in het correcte volgende vak.',
                     ], 400);
                 }
+
+                // Check 3: Is dit de correcte positie (wit/blauw)? → BLOKKEER
+                if ($bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
+                    ], 400);
+                }
             }
         }
 

@@ -219,25 +219,31 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
-    // Check of dit de juiste positie is volgens het schema
-    if (data.volgendeWedstrijdId && data.winnaarNaarSlot) {
+    // STRENGE validatie: als judoka vanuit een wedstrijd komt, moet die naar de JUISTE volgende wedstrijd
+    if (data.volgendeWedstrijdId) {
         // Dit is een doorschuif vanuit een vorige wedstrijd
-        if (data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot !== positie) {
-            // Verkeerde positie! Toon waarschuwing
+        if (data.volgendeWedstrijdId != targetWedstrijdId) {
+            // VERKEERDE WEDSTRIJD - BLOKKEER DIRECT
+            const naam = data.judokaNaam || 'Deze judoka';
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
+                `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
+                `Sleep naar het juiste vak.`
+            );
+            return;
+        }
+
+        // Juiste wedstrijd, maar verkeerde positie?
+        if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
             const naam = data.judokaNaam || 'Deze judoka';
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT' : 'BLAUW';
             const gekozenPositie = positie === 'wit' ? 'WIT' : 'BLAUW';
 
-            const bevestig = confirm(
-                `⚠️ Let op: verkeerde positie!\n\n` +
-                `${naam} moet volgens het schema op ${juistePositie} staan.\n` +
-                `U plaatst nu op ${gekozenPositie}.\n\n` +
-                `Weet u het zeker?`
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
+                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
             );
-
-            if (!bevestig) {
-                return; // Annuleer de actie
-            }
+            return;
         }
     }
 
