@@ -490,7 +490,12 @@ class EliminatieService
      */
     private function plaatsVerliezerInB(Wedstrijd $wedstrijd, int $verliezerId): void
     {
-        \Log::info("plaatsVerliezerInB: verliezer={$verliezerId}, wedstrijd={$wedstrijd->id}, ronde={$wedstrijd->ronde}, groep={$wedstrijd->groep}");
+        // Check of dit een bye-verliezer is (had vrijstelling in A)
+        $hadByeInA = $wedstrijd->uitslag_type === 'bye' ||
+                     $wedstrijd->judoka_wit_id === null ||
+                     $wedstrijd->judoka_blauw_id === null;
+
+        \Log::info("plaatsVerliezerInB: verliezer={$verliezerId}, wedstrijd={$wedstrijd->id}, ronde={$wedstrijd->ronde}, hadBye={$hadByeInA}");
 
         // Check of verliezer al in B zit
         $alInB = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
@@ -514,33 +519,80 @@ class EliminatieService
             return;
         }
 
-        // Zoek lege plek in target ronde
-        $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $targetRonde);
-        \Log::info("plaatsVerliezerInB: legeWedstrijd in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        $legeWedstrijd = null;
+        $plaatsKleur = null;
 
-        // Als target ronde vol is, probeer ALLEEN de vorige ronde (niet verdere rondes!)
-        // Dit voorkomt dat verliezers in een te late ronde terechtkomen
+        if ($hadByeInA) {
+            // BYE-VERLIEZER: moet tegenstander krijgen, geen 2e vrijstelling!
+            // Zoek wedstrijd waar al iemand op WIT staat, plaats op BLAUW
+            $legeWedstrijd = $this->zoekWedstrijdMetTegenstander($wedstrijd->poule_id, $targetRonde);
+            $plaatsKleur = 'blauw';
+            \Log::info("plaatsVerliezerInB: bye-verliezer, zoek tegenstander in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        }
+
+        // Normale verliezer OF geen plek met tegenstander gevonden
+        if (!$legeWedstrijd) {
+            // Eerst WIT plekken vullen
+            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $targetRonde, 'wit');
+            $plaatsKleur = 'wit';
+            \Log::info("plaatsVerliezerInB: zoek WIT in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        }
+
+        // Dan BLAUW plekken
+        if (!$legeWedstrijd) {
+            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $targetRonde, 'blauw');
+            $plaatsKleur = 'blauw';
+            \Log::info("plaatsVerliezerInB: zoek BLAUW in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        }
+
+        // Fallback naar vorige ronde (voorronde)
         if (!$legeWedstrijd) {
             $fallback = $this->getVorigeRonde($targetRonde);
             \Log::info("plaatsVerliezerInB: fallback ronde = {$fallback}");
             if ($fallback) {
-                $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $fallback);
-                \Log::info("plaatsVerliezerInB: legeWedstrijd in fallback = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+                $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $fallback, 'wit');
+                $plaatsKleur = 'wit';
+                if (!$legeWedstrijd) {
+                    $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $fallback, 'blauw');
+                    $plaatsKleur = 'blauw';
+                }
+                \Log::info("plaatsVerliezerInB: fallback wedstrijd = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
             }
         }
 
-        if ($legeWedstrijd) {
-            if ($legeWedstrijd->judoka_wit_id === null) {
-                $legeWedstrijd->update(['judoka_wit_id' => $verliezerId]);
-                \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als WIT in wedstrijd {$legeWedstrijd->id}");
-            } else {
-                $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
-                \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als BLAUW in wedstrijd {$legeWedstrijd->id}");
-            }
+        if ($legeWedstrijd && $plaatsKleur) {
+            $legeWedstrijd->update(["judoka_{$plaatsKleur}_id" => $verliezerId]);
+            \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als {$plaatsKleur} in wedstrijd {$legeWedstrijd->id}");
         } else {
-            // Log warning - er is geen plek in de B-groep
             \Log::warning("Geen plek in B-groep voor verliezer {$verliezerId} uit {$wedstrijd->ronde}");
         }
+    }
+
+    /**
+     * Zoek wedstrijd waar al een tegenstander op WIT staat (voor bye-verliezers)
+     */
+    private function zoekWedstrijdMetTegenstander(int $pouleId, string $ronde): ?Wedstrijd
+    {
+        return Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('ronde', $ronde)
+            ->whereNotNull('judoka_wit_id')  // Er staat al iemand op WIT
+            ->whereNull('judoka_blauw_id')   // BLAUW is nog vrij
+            ->orderBy('bracket_positie')
+            ->first();
+    }
+
+    /**
+     * Zoek lege plek met specifieke kleur
+     */
+    private function zoekLegePlekMetKleur(int $pouleId, string $ronde, string $kleur): ?Wedstrijd
+    {
+        return Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('ronde', $ronde)
+            ->whereNull("judoka_{$kleur}_id")
+            ->orderBy('bracket_positie')
+            ->first();
     }
 
     /**
