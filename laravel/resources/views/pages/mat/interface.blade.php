@@ -219,8 +219,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
-    // STRENGE validatie: als judoka vanuit een wedstrijd komt, moet die naar de JUISTE volgende wedstrijd
-    if (data.volgendeWedstrijdId) {
+    // Check of we in seeding-fase zijn (geen wedstrijden gespeeld in deze poule)
+    // data.pouleIsLocked wordt meegegeven vanuit de drag source
+    const isLocked = data.pouleIsLocked === true;
+
+    // STRENGE validatie: alleen als bracket LOCKED is (wedstrijden al gespeeld)
+    if (isLocked && data.volgendeWedstrijdId) {
         // Dit is een doorschuif vanuit een vorige wedstrijd
         if (data.volgendeWedstrijdId != targetWedstrijdId) {
             // VERKEERDE WEDSTRIJD - BLOKKEER DIRECT
@@ -795,6 +799,12 @@ function matInterface() {
             return poule.wedstrijden.some(w => w.ronde === 'b_brons');
         },
 
+        // Check of bracket locked is (minimaal 1 wedstrijd gespeeld)
+        // In seeding-fase (niet locked) mag je vrij schuiven
+        isBracketLocked(poule) {
+            return poule.wedstrijden.some(w => w.is_gespeeld);
+        },
+
         // Render herkansing eenvoudig (geen bracket symmetrie)
         renderHerkansingSimple(rondes) {
             const ringColor = 'ring-purple-400';
@@ -916,6 +926,9 @@ function matInterface() {
             const rondes = this.getEliminatieBracket(poule, groep);
             if (rondes.length === 0) return '<div class="text-gray-500">Geen wedstrijden</div>';
 
+            // Check of bracket locked is (seeding-fase voorbij)
+            const isLocked = this.isBracketLocked(poule);
+
             const h = 28; // slot height
             let html = '';
 
@@ -1019,7 +1032,8 @@ function matInterface() {
                             wedstrijdId: wed.id,
                             judokaNaam: wed.wit?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot
+                            winnaarNaarSlot: wed.winnaar_naar_slot,
+                            pouleIsLocked: isLocked
                         }).replace(/"/g, '&quot;') : '';
 
                         const blauwDragData = wed ? JSON.stringify({
@@ -1027,7 +1041,8 @@ function matInterface() {
                             wedstrijdId: wed.id,
                             judokaNaam: wed.blauw?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot
+                            winnaarNaarSlot: wed.winnaar_naar_slot,
+                            pouleIsLocked: isLocked
                         }).replace(/"/g, '&quot;') : '';
 
                         // Potje container met absolute positie - flex voor nummer + slots
@@ -1093,7 +1108,8 @@ function matInterface() {
                             wedstrijdId: wed.id,
                             judokaNaam: wed.wit?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot
+                            winnaarNaarSlot: wed.winnaar_naar_slot,
+                            pouleIsLocked: isLocked
                         }).replace(/"/g, '&quot;');
 
                         const blauwDragData = JSON.stringify({
@@ -1101,7 +1117,8 @@ function matInterface() {
                             wedstrijdId: wed.id,
                             judokaNaam: wed.blauw?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot
+                            winnaarNaarSlot: wed.winnaar_naar_slot,
+                            pouleIsLocked: isLocked
                         }).replace(/"/g, '&quot;');
 
                         // Wit slot
