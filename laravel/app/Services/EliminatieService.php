@@ -503,12 +503,12 @@ class EliminatieService
         // Zoek lege plek in target ronde
         $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $targetRonde);
 
-        // Fallback naar andere rondes als vol
+        // Als target ronde vol is, probeer ALLEEN de vorige ronde (niet verdere rondes!)
+        // Dit voorkomt dat verliezers in een te late ronde terechtkomen
         if (!$legeWedstrijd) {
-            $fallbacks = $this->getFallbackRondes($targetRonde);
-            foreach ($fallbacks as $fallback) {
+            $fallback = $this->getVorigeRonde($targetRonde);
+            if ($fallback) {
                 $legeWedstrijd = $this->zoekLegePlek($wedstrijd->poule_id, $fallback);
-                if ($legeWedstrijd) break;
             }
         }
 
@@ -518,22 +518,23 @@ class EliminatieService
             } else {
                 $legeWedstrijd->update(['judoka_blauw_id' => $verliezerId]);
             }
-
-            // NIET automatisch byes verwerken - dit veroorzaakt cascade doorschuiven
-            // Gebruik de "Verwerk Byes" knop handmatig als een ronde compleet is
+        } else {
+            // Log warning - er is geen plek in de B-groep
+            \Log::warning("Geen plek in B-groep voor verliezer {$verliezerId} uit {$wedstrijd->ronde}");
         }
     }
 
     /**
-     * Geef fallback rondes als primaire vol is
+     * Geef vorige ronde (eerder in het toernooi) als fallback
+     * Verliezers mogen alleen naar een eerdere ronde, nooit naar een latere
      */
-    private function getFallbackRondes(string $ronde): array
+    private function getVorigeRonde(string $ronde): ?string
     {
         return match ($ronde) {
-            'b_voorronde' => ['b_achtste_finale', 'b_kwartfinale'],
-            'b_achtste_finale' => ['b_voorronde', 'b_kwartfinale'],
-            'b_kwartfinale' => ['b_halve_finale'],
-            default => [],
+            'b_achtste_finale' => 'b_voorronde',
+            'b_kwartfinale' => 'b_achtste_finale',
+            'b_halve_finale' => 'b_kwartfinale',
+            default => null,
         };
     }
 
