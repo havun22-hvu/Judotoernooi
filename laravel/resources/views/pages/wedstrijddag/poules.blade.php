@@ -118,28 +118,46 @@
                         </button>
                         @endif
                     </div>
-                    @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
-                    @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
-                    <button
-                        onclick="naarZaaloverzicht('{{ $jsKey }}')"
-                        class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
-                        data-category="{{ $jsKey }}"
-                    >
-                        {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
-                    </button>
-                    @elseif($aantalLegePoules > 0 && !$isEliminatie)
-                    <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
-                    @elseif($totaalActiefInCategorie === 0)
-                    <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
-                    @endif
+                    <div class="flex items-center gap-2">
+                        @if($isEliminatie)
+                        {{-- Eliminatie: omzetten knop in header --}}
+                        @php $elimPoule = $category['poules']->first(); @endphp
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">
+                                Omzetten naar poules ▾
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
+                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
+                                    Alleen poules
+                                </button>
+                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">
+                                    Poules + kruisfinale
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                        @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
+                        @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
+                        <button
+                            onclick="naarZaaloverzicht('{{ $jsKey }}')"
+                            class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
+                            data-category="{{ $jsKey }}"
+                        >
+                            {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
+                        </button>
+                        @elseif($aantalLegePoules > 0 && !$isEliminatie)
+                        <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
+                        @elseif($totaalActiefInCategorie === 0)
+                        <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="p-4">
                     @if($isEliminatie)
                     {{-- Eliminatie: één grote box met alle judoka's in grid --}}
                     @php
-                        $elimPoule = $category['poules']->first();
-
+                        // $elimPoule is already set in header for the dropdown
                         // Collect removed judokas for info tooltip
                         $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie) {
                             $isAfwezig = $j->aanwezigheid === 'afwezig';
@@ -156,21 +174,6 @@
                             return $j->naam . ' (' . $reden . ')';
                         });
                     @endphp
-                    <div class="mb-3 flex justify-end" x-data="{ open: false }">
-                        <div class="relative">
-                            <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">
-                                Omzetten naar poules ▾
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
-                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
-                                    Alleen poules
-                                </button>
-                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">
-                                    Poules + kruisfinale
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
                             <span class="font-bold">{{ $aantalActiefElim }} judoka's</span>
