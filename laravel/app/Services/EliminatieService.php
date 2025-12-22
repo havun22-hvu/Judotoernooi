@@ -441,6 +441,14 @@ class EliminatieService
             }
         }
 
+        // Oude winnaar was eigenlijk verliezer - moet naar B (als A-wedstrijd, niet finale)
+        if ($wedstrijd->groep === 'A' && $wedstrijd->ronde !== 'finale' && $oudeWinnaarId) {
+            $this->plaatsVerliezerInB($wedstrijd, $oudeWinnaarId);
+            if ($oudeWinnaar) {
+                $correcties[] = "{$oudeWinnaar->naam} geplaatst in B-groep (echte verliezer)";
+            }
+        }
+
         return $correcties;
     }
 
