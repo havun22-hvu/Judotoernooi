@@ -55,10 +55,22 @@
     @forelse($blokken as $blok)
     <div class="bg-white rounded-lg shadow" x-data="{ open: true }">
         {{-- Blok header (inklapbaar) --}}
+        @php
+            // Tel totaal actieve judoka's en wedstrijden in dit blok
+            $blokJudokas = 0;
+            $blokWedstrijden = 0;
+            foreach ($blok['categories'] as $cat) {
+                foreach ($cat['poules'] as $p) {
+                    $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+                    $blokJudokas += $actief;
+                    $blokWedstrijden += $p->aantal_wedstrijden ?? 0;
+                }
+            }
+        @endphp
         <button @click="open = !open" class="w-full flex justify-between items-center px-4 py-3 bg-gray-800 text-white rounded-t-lg hover:bg-gray-700">
             <div class="flex items-center gap-4">
                 <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
-                <span class="text-gray-300 text-sm">{{ $blok['categories']->count() }} categorieën</span>
+                <span class="text-gray-300 text-sm">{{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blok['categories']->count() }} categorieën</span>
             </div>
             <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
