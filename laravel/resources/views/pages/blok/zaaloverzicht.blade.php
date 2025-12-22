@@ -51,7 +51,7 @@
         ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc']])
         ->values();
 @endphp
-<div class="mb-6" x-data="{ open: true }">
+<div class="mb-6" x-data="{ open: false }">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">

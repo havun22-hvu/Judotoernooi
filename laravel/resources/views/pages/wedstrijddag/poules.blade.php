@@ -53,7 +53,7 @@
     </div>
 
     @forelse($blokken as $blok)
-    <div class="bg-white rounded-lg shadow" x-data="{ open: true }">
+    <div class="bg-white rounded-lg shadow" x-data="{ open: false }">
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
