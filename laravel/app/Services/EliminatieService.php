@@ -365,10 +365,9 @@ class EliminatieService
      * Handelt ook correcties af: verwijdert oude plaatsingen eerst
      * Returns array met correctie-informatie voor admin
      */
-    public function verwerkUitslag(Wedstrijd $wedstrijd, int $winnaarId): array
+    public function verwerkUitslag(Wedstrijd $wedstrijd, int $winnaarId, ?int $oudeWinnaarId = null): array
     {
         $correcties = [];
-        $oudeWinnaarId = $wedstrijd->getOriginal('winnaar_id');
         $verliezerId = $wedstrijd->judoka_wit_id == $winnaarId
             ? $wedstrijd->judoka_blauw_id
             : $wedstrijd->judoka_wit_id;

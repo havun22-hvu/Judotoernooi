@@ -82,6 +82,9 @@ class MatController extends Controller
 
         // Check if this is an elimination match (has groep field)
         if ($wedstrijd->groep) {
+            // Bewaar oude winnaar VOOR update (voor correctie-logica)
+            $oudeWinnaarId = $wedstrijd->winnaar_id;
+
             $wedstrijd->update([
                 'winnaar_id' => $validated['winnaar_id'],
                 'is_gespeeld' => (bool) $validated['winnaar_id'],
@@ -92,7 +95,7 @@ class MatController extends Controller
             // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
             $correcties = [];
             if ($validated['winnaar_id']) {
-                $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
+                $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId);
             }
 
             return response()->json([
@@ -224,6 +227,9 @@ class MatController extends Controller
             if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
                 $winnaarId = $validated['judoka_id'];
 
+                // Bewaar oude winnaar VOOR update (voor correctie-logica)
+                $oudeWinnaarId = $bronWedstrijd->winnaar_id;
+
                 // Markeer de bron wedstrijd als gespeeld
                 $bronWedstrijd->update([
                     'winnaar_id' => $winnaarId,
@@ -232,7 +238,7 @@ class MatController extends Controller
                 ]);
 
                 // Gebruik EliminatieService voor correcte afhandeling (incl. correcties)
-                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId);
+                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId);
             }
         }
 
