@@ -217,25 +217,25 @@ class EliminatieService
         $wedstrijden = [];
         $volgorde = $aCount + 1;
 
-        // Bereken verliezers per A-ronde
-        $achtsteVerliezers = $doelA / 2;  // 8 bij doel=16
-        $kwartVerliezers = $doelA / 4;    // 4 bij doel=16
+        // === SIMPELE BEREKENING ===
+        // Verliezers naar B 1/8: A-voorronde verliezers + A 1/8 verliezers
+        $a18Verliezers = $doelA / 2;  // 8 bij doel=16
+        $totaalVerliezers = $voorrondeA + $a18Verliezers;  // bijv. 13 + 8 = 21
 
-        // === B VOORRONDE ===
-        // Alle A 1/8 verliezers gaan naar B voorronde
-        // Dit geeft ze een eerlijke extra wedstrijd
-        $bVoorrondeAantal = ceil($achtsteVerliezers / 2);  // 8 / 2 = 4 wedstrijden
-        $bVoorrondeWinnaars = $bVoorrondeAantal;  // 4 winnaars
+        // B 1/8 heeft 16 plekken (8 wedstrijden)
+        $b18Capaciteit = 16;
 
-        // === B 1/8 capaciteit ===
-        // B voorronde winnaars + A voorronde verliezers
-        $naarB18 = $bVoorrondeWinnaars + $voorrondeA;  // 4 + 13 = 17
-        $doelB18 = $this->berekenDoelGrootte($naarB18);  // 16
-        $extraVoorB = $naarB18 - $doelB18;  // 17 - 16 = 1 extra
-
-        // Als er meer zijn dan B 1/8 aankan, maak B voorronde groter
-        if ($extraVoorB > 0) {
-            $bVoorrondeAantal += ceil($extraVoorB / 2);  // +1 wedstrijd voor de overflow
+        // Bereken B-voorronde wedstrijden
+        $bVoorrondeAantal = 0;
+        if ($totaalVerliezers > $b18Capaciteit) {
+            // Te veel verliezers - sommigen moeten afvallen via B-voorronde
+            $moetAfvallen = $totaalVerliezers - $b18Capaciteit;  // bijv. 21 - 16 = 5
+            $bVoorrondeAantal = $moetAfvallen;  // 5 wedstrijden, 5 vallen af
+            \Log::info("B-groep: {$totaalVerliezers} verliezers, {$moetAfvallen} moeten afvallen, {$bVoorrondeAantal} B-voorronde wedstrijden");
+        } else {
+            // Te weinig verliezers - sommigen krijgen bye in B 1/8
+            $byesInB18 = $b18Capaciteit - $totaalVerliezers;  // bijv. 16 - 15 = 1 bye
+            \Log::info("B-groep: {$totaalVerliezers} verliezers, {$byesInB18} byes in B 1/8");
         }
 
         $bVoorrondeWeds = [];
@@ -254,9 +254,9 @@ class EliminatieService
             }
         }
 
-        // === B BRACKET ===
-        // Bereken de B 1/8 grootte: moet passen met B voorronde winnaars + voorronde verliezers + overflow
-        $b18Wedstrijden = max(4, $doelB18 / 2);  // Minimaal 4 (voor 8 plekken)
+        // === B 1/8 FINALE ===
+        // Altijd 8 wedstrijden (16 plekken)
+        $b18Wedstrijden = 8;
 
         $huidigeRonde = [];
         $aantalInRonde = $b18Wedstrijden * 2;  // Aantal judoka's voor deze ronde
@@ -490,10 +490,21 @@ class EliminatieService
      */
     private function plaatsVerliezerInB(Wedstrijd $wedstrijd, int $verliezerId): void
     {
-        // Check of dit een bye-verliezer is (had vrijstelling in A)
-        $hadByeInA = $wedstrijd->uitslag_type === 'bye' ||
-                     $wedstrijd->judoka_wit_id === null ||
-                     $wedstrijd->judoka_blauw_id === null;
+        // Check of dit een bye-verliezer is (had vrijstelling in A = speelde NIET in voorronde)
+        // Alleen relevant voor A 1/8 verliezers
+        $hadByeInA = false;
+        if ($wedstrijd->ronde === 'achtste_finale') {
+            // Check of verliezer in een A-voorronde wedstrijd zat
+            $wasInVoorronde = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+                ->where('groep', 'A')
+                ->where('ronde', 'voorronde')
+                ->where(function ($q) use ($verliezerId) {
+                    $q->where('judoka_wit_id', $verliezerId)
+                      ->orWhere('judoka_blauw_id', $verliezerId);
+                })
+                ->exists();
+            $hadByeInA = !$wasInVoorronde;
+        }
 
         \Log::info("plaatsVerliezerInB: verliezer={$verliezerId}, wedstrijd={$wedstrijd->id}, ronde={$wedstrijd->ronde}, hadBye={$hadByeInA}");
 
@@ -522,17 +533,30 @@ class EliminatieService
         $legeWedstrijd = null;
         $plaatsKleur = null;
 
+        // === NIEUWE LOGICA ===
+        // Bye-verliezers (hadden al vrijstelling in A) gaan EERST naar B-voorronde
+        // Zo krijgen ze geen 2e vrijstelling
         if ($hadByeInA) {
-            // BYE-VERLIEZER: moet tegenstander krijgen, geen 2e vrijstelling!
-            // Zoek wedstrijd waar al iemand op WIT staat, plaats op BLAUW
-            $legeWedstrijd = $this->zoekWedstrijdMetTegenstander($wedstrijd->poule_id, $targetRonde);
-            $plaatsKleur = 'blauw';
-            \Log::info("plaatsVerliezerInB: bye-verliezer, zoek tegenstander in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+            // Probeer eerst B-voorronde (als die bestaat)
+            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'wit');
+            $plaatsKleur = 'wit';
+            if (!$legeWedstrijd) {
+                $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'blauw');
+                $plaatsKleur = 'blauw';
+            }
+            \Log::info("plaatsVerliezerInB: bye-verliezer, zoek plek in b_voorronde = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+
+            // Als B-voorronde vol, zoek plek in target ronde NAAST bestaande tegenstander
+            if (!$legeWedstrijd) {
+                $legeWedstrijd = $this->zoekWedstrijdMetTegenstander($wedstrijd->poule_id, $targetRonde);
+                $plaatsKleur = 'blauw';
+                \Log::info("plaatsVerliezerInB: bye-verliezer fallback naar {$targetRonde} met tegenstander = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+            }
         }
 
-        // Normale verliezer OF geen plek met tegenstander gevonden
+        // Normale verliezer OF geen plek gevonden voor bye-verliezer
         if (!$legeWedstrijd) {
-            // Eerst WIT plekken vullen
+            // Eerst WIT plekken vullen in target ronde
             $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $targetRonde, 'wit');
             $plaatsKleur = 'wit';
             \Log::info("plaatsVerliezerInB: zoek WIT in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
@@ -545,24 +569,20 @@ class EliminatieService
             \Log::info("plaatsVerliezerInB: zoek BLAUW in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
         }
 
-        // Fallback naar vorige ronde (voorronde)
-        if (!$legeWedstrijd) {
-            $fallback = $this->getVorigeRonde($targetRonde);
-            \Log::info("plaatsVerliezerInB: fallback ronde = {$fallback}");
-            if ($fallback) {
-                $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $fallback, 'wit');
-                $plaatsKleur = 'wit';
-                if (!$legeWedstrijd) {
-                    $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $fallback, 'blauw');
-                    $plaatsKleur = 'blauw';
-                }
-                \Log::info("plaatsVerliezerInB: fallback wedstrijd = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        // Fallback naar B-voorronde (als target vol)
+        if (!$legeWedstrijd && $targetRonde !== 'b_voorronde') {
+            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'wit');
+            $plaatsKleur = 'wit';
+            if (!$legeWedstrijd) {
+                $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'blauw');
+                $plaatsKleur = 'blauw';
             }
+            \Log::info("plaatsVerliezerInB: fallback naar b_voorronde = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
         }
 
         if ($legeWedstrijd && $plaatsKleur) {
             $legeWedstrijd->update(["judoka_{$plaatsKleur}_id" => $verliezerId]);
-            \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als {$plaatsKleur} in wedstrijd {$legeWedstrijd->id}");
+            \Log::info("plaatsVerliezerInB: verliezer {$verliezerId} geplaatst als {$plaatsKleur} in wedstrijd {$legeWedstrijd->id} ({$legeWedstrijd->ronde})");
         } else {
             \Log::warning("Geen plek in B-groep voor verliezer {$verliezerId} uit {$wedstrijd->ronde}");
         }
@@ -672,16 +692,16 @@ class EliminatieService
     /**
      * Bepaal B-ronde voor A-ronde verliezers
      *
-     * Alle A 1/8 verliezers → B voorronde (eerlijke extra wedstrijd)
-     * A voorronde verliezers → B 1/8 (gespaard, hebben al 1 wedstrijd)
+     * A-voorronde verliezers → B 1/8 (hebben al 1 wedstrijd)
+     * A 1/8 verliezers → B 1/8 (default, bye-verliezers gaan via speciale logica naar B-voorronde)
      */
     private function getBRondeVoorARonde(string $aRonde): ?string
     {
         return match ($aRonde) {
-            'voorronde' => 'b_achtste_finale',    // Voorronde verliezers gespaard naar B 1/8
-            'achtste_finale' => 'b_voorronde',    // ALLE 1/8 verliezers naar B voorronde
-            'zestiende_finale' => 'b_voorronde',  // 1/16 verliezers naar B voorronde
-            'kwartfinale' => 'b_kwartfinale',     // 1/4 verliezers naar B 1/4
+            'voorronde' => 'b_achtste_finale',       // Voorronde verliezers naar B 1/8
+            'achtste_finale' => 'b_achtste_finale',  // 1/8 verliezers naar B 1/8 (bye-verliezers gaan eerst naar b_voorronde via speciale logica)
+            'zestiende_finale' => 'b_achtste_finale',
+            'kwartfinale' => 'b_kwartfinale',
             'halve_finale' => 'b_brons',
             default => null,
         };
