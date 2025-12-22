@@ -221,10 +221,11 @@ class MatController extends Controller
         }
 
         // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
+        // Ook bij "verkeerde" plaatsing (admin mag overrulen na waarschuwing)
         if (!empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
 
-            if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
+            if ($bronWedstrijd) {
                 $winnaarId = $validated['judoka_id'];
 
                 // Bewaar oude winnaar VOOR update (voor correctie-logica)
@@ -238,6 +239,7 @@ class MatController extends Controller
                 ]);
 
                 // Gebruik EliminatieService voor correcte afhandeling (incl. correcties)
+                // Dit plaatst ook de verliezer in de B-groep
                 $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId);
             }
         }
