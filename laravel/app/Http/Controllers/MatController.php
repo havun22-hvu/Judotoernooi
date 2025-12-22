@@ -185,8 +185,14 @@ class MatController extends Controller
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
         $correcties = [];
 
+        // Check of bracket locked is (minimaal 1 wedstrijd gespeeld in deze poule)
+        $isLocked = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+            ->where('is_gespeeld', true)
+            ->exists();
+
         // Als dit een doorschuif is vanuit een vorige wedstrijd, valideer STRENG
-        if (!empty($validated['bron_wedstrijd_id'])) {
+        // Maar ALLEEN als bracket locked is (seeding-fase voorbij)
+        if ($isLocked && !empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
             $judokaId = $validated['judoka_id'];
 
@@ -228,8 +234,8 @@ class MatController extends Controller
         }
 
         // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
-        // ALLEEN als winnaar in het JUISTE vak is geplaatst (volgende_wedstrijd_id match)
-        if (!empty($validated['bron_wedstrijd_id'])) {
+        // ALLEEN als bracket locked is (seeding-fase voorbij) EN winnaar in JUISTE vak
+        if ($isLocked && !empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
 
             if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
