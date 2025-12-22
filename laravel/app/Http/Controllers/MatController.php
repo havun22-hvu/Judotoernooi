@@ -221,11 +221,11 @@ class MatController extends Controller
         }
 
         // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
-        // Ook bij "verkeerde" plaatsing (admin mag overrulen na waarschuwing)
+        // ALLEEN als winnaar in het JUISTE vak is geplaatst (volgende_wedstrijd_id match)
         if (!empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
 
-            if ($bronWedstrijd) {
+            if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
                 $winnaarId = $validated['judoka_id'];
 
                 // Bewaar oude winnaar VOOR update (voor correctie-logica)
