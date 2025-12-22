@@ -91,14 +91,6 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
-
-                        <!-- Bronswedstrijden sectie -->
-                        <template x-if="heeftBronsWedstrijden(poule)">
-                            <div class="mt-4 border-t pt-4">
-                                <h3 class="text-sm font-bold text-amber-700 mb-3">🥉 Bronswedstrijden</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-html="renderBronsWedstrijden(poule)"></div>
-                            </div>
-                        </template>
                     </div>
 
                 </div>
