@@ -131,3 +131,70 @@ A Finale (1)
     ↓
   GOUD + ZILVER
 ```
+
+---
+
+## Seeding en Bracket Locking
+
+### Twee fasen
+
+Het eliminatie systeem kent twee fasen:
+
+| Fase | Status | Toegestane acties |
+|------|--------|-------------------|
+| **Seeding** | Geen wedstrijden gespeeld | Vrij verplaatsen van judoka's |
+| **Wedstrijd** | ≥1 wedstrijd gespeeld | Alleen volgens schema |
+
+### Seeding-fase
+
+Vóór de eerste wedstrijd is gespeeld:
+
+- **Vrij verplaatsen**: judoka's kunnen tussen alle slots worden gesleept
+- **Clubgenoten scheiden**: zet judoka's van dezelfde club uit elkaar
+- **Sterke spelers spreiden**: voorkom dat toppers elkaar vroeg treffen
+- **Fouten corrigeren**: administratieve fouten in de loting herstellen
+
+```
+Voorbeeld seeding aanpassing:
+- Club A heeft 3 judoka's in dezelfde bracket helft
+- Verplaats 1 judoka naar de andere helft
+- Zo treffen ze elkaar pas in de finale
+```
+
+### Bracket Locking
+
+Zodra de **eerste wedstrijd is gespeeld**:
+
+- Bracket is **definitief vergrendeld**
+- Judoka's kunnen alleen naar het **correcte volgende vak**
+- Positie (WIT/BLAUW) moet overeenkomen met `winnaar_naar_slot`
+- Uitslagen worden automatisch geregistreerd bij doorschuiven
+
+### Validatie (locked bracket)
+
+Bij elke verplaatsing worden 3 checks uitgevoerd:
+
+| Check | Fout | Actie |
+|-------|------|-------|
+| 1. Judoka in bronwedstrijd? | Judoka speelde niet in die wedstrijd | BLOKKEER |
+| 2. Correcte volgende wedstrijd? | Verkeerde wedstrijd geselecteerd | BLOKKEER |
+| 3. Correcte positie (wit/blauw)? | Verkeerde kant | BLOKKEER |
+
+### Technische implementatie
+
+```php
+// Check of bracket locked is
+$isLocked = Wedstrijd::where('poule_id', $pouleId)
+    ->where('is_gespeeld', true)
+    ->exists();
+
+// Seeding-fase: vrij verplaatsen
+// Wedstrijd-fase: strenge validatie
+```
+
+```javascript
+// Frontend check
+isBracketLocked(poule) {
+    return poule.wedstrijden.some(w => w.is_gespeeld);
+}
+```
