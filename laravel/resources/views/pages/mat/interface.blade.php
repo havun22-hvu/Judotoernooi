@@ -91,6 +91,14 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
+
+                        <!-- Bronswedstrijden sectie -->
+                        <template x-if="heeftBronsWedstrijden(poule)">
+                            <div class="mt-4 border-t pt-4">
+                                <h3 class="text-sm font-bold text-amber-700 mb-3">🥉 Bronswedstrijden</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" x-html="renderBronsWedstrijden(poule)"></div>
+                            </div>
+                        </template>
                     </div>
 
                 </div>
@@ -785,7 +793,7 @@ function matInterface() {
 
         // Check of poule bronswedstrijden heeft
         heeftBronsWedstrijden(poule) {
-            return poule.wedstrijden.some(w => w.ronde === 'brons');
+            return poule.wedstrijden.some(w => w.ronde === 'b_brons');
         },
 
         // Render herkansing eenvoudig (geen bracket symmetrie)
@@ -844,7 +852,7 @@ function matInterface() {
 
         // Render bronswedstrijden
         renderBronsWedstrijden(poule) {
-            const bronsWeds = poule.wedstrijden.filter(w => w.ronde === 'brons');
+            const bronsWeds = poule.wedstrijden.filter(w => w.ronde === 'b_brons');
             if (bronsWeds.length === 0) return '';
 
             const ringColor = 'ring-amber-400';
@@ -1195,7 +1203,7 @@ function matInterface() {
 
         // Get brons winnaars (2 stuks bij double elimination)
         getBronsWinnaars(poule) {
-            const bronsWedstrijden = poule.wedstrijden.filter(w => w.ronde === 'brons');
+            const bronsWedstrijden = poule.wedstrijden.filter(w => w.ronde === 'b_brons');
             return bronsWedstrijden
                 .filter(w => w.is_gespeeld && w.winnaar_id)
                 .map(w => w.winnaar_id === w.wit?.id ? w.wit : w.blauw)

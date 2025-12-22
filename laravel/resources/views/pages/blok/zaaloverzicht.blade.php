@@ -58,12 +58,13 @@
                 <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
                 @php
                     $blokPoules = collect($blok['matten'])->sum(fn($m) => count($m['poules']));
+                    $blokJudokas = collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('judokas'));
                     $blokWedstrijden = collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('wedstrijden'));
                     $aantalMatten = count($blok['matten']);
                     $gemPerMat = $aantalMatten > 0 ? round($blokWedstrijden / $aantalMatten, 1) : 0;
                 @endphp
                 <span class="text-gray-300 text-sm">
-                    {{ $blokPoules }} poules | {{ $blokWedstrijden }} wedstrijden ({{ $gemPerMat }} wed/mat)
+                    {{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blokPoules }} poules ({{ $gemPerMat }} wed/mat)
                 </span>
                 @if($blok['weging_gesloten'])
                 <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
