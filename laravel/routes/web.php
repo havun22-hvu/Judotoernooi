@@ -101,6 +101,11 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('poule/{poule}/eliminatie/seeding', [PouleController::class, 'seedingBGroep'])->name('poule.eliminatie.seeding');
         Route::get('poule/{poule}/eliminatie/b-groep', [PouleController::class, 'getBGroepSeeding'])->name('poule.eliminatie.b-groep');
 
+        // A-groep seeding (swap/move favorieten)
+        Route::get('poule/{poule}/eliminatie/seeding-status', [PouleController::class, 'getSeedingStatus'])->name('poule.eliminatie.seeding-status');
+        Route::post('poule/{poule}/eliminatie/swap', [PouleController::class, 'swapSeeding'])->name('poule.eliminatie.swap');
+        Route::post('poule/{poule}/eliminatie/move', [PouleController::class, 'moveSeeding'])->name('poule.eliminatie.move');
+
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
         Route::post('blok/kies-variant', [BlokController::class, 'kiesVariant'])->name('blok.kies-variant');
