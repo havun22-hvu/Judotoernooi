@@ -42,6 +42,14 @@
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             Organisatie
         </button>
+        @if(auth()->user()?->email === 'henkvu@gmail.com')
+        <button type="button"
+                @click="activeTab = 'test'"
+                :class="activeTab === 'test' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            🧪 Test
+        </button>
+        @endif
     </div>
 
     <!-- TAB: TOERNOOI -->
@@ -1130,6 +1138,95 @@
     </div>
 
     </div><!-- End TAB: ORGANISATIE -->
+
+    <!-- TAB: TEST (alleen voor henkvu@gmail.com) -->
+    @if(auth()->user()?->email === 'henkvu@gmail.com')
+    <div x-show="activeTab === 'test'" x-cloak>
+
+    <!-- RESET CATEGORIE -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">🔄</span> Reset Categorie
+        </h2>
+        <p class="text-gray-600 mb-4">
+            Verwijder alle wedstrijden van een categorie en haal van mat. De categorie wordt weer inactief en kan opnieuw geactiveerd worden.
+        </p>
+
+        @php
+            $blokken = $toernooi->blokken()->orderBy('nummer')->get();
+            $categorieen = [];
+            foreach ($toernooi->poules as $poule) {
+                $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+                if (!isset($categorieen[$key])) {
+                    $categorieen[$key] = [
+                        'label' => $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse,
+                        'blokken' => [],
+                    ];
+                }
+                if ($poule->blok && !in_array($poule->blok->nummer, $categorieen[$key]['blokken'])) {
+                    $categorieen[$key]['blokken'][] = $poule->blok->nummer;
+                }
+            }
+            ksort($categorieen);
+        @endphp
+
+        <div class="space-y-4">
+            @foreach($blokken as $blok)
+            <div class="border rounded-lg p-4">
+                <h3 class="font-bold text-gray-700 mb-3">Blok {{ $blok->nummer }}</h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($categorieen as $key => $cat)
+                        @if(in_array($blok->nummer, $cat['blokken']))
+                        <form action="{{ route('toernooi.blok.reset-categorie', $toernooi) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Weet je zeker dat je {{ $cat['label'] }} wilt resetten? Alle wedstrijden worden verwijderd!')">
+                            @csrf
+                            <input type="hidden" name="category" value="{{ $key }}">
+                            <input type="hidden" name="blok" value="{{ $blok->nummer }}">
+                            <button type="submit" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded border border-red-300 text-sm transition-colors">
+                                🗑️ {{ $cat['label'] }}
+                            </button>
+                        </form>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div class="mt-4 p-3 bg-orange-50 rounded text-sm text-orange-800">
+            <strong>⚠️ Let op:</strong> Dit verwijdert ALLE wedstrijden van de categorie en haalt de poules van de mat.
+            De judoka's blijven behouden en kunnen opnieuw geactiveerd worden vanuit het zaaloverzicht.
+        </div>
+    </div>
+
+    <!-- DEBUG INFO -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">🐛</span> Debug Info
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium">Totaal judoka's:</span>
+                <span class="float-right">{{ $toernooi->judokas()->count() }}</span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium">Totaal poules:</span>
+                <span class="float-right">{{ $toernooi->poules()->count() }}</span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium">Totaal wedstrijden:</span>
+                <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->count() }}</span>
+            </div>
+            <div class="p-3 bg-gray-50 rounded">
+                <span class="font-medium">Gespeelde wedstrijden:</span>
+                <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->where('is_gespeeld', true)->count() }}</span>
+            </div>
+        </div>
+    </div>
+
+    </div><!-- End TAB: TEST -->
+    @endif
 
 </div>
 
