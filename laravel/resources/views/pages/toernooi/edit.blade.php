@@ -42,7 +42,7 @@
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             Organisatie
         </button>
-        @if(auth()->user()?->email === 'henkvu@gmail.com')
+        @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
                 @click="activeTab = 'test'"
                 :class="activeTab === 'test' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -1139,8 +1139,8 @@
 
     </div><!-- End TAB: ORGANISATIE -->
 
-    <!-- TAB: TEST (alleen voor henkvu@gmail.com) -->
-    @if(auth()->user()?->email === 'henkvu@gmail.com')
+    <!-- TAB: TEST (alleen voor admin) -->
+    @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
     <div x-show="activeTab === 'test'" x-cloak>
 
     <!-- RESET CATEGORIE -->
