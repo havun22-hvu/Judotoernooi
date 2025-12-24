@@ -1143,59 +1143,31 @@
     @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
     <div x-show="activeTab === 'test'" x-cloak>
 
-    <!-- RESET CATEGORIE -->
+    <!-- RESET ALLES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
-            <span class="text-2xl">🔄</span> Reset Categorie
+            <span class="text-2xl">💥</span> Reset Alles
         </h2>
         <p class="text-gray-600 mb-4">
-            Verwijder alle wedstrijden van een categorie en haal van mat. De categorie wordt weer inactief en kan opnieuw geactiveerd worden.
+            Verwijder ALLE wedstrijden van ALLE categorieën en haal alles van de matten. Terug naar start!
         </p>
 
-        @php
-            $blokken = $toernooi->blokken()->orderBy('nummer')->get();
-            $categorieen = [];
-            foreach ($toernooi->poules as $poule) {
-                $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-                if (!isset($categorieen[$key])) {
-                    $categorieen[$key] = [
-                        'label' => $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse,
-                        'blokken' => [],
-                    ];
-                }
-                if ($poule->blok && !in_array($poule->blok->nummer, $categorieen[$key]['blokken'])) {
-                    $categorieen[$key]['blokken'][] = $poule->blok->nummer;
-                }
-            }
-            ksort($categorieen);
-        @endphp
+        <form action="{{ route('toernooi.blok.reset-alles', $toernooi) }}" method="POST"
+              onsubmit="return confirm('🚨 WEET JE HET ZEKER?\n\nDit verwijdert ALLE wedstrijden van ALLE categorieën!\n\nJudoka\'s blijven behouden.')">
+            @csrf
+            <button type="submit" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
+                🔥 RESET ALLES 🔥
+            </button>
+        </form>
 
-        <div class="space-y-4">
-            @foreach($blokken as $blok)
-            <div class="border rounded-lg p-4">
-                <h3 class="font-bold text-gray-700 mb-3">Blok {{ $blok->nummer }}</h3>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($categorieen as $key => $cat)
-                        @if(in_array($blok->nummer, $cat['blokken']))
-                        <form action="{{ route('toernooi.blok.reset-categorie', $toernooi) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Weet je zeker dat je {{ $cat['label'] }} wilt resetten? Alle wedstrijden worden verwijderd!')">
-                            @csrf
-                            <input type="hidden" name="category" value="{{ $key }}">
-                            <input type="hidden" name="blok" value="{{ $blok->nummer }}">
-                            <button type="submit" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded border border-red-300 text-sm transition-colors">
-                                🗑️ {{ $cat['label'] }}
-                            </button>
-                        </form>
-                        @endif
-                    @endforeach
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <div class="mt-4 p-3 bg-orange-50 rounded text-sm text-orange-800">
-            <strong>⚠️ Let op:</strong> Dit verwijdert ALLE wedstrijden van de categorie en haalt de poules van de mat.
-            De judoka's blijven behouden en kunnen opnieuw geactiveerd worden vanuit het zaaloverzicht.
+        <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
+            <strong>⚠️ Dit verwijdert:</strong>
+            <ul class="list-disc list-inside mt-1">
+                <li>Alle wedstrijden (alle blokken, alle matten)</li>
+                <li>Alle mat-toewijzingen</li>
+                <li>Alle doorstuur-status</li>
+            </ul>
+            <strong class="block mt-2">✓ Dit blijft behouden:</strong> Judoka's, clubs, poule-indelingen
         </div>
     </div>
 
