@@ -261,6 +261,49 @@ class BlokController extends Controller
     }
 
     /**
+     * Reset een categorie: verwijder wedstrijden en haal van mat
+     * Categorie wordt weer inactief en kan opnieuw geactiveerd worden
+     */
+    public function resetCategorie(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'category' => 'required|string',
+            'blok' => 'required|integer',
+        ]);
+
+        [$leeftijdsklasse, $gewichtsklasse] = explode('|', $validated['category']);
+        $blokNummer = $validated['blok'];
+
+        // Find all poules for this category in this blok
+        $poules = $toernooi->poules()
+            ->whereHas('blok', fn($q) => $q->where('nummer', $blokNummer))
+            ->where('leeftijdsklasse', $leeftijdsklasse)
+            ->where('gewichtsklasse', $gewichtsklasse)
+            ->get();
+
+        $totaalVerwijderd = 0;
+
+        foreach ($poules as $poule) {
+            // Verwijder alle wedstrijden
+            $verwijderd = $poule->wedstrijden()->delete();
+            $totaalVerwijderd += $verwijderd;
+
+            // Reset poule status
+            $poule->update([
+                'mat_id' => null,
+                'doorgestuurd_op' => null,
+                'spreker_klaar' => null,
+                'afgeroepen_at' => null,
+                'aantal_wedstrijden' => 0,
+            ]);
+        }
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} gereset - {$totaalVerwijderd} wedstrijden verwijderd, klaar voor nieuwe ronde");
+    }
+
+    /**
      * Get category statuses for wedstrijddag overview
      * Returns: wachtruimte_count, is_activated (has wedstrijden), is_sent (doorgestuurd_op set)
      */
