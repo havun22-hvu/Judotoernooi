@@ -304,6 +304,34 @@ class BlokController extends Controller
     }
 
     /**
+     * NUCLEAR OPTION: Reset ALLES - alle wedstrijden, alle matten, alle blokken
+     */
+    public function resetAlles(Toernooi $toernooi): RedirectResponse
+    {
+        $poules = $toernooi->poules()->get();
+        $totaalVerwijderd = 0;
+
+        foreach ($poules as $poule) {
+            // Verwijder alle wedstrijden
+            $verwijderd = $poule->wedstrijden()->delete();
+            $totaalVerwijderd += $verwijderd;
+
+            // Reset poule status
+            $poule->update([
+                'mat_id' => null,
+                'doorgestuurd_op' => null,
+                'spreker_klaar' => null,
+                'afgeroepen_at' => null,
+                'aantal_wedstrijden' => 0,
+            ]);
+        }
+
+        return redirect()
+            ->route('toernooi.edit', $toernooi)
+            ->with('success', "💥 ALLES GERESET - {$totaalVerwijderd} wedstrijden verwijderd, alle matten leeg, klaar voor nieuwe ronde!");
+    }
+
+    /**
      * Get category statuses for wedstrijddag overview
      * Returns: wachtruimte_count, is_activated (has wedstrijden), is_sent (doorgestuurd_op set)
      */
