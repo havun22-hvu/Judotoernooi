@@ -53,8 +53,8 @@ B voorronde nodig = max(0, 21 - 16) = 5 wedstrijden
 | B 1/8 finale | 8 | B voorronde winnaars + A voorronde verliezers |
 | B 1/4 deel 1 | 4 | 8 winnaars uit B 1/8 |
 | B 1/4 deel 2 | 4 | 4 winnaars deel 1 + **4 verliezers A 1/4** |
-| B 1/2 finale | 2 | 4 winnaars uit B 1/4 deel 2 |
-| Brons | 2 | 2 B-winnaars + **2 verliezers A 1/2** |
+| B 1/2 deel 1 | 2 | 4 winnaars uit B 1/4 deel 2 |
+| Brons (B 1/2 deel 2) | 2 | 2 B-winnaars + **2 verliezers A 1/2** |
 | **Totaal B** | **25** | |
 
 ---
@@ -65,18 +65,30 @@ B voorronde nodig = max(0, 21 - 16) = 5 wedstrijden
 Totaal = A + B = 28 + 25 = 53 wedstrijden
 ```
 
-### Algemene formule
+### Formules per bracket grootte
 
+**D=16 (17-32 judoka's, geen A 1/16):**
 ```
-A-wedstrijden = N - 1
-
-B-wedstrijden = B_voorronde + 8 + 4 + 4 + 2 + 2
-             = max(0, V + D/2 - 16) + 20
-             = max(0, N - D + D/2 - 16) + 20
-             = max(0, N - D/2 - 16) + 20
-
-Totaal = N - 1 + max(0, N - D/2 - 16) + 20
+B = B_voorronde + B_1/8 + B_1/4_deel1 + B_1/4_deel2 + B_1/2_deel1 + Brons
+  = max(0, V+8-16) + 8 + 4 + 4 + 2 + 2
+  = max(0, N-16+8-16) + 20
 ```
+
+**D=32 (33-64 judoka's, met A 1/16):**
+```
+B = B_1/8_deel1 + B_1/8_deel2 + B_1/4_deel1 + B_1/4_deel2 + B_1/2_deel1 + Brons
+  = 8 + 8 + 4 + 4 + 2 + 2 = 28 wedstrijden
+```
+
+### Voorbeelden
+
+| N | D | V | A-weds | B-structuur | B-weds | Totaal |
+|---|---|---|--------|-------------|--------|--------|
+| 23 | 16 | 7 | 22 | 8+4+4+2+2 (1 bye) | 20 | 42 |
+| 29 | 16 | 13 | 28 | 5+8+4+4+2+2 | 25 | 53 |
+| 32 | 32 | 0 | 31 | 8+8+4+4+2+2 | 28 | 59 |
+
+**Let op:** Bij N=23 is er 1 bye in B 1/8 (15 judoka's, 16 slots)
 
 ---
 
@@ -105,7 +117,7 @@ Judoka's die een **bye** hadden in A (niet in voorronde speelden) gaan bij verli
 
 ---
 
-## Visuele Structuur (29 judoka's)
+## Visuele Structuur (29 judoka's, D=16)
 
 ```
 A-GROEP                              B-GROEP
@@ -113,20 +125,51 @@ A-GROEP                              B-GROEP
 
 A Voorronde (13)
     ↓ winnaars
-    ↓ verliezers ──────────────────→ B 1/8 (8)
-                                         ↓
-A 1/8 (8)                            B 1/4 deel 1 (4)
-    ↓ winnaars                           ↓
-    ↓ verliezers ──────────────────→ B voorronde (5)
-                                         ↓ winnaars → B 1/8
-A 1/4 (4)
-    ↓ winnaars                       B 1/4 deel 2 (4)
-    ↓ verliezers ──────────────────→     ↑ A 1/4 verliezers
-                                         ↓
-A 1/2 (2)                            B 1/2 (2)
-    ↓ winnaars                           ↓
-    ↓ verliezers ──────────────────→ BRONS (2)
-                                         ↑ B 1/2 winnaars
+    ↓ verliezers ───────────────────────────────────→ B 1/8 (8)
+                                                          ↓
+A 1/8 (8)                                            B 1/4 deel 1 (4)
+    ↓ winnaars                                            ↓
+    ↓ verliezers (bye) ──────────────→ B voorronde (5) ──→ ↑
+
+A 1/4 (4)                                            B 1/4 deel 2 (4)
+    ↓ winnaars                                       ↗ B 1/4 deel 1 winnaars
+    ↓ verliezers ────────────────────────────────────
+                                                          ↓
+A 1/2 (2)                                            B 1/2 deel 1 (2)
+    ↓ winnaars                                            ↓
+    ↓ verliezers ────────────────────────────────────→ BRONS (2)
+                                                     ↗ B 1/2 deel 1 winnaars
+A Finale (1)
+    ↓
+  GOUD + ZILVER
+```
+
+## Visuele Structuur (32 judoka's, D=32)
+
+```
+A-GROEP                              B-GROEP
+========                             ========
+
+A 1/16 (16)
+    ↓ winnaars
+    ↓ verliezers ───────────────────────────────────→ B 1/8 deel 1 (8)
+                                                          ↓
+A 1/8 (8)                                            B 1/8 deel 2 (8)
+    ↓ winnaars                                       ↗ B 1/8 deel 1 winnaars
+    ↓ verliezers ────────────────────────────────────
+                                                          ↓
+                                                     B 1/4 deel 1 (4)
+                                                          ↓
+A 1/4 (4)                                            B 1/4 deel 2 (4)
+    ↓ winnaars                                       ↗ B 1/4 deel 1 winnaars
+    ↓ verliezers ────────────────────────────────────
+                                                          ↓
+                                                     B 1/2 deel 1 (2)
+                                                          ↓
+A 1/2 (2)                                            BRONS (2)
+    ↓ winnaars                                       ↗ B 1/2 deel 1 winnaars
+    ↓ verliezers ────────────────────────────────────
+
 A Finale (1)
     ↓
   GOUD + ZILVER

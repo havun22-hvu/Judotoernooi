@@ -401,4 +401,140 @@ class PouleController extends Controller
             'message' => 'Uitslag opgeslagen',
         ]);
     }
+
+    /**
+     * Verplaats judoka in B-groep (seeding)
+     * Alleen toegestaan als de bracket nog in seeding fase is
+     */
+    public function seedingBGroep(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|exists:judokas,id',
+            'van_wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'naar_wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'naar_slot' => 'required|in:wit,blauw',
+        ]);
+
+        $vanWedstrijd = Wedstrijd::findOrFail($validated['van_wedstrijd_id']);
+        $naarWedstrijd = Wedstrijd::findOrFail($validated['naar_wedstrijd_id']);
+
+        // Validatie: beide wedstrijden moeten in B-groep zijn
+        if ($vanWedstrijd->groep !== 'B' || $naarWedstrijd->groep !== 'B') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Seeding is alleen mogelijk binnen de B-groep',
+            ], 400);
+        }
+
+        // Validatie: beide wedstrijden moeten bij dezelfde poule horen
+        if ($vanWedstrijd->poule_id !== $poule->id || $naarWedstrijd->poule_id !== $poule->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Wedstrijden horen niet bij deze poule',
+            ], 400);
+        }
+
+        // Validatie: check of bracket nog in seeding fase is (geen wedstrijden gespeeld in B-groep)
+        $bWedstrijdenGespeeld = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'B')
+            ->where('is_gespeeld', true)
+            ->exists();
+
+        if ($bWedstrijdenGespeeld) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bracket is vergrendeld - er zijn al wedstrijden gespeeld in de B-groep',
+            ], 400);
+        }
+
+        // Validatie: judoka moet in van_wedstrijd zitten
+        $judokaId = $validated['judoka_id'];
+        $vanSlot = null;
+        if ($vanWedstrijd->judoka_wit_id == $judokaId) {
+            $vanSlot = 'wit';
+        } elseif ($vanWedstrijd->judoka_blauw_id == $judokaId) {
+            $vanSlot = 'blauw';
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Judoka zit niet in de bron wedstrijd',
+            ], 400);
+        }
+
+        // Validatie: doel slot moet leeg zijn
+        $naarSlot = $validated['naar_slot'];
+        if ($naarWedstrijd->{"judoka_{$naarSlot}_id"} !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Doel slot is niet leeg',
+            ], 400);
+        }
+
+        // Check op potentiële rematch
+        $potentieleTegenstander = $naarSlot === 'wit'
+            ? $naarWedstrijd->judoka_blauw_id
+            : $naarWedstrijd->judoka_wit_id;
+
+        $waarschuwing = null;
+        if ($potentieleTegenstander) {
+            if ($this->eliminatieService->heeftAlGespeeld($poule->id, $judokaId, $potentieleTegenstander)) {
+                $tegenstander = \App\Models\Judoka::find($potentieleTegenstander);
+                $waarschuwing = "Let op: dit veroorzaakt een rematch met {$tegenstander->naam}";
+            }
+        }
+
+        // Voer de verplaatsing uit
+        $vanWedstrijd->update(["judoka_{$vanSlot}_id" => null]);
+        $naarWedstrijd->update(["judoka_{$naarSlot}_id" => $judokaId]);
+
+        $judoka = \App\Models\Judoka::find($judokaId);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$judoka->naam} verplaatst naar {$naarWedstrijd->ronde}",
+            'waarschuwing' => $waarschuwing,
+        ]);
+    }
+
+    /**
+     * Haal B-groep seeding informatie op
+     */
+    public function getBGroepSeeding(Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $poule->load(['wedstrijden.judokaWit', 'wedstrijden.judokaBlauw']);
+
+        $bWedstrijden = $poule->wedstrijden
+            ->where('groep', 'B')
+            ->sortBy('bracket_positie')
+            ->groupBy('ronde');
+
+        $isLocked = $poule->wedstrijden
+            ->where('groep', 'B')
+            ->where('is_gespeeld', true)
+            ->isNotEmpty();
+
+        // Verzamel potentiële rematches
+        $rematches = [];
+        foreach ($bWedstrijden as $ronde => $wedstrijden) {
+            foreach ($wedstrijden as $wed) {
+                if ($wed->judoka_wit_id && $wed->judoka_blauw_id) {
+                    if ($this->eliminatieService->heeftAlGespeeld($poule->id, $wed->judoka_wit_id, $wed->judoka_blauw_id)) {
+                        $rematches[] = [
+                            'wedstrijd_id' => $wed->id,
+                            'ronde' => $ronde,
+                            'judoka_wit' => $wed->judokaWit->naam,
+                            'judoka_blauw' => $wed->judokaBlauw->naam,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_locked' => $isLocked,
+            'rematches' => $rematches,
+            'wedstrijden' => $bWedstrijden,
+        ]);
+    }
 }
