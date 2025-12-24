@@ -138,30 +138,55 @@ class Poule extends Model
 
     /**
      * Calculate number of matches for elimination bracket
-     * Double elimination with repechage and 2 bronze matches
+     * Double elimination with B-group (losers bracket) and 2 bronze matches
+     *
+     * Formulas:
+     * - A-group: N - 1 (single elimination)
+     * - B-group: depends on bracket size D
+     *   - D=4 (5-8 judokas):    4 (B 1/2 + Brons)
+     *   - D=8 (9-15 judokas):   12 (B 1/4 deel 1+2 + B 1/2 + Brons)
+     *   - D=16 (16-31 judokas): max(0, N-24) + 20
+     *   - D=32 (32-63 judokas): 28 (fixed structure)
      */
     private function berekenEliminatieWedstrijden(int $aantal): int
     {
         if ($aantal < 2) return 0;
         if ($aantal === 2) return 1; // Just finale
+        if ($aantal === 3) return 4; // 2 A + 2 B (simplified)
+        if ($aantal === 4) return 7; // 3 A + 2 B 1/2 + 2 brons
 
-        // Calculate bracket size (smallest power of 2 >= aantal)
-        $bracketGrootte = 1;
-        while ($bracketGrootte < $aantal) {
-            $bracketGrootte *= 2;
+        // A-group: always N - 1 (single elimination)
+        $aWedstrijden = $aantal - 1;
+
+        // Calculate D = largest power of 2 <= N
+        $d = 1;
+        while ($d * 2 <= $aantal) {
+            $d *= 2;
         }
 
-        // Main bracket (Groep A): bracketGrootte - 1 matches
-        $hoofdboom = $bracketGrootte - 1;
+        // B-group calculation based on D
+        if ($d >= 32) {
+            // D=32+: fixed B structure
+            // B 1/8 deel 1 + B 1/8 deel 2 + B 1/4 deel 1 + B 1/4 deel 2 + B 1/2 deel 1 + Brons
+            $bWedstrijden = 8 + 8 + 4 + 4 + 2 + 2; // = 28
+        } elseif ($d >= 16) {
+            // D=16: 17-32 judokas
+            // B voorronde (overflow) + B 1/8 + B 1/4 deel 1 + B 1/4 deel 2 + B 1/2 deel 1 + Brons
+            // B voorronde = max(0, V + 8 - 16) = max(0, N - 16 + 8 - 16) = max(0, N - 24)
+            $bVoorronde = max(0, $aantal - 24);
+            $bWedstrijden = $bVoorronde + 8 + 4 + 4 + 2 + 2; // = bVoorronde + 20
+        } elseif ($d >= 8) {
+            // D=8: 9-16 judokas (N = 9-15, want N=16 → D=16)
+            // V = N - 8 = 1-7, B 1/4 capaciteit = 8, dus geen overflow
+            // B 1/4 deel 1 + B 1/4 deel 2 + B 1/2 deel 1 + Brons
+            $bWedstrijden = 4 + 4 + 2 + 2; // = 12
+        } else {
+            // D=4: 5-8 judokas (simplified)
+            // B 1/2 + Brons
+            $bWedstrijden = 2 + 2; // = 4
+        }
 
-        // Repechage (Groep B): roughly half of main bracket
-        // Losers from each round feed into repechage
-        $herkansing = max(0, intval($hoofdboom / 2));
-
-        // Bronze matches: 2 (semi-final losers vs repechage winners)
-        $brons = $aantal >= 4 ? 2 : 0;
-
-        return $hoofdboom + $herkansing + $brons;
+        return $aWedstrijden + $bWedstrijden;
     }
 
     /**
