@@ -81,7 +81,8 @@ class EliminatieService
         return DB::transaction(function () use ($poule, $judokas, $aantal) {
             $poule->wedstrijden()->delete();
 
-            $geseededJudokas = $judokas->shuffle()->values()->all();
+            // Seed met clubgenoten-spreiding
+            $geseededJudokas = $this->seedMetClubSpreiding($judokas);
 
             $doelA = $this->berekenDoelGrootte($aantal);
             $voorrondeA = $aantal - $doelA;
@@ -113,6 +114,174 @@ class EliminatieService
             $power *= 2;
         }
         return $power;
+    }
+
+    /**
+     * Seed judoka's met clubgenoten-spreiding
+     *
+     * Algoritme:
+     * 1. Groepeer per club
+     * 2. Verdeel elke club over 2 bracket-helften (50/50)
+     * 3. Shuffle binnen elke helft
+     * 4. Combineer: helft1 + helft2 (interleaved)
+     */
+    private function seedMetClubSpreiding(Collection $judokas): array
+    {
+        $perClub = $judokas->groupBy('club_id');
+        $helft1 = [];
+        $helft2 = [];
+
+        foreach ($perClub as $clubId => $clubJudokas) {
+            $shuffled = $clubJudokas->shuffle()->values();
+            $count = $shuffled->count();
+
+            // Verdeel 50/50 over beide helften
+            for ($i = 0; $i < $count; $i++) {
+                if ($i % 2 === 0) {
+                    $helft1[] = $shuffled[$i];
+                } else {
+                    $helft2[] = $shuffled[$i];
+                }
+            }
+        }
+
+        // Shuffle binnen elke helft voor extra randomness
+        shuffle($helft1);
+        shuffle($helft2);
+
+        // Combineer: interleave om spreiding te behouden
+        // Helft1 = posities 0,2,4,6... (bovenste deel bracket)
+        // Helft2 = posities 1,3,5,7... (onderste deel bracket)
+        $result = [];
+        $max = max(count($helft1), count($helft2));
+        for ($i = 0; $i < $max; $i++) {
+            if (isset($helft1[$i])) $result[] = $helft1[$i];
+            if (isset($helft2[$i])) $result[] = $helft2[$i];
+        }
+
+        \Log::info("Seeding: " . count($judokas) . " judoka's, " . $perClub->count() . " clubs, helft1=" . count($helft1) . ", helft2=" . count($helft2));
+
+        return $result;
+    }
+
+    /**
+     * Check of bracket in seeding-fase is (geen wedstrijden gespeeld)
+     */
+    public function isInSeedingFase(Poule $poule): bool
+    {
+        return !Wedstrijd::where('poule_id', $poule->id)
+            ->where('is_gespeeld', true)
+            ->exists();
+    }
+
+    /**
+     * Swap twee judoka's in de eerste ronde (seeding)
+     *
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function swapJudokas(Poule $poule, int $judokaAId, int $judokaBId): array
+    {
+        // Check seeding-fase
+        if (!$this->isInSeedingFase($poule)) {
+            return ['success' => false, 'message' => 'Bracket is locked - er zijn al wedstrijden gespeeld'];
+        }
+
+        // Vind wedstrijden waar judoka's in zitten
+        $wedstrijdA = $this->vindEersteRondeWedstrijd($poule, $judokaAId);
+        $wedstrijdB = $this->vindEersteRondeWedstrijd($poule, $judokaBId);
+
+        if (!$wedstrijdA) {
+            return ['success' => false, 'message' => 'Judoka A niet gevonden in eerste ronde'];
+        }
+        if (!$wedstrijdB) {
+            return ['success' => false, 'message' => 'Judoka B niet gevonden in eerste ronde'];
+        }
+
+        // Bepaal positie (wit/blauw) van beide
+        $positieA = $wedstrijdA->judoka_wit_id == $judokaAId ? 'wit' : 'blauw';
+        $positieB = $wedstrijdB->judoka_wit_id == $judokaBId ? 'wit' : 'blauw';
+
+        // Swap uitvoeren
+        DB::transaction(function () use ($wedstrijdA, $wedstrijdB, $judokaAId, $judokaBId, $positieA, $positieB) {
+            // Zet A op plek van B
+            $wedstrijdB->update(["judoka_{$positieB}_id" => $judokaAId]);
+            // Zet B op plek van A
+            $wedstrijdA->update(["judoka_{$positieA}_id" => $judokaBId]);
+        });
+
+        \Log::info("Seeding swap: judoka {$judokaAId} <-> {$judokaBId} in poule {$poule->id}");
+
+        return ['success' => true, 'message' => 'Judoka\'s gewisseld'];
+    }
+
+    /**
+     * Verplaats judoka naar lege plek in eerste ronde
+     *
+     * @return array ['success' => bool, 'message' => string]
+     */
+    public function moveJudokaNaarLegePlek(Poule $poule, int $judokaId, int $doelWedstrijdId, string $doelPositie): array
+    {
+        // Check seeding-fase
+        if (!$this->isInSeedingFase($poule)) {
+            return ['success' => false, 'message' => 'Bracket is locked - er zijn al wedstrijden gespeeld'];
+        }
+
+        // Valideer doelPositie
+        if (!in_array($doelPositie, ['wit', 'blauw'])) {
+            return ['success' => false, 'message' => 'Ongeldige positie (moet wit of blauw zijn)'];
+        }
+
+        // Vind huidige wedstrijd van judoka
+        $huidigeWedstrijd = $this->vindEersteRondeWedstrijd($poule, $judokaId);
+        if (!$huidigeWedstrijd) {
+            return ['success' => false, 'message' => 'Judoka niet gevonden in eerste ronde'];
+        }
+
+        // Vind doel wedstrijd
+        $doelWedstrijd = Wedstrijd::where('poule_id', $poule->id)
+            ->where('id', $doelWedstrijdId)
+            ->whereIn('ronde', ['voorronde', 'achtste_finale', 'kwartfinale', 'zestiende_finale'])
+            ->where('groep', 'A')
+            ->first();
+
+        if (!$doelWedstrijd) {
+            return ['success' => false, 'message' => 'Doel wedstrijd niet gevonden in eerste ronde'];
+        }
+
+        // Check of doelplek leeg is
+        if ($doelWedstrijd->{"judoka_{$doelPositie}_id"} !== null) {
+            return ['success' => false, 'message' => "Plek {$doelPositie} is niet leeg - gebruik swap"];
+        }
+
+        // Bepaal huidige positie
+        $huidigePositie = $huidigeWedstrijd->judoka_wit_id == $judokaId ? 'wit' : 'blauw';
+
+        // Verplaats
+        DB::transaction(function () use ($huidigeWedstrijd, $doelWedstrijd, $judokaId, $huidigePositie, $doelPositie) {
+            // Verwijder van huidige plek
+            $huidigeWedstrijd->update(["judoka_{$huidigePositie}_id" => null]);
+            // Plaats op nieuwe plek
+            $doelWedstrijd->update(["judoka_{$doelPositie}_id" => $judokaId]);
+        });
+
+        \Log::info("Seeding move: judoka {$judokaId} naar wedstrijd {$doelWedstrijdId} positie {$doelPositie}");
+
+        return ['success' => true, 'message' => 'Judoka verplaatst'];
+    }
+
+    /**
+     * Vind eerste-ronde wedstrijd waar judoka in zit
+     */
+    private function vindEersteRondeWedstrijd(Poule $poule, int $judokaId): ?Wedstrijd
+    {
+        return Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'A')
+            ->whereIn('ronde', ['voorronde', 'achtste_finale', 'kwartfinale', 'zestiende_finale'])
+            ->where(function ($q) use ($judokaId) {
+                $q->where('judoka_wit_id', $judokaId)
+                  ->orWhere('judoka_blauw_id', $judokaId);
+            })
+            ->first();
     }
 
     private function getRondeNaam(int $aantalWedstrijden): string

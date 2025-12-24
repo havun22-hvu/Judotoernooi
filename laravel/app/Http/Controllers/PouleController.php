@@ -537,4 +537,86 @@ class PouleController extends Controller
             'wedstrijden' => $bWedstrijden,
         ]);
     }
+
+    /**
+     * Haal A-groep seeding informatie op
+     */
+    public function getSeedingStatus(Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $poule->load(['wedstrijden.judokaWit.club', 'wedstrijden.judokaBlauw.club']);
+
+        $eersteRonde = $poule->wedstrijden
+            ->where('groep', 'A')
+            ->whereIn('ronde', ['voorronde', 'achtste_finale', 'kwartfinale', 'zestiende_finale'])
+            ->sortBy('bracket_positie');
+
+        $isLocked = !$this->eliminatieService->isInSeedingFase($poule);
+
+        // Groepeer clubgenoten die tegen elkaar moeten
+        $clubConflicten = [];
+        foreach ($eersteRonde as $wed) {
+            if ($wed->judoka_wit_id && $wed->judoka_blauw_id) {
+                $clubWit = $wed->judokaWit->club_id ?? null;
+                $clubBlauw = $wed->judokaBlauw->club_id ?? null;
+                if ($clubWit && $clubWit === $clubBlauw) {
+                    $clubConflicten[] = [
+                        'wedstrijd_id' => $wed->id,
+                        'ronde' => $wed->ronde,
+                        'judoka_wit' => $wed->judokaWit->naam,
+                        'judoka_blauw' => $wed->judokaBlauw->naam,
+                        'club' => $wed->judokaWit->club->naam ?? 'Onbekend',
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'is_locked' => $isLocked,
+            'club_conflicten' => $clubConflicten,
+            'wedstrijden' => $eersteRonde->values(),
+        ]);
+    }
+
+    /**
+     * Swap twee judoka's in de eerste ronde (A-groep seeding)
+     * Alleen mogelijk in seeding-fase (voor eerste wedstrijd)
+     */
+    public function swapSeeding(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_a_id' => 'required|exists:judokas,id',
+            'judoka_b_id' => 'required|exists:judokas,id',
+        ]);
+
+        $result = $this->eliminatieService->swapJudokas(
+            $poule,
+            $validated['judoka_a_id'],
+            $validated['judoka_b_id']
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
+
+    /**
+     * Verplaats judoka naar lege plek in eerste ronde (A-groep seeding)
+     * Alleen mogelijk in seeding-fase (voor eerste wedstrijd)
+     */
+    public function moveSeeding(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|exists:judokas,id',
+            'naar_wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'naar_positie' => 'required|in:wit,blauw',
+        ]);
+
+        $result = $this->eliminatieService->moveJudokaNaarLegePlek(
+            $poule,
+            $validated['judoka_id'],
+            $validated['naar_wedstrijd_id'],
+            $validated['naar_positie']
+        );
+
+        return response()->json($result, $result['success'] ? 200 : 400);
+    }
 }
