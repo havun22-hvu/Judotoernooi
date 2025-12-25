@@ -936,8 +936,14 @@ class EliminatieService
             }
         }
 
-        // === SLIMME PLAATSING VOOR A 1/4 VERLIEZERS ===
-        // Vermijd rematches door te kijken naar potentiële B-tegenstanders
+        // === DIRECTE PLAATSING VOOR A 1/2 VERLIEZERS → BRONS ===
+        if (!$legeWedstrijd && $wedstrijd->ronde === 'halve_finale') {
+            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_brons', 'wit', false);
+            $plaatsKleur = 'wit';  // A 1/2 verliezers komen als WIT in Brons
+            \Log::info("plaatsVerliezerInB: halve finale verliezer → Brons WIT = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+        }
+
+        // === SLIMME PLAATSING VOOR A 1/4 VERLIEZERS → B 1/4 deel 2 ===
         if (!$legeWedstrijd && $wedstrijd->ronde === 'kwartfinale') {
             $legeWedstrijd = $this->zoekSlimmePlekVoorKwartfinaleVerliezer(
                 $wedstrijd->poule_id,
@@ -945,33 +951,45 @@ class EliminatieService
                 $targetRonde
             );
             $plaatsKleur = 'wit';  // A 1/4 verliezers komen als WIT in B 1/4 deel 2
-            \Log::info("plaatsVerliezerInB: slimme plaatsing kwartfinale verliezer = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
+            \Log::info("plaatsVerliezerInB: kwartfinale verliezer → B 1/4 deel 2 WIT = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
         }
 
         // Normale verliezer OF geen plek gevonden voor bye-verliezer/kwartfinale
+        // BELANGRIJK: Vul B voorronde EERST volledig voordat B 1/8 wordt gevuld
+        // SKIP voor kwartfinale en halve_finale verliezers (die hebben eigen routing)
+        $skipBVoorronde = in_array($wedstrijd->ronde, ['kwartfinale', 'halve_finale']);
+        if (!$legeWedstrijd && $targetRonde !== 'b_voorronde' && !$skipBVoorronde) {
+            // Check of B voorronde nog BLAUW plekken heeft (WIT is vaak al gevuld)
+            $bVoorrondeLeeg = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'blauw', false);
+            if ($bVoorrondeLeeg) {
+                $legeWedstrijd = $bVoorrondeLeeg;
+                $plaatsKleur = 'blauw';
+                \Log::info("plaatsVerliezerInB: B voorronde BLAUW nog vrij = " . $legeWedstrijd->id);
+            }
+            // Ook WIT checken als die nog leeg is
+            if (!$legeWedstrijd) {
+                $bVoorrondeWit = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'wit', false);
+                if ($bVoorrondeWit) {
+                    $legeWedstrijd = $bVoorrondeWit;
+                    $plaatsKleur = 'wit';
+                    \Log::info("plaatsVerliezerInB: B voorronde WIT nog vrij = " . $legeWedstrijd->id);
+                }
+            }
+        }
+
+        // Dan pas naar target ronde (B 1/8) als B voorronde vol is
         if (!$legeWedstrijd) {
-            // Eerst WIT plekken vullen in target ronde
+            // Eerst WIT plekken vullen in target ronde (skip gereserveerde)
             $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $targetRonde, 'wit');
             $plaatsKleur = 'wit';
             \Log::info("plaatsVerliezerInB: zoek WIT in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
         }
 
-        // Dan BLAUW plekken
+        // Dan BLAUW plekken (skip gereserveerde)
         if (!$legeWedstrijd) {
             $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, $targetRonde, 'blauw');
             $plaatsKleur = 'blauw';
             \Log::info("plaatsVerliezerInB: zoek BLAUW in {$targetRonde} = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
-        }
-
-        // Fallback naar B-voorronde (als target vol)
-        if (!$legeWedstrijd && $targetRonde !== 'b_voorronde') {
-            $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'wit');
-            $plaatsKleur = 'wit';
-            if (!$legeWedstrijd) {
-                $legeWedstrijd = $this->zoekLegePlekMetKleur($wedstrijd->poule_id, 'b_voorronde', 'blauw');
-                $plaatsKleur = 'blauw';
-            }
-            \Log::info("plaatsVerliezerInB: fallback naar b_voorronde = " . ($legeWedstrijd ? $legeWedstrijd->id : 'GEEN'));
         }
 
         if ($legeWedstrijd && $plaatsKleur) {
@@ -1074,15 +1092,31 @@ class EliminatieService
 
     /**
      * Zoek lege plek met specifieke kleur
+     * Skip gereserveerde plekken (waar B voorronde winnaars naartoe gaan)
      */
-    private function zoekLegePlekMetKleur(int $pouleId, string $ronde, string $kleur): ?Wedstrijd
+    private function zoekLegePlekMetKleur(int $pouleId, string $ronde, string $kleur, bool $skipReserved = true): ?Wedstrijd
     {
-        return Wedstrijd::where('poule_id', $pouleId)
+        $query = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
             ->where('ronde', $ronde)
             ->whereNull("judoka_{$kleur}_id")
-            ->orderBy('bracket_positie')
-            ->first();
+            ->orderBy('bracket_positie');
+
+        // Skip plekken die gereserveerd zijn voor B voorronde winnaars
+        if ($skipReserved && $ronde !== 'b_voorronde') {
+            $reservedIds = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', 'b_voorronde')
+                ->whereNotNull('volgende_wedstrijd_id')
+                ->where('winnaar_naar_slot', $kleur)
+                ->pluck('volgende_wedstrijd_id');
+
+            if ($reservedIds->isNotEmpty()) {
+                $query->whereNotIn('id', $reservedIds);
+            }
+        }
+
+        return $query->first();
     }
 
     /**

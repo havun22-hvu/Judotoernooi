@@ -730,9 +730,9 @@ function matInterface() {
         rondeVolgordeLookup: {
             'voorronde': 0, 'b_voorronde': 0,
             'zestiende_finale': 1, 'b_zestiende_finale': 1,
-            'achtste_finale': 2, 'b_achtste_finale': 2,
+            'achtste_finale': 2, 'b_achtste_finale': 2, 'b_achtste_finale_2': 2.5,
             'kwartfinale': 3, 'b_kwartfinale_1': 3,
-            'halve_finale': 4, 'b_kwartfinale_2': 4, 'b_halve_finale': 5,
+            'halve_finale': 4, 'b_kwartfinale_2': 4, 'b_halve_finale_1': 5,
             'finale': 6, 'b_brons': 6,
         },
 
@@ -780,10 +780,11 @@ function matInterface() {
                 'finale': 'Finale',
                 'b_voorronde': 'Voorronde',
                 'b_zestiende_finale': '1/16',
-                'b_achtste_finale': '1/8',
+                'b_achtste_finale': '1/8 (1)',
+                'b_achtste_finale_2': '1/8 (2)',
                 'b_kwartfinale_1': '1/4 (1)',
                 'b_kwartfinale_2': '1/4 (2)',
-                'b_halve_finale': '1/2',
+                'b_halve_finale_1': '1/2 (1)',
                 'b_brons': 'Brons',
             };
             return namen[ronde] || ronde.replace('b_', '').replace('_', ' ');

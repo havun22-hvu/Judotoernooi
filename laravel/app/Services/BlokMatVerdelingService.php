@@ -275,13 +275,50 @@ class BlokMatVerdelingService
         }
 
         // STAP 1: Plaats grote leeftijdsklassen in volgorde
-        // Mini's start ALTIJD in blok 1 (index 0)!
+        // Check eerst of er vastgezette categorieën zijn per leeftijd - sluit daar bij aan!
+        $vastgezetteBloknummersPerLeeftijd = [];
+        foreach ($alleCategorieen as $cat) {
+            if ($cat['blok_vast'] && $cat['blok_id']) {
+                // Zoek bloknummer bij blok_id
+                $blokNummer = null;
+                foreach ($blokkenArray as $blok) {
+                    if ($blok->id == $cat['blok_id']) {
+                        $blokNummer = $blok->nummer;
+                        break;
+                    }
+                }
+                if ($blokNummer) {
+                    $leeftijd = $cat['leeftijd'];
+                    if (!isset($vastgezetteBloknummersPerLeeftijd[$leeftijd])) {
+                        $vastgezetteBloknummersPerLeeftijd[$leeftijd] = [];
+                    }
+                    $vastgezetteBloknummersPerLeeftijd[$leeftijd][] = $blokNummer;
+                }
+            }
+        }
+
+        // Mini's start ALTIJD in blok 1 (index 0) TENZIJ er vastgezette zijn
         $huidigeBlokIndex = 0;
 
         foreach ($groteLeeftijdenVolgorde as $leeftijd) {
             if (!isset($perLeeftijd[$leeftijd])) continue;
 
             $gewichten = $perLeeftijd[$leeftijd];
+
+            // CHECK: Zijn er vastgezette categorieën voor deze leeftijd?
+            // Zo ja, start bij het LAAGSTE blok van de vastgezette (om aan te sluiten)
+            if (isset($vastgezetteBloknummersPerLeeftijd[$leeftijd])) {
+                $vastBlokken = $vastgezetteBloknummersPerLeeftijd[$leeftijd];
+                $minVastBlok = min($vastBlokken);
+                // Zoek de index van dit bloknummer
+                foreach ($blokkenArray as $idx => $blok) {
+                    if ($blok->nummer == $minVastBlok) {
+                        $huidigeBlokIndex = max(0, $idx - 1);  // Start 1 blok eerder voor aansluiting
+                        break;
+                    }
+                }
+                Log::info("Leeftijd {$leeftijd} heeft vastgezette in blokken " . implode(',', $vastBlokken) . " - start bij index {$huidigeBlokIndex}");
+            }
 
             // Variatie in sortering (maar altijd licht→zwaar als basis)
             usort($gewichten, fn($a, $b) => $a['gewicht_num'] <=> $b['gewicht_num']);
@@ -921,7 +958,7 @@ class BlokMatVerdelingService
                             'wedstrijden' => $p->aantal_wedstrijden,
                         ];
                     })
-                    ->filter(fn($p) => $p['judokas'] > 0) // Filter empty poules
+                    ->filter(fn($p) => $p['judokas'] > 1) // Need at least 2 judokas for a match
                     ->values()
                     ->toArray(),
                 ];
