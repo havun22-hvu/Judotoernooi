@@ -51,7 +51,11 @@
         ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc']])
         ->values();
 @endphp
-<div class="mb-6" x-data="{ open: false }">
+<div class="mb-6" x-data="{ 
+    open: localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') !== null 
+        ? localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') === 'true' 
+        : {{ $loop->first ? 'true' : 'false' }} 
+}" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
@@ -101,12 +105,27 @@
                 }
             @endphp
             @if($isActivated)
-            {{-- Groen: al geactiveerd, klik gaat naar mat interface met blok voorgeselecteerd --}}
-            <a href="{{ route('toernooi.mat.interface', ['toernooi' => $toernooi, 'blok' => $blok['nummer']]) }}"
-               class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
-            >
-                ✓ {{ $catNaam }}
-            </a>
+            {{-- Groen: al geactiveerd, dropdown met mat interface en reset --}}
+            <div class="relative inline-block" x-data="{ dropdown: false }">
+                <button @click="dropdown = !dropdown" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
+                    ✓ {{ $catNaam }} ▾
+                </button>
+                <div x-show="dropdown" @click.away="dropdown = false" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
+                    <a href="{{ route('toernooi.mat.interface', ['toernooi' => $toernooi, 'blok' => $blok['nummer']]) }}"
+                       class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        🖥️ Mat Interface
+                    </a>
+                    <form action="{{ route('toernooi.blok.reset-categorie', $toernooi) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="category" value="{{ $catKey }}">
+                        <input type="hidden" name="blok" value="{{ $blok['nummer'] }}">
+                        <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                                onclick="return confirm('Reset {{ $catNaam }}? Wedstrijden worden verwijderd.')">
+                            🔄 Reset
+                        </button>
+                    </form>
+                </div>
+            </div>
             @elseif($hasWaiting && !$isSent)
             {{-- Heeft wachtende judokas, moet eerst overpoulen --}}
             <button
@@ -154,7 +173,7 @@
                     </div>
                     @php
                         // Filter poules zonder judoka's (lege poules)
-                        $allePoules = collect($matData['poules'])->filter(fn($p) => ($p['judokas'] ?? 0) > 0);
+                        $allePoules = collect($matData['poules'])->filter(fn($p) => ($p['judokas'] ?? 0) > 1);
                     @endphp
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
                         @forelse($allePoules as $poule)

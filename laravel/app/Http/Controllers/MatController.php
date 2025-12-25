@@ -235,10 +235,15 @@ class MatController extends Controller
 
         // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
         // ALLEEN als bracket locked is (seeding-fase voorbij) EN winnaar in JUISTE vak
-        if ($isLocked && !empty($validated['bron_wedstrijd_id'])) {
+        if (!empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
 
-            if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
+            // Check of bronwedstrijd beide deelnemers heeft (= echte wedstrijd, geen seeding)
+            $heeftBeideJudokas = $bronWedstrijd &&
+                                 $bronWedstrijd->judoka_wit_id &&
+                                 $bronWedstrijd->judoka_blauw_id;
+
+            if ($heeftBeideJudokas && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
                 $winnaarId = $validated['judoka_id'];
 
                 // Bewaar oude winnaar VOOR update (voor correctie-logica)

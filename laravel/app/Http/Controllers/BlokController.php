@@ -291,7 +291,7 @@ class BlokController extends Controller
             // Reset poule status
             $poule->update([
                 'mat_id' => null,
-                'doorgestuurd_op' => null,
+                'doorgestuurd_op' => now(),
                 'spreker_klaar' => null,
                 'afgeroepen_at' => null,
                 'aantal_wedstrijden' => 0,

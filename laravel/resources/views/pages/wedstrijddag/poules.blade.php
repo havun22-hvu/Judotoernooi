@@ -53,7 +53,11 @@
     </div>
 
     @forelse($blokken as $blok)
-    <div class="bg-white rounded-lg shadow" x-data="{ open: false }">
+    <div class="bg-white rounded-lg shadow" x-data="{ 
+    open: localStorage.getItem('blok-poules-{{ $blok['id'] }}') !== null 
+        ? localStorage.getItem('blok-poules-{{ $blok['id'] }}') === 'true' 
+        : {{ $loop->first ? 'true' : 'false' }} 
+}" x-init="$watch('open', val => localStorage.setItem('blok-poules-{{ $blok['id'] }}', val))">
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
@@ -386,19 +390,27 @@ function scrollToPoule(event, pouleId) {
     event.preventDefault();
     const pouleCard = document.getElementById('poule-' + pouleId);
     if (pouleCard) {
-        // Scroll with offset so title is clearly visible (100px from top)
-        const offset = 100;
-        const elementPosition = pouleCard.getBoundingClientRect().top + window.pageYOffset;
-        window.scrollTo({
-            top: elementPosition - offset,
-            behavior: 'smooth'
-        });
+        // Find parent blok div with Alpine.js x-data and open it
+        const blokDiv = pouleCard.closest('[x-data]');
+        if (blokDiv && blokDiv._x_dataStack) {
+            blokDiv._x_dataStack[0].open = true;
+        }
 
-        // Flash effect to highlight the poule
-        pouleCard.classList.add('ring-4', 'ring-yellow-400');
+        // Wait for collapse animation, then scroll
         setTimeout(() => {
-            pouleCard.classList.remove('ring-4', 'ring-yellow-400');
-        }, 2000);
+            const offset = 100;
+            const elementPosition = pouleCard.getBoundingClientRect().top + window.pageYOffset;
+            window.scrollTo({
+                top: elementPosition - offset,
+                behavior: 'smooth'
+            });
+
+            // Flash effect to highlight the poule
+            pouleCard.classList.add('ring-4', 'ring-yellow-400');
+            setTimeout(() => {
+                pouleCard.classList.remove('ring-4', 'ring-yellow-400');
+            }, 2000);
+        }, 100);
     }
 }
 
