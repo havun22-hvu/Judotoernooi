@@ -699,6 +699,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update category status
         const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
         updateCategoryStatus(categoryKey);
+
+        // Update problematische poules lijst bovenaan
+        updateProblematischePoules(
+            { id: pouleId, aantal_judokas: aantalJudokas },
+            isProblematisch
+        );
     }
 
     // Initialize sortable on all poule containers (voor drag TUSSEN poules)
