@@ -823,8 +823,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('problematische-poules-container');
         const linksContainer = document.getElementById('problematische-links');
         const countEl = document.getElementById('problematische-count');
-        const existingLink = document.querySelector(`[data-probleem-poule="${pouleData.id}"]`);
-        const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleData.id}"]`);
+        // Ensure we match both string and number IDs
+        const pouleId = String(pouleData.id);
+        const existingLink = document.querySelector(`[data-probleem-poule="${pouleId}"]`);
+        const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleId}"]`);
+
+        console.log('updateProblematischePoules:', { pouleId, isProblematisch, existingLink: !!existingLink });
 
         if (isProblematisch) {
             if (existingLink) {
@@ -863,17 +867,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
             }
-        } else if (existingLink) {
-            // Remove from problematic list
-            existingLink.remove();
+        } else {
+            // Niet problematisch - verwijder uit lijst als aanwezig
+            if (existingLink) {
+                console.log('Removing problematic link for poule:', pouleId);
+                existingLink.remove();
 
-            const newLinksContainer = document.getElementById('problematische-links');
-            if (countEl && newLinksContainer) {
-                const remaining = newLinksContainer.querySelectorAll('[data-probleem-poule]').length;
-                countEl.textContent = remaining;
+                // Update count en verwijder hele section als leeg
+                const updatedLinksContainer = document.getElementById('problematische-links');
+                if (updatedLinksContainer) {
+                    const remaining = updatedLinksContainer.querySelectorAll('[data-probleem-poule]').length;
+                    console.log('Remaining problematic poules:', remaining);
 
-                if (remaining === 0) {
-                    container.innerHTML = '';
+                    if (countEl) countEl.textContent = remaining;
+
+                    if (remaining === 0 && container) {
+                        container.innerHTML = '';
+                    }
                 }
             }
         }
