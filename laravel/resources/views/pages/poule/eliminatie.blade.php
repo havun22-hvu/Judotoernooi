@@ -7,8 +7,8 @@
     <div class="flex justify-between items-center">
         <div>
             <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="text-blue-600 hover:underline text-sm">&larr; Terug naar poules</a>
-            <h1 class="text-3xl font-bold text-gray-800">Eliminatie Bracket</h1>
-            <p class="text-gray-600">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg - {{ $poule->judokas->count() }} judoka's</p>
+            <h1 class="text-3xl font-bold text-gray-800">Eliminatie Bracket ({{ $poule->judokas->count() }} judoka's)</h1>
+            <p class="text-gray-600">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</p>
         </div>
         <div class="flex gap-2">
             @if(!$heeftEliminatie)
@@ -101,7 +101,7 @@
         @if($bracket['herkansing']->count() > 0)
         <!-- Herkansing (Groep B) -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-bold mb-4 text-orange-800">Herkansing (Groep B)</h2>
+            <h2 class="text-xl font-bold mb-4 text-orange-800">Herkansing (Groep B) - {{ $poule->judokas->count() - 2 }} judoka's</h2>
             <div class="bracket-container overflow-x-auto">
                 <div class="bracket flex gap-8 min-w-max">
                     @foreach($bracket['herkansing'] as $ronde => $wedstrijden)
