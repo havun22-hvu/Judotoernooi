@@ -47,32 +47,65 @@ Finale → 1e plaats (winnaar) en 2e plaats (verliezer)
 
 De B-poule groeit elke ronde met verliezers uit de A-poule.
 
-#### B-groep structuur per aantal spelers
+#### B-groep structuur per aantal spelers (8-40)
 
-| Spelers | Naar B | A-groep | B-groep structuur |
-|---------|--------|---------|-------------------|
-| 8 | 4 | 1/4, 1/2, finale | 1e 1/2, 2e 1/2, brons |
-| 9 | 5 | 1 voorronde + 1/4, 1/2, finale | 1 voorronde + 1e 1/2, 2e 1/2, brons |
-| 10 | 6 | 2 voorrondes + 1/4, 1/2, finale | 2 voorrondes + 1e 1/2, 2e 1/2, brons |
-| 11 | 7 | 3 voorrondes + 1/4, 1/2, finale | 3 voorrondes + 1e 1/2, 2e 1/2, brons |
-| **12** | **8** | 4 voorrondes + 1/4, 1/2, finale | **1/4**, 1e 1/2, 2e 1/2, brons |
-| 13 | 9 | 5 voorrondes + 1/4, 1/2, finale | 1/4 + 1 voorronde, 1e 1/2, 2e 1/2, brons |
-| 14 | 10 | 6 voorrondes + 1/4, 1/2, finale | 1/4 + 2 voorrondes, 1e 1/2, 2e 1/2, brons |
-| 15 | 11 | 7 voorrondes + 1/4, 1/2, finale | 1/4 + 3 voorrondes, 1e 1/2, 2e 1/2, brons |
-| **16** | **8** | **1/8**, 1/4, 1/2, finale | **1e 1/4, 2e 1/4**, 1e 1/2, 2e 1/2, brons |
-| 17-31 | var | 1/8 + voorrondes, 1/4, 1/2, finale | 1e 1/4 + voorrondes, 2e 1/4, 1e 1/2, 2e 1/2, brons |
-| **32** | **16** | **1/16**, 1/8, 1/4, 1/2, finale | **1e 1/8, 2e 1/8**, 1e 1/4, 2e 1/4, 1e 1/2, 2e 1/2, brons |
+| N | D | V | Naar B | B-groep rondes (aantal wedstrijden) |
+|---|---|---|--------|-------------------------------------|
+| 8 | 8 | 0 | 4 | 1e 1/2 (2), 2e 1/2 (2) |
+| 9 | 8 | 1 | 5 | 1 voorr (1), 1e 1/2 (2), 2e 1/2 (2) |
+| 10 | 8 | 2 | 6 | 2 voorr (2), 1e 1/2 (2), 2e 1/2 (2) |
+| 11 | 8 | 3 | 7 | 3 voorr (3), 1e 1/2 (2), 2e 1/2 (2) |
+| **12** | 8 | 4 | 8 | **1/4 (4)**, 1e 1/2 (2), 2e 1/2 (2) |
+| 13 | 8 | 5 | 9 | 1 voorr + 1/4 (5), 1e 1/2 (2), 2e 1/2 (2) |
+| 14 | 8 | 6 | 10 | 2 voorr + 1/4 (6), 1e 1/2 (2), 2e 1/2 (2) |
+| 15 | 8 | 7 | 11 | 3 voorr + 1/4 (7), 1e 1/2 (2), 2e 1/2 (2) |
+| **16** | 16 | 0 | 8 | **1e 1/4 (4), 2e 1/4 (4)**, 1e 1/2 (2), 2e 1/2 (2) |
+| 17 | 16 | 1 | 9 | 1 voorr (1), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 18 | 16 | 2 | 10 | 2 voorr (2), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 19 | 16 | 3 | 11 | 3 voorr (3), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| **20** | 16 | 4 | 12 | **1/8 (4)**, 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 21 | 16 | 5 | 13 | 1 voorr + 1/8 (5), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 22 | 16 | 6 | 14 | 2 voorr + 1/8 (6), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 23 | 16 | 7 | 15 | 3 voorr + 1/8 (7), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| **24** | 16 | 8 | 16 | **1/8 (8)**, 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 25 | 16 | 9 | 17 | 1 voorr + 1/8 (9), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 26 | 16 | 10 | 18 | 2 voorr + 1/8 (10), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 27 | 16 | 11 | 19 | 3 voorr + 1/8 (11), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 28 | 16 | 12 | 20 | 4 voorr + 1/8 (12), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 29 | 16 | 13 | 21 | 5 voorr + 1/8 (13), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 30 | 16 | 14 | 22 | 6 voorr + 1/8 (14), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 31 | 16 | 15 | 23 | 7 voorr + 1/8 (15), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| **32** | 32 | 0 | 16 | **1e 1/8 (8), 2e 1/8 (8)**, 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 33 | 32 | 1 | 17 | 1 voorr (1), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 34 | 32 | 2 | 18 | 2 voorr (2), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 35 | 32 | 3 | 19 | 3 voorr (3), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| **36** | 32 | 4 | 20 | **1/16 (4)**, 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 37 | 32 | 5 | 21 | 1 voorr + 1/16 (5), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 38 | 32 | 6 | 22 | 2 voorr + 1/16 (6), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| 39 | 32 | 7 | 23 | 3 voorr + 1/16 (7), 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
+| **40** | 32 | 8 | 24 | **1/16 (8)**, 1e 1/8 (8), 2e 1/8 (8), 1e 1/4 (4), 2e 1/4 (4), 1e 1/2 (2), 2e 1/2 (2) |
 
-**NB:** 1/4 finale + 4 voorrondes = 1/8 finale
+#### Formules
 
-#### Grenzen voor dubbele rondes in B-groep
+```
+D = grootste macht van 2 ≤ N (doel A-bracket)
+V = N - D (aantal A-voorrondes)
+Naar_B = V + D/2 (totaal naar B eerste ronde)
+B_voorrondes = V (overflow t.o.v. capaciteit D/2)
+```
 
-| Ronde | Vanaf | Reden |
-|-------|-------|-------|
-| Dubbele 1/2 finale | 8 spelers | A 1/2 verliezers stromen in bij 2e 1/2 finale |
-| Enkele 1/4 finale | 12 spelers | 8 B-deelnemers (4 voorronde + 4 uit A 1/4) |
-| **Dubbele 1/4 finale** | **16 spelers** | A 1/8 verliezers → B 1e 1/4, A 1/4 verliezers → B 2e 1/4 |
-| **Dubbele 1/8 finale** | **32 spelers** | A 1/16 verliezers → B 1e 1/8, A 1/8 verliezers → B 2e 1/8 |
+#### Grenzen voor rondes in B-groep
+
+| Milestone | Vanaf N | Reden |
+|-----------|---------|-------|
+| Dubbele 1/2 finale | 8 | A 1/2 verliezers stromen in bij 2e 1/2 |
+| Enkele 1/4 finale | 12 | 8 B-deelnemers = 4 wedstrijden |
+| **Dubbele 1/4 finale** | **16** | A 1/8 → B 1e 1/4, A 1/4 → B 2e 1/4 |
+| Enkele 1/8 finale | 20 | 12 B-deelnemers, 4 voorrondes = 1/8 |
+| Volle 1/8 finale | 24 | 16 B-deelnemers = 8 wedstrijden |
+| **Dubbele 1/8 finale** | **32** | A 1/16 → B 1e 1/8, A 1/8 → B 2e 1/8 |
+| Enkele 1/16 finale | 36 | 20 B-deelnemers, 4 voorrondes = 1/16 |
+| Volle 1/16 finale | 40 | 24 B-deelnemers = 8 wedstrijden |
 
 #### Voorbeeld: 16 spelers (D=16, V=0)
 
@@ -80,6 +113,28 @@ De B-poule groeit elke ronde met verliezers uit de A-poule.
 A-GROEP                              B-GROEP
 ========                             ========
 A 1/8 finale (8 weds)
+    ↓ 8 verliezers ─────────────────→ B 1e 1/4 finale (4 weds)
+                                          ↓ 4 winnaars
+A 1/4 finale (4 weds)                     ↓
+    ↓ 4 verliezers ─────────────────→ B 2e 1/4 finale (4 weds)
+                                          ↓ 4 winnaars
+A 1/2 finale (2 weds)                B 1e 1/2 finale (2 weds)
+    ↓ 2 verliezers ─────────────────→     ↓ 2 winnaars
+                                     B 2e 1/2 finale = BRONS (2 weds)
+A finale (1 wed)
+    ↓
+  GOUD + ZILVER
+```
+
+#### Voorbeeld: 21 spelers (D=16, V=5)
+
+```
+A-GROEP                              B-GROEP
+========                             ========
+A voorronde (5 weds)
+    ↓ 5 verliezers ──────────────────┐
+                                     ↓
+A 1/8 finale (8 weds)           B voorronde (5 weds, 13→8)
     ↓ 8 verliezers ─────────────────→ B 1e 1/4 finale (4 weds)
                                           ↓ 4 winnaars
 A 1/4 finale (4 weds)                     ↓
