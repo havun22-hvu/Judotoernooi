@@ -157,6 +157,8 @@ class WedstrijdSchemaService
         foreach ($poules as $poule) {
             $isEliminatie = $poule->type === 'eliminatie';
 
+            $judokaCount = $poule->judokas->count();
+
             $pouleSchema = [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
@@ -166,6 +168,7 @@ class WedstrijdSchemaService
                 'blok_nummer' => $blok->nummer,
                 'mat_nummer' => $mat->nummer,
                 'titel' => $poule->titel,
+                'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
                 'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
