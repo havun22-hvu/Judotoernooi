@@ -47,6 +47,52 @@ Finale → 1e plaats (winnaar) en 2e plaats (verliezer)
 
 De B-poule groeit elke ronde met verliezers uit de A-poule.
 
+#### B-groep structuur per aantal spelers
+
+| Spelers | Naar B | A-groep | B-groep structuur |
+|---------|--------|---------|-------------------|
+| 8 | 4 | 1/4, 1/2, finale | 1e 1/2, 2e 1/2, brons |
+| 9 | 5 | 1 voorronde + 1/4, 1/2, finale | 1 voorronde + 1e 1/2, 2e 1/2, brons |
+| 10 | 6 | 2 voorrondes + 1/4, 1/2, finale | 2 voorrondes + 1e 1/2, 2e 1/2, brons |
+| 11 | 7 | 3 voorrondes + 1/4, 1/2, finale | 3 voorrondes + 1e 1/2, 2e 1/2, brons |
+| **12** | **8** | 4 voorrondes + 1/4, 1/2, finale | **1/4**, 1e 1/2, 2e 1/2, brons |
+| 13 | 9 | 5 voorrondes + 1/4, 1/2, finale | 1/4 + 1 voorronde, 1e 1/2, 2e 1/2, brons |
+| 14 | 10 | 6 voorrondes + 1/4, 1/2, finale | 1/4 + 2 voorrondes, 1e 1/2, 2e 1/2, brons |
+| 15 | 11 | 7 voorrondes + 1/4, 1/2, finale | 1/4 + 3 voorrondes, 1e 1/2, 2e 1/2, brons |
+| **16** | **8** | **1/8**, 1/4, 1/2, finale | **1e 1/4, 2e 1/4**, 1e 1/2, 2e 1/2, brons |
+| 17-31 | var | 1/8 + voorrondes, 1/4, 1/2, finale | 1e 1/4 + voorrondes, 2e 1/4, 1e 1/2, 2e 1/2, brons |
+| **32** | **16** | **1/16**, 1/8, 1/4, 1/2, finale | **1e 1/8, 2e 1/8**, 1e 1/4, 2e 1/4, 1e 1/2, 2e 1/2, brons |
+
+**NB:** 1/4 finale + 4 voorrondes = 1/8 finale
+
+#### Grenzen voor dubbele rondes in B-groep
+
+| Ronde | Vanaf | Reden |
+|-------|-------|-------|
+| Dubbele 1/2 finale | 8 spelers | A 1/2 verliezers stromen in bij 2e 1/2 finale |
+| Enkele 1/4 finale | 12 spelers | 8 B-deelnemers (4 voorronde + 4 uit A 1/4) |
+| **Dubbele 1/4 finale** | **16 spelers** | A 1/8 verliezers → B 1e 1/4, A 1/4 verliezers → B 2e 1/4 |
+| **Dubbele 1/8 finale** | **32 spelers** | A 1/16 verliezers → B 1e 1/8, A 1/8 verliezers → B 2e 1/8 |
+
+#### Voorbeeld: 16 spelers (D=16, V=0)
+
+```
+A-GROEP                              B-GROEP
+========                             ========
+A 1/8 finale (8 weds)
+    ↓ 8 verliezers ─────────────────→ B 1e 1/4 finale (4 weds)
+                                          ↓ 4 winnaars
+A 1/4 finale (4 weds)                     ↓
+    ↓ 4 verliezers ─────────────────→ B 2e 1/4 finale (4 weds)
+                                          ↓ 4 winnaars
+A 1/2 finale (2 weds)                B 1e 1/2 finale (2 weds)
+    ↓ 2 verliezers ─────────────────→     ↓ 2 winnaars
+                                     B 2e 1/2 finale = BRONS (2 weds)
+A finale (1 wed)
+    ↓
+  GOUD + ZILVER
+```
+
 #### Structuur bij 23 judokas (doel=16, voorronde=7)
 
 | B-ronde   | Deelnemers                                      | Wedstrijden |
