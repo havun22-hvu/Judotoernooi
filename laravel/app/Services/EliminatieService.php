@@ -450,11 +450,13 @@ class EliminatieService
 
         \Log::info("B-groep genereren: N={$n}, D={$doelA}, V={$voorrondeA}, NaarB={$naarB}, BVoorrondes={$bVoorrondes}");
 
-        // Bepaal welke rondes nodig zijn op basis van D en N
+        // Bepaal welke rondes nodig zijn op basis van D en NaarB
+        // B 1/4 alleen als NaarB >= 8 (genoeg voor 4 wedstrijden)
+        // B 1/8 alleen bij D>=16 (A heeft dan 1/8 finale)
         $heeftDubbele18 = $doelA >= 32;  // Dubbele B 1/8 bij D=32
         $heeftEnkele18 = $doelA >= 16;   // Enkele B 1/8 bij D=16
         $heeftDubbele14 = $doelA >= 16;  // Dubbele B 1/4 bij D=16
-        $heeftEnkele14 = $doelA >= 8;    // Enkele B 1/4 bij D=8
+        $heeftEnkele14 = $naarB >= 8;    // B 1/4 alleen als 8+ naar B gaan (12+ spelers bij D=8)
 
         $vorigeRondeWeds = [];
 
