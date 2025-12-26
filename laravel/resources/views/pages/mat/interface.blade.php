@@ -21,7 +21,8 @@
             <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
-                        <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer + (poule.type === 'eliminatie' ? ' (' + poule.judoka_count + ' judoka\\'s)' : '')"></span>
+                        <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
+                        <span x-show="poule.type === 'eliminatie'" x-text="'(' + poule.judoka_count + ')'"></span>
                     </h2>
                 </div>
                 <div class="flex items-center gap-3">
