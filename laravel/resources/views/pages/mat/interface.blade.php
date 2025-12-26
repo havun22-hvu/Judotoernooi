@@ -21,7 +21,7 @@
             <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
-                        <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
+                        <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer + (poule.type === 'eliminatie' ? ' (' + poule.judoka_count + ' judoka\\'s)' : '')"></span>
                     </h2>
                 </div>
                 <div class="flex items-center gap-3">
@@ -52,13 +52,13 @@
                         <button @click="activeTab = 'A'"
                                 :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                 class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                            Groep A (Hoofdboom)
+                            Groep A (Hoofdboom) <span x-text="'(' + poule.judoka_count + ')'"></span>
                         </button>
                         <template x-if="heeftHerkansing(poule)">
                             <button @click="activeTab = 'B'"
                                     :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                Groep B (Herkansing)
+                                Groep B (Herkansing) <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
                             </button>
                         </template>
                     </div>
