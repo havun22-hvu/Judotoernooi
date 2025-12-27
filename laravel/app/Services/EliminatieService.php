@@ -446,18 +446,28 @@ class EliminatieService
 
         $n = $doelA + $voorrondeA;
         $naarB = $voorrondeA + ($doelA / 2);  // V + D/2
-        $bVoorrondes = $voorrondeA;  // B voorrondes = V
 
-        \Log::info("B-groep genereren: N={$n}, D={$doelA}, V={$voorrondeA}, NaarB={$naarB}, BVoorrondes={$bVoorrondes}");
+        // Eerste fase = wedstrijden nodig om NaarB te reduceren naar 8
+        $eersteCase = max(0, $naarB - 8);
 
-        // Bepaal welke rondes nodig zijn op basis van D en NaarB
-        // B 1/8 alleen bij D>=32 (A heeft dan 1/16 finale, verliezers → B 1/8)
-        // B 1/4 dubbel bij D>=16 (A 1/8 verliezers → B 1e 1/4, A 1/4 verliezers → B 2e 1/4)
-        // B 1/4 enkel bij D=8 met NaarB >= 8
+        // B 1/8 = 8 als eersteCase >= 8, 4 als eersteCase >= 4, anders 0
+        $aantalB18 = 0;
+        if ($eersteCase >= 8) {
+            $aantalB18 = 8;
+        } elseif ($eersteCase >= 4) {
+            $aantalB18 = 4;
+        }
+
+        // B voorrondes = rest na B 1/8
+        $bVoorrondes = $eersteCase - $aantalB18;
+
+        \Log::info("B-groep genereren: N={$n}, D={$doelA}, V={$voorrondeA}, NaarB={$naarB}, EersteCase={$eersteCase}, B18={$aantalB18}, BVoorrondes={$bVoorrondes}");
+
+        // Bepaal welke rondes nodig zijn
         $heeftDubbele18 = $doelA >= 64;  // Dubbele B 1/8 bij D=64
-        $heeftEnkele18 = $doelA >= 32;   // Enkele B 1/8 alleen bij D>=32!
+        $heeftEnkele18 = $aantalB18 > 0;  // B 1/8 als berekend
         $heeftDubbele14 = $doelA >= 16;  // Dubbele B 1/4 bij D=16
-        $heeftEnkele14 = $naarB >= 8;    // B 1/4 alleen als 8+ naar B gaan (12+ spelers bij D=8)
+        $heeftEnkele14 = $naarB >= 8;    // B 1/4 alleen als 8+ naar B gaan
 
         $vorigeRondeWeds = [];
 
@@ -477,11 +487,9 @@ class EliminatieService
             \Log::info("B voorronde: {$bVoorrondes} wedstrijden");
         }
 
-        // === STAP 2: B 1/8 DEEL 1 (alleen bij D>=16) ===
+        // === STAP 2: B 1/8 (aantal al berekend hierboven) ===
         $b18Deel1Weds = [];
         if ($heeftEnkele18) {
-            // Aantal wedstrijden = D/4 (8 bij D=32, 4 bij D=16... maar standaard 8)
-            $aantalB18 = min(8, $doelA / 2);
             for ($i = 0; $i < $aantalB18; $i++) {
                 $wed = Wedstrijd::create([
                     'poule_id' => $poule->id,
