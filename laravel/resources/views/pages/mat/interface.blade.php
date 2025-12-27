@@ -961,7 +961,9 @@ function matInterface() {
 
             // Simpele berekening met absolute positioning
             const potjeHeight = 2 * h; // 56px (wit + blauw)
-            const potjeGap = 8; // marge tussen potjes
+            // Meer ruimte tussen potjes als er voorronde is (ruimte voor 2 potjes per 1/8 slot)
+            const heeftVoorrondeInBracket = rondes.some(r => r.ronde === 'voorronde' || r.ronde === 'b_voorronde');
+            const potjeGap = heeftVoorrondeInBracket ? (potjeHeight + 16) : 8;
 
             // Niveau bepaalt verticale positie (deel 2 rondes krijgen zelfde niveau als deel 1)
             const rondeNiveauMap = {
