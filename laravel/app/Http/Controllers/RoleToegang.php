@@ -67,6 +67,7 @@ class RoleToegang extends Controller
 
         return view('pages.mat.interface', [
             'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken,
             'matten' => $toernooi->matten,
         ]);
     }
