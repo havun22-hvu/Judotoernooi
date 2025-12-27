@@ -502,8 +502,8 @@ class EliminatieService
                 $b18Deel1Weds[] = $wed;
             }
 
-            // Koppel B voorronde → B 1/8
-            $this->koppelRondes($vorigeRondeWeds, $b18Deel1Weds);
+            // Koppel B voorronde → B 1/8 (1-op-1, zoals A-groep)
+            $this->koppelRondes($vorigeRondeWeds, $b18Deel1Weds, true);
             $vorigeRondeWeds = $b18Deel1Weds;
             \Log::info("B 1/8 deel 1: {$aantalB18} wedstrijden");
         }
@@ -551,8 +551,8 @@ class EliminatieService
                 $b14Deel1Weds[] = $wed;
             }
 
-            // Koppel vorige ronde → B 1/4 deel 1
-            $this->koppelRondes($vorigeRondeWeds, $b14Deel1Weds);
+            // Koppel vorige ronde → B 1/4 deel 1 (geen bracket_pos update)
+            $this->koppelRondes($vorigeRondeWeds, $b14Deel1Weds, false, false);
             \Log::info("B 1/4 deel 1: 4 wedstrijden");
         }
 
@@ -600,8 +600,8 @@ class EliminatieService
             $b12Deel1Weds[] = $wed;
         }
 
-        // Koppel vorige ronde → B 1/2 deel 1
-        $this->koppelRondes($vorigeRondeWeds, $b12Deel1Weds);
+        // Koppel vorige ronde → B 1/2 deel 1 (geen bracket_pos update)
+        $this->koppelRondes($vorigeRondeWeds, $b12Deel1Weds, false, false);
         \Log::info("B 1/2 deel 1: 2 wedstrijden");
 
         // === STAP 7: BRONS (B 1/2 DEEL 2) ===
@@ -638,15 +638,27 @@ class EliminatieService
      * Koppel wedstrijden van vorige ronde naar volgende ronde
      * 2 wedstrijden uit vorige → 1 wedstrijd in volgende
      */
-    private function koppelRondes(array $vorigeRonde, array $volgendeRonde): void
+    private function koppelRondes(array $vorigeRonde, array $volgendeRonde, bool $eenOpEen = false, bool $updateBracketPos = true): void
     {
         foreach ($vorigeRonde as $idx => $wed) {
-            $volgendeIdx = (int) ($idx / 2);
+            // 1-op-1: elke voorronde naar aparte volgende wedstrijd (zoals A-groep)
+            // 2-op-1: twee wedstrijden naar 1 volgende wedstrijd (standaard bracket)
+            $volgendeIdx = $eenOpEen ? $idx : (int) ($idx / 2);
             if (isset($volgendeRonde[$volgendeIdx])) {
-                $wed->update([
+                $slot = $eenOpEen ? 'blauw' : (($idx % 2 === 0) ? 'wit' : 'blauw');
+
+                $updateData = [
                     'volgende_wedstrijd_id' => $volgendeRonde[$volgendeIdx]->id,
-                    'winnaar_naar_slot' => ($idx % 2 === 0) ? 'wit' : 'blauw',
-                ]);
+                    'winnaar_naar_slot' => $slot,
+                ];
+
+                // Alleen bracket_positie updaten voor voorrondes, niet voor 1/8 → 1/4 etc.
+                if ($updateBracketPos) {
+                    $volgendeBracketPos = $volgendeRonde[$volgendeIdx]->bracket_positie;
+                    $updateData['bracket_positie'] = $volgendeBracketPos * 2;
+                }
+
+                $wed->update($updateData);
             }
         }
     }
