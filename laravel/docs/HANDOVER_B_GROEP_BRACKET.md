@@ -1,5 +1,10 @@
 # Handover: B-groep Bracket Fix
 
+## ⚠️ BELANGRIJKE LES - LEES DIT EERST
+**Bij visuele/layout problemen: VRAAG EERST OM EEN SCREENSHOT OF TEKENING!**
+Niet raden, niet aannames maken. Eén plaatje zegt meer dan 1000 woorden.
+Dit had 30 minuten gekost i.p.v. 6 uur.
+
 ## Wat is gedaan
 - Voorronde toont nu alleen bestaande wedstrijden, niet 16 lege potjes
 - Positie gebaseerd op `bracket_positie` (waar de voorronde hoort bij de 1/8)
