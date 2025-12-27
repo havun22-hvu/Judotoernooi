@@ -16,10 +16,11 @@ Voorronde (5) | 1/8 (8) | 1/4 (1) | 1/4 (2) | 1/2 (1) | Brons | →🥉
 2. **Verticale posities**:
    - 1/4(2) op DEZELFDE hoogte als 1/4(1)
    - Brons op DEZELFDE hoogte als 1/2(1)
-3. **Symmetrie = SPIEGELING naar het MIDDEN**
-   - Bovenste helft spiegelt naar beneden
-   - Onderste helft spiegelt naar boven
-   - Finales komen uit in het midden
+3. **Symmetrie = SPIEGELEN NAAR HET MIDDEN**
+   - Bovenste helft spiegelt naar beneden (richting midden)
+   - Onderste helft spiegelt naar boven (richting midden)
+   - Finales komen uit in het MIDDEN van de bracket
+   - Dit is de kernterm: "spiegelen naar het midden"
 4. **Voorronde = alleen bestaande wedstrijden**
    - Niet complete 1/16 finale tekenen
    - Alleen de X voorrondes op hun bracket_positie
