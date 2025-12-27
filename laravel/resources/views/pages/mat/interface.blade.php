@@ -999,7 +999,14 @@ function matInterface() {
             };
 
             // Helper om niveau te bepalen voor een ronde
+            // A-groep: gebruik rondeIdx (standaard bracket)
+            // B-groep: gebruik niveau-mapping voor deel 2 rondes
             const getNiveau = (rondeNaam, rondeIdx) => {
+                // A-groep: altijd rondeIdx gebruiken (standaard bracket layout)
+                if (!rondeNaam || !rondeNaam.startsWith('b_')) {
+                    return rondeIdx;
+                }
+                // B-groep: gebruik niveau-mapping
                 if (rondeNiveauMap[rondeNaam] !== undefined) {
                     return rondeNiveauMap[rondeNaam];
                 }
