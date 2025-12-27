@@ -1027,68 +1027,53 @@ function matInterface() {
                 const isVoorronde = ronde.ronde === 'voorronde' || ronde.ronde === 'b_voorronde';
 
                 if (isVoorronde) {
-                    // VOORRONDE = 1/16 finale: 16 potjes met absolute positioning
-                    const eersteRonde = rondes[1]; // 1/8 finale
-                    const aantal1_8 = eersteRonde ? eersteRonde.wedstrijden.length : 8;
-                    const aantalVoorondePotjes = aantal1_8 * 2; // 16 potjes voor 8 1/8 matches
-
-                    // Tel echte voorronde wedstrijden voor nummering
-                    let wedstrijdTeller = 0;
-
+                    // VOORRONDE: alleen de bestaande wedstrijden tekenen op hun bracket_positie
                     html += `<div class="relative flex-shrink-0 w-36">`; // iets breder voor nummer
 
-                    // Map voorronde wedstrijden op bracket_positie
-                    const voorrondeMap = {};
-                    ronde.wedstrijden.forEach(w => {
-                        voorrondeMap[w.bracket_positie] = w;
-                    });
-
-                    // Render 16 potjes met absolute positioning
                     const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
 
-                    for (let potjeNr = 1; potjeNr <= aantalVoorondePotjes; potjeNr++) {
-                        const wed = voorrondeMap[potjeNr];
-                        const topPos = berekenPotjeTop(0, potjeNr - 1); // 0-indexed
+                    // Sorteer op bracket_positie en teken alleen bestaande wedstrijden
+                    const sortedVoorrondes = [...ronde.wedstrijden].sort((a, b) => a.bracket_positie - b.bracket_positie);
+
+                    sortedVoorrondes.forEach((wed, wedIdx) => {
+                        // Positie gebaseerd op bracket_positie (waar deze voorronde hoort bij de 1/8)
+                        const topPos = berekenPotjeTop(0, wed.bracket_positie - 1);
 
                         // Check winnaar status (niet bij bye)
-                        const isBye = wed?.uitslag_type === 'bye';
-                        const isWitWinnaar = wed?.is_gespeeld && wed?.winnaar_id === wed?.wit?.id && !isBye;
-                        const isBlauwWinnaar = wed?.is_gespeeld && wed?.winnaar_id === wed?.blauw?.id && !isBye;
+                        const isBye = wed.uitslag_type === 'bye';
+                        const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
+                        const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
 
-                        // Wedstrijdnummer alleen als er een wedstrijd is
-                        if (wed) wedstrijdTeller++;
-                        const wedNr = wed ? wedstrijdTeller : '';
+                        const wedNr = wedIdx + 1;
 
-                        // Drag data met volgende wedstrijd info voor validatie
-                        const witDragData = wed ? JSON.stringify({
+                        // Drag data
+                        const witDragData = JSON.stringify({
                             judokaId: wed.wit?.id,
                             wedstrijdId: wed.id,
                             judokaNaam: wed.wit?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
                             winnaarNaarSlot: wed.winnaar_naar_slot,
                             pouleIsLocked: isLocked
-                        }).replace(/"/g, '&quot;') : '';
+                        }).replace(/"/g, '&quot;');
 
-                        const blauwDragData = wed ? JSON.stringify({
+                        const blauwDragData = JSON.stringify({
                             judokaId: wed.blauw?.id,
                             wedstrijdId: wed.id,
                             judokaNaam: wed.blauw?.naam || '',
                             volgendeWedstrijdId: wed.volgende_wedstrijd_id,
                             winnaarNaarSlot: wed.winnaar_naar_slot,
                             pouleIsLocked: isLocked
-                        }).replace(/"/g, '&quot;') : '';
+                        }).replace(/"/g, '&quot;');
 
-                        // Potje container met absolute positie - flex voor nummer + slots
+                        // Potje container
                         html += `<div class="absolute w-36 flex items-center" style="top: ${topPos}px;">`;
-                        // Nummer links van potje (verticaal gecentreerd)
                         html += `<div class="w-4 text-xs text-gray-500 font-medium text-right pr-1">${wedNr}</div>`;
-                        // Slots container
                         html += `<div class="flex-1">`;
 
                         // Wit slot
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
-                        if (wed && wed.wit) {
+                        if (wed.wit) {
                             html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
                                        ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
                                      <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
@@ -1101,7 +1086,7 @@ function matInterface() {
                         // Blauw slot
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
-                        if (wed && wed.blauw) {
+                        if (wed.blauw) {
                             html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
                                        ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
                                      <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
@@ -1113,7 +1098,7 @@ function matInterface() {
 
                         html += '</div>'; // einde slots container (flex-1)
                         html += '</div>'; // einde potje container (absolute)
-                    }
+                    });
 
                     html += '</div>';
                 } else {
