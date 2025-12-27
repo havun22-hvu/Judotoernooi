@@ -753,7 +753,7 @@ function matInterface() {
             });
 
             // Sorteer rondes op volgorde (voorronde eerst, finale/halve laatst)
-            let rondes = Object.entries(rondesMap)
+            const rondes = Object.entries(rondesMap)
                 .sort((a, b) => {
                     const volgordeA = this.rondeVolgordeLookup[a[0]] ?? 99;
                     const volgordeB = this.rondeVolgordeLookup[b[0]] ?? 99;
@@ -768,67 +768,7 @@ function matInterface() {
                     return { naam, ronde, wedstrijden: weds };
                 });
 
-            // Voor B-groep: combineer deel 1 en deel 2 rondes tot één kolom
-            if (groep === 'B') {
-                rondes = this.combineerBGroepRondes(rondes);
-            }
-
             return rondes;
-        },
-
-        // Combineer B-groep rondes (1/4-1 + 1/4-2 -> 1/4, 1/2-1 + brons -> 1/2+Brons)
-        combineerBGroepRondes(rondes) {
-            const gecombineerd = [];
-            const verwerkt = new Set();
-
-            for (let i = 0; i < rondes.length; i++) {
-                if (verwerkt.has(i)) continue;
-
-                const ronde = rondes[i];
-                const rondeNaam = ronde.ronde;
-
-                // Check voor rondes die gecombineerd moeten worden
-                if (rondeNaam === 'b_kwartfinale_1') {
-                    // Zoek b_kwartfinale_2
-                    const deel2Idx = rondes.findIndex(r => r.ronde === 'b_kwartfinale_2');
-                    if (deel2Idx >= 0) {
-                        const gecombineerdeWeds = [...ronde.wedstrijden, ...rondes[deel2Idx].wedstrijden];
-                        gecombineerdeWeds.sort((a, b) => (a.bracket_positie || 0) - (b.bracket_positie || 0));
-                        gecombineerd.push({
-                            naam: '1/4',
-                            ronde: 'b_kwartfinale',
-                            wedstrijden: gecombineerdeWeds
-                        });
-                        verwerkt.add(deel2Idx);
-                    } else {
-                        gecombineerd.push(ronde);
-                    }
-                } else if (rondeNaam === 'b_halve_finale_1') {
-                    // Zoek b_brons
-                    const bronsIdx = rondes.findIndex(r => r.ronde === 'b_brons');
-                    if (bronsIdx >= 0) {
-                        const gecombineerdeWeds = [...ronde.wedstrijden, ...rondes[bronsIdx].wedstrijden];
-                        gecombineerdeWeds.sort((a, b) => (a.bracket_positie || 0) - (b.bracket_positie || 0));
-                        gecombineerd.push({
-                            naam: '1/2 + Brons',
-                            ronde: 'b_halve_brons',
-                            wedstrijden: gecombineerdeWeds
-                        });
-                        verwerkt.add(bronsIdx);
-                    } else {
-                        gecombineerd.push(ronde);
-                    }
-                } else if (rondeNaam === 'b_kwartfinale_2' || rondeNaam === 'b_brons') {
-                    // Skip - wordt al gecombineerd
-                    continue;
-                } else {
-                    gecombineerd.push(ronde);
-                }
-
-                verwerkt.add(i);
-            }
-
-            return gecombineerd;
         },
 
         // Geef leesbare naam voor ronde
@@ -1023,8 +963,23 @@ function matInterface() {
             const potjeHeight = 2 * h; // 56px (wit + blauw)
             const potjeGap = 8; // marge tussen potjes
 
-            // Niveau voor voorronde (aparte logica) - rest gebruikt rondeIdx
-            // Na combineren zijn B-groep rondes: b_voorronde, b_achtste_finale, b_kwartfinale, b_halve_brons
+            // Niveau bepaalt verticale positie (deel 2 rondes krijgen zelfde niveau als deel 1)
+            const rondeNiveauMap = {
+                'b_voorronde': -1,  // Voorronde heeft eigen logica
+                'b_achtste_finale': 0,
+                'b_achtste_finale_2': 0,  // Zelfde als 1/8-1
+                'b_kwartfinale': 1,
+                'b_kwartfinale_1': 1,
+                'b_kwartfinale_2': 1,  // Zelfde niveau als 1/4-1
+                'b_halve_finale_1': 2,
+                'b_brons': 2,  // Zelfde niveau als 1/2-1
+                // A-groep
+                'voorronde': -1,
+                'achtste_finale': 0,
+                'kwartfinale': 1,
+                'halve_finale': 2,
+                'finale': 3,
+            };
 
             // Bereken posities voor elke ronde op basis van niveau
             const berekenPotjeTop = (niveau, potjeIdx) => {
@@ -1043,9 +998,20 @@ function matInterface() {
                 return center - potjeHeight / 2;
             };
 
-            // Niveau = rondeIdx (standaard bracket layout voor beide groepen)
-            // Na combineren werkt B-groep net als A-groep
-            const getNiveau = (rondeNaam, rondeIdx) => rondeIdx;
+            // Helper om niveau te bepalen voor een ronde
+            // A-groep: gebruik rondeIdx (standaard bracket)
+            // B-groep: gebruik niveau-mapping voor deel 2 rondes
+            const getNiveau = (rondeNaam, rondeIdx) => {
+                // A-groep: altijd rondeIdx gebruiken (standaard bracket layout)
+                if (!rondeNaam || !rondeNaam.startsWith('b_')) {
+                    return rondeIdx;
+                }
+                // B-groep: gebruik niveau-mapping
+                if (rondeNiveauMap[rondeNaam] !== undefined) {
+                    return rondeNiveauMap[rondeNaam];
+                }
+                return rondeIdx; // fallback
+            };
 
             // Bepaal totale hoogte (gebaseerd op eerste ronde)
             const eersteRonde = rondes[0];
@@ -1061,10 +1027,10 @@ function matInterface() {
                 const isVoorronde = ronde.ronde === 'voorronde' || ronde.ronde === 'b_voorronde';
 
                 if (isVoorronde) {
-                    // VOORRONDE: posities gebaseerd op volgende ronde
-                    const volgendeRonde = rondes[1]; // 1/8 finale of 1/4 finale
-                    const aantalVolgende = volgendeRonde ? volgendeRonde.wedstrijden.length : 8;
-                    const aantalVoorondePotjes = aantalVolgende * 2; // 2 slots per volgende wedstrijd
+                    // VOORRONDE = 1/16 finale: 16 potjes met absolute positioning
+                    const eersteRonde = rondes[1]; // 1/8 finale
+                    const aantal1_8 = eersteRonde ? eersteRonde.wedstrijden.length : 8;
+                    const aantalVoorondePotjes = aantal1_8 * 2; // 16 potjes voor 8 1/8 matches
 
                     // Tel echte voorronde wedstrijden voor nummering
                     let wedstrijdTeller = 0;
@@ -1261,17 +1227,14 @@ function matInterface() {
                 html += '</div></div>';
                 html += '</div>';
             } else {
-                // B groep: 2 bronzen winnaars (filter alleen brons wedstrijden uit gecombineerde ronde)
-                const bronsWedstrijden = laatsteRondeWedstrijden.filter(w => w.ronde === 'b_brons');
+                // B groep: 2 bronzen winnaars (1 per brons wedstrijd)
                 html += `<div class="relative flex-shrink-0 w-32">`;
-                bronsWedstrijden.forEach((wed, wedIdx) => {
+                laatsteRondeWedstrijden.forEach((wed, wedIdx) => {
                     const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
-                    // Brons slots staan na de halve finale slots in de gecombineerde ronde
-                    const halveFinaleCount = laatsteRondeWedstrijden.filter(w => w.ronde === 'b_halve_finale_1').length;
-                    const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, halveFinaleCount + wedIdx) + h / 2;
+                    const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, wedIdx) + h / 2;
                     html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
                     html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate">`;
-                    html += winnaar ? `🥉 ${winnaar.naam}` : '🥉';
+                    html += winnaar ? `${winnaar.naam} →🥉` : '→ 🥉';
                     html += '</div></div>';
                 });
                 html += '</div>';
