@@ -1,4 +1,4 @@
-# Handover - JudoToernooi
+verkeerde# Handover - JudoToernooi
 
 > Dit bestand wordt bijgewerkt aan het einde van elke sessie.
 > Lees dit EERST bij een nieuwe sessie.
