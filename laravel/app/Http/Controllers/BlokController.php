@@ -242,7 +242,8 @@ class BlokController extends Controller
                 if ($poule->type === 'eliminatie') {
                     // Generate elimination bracket
                     $isEliminatie = true;
-                    $stats = $this->eliminatieService->genereerBracket($poule);
+                    $judokaIds = $poule->judokas()->pluck('judokas.id')->toArray();
+                    $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds);
                     $totaalWedstrijden += $stats['totaal_wedstrijden'] ?? 0;
                 } else {
                     // Generate round-robin matches
