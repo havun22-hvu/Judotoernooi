@@ -554,6 +554,7 @@ class EliminatieService
 
         // Als er een oude winnaar was, moet die gecorrigeerd worden
         if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
+            // 1. Verwijder oude winnaar uit volgende ronde
             if ($wedstrijd->volgende_wedstrijd_id) {
                 $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
                 if ($volgendeWedstrijd) {
@@ -566,6 +567,14 @@ class EliminatieService
                     }
                 }
             }
+
+            // 2. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
+            // Want die was daar geplaatst als verliezer, maar is nu winnaar
+            $this->verwijderUitB($wedstrijd->poule_id, $winnaarId);
+            $correcties[] = "Nieuwe winnaar verwijderd uit B-groep";
+
+            // 3. Plaats oude winnaar (=nieuwe verliezer) in B-groep
+            // De reguliere code hieronder doet dit al
         }
 
         // Verliezer naar B-groep (alleen bij A-groep wedstrijden)

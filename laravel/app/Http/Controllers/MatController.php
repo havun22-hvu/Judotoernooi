@@ -181,10 +181,12 @@ class MatController extends Controller
             'judoka_id' => 'required|exists:judokas,id',
             'positie' => 'required|in:wit,blauw',
             'bron_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+            'is_correctie' => 'nullable|boolean',
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
         $correcties = [];
+        $isCorrectie = $validated['is_correctie'] ?? false;
 
         // Check of bracket locked is (minimaal 1 wedstrijd gespeeld in deze poule)
         $isLocked = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
@@ -211,9 +213,10 @@ class MatController extends Controller
 
                 // Check: Heeft deze bron-wedstrijd een volgende_wedstrijd_id?
                 if ($bronWedstrijd->volgende_wedstrijd_id) {
-                    // Als wedstrijd AL gespeeld is, moet deze judoka de winnaar zijn
-                    // Als wedstrijd NOG NIET gespeeld is, wordt deze door slepen gespeeld
-                    if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId) {
+                    // Als wedstrijd AL gespeeld is en dit is NIET de winnaar:
+                    // - Bij correctie: toegestaan (winnaar wordt gewijzigd)
+                    // - Zonder correctie-flag: blokkeer
+                    if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId && !$isCorrectie) {
                         return response()->json([
                             'success' => false,
                             'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',
@@ -255,9 +258,10 @@ class MatController extends Controller
                     ], 400);
                 }
 
-                // Als wedstrijd AL gespeeld is, moet deze judoka de winnaar zijn
-                // Als wedstrijd NOG NIET gespeeld is, wordt deze door slepen gespeeld
-                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId) {
+                // Als wedstrijd AL gespeeld is en dit is NIET de winnaar:
+                // - Bij correctie: toegestaan (winnaar wordt gewijzigd)
+                // - Zonder correctie-flag: blokkeer
+                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId && !$isCorrectie) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',

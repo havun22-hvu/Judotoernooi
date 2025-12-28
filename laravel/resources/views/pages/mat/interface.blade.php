@@ -248,15 +248,19 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
         console.log('Check 2: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
         console.log('Check 2 extra: isGespeeld:', data.isGespeeld, 'isWinnaar:', data.isWinnaar);
         if (data.volgendeWedstrijdId) {
-            // Als wedstrijd AL gespeeld is, mag alleen de winnaar doorschuiven
-            // Als wedstrijd NIET gespeeld is, wordt deze door slepen gespeeld (judoka = winnaar)
+            // Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
+            // Vraag bevestiging voordat we de winnaar wijzigen
             if (data.isGespeeld && !data.isWinnaar) {
-                alert(
-                    `❌ GEBLOKKEERD: Dit is niet de winnaar!\n\n` +
-                    `${naam} heeft deze wedstrijd niet gewonnen.\n` +
-                    `Alleen de winnaar mag naar de volgende ronde.`
-                );
-                return;
+                if (!confirm(
+                    `⚠️ CORRECTIE: Winnaar wijzigen?\n\n` +
+                    `${naam} was niet de winnaar van deze wedstrijd.\n\n` +
+                    `Wil je ${naam} als nieuwe winnaar instellen?\n` +
+                    `(De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast)`
+                )) {
+                    return; // Gebruiker annuleerde
+                }
+                // Gebruiker bevestigde - markeer als correctie
+                data.isCorrectie = true;
             }
 
             console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
@@ -302,7 +306,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
                 wedstrijd_id: targetWedstrijdId,
                 judoka_id: data.judokaId,
                 positie: positie,
-                bron_wedstrijd_id: data.wedstrijdId || null  // Stuur bron wedstrijd mee voor uitslag registratie
+                bron_wedstrijd_id: data.wedstrijdId || null,  // Stuur bron wedstrijd mee voor uitslag registratie
+                is_correctie: data.isCorrectie || false       // Flag voor winnaar-correctie
             })
         });
 
