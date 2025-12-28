@@ -248,17 +248,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
         console.log('Check 2: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
         console.log('Check 2 extra: isGespeeld:', data.isGespeeld, 'isWinnaar:', data.isWinnaar);
         if (data.volgendeWedstrijdId) {
-            // NIEUWE CHECK: Alleen de WINNAAR van een GESPEELDE wedstrijd mag doorschuiven
-            if (!data.isGespeeld) {
-                alert(
-                    `❌ GEBLOKKEERD: Wedstrijd nog niet gespeeld!\n\n` +
-                    `${naam}'s wedstrijd moet eerst gespeeld worden.\n` +
-                    `Alleen de winnaar mag doorschuiven.`
-                );
-                return;
-            }
-
-            if (!data.isWinnaar) {
+            // Als wedstrijd AL gespeeld is, mag alleen de winnaar doorschuiven
+            // Als wedstrijd NIET gespeeld is, wordt deze door slepen gespeeld (judoka = winnaar)
+            if (data.isGespeeld && !data.isWinnaar) {
                 alert(
                     `❌ GEBLOKKEERD: Dit is niet de winnaar!\n\n` +
                     `${naam} heeft deze wedstrijd niet gewonnen.\n` +
@@ -1031,11 +1023,11 @@ function matInterface() {
                         html += `<div class="w-4 text-xs text-gray-500 font-medium text-right pr-1">${wedNr}</div>`;
                         html += `<div class="flex-1">`;
 
-                        // Wit slot
+                        // Wit slot (b_start)
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
                         if (wed.wit) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                        ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
                                      <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
                                   </div>`;
@@ -1044,11 +1036,11 @@ function matInterface() {
                         html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
                         html += '</div>';
 
-                        // Blauw slot
+                        // Blauw slot (b_start)
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
                         if (wed.blauw) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                        ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
                                      <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                   </div>`;
@@ -1113,7 +1105,7 @@ function matInterface() {
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit')">`;
                         if (wed.wit) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                           ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
                                         <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
                                      </div>`;
@@ -1131,7 +1123,7 @@ function matInterface() {
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw')">`;
                         if (wed.blauw) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-move" draggable="true"
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                           ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
                                         <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                      </div>`;

@@ -240,10 +240,17 @@ class BlokController extends Controller
             // Only generate if no wedstrijden exist yet
             if ($poule->wedstrijden()->count() === 0) {
                 if ($poule->type === 'eliminatie') {
-                    // Generate elimination bracket
+                    // Generate elimination bracket (alleen aanwezige judoka's!)
                     $isEliminatie = true;
-                    $judokaIds = $poule->judokas()->pluck('judokas.id')->toArray();
-                    $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds);
+                    $judokaIds = $poule->judokas()
+                        ->where(function ($q) {
+                            $q->whereNull('aanwezigheid')
+                              ->orWhere('aanwezigheid', '!=', 'afwezig');
+                        })
+                        ->pluck('judokas.id')
+                        ->toArray();
+                    $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+                    $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
                     $totaalWedstrijden += $stats['totaal_wedstrijden'] ?? 0;
                 } else {
                     // Generate round-robin matches

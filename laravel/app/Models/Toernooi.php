@@ -95,6 +95,7 @@ class Toernooi extends Model
         'wedstrijd_systeem',
         'eliminatie_gewichtsklassen',
         'kruisfinales_aantal',
+        'eliminatie_type',
         'gewicht_tolerantie',
         'judoka_code_volgorde',
         'gebruik_gewichtsklassen',
