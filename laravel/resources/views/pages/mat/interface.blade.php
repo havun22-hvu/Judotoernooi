@@ -774,21 +774,25 @@ function matInterface() {
         // Ronde volgorde voor sorteren (kleinste eerst = meeste wedstrijden)
         // B-groep: deel 1 en deel 2 rondes op volgorde
         rondeVolgordeLookup: {
-            // A-groep (geen aparte voorronde, 1/16 met byes)
+            // A-groep (1/16 met byes als nodig)
             'zestiende_finale': 1,
             'achtste_finale': 2,
             'kwartfinale': 3,
             'halve_finale': 4,
             'finale': 5,
-            // B-groep met dubbele rondes
-            'b_start': 0,              // Extra wedstrijden om naar macht van 2 te komen
-            'b_zestiende_finale': 1,
-            'b_achtste_finale': 2,
-            'b_achtste_finale_2': 3,
-            'b_kwartfinale_1': 4,
-            'b_kwartfinale_2': 5,
-            'b_halve_finale_1': 6,
-            'b_brons': 7,
+            // B-groep: dynamische structuur op basis van aantal judoka's
+            // 25+ j: B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
+            // 17-24 j: B-1/8 → B-1/4 → B-brons
+            // 13-16 j: B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
+            // 9-12 j: B-1/4 → B-brons
+            'b_achtste_finale_1': 1,
+            'b_achtste_finale_2': 2,
+            'b_achtste_finale': 1,     // Zonder suffix (17-24 j)
+            'b_kwartfinale_1': 3,
+            'b_kwartfinale_2': 4,
+            'b_kwartfinale': 3,        // Zonder suffix (9-12 j)
+            'b_halve_finale_1': 5,
+            'b_brons': 6,
         },
 
         // Get bracket als array van rondes met wedstrijden
@@ -826,25 +830,25 @@ function matInterface() {
         },
 
         // Geef leesbare naam voor ronde
-        // A-groep: 1/16 (met byes) → 1/8 → 1/4 → 1/2 → Finale
-        // B-groep: Start → dubbele rondes (1), (2) → Brons
+        // A-groep: 1/16 → 1/8 → 1/4 → 1/2 → Finale
+        // B-groep: dynamisch op basis van aantal judoka's
         getRondeDisplayNaam(ronde, aantalWeds) {
             const namen = {
-                // A-groep (geen aparte voorronde, 1/16 met byes)
+                // A-groep
                 'zestiende_finale': '1/16',
                 'achtste_finale': '1/8',
                 'kwartfinale': '1/4',
                 'halve_finale': '1/2',
                 'finale': 'Finale',
-                // B-groep met dubbele rondes
-                'b_start': 'Start',            // Extra wedstrijden om naar x² te komen
-                'b_zestiende_finale': '1/16',
-                'b_achtste_finale': '1/8 (1)',
+                // B-groep: (1)/(2) alleen als ronde 2x gespeeld wordt
+                'b_achtste_finale_1': '1/8 (1)',
                 'b_achtste_finale_2': '1/8 (2)',
+                'b_achtste_finale': '1/8',      // Zonder suffix
                 'b_kwartfinale_1': '1/4 (1)',
                 'b_kwartfinale_2': '1/4 (2)',
+                'b_kwartfinale': '1/4',         // Zonder suffix
                 'b_halve_finale_1': '1/2 (1)',
-                'b_brons': '1/2 (2)',          // Brons wedstrijden
+                'b_brons': 'Brons',
             };
             return namen[ronde] || ronde.replace('b_', 'B ').replace('_', ' ');
         },
@@ -904,8 +908,8 @@ function matInterface() {
             const potjeHeight = 2 * h; // 56px (wit + blauw)
             const potjeGap = 8; // marge tussen potjes
 
-            // Niveau bepaalt verticale positie (deel 2 rondes krijgen zelfde niveau als deel 1)
-            // Horizontaal gespiegeld: finale/brons = horizon (midden)
+            // Niveau bepaalt verticale positie
+            // (1) en (2) rondes krijgen NIET hetzelfde niveau - ze zijn opeenvolgend
             const rondeNiveauMap = {
                 // A-groep: standaard bracket
                 'zestiende_finale': 0,
@@ -913,14 +917,15 @@ function matInterface() {
                 'kwartfinale': 2,
                 'halve_finale': 3,
                 'finale': 4,
-                // B-groep: dubbele rondes op zelfde niveau
-                'b_start': 0,
-                'b_achtste_finale': 1,
-                'b_achtste_finale_2': 1,  // Zelfde niveau als 1/8 (1)
-                'b_kwartfinale_1': 2,
-                'b_kwartfinale_2': 2,     // Zelfde niveau als 1/4 (1)
-                'b_halve_finale_1': 3,
-                'b_brons': 3,             // Zelfde niveau als 1/2 (1)
+                // B-groep: elke ronde eigen niveau (opeenvolgend)
+                'b_achtste_finale_1': 0,
+                'b_achtste_finale_2': 1,
+                'b_achtste_finale': 0,    // Zonder suffix
+                'b_kwartfinale_1': 0,     // Of 2 als na b_achtste
+                'b_kwartfinale_2': 1,     // Of 3 als na b_kwartfinale_1
+                'b_kwartfinale': 0,       // Zonder suffix (eerste B-ronde)
+                'b_halve_finale_1': 2,
+                'b_brons': 3,
             };
 
             // Bereken posities voor elke ronde op basis van niveau
@@ -941,125 +946,28 @@ function matInterface() {
             };
 
             // Helper om niveau te bepalen voor een ronde
-            // A-groep: gebruik rondeIdx (standaard bracket)
-            // B-groep: gebruik niveau-mapping voor deel 2 rondes
+            // Gebruik gewoon rondeIdx voor beide groepen (simpele bracket layout)
             const getNiveau = (rondeNaam, rondeIdx) => {
-                // A-groep: altijd rondeIdx gebruiken (standaard bracket layout)
-                if (!rondeNaam || !rondeNaam.startsWith('b_')) {
-                    return rondeIdx;
-                }
-                // B-groep: gebruik niveau-mapping
-                if (rondeNiveauMap[rondeNaam] !== undefined) {
-                    return rondeNiveauMap[rondeNaam];
-                }
-                return rondeIdx; // fallback
+                return rondeIdx;
             };
 
-            // Bepaal totale hoogte (gebaseerd op bracket structuur)
-            // A-groep: gebruik volgende ronde * 2 (bijv. 1/8 heeft 8 weds → 16 slots)
-            // B-groep: idem voor b_start
+            // Bepaal totale hoogte gebaseerd op eerste ronde
             const eersteRonde = rondes[0];
             const tweedeRonde = rondes[1];
-            const heeftBStart = eersteRonde.ronde === 'b_start';
 
-            // Bereken aantal slots op basis van volgende ronde (of huidige als geen volgende)
+            // Bereken aantal slots op basis van eerste ronde wedstrijden
             let aantalSlots;
-            if (heeftBStart) {
-                aantalSlots = (tweedeRonde?.wedstrijden.length || 8) * 2;
-            } else if (tweedeRonde) {
-                // A-groep: 1/16 → 1/8 (8 weds) → 16 slots nodig
-                aantalSlots = tweedeRonde.wedstrijden.length * 2;
+            if (eersteRonde) {
+                // Gebruik eerste ronde wedstrijden * 2 voor correcte spacing
+                aantalSlots = eersteRonde.wedstrijden.length * 2;
             } else {
-                // Fallback: gebruik eerste ronde
-                aantalSlots = eersteRonde.wedstrijden.length;
+                aantalSlots = 8; // Fallback
             }
-            const totaleHoogte = aantalSlots * (potjeHeight + potjeGap);
+            const totaleHoogte = Math.max(aantalSlots * (potjeHeight + potjeGap), 300);
 
             html += `<div class="flex" style="height: ${totaleHoogte}px;">`;
 
             rondes.forEach((ronde, rondeIdx) => {
-                const isBStart = ronde.ronde === 'b_start';
-
-                if (isBStart) {
-                    // B_START: alleen de bestaande wedstrijden tekenen op hun bracket_positie
-                    html += `<div class="relative flex-shrink-0 w-36">`; // iets breder voor nummer
-
-                    const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
-
-                    // Sorteer op bracket_positie en teken alleen bestaande wedstrijden
-                    const sortedBStart = [...ronde.wedstrijden].sort((a, b) => a.bracket_positie - b.bracket_positie);
-
-                    sortedBStart.forEach((wed, wedIdx) => {
-                        // Positie gebaseerd op bracket_positie (waar deze b_start hoort bij de 1/8)
-                        const topPos = berekenPotjeTop(0, wed.bracket_positie - 1);
-
-                        // Check winnaar status (niet bij bye)
-                        const isBye = wed.uitslag_type === 'bye';
-                        const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
-                        const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
-
-                        const wedNr = wedIdx + 1;
-
-                        // Drag data met validatie info
-                        const witDragData = JSON.stringify({
-                            judokaId: wed.wit?.id,
-                            wedstrijdId: wed.id,
-                            judokaNaam: wed.wit?.naam || '',
-                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot,
-                            pouleIsLocked: isLocked,
-                            isWinnaar: isWitWinnaar,
-                            isGespeeld: wed.is_gespeeld === true
-                        }).replace(/"/g, '&quot;');
-
-                        const blauwDragData = JSON.stringify({
-                            judokaId: wed.blauw?.id,
-                            wedstrijdId: wed.id,
-                            judokaNaam: wed.blauw?.naam || '',
-                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot,
-                            pouleIsLocked: isLocked,
-                            isWinnaar: isBlauwWinnaar,
-                            isGespeeld: wed.is_gespeeld === true
-                        }).replace(/"/g, '&quot;');
-
-                        // Potje container
-                        html += `<div class="absolute w-36 flex items-center" style="top: ${topPos}px;">`;
-                        html += `<div class="w-4 text-xs text-gray-500 font-medium text-right pr-1">${wedNr}</div>`;
-                        html += `<div class="flex-1">`;
-
-                        // Wit slot (b_start)
-                        html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
-                        if (wed.wit) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                       ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
-                                     <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
-                                  </div>`;
-                        }
-                        html += '</div>';
-                        html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
-                        html += '</div>';
-
-                        // Blauw slot (b_start)
-                        html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs border-r-0">`;
-                        if (wed.blauw) {
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                       ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
-                                     <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
-                                  </div>`;
-                        }
-                        html += '</div>';
-                        html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
-                        html += '</div>';
-
-                        html += '</div>'; // einde slots container (flex-1)
-                        html += '</div>'; // einde potje container (absolute)
-                    });
-
-                    html += '</div>';
-                } else {
                     // Normale ronde rendering met absolute positioning
                     html += `<div class="relative flex-shrink-0 w-32">`;
 
@@ -1143,7 +1051,6 @@ function matInterface() {
                     });
 
                     html += '</div>';
-                }
 
                 // Ruimte voor connector
                 if (rondeIdx < rondes.length - 1) {
