@@ -228,69 +228,64 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie) {
     // Check of we in seeding-fase zijn (geen wedstrijden gespeeld in deze poule)
     // data.pouleIsLocked wordt meegegeven vanuit de drag source
     const isLocked = data.pouleIsLocked === true;
+    const naam = data.judokaNaam || 'Deze judoka';
     console.log('isLocked:', isLocked);
 
-    // STRENGE validatie: alleen als bracket LOCKED is (wedstrijden al gespeeld)
-    if (isLocked) {
-        const naam = data.judokaNaam || 'Deze judoka';
+    // Check 1: Mag niet naar andere slot in DEZELFDE wedstrijd (ALTIJD)
+    console.log('Check 1: wedstrijdId', data.wedstrijdId, '==', targetWedstrijdId, '?', data.wedstrijdId == targetWedstrijdId);
+    if (data.wedstrijdId == targetWedstrijdId) {
+        alert(
+            `❌ GEBLOKKEERD: Kan niet verplaatsen binnen dezelfde wedstrijd!\n\n` +
+            `${naam} staat al in deze wedstrijd.`
+        );
+        return;
+    }
 
-        // Check 1: Mag niet naar andere slot in DEZELFDE wedstrijd
-        console.log('Check 1: wedstrijdId', data.wedstrijdId, '==', targetWedstrijdId, '?', data.wedstrijdId == targetWedstrijdId);
-        if (data.wedstrijdId == targetWedstrijdId) {
+    // Check 2: Als er een volgende wedstrijd is bepaald, moet die ALTIJD kloppen
+    // Dit geldt zowel in seeding-fase als locked-fase
+    console.log('Check 2: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
+    if (data.volgendeWedstrijdId) {
+        // Check 2a: Moet naar de juiste volgende wedstrijd
+        console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
+        if (data.volgendeWedstrijdId != targetWedstrijdId) {
             alert(
-                `❌ GEBLOKKEERD: Kan niet verplaatsen binnen dezelfde wedstrijd!\n\n` +
-                `${naam} staat al in deze wedstrijd.`
+                `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
+                `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
+                `Sleep naar het juiste vak.`
             );
             return;
         }
 
-        // Check 2: Als er een volgende wedstrijd is bepaald, moet die kloppen
-        console.log('Check 2: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
-        console.log('Check 2 extra: isGespeeld:', data.isGespeeld, 'isWinnaar:', data.isWinnaar);
-        if (data.volgendeWedstrijdId) {
-            // Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
-            // Vraag bevestiging voordat we de winnaar wijzigen
-            if (data.isGespeeld && !data.isWinnaar) {
-                if (!confirm(
-                    `⚠️ CORRECTIE: Winnaar wijzigen?\n\n` +
-                    `${naam} was niet de winnaar van deze wedstrijd.\n\n` +
-                    `Wil je ${naam} als nieuwe winnaar instellen?\n` +
-                    `(De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast)`
-                )) {
-                    return; // Gebruiker annuleerde
-                }
-                // Gebruiker bevestigde - markeer als correctie
-                data.isCorrectie = true;
-            }
+        // Check 2b: Moet in het juiste slot (wit/blauw)
+        console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, '!==', positie, '?', data.winnaarNaarSlot !== positie);
+        if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
+            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
+            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
 
-            console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
-            if (data.volgendeWedstrijdId != targetWedstrijdId) {
-                // VERKEERDE WEDSTRIJD - BLOKKEER DIRECT
-                alert(
-                    `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-                    `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
-                    `Sleep naar het juiste vak.`
-                );
-                return;
-            }
-
-            // Juiste wedstrijd, maar verkeerde positie?
-            console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, '!==', positie, '?', data.winnaarNaarSlot !== positie);
-            if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-                const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT' : 'BLAUW';
-                const gekozenPositie = positie === 'wit' ? 'WIT' : 'BLAUW';
-
-                alert(
-                    `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
-                    `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
-                );
-                return;
-            }
-        } else {
-            // Geen volgendeWedstrijdId = finale of bye judoka
-            // Bij finale is dit OK, bij andere situaties niet
-            console.log('GEEN volgendeWedstrijdId - finale of bye judoka, wordt geaccepteerd');
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
+                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
+            );
+            return;
         }
+
+        // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
+        // Alleen relevant als bracket locked is
+        if (isLocked && data.isGespeeld && !data.isWinnaar) {
+            if (!confirm(
+                `⚠️ CORRECTIE: Winnaar wijzigen?\n\n` +
+                `${naam} was niet de winnaar van deze wedstrijd.\n\n` +
+                `Wil je ${naam} als nieuwe winnaar instellen?\n` +
+                `(De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast)`
+            )) {
+                return; // Gebruiker annuleerde
+            }
+            // Gebruiker bevestigde - markeer als correctie
+            data.isCorrectie = true;
+        }
+    } else {
+        // Geen volgendeWedstrijdId = finale of bye judoka
+        console.log('GEEN volgendeWedstrijdId - finale of bye judoka, wordt geaccepteerd');
     }
 
     console.log('=== VALIDATIE PASSED - doorgaan met plaatsen ===');
