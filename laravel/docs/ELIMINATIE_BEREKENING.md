@@ -1,243 +1,163 @@
 # Eliminatie (K.O.) Systeem - Berekening
 
-Dit document beschrijft de wiskundige logica voor het berekenen van het aantal wedstrijden in een double elimination bracket.
+Dit document beschrijft de wiskundige logica voor het double elimination systeem.
 
-## Variabelen
+## Basisformules
 
-| Symbool | Betekenis |
-|---------|-----------|
-| N | Aantal judoka's |
-| D | Doel A = grootste macht van 2 ≤ N |
-| V | Voorronde A = N - D |
-
-## Voorbeeld: 29 judoka's
-
-```
-N = 29
-D = 16  (want 16 ≤ 29 < 32)
-V = 29 - 16 = 13
-```
-
----
+| Variabele | Formule | Betekenis |
+|-----------|---------|-----------|
+| N | - | Aantal judoka's |
+| D | 2^floor(log₂N) | Doel: grootste macht van 2 ≤ N |
+| A | N - 1 | Wedstrijden in A-groep |
+| B | N - 4 | Wedstrijden in B-groep |
+| Totaal | 2N - 5 | Totaal wedstrijden |
 
 ## A-Groep (Winners Bracket)
 
-| Ronde | Wedstrijden | Verliezers → B |
-|-------|-------------|----------------|
-| A voorronde | V = 13 | 13 → B 1/8 |
-| A 1/8 finale | D/2 = 8 | 8 → B voorronde* |
-| A 1/4 finale | 4 | 4 → B 1/4 deel 2 |
-| A 1/2 finale | 2 | 2 → Brons |
-| A finale | 1 | - |
-| **Totaal A** | **N - 1 = 28** | |
-
-*Bye-verliezers uit A 1/8 (die geen voorronde speelden) gaan EERST naar B voorronde.
-
----
-
-## B-Groep (Losers Bracket)
-
-### Stap 1: Bereken B voorronde
-
+### Structuur
 ```
-Verliezers naar B 1/8 = V + D/2 = 13 + 8 = 21
-B 1/8 capaciteit = 16 plekken (8 wedstrijden)
-B voorronde nodig = max(0, 21 - 16) = 5 wedstrijden
+1/16 → 1/8 → 1/4 → 1/2 → Finale → 🥇 Goud + 🥈 Zilver
 ```
 
-### Stap 2: B-groep structuur
+### Byes (geen aparte voorronde)
 
-| Ronde | Wedstrijden | Instroom |
-|-------|-------------|----------|
-| B voorronde | 5 | Overflow + bye-verliezers uit A |
-| B 1/8 finale | 8 | B voorronde winnaars + A voorronde verliezers |
-| B 1/4 deel 1 | 4 | 8 winnaars uit B 1/8 |
-| B 1/4 deel 2 | 4 | 4 winnaars deel 1 + **4 verliezers A 1/4** |
-| B 1/2 deel 1 | 2 | 4 winnaars uit B 1/4 deel 2 |
-| Brons (B 1/2 deel 2) | 2 | 2 B-winnaars + **2 verliezers A 1/2** |
-| **Totaal B** | **25** | |
-
----
-
-## Totaal Wedstrijden
+Bij niet-macht-van-2 worden **byes** gebruikt in de eerste ronde:
 
 ```
-Totaal = A + B = 28 + 25 = 53 wedstrijden
+Echte wedstrijden = N - D
+Byes = D - (N - D) = 2D - N  (alleen als N > D)
 ```
 
-### Formules per bracket grootte
+| N | D | Wedstrijden 1/16 | Byes |
+|---|---|------------------|------|
+| 29 | 16 | 13 | 3 |
+| 24 | 16 | 8 | 8 |
+| 20 | 16 | 4 | 12 |
+| 16 | 16 | 0 (start bij 1/8) | - |
 
-**D=16 (17-32 judoka's, geen A 1/16):**
-```
-B = B_voorronde + B_1/8 + B_1/4_deel1 + B_1/4_deel2 + B_1/2_deel1 + Brons
-  = max(0, V+8-16) + 8 + 4 + 4 + 2 + 2
-  = max(0, N-16+8-16) + 20
-```
+### A-groep wedstrijden per ronde
 
-**D=32 (33-64 judoka's, met A 1/16):**
-```
-B = B_1/8_deel1 + B_1/8_deel2 + B_1/4_deel1 + B_1/4_deel2 + B_1/2_deel1 + Brons
-  = 8 + 8 + 4 + 4 + 2 + 2 = 28 wedstrijden
-```
+| Ronde | Wedstrijden |
+|-------|-------------|
+| 1/16 | N - D (of 0) |
+| 1/8 | D/2 = 8 |
+| 1/4 | 4 |
+| 1/2 | 2 |
+| Finale | 1 |
+| **Totaal** | **N - 1** |
 
-### Voorbeelden
+## B-Groep (Losers Bracket / Herkansing)
 
-| N | D | V | A-weds | B-structuur | B-weds | Totaal |
-|---|---|---|--------|-------------|--------|--------|
-| 23 | 16 | 7 | 22 | 8+4+4+2+2 (1 bye) | 20 | 42 |
-| 29 | 16 | 13 | 28 | 5+8+4+4+2+2 | 25 | 53 |
-| 32 | 32 | 0 | 31 | 8+8+4+4+2+2 | 28 | 59 |
+### Instroom vanuit A
 
-**Let op:** Bij N=23 is er 1 bye in B 1/8 (15 judoka's, 16 slots)
+| A-ronde | Verliezers | Naar B-ronde |
+|---------|------------|--------------|
+| 1/16 | N - D | B start / B 1/8 (1) |
+| 1/8 | D/2 | B 1/8 (2) |
+| 1/4 | 4 | B 1/4 (2) |
+| 1/2 | 2 | B 1/2 (2) = Brons |
 
----
+### Dubbele rondes
 
-## Plaatsingsregels B-Groep
-
-### Prioriteit voor bye-verliezers
-
-Judoka's die een **bye** hadden in A (niet in voorronde speelden) gaan bij verlies in A 1/8 **eerst naar B voorronde**. Dit voorkomt dat ze een tweede bye krijgen in B 1/8.
-
-### Volgorde van plaatsen
-
-1. **WIT** plekken eerst vullen
-2. Dan **BLAUW** plekken
-3. Bye-verliezers → B voorronde (prioriteit)
-4. Normale verliezers → target ronde volgens tabel
-
-### Routing tabel
-
-| Verlies in A | Gaat naar B |
-|--------------|-------------|
-| A voorronde | B 1/8 |
-| A 1/8 (met bye) | B voorronde |
-| A 1/8 (zonder bye) | B 1/8 |
-| A 1/4 | B 1/4 deel 2 |
-| A 1/2 | Brons (als WIT) |
-
----
-
-## Visuele Structuur (29 judoka's, D=16)
+B-groep heeft **dubbele rondes** door de batch instroom:
 
 ```
-A-GROEP                              B-GROEP
-========                             ========
-
-A Voorronde (13)
-    ↓ winnaars
-    ↓ verliezers ───────────────────────────────────→ B 1/8 (8)
-                                                          ↓
-A 1/8 (8)                                            B 1/4 deel 1 (4)
-    ↓ winnaars                                            ↓
-    ↓ verliezers (bye) ──────────────→ B voorronde (5) ──→ ↑
-
-A 1/4 (4)                                            B 1/4 deel 2 (4)
-    ↓ winnaars                                       ↗ B 1/4 deel 1 winnaars
-    ↓ verliezers ────────────────────────────────────
-                                                          ↓
-A 1/2 (2)                                            B 1/2 deel 1 (2)
-    ↓ winnaars                                            ↓
-    ↓ verliezers ────────────────────────────────────→ BRONS (2)
-                                                     ↗ B 1/2 deel 1 winnaars
-A Finale (1)
-    ↓
-  GOUD + ZILVER
+B: Start → 1/8(1) → 1/8(2) → 1/4(1) → 1/4(2) → 1/2(1) → 1/2(2) → 2x 🥉
 ```
 
-## Visuele Structuur (32 judoka's, D=32)
+### B-groep wedstrijden berekening
+
+**Totaal B = N - 4**
+
+| Ronde | Wedstrijden | Toelichting |
+|-------|-------------|-------------|
+| B start | max(0, instroom - 16) | Om naar macht van 2 te komen |
+| B 1/8 (1) | 8 | B onderling |
+| B 1/8 (2) | 8 | + A 1/8 verliezers |
+| B 1/4 (1) | 4 | B winnaars |
+| B 1/4 (2) | 4 | + A 1/4 verliezers |
+| B 1/2 (1) | 2 | B winnaars |
+| B 1/2 (2) | 2 | + A 1/2 verliezers → **Brons** |
+
+## Voorbeeldberekeningen
+
+### 29 Judoka's
 
 ```
-A-GROEP                              B-GROEP
-========                             ========
+N = 29, D = 16
 
-A 1/16 (16)
-    ↓ winnaars
-    ↓ verliezers ───────────────────────────────────→ B 1/8 deel 1 (8)
-                                                          ↓
-A 1/8 (8)                                            B 1/8 deel 2 (8)
-    ↓ winnaars                                       ↗ B 1/8 deel 1 winnaars
-    ↓ verliezers ────────────────────────────────────
-                                                          ↓
-                                                     B 1/4 deel 1 (4)
-                                                          ↓
-A 1/4 (4)                                            B 1/4 deel 2 (4)
-    ↓ winnaars                                       ↗ B 1/4 deel 1 winnaars
-    ↓ verliezers ────────────────────────────────────
-                                                          ↓
-                                                     B 1/2 deel 1 (2)
-                                                          ↓
-A 1/2 (2)                                            BRONS (2)
-    ↓ winnaars                                       ↗ B 1/2 deel 1 winnaars
-    ↓ verliezers ────────────────────────────────────
+A-GROEP:
+- 1/16: 29 - 16 = 13 wedstrijden (26 judoka's, 3 bye)
+- 1/8: 8 wedstrijden
+- 1/4: 4 wedstrijden
+- 1/2: 2 wedstrijden
+- Finale: 1 wedstrijd
+Totaal A: 28 wedstrijden (= N - 1 ✓)
 
-A Finale (1)
-    ↓
-  GOUD + ZILVER
+B-GROEP:
+- Instroom 1: 13 (A 1/16 verliezers)
+- Instroom 2: 8 (A 1/8 verliezers)
+- Totaal eerste instroom: 21
+- B start: 21 - 16 = 5 wedstrijden
+- B 1/8 (1): 8 wedstrijden
+- B 1/8 (2): 8 wedstrijden
+- B 1/4 (1): 4 wedstrijden
+- B 1/4 (2): 4 wedstrijden
+- B 1/2 (1): 2 wedstrijden
+- B 1/2 (2): 2 wedstrijden (Brons)
+Totaal B: 25 wedstrijden (= N - 4 ✓)
+
+TOTAAL: 53 wedstrijden (= 2N - 5 ✓)
 ```
 
----
-
-## Seeding en Bracket Locking
-
-### Twee fasen
-
-Het eliminatie systeem kent twee fasen:
-
-| Fase | Status | Toegestane acties |
-|------|--------|-------------------|
-| **Seeding** | Geen wedstrijden gespeeld | Vrij verplaatsen van judoka's |
-| **Wedstrijd** | ≥1 wedstrijd gespeeld | Alleen volgens schema |
-
-### Seeding-fase
-
-Vóór de eerste wedstrijd is gespeeld:
-
-- **Vrij verplaatsen**: judoka's kunnen tussen alle slots worden gesleept
-- **Clubgenoten scheiden**: zet judoka's van dezelfde club uit elkaar
-- **Sterke spelers spreiden**: voorkom dat toppers elkaar vroeg treffen
-- **Fouten corrigeren**: administratieve fouten in de loting herstellen
+### 16 Judoka's (precies macht van 2)
 
 ```
-Voorbeeld seeding aanpassing:
-- Club A heeft 3 judoka's in dezelfde bracket helft
-- Verplaats 1 judoka naar de andere helft
-- Zo treffen ze elkaar pas in de finale
+N = 16, D = 16
+
+A-GROEP:
+- 1/16: 0 wedstrijden (start direct bij 1/8)
+- 1/8: 8 wedstrijden
+- 1/4: 4 wedstrijden
+- 1/2: 2 wedstrijden
+- Finale: 1 wedstrijd
+Totaal A: 15 wedstrijden (= N - 1 ✓)
+
+B-GROEP:
+- Instroom: 8 (A 1/8 verliezers)
+- B 1/8 (1): 4 wedstrijden
+- B 1/8 (2): 4 wedstrijden
+- B 1/4 (1): 2 wedstrijden
+- B 1/4 (2): 2 wedstrijden
+- B 1/2 (2): 2 wedstrijden (Brons)
+Totaal B: 12 wedstrijden (= N - 4 ✓)
+
+TOTAAL: 27 wedstrijden (= 2N - 5 ✓)
 ```
 
-### Bracket Locking
+## Batch Timing
 
-Zodra de **eerste wedstrijd is gespeeld**:
+Verliezers stromen in **batches** in naar B:
 
-- Bracket is **definitief vergrendeld**
-- Judoka's kunnen alleen naar het **correcte volgende vak**
-- Positie (WIT/BLAUW) moet overeenkomen met `winnaar_naar_slot`
-- Uitslagen worden automatisch geregistreerd bij doorschuiven
+1. **Na A 1/16**: verliezers beschikbaar voor B start
+2. **Na A 1/8**: verliezers combineren met B 1/8 (1) winnaars
+3. **Na A 1/4**: verliezers combineren met B 1/4 (1) winnaars
+4. **Na A 1/2**: verliezers naar B 1/2 (2) = Brons
 
-### Validatie (locked bracket)
+Dit maakt **parallel spelen** mogelijk:
+- B-groep kan beginnen zodra A 1/16 klaar is
+- Niet wachten tot hele A-groep klaar is
 
-Bij elke verplaatsing worden 3 checks uitgevoerd:
+## Quick Reference
 
-| Check | Fout | Actie |
-|-------|------|-------|
-| 1. Judoka in bronwedstrijd? | Judoka speelde niet in die wedstrijd | BLOKKEER |
-| 2. Correcte volgende wedstrijd? | Verkeerde wedstrijd geselecteerd | BLOKKEER |
-| 3. Correcte positie (wit/blauw)? | Verkeerde kant | BLOKKEER |
-
-### Technische implementatie
-
-```php
-// Check of bracket locked is
-$isLocked = Wedstrijd::where('poule_id', $pouleId)
-    ->where('is_gespeeld', true)
-    ->exists();
-
-// Seeding-fase: vrij verplaatsen
-// Wedstrijd-fase: strenge validatie
 ```
+29 judoka's:
+├── A: 13 + 8 + 4 + 2 + 1 = 28 wedstrijden
+├── B: 5 + 8 + 8 + 4 + 4 + 2 + 2 = 25 wedstrijden
+└── Totaal: 53 wedstrijden, 4 medailles
 
-```javascript
-// Frontend check
-isBracketLocked(poule) {
-    return poule.wedstrijden.some(w => w.is_gespeeld);
-}
+Formules:
+├── A = N - 1
+├── B = N - 4
+└── Totaal = 2N - 5
 ```

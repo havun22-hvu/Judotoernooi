@@ -190,14 +190,67 @@ class MatController extends Controller
             ->where('is_gespeeld', true)
             ->exists();
 
-        // Als dit een doorschuif is vanuit een vorige wedstrijd, valideer STRENG
-        // Maar ALLEEN als bracket locked is (seeding-fase voorbij)
+        $judokaId = $validated['judoka_id'];
+
+        // STRENGE validatie als bracket locked is
+        if ($isLocked) {
+            // Zoek ALLE wedstrijden waar deze judoka in zit
+            $judokaWedstrijden = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+                ->where(function ($q) use ($judokaId) {
+                    $q->where('judoka_wit_id', $judokaId)
+                      ->orWhere('judoka_blauw_id', $judokaId);
+                })
+                ->get();
+
+            foreach ($judokaWedstrijden as $bronWedstrijd) {
+                // Skip als dit dezelfde wedstrijd is waar we naar toe slepen
+                if ($bronWedstrijd->id == $wedstrijd->id) {
+                    continue;
+                }
+
+                // Check: Heeft deze bron-wedstrijd een volgende_wedstrijd_id?
+                if ($bronWedstrijd->volgende_wedstrijd_id) {
+                    // NIEUWE CHECK: Wedstrijd moet gespeeld zijn
+                    if (!$bronWedstrijd->is_gespeeld) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Wedstrijd nog niet gespeeld! Alleen de winnaar mag doorschuiven.',
+                        ], 400);
+                    }
+
+                    // NIEUWE CHECK: Judoka moet de winnaar zijn
+                    if ($bronWedstrijd->winnaar_id != $judokaId) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',
+                        ], 400);
+                    }
+
+                    // Mag ALLEEN naar die specifieke wedstrijd
+                    if ($bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Dit is niet het juiste vak! Deze judoka moet naar een ander vak in het schema.',
+                        ], 400);
+                    }
+
+                    // Mag ALLEEN in het juiste slot (wit/blauw)
+                    if ($bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
+                        ], 400);
+                    }
+                }
+            }
+        }
+
+        // Extra check met bron_wedstrijd_id als die is meegegeven
         if ($isLocked && !empty($validated['bron_wedstrijd_id'])) {
             $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
-            $judokaId = $validated['judoka_id'];
 
-            if ($bronWedstrijd) {
-                // Check 1: Zit de judoka wel in de bron wedstrijd? → BLOKKEER
+            if ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id) {
+                // Check: Zit de judoka wel in de bron wedstrijd?
                 $judokaInBron = $bronWedstrijd->judoka_wit_id == $judokaId ||
                                 $bronWedstrijd->judoka_blauw_id == $judokaId;
 
@@ -208,15 +261,31 @@ class MatController extends Controller
                     ], 400);
                 }
 
-                // Check 2: Is dit de correcte volgende wedstrijd? → BLOKKEER
-                if ($bronWedstrijd->volgende_wedstrijd_id && $bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
+                // Check: Is de wedstrijd gespeeld?
+                if (!$bronWedstrijd->is_gespeeld) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Wedstrijd nog niet gespeeld! Alleen de winnaar mag doorschuiven.',
+                    ], 400);
+                }
+
+                // Check: Is de judoka de winnaar?
+                if ($bronWedstrijd->winnaar_id != $judokaId) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',
+                    ], 400);
+                }
+
+                // Check: Is dit de correcte volgende wedstrijd?
+                if ($bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Dit is niet het juiste vak! Plaats de winnaar alleen in het correcte volgende vak.',
                     ], 400);
                 }
 
-                // Check 3: Is dit de correcte positie (wit/blauw)? → BLOKKEER
+                // Check: Is dit de correcte positie (wit/blauw)?
                 if ($bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
                     return response()->json([
                         'success' => false,
@@ -276,10 +345,10 @@ class MatController extends Controller
         $pouleId = $bronWedstrijd->poule_id;
 
         // Bepaal target B-ronde op basis van A-ronde
+        // A-groep heeft geen voorronde meer, alleen 1/16 met byes
         $targetRonde = match ($bronWedstrijd->ronde) {
-            'voorronde' => 'b_achtste_finale',
-            'achtste_finale', 'zestiende_finale' => 'b_voorronde',
-            'kwartfinale' => 'b_kwartfinale',
+            'zestiende_finale', 'achtste_finale' => 'b_start',
+            'kwartfinale' => 'b_kwartfinale_2',
             'halve_finale' => 'b_brons',
             default => null,
         };
@@ -300,7 +369,7 @@ class MatController extends Controller
 
         // Fallback naar andere B-ronde als primaire vol is
         if (!$legeWedstrijd) {
-            $fallbackRonde = $targetRonde === 'b_voorronde' ? 'b_achtste_finale' : 'b_voorronde';
+            $fallbackRonde = $targetRonde === 'b_start' ? 'b_achtste_finale' : 'b_start';
             $legeWedstrijd = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
                 ->where('ronde', $fallbackRonde)
