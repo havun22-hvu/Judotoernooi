@@ -284,59 +284,76 @@ class EliminatieService
     /**
      * Genereer B-groep voor Dubbel Eliminatie
      *
-     * Structuur met dubbele rondes:
-     * - B-(1) rondes: B-winnaars onderling
-     * - B-(2) rondes: B-winnaars + nieuwe A-verliezers
+     * Regels:
+     * - Ronde naam = aantal wedstrijden (1/8=8wed, 1/4=4wed, 1/2=2wed)
+     * - A-verliezers verzamelen tot ≥5 voor eerste B-ronde
+     * - B-ronde bepalen: 5-8→1/4, 9-16→1/8, 17-32→1/16
+     * - (1)/(2) suffix alleen als dezelfde ronde 2x gespeeld wordt
      *
-     * Flow (24 judoka's):
-     * A-1/16 verl (8) + A-1/8 verl (8) → B-1/8 (8 wed) → 8 win
-     * 8 win → B-1/4(1) (4 wed) → 4 win
-     * 4 win + A-1/4 verl (4) → B-1/4(2) (4 wed) → 4 win
-     * 4 win → B-1/2(1) (2 wed) → 2 win
-     * 2 win + A-1/2 verl (2) → B-BRONS (2 wed) → 2x BRONS
+     * Voorbeelden:
+     * - 12j: 4 verl A-1/8 + 4 verl A-1/4 = 8 → B-1/4 (geen suffix)
+     * - 15j: 7 verl A-1/8 → B-1/4(1), 4 win + 4 verl A-1/4 → B-1/4(2)
+     * - 25j: 9 verl A-1/16 → B-1/8(1), 8 win + 8 verl A-1/8 → B-1/8(2)
      */
     private function genereerBGroepDubbel(Poule $poule, int $n): void
     {
-        $d = $this->berekenDoel($n);
         $volgorde = 1000;
 
-        // Bereken instroom uit A-groep
-        $verliezersEersteRonde = $n - $d;  // Uit A eerste ronde (1/16, 1/8, etc.)
-        $verliezersAchtste = ($d >= 16) ? 8 : (($d >= 8) ? $d / 2 : 0);
+        // Bereken verliezers per A-ronde (ronde naam = aantal wedstrijden)
+        // A-1/16: 16 wed, verliezers = n - 16 (als n > 16)
+        // A-1/8: 8 wed, verliezers = 8 (altijd, als we 1/8 hebben)
+        // A-1/4: 4 wed, verliezers = 4
+        // A-1/2: 2 wed, verliezers = 2
+        $verliezers = [];
 
-        // Totale instroom voor B-start = verliezers eerste ronde + verliezers 1/8
-        // Deze worden gecombineerd in de eerste B-ronde
-        $totaleEersteInstroom = $verliezersEersteRonde;
-        if ($d >= 16) {
-            $totaleEersteInstroom += 8;  // A-1/8 verliezers erbij
-        } elseif ($d >= 8 && $n > 8) {
-            $totaleEersteInstroom += $d / 2;
+        if ($n > 16) {
+            $verliezers['a_zestiende'] = $n - 16;  // A-1/16 verliezers
+            $verliezers['a_achtste'] = 8;          // A-1/8 verliezers (altijd 8)
+        } else {
+            $verliezers['a_achtste'] = $n - 8;    // A-1/8 verliezers = n - 8
         }
+        $verliezers['a_kwart'] = 4;               // A-1/4 verliezers (altijd 4)
+        $verliezers['a_halve'] = 2;               // A-1/2 verliezers (altijd 2)
 
         $rondes = [];
 
-        // === B-START (voorronde als instroom niet macht van 2) ===
-        $bStartDoel = $this->berekenDoel($totaleEersteInstroom);
-        if ($bStartDoel < $totaleEersteInstroom && $totaleEersteInstroom > 0) {
-            $bStartWedstrijden = $totaleEersteInstroom - $bStartDoel;
-            if ($bStartWedstrijden > 0) {
-                $rondes[] = ['naam' => 'b_start', 'wedstrijden' => $bStartWedstrijden, 'instroom_van' => 'eerste_ronde'];
-            }
-            $totaleEersteInstroom = $bStartDoel;
+        // === Bepaal B-groep structuur ===
+
+        // Stap 1: Verzamel vroege verliezers (A-1/16 + A-1/8)
+        $vroegeVerliezers = ($verliezers['a_zestiende'] ?? 0) + ($verliezers['a_achtste'] ?? 0);
+        $alleenA16Verliezers = $verliezers['a_zestiende'] ?? 0;
+        $a8Verliezers = $verliezers['a_achtste'] ?? 0;
+
+        // Stap 2: Bepaal eerste B-ronde
+        if ($alleenA16Verliezers >= 9) {
+            // Genoeg A-1/16 verliezers voor B-1/8(1)
+            $rondes[] = ['naam' => 'b_achtste_finale_1', 'wedstrijden' => 8];
+            $rondes[] = ['naam' => 'b_achtste_finale_2', 'wedstrijden' => 8];
+            $rondes[] = ['naam' => 'b_kwartfinale_1', 'wedstrijden' => 4];
+            $rondes[] = ['naam' => 'b_kwartfinale_2', 'wedstrijden' => 4];
+        } elseif ($vroegeVerliezers >= 9) {
+            // A-1/16 + A-1/8 samen ≥9 → B-1/8 (geen suffix, komen samen)
+            $rondes[] = ['naam' => 'b_achtste_finale', 'wedstrijden' => 8];
+            $rondes[] = ['naam' => 'b_kwartfinale', 'wedstrijden' => 4];  // + A-1/4 verliezers
+            // Hier geen (1)/(2) want B-1/8 winnaars gaan direct naar B-1/4 met A-1/4 verl
+        } elseif ($a8Verliezers >= 5) {
+            // 5-8 A-1/8 verliezers → B-1/4(1)
+            $rondes[] = ['naam' => 'b_kwartfinale_1', 'wedstrijden' => 4];
+            $rondes[] = ['naam' => 'b_kwartfinale_2', 'wedstrijden' => 4];
+        } else {
+            // ≤4 A-1/8 verliezers, wacht op A-1/4 → samen B-1/4 (geen suffix)
+            $rondes[] = ['naam' => 'b_kwartfinale', 'wedstrijden' => 4];
         }
 
-        // === B-1/8 (als we 8+ judoka's in B hebben) ===
-        if ($totaleEersteInstroom >= 8) {
-            $rondes[] = ['naam' => 'b_achtste_finale', 'wedstrijden' => $totaleEersteInstroom / 2, 'instroom_van' => null];
+        // Stap 3: B-halve finale en B-brons
+        // Check of we al b_kwartfinale_2 hebben (dan b_halve_finale_1 nodig)
+        $heeftKwart2 = collect($rondes)->contains(fn($r) => str_contains($r['naam'], 'kwartfinale_2'));
+
+        if ($heeftKwart2) {
+            $rondes[] = ['naam' => 'b_halve_finale_1', 'wedstrijden' => 2];
         }
-
-        // === B-1/4(1) en B-1/4(2) ===
-        $rondes[] = ['naam' => 'b_kwartfinale_1', 'wedstrijden' => 4, 'instroom_van' => null];
-        $rondes[] = ['naam' => 'b_kwartfinale_2', 'wedstrijden' => 4, 'instroom_van' => 'kwartfinale'];  // A-1/4 verliezers
-
-        // === B-1/2(1) en B-BRONS ===
-        $rondes[] = ['naam' => 'b_halve_finale_1', 'wedstrijden' => 2, 'instroom_van' => null];
-        $rondes[] = ['naam' => 'b_brons', 'wedstrijden' => 2, 'instroom_van' => 'halve_finale'];  // A-1/2 verliezers
+        // B-brons: B-halve winnaars + A-halve verliezers → 2 bronzen
+        $rondes[] = ['naam' => 'b_brons', 'wedstrijden' => 2];
 
         // Maak wedstrijden
         $wedstrijdenPerRonde = [];
@@ -591,31 +608,38 @@ class EliminatieService
 
     /**
      * Plaats verliezer in B-groep (Dubbel Eliminatie)
+     *
+     * Mapping A-ronde → B-ronde:
+     * - A-1/16 verliezers → B-1/8(1) of B-1/8
+     * - A-1/8 verliezers → B-1/8(2) of B-1/4(1) of B-1/4
+     * - A-1/4 verliezers → B-1/4(2) of B-1/4
+     * - A-1/2 verliezers → B-brons
      */
     private function plaatsVerliezerDubbel(Wedstrijd $wedstrijd, int $verliezerId): void
     {
-        $poule = $wedstrijd->poule;
+        $pouleId = $wedstrijd->poule_id;
 
-        // Bepaal target B-ronde op basis van A-ronde
-        $targetRonde = match ($wedstrijd->ronde) {
-            'tweeendertigste_finale', 'zestiende_finale', 'achtste_finale' => 'b_start',
-            'kwartfinale' => 'b_kwartfinale_2',
-            'halve_finale' => 'b_brons',
-            default => 'b_start',
+        // Bepaal target B-rondes op basis van A-ronde (in volgorde van voorkeur)
+        $targetRondes = match ($wedstrijd->ronde) {
+            'zestiende_finale' => ['b_achtste_finale_1', 'b_achtste_finale'],
+            'achtste_finale' => ['b_achtste_finale_2', 'b_kwartfinale_1', 'b_kwartfinale', 'b_achtste_finale'],
+            'kwartfinale' => ['b_kwartfinale_2', 'b_kwartfinale'],
+            'halve_finale' => ['b_brons'],
+            default => ['b_kwartfinale_1', 'b_kwartfinale', 'b_achtste_finale'],
         };
 
-        // Als b_start niet bestaat, probeer b_achtste_finale
-        $bWedstrijd = $this->zoekLegeBSlot($poule->id, $targetRonde);
+        // Zoek eerste beschikbare slot
+        $bWedstrijd = null;
+        foreach ($targetRondes as $ronde) {
+            $bWedstrijd = $this->zoekLegeBSlot($pouleId, $ronde);
+            if ($bWedstrijd) {
+                break;
+            }
+        }
 
-        // Fallback naar andere B-ronde
+        // Fallback: zoek in alle B-rondes
         if (!$bWedstrijd) {
-            $bWedstrijd = $this->zoekLegeBSlot($poule->id, 'b_achtste_finale');
-        }
-        if (!$bWedstrijd) {
-            $bWedstrijd = $this->zoekLegeBSlot($poule->id, 'b_kwartfinale_1');
-        }
-        if (!$bWedstrijd) {
-            $bWedstrijd = $this->zoekLegeBSlot($poule->id, null);  // Any B-slot
+            $bWedstrijd = $this->zoekLegeBSlot($pouleId, null);
         }
 
         if ($bWedstrijd) {
