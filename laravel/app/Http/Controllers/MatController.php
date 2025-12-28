@@ -95,7 +95,8 @@ class MatController extends Controller
             // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
             $correcties = [];
             if ($validated['winnaar_id']) {
-                $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId);
+                $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+                $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
             }
 
             return response()->json([
@@ -210,16 +211,9 @@ class MatController extends Controller
 
                 // Check: Heeft deze bron-wedstrijd een volgende_wedstrijd_id?
                 if ($bronWedstrijd->volgende_wedstrijd_id) {
-                    // NIEUWE CHECK: Wedstrijd moet gespeeld zijn
-                    if (!$bronWedstrijd->is_gespeeld) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Wedstrijd nog niet gespeeld! Alleen de winnaar mag doorschuiven.',
-                        ], 400);
-                    }
-
-                    // NIEUWE CHECK: Judoka moet de winnaar zijn
-                    if ($bronWedstrijd->winnaar_id != $judokaId) {
+                    // Als wedstrijd AL gespeeld is, moet deze judoka de winnaar zijn
+                    // Als wedstrijd NOG NIET gespeeld is, wordt deze door slepen gespeeld
+                    if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId) {
                         return response()->json([
                             'success' => false,
                             'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',
@@ -261,16 +255,9 @@ class MatController extends Controller
                     ], 400);
                 }
 
-                // Check: Is de wedstrijd gespeeld?
-                if (!$bronWedstrijd->is_gespeeld) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Wedstrijd nog niet gespeeld! Alleen de winnaar mag doorschuiven.',
-                    ], 400);
-                }
-
-                // Check: Is de judoka de winnaar?
-                if ($bronWedstrijd->winnaar_id != $judokaId) {
+                // Als wedstrijd AL gespeeld is, moet deze judoka de winnaar zijn
+                // Als wedstrijd NOG NIET gespeeld is, wordt deze door slepen gespeeld
+                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id != $judokaId) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Dit is niet de winnaar! Alleen de winnaar mag naar de volgende ronde.',
@@ -327,7 +314,8 @@ class MatController extends Controller
 
                 // Gebruik EliminatieService voor correcte afhandeling (incl. correcties)
                 // Dit plaatst ook de verliezer in de B-groep
-                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId);
+                $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId, $eliminatieType);
             }
         }
 

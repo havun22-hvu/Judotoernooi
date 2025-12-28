@@ -348,7 +348,13 @@ class PouleController extends Controller
             ], 400);
         }
 
-        $statistieken = $this->eliminatieService->genereerBracket($poule, $judokas);
+        // Alleen aanwezige judoka's (niet afwezig)
+        $judokaIds = $judokas
+            ->filter(fn($j) => $j->aanwezigheid !== 'afwezig')
+            ->pluck('id')
+            ->toArray();
+        $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+        $statistieken = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
 
         if (isset($statistieken['error'])) {
             return response()->json([
@@ -394,7 +400,8 @@ class PouleController extends Controller
         ]);
 
         // Process advancement
-        $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id']);
+        $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+        $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], null, $eliminatieType);
 
         return response()->json([
             'success' => true,

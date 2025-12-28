@@ -227,6 +227,47 @@
                 <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='["groepsgrootte","bandkleur","clubspreiding"]'>
             </div>
 
+            <!-- Eliminatie Type (KO systeem) -->
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium text-gray-700 mb-2">Knock-out Systeem</h3>
+                <p class="text-xs text-gray-500 mb-3">
+                    Kies het type eliminatie bracket voor gewichtsklassen met "Direct eliminatie"
+                </p>
+
+                @php
+                    $eliminatieType = old('eliminatie_type', $toernooi->eliminatie_type) ?? 'dubbel';
+                @endphp
+
+                <div class="flex gap-4">
+                    <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 {{ $eliminatieType === 'dubbel' ? 'border-blue-500 bg-blue-50' : 'bg-white' }}">
+                        <input type="radio" name="eliminatie_type" value="dubbel"
+                               {{ $eliminatieType === 'dubbel' ? 'checked' : '' }}
+                               class="mt-1 w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium text-sm">Dubbel Eliminatie</span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                Alle verliezers krijgen herkansing in B-groep.<br>
+                                Meer wedstrijden, iedereen minimaal 2x judoën.<br>
+                                <span class="text-blue-600">Aanbevolen voor jeugdtoernooien</span>
+                            </span>
+                        </div>
+                    </label>
+                    <label class="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 {{ $eliminatieType === 'ijf' ? 'border-blue-500 bg-blue-50' : 'bg-white' }}">
+                        <input type="radio" name="eliminatie_type" value="ijf"
+                               {{ $eliminatieType === 'ijf' ? 'checked' : '' }}
+                               class="mt-1 w-4 h-4 text-blue-600">
+                        <div>
+                            <span class="font-medium text-sm">IJF Repechage</span>
+                            <span class="block text-xs text-gray-500 mt-1">
+                                Officieel systeem: alleen verliezers van 1/4 finale<br>
+                                (die verloren van finalisten) krijgen herkansing.<br>
+                                <span class="text-orange-600">Minder wedstrijden, strenger</span>
+                            </span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <!-- Wedstrijdsysteem per leeftijdsklasse -->
             <div class="border-t pt-4 mt-4">
                 <h3 class="font-medium text-gray-700 mb-2">Wedstrijdsysteem per Leeftijdsklasse</h3>

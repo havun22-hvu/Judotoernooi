@@ -157,7 +157,8 @@ class WedstrijdSchemaService
         foreach ($poules as $poule) {
             $isEliminatie = $poule->type === 'eliminatie';
 
-            $judokaCount = $poule->judokas->count();
+            // Tel alleen aanwezige judoka's (niet afwezig)
+            $judokaCount = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
             $pouleSchema = [
                 'poule_id' => $poule->id,
