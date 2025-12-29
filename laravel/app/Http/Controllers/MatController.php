@@ -550,28 +550,4 @@ class MatController extends Controller
 
         return response()->json(['success' => true]);
     }
-
-    /**
-     * Verwerk byes in B-groep: judoka's zonder tegenstander automatisch doorschuiven
-     */
-    public function verwerkByes(Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $validated = $request->validate([
-            'poule_id' => 'required|exists:poules,id',
-        ]);
-
-        $poule = Poule::findOrFail($validated['poule_id']);
-
-        // Verify poule belongs to this toernooi
-        if ($poule->toernooi_id !== $toernooi->id) {
-            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
-        }
-
-        $verwerkt = $this->eliminatieService->verwerkBByes($poule->id);
-
-        return response()->json([
-            'success' => true,
-            'verwerkt' => $verwerkt,
-        ]);
-    }
 }
