@@ -209,6 +209,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('mat/huidige-wedstrijd', [MatController::class, 'setHuidigeWedstrijd'])->name('mat.huidige-wedstrijd');
         Route::post('mat/plaats-judoka', [MatController::class, 'plaatsJudoka'])->name('mat.plaats-judoka');
         Route::post('mat/verwijder-judoka', [MatController::class, 'verwijderJudoka'])->name('mat.verwijder-judoka');
+        Route::post('mat/finale-uitslag', [MatController::class, 'finaleUitslag'])->name('mat.finale-uitslag');
         Route::post('mat/verwerk-byes', [MatController::class, 'verwerkByes'])->name('mat.verwerk-byes');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
     });

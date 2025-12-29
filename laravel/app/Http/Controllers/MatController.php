@@ -118,6 +118,66 @@ class MatController extends Controller
     }
 
     /**
+     * Register finale/brons result via medal placement (drag to gold/silver/bronze)
+     */
+    public function finaleUitslag(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'wedstrijd_id' => 'required|exists:wedstrijden,id',
+            'geplaatste_judoka_id' => 'required|exists:judokas,id',
+            'medaille' => 'required|in:goud,zilver,brons',
+        ]);
+
+        $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Check of dit een finale of brons wedstrijd is
+        $isMedailleWedstrijd = $wedstrijd->ronde === 'finale' ||
+                               str_starts_with($wedstrijd->ronde ?? '', 'b_brons');
+
+        if (!$isMedailleWedstrijd) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Dit is geen finale of brons wedstrijd!',
+            ], 400);
+        }
+
+        // Check of judoka in de wedstrijd zit
+        $geplaatsteId = $validated['geplaatste_judoka_id'];
+        if ($wedstrijd->judoka_wit_id != $geplaatsteId && $wedstrijd->judoka_blauw_id != $geplaatsteId) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Deze judoka zit niet in deze wedstrijd!',
+            ], 400);
+        }
+
+        // Bepaal winnaar op basis van medaille
+        // Goud/Brons = geplaatste judoka wint
+        // Zilver = andere judoka wint (want die krijgt goud)
+        if ($validated['medaille'] === 'goud' || $validated['medaille'] === 'brons') {
+            $winnaarId = $geplaatsteId;
+        } else {
+            // Zilver: de ANDERE judoka wint
+            $winnaarId = ($wedstrijd->judoka_wit_id == $geplaatsteId)
+                ? $wedstrijd->judoka_blauw_id
+                : $wedstrijd->judoka_wit_id;
+        }
+
+        // Update wedstrijd met winnaar
+        $uitslagType = $validated['medaille'] === 'brons' ? 'brons' : 'finale';
+        $wedstrijd->update([
+            'winnaar_id' => $winnaarId,
+            'is_gespeeld' => true,
+            'uitslag_type' => $uitslagType,
+            'gespeeld_op' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'winnaar_id' => $winnaarId,
+        ]);
+    }
+
+    /**
      * Mark poule as ready for spreker (results announcement)
      */
     public function pouleKlaar(Request $request, Toernooi $toernooi): JsonResponse
@@ -211,6 +271,18 @@ class MatController extends Controller
                     continue;
                 }
 
+                // Skip B-groep wedstrijden bij correctie naar A-groep
+                // Bij correctie willen we de A-groep bron gebruiken, niet de B-groep
+                if ($isCorrectie && $bronWedstrijd->groep === 'B' && $wedstrijd->groep === 'A') {
+                    continue;
+                }
+
+                // Skip wedstrijden waar deze judoka AL gewonnen heeft
+                // Die zijn "afgerond" - we willen alleen de huidige ronde checken
+                if ($bronWedstrijd->is_gespeeld && $bronWedstrijd->winnaar_id == $judokaId) {
+                    continue;
+                }
+
                 // Check: Heeft deze bron-wedstrijd een volgende_wedstrijd_id?
                 if ($bronWedstrijd->volgende_wedstrijd_id) {
                     // Als wedstrijd AL gespeeld is en dit is NIET de winnaar:
@@ -223,16 +295,16 @@ class MatController extends Controller
                         ], 400);
                     }
 
-                    // Mag ALLEEN naar die specifieke wedstrijd
-                    if ($bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
+                    // Mag ALLEEN naar die specifieke wedstrijd (skip check bij correctie)
+                    if (!$isCorrectie && $bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
                         return response()->json([
                             'success' => false,
                             'error' => 'Dit is niet het juiste vak! Deze judoka moet naar een ander vak in het schema.',
                         ], 400);
                     }
 
-                    // Mag ALLEEN in het juiste slot (wit/blauw)
-                    if ($bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
+                    // Mag ALLEEN in het juiste slot (wit/blauw) - skip bij correctie
+                    if (!$isCorrectie && $bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
                         return response()->json([
                             'success' => false,
                             'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
@@ -269,7 +341,8 @@ class MatController extends Controller
                 }
 
                 // Check: Is dit de correcte volgende wedstrijd?
-                if ($bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
+                // Bij correctie: skip deze check - we corrigeren de winnaar
+                if (!$isCorrectie && $bronWedstrijd->volgende_wedstrijd_id != $wedstrijd->id) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Dit is niet het juiste vak! Plaats de winnaar alleen in het correcte volgende vak.',
@@ -277,7 +350,8 @@ class MatController extends Controller
                 }
 
                 // Check: Is dit de correcte positie (wit/blauw)?
-                if ($bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
+                // Bij correctie: skip deze check - nieuwe winnaar gaat naar plek van oude winnaar
+                if (!$isCorrectie && $bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
                     return response()->json([
                         'success' => false,
                         'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
@@ -294,9 +368,26 @@ class MatController extends Controller
         }
 
         // Als dit een doorschuif is vanuit een vorige wedstrijd, registreer de uitslag
-        // ALLEEN als bracket locked is (seeding-fase voorbij) EN winnaar in JUISTE vak
-        if (!empty($validated['bron_wedstrijd_id'])) {
-            $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
+        if (!empty($validated['bron_wedstrijd_id']) || $isCorrectie) {
+            $bronWedstrijd = null;
+
+            // Bij correctie: zoek de ORIGINELE A-groep wedstrijd die naar deze wedstrijd wijst
+            // (niet de B-groep wedstrijd waar de judoka nu in zit)
+            if ($isCorrectie && $wedstrijd->groep === 'A') {
+                $bronWedstrijd = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+                    ->where('groep', 'A')
+                    ->where('volgende_wedstrijd_id', $wedstrijd->id)
+                    ->where(function ($q) use ($judokaId) {
+                        $q->where('judoka_wit_id', $judokaId)
+                          ->orWhere('judoka_blauw_id', $judokaId);
+                    })
+                    ->first();
+            }
+
+            // Fallback naar meegestuurde bron_wedstrijd_id
+            if (!$bronWedstrijd && !empty($validated['bron_wedstrijd_id'])) {
+                $bronWedstrijd = Wedstrijd::find($validated['bron_wedstrijd_id']);
+            }
 
             // Check of bronwedstrijd beide deelnemers heeft (= echte wedstrijd, geen seeding)
             $heeftBeideJudokas = $bronWedstrijd &&
@@ -389,17 +480,35 @@ class MatController extends Controller
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
-            'judoka_id' => 'required|exists:judokas,id',
+            'judoka_id' => 'nullable|exists:judokas,id',
+            'positie' => 'nullable|in:wit,blauw',
+            'alleen_positie' => 'nullable|boolean',
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
-        $judokaId = $validated['judoka_id'];
+        $alleenPositie = $validated['alleen_positie'] ?? false;
 
-        // Remove judoka from the slot they were in
-        if ($wedstrijd->judoka_wit_id == $judokaId) {
-            $wedstrijd->update(['judoka_wit_id' => null]);
-        } elseif ($wedstrijd->judoka_blauw_id == $judokaId) {
-            $wedstrijd->update(['judoka_blauw_id' => null]);
+        // Verwijder op basis van positie (voor seeding) of judoka_id
+        if (!empty($validated['positie'])) {
+            $veld = $validated['positie'] === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
+            $judokaId = $wedstrijd->$veld;
+            $wedstrijd->update([$veld => null]);
+        } elseif (!empty($validated['judoka_id'])) {
+            $judokaId = $validated['judoka_id'];
+            // Remove judoka from the slot they were in
+            if ($wedstrijd->judoka_wit_id == $judokaId) {
+                $wedstrijd->update(['judoka_wit_id' => null]);
+            } elseif ($wedstrijd->judoka_blauw_id == $judokaId) {
+                $wedstrijd->update(['judoka_blauw_id' => null]);
+            }
+        } else {
+            return response()->json(['success' => false, 'error' => 'Geen judoka_id of positie opgegeven'], 400);
+        }
+
+        // Bij alleen_positie: alleen de positie leegmaken, geen uitslag/B-groep wijzigingen
+        // Dit wordt gebruikt bij seeding waar je judoka's verplaatst
+        if ($alleenPositie) {
+            return response()->json(['success' => true]);
         }
 
         // Zoek bronwedstrijd waarvan deze judoka de winnaar was
@@ -410,6 +519,17 @@ class MatController extends Controller
 
         // Reset bronwedstrijd als gevonden
         if ($bronWedstrijd) {
+            // Bepaal de verliezer (de andere judoka in de bronwedstrijd)
+            $verliezerId = ($bronWedstrijd->judoka_wit_id == $judokaId)
+                ? $bronWedstrijd->judoka_blauw_id
+                : $bronWedstrijd->judoka_wit_id;
+
+            // Verwijder verliezer uit B-groep (die was daar geplaatst toen winnaar werd geregistreerd)
+            if ($verliezerId) {
+                $this->eliminatieService->verwijderUitB($wedstrijd->poule_id, $verliezerId);
+            }
+
+            // Reset de bronwedstrijd (groene stip verdwijnt)
             $bronWedstrijd->update([
                 'winnaar_id' => null,
                 'is_gespeeld' => false,
@@ -417,7 +537,7 @@ class MatController extends Controller
             ]);
         }
 
-        // Verwijder judoka ook uit B-groep als die daar stond
+        // Verwijder judoka ook uit B-groep als die daar stond (voor het geval dat)
         $this->eliminatieService->verwijderUitB($wedstrijd->poule_id, $judokaId);
 
         return response()->json(['success' => true]);

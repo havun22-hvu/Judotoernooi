@@ -98,10 +98,27 @@ class RoleToegang extends Controller
         $toernooi = $this->getToernooiFromSession($request);
         $this->checkRole($request, 'hoofdjury');
 
-        return view('pages.poule.index', [
-            'toernooi' => $toernooi,
-            'poules' => $toernooi->poules()->with('judokas')->get(),
+        // Define age class order (youngest to oldest)
+        $leeftijdsklasseVolgorde = [
+            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
+            'U9' => 1, 'U11' => 2, 'U13' => 3, 'U15' => 4, 'U18' => 5, 'U21' => 6, 'Senioren' => 7,
+        ];
+
+        $poules = $toernooi->poules()
+            ->with(['blok', 'mat', 'judokas.club'])
+            ->withCount('judokas')
+            ->get();
+
+        // Sort by age class and weight class
+        $poules = $poules->sortBy([
+            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => (int) filter_var($a->gewichtsklasse, FILTER_SANITIZE_NUMBER_INT) <=> (int) filter_var($b->gewichtsklasse, FILTER_SANITIZE_NUMBER_INT),
+            fn ($a, $b) => $a->nummer <=> $b->nummer,
         ]);
+
+        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+
+        return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse'));
     }
 
     /**
