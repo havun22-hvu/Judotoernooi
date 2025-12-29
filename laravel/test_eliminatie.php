@@ -17,19 +17,33 @@ $service = new EliminatieService();
 
 echo "=== ELIMINATIE BRACKET TEST ===\n\n";
 
-// Test statistieken voor verschillende aantallen judoka's
+// Test B-bracket structuur voor verschillende aantallen
 $testCases = [8, 12, 16, 20, 24, 29, 32];
 
 foreach ($testCases as $n) {
     $stats = $service->berekenStatistieken($n);
+    $d = $stats['doel'];
 
-    echo "--- {$n} Judoka's ---\n";
-    echo "Doel (D):            {$stats['doel']}\n";
-    echo "A-groep wedstrijden: {$stats['a_wedstrijden']} (N-1 = " . ($n - 1) . ")\n";
-    echo "B-groep wedstrijden: {$stats['b_wedstrijden']} (N-4 = " . ($n - 4) . ")\n";
-    echo "Totaal:              {$stats['totaal_wedstrijden']} (2N-5 = " . (2 * $n - 5) . ")\n";
-    echo "Voorronde weds:      {$stats['voorronde_wedstrijden']} (N-D = " . ($n - $stats['doel']) . ")\n";
-    echo "Byes:                {$stats['byes']} (2D-N = " . (2 * $stats['doel'] - $n) . ")\n";
+    // Bereken vroege verliezers (A-1/16 + A-1/8)
+    $eersteRondeVerliezers = $n - $d;
+    $tweedeRondeVerliezers = $d / 2;
+    $vroegeVerliezers = $eersteRondeVerliezers + $tweedeRondeVerliezers;
+
+    // Bepaal B-start ronde
+    if ($vroegeVerliezers > 16) {
+        $bStart = 'B-1/16 (16 wed)';
+    } elseif ($vroegeVerliezers > 8) {
+        $bStart = 'B-1/8 (8 wed)';
+    } elseif ($vroegeVerliezers > 4) {
+        $bStart = 'B-1/4 (4 wed)';
+    } else {
+        $bStart = 'B-1/2 (2 wed)';
+    }
+
+    echo "--- {$n} Judoka's (D={$d}) ---\n";
+    echo "A-voorronde verl: {$eersteRondeVerliezers}, A-1/8 verl: {$tweedeRondeVerliezers}\n";
+    echo "Vroege verliezers: {$vroegeVerliezers} → B-start: {$bStart}\n";
+    echo "Byes in A: {$stats['byes']} (moeten voorrang krijgen in B)\n";
     echo "\n";
 }
 
