@@ -4,14 +4,35 @@
 > Lees dit EERST bij een nieuwe sessie.
 
 ## Laatste sessie
-**Datum:** 2024-12-28 (middag)
+**Datum:** 2024-12-29 (avond)
 **Door:** Claude
 
 ---
 
 ## Wat vandaag gedaan
 
-### NIEUW: Twee KO Systemen Geïmplementeerd
+### Eliminatie System Fixes & Features
+
+- ✅ **Winnaar doorschuiven fix** - 1/4f → 1/2f blokkade opgelost (skip already-won matches)
+- ✅ **Medaille plaatsing** - Drag-drop naar goud/zilver/brons vakken
+- ✅ **Swap box verbergen** - Verdwijnt na eerste wedstrijd (seeding fase voorbij)
+- ✅ **Aantal bronzen instelling** - Keuze 1 of 2 bronzen medailles
+- ✅ **Oogjes wachtwoord velden** - Toggle visibility voor admin/weging/etc wachtwoorden
+- ✅ **Jury link 403 fix** - Missing poulesPerKlasse in RoleToegang
+- ✅ **B-groep mixing** - B-winnaars naar WIT, A-verliezers naar BLAUW
+- ⏪ **B-groep layout teruggedraaid** - Medailles blijven rechts (was fout geïmplementeerd)
+
+### TODO Volgende Sessie
+
+- [ ] Documentatie B-groep layout (ASCII art) toevoegen aan docs
+- [ ] Positionering (1) en (2) wedstrijden t.o.v. elkaar
+- [ ] Gespiegelde layout correct implementeren
+
+---
+
+## Vorige sessie (2024-12-28 middag)
+
+### Twee KO Systemen Geïmplementeerd
 
 **Probleem:** Gebruiker wil keuze tussen twee eliminatie systemen.
 
