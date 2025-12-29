@@ -765,53 +765,112 @@ class EliminatieService
     /**
      * Plaats verliezer in B-groep (Dubbel Eliminatie)
      *
-     * Nieuwe logica:
-     * 1. A-1/2 verliezers → direct naar B-brons (blauw slot)
-     * 2. Andere verliezers → B-start ronde
-     * 3. Bye-judoka's krijgen voorrang op slots met tegenstander (geen dubbele bye)
-     * 4. Verdeling over wedstrijden voor balans
+     * Bij dubbele rondes gaan verliezers naar specifieke B-rondes:
+     * - A eerste ronde verliezers → B-xxx(1) (onderling uitvechten)
+     * - A-1/8 verliezers → B-1/8(2) (tegen B(1) winnaars)
+     * - A-1/4 verliezers → B-1/4(2)
+     * - A-1/2 verliezers → B-1/2(2) / B-brons
      */
     private function plaatsVerliezerDubbel(Wedstrijd $wedstrijd, int $verliezerId): void
     {
         $pouleId = $wedstrijd->poule_id;
+        $aRonde = $wedstrijd->ronde;
 
-        // A-1/2 verliezers gaan direct naar B-brons
-        if ($wedstrijd->ronde === 'halve_finale') {
-            $this->plaatsInBBrons($pouleId, $verliezerId);
+        // Bepaal naar welke B-ronde de verliezer moet
+        $bRonde = $this->bepaalBRondeVoorVerliezer($pouleId, $aRonde);
+
+        if (!$bRonde) {
+            Log::warning("Geen B-ronde bepaald voor A-ronde {$aRonde} in poule {$pouleId}");
             return;
         }
+
+        Log::info("Verliezer {$verliezerId} van {$aRonde} → {$bRonde}");
 
         // Check of verliezer al een bye heeft gehad in A-groep
         $hadAlBye = $this->heeftByeGehad($pouleId, $verliezerId);
 
-        // Zoek B-start ronde (eerste B-ronde, niet b_brons)
-        $bStartRonde = $this->vindBStartRonde($pouleId);
-
-        if (!$bStartRonde) {
-            Log::warning("Geen B-start ronde gevonden voor poule {$pouleId}");
-            return;
-        }
-
-        // Zoek beschikbare slot
+        // Zoek beschikbare slot in de juiste B-ronde
         $bWedstrijd = null;
 
         if ($hadAlBye) {
             // Bye-judoka: zoek slot waar al iemand staat (geen nieuwe bye)
-            $bWedstrijd = $this->zoekSlotMetTegenstander($pouleId, $bStartRonde);
+            $bWedstrijd = $this->zoekSlotMetTegenstander($pouleId, $bRonde);
         }
 
         if (!$bWedstrijd) {
             // Zoek eerste beschikbare lege slot
-            $bWedstrijd = $this->zoekEersteLegeBSlot($pouleId, $bStartRonde);
+            $bWedstrijd = $this->zoekEersteLegeBSlot($pouleId, $bRonde);
         }
 
         if ($bWedstrijd) {
-            // Gebruik eerste beschikbare slot (wit of blauw)
-            $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : 'judoka_blauw_id';
-            $bWedstrijd->update([$slot => $verliezerId]);
+            // Voor (2) rondes: A-verliezers komen op BLAUW slot
+            // Voor (1) rondes: eerste beschikbare slot
+            if (str_ends_with($bRonde, '_2')) {
+                // (2) ronde: A-verliezers op blauw
+                $slot = 'judoka_blauw_id';
+                if (!is_null($bWedstrijd->judoka_blauw_id)) {
+                    // Blauw bezet, probeer wit
+                    $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : null;
+                }
+            } else {
+                // (1) ronde: eerste beschikbare
+                $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : 'judoka_blauw_id';
+            }
+
+            if ($slot) {
+                $bWedstrijd->update([$slot => $verliezerId]);
+            } else {
+                Log::warning("Geen vrij slot in wedstrijd {$bWedstrijd->id} voor verliezer {$verliezerId}");
+            }
         } else {
-            Log::warning("Geen B-slot beschikbaar voor verliezer {$verliezerId} in poule {$pouleId}");
+            Log::warning("Geen B-slot beschikbaar voor verliezer {$verliezerId} in {$bRonde} van poule {$pouleId}");
         }
+    }
+
+    /**
+     * Bepaal naar welke B-ronde een A-verliezer moet
+     */
+    private function bepaalBRondeVoorVerliezer(int $pouleId, string $aRonde): ?string
+    {
+        // Check of we dubbele rondes hebben (door te kijken of _1 rondes bestaan)
+        $heeftDubbeleRondes = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->where('ronde', 'like', '%_1')
+            ->exists();
+
+        // Mapping A-ronde → B-ronde
+        // Bij dubbele rondes: 1e ronde A → (1), 2e ronde A → (2)
+        if ($aRonde === 'halve_finale') {
+            return 'b_halve_finale_2';
+        }
+
+        if ($aRonde === 'kwartfinale') {
+            return $heeftDubbeleRondes ? 'b_kwartfinale_2' : 'b_kwartfinale';
+        }
+
+        if ($aRonde === 'achtste_finale') {
+            return $heeftDubbeleRondes ? 'b_achtste_finale_2' : 'b_achtste_finale';
+        }
+
+        // Eerste ronde (voorronde) → B-start(1)
+        if (in_array($aRonde, ['eerste_ronde', 'voorronde'])) {
+            // Zoek de eerste B-ronde met _1 suffix
+            $bStart1 = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', 'like', '%_1')
+                ->orderBy('volgorde')
+                ->first();
+
+            if ($bStart1) {
+                return $bStart1->ronde;
+            }
+
+            // Fallback: zoek eerste B-ronde
+            return $this->vindBStartRonde($pouleId);
+        }
+
+        // Fallback
+        return $this->vindBStartRonde($pouleId);
     }
 
     /**
