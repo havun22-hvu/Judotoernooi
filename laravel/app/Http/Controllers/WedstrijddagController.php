@@ -138,7 +138,7 @@ class WedstrijddagController extends Controller
             $oudePouleData = [
                 'id' => $oudePoule->id,
                 'aantal_judokas' => $actieveJudokasOud,
-                'aantal_wedstrijden' => $oudePoule->aantal_wedstrijden,
+                'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokasOud),
             ];
         } else {
             // From wachtruimte - detach from ALL current poules
@@ -185,7 +185,7 @@ class WedstrijddagController extends Controller
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
                 'aantal_judokas' => $actieveJudokasNieuw,
-                'aantal_wedstrijden' => $nieuwePoule->aantal_wedstrijden,
+                'aantal_wedstrijden' => $nieuwePoule->berekenAantalWedstrijden($actieveJudokasNieuw),
             ],
         ]);
     }

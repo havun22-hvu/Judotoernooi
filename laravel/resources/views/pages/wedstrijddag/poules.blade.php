@@ -61,13 +61,14 @@
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
+            // BELANGRIJK: Wedstrijden herberekenen op basis van actieve judokas (niet DB waarde!)
             $blokJudokas = 0;
             $blokWedstrijden = 0;
             foreach ($blok['categories'] as $cat) {
                 foreach ($cat['poules'] as $p) {
                     $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
                     $blokJudokas += $actief;
-                    $blokWedstrijden += $p->aantal_wedstrijden ?? 0;
+                    $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
                 }
             }
         @endphp
@@ -182,7 +183,7 @@
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
                             <span class="font-bold">{{ $aantalActiefElim }} judoka's</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-orange-200">~{{ $elimPoule->aantal_wedstrijden }} wedstrijden</span>
+                                <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</span>
                                 @if($verwijderdeTekstElim->isNotEmpty())
                                 <span class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100" title="{{ $verwijderdeTekstElim->join("\n") }}" onclick="alert(this.title)">ⓘ</span>
                                 @endif
@@ -228,8 +229,9 @@
                                 });
 
                                 // Calculate active count (total minus removed)
+                                // BELANGRIJK: Wedstrijden herberekenen op basis van actieve judokas!
                                 $aantalActief = $poule->judokas->count() - $verwijderdeJudokas->count();
-                                $aantalWedstrijden = $poule->aantal_wedstrijden;
+                                $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
                                 $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
 
                                 // Format removed for tooltip

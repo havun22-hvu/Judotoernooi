@@ -6,12 +6,27 @@ Dit document beschrijft de wiskundige logica voor het double elimination systeem
 
 ```
 A-groep (Hoofdboom)     →  Goud + Zilver
-B-groep (Herkansing)    →  2x Brons
+B-groep (Herkansing)    →  Brons (aantal instelbaar: 1 of 2)
 
 Iedereen start in A-groep.
 Verlies in A = naar B-groep (herkansing).
 Verlies in B = uitgeschakeld.
 ```
+
+### Instelling: aantal_brons (toernooi configuratie)
+
+| aantal_brons | B-einde | Medailles |
+|--------------|---------|-----------|
+| **2** (default) | 2x B-1/2(2) = 2x BRONS (geen finale) | 1 goud, 1 zilver, 2 brons |
+| **1** | B-finale (winnaars B-1/2(2)) = 1x BRONS | 1 goud, 1 zilver, 1 brons |
+
+**Bij 2 bronzen medailles:**
+- Beide verliezers van A-1/2 finale krijgen brons via B-1/2(2)
+- GEEN B-finale nodig
+
+**Bij 1 bronzen medaille:**
+- Winnaars van B-1/2(2) vechten tegen elkaar in B-finale
+- Winnaar B-finale = brons
 
 ---
 
@@ -382,7 +397,8 @@ B-1/8(1)    B-1/8(2)    B-1/4(1)    B-1/4(2)    B-1/2(1)    B-1/2(2)
 ```
 
 **BELANGRIJK:**
-- 2 bronzen medailles = 2x B-1/2(2), **GEEN B-finale!**
+- Bij `aantal_brons = 2`: 2x B-1/2(2) = 2x BRONS, **GEEN B-finale!**
+- Bij `aantal_brons = 1`: B-1/2(2) winnaars → B-finale = 1x BRONS
 - B-1/2(1) winnaars (wit) vs A-1/2 verliezers (blauw) in B-1/2(2)
 
 ---
@@ -391,11 +407,14 @@ B-1/8(1)    B-1/8(2)    B-1/4(1)    B-1/4(2)    B-1/2(1)    B-1/2(2)
 
 ```
 A-groep wedstrijden = N - 1
-B-groep wedstrijden = N - 4
-Totaal wedstrijden = 2N - 5
-
-Medailles = 4 (1x Goud, 1x Zilver, 2x Brons)
+B-groep wedstrijden = N - 4 (bij 2 brons) of N - 3 (bij 1 brons)
+Totaal wedstrijden  = 2N - 5 (bij 2 brons) of 2N - 4 (bij 1 brons)
 ```
+
+| aantal_brons | B-wedstrijden | Totaal | Medailles |
+|--------------|---------------|--------|-----------|
+| 2 | N - 4 | 2N - 5 | 4 (1 goud, 1 zilver, 2 brons) |
+| 1 | N - 3 | 2N - 4 | 3 (1 goud, 1 zilver, 1 brons) |
 
 ### Verificatie voorbeelden
 

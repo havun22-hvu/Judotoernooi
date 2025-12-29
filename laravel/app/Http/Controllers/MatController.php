@@ -272,6 +272,13 @@ class MatController extends Controller
                     continue;
                 }
 
+                // Skip wedstrijden uit ANDERE groep (A vs B)
+                // Bij B→B doorschuiven moeten we A-groep verlies negeren
+                // Bij A→A doorschuiven moeten we B-groep negeren
+                if ($bronWedstrijd->groep !== $wedstrijd->groep) {
+                    continue;
+                }
+
                 // Skip B-groep wedstrijden bij correctie naar A-groep
                 // Bij correctie willen we de A-groep bron gebruiken, niet de B-groep
                 if ($isCorrectie && $bronWedstrijd->groep === 'B' && $wedstrijd->groep === 'A') {
