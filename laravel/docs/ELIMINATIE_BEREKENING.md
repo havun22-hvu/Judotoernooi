@@ -226,39 +226,66 @@ A-1/64 verliezers (33-64) ──► B-1/32(1) ──► B-1/32(2) ──► B-1/
 
 ## BYES BEREKENING
 
-### A-groep byes (automatisch te berekenen)
+### Legenda
+
+```
+N  = aantal judoka's in de categorie
+D  = grootste macht van 2 ≤ N (4, 8, 16, 32, 64...)
+V1 = verliezers uit A-1e ronde = N - D
+V2 = verliezers uit A-2e ronde = D / 2 (altijd vast!)
+```
+
+**Voorbeelden:**
+| N | D | V1 (=N-D) | V2 (=D/2) |
+|---|---|-----------|-----------|
+| 20 | 16 | 4 | 8 |
+| 27 | 16 | 11 | 8 |
+| 40 | 32 | 8 | 16 |
+| 50 | 32 | 18 | 16 |
+
+### A-groep byes
 
 ```
 A-byes = 2D - N
-
-Voorbeelden:
-- N=27, D=16: A-byes = 32 - 27 = 5 byes
-- N=20, D=16: A-byes = 32 - 20 = 12 byes
-- N=35, D=32: A-byes = 64 - 35 = 29 byes
-- N=16, D=16: A-byes = 32 - 16 = 16 → geen voorronde, start bij A-1/8
 ```
 
-### B-groep byes (automatisch te berekenen)
+**Voorbeelden:**
+| N | D | A-byes (=2D-N) | Betekenis |
+|---|---|----------------|-----------|
+| 27 | 16 | 5 | 5 judoka's direct naar A-1/8 |
+| 20 | 16 | 12 | 12 judoka's direct naar A-1/8 |
+| 16 | 16 | 16 | Geen voorronde, start bij A-1/8 |
 
-**Bij ENKELE rondes:**
+### B-groep byes
+
+**Stap 1: Bepaal B-start capaciteit**
 ```
-B-byes = (2 × V2) - (V1 + V2) = V2 - V1
+B-start capaciteit = 2 × V2
 
-Voorbeeld N=20, D=16:
-- V1 = 4, V2 = 8
-- B-1/8 capaciteit = 16 (want V2=8 → 8 wedstrijden × 2)
+Waarom? De B-start ronde heeft evenveel wedstrijden als V2.
+V2 wedstrijden = V2 × 2 plekken = 2 × V2 capaciteit.
+```
+
+**Stap 2: Bereken B-byes**
+
+| Situatie | Instroom B-start | B-byes formule |
+|----------|------------------|----------------|
+| ENKELE rondes (V1 ≤ V2) | V1 + V2 | 2×V2 - (V1+V2) = **V2 - V1** |
+| DUBBELE rondes (V1 > V2) | alleen V1 | 2×V2 - V1 = **2×V2 - V1** |
+
+**Voorbeelden:**
+```
+N=20, D=16 (ENKELE rondes):
+- V1=4, V2=8 → V1 ≤ V2
+- B-1/8 capaciteit = 2×8 = 16
 - Instroom = V1 + V2 = 4 + 8 = 12
-- B-byes = 16 - 12 = 4 byes
-```
+- B-byes = 16 - 12 = 4
 
-**Bij DUBBELE rondes:**
-```
-B-1e ronde byes = (2 × V2) - V1   (afronden naar boven)
-
-Voorbeeld N=27, D=16:
-- V1 = 11, V2 = 8
-- B-1/8(1) capaciteit = 16
-- B-byes = 16 - 11 = 5 byes
+N=27, D=16 (DUBBELE rondes):
+- V1=11, V2=8 → V1 > V2
+- B-1/8(1) capaciteit = 2×8 = 16
+- Instroom B-1/8(1) = V1 = 11
+- B-byes = 16 - 11 = 5
 ```
 
 ### FAIRNESS REGEL: B-byes verdeling
