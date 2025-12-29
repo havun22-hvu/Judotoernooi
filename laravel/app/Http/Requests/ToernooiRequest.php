@@ -56,6 +56,7 @@ class ToernooiRequest extends FormRequest
             'eliminatie_gewichtsklassen.*' => 'nullable|array',
             'eliminatie_gewichtsklassen.*.*' => 'string',
             'eliminatie_type' => 'nullable|string|in:dubbel,ijf',
+            'aantal_brons' => 'nullable|integer|in:1,2',
             'kruisfinales_aantal' => 'nullable|integer|min:1|max:3',
             'gewicht_tolerantie' => 'nullable|numeric|min:0|max:5',
             'weging_verplicht' => 'nullable|boolean',

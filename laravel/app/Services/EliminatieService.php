@@ -378,6 +378,10 @@ class EliminatieService
 
     /**
      * Koppel B-groep wedstrijden (dubbel eliminatie)
+     *
+     * Twee types rondes:
+     * - Eerste rondes (_1 of geen suffix): alleen A-verliezers, standaard 2:1 bracket
+     * - Gemixte rondes (_2 of b_brons): B-winnaars (wit) + A-verliezers (blauw), 1:1 linking
      */
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde): void
     {
@@ -390,9 +394,20 @@ class EliminatieService
             $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
             $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
 
+            // Check of volgende ronde gemixt is (B-winnaars + A-verliezers)
+            $volgendeIsGemixt = str_ends_with($volgendeRonde, '_2') ||
+                                str_starts_with($volgendeRonde, 'b_brons');
+
             foreach ($huidigeWedstrijden as $idx => $wedstrijd) {
-                $volgendeIdx = floor($idx / 2);
-                $slot = ($idx % 2 == 0) ? 'wit' : 'blauw';
+                if ($volgendeIsGemixt) {
+                    // Gemixte ronde: 1:1 linking, B-winnaar naar WIT
+                    $volgendeIdx = $idx;  // 1:1 mapping
+                    $slot = 'wit';
+                } else {
+                    // Eerste ronde: standaard 2:1 bracket
+                    $volgendeIdx = floor($idx / 2);
+                    $slot = ($idx % 2 == 0) ? 'wit' : 'blauw';
+                }
 
                 if (isset($volgendeWedstrijden[$volgendeIdx])) {
                     $wedstrijd->update([
@@ -569,6 +584,11 @@ class EliminatieService
             ? $wedstrijd->judoka_blauw_id
             : $wedstrijd->judoka_wit_id;
 
+        // Haal namen op voor duidelijke meldingen
+        $winnaarNaam = \App\Models\Judoka::find($winnaarId)?->naam ?? 'Onbekend';
+        $verliezerNaam = $verliezerId ? (\App\Models\Judoka::find($verliezerId)?->naam ?? 'Onbekend') : null;
+        $oudeWinnaarNaam = $oudeWinnaarId ? (\App\Models\Judoka::find($oudeWinnaarId)?->naam ?? 'Onbekend') : null;
+
         // Als er een oude winnaar was, moet die gecorrigeerd worden
         if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
             // 1. Verwijder oude winnaar uit volgende ronde
@@ -580,7 +600,7 @@ class EliminatieService
 
                     if ($volgendeWedstrijd->$veld == $oudeWinnaarId) {
                         $volgendeWedstrijd->update([$veld => null]);
-                        $correcties[] = "Oude winnaar verwijderd uit volgende ronde";
+                        $correcties[] = "{$oudeWinnaarNaam} verwijderd uit volgende ronde (was foutief geplaatst)";
                     }
                 }
             }
@@ -588,10 +608,11 @@ class EliminatieService
             // 2. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
             // Want die was daar geplaatst als verliezer, maar is nu winnaar
             $this->verwijderUitB($wedstrijd->poule_id, $winnaarId);
-            $correcties[] = "Nieuwe winnaar verwijderd uit B-groep";
+            $correcties[] = "{$winnaarNaam} verwijderd uit B-groep (is nu winnaar)";
 
             // 3. Plaats oude winnaar (=nieuwe verliezer) in B-groep
             // De reguliere code hieronder doet dit al
+            $correcties[] = "Winnaar gecorrigeerd: {$winnaarNaam} (was: {$oudeWinnaarNaam})";
         }
 
         // Verliezer naar B-groep (alleen bij A-groep wedstrijden)
@@ -600,6 +621,11 @@ class EliminatieService
                 $this->plaatsVerliezerIJF($wedstrijd, $verliezerId);
             } else {
                 $this->plaatsVerliezerDubbel($wedstrijd, $verliezerId);
+            }
+
+            // Alleen melding als dit een correctie was
+            if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
+                $correcties[] = "{$verliezerNaam} geplaatst in B-groep";
             }
         }
 
@@ -619,6 +645,9 @@ class EliminatieService
     {
         $pouleId = $wedstrijd->poule_id;
 
+        // Check of verliezer al een bye heeft gehad in A-groep
+        $hadAlBye = $this->heeftByeGehad($pouleId, $verliezerId);
+
         // Bepaal target B-rondes op basis van A-ronde (in volgorde van voorkeur)
         $targetRondes = match ($wedstrijd->ronde) {
             'zestiende_finale' => ['b_achtste_finale_1', 'b_achtste_finale'],
@@ -628,10 +657,11 @@ class EliminatieService
             default => ['b_kwartfinale_1', 'b_kwartfinale', 'b_achtste_finale'],
         };
 
-        // Zoek eerste beschikbare slot
+        // Zoek beschikbare slot
+        // Als verliezer al bye had: zoek slot waar al iemand staat (geen nieuwe bye)
         $bWedstrijd = null;
         foreach ($targetRondes as $ronde) {
-            $bWedstrijd = $this->zoekLegeBSlot($pouleId, $ronde);
+            $bWedstrijd = $this->zoekLegeBSlot($pouleId, $ronde, $hadAlBye);
             if ($bWedstrijd) {
                 break;
             }
@@ -639,13 +669,47 @@ class EliminatieService
 
         // Fallback: zoek in alle B-rondes
         if (!$bWedstrijd) {
-            $bWedstrijd = $this->zoekLegeBSlot($pouleId, null);
+            $bWedstrijd = $this->zoekLegeBSlot($pouleId, null, $hadAlBye);
+        }
+
+        // Laatste fallback: als alles vol is, zoek zonder bye-restrictie
+        if (!$bWedstrijd && $hadAlBye) {
+            foreach ($targetRondes as $ronde) {
+                $bWedstrijd = $this->zoekLegeBSlot($pouleId, $ronde, false);
+                if ($bWedstrijd) {
+                    break;
+                }
+            }
         }
 
         if ($bWedstrijd) {
-            $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : 'judoka_blauw_id';
+            // Bepaal slot: A-verliezers naar BLAUW in gemixte rondes (waar B-winnaars op wit komen)
+            // Gemixte rondes: _2 suffix of b_brons (B-winnaars + A-verliezers)
+            // Eerste rondes: _1 suffix of geen suffix → beide slots beschikbaar (alleen A-verliezers)
+            $isGemixteRonde = str_ends_with($bWedstrijd->ronde, '_2') ||
+                              str_starts_with($bWedstrijd->ronde, 'b_brons');
+
+            if ($isGemixteRonde) {
+                // A-verliezers naar BLAUW (B-winnaars komen op WIT)
+                $slot = 'judoka_blauw_id';
+            } else {
+                // Eerste B-ronde: gebruik eerste beschikbare slot
+                $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : 'judoka_blauw_id';
+            }
+
             $bWedstrijd->update([$slot => $verliezerId]);
         }
+    }
+
+    /**
+     * Check of judoka al een bye heeft gehad in deze poule
+     */
+    private function heeftByeGehad(int $pouleId, int $judokaId): bool
+    {
+        return Wedstrijd::where('poule_id', $pouleId)
+            ->where('uitslag_type', 'bye')
+            ->where('winnaar_id', $judokaId)
+            ->exists();
     }
 
     /**
@@ -666,8 +730,9 @@ class EliminatieService
 
     /**
      * Zoek een lege slot in B-groep
+     * @param bool $vermijdBye Als true: zoek slot waar al iemand staat (geen bye)
      */
-    private function zoekLegeBSlot(int $pouleId, ?string $ronde): ?Wedstrijd
+    private function zoekLegeBSlot(int $pouleId, ?string $ronde, bool $vermijdBye = false): ?Wedstrijd
     {
         $query = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
@@ -679,6 +744,14 @@ class EliminatieService
 
         if ($ronde) {
             $query->where('ronde', $ronde);
+        }
+
+        // Als we bye moeten vermijden: zoek wedstrijd waar al 1 judoka staat
+        if ($vermijdBye) {
+            $query->where(function ($q) {
+                $q->whereNotNull('judoka_wit_id')
+                  ->orWhereNotNull('judoka_blauw_id');
+            });
         }
 
         return $query->first();
