@@ -927,13 +927,16 @@ class BlokMatVerdelingService
 
     /**
      * Get hall overview (zaaloverzicht)
-     * Counts only active judoka's (not absent, weight within class)
+     * BELANGRIJK: Telt alleen ACTIEVE judoka's (niet afwezig, gewicht binnen klasse)
+     * en herberekent wedstrijden op basis daarvan!
      */
     public function getZaalOverzicht(Toernooi $toernooi): array
     {
         $overzicht = [];
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0;
 
-        foreach ($toernooi->blokken()->with('poules.mat')->get() as $blok) {
+        // Eager load judokas for active count calculation
+        foreach ($toernooi->blokken()->with('poules.mat', 'poules.judokas')->get() as $blok) {
             $blokData = [
                 'nummer' => $blok->nummer,
                 'naam' => $blok->naam,
@@ -947,15 +950,21 @@ class BlokMatVerdelingService
 
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
-                    'poules' => $poules->map(function($p) {
+                    'poules' => $poules->map(function($p) use ($tolerantie) {
+                        // Tel alleen ACTIEVE judoka's (niet afwezig, gewicht binnen klasse)
+                        $actieveJudokas = $p->judokas->filter(
+                            fn($j) => !$j->moetUitPouleVerwijderd($tolerantie)
+                        )->count();
+
                         return [
                             'id' => $p->id,
                             'nummer' => $p->nummer,
                             'titel' => $p->titel,
                             'leeftijdsklasse' => $p->leeftijdsklasse,
                             'gewichtsklasse' => $p->gewichtsklasse,
-                            'judokas' => $p->aantal_judokas,
-                            'wedstrijden' => $p->aantal_wedstrijden,
+                            'judokas' => $actieveJudokas,
+                            // BELANGRIJK: Herbereken wedstrijden op basis van actieve judokas!
+                            'wedstrijden' => $p->berekenAantalWedstrijden($actieveJudokas),
                         ];
                     })
                     ->filter(fn($p) => $p['judokas'] > 1) // Need at least 2 judokas for a match
