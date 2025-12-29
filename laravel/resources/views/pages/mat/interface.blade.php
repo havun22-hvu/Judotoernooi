@@ -1222,18 +1222,12 @@ function matInterface() {
             const bStartIdx = rondes.findIndex(r => r.ronde === 'b_start');
             const heeftBStartInBracket = bStartIdx >= 0;
 
-            // B-groep: gespiegeld (brons links, vroege rondes rechts)
-            // - Rondes omgekeerd zodat brons eerst komt
-            // - GEEN flex-row-reverse, want dan komt medaille rechts ipv links
+            // B-groep: zelfde volgorde als A-groep (vroege rondes links, brons rechts)
             const isBGroep = groep === 'B';
-            const displayRondes = isBGroep ? [...rondes].reverse() : rondes;
+            const displayRondes = rondes;
 
             // Header met ronde namen
             html += `<div class="flex mb-1">`;
-            // Medaille eerst voor B-groep (links), laatst voor A-groep (rechts)
-            if (isBGroep) {
-                html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
-            }
             displayRondes.forEach((ronde, rondeIdx) => {
                 const isBStartHeader = ronde.ronde === 'b_start';
                 const headerWidth = isBStartHeader ? 'w-36' : 'w-32';
@@ -1244,9 +1238,7 @@ function matInterface() {
                     html += '<div class="w-2 flex-shrink-0"></div>';
                 }
             });
-            if (!isBGroep) {
-                html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
-            }
+            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
             html += '</div>';
 
             // Simpele berekening met absolute positioning
@@ -1312,31 +1304,12 @@ function matInterface() {
 
             html += `<div class="flex" style="height: ${totaleHoogte}px;">`;
 
-            // Benodigde data voor medaille slots (voor zowel A als B groep)
+            // Benodigde data voor medaille slots
             const laatsteRonde = rondes[rondes.length - 1];
             const laatsteRondeWedstrijden = laatsteRonde?.wedstrijden || [];
             const laatsteRondeNiveau = getNiveau(laatsteRonde?.ronde, rondes.length - 1);
 
-            // B-groep: medaille slots EERST (links van rondes)
-            if (isBGroep) {
-                html += `<div class="relative flex-shrink-0 w-32">`;
-                laatsteRondeWedstrijden.forEach((wed, wedIdx) => {
-                    const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
-                    const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, wedIdx) + h / 2;
-                    html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
-                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate ${!winnaar ? 'cursor-pointer' : ''}"
-                                  ondragover="event.preventDefault(); if(!${!!winnaar}) this.classList.add('ring-2','ring-amber-500')"
-                                  ondragleave="this.classList.remove('ring-2','ring-amber-500')"
-                                  ondrop="this.classList.remove('ring-2','ring-amber-500'); window.dropOpMedaille(event, ${wed.id}, 'brons', ${poule.poule_id})">`;
-                    html += winnaar ? `🥉 ${winnaar.naam}` : '🥉 Sleep winnaar';
-                    html += '</div></div>';
-                });
-                html += '</div>';
-            }
-
-            displayRondes.forEach((ronde, displayIdx) => {
-                // Gebruik originele rondeIdx voor niveau berekening
-                const rondeIdx = isBGroep ? (rondes.length - 1 - displayIdx) : displayIdx;
+            displayRondes.forEach((ronde, rondeIdx) => {
                 // Normale ronde rendering met absolute positioning
                     html += `<div class="relative flex-shrink-0 w-32">`;
 
@@ -1389,9 +1362,8 @@ function matInterface() {
                         const blauwBewoner = wed.blauw ? JSON.stringify({id: wed.blauw.id, naam: wed.blauw.naam}).replace(/"/g, '&quot;') : 'null';
 
                         // Wit slot
-                        const witBorderSide = isBGroep ? 'rounded-r border-l-0' : 'rounded-l border-r-0';
                         html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-white border border-gray-300 ${!isLastRound ? witBorderSide : 'rounded'} flex items-center text-xs drop-slot"
+                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
                                       ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit', ${poule.poule_id}, ${witBewoner})">`;
@@ -1402,23 +1374,15 @@ function matInterface() {
                                      </div>`;
                         }
                         html += '</div>';
-                        // Connector lijnen: B-groep gespiegeld (links), A-groep normaal (rechts)
-                        const isFirstDisplayRound = displayIdx === 0;
-                        if (!isFirstDisplayRound || !isBGroep) {
-                            if (!isLastRound) {
-                                if (isBGroep) {
-                                    html += `<div class="absolute left-0 top-0 w-4 h-full border-t border-l border-gray-400"></div>`;
-                                } else {
-                                    html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
-                                }
-                            }
+                        // Connector lijnen naar rechts
+                        if (!isLastRound) {
+                            html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
                         }
                         html += '</div>';
 
                         // Blauw slot
-                        const borderSide = isBGroep ? 'rounded-r border-l-0' : 'rounded-l border-r-0';
                         html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 ${!isLastRound ? borderSide : 'rounded'} flex items-center text-xs drop-slot"
+                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
                                       ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw', ${poule.poule_id}, ${blauwBewoner})">`;
@@ -1429,14 +1393,8 @@ function matInterface() {
                                      </div>`;
                         }
                         html += '</div>';
-                        if (!isFirstDisplayRound || !isBGroep) {
-                            if (!isLastRound) {
-                                if (isBGroep) {
-                                    html += `<div class="absolute left-0 top-0 w-4 h-full border-b border-l border-gray-400"></div>`;
-                                } else {
-                                    html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
-                                }
-                            }
+                        if (!isLastRound) {
+                            html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
                         }
                         html += '</div>';
 
@@ -1451,7 +1409,7 @@ function matInterface() {
                 }
             });
 
-            // A-groep: Goud en Zilver slots RECHTS van finale
+            // Medaille slots RECHTS van finale/brons
             if (groep === 'A') {
                 const finale = laatsteRondeWedstrijden[0];
                 const winnaar = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw) : null;
@@ -1476,8 +1434,22 @@ function matInterface() {
                 html += verliezer ? `🥈 ${verliezer.naam}` : '🥈 Sleep verliezer hier';
                 html += '</div></div>';
                 html += '</div>';
+            } else {
+                // B groep: bronzen winnaars rechts van brons wedstrijden
+                html += `<div class="relative flex-shrink-0 w-32">`;
+                laatsteRondeWedstrijden.forEach((wed, wedIdx) => {
+                    const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
+                    const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, wedIdx) + h / 2;
+                    html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
+                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate ${!winnaar ? 'cursor-pointer' : ''}"
+                                  ondragover="event.preventDefault(); if(!${!!winnaar}) this.classList.add('ring-2','ring-amber-500')"
+                                  ondragleave="this.classList.remove('ring-2','ring-amber-500')"
+                                  ondrop="this.classList.remove('ring-2','ring-amber-500'); window.dropOpMedaille(event, ${wed.id}, 'brons', ${poule.poule_id})">`;
+                    html += winnaar ? `🥉 ${winnaar.naam}` : '🥉 Sleep winnaar';
+                    html += '</div></div>';
+                });
+                html += '</div>';
             }
-            // B-groep medailles zijn al aan het begin gerenderd
 
             html += '</div>';
 
