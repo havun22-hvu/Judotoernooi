@@ -52,7 +52,11 @@ Als N geen macht van 2 is, worden **byes** gebruikt:
 | 20 | 16 | 4 (8 spelen) | 12 (direct naar 1/8) |
 | 16 | 16 | 0 | Start bij 1/8 |
 
-**Byes worden handmatig verwerkt door admin** - niet automatisch doorschuiven.
+**Byes worden automatisch berekend:**
+- A-byes = 2D - N
+- B-byes niet aan A-bye judoka's geven (fairness regel)
+
+Zie [ELIMINATIE_BEREKENING.md](../ELIMINATIE_BEREKENING.md) voor details.
 
 ### Layout (horizontaal gespiegeld)
 

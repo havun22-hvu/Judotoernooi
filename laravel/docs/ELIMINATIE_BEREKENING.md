@@ -224,19 +224,56 @@ A-1/64 verliezers (33-64) ──► B-1/32(1) ──► B-1/32(2) ──► B-1/
 
 ---
 
-## BYES IN B-GROEP
+## BYES BEREKENING
 
-Als de verliezers uit A-1e ronde niet precies de capaciteit vullen, komen er byes:
+### A-groep byes (automatisch te berekenen)
 
 ```
-Byes in B-start = capaciteit - verliezers
+A-byes = 2D - N
 
-Voorbeeld N=20:
-- A-1/16 verliezers: 20 - 16 = 4
-- A-1/8 verliezers: 8
-- Totaal naar B-1/8: 4 + 8 = 12
-- B-1/8 capaciteit: 16
-- Byes: 16 - 12 = 4
+Voorbeelden:
+- N=27, D=16: A-byes = 32 - 27 = 5 byes
+- N=20, D=16: A-byes = 32 - 20 = 12 byes
+- N=35, D=32: A-byes = 64 - 35 = 29 byes
+- N=16, D=16: A-byes = 32 - 16 = 16 → geen voorronde, start bij A-1/8
+```
+
+### B-groep byes (automatisch te berekenen)
+
+**Bij ENKELE rondes:**
+```
+B-byes = (2 × V2) - (V1 + V2) = V2 - V1
+
+Voorbeeld N=20, D=16:
+- V1 = 4, V2 = 8
+- B-1/8 capaciteit = 16 (want V2=8 → 8 wedstrijden × 2)
+- Instroom = V1 + V2 = 4 + 8 = 12
+- B-byes = 16 - 12 = 4 byes
+```
+
+**Bij DUBBELE rondes:**
+```
+B-1e ronde byes = (2 × V2) - V1   (afronden naar boven)
+
+Voorbeeld N=27, D=16:
+- V1 = 11, V2 = 8
+- B-1/8(1) capaciteit = 16
+- B-byes = 16 - 11 = 5 byes
+```
+
+### FAIRNESS REGEL: B-byes verdeling
+
+```
+REGEL: B-byes NIET aan A-bye judoka's geven (tenzij niet anders kan)
+
+Reden: Judoka's die al een bye hadden in A-groep, moeten niet
+       nóg een bye krijgen in B-groep. Anders krijgen zij oneerlijk
+       voordeel (minder wedstrijden, meer rust).
+
+Implementatie:
+1. Markeer welke judoka's A-bye hadden
+2. Bij B-groep plaatsing: geef byes aan judoka's ZONDER A-bye
+3. Alleen als alle judoka's A-bye hadden, mag B-bye aan A-bye
 ```
 
 ---
