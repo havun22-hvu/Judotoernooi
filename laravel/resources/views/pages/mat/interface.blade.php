@@ -1484,7 +1484,7 @@ function matInterface() {
             let html = '';
 
             // Header met niveau namen (niet individuele rondes)
-            html += `<div class="flex mb-2">`;
+            html += `<div class="flex mb-4">`;
             niveaus.forEach((niveau, idx) => {
                 // Voor elk niveau: toon de subronde namen
                 niveau.subRondes.forEach((sr, srIdx) => {
