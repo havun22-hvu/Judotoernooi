@@ -39,8 +39,9 @@ class EliminatieService
      * @param Poule $poule De poule waarvoor bracket gemaakt wordt
      * @param array $judokaIds Array van judoka IDs
      * @param string $type 'dubbel' of 'ijf'
+     * @param int $aantalBrons 1 of 2 bronzen medailles (default: lees uit toernooi)
      */
-    public function genereerBracket(Poule $poule, array $judokaIds, string $type = 'dubbel'): array
+    public function genereerBracket(Poule $poule, array $judokaIds, string $type = 'dubbel', ?int $aantalBrons = null): array
     {
         // Verwijder bestaande wedstrijden
         $poule->wedstrijden()->delete();
@@ -50,7 +51,12 @@ class EliminatieService
             return ['totaal_wedstrijden' => 0];
         }
 
-        DB::transaction(function () use ($poule, $judokaIds, $n, $type) {
+        // Lees aantal_brons uit toernooi indien niet meegegeven
+        if ($aantalBrons === null) {
+            $aantalBrons = $poule->mat?->blok?->toernooi?->aantal_brons ?? 2;
+        }
+
+        DB::transaction(function () use ($poule, $judokaIds, $n, $type, $aantalBrons) {
             // Genereer A-groep bracket (zelfde voor beide systemen)
             $aWedstrijden = $this->genereerAGroep($poule, $judokaIds);
 
@@ -59,7 +65,7 @@ class EliminatieService
                 if ($type === 'ijf') {
                     $this->genereerBGroepIJF($poule, $n, $aWedstrijden);
                 } else {
-                    $this->genereerBGroepDubbel($poule, $n);
+                    $this->genereerBGroepDubbel($poule, $n, $aantalBrons);
                 }
             }
         });
@@ -71,6 +77,7 @@ class EliminatieService
             'a_wedstrijden' => $n - 1,
             'b_wedstrijden' => $bWedstrijden,
             'type' => $type,
+            'aantal_brons' => $aantalBrons,
         ];
     }
 
@@ -298,10 +305,11 @@ class EliminatieService
      * B-byes = capaciteit - instroom
      *
      * BELANGRIJK:
-     * - 2x brons = 2x B-1/2(2), GEEN finale!
+     * - aantalBrons = 2: Eindigt met 2x B-1/2(2), GEEN finale! (2x brons)
+     * - aantalBrons = 1: Eindigt met B-finale (1x brons)
      * - B-byes NIET aan A-bye judoka's geven (fairness)
      */
-    private function genereerBGroepDubbel(Poule $poule, int $n): void
+    private function genereerBGroepDubbel(Poule $poule, int $n, int $aantalBrons = 2): void
     {
         $volgorde = 1000;
         $wedstrijdenPerRonde = [];
@@ -329,16 +337,16 @@ class EliminatieService
             $bByes = $bCapaciteit - ($v1 + $v2);
         }
 
-        Log::info("B-groep generatie: N={$n}, D={$d}, V1={$v1}, V2={$v2}, Dubbel=" . ($dubbelRondes ? 'Ja' : 'Nee') . ", B-byes={$bByes}");
+        Log::info("B-groep generatie: N={$n}, D={$d}, V1={$v1}, V2={$v2}, Dubbel=" . ($dubbelRondes ? 'Ja' : 'Nee') . ", B-byes={$bByes}, aantalBrons={$aantalBrons}");
 
         // === STAP 5: Genereer B-bracket structuur ===
 
         if ($dubbelRondes) {
             // DUBBELE RONDES: (1) en (2) per niveau
-            $this->genereerDubbeleBRondes($poule, $bStartWedstrijden, $volgorde, $wedstrijdenPerRonde);
+            $this->genereerDubbeleBRondes($poule, $bStartWedstrijden, $volgorde, $wedstrijdenPerRonde, $aantalBrons);
         } else {
             // ENKELE RONDES: standaard knockout
-            $this->genereerEnkeleBRondes($poule, $bStartWedstrijden, $volgorde, $wedstrijdenPerRonde);
+            $this->genereerEnkeleBRondes($poule, $bStartWedstrijden, $volgorde, $wedstrijdenPerRonde, $aantalBrons);
         }
 
         // === STAP 6: Koppel B-groep wedstrijden ===
@@ -348,9 +356,10 @@ class EliminatieService
     /**
      * Genereer ENKELE B-rondes (V1 ≤ V2)
      *
-     * Structuur: B-start → B-volgende → ... → B-1/2(1) → B-1/2(2) = BRONS
+     * aantalBrons = 2: B-start → ... → B-1/2 → B-1/2(2) = 2x BRONS
+     * aantalBrons = 1: B-start → ... → B-1/2 → B-1/2(2) → B-finale = 1x BRONS
      */
-    private function genereerEnkeleBRondes(Poule $poule, int $startWedstrijden, int &$volgorde, array &$wedstrijdenPerRonde): void
+    private function genereerEnkeleBRondes(Poule $poule, int $startWedstrijden, int &$volgorde, array &$wedstrijdenPerRonde, int $aantalBrons = 2): void
     {
         $huidigeWedstrijden = $startWedstrijden;
 
@@ -374,7 +383,7 @@ class EliminatieService
             $huidigeWedstrijden = $huidigeWedstrijden / 2;
         }
 
-        // B-1/2(2): 2 wedstrijden voor BRONS (B-1/2 winnaars + A-1/2 verliezers)
+        // B-1/2(2): 2 wedstrijden (B-1/2 winnaars + A-1/2 verliezers)
         for ($i = 0; $i < 2; $i++) {
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
@@ -387,6 +396,20 @@ class EliminatieService
             ]);
             $wedstrijdenPerRonde['b_halve_finale_2'][] = $wedstrijd;
         }
+
+        // Bij 1 brons: voeg B-finale toe (winnaars b_halve_finale_2 tegen elkaar)
+        if ($aantalBrons === 1) {
+            $wedstrijd = Wedstrijd::create([
+                'poule_id' => $poule->id,
+                'judoka_wit_id' => null,
+                'judoka_blauw_id' => null,
+                'volgorde' => $volgorde++,
+                'ronde' => 'b_finale',
+                'groep' => 'B',
+                'bracket_positie' => 1,
+            ]);
+            $wedstrijdenPerRonde['b_finale'][] = $wedstrijd;
+        }
     }
 
     /**
@@ -396,9 +419,10 @@ class EliminatieService
      * - (1): B onderling (V1 of vorige winnaars)
      * - (2): winnaars (1) + A-verliezers van dat niveau
      *
-     * Eindigt met 2x B-1/2(2) = BRONS (GEEN finale!)
+     * aantalBrons = 2: Eindigt met 2x B-1/2(2) = 2x BRONS (GEEN finale!)
+     * aantalBrons = 1: Eindigt met B-finale = 1x BRONS
      */
-    private function genereerDubbeleBRondes(Poule $poule, int $startWedstrijden, int &$volgorde, array &$wedstrijdenPerRonde): void
+    private function genereerDubbeleBRondes(Poule $poule, int $startWedstrijden, int &$volgorde, array &$wedstrijdenPerRonde, int $aantalBrons = 2): void
     {
         $huidigeWedstrijden = $startWedstrijden;
 
@@ -439,7 +463,20 @@ class EliminatieService
             $huidigeWedstrijden = $huidigeWedstrijden / 2;
         }
 
-        // GEEN B-finale! Eindigt met 2x B-1/2(2) = BRONS
+        // Bij 1 brons: voeg B-finale toe (winnaars b_halve_finale_2 tegen elkaar)
+        if ($aantalBrons === 1) {
+            $wedstrijd = Wedstrijd::create([
+                'poule_id' => $poule->id,
+                'judoka_wit_id' => null,
+                'judoka_blauw_id' => null,
+                'volgorde' => $volgorde++,
+                'ronde' => 'b_finale',
+                'groep' => 'B',
+                'bracket_positie' => 1,
+            ]);
+            $wedstrijdenPerRonde['b_finale'][] = $wedstrijd;
+        }
+        // aantalBrons = 2: GEEN B-finale! Eindigt met 2x B-1/2(2) = BRONS
     }
 
     /**
@@ -685,17 +722,16 @@ class EliminatieService
 
         // Als er een oude winnaar was, moet die gecorrigeerd worden
         if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
-            // 1. Verwijder oude winnaar uit volgende ronde
+            // 1. Verwijder oude winnaar uit volgende ronde EN plaats nieuwe winnaar
             if ($wedstrijd->volgende_wedstrijd_id) {
                 $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
                 if ($volgendeWedstrijd) {
                     $slot = $wedstrijd->winnaar_naar_slot ?? 'wit';
                     $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
 
-                    if ($volgendeWedstrijd->$veld == $oudeWinnaarId) {
-                        $volgendeWedstrijd->update([$veld => null]);
-                        $correcties[] = "{$oudeWinnaarNaam} verwijderd uit volgende ronde (was foutief geplaatst)";
-                    }
+                    // Verwijder oude winnaar en plaats nieuwe winnaar in één keer
+                    $volgendeWedstrijd->update([$veld => $winnaarId]);
+                    $correcties[] = "{$oudeWinnaarNaam} vervangen door {$winnaarNaam} in volgende ronde";
                 }
             }
 

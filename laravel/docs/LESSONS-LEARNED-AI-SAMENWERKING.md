@@ -281,81 +281,91 @@ Bij het bouwen van een print-versie van het wedstrijdschema ging veel tijd verlo
 
 ---
 
-## Les: Single Source of Truth voor Counts
+## Les: Context-Afhankelijke Tellingen (Voorbereiding vs Wedstrijddag)
 
-> Bron: Judoka/wedstrijden count mismatch (dec 2025)
+> Bron: Judoka/wedstrijden count mismatch (dec 2025, herzien dec 2025)
 
 ### Probleem
 
-De judoka count in poules werd inconsistent weergegeven:
-- Database telde 5 judoka's
-- Frontend toonde 4 judoka's
-- Dit probleem keerde 10+ keer terug ondanks "fixes"
+Tellingen van judoka's en wedstrijden moeten ANDERS behandeld worden afhankelijk van de context:
 
-### Oorzaak
+| Context | Wat tellen? | Bron |
+|---------|-------------|------|
+| **Voorbereiding** | Alle ingeschreven judoka's | Database (`$poule->aantal_judokas`) |
+| **Wedstrijddag** | Alleen ACTIEVE judoka's | Herberekenen op basis van afwezigheid |
 
-Er waren **twee bronnen** voor dezelfde data:
+### KRITISCH: Wedstrijddag vs Voorbereiding
 
-1. **Database** (`Poule::updateStatistieken()`) → telde ALLE judoka's
-2. **Frontend filter** → telde alleen ACTIEVE judoka's (niet afwezig, correct gewicht)
+**Op de wedstrijddag:**
+- Judoka's kunnen afwezig zijn (niet komen opdagen)
+- Judoka's kunnen afwijkend gewogen zijn (ompolen naar andere klasse)
+- Het aantal wedstrijden hangt af van het WERKELIJKE aantal deelnemers
+
+**Voorbeeld:**
+- Voorbereiding: 29 judoka's ingeschreven → 53 wedstrijden (dubbel KO)
+- Wedstrijddag: 2 afwezig → 27 actieve judoka's → 49 wedstrijden
+
+### Voorbereiding: Database als bron
 
 ```php
-// FOUT: filtering in de view
-$actieveJudokas = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd());
-$aantal = $actieveJudokas->count();
-
-// GOED: database waarde gebruiken
+// GOED voor poule-indeling, blokken plannen
 $aantal = $poule->aantal_judokas;
+$wedstrijden = $poule->aantal_wedstrijden;
 ```
 
-### Oplossing: Single Source of Truth
-
-**Database is altijd de bron.** Nooit filteren of herberekenen in de view.
-
-| Wat | Gebruik |
-|-----|---------|
-| Aantal judoka's | `$poule->aantal_judokas` |
-| Aantal wedstrijden | `$poule->aantal_wedstrijden` |
-| Totaal categorie | `sum($poule->aantal_judokas)` |
-
-### Implementatie
+### Wedstrijddag: ALTIJD herberekenen
 
 ```php
-// In Poule model - updateStatistieken()
-public function updateStatistieken(): void
-{
-    $this->update([
-        'aantal_judokas' => $this->judokas()->count(),
-        'aantal_wedstrijden' => $this->berekenAantalWedstrijden(),
-    ]);
-}
+// VERPLICHT voor wedstrijddag interface
+$actieveJudokas = $poule->judokas->filter(
+    fn($j) => !$j->moetUitPouleVerwijderd($tolerantie)
+)->count();
 
-// In Controller - bij elke mutatie
-$poule->updateStatistieken();
+// Wedstrijden herberekenen op basis van ACTIEVE judoka's!
+$aantalWedstrijden = $poule->berekenAantalWedstrijden($actieveJudokas);
+```
 
-// Return stored values, never recalculate
+### Implementatie in code
+
+```php
+// wedstrijddag/poules.blade.php - ALTIJD herberekenen
+$actief = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+$wedstrijden = $poule->berekenAantalWedstrijden($actief);
+
+// WedstrijddagController - bij drag & drop
+$actieveJudokasNieuw = $nieuwePoule->judokas->filter(...)->count();
 return response()->json([
-    'aantal_judokas' => $poule->aantal_judokas,
-    'aantal_wedstrijden' => $poule->aantal_wedstrijden,
+    'aantal_judokas' => $actieveJudokasNieuw,
+    'aantal_wedstrijden' => $nieuwePoule->berekenAantalWedstrijden($actieveJudokasNieuw),
 ]);
 ```
 
 ### Regels
 
-1. **Nooit** `->count()` of `->filter()->count()` in views
-2. **Altijd** `updateStatistieken()` aanroepen na mutatie
-3. **Altijd** database waarden returnen in API responses
-4. **Nooit** herberekenen wat al opgeslagen is
+**Voorbereiding (poule-indeling, blokken):**
+1. ✅ Gebruik `$poule->aantal_judokas` en `$poule->aantal_wedstrijden`
+2. ✅ Update database na mutaties met `updateStatistieken()`
 
-### Anti-pattern
+**Wedstrijddag:**
+1. ✅ ALTIJD actieve judoka's tellen (excl. afwezig/afwijkend)
+2. ✅ ALTIJD wedstrijden herberekenen: `berekenAantalWedstrijden($actief)`
+3. ❌ NOOIT database waarde `$poule->aantal_wedstrijden` gebruiken
 
-❌ `$poule->judokas->filter(...)->count()` in view
-❌ `berekenAantalWedstrijden($aantalActief)` met gefilterde count
-❌ Verschillende tellingen op verschillende plekken
+### Anti-pattern (FOUT!)
 
-✅ `$poule->aantal_judokas` overal
-✅ `$poule->aantal_wedstrijden` overal
-✅ Eén plek die de waarheid bepaalt (database)
+```php
+// FOUT op wedstrijddag - dit is de database waarde, niet de werkelijke situatie
+$aantalWedstrijden = $poule->aantal_wedstrijden;
+```
+
+### Waarom dit steeds fout ging
+
+Dit patroon werd 10+ keer "gefixt" omdat:
+1. De fix voor voorbereiding (database als bron) werd verkeerd toegepast op wedstrijddag
+2. De context (voorbereiding vs wedstrijddag) werd niet meegenomen
+3. Er stond incorrecte documentatie die zei "database is altijd de bron"
+
+**ONTHOUD: Wedstrijddag = dynamische data, voorbereiding = statische data**
 
 ---
 

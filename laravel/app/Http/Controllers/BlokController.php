@@ -184,6 +184,12 @@ class BlokController extends Controller
         // Reset doorgestuurd_op for all poules (categories are now inactive)
         $toernooi->poules()->update(['doorgestuurd_op' => null]);
 
+        // Update aantal_judokas en aantal_wedstrijden voor alle poules
+        // Dit voorkomt dat poules weggefilterd worden door verouderde tellingen
+        foreach ($toernooi->poules as $poule) {
+            $poule->updateStatistieken();
+        }
+
         // Assign mats to poules (balanced distribution)
         $this->verdelingService->verdeelOverMatten($toernooi);
 

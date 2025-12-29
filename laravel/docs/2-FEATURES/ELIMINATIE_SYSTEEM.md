@@ -6,22 +6,40 @@ Dit document beschrijft het double elimination systeem voor judotoernooien.
 
 Het eliminatiesysteem werkt met twee groepen:
 - **A-groep (Hoofdboom)**: Winnaars bracket → Goud en Zilver
-- **B-groep (Herkansing)**: Verliezers krijgen tweede kans → 2x Brons
+- **B-groep (Herkansing)**: Verliezers krijgen tweede kans → Brons
 
 ## Principe
 
 1. **Iedereen begint in A-groep**
 2. **Verlies in A → naar B-groep** (herkansing)
 3. **Verlies in B → uitgeschakeld** (naar huis)
-4. **Resultaat: 4 medailles** (1x goud, 1x zilver, 2x brons)
+4. **Resultaat:** afhankelijk van `aantal_brons` instelling (zie onder)
+
+## Instelling: aantal_brons
+
+De toernooi-instelling `aantal_brons` bepaalt het einde van de B-groep:
+
+| aantal_brons | B-einde | Medailles |
+|--------------|---------|-----------|
+| **2** (default) | 2x B-1/2(2) = 2x BRONS | 4 (1 goud, 1 zilver, 2 brons) |
+| **1** | B-finale = 1x BRONS | 3 (1 goud, 1 zilver, 1 brons) |
+
+**Bij 2 bronzen:**
+- Beide verliezers A-1/2 finale krijgen brons via B-1/2(2)
+- GEEN B-finale
+
+**Bij 1 brons:**
+- Winnaars B-1/2(2) vechten in B-finale om brons
 
 ## Formules
 
 | Formule | Betekenis |
 |---------|-----------|
 | **A = N - 1** | Aantal A-groep wedstrijden |
-| **B = N - 4** | Aantal B-groep wedstrijden |
-| **Totaal = 2N - 5** | Totaal aantal wedstrijden |
+| **B = N - 4** (2 brons) | Aantal B-groep wedstrijden |
+| **B = N - 3** (1 brons) | Aantal B-groep wedstrijden (+1 finale) |
+| **Totaal = 2N - 5** (2 brons) | Totaal aantal wedstrijden |
+| **Totaal = 2N - 4** (1 brons) | Totaal aantal wedstrijden |
 | **D = 2^floor(log₂N)** | Doel: grootste macht van 2 ≤ N |
 
 ### Voorbeeld: 29 judoka's
