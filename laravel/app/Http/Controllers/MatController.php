@@ -132,7 +132,8 @@ class MatController extends Controller
 
         // Check of dit een finale of brons wedstrijd is
         $isMedailleWedstrijd = $wedstrijd->ronde === 'finale' ||
-                               str_starts_with($wedstrijd->ronde ?? '', 'b_brons');
+                               str_starts_with($wedstrijd->ronde ?? '', 'b_brons') ||
+                               $wedstrijd->ronde === 'b_halve_finale_2';
 
         if (!$isMedailleWedstrijd) {
             return response()->json([
@@ -432,7 +433,7 @@ class MatController extends Controller
         $targetRonde = match ($bronWedstrijd->ronde) {
             'zestiende_finale', 'achtste_finale' => 'b_start',
             'kwartfinale' => 'b_kwartfinale_2',
-            'halve_finale' => 'b_brons',
+            'halve_finale' => 'b_halve_finale_2',
             default => null,
         };
 

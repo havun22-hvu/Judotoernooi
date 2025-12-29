@@ -1125,7 +1125,8 @@ function matInterface() {
             'b_kwartfinale_2': 4,
             'b_kwartfinale': 3,        // Zonder suffix (9-12 j)
             'b_halve_finale_1': 5,
-            'b_brons': 6,
+            'b_halve_finale_2': 6,
+            'b_brons': 6,  // Legacy support
         },
 
         // Get bracket als array van rondes met wedstrijden
@@ -1181,7 +1182,8 @@ function matInterface() {
                 'b_kwartfinale_2': '1/4 (2)',
                 'b_kwartfinale': '1/4',         // Zonder suffix
                 'b_halve_finale_1': '1/2 (1)',
-                'b_brons': 'Brons',
+                'b_halve_finale_2': '1/2 (2)',
+                'b_brons': 'Brons',  // Legacy support (IJF)
             };
             return namen[ronde] || ronde.replace('b_', 'B ').replace('_', ' ');
         },
@@ -1193,7 +1195,9 @@ function matInterface() {
 
         // Check of poule bronswedstrijden heeft
         heeftBronsWedstrijden(poule) {
-            return poule.wedstrijden.some(w => w.ronde === 'b_brons');
+            return poule.wedstrijden.some(w =>
+                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons'
+            );
         },
 
         // Check of bracket locked is (minimaal 1 wedstrijd gespeeld)
@@ -1262,7 +1266,8 @@ function matInterface() {
                 'b_kwartfinale_2': 1,     // Of 3 als na b_kwartfinale_1
                 'b_kwartfinale': 0,       // Zonder suffix (eerste B-ronde)
                 'b_halve_finale_1': 2,
-                'b_brons': 3,
+                'b_halve_finale_2': 3,
+                'b_brons': 3,  // Legacy support
             };
 
             // Bereken posities voor elke ronde op basis van niveau
@@ -1465,7 +1470,9 @@ function matInterface() {
 
         // Get brons winnaars (2 stuks bij double elimination)
         getBronsWinnaars(poule) {
-            const bronsWedstrijden = poule.wedstrijden.filter(w => w.ronde === 'b_brons');
+            const bronsWedstrijden = poule.wedstrijden.filter(w =>
+                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons'
+            );
             return bronsWedstrijden
                 .filter(w => w.is_gespeeld && w.winnaar_id)
                 .map(w => w.winnaar_id === w.wit?.id ? w.wit : w.blauw)
