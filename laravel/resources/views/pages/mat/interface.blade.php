@@ -102,11 +102,7 @@
 
                     <!-- Groep B - Herkansing -->
                     <div x-show="activeTab === 'B'">
-                        <div class="flex justify-between items-center">
-                            <button @click="verwerkByes(poule)"
-                                    class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2 py-1 rounded">
-                                ⏩ Verwerk Byes
-                            </button>
+                        <div class="flex justify-end items-center">
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
@@ -952,32 +948,6 @@ function matInterface() {
             }
         },
 
-        async verwerkByes(poule) {
-            try {
-                const response = await fetch(`{{ route('toernooi.mat.verwerk-byes', $toernooi) }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        poule_id: poule.poule_id
-                    })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    if (data.verwerkt && data.verwerkt.length > 0) {
-                        alert('✅ Byes verwerkt:\n\n• ' + data.verwerkt.join('\n• '));
-                    } else {
-                        alert('ℹ️ Geen byes gevonden om te verwerken');
-                    }
-                    this.laadWedstrijden();
-                }
-            } catch (err) {
-                alert('Fout bij verwerken byes: ' + err.message);
-            }
-        },
 
         // Bepaal huidige en volgende wedstrijd
         getHuidigeEnVolgende(poule) {
