@@ -1514,17 +1514,17 @@ function matInterface() {
             let html = '';
 
             // Header met niveau namen (niet individuele rondes)
-            html += `<div class="flex mb-1">`;
+            html += `<div class="flex mb-2">`;
             niveaus.forEach((niveau, idx) => {
                 // Voor elk niveau: toon de subronde namen
                 niveau.subRondes.forEach((sr, srIdx) => {
-                    html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-purple-600">${sr.naam}</div>`;
+                    html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-purple-600 px-1">${sr.naam}</div>`;
                     if (srIdx < niveau.subRondes.length - 1 || idx < niveaus.length - 1) {
-                        html += '<div class="w-2 flex-shrink-0"></div>';
+                        html += '<div class="w-4 flex-shrink-0"></div>';
                     }
                 });
             });
-            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">🥉</div>`;
+            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600 px-1">🥉</div>`;
             html += '</div>';
 
             // Main container
@@ -1591,9 +1591,9 @@ function matInterface() {
 
                     html += '</div>';
 
-                    // Ruimte tussen kolommen
+                    // Ruimte tussen kolommen (moet matchen met header spacing)
                     if (!isLastColumn) {
-                        html += '<div class="w-2 flex-shrink-0"></div>';
+                        html += '<div class="w-4 flex-shrink-0"></div>';
                     }
                 });
             });
