@@ -573,8 +573,8 @@ class EliminatieService
                     // 2:1 mapping: standaard knockout
                     // Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | etc.
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    // Even bracket_positie → WIT (bovenste van paar), oneven → BLAUW (onderste)
-                    $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
+                    // Oneven bracket_positie → WIT (boven), even → BLAUW (onder)
+                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
                 // Zoek volgende wedstrijd op bracket_positie
@@ -1159,8 +1159,8 @@ class EliminatieService
                     $slot = 'wit';
                 } else {
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    // Even bracket_positie → WIT (bovenste van paar), oneven → BLAUW (onderste)
-                    $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
+                    // Oneven bracket_positie → WIT (boven), even → BLAUW (onder)
+                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
                 $volgendeWedstrijd = collect($volgendeWedstrijden)
