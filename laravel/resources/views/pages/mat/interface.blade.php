@@ -411,8 +411,39 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         console.log('Check 2 SOEPEL: wedstrijd nog niet gespeeld, doorschuiven toegestaan');
     }
 
-    // Check 3: Als bracket locked is, vraag admin wachtwoord voor speciale wijzigingen
-    // Normale winnaar-doorschuif (juiste positie) is al toegestaan door check 2
+    // ============================================================
+    // BLOKKEER-CHECKS VOOR ADMIN WACHTWOORD
+    // Voorkomt dat we om wachtwoord vragen voor ongeldige acties
+    // ============================================================
+
+    if (isLocked && data.volgendeWedstrijdId) {
+        // Check: Verkeerde wedstrijd? → BLOKKEER direct (geen wachtwoord nodig)
+        if (data.volgendeWedstrijdId != targetWedstrijdId) {
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
+                `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
+                `Sleep naar het juiste vak.`
+            );
+            return;
+        }
+
+        // Check: Verkeerde positie? → BLOKKEER direct (geen wachtwoord nodig)
+        if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
+            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
+            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
+                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
+            );
+            return;
+        }
+    }
+
+    // ============================================================
+    // ADMIN WACHTWOORD VOOR CORRECTIES/SWAPS
+    // Alleen voor legitieme wijzigingen die wel op juiste plek zijn
+    // ============================================================
+
     if (isLocked) {
         // Check of dit een normale winnaar-doorschuif is (toegestaan zonder wachtwoord)
         const isNormaleWinnaarDoorschuif = data.volgendeWedstrijdId == targetWedstrijdId &&
@@ -421,15 +452,15 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         if (!isNormaleWinnaarDoorschuif) {
             // Bepaal of dit een correctie is (wedstrijd gespeeld, dit is niet de winnaar)
             const isCorrectiePoging = data.isGespeeld && !data.isWinnaar;
-            // Of een swap binnen de ronde (geen volgendeWedstrijdId naar target)
-            const isSwapBinnenRonde = !data.volgendeWedstrijdId || data.volgendeWedstrijdId != targetWedstrijdId;
+            // Of een vrije plaatsing (geen volgendeWedstrijdId)
+            const isVrijePlaatsing = !data.volgendeWedstrijdId;
 
             const wachtwoord = prompt(
                 '🔒 BRACKET VERGRENDELD\n\n' +
                 (isCorrectiePoging
                     ? `CORRECTIE: ${naam} was niet de winnaar.\nWil je de uitslag corrigeren?\n\n`
-                    : isSwapBinnenRonde
-                        ? `SWAP: ${naam} verplaatsen binnen de ronde.\n\n`
+                    : isVrijePlaatsing
+                        ? `PLAATSING: ${naam} handmatig plaatsen.\n\n`
                         : 'De bracket is vastgezet na de eerste wedstrijd.\n') +
                 'Alleen een admin kan wijzigingen maken.\n\n' +
                 'Voer het admin wachtwoord in:'
@@ -457,35 +488,11 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
     }
 
-    // Check 3: Validaties voor doorschuiven winnaars (ALLEEN als bracket locked is)
-    // Bij seeding (niet locked) mogen judoka's vrij verplaatst worden
+    // Check 3: Extra logging (checks al gedaan boven)
     console.log('Check 3: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
     if (isLocked && data.volgendeWedstrijdId) {
-        // Check 2a: Moet naar de juiste volgende wedstrijd (SKIP bij admin override - backend handelt af)
-        if (!data.isAdminOverride) {
-            console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
-            if (data.volgendeWedstrijdId != targetWedstrijdId) {
-                alert(
-                    `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-                    `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
-                    `Sleep naar het juiste vak.`
-                );
-                return;
-            }
-        }
-
-        // Check 2b: Moet in het juiste slot (wit/blauw) - ALTIJD checken, ook bij correctie!
-        console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, '!==', positie, '?', data.winnaarNaarSlot !== positie);
-        if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-
-            alert(
-                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
-                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
-            );
-            return;
-        }
+        // Checks al gedaan boven - hier alleen logging
+        console.log('Validatie passed - juiste wedstrijd en positie');
 
         // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
         if (!data.isAdminOverride && data.isGespeeld && !data.isWinnaar) {
