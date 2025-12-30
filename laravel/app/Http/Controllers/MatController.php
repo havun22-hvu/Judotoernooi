@@ -379,11 +379,11 @@ class MatController extends Controller
         if (!empty($validated['bron_wedstrijd_id']) || $isCorrectie) {
             $bronWedstrijd = null;
 
-            // Bij correctie: zoek de ORIGINELE A-groep wedstrijd die naar deze wedstrijd wijst
-            // (niet de B-groep wedstrijd waar de judoka nu in zit)
-            if ($isCorrectie && $wedstrijd->groep === 'A') {
+            // Bij correctie: zoek de wedstrijd die naar deze wedstrijd wijst
+            if ($isCorrectie) {
+                // Zoek in dezelfde groep als de doel-wedstrijd
                 $bronWedstrijd = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
-                    ->where('groep', 'A')
+                    ->where('groep', $wedstrijd->groep)
                     ->where('volgende_wedstrijd_id', $wedstrijd->id)
                     ->where(function ($q) use ($judokaId) {
                         $q->where('judoka_wit_id', $judokaId)
@@ -402,7 +402,10 @@ class MatController extends Controller
                                  $bronWedstrijd->judoka_wit_id &&
                                  $bronWedstrijd->judoka_blauw_id;
 
-            if ($heeftBeideJudokas && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id) {
+            // Bij correctie: skip volgende_wedstrijd check (winnaar kan naar andere plek gaan)
+            $volgendeWedstrijdKlopt = $isCorrectie || ($bronWedstrijd && $bronWedstrijd->volgende_wedstrijd_id == $wedstrijd->id);
+
+            if ($heeftBeideJudokas && $volgendeWedstrijdKlopt) {
                 $winnaarId = $validated['judoka_id'];
 
                 // Bewaar oude winnaar VOOR update (voor correctie-logica)
