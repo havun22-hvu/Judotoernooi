@@ -106,6 +106,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('poule/{poule}/eliminatie/swap', [PouleController::class, 'swapSeeding'])->name('poule.eliminatie.swap');
         Route::post('poule/{poule}/eliminatie/move', [PouleController::class, 'moveSeeding'])->name('poule.eliminatie.move');
         Route::post('poule/{poule}/eliminatie/herstel-koppelingen', [PouleController::class, 'herstelBKoppelingen'])->name('poule.eliminatie.herstel-koppelingen');
+        Route::get('poule/{poule}/eliminatie/diagnose-koppelingen', [PouleController::class, 'diagnoseBKoppelingen'])->name('poule.eliminatie.diagnose-koppelingen');
 
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');

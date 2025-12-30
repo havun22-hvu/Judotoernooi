@@ -120,6 +120,7 @@ class Toernooi extends Model
         'code_spreker',
         'wedstrijd_schemas',
         'pagina_content',
+        'thema_kleur',
     ];
 
     protected $hidden = [
