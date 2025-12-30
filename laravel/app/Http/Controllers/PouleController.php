@@ -640,4 +640,33 @@ class PouleController extends Controller
             'hersteld' => $hersteld,
         ]);
     }
+
+    /**
+     * Diagnose B-koppelingen - toon huidige koppelingen zonder wijzigingen
+     */
+    public function diagnoseBKoppelingen(Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
+    {
+        $wedstrijden = Wedstrijd::where('poule_id', $poule->id)
+            ->where('groep', 'B')
+            ->orderBy('volgorde')
+            ->get(['id', 'ronde', 'bracket_positie', 'volgende_wedstrijd_id', 'winnaar_naar_slot', 'locatie_wit', 'locatie_blauw']);
+
+        $perRonde = [];
+        foreach ($wedstrijden as $wed) {
+            $perRonde[$wed->ronde][] = [
+                'id' => $wed->id,
+                'pos' => $wed->bracket_positie,
+                'volgende' => $wed->volgende_wedstrijd_id,
+                'slot' => $wed->winnaar_naar_slot,
+                'loc_wit' => $wed->locatie_wit,
+                'loc_blauw' => $wed->locatie_blauw,
+            ];
+        }
+
+        return response()->json([
+            'poule' => $poule->naam,
+            'rondes' => array_keys($perRonde),
+            'koppelingen' => $perRonde,
+        ]);
+    }
 }

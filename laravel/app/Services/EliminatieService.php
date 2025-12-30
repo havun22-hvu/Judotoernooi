@@ -546,6 +546,7 @@ class EliminatieService
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
     {
         $rondes = array_keys($wedstrijdenPerRonde);
+        Log::info("koppelBGroepWedstrijden: rondes=" . implode(', ', $rondes) . ", dubbelRondes=" . ($dubbelRondes ? 'ja' : 'nee'));
 
         for ($r = 0; $r < count($rondes) - 1; $r++) {
             $huidigeRonde = $rondes[$r];
@@ -557,6 +558,8 @@ class EliminatieService
             // Bepaal mapping type
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
+
+            Log::info("Koppel {$huidigeRonde} (" . count($huidigeWedstrijden) . ") → {$volgendeRonde} (" . count($volgendeWedstrijden) . "): is1naar2={$is1naar2}, isBrons={$isBrons}");
 
             foreach ($huidigeWedstrijden as $wedstrijd) {
                 $bracketPos = $wedstrijd->bracket_positie;
@@ -583,6 +586,8 @@ class EliminatieService
                         'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                         'winnaar_naar_slot' => $slot,
                     ]);
+                } else {
+                    Log::warning("GEEN VOLGENDE GEVONDEN: Wed {$wedstrijd->id} pos {$bracketPos} zoekt pos {$volgendeBracketPos}");
                 }
             }
         }
@@ -1114,18 +1119,21 @@ class EliminatieService
         $hersteld = 0;
 
         // Haal alle B-groep wedstrijden op, gegroepeerd per ronde
+        // BELANGRIJK: sorteer op volgorde (niet op ronde-naam, want alfabetisch klopt niet!)
         $wedstrijdenPerRonde = [];
         $bWedstrijden = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
-            ->orderBy('ronde')
-            ->orderBy('bracket_positie')
+            ->orderBy('volgorde')  // Correcte volgorde: 1/8_1, 1/8_2, 1/4_1, 1/4_2, etc.
             ->get();
 
         foreach ($bWedstrijden as $wed) {
             $wedstrijdenPerRonde[$wed->ronde][] = $wed;
         }
 
+        // Sorteer rondes in correcte volgorde (invoegvolgorde is nu correct door orderBy volgorde)
         $rondes = array_keys($wedstrijdenPerRonde);
+
+        Log::info("herstelBKoppelingen poule {$pouleId}: rondes=" . implode(', ', $rondes));
 
         // Bepaal of dit dubbele rondes zijn
         $dubbelRondes = collect($rondes)->contains(fn($r) => str_ends_with($r, '_1'));
@@ -1140,6 +1148,8 @@ class EliminatieService
 
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
+
+            Log::info("Koppel {$huidigeRonde} → {$volgendeRonde}: is1naar2={$is1naar2}, isBrons={$isBrons}");
 
             foreach ($huidigeWedstrijden as $wedstrijd) {
                 $pos = $wedstrijd->bracket_positie - 1;
@@ -1160,7 +1170,10 @@ class EliminatieService
                         'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                         'winnaar_naar_slot' => $slot,
                     ]);
+                    Log::debug("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → Wed {$volgendeWedstrijd->id} (pos {$volgendeWedstrijd->bracket_positie}), slot={$slot}");
                     $hersteld++;
+                } else {
+                    Log::warning("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → GEEN VOLGENDE GEVONDEN (zoekt pos " . ($volgendePos + 1) . ")");
                 }
             }
         }
