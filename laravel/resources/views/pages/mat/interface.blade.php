@@ -458,18 +458,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             return;
         }
 
-        // Check 2b: Moet in het juiste slot (wit/blauw)
-        console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, '!==', positie, '?', data.winnaarNaarSlot !== positie);
-        if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-
-            alert(
-                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
-                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
-            );
-            return;
-        }
+        // Check 2b: Slot-check VERWIJDERD - winnaar mag naar elk vrij slot in de correcte volgende wedstrijd
+        // De strikte winnaar_naar_slot check was te beperkend bij B-groep knockout
+        console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, 'positie:', positie, '(slot-check uitgeschakeld)');
 
         // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
         if (data.isGespeeld && !data.isWinnaar) {
