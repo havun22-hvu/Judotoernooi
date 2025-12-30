@@ -122,6 +122,50 @@ Dit is de normale **2:1 mapping**:
 
 ---
 
+## Flow: A → B (Verliezers)
+
+### A-Verliezers naar B-Groep
+
+Bij **dubbele rondes** (V1 > V2):
+```
+A-voorronde verliezers → B-start(1) op eerste beschikbaar slot
+A-1/16 verliezers      → B-1/16(2) op BLAUW slot
+A-1/8 verliezers       → B-1/8(2) op BLAUW slot
+A-1/4 verliezers       → B-1/4(2) op BLAUW slot
+A-1/2 verliezers       → B-1/2(2) op BLAUW slot
+```
+
+Bij **enkele rondes** (V1 ≤ V2):
+```
+Alle A-verliezers → B-ronde (zonder suffix) op eerste beschikbaar slot
+```
+
+### Waarom BLAUW voor (2) rondes?
+- B-winnaars van ronde (1) staan al op **WIT**
+- A-verliezers komen op **BLAUW** (de tegenstander)
+- Zo vechten B-winnaars tegen verse A-verliezers
+
+### Visueel
+
+```
+A-GROEP                         B-GROEP
+
+A-1/8 ─── winnaar ───────────► A-1/4
+   │
+   └── verliezer ────────────► B-1/8(2) BLAUW slot
+                                    │
+                                    ├── B-1/8(1) winnaar op WIT
+                                    │
+                                    └── A-1/8 verliezer op BLAUW
+```
+
+### Bye Fairness
+Judoka's die al een **bye** hadden in de A-groep:
+- Worden NIET opnieuw met bye geplaatst in B-groep
+- Ze worden bij een tegenstander gezet indien mogelijk
+
+---
+
 ## Database Velden
 
 In de `wedstrijden` tabel:
