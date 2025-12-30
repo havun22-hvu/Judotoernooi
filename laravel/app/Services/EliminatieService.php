@@ -870,11 +870,16 @@ class EliminatieService
     /**
      * Plaats verliezer in B-groep (Dubbel Eliminatie)
      *
-     * Bij dubbele rondes gaan verliezers naar specifieke B-rondes:
-     * - A eerste ronde verliezers → B-xxx(1) (onderling uitvechten)
-     * - A-1/8 verliezers → B-1/8(2) (tegen B(1) winnaars)
-     * - A-1/4 verliezers → B-1/4(2)
-     * - A-1/2 verliezers → B-1/2(2) / B-brons
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     *
+     * A→B VERLIEZER FLOW:
+     * - A-voorronde verliezers → B-start(1) op eerste beschikbaar slot
+     * - A-latere ronde verliezers → B-xxx(2) op BLAUW slot
+     *   (B-winnaars van (1) staan al op WIT)
+     *
+     * BYE FAIRNESS:
+     * - Judoka's die al een bye hadden worden NIET opnieuw met bye geplaatst
+     * - Ze worden bij een tegenstander gezet indien mogelijk
      */
     private function plaatsVerliezerDubbel(Wedstrijd $wedstrijd, int $verliezerId): void
     {
@@ -934,6 +939,20 @@ class EliminatieService
 
     /**
      * Bepaal naar welke B-ronde een A-verliezer moet
+     *
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     *
+     * A→B VERLIEZER MAPPING:
+     *
+     * Bij DUBBELE rondes (V1 > V2):
+     * - A-voorronde/1e ronde → B-start(1) op WIT/BLAUW (eerste beschikbaar)
+     * - A-1/16 verliezers    → B-1/16(2) op BLAUW
+     * - A-1/8 verliezers     → B-1/8(2) op BLAUW
+     * - A-1/4 verliezers     → B-1/4(2) op BLAUW
+     * - A-1/2 verliezers     → B-1/2(2) op BLAUW
+     *
+     * Bij ENKELE rondes (V1 ≤ V2):
+     * - Alle verliezers → B-ronde zonder suffix, eerste beschikbaar slot
      */
     private function bepaalBRondeVoorVerliezer(int $pouleId, string $aRonde): ?string
     {
@@ -944,7 +963,7 @@ class EliminatieService
             ->exists();
 
         // Mapping A-ronde → B-ronde
-        // Bij dubbele rondes: 1e ronde A → (1), 2e ronde A → (2)
+        // Bij dubbele rondes: latere A-rondes → (2) rondes (A-verliezers op BLAUW)
         if ($aRonde === 'halve_finale') {
             return 'b_halve_finale_2';
         }
@@ -957,8 +976,13 @@ class EliminatieService
             return $heeftDubbeleRondes ? 'b_achtste_finale_2' : 'b_achtste_finale';
         }
 
+        // 1/16 finale support (voor 17-32 judoka's)
+        if ($aRonde === 'zestiende_finale') {
+            return $heeftDubbeleRondes ? 'b_zestiende_finale_2' : 'b_zestiende_finale';
+        }
+
         // Eerste ronde (voorronde) → B-start(1)
-        if (in_array($aRonde, ['eerste_ronde', 'voorronde'])) {
+        if (in_array($aRonde, ['eerste_ronde', 'voorronde', 'tweeendertigste_finale'])) {
             // Zoek de eerste B-ronde met _1 suffix
             $bStart1 = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
