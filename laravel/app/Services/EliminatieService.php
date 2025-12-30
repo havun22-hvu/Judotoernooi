@@ -36,18 +36,27 @@ class EliminatieService
     /**
      * Bereken locatie_wit en locatie_blauw op basis van bracket_positie
      *
-     * Locatie flow:
-     * - bracket_positie 1: locatie_wit=1, locatie_blauw=2
-     * - bracket_positie 2: locatie_wit=3, locatie_blauw=4
-     * - etc.
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
      *
-     * Winnaar van locatie X,X+1 → locatie ceil(X/2) in volgende ronde
+     * SLOT FORMULES (wedstrijd N):
+     * - slot_wit = (N - 1) * 2 + 1 = 2N - 1
+     * - slot_blauw = (N - 1) * 2 + 2 = 2N
+     *
+     * Voorbeeld 1/8 finale (8 wedstrijden, 16 slots):
+     * - Wedstrijd 1: slot 1 (wit), slot 2 (blauw)
+     * - Wedstrijd 2: slot 3 (wit), slot 4 (blauw)
+     * - Wedstrijd 6: slot 11 (wit), slot 12 (blauw)
+     *
+     * DOORSCHUIF FORMULE:
+     * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
+     * - Oneven slot → wit positie, even slot → blauw positie
      */
     private function berekenLocaties(int $bracketPositie): array
     {
+        // Formule: slot_wit = 2N-1, slot_blauw = 2N (waar N = bracket_positie)
         return [
-            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,
-            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2,
+            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,   // = 2N - 1
+            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2, // = 2N
         ];
     }
 
@@ -255,6 +264,20 @@ class EliminatieService
 
     /**
      * Koppel A-groep wedstrijden aan elkaar
+     *
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     *
+     * DOORSCHUIF LOGICA (2:1 mapping):
+     * - Wedstrijd 1+2 → wedstrijd 1 in volgende ronde
+     * - Wedstrijd 3+4 → wedstrijd 2 in volgende ronde
+     *
+     * SLOT BEPALING (op basis van wedstrijd index):
+     * - Oneven index (0, 2, 4...) → winnaar_naar_slot = 'wit'
+     * - Even index (1, 3, 5...)   → winnaar_naar_slot = 'blauw'
+     *
+     * Dit komt overeen met de slot formule:
+     * - Slot S gaat naar slot ceil(S/2)
+     * - Oneven doel-slot = wit positie, even doel-slot = blauw positie
      */
     private function koppelAGroepWedstrijden(array $wedstrijdenPerRonde, array $byeJudokas): void
     {
@@ -269,7 +292,11 @@ class EliminatieService
             $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
 
             foreach ($huidigeWedstrijden as $idx => $wedstrijd) {
+                // 2:1 mapping: wedstrijd 0,1 → wed 0 | wedstrijd 2,3 → wed 1 | etc.
                 $volgendeIdx = floor($idx / 2);
+
+                // Slot bepaling: idx 0,2,4... → wit | idx 1,3,5... → blauw
+                // (Dit komt overeen met: oneven bracket_positie → wit, even → blauw)
                 $slot = ($idx % 2 == 0) ? 'wit' : 'blauw';
 
                 if (isset($volgendeWedstrijden[$volgendeIdx])) {
@@ -532,16 +559,28 @@ class EliminatieService
     }
 
     /**
-     * Koppel B-groep wedstrijden op basis van locatie
+     * Koppel B-groep wedstrijden op basis van bracket_positie
      *
-     * Locatie flow (2:1 mapping):
-     * - Locatie 1,2 (wed 1) → winnaar naar WIT (locatie 1 volgende ronde)
-     * - Locatie 3,4 (wed 2) → winnaar naar BLAUW (locatie 2 volgende ronde)
-     * - Locatie 5,6 (wed 3) → winnaar naar WIT (locatie 3 volgende ronde)
-     * - etc.
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
      *
-     * Bij DUBBELE rondes: (1) → (2) is 1:1 mapping (winnaar altijd naar WIT)
-     * B-1/2(2) is speciaal: B-winnaar op WIT + A-verliezer op BLAUW → BRONS
+     * SLOT SYSTEEM B-GROEP:
+     * - Wedstrijd N heeft: slot_wit = 2N-1, slot_blauw = 2N
+     * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
+     *
+     * TWEE MAPPING TYPES:
+     *
+     * 1. NORMALE 2:1 MAPPING ((2) → volgende (1)):
+     *    - Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | Wed 5+6 → wed 3 | etc.
+     *    - Oneven bracket_positie (1,3,5...) → winnaar naar WIT
+     *    - Even bracket_positie (2,4,6...)   → winnaar naar BLAUW
+     *
+     * 2. SPECIALE 1:1 MAPPING ((1) → (2)):
+     *    - Wed N → wed N (zelfde positie)
+     *    - Winnaar ALTIJD naar WIT (A-verliezer komt op BLAUW)
+     *
+     * VOORBEELD 1/8(2) → 1/4(1):
+     * - Wed 5 (slots 9,10) → wed 3 (slot 5 = wit)
+     * - Wed 6 (slots 11,12) → wed 3 (slot 6 = blauw)
      */
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
     {
@@ -556,6 +595,7 @@ class EliminatieService
             $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
 
             // Bepaal mapping type
+            // 1:1 mapping bij: (1) → (2) of naar b_halve_finale_2 (brons)
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
 
@@ -565,15 +605,17 @@ class EliminatieService
                 $bracketPos = $wedstrijd->bracket_positie;
 
                 if ($is1naar2 || $isBrons) {
-                    // 1:1 mapping: (1) → (2) of laatste → brons
-                    // Winnaar altijd naar WIT (A-verliezer gaat naar BLAUW)
+                    // 1:1 MAPPING: (1) → (2) of laatste → brons
+                    // Winnaar altijd naar WIT (A-verliezer komt op BLAUW)
                     $volgendeBracketPos = $bracketPos;
                     $slot = 'wit';
                 } else {
-                    // 2:1 mapping: standaard knockout
-                    // Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | etc.
+                    // 2:1 MAPPING: standaard knockout
+                    // Formule: doel_wedstrijd = ceil(bracket_positie / 2)
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    // Oneven bracket_positie → WIT (boven), even → BLAUW (onder)
+
+                    // Formule: oneven bracket_positie → WIT, even → BLAUW
+                    // Dit komt overeen met: slot ceil(locatie_blauw/2) is oneven → wit
                     $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
@@ -1113,6 +1155,12 @@ class EliminatieService
     /**
      * Herstel B-groep koppelingen voor bestaande bracket
      * Gebruik dit als de volgende_wedstrijd_id of winnaar_naar_slot fout staat
+     *
+     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     *
+     * Gebruikt dezelfde logica als koppelBGroepWedstrijden():
+     * - 2:1 MAPPING: oneven bracket_positie → wit, even → blauw
+     * - 1:1 MAPPING: (1) → (2) altijd naar wit
      */
     public function herstelBKoppelingen(int $pouleId): int
     {
@@ -1146,6 +1194,7 @@ class EliminatieService
             $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
             $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
 
+            // Bepaal mapping type (zie koppelBGroepWedstrijden voor details)
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
 
@@ -1155,11 +1204,15 @@ class EliminatieService
                 $bracketPos = $wedstrijd->bracket_positie;
 
                 if ($is1naar2 || $isBrons) {
+                    // 1:1 MAPPING: winnaar altijd naar WIT
                     $volgendeBracketPos = $bracketPos;
                     $slot = 'wit';
                 } else {
+                    // 2:1 MAPPING: standaard knockout
+                    // Formule: doel_wedstrijd = ceil(bracket_positie / 2)
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    // Oneven bracket_positie → WIT (boven), even → BLAUW (onder)
+
+                    // Formule: oneven bracket_positie → WIT, even → BLAUW
                     $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
@@ -1174,7 +1227,7 @@ class EliminatieService
                     Log::debug("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → Wed {$volgendeWedstrijd->id} (pos {$volgendeWedstrijd->bracket_positie}), slot={$slot}");
                     $hersteld++;
                 } else {
-                    Log::warning("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → GEEN VOLGENDE GEVONDEN (zoekt pos " . ($volgendePos + 1) . ")");
+                    Log::warning("  Wed {$wedstrijd->id} (pos {$wedstrijd->bracket_positie}) → GEEN VOLGENDE GEVONDEN (zoekt pos {$volgendeBracketPos})");
                 }
             }
         }
