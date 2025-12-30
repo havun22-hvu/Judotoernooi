@@ -361,6 +361,20 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return;
     }
 
+    // Check 1b: Slot validatie ALTIJD EERST (voor admin wachtwoord prompt!)
+    // Voorkomt dat we om wachtwoord vragen voor iets dat toch geblokkeerd wordt
+    if (isLocked && data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot) {
+        if (data.winnaarNaarSlot !== positie) {
+            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
+            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
+            alert(
+                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
+                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
+            );
+            return;
+        }
+    }
+
     // Check 2: Winnaar doorschuiven naar VERKEERDE positie = GEBLOKKEERD (met uitzonderingen)
     // Alleen strikt checken als wedstrijd al gespeeld is EN dit de winnaar is
     console.log('Check 2: volgendeWedstrijdId=', data.volgendeWedstrijdId, 'target=', targetWedstrijdId, 'slot=', data.winnaarNaarSlot, 'positie=', positie);
