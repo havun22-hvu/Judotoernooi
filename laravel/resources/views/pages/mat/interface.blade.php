@@ -446,19 +446,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     // Check 3: Validaties voor doorschuiven winnaars (ALLEEN als bracket locked is)
     // Bij seeding (niet locked) mogen judoka's vrij verplaatst worden
     console.log('Check 3: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
-    if (isLocked && data.volgendeWedstrijdId && !data.isAdminOverride) {
-        // Check 2a: Moet naar de juiste volgende wedstrijd
-        console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
-        if (data.volgendeWedstrijdId != targetWedstrijdId) {
-            alert(
-                `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-                `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
-                `Sleep naar het juiste vak.`
-            );
-            return;
+    if (isLocked && data.volgendeWedstrijdId) {
+        // Check 2a: Moet naar de juiste volgende wedstrijd (SKIP bij admin override - backend handelt af)
+        if (!data.isAdminOverride) {
+            console.log('Check 2a: volgendeWedstrijdId', data.volgendeWedstrijdId, '!=', targetWedstrijdId, '?', data.volgendeWedstrijdId != targetWedstrijdId);
+            if (data.volgendeWedstrijdId != targetWedstrijdId) {
+                alert(
+                    `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
+                    `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
+                    `Sleep naar het juiste vak.`
+                );
+                return;
+            }
         }
 
-        // Check 2b: Moet in het juiste slot (wit/blauw)
+        // Check 2b: Moet in het juiste slot (wit/blauw) - ALTIJD checken, ook bij correctie!
         console.log('Check 2b: winnaarNaarSlot', data.winnaarNaarSlot, '!==', positie, '?', data.winnaarNaarSlot !== positie);
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
@@ -472,7 +474,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
 
         // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
-        if (data.isGespeeld && !data.isWinnaar) {
+        if (!data.isAdminOverride && data.isGespeeld && !data.isWinnaar) {
             if (!confirm(
                 `⚠️ CORRECTIE: Winnaar wijzigen?\n\n` +
                 `${naam} was niet de winnaar van deze wedstrijd.\n\n` +
