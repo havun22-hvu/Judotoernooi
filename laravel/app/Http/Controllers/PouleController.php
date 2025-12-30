@@ -626,4 +626,18 @@ class PouleController extends Controller
 
         return response()->json($result, $result['success'] ? 200 : 400);
     }
+
+    /**
+     * Herstel B-groep koppelingen voor bestaande bracket
+     */
+    public function herstelBKoppelingen(Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
+    {
+        $hersteld = $this->eliminatieService->herstelBKoppelingen($poule->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$hersteld} B-koppelingen hersteld",
+            'hersteld' => $hersteld,
+        ]);
+    }
 }
