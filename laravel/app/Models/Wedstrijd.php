@@ -20,6 +20,8 @@ class Wedstrijd extends Model
         'ronde',
         'groep',
         'bracket_positie',
+        'locatie_wit',
+        'locatie_blauw',
         'volgende_wedstrijd_id',
         'herkansing_wedstrijd_id',
         'winnaar_naar_slot',
@@ -128,5 +130,31 @@ class Wedstrijd extends Model
     public function isGelijk(): bool
     {
         return $this->is_gespeeld && $this->winnaar_id === null;
+    }
+
+    /**
+     * Bereken winnaar doel-locatie op basis van locatie_wit
+     * Locatie 1,2 → 1 | Locatie 3,4 → 2 | Locatie 5,6 → 3 | etc.
+     */
+    public function getWinnaarDoelLocatie(): ?int
+    {
+        if (!$this->locatie_wit) {
+            return null;
+        }
+        return (int) ceil($this->locatie_wit / 2);
+    }
+
+    /**
+     * Bereken of winnaar naar WIT of BLAUW slot gaat
+     * Locatie 1,2 → wit | Locatie 3,4 → blauw | Locatie 5,6 → wit | etc.
+     */
+    public function getWinnaarDoelSlot(): ?string
+    {
+        if (!$this->locatie_wit) {
+            return null;
+        }
+        // Locatie 1,2 (ceil=1) → wit, Locatie 3,4 (ceil=2) → blauw
+        $doelLocatie = $this->getWinnaarDoelLocatie();
+        return ($doelLocatie % 2 === 1) ? 'wit' : 'blauw';
     }
 }

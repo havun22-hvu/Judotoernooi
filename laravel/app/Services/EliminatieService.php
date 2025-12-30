@@ -34,6 +34,24 @@ use Illuminate\Support\Facades\Log;
 class EliminatieService
 {
     /**
+     * Bereken locatie_wit en locatie_blauw op basis van bracket_positie
+     *
+     * Locatie flow:
+     * - bracket_positie 1: locatie_wit=1, locatie_blauw=2
+     * - bracket_positie 2: locatie_wit=3, locatie_blauw=4
+     * - etc.
+     *
+     * Winnaar van locatie X,X+1 → locatie ceil(X/2) in volgende ronde
+     */
+    private function berekenLocaties(int $bracketPositie): array
+    {
+        return [
+            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,
+            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2,
+        ];
+    }
+
+    /**
      * Genereer complete eliminatie bracket
      *
      * @param Poule $poule De poule waarvoor bracket gemaakt wordt
@@ -108,6 +126,7 @@ class EliminatieService
 
             // Maak eerste ronde met ALLE judoka's
             for ($i = 0; $i < $n / 2; $i++) {
+                $bracketPositie = $i + 1;
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => $judokaIds[$i * 2],
@@ -115,7 +134,8 @@ class EliminatieService
                     'volgorde' => $volgorde++,
                     'ronde' => $eersteRonde,
                     'groep' => 'A',
-                    'bracket_positie' => $i + 1,
+                    'bracket_positie' => $bracketPositie,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$eersteRonde][] = $wedstrijd;
             }
@@ -127,6 +147,7 @@ class EliminatieService
                 $volgendeRonde = $this->getRondeNaamVoorAantal($huidigeAantal);
 
                 for ($i = 0; $i < $volgendeAantal; $i++) {
+                    $bracketPositie = $i + 1;
                     $wedstrijd = Wedstrijd::create([
                         'poule_id' => $poule->id,
                         'judoka_wit_id' => null,
@@ -134,7 +155,8 @@ class EliminatieService
                         'volgorde' => $volgorde++,
                         'ronde' => $volgendeRonde,
                         'groep' => 'A',
-                        'bracket_positie' => $i + 1,
+                        'bracket_positie' => $bracketPositie,
+                        ...$this->berekenLocaties($bracketPositie),
                     ]);
                     $wedstrijdenPerRonde[$volgendeRonde][] = $wedstrijd;
                 }
@@ -158,6 +180,7 @@ class EliminatieService
 
         // === EERSTE RONDE (voorronde) ===
         for ($i = 0; $i < $eersteRondeWedstrijden; $i++) {
+            $bracketPositie = $i + 1;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => $wedstrijdJudokas[$i * 2],
@@ -165,7 +188,8 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => $eersteRonde,
                 'groep' => 'A',
-                'bracket_positie' => $i + 1,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde[$eersteRonde][] = $wedstrijd;
         }
@@ -178,6 +202,7 @@ class EliminatieService
             $volgendeRonde = $this->getRondeNaamVoorAantal($huidigeAantal);
 
             for ($i = 0; $i < $volgendeAantal; $i++) {
+                $bracketPositie = $i + 1;
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => null,
@@ -185,7 +210,8 @@ class EliminatieService
                     'volgorde' => $volgorde++,
                     'ronde' => $volgendeRonde,
                     'groep' => 'A',
-                    'bracket_positie' => $i + 1,
+                    'bracket_positie' => $bracketPositie,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$volgendeRonde][] = $wedstrijd;
             }
@@ -368,6 +394,7 @@ class EliminatieService
             $rondeNaam = $this->getBRondeNaam($huidigeWedstrijden);
 
             for ($i = 0; $i < $huidigeWedstrijden; $i++) {
+                $bracketPositie = $i + 1;
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => null,
@@ -375,7 +402,8 @@ class EliminatieService
                     'volgorde' => $volgorde++,
                     'ronde' => $rondeNaam,
                     'groep' => 'B',
-                    'bracket_positie' => $i + 1,
+                    'bracket_positie' => $bracketPositie,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$rondeNaam][] = $wedstrijd;
             }
@@ -383,8 +411,9 @@ class EliminatieService
             $huidigeWedstrijden = $huidigeWedstrijden / 2;
         }
 
-        // B-1/2(2): 2 wedstrijden (B-1/2 winnaars + A-1/2 verliezers)
+        // B-1/2(2): 2 wedstrijden (B-1/2 winnaars op WIT + A-1/2 verliezers op BLAUW)
         for ($i = 0; $i < 2; $i++) {
+            $bracketPositie = $i + 1;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => null,
@@ -392,13 +421,15 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_halve_finale_2',
                 'groep' => 'B',
-                'bracket_positie' => $i + 1,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde['b_halve_finale_2'][] = $wedstrijd;
         }
 
         // Bij 1 brons: voeg B-finale toe (winnaars b_halve_finale_2 tegen elkaar)
         if ($aantalBrons === 1) {
+            $bracketPositie = 1;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => null,
@@ -406,7 +437,8 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_finale',
                 'groep' => 'B',
-                'bracket_positie' => 1,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde['b_finale'][] = $wedstrijd;
         }
@@ -430,9 +462,10 @@ class EliminatieService
         while ($huidigeWedstrijden >= 2) {
             $baseRondeNaam = $this->getBRondeNaam($huidigeWedstrijden);
 
-            // Ronde (1): B onderling
+            // Ronde (1): B onderling - WIT slots alleen (B-winnaars komen hier)
             $ronde1Naam = $baseRondeNaam . '_1';
             for ($i = 0; $i < $huidigeWedstrijden; $i++) {
+                $bracketPositie = $i + 1;
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => null,
@@ -440,14 +473,16 @@ class EliminatieService
                     'volgorde' => $volgorde++,
                     'ronde' => $ronde1Naam,
                     'groep' => 'B',
-                    'bracket_positie' => $i + 1,
+                    'bracket_positie' => $bracketPositie,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$ronde1Naam][] = $wedstrijd;
             }
 
-            // Ronde (2): winnaars (1) + A-verliezers
+            // Ronde (2): winnaars (1) op WIT + A-verliezers op BLAUW (even locaties)
             $ronde2Naam = $baseRondeNaam . '_2';
             for ($i = 0; $i < $huidigeWedstrijden; $i++) {
+                $bracketPositie = $i + 1;
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => null,
@@ -455,7 +490,8 @@ class EliminatieService
                     'volgorde' => $volgorde++,
                     'ronde' => $ronde2Naam,
                     'groep' => 'B',
-                    'bracket_positie' => $i + 1,
+                    'bracket_positie' => $bracketPositie,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$ronde2Naam][] = $wedstrijd;
             }
@@ -465,6 +501,7 @@ class EliminatieService
 
         // Bij 1 brons: voeg B-finale toe (winnaars b_halve_finale_2 tegen elkaar)
         if ($aantalBrons === 1) {
+            $bracketPositie = 1;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => null,
@@ -472,7 +509,8 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_finale',
                 'groep' => 'B',
-                'bracket_positie' => 1,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde['b_finale'][] = $wedstrijd;
         }
@@ -494,12 +532,16 @@ class EliminatieService
     }
 
     /**
-     * Koppel B-groep wedstrijden
+     * Koppel B-groep wedstrijden op basis van locatie
      *
-     * Bij ENKELE rondes: standaard knockout (2:1 mapping)
-     * Bij DUBBELE rondes: (1) → (2) is 1:1, (2) → volgende(1) is 2:1
+     * Locatie flow (2:1 mapping):
+     * - Locatie 1,2 (wed 1) → winnaar naar WIT (locatie 1 volgende ronde)
+     * - Locatie 3,4 (wed 2) → winnaar naar BLAUW (locatie 2 volgende ronde)
+     * - Locatie 5,6 (wed 3) → winnaar naar WIT (locatie 3 volgende ronde)
+     * - etc.
      *
-     * B-1/2(2) is altijd speciaal: B-winnaar (wit) + A-1/2 verliezer (blauw) → BRONS
+     * Bij DUBBELE rondes: (1) → (2) is 1:1 mapping (winnaar altijd naar WIT)
+     * B-1/2(2) is speciaal: B-winnaar op WIT + A-verliezer op BLAUW → BRONS
      */
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
     {
@@ -517,23 +559,24 @@ class EliminatieService
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
 
             foreach ($huidigeWedstrijden as $wedstrijd) {
-                // Gebruik bracket_positie (1-based) voor correcte koppeling
-                $pos = $wedstrijd->bracket_positie - 1;  // Convert to 0-based
+                $bracketPos = $wedstrijd->bracket_positie;
 
                 if ($is1naar2 || $isBrons) {
                     // 1:1 mapping: (1) → (2) of laatste → brons
-                    $volgendePos = $pos;
-                    $slot = 'wit';  // B-winnaar altijd op wit, A-verliezer op blauw
+                    // Winnaar altijd naar WIT (A-verliezer gaat naar BLAUW)
+                    $volgendeBracketPos = $bracketPos;
+                    $slot = 'wit';
                 } else {
                     // 2:1 mapping: standaard knockout
-                    // Positie 0,1 → 0 | Positie 2,3 → 1 | Positie 4,5 → 2 | etc.
-                    $volgendePos = (int) floor($pos / 2);
-                    $slot = ($pos % 2 == 0) ? 'wit' : 'blauw';
+                    // Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | etc.
+                    $volgendeBracketPos = (int) ceil($bracketPos / 2);
+                    // Oneven bracket_positie → WIT, even → BLAUW
+                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
                 // Zoek volgende wedstrijd op bracket_positie
                 $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendePos + 1);
+                    ->firstWhere('bracket_positie', $volgendeBracketPos);
 
                 if ($volgendeWedstrijd) {
                     $wedstrijd->update([
@@ -571,6 +614,7 @@ class EliminatieService
         // Verliezers 1/4 finale pos 1+3 → pool 1
         // Verliezers 1/4 finale pos 2+4 → pool 2
         for ($i = 1; $i <= 2; $i++) {
+            $bracketPositie = $i;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => null,
@@ -578,14 +622,16 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_repechage_' . $i,
                 'groep' => 'B',
-                'bracket_positie' => $i,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde['b_repechage'][] = $wedstrijd;
         }
 
         // === BRONS WEDSTRIJDEN (2 wedstrijden) ===
-        // Winnaar repechage vs Verliezer 1/2 finale
+        // Winnaar repechage op WIT vs Verliezer 1/2 finale op BLAUW
         for ($i = 1; $i <= 2; $i++) {
+            $bracketPositie = $i;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => null,
@@ -593,7 +639,8 @@ class EliminatieService
                 'volgorde' => $volgorde++,
                 'ronde' => 'b_brons_' . $i,
                 'groep' => 'B',
-                'bracket_positie' => $i,
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
             ]);
             $wedstrijdenPerRonde['b_brons'][] = $wedstrijd;
         }
