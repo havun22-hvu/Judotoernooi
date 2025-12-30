@@ -1059,6 +1059,71 @@ class EliminatieService
     }
 
     /**
+     * Herstel B-groep koppelingen voor bestaande bracket
+     * Gebruik dit als de volgende_wedstrijd_id of winnaar_naar_slot fout staat
+     */
+    public function herstelBKoppelingen(int $pouleId): int
+    {
+        $hersteld = 0;
+
+        // Haal alle B-groep wedstrijden op, gegroepeerd per ronde
+        $wedstrijdenPerRonde = [];
+        $bWedstrijden = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'B')
+            ->orderBy('ronde')
+            ->orderBy('bracket_positie')
+            ->get();
+
+        foreach ($bWedstrijden as $wed) {
+            $wedstrijdenPerRonde[$wed->ronde][] = $wed;
+        }
+
+        $rondes = array_keys($wedstrijdenPerRonde);
+
+        // Bepaal of dit dubbele rondes zijn
+        $dubbelRondes = collect($rondes)->contains(fn($r) => str_ends_with($r, '_1'));
+
+        // Koppel elke ronde aan de volgende
+        for ($r = 0; $r < count($rondes) - 1; $r++) {
+            $huidigeRonde = $rondes[$r];
+            $volgendeRonde = $rondes[$r + 1];
+
+            $huidigeWedstrijden = $wedstrijdenPerRonde[$huidigeRonde];
+            $volgendeWedstrijden = $wedstrijdenPerRonde[$volgendeRonde];
+
+            $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
+            $isBrons = $volgendeRonde === 'b_halve_finale_2';
+
+            foreach ($huidigeWedstrijden as $wedstrijd) {
+                $pos = $wedstrijd->bracket_positie - 1;
+
+                if ($is1naar2 || $isBrons) {
+                    $volgendePos = $pos;
+                    $slot = 'wit';
+                } else {
+                    $volgendePos = (int) floor($pos / 2);
+                    $slot = ($pos % 2 == 0) ? 'wit' : 'blauw';
+                }
+
+                $volgendeWedstrijd = collect($volgendeWedstrijden)
+                    ->firstWhere('bracket_positie', $volgendePos + 1);
+
+                if ($volgendeWedstrijd) {
+                    $wedstrijd->update([
+                        'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
+                        'winnaar_naar_slot' => $slot,
+                    ]);
+                    $hersteld++;
+                }
+            }
+        }
+
+        Log::info("Hersteld {$hersteld} B-koppelingen voor poule {$pouleId}");
+
+        return $hersteld;
+    }
+
+    /**
      * Verwijder judoka uit B-groep wedstrijden
      */
     public function verwijderUitB(int $pouleId, int $judokaId): void
