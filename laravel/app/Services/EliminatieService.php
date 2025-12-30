@@ -942,17 +942,18 @@ class EliminatieService
      *
      * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
      *
-     * A→B VERLIEZER MAPPING:
+     * BELANGRIJK: De B-groep start niet altijd op hetzelfde niveau als A!
+     * B-start = V2 wedstrijden, dus bij 20 judoka's: B-start = 1/8
      *
-     * Bij DUBBELE rondes (V1 > V2):
-     * - A-voorronde/1e ronde → B-start(1) op WIT/BLAUW (eerste beschikbaar)
-     * - A-1/16 verliezers    → B-1/16(2) op BLAUW
-     * - A-1/8 verliezers     → B-1/8(2) op BLAUW
-     * - A-1/4 verliezers     → B-1/4(2) op BLAUW
-     * - A-1/2 verliezers     → B-1/2(2) op BLAUW
+     * LOGICA:
+     * 1. Check of de corresponderende B-ronde bestaat
+     * 2. Zo ja: verliezers naar die B-ronde
+     * 3. Zo nee: dit is de voorronde, verliezers naar B-start(1)
      *
-     * Bij ENKELE rondes (V1 ≤ V2):
-     * - Alle verliezers → B-ronde zonder suffix, eerste beschikbaar slot
+     * VOORBEELD (24 judoka's, D=16, V2=8):
+     * - A-1/16 (voorronde) verliezers → B-1/8(1) (want B-1/16 bestaat niet!)
+     * - A-1/8 verliezers → B-1/8(2)
+     * - A-1/4 verliezers → B-1/4(2)
      */
     private function bepaalBRondeVoorVerliezer(int $pouleId, string $aRonde): ?string
     {
@@ -972,17 +973,35 @@ class EliminatieService
             return $heeftDubbeleRondes ? 'b_kwartfinale_2' : 'b_kwartfinale';
         }
 
+        // 1/8 finale - check of B-1/8 rondes bestaan, anders is dit de voorronde
         if ($aRonde === 'achtste_finale') {
-            return $heeftDubbeleRondes ? 'b_achtste_finale_2' : 'b_achtste_finale';
+            $bAchtsteExists = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', 'like', 'b_achtste_finale%')
+                ->exists();
+
+            if ($bAchtsteExists) {
+                return $heeftDubbeleRondes ? 'b_achtste_finale_2' : 'b_achtste_finale';
+            }
+            // B-1/8 bestaat niet = dit is de voorronde, val door naar B-start
         }
 
-        // 1/16 finale support (voor 17-32 judoka's)
+        // 1/16 finale - check of B-1/16 rondes bestaan, anders is dit de voorronde
         if ($aRonde === 'zestiende_finale') {
-            return $heeftDubbeleRondes ? 'b_zestiende_finale_2' : 'b_zestiende_finale';
+            $bZestiendeExists = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', 'like', 'b_zestiende_finale%')
+                ->exists();
+
+            if ($bZestiendeExists) {
+                return $heeftDubbeleRondes ? 'b_zestiende_finale_2' : 'b_zestiende_finale';
+            }
+            // B-1/16 bestaat niet = dit is de voorronde, val door naar B-start
         }
 
         // Eerste ronde (voorronde) → B-start(1)
-        if (in_array($aRonde, ['eerste_ronde', 'voorronde', 'tweeendertigste_finale'])) {
+        // Inclusief 1/8 en 1/16 als die de eerste ronde zijn en B-equivalent niet bestaat
+        if (in_array($aRonde, ['eerste_ronde', 'voorronde', 'tweeendertigste_finale', 'zestiende_finale', 'achtste_finale'])) {
             // Zoek de eerste B-ronde met _1 suffix
             $bStart1 = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
