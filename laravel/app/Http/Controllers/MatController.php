@@ -311,13 +311,8 @@ class MatController extends Controller
                         ], 400);
                     }
 
-                    // Mag ALLEEN in het juiste slot (wit/blauw) - skip bij correctie
-                    if (!$isCorrectie && $bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
-                        return response()->json([
-                            'success' => false,
-                            'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
-                        ], 400);
-                    }
+                    // Slot-check VERWIJDERD - winnaar mag naar elk vrij slot in de correcte volgende wedstrijd
+                    // De strikte winnaar_naar_slot check was te beperkend bij B-groep knockout
                 }
             }
         }
@@ -357,14 +352,7 @@ class MatController extends Controller
                     ], 400);
                 }
 
-                // Check: Is dit de correcte positie (wit/blauw)?
-                // Bij correctie: skip deze check - nieuwe winnaar gaat naar plek van oude winnaar
-                if (!$isCorrectie && $bronWedstrijd->winnaar_naar_slot && $bronWedstrijd->winnaar_naar_slot != $validated['positie']) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Verkeerde positie! Plaats op ' . strtoupper($bronWedstrijd->winnaar_naar_slot) . '.',
-                    ], 400);
-                }
+                // Slot-check VERWIJDERD - winnaar mag naar elk vrij slot in de correcte volgende wedstrijd
             }
         }
 
