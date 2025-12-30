@@ -291,6 +291,17 @@ class MatController extends Controller
                     continue;
                 }
 
+                // Skip niet-gespeelde wedstrijden als judoka AL in een latere ronde zit
+                // Bijv: judoka zit in 1/8(1) en 1/8(2), 1/8(1) niet gespeeld maar 1/8(2) wel
+                // We willen dan alleen de 1/8(2) wedstrijd checken, niet de 1/8(1)
+                if (!$bronWedstrijd->is_gespeeld && $bronWedstrijd->volgende_wedstrijd_id) {
+                    // Check of judoka al in de volgende ronde zit
+                    $volgendeWed = Wedstrijd::find($bronWedstrijd->volgende_wedstrijd_id);
+                    if ($volgendeWed && ($volgendeWed->judoka_wit_id == $judokaId || $volgendeWed->judoka_blauw_id == $judokaId)) {
+                        continue; // Skip - judoka is al doorgeschoven
+                    }
+                }
+
                 // Check: Heeft deze bron-wedstrijd een volgende_wedstrijd_id?
                 if ($bronWedstrijd->volgende_wedstrijd_id) {
                     // Als wedstrijd AL gespeeld is en dit is NIET de winnaar:
