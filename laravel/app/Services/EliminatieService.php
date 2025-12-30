@@ -573,8 +573,8 @@ class EliminatieService
                     // 2:1 mapping: standaard knockout
                     // Wed 1+2 → wed 1 | Wed 3+4 → wed 2 | etc.
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
-                    // Oneven bracket_positie → WIT, even → BLAUW
-                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
+                    // Even bracket_positie → WIT (bovenste van paar), oneven → BLAUW (onderste)
+                    $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
                 }
 
                 // Zoek volgende wedstrijd op bracket_positie
@@ -1152,18 +1152,19 @@ class EliminatieService
             Log::info("Koppel {$huidigeRonde} → {$volgendeRonde}: is1naar2={$is1naar2}, isBrons={$isBrons}");
 
             foreach ($huidigeWedstrijden as $wedstrijd) {
-                $pos = $wedstrijd->bracket_positie - 1;
+                $bracketPos = $wedstrijd->bracket_positie;
 
                 if ($is1naar2 || $isBrons) {
-                    $volgendePos = $pos;
+                    $volgendeBracketPos = $bracketPos;
                     $slot = 'wit';
                 } else {
-                    $volgendePos = (int) floor($pos / 2);
-                    $slot = ($pos % 2 == 0) ? 'wit' : 'blauw';
+                    $volgendeBracketPos = (int) ceil($bracketPos / 2);
+                    // Even bracket_positie → WIT (bovenste van paar), oneven → BLAUW (onderste)
+                    $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
                 }
 
                 $volgendeWedstrijd = collect($volgendeWedstrijden)
-                    ->firstWhere('bracket_positie', $volgendePos + 1);
+                    ->firstWhere('bracket_positie', $volgendeBracketPos);
 
                 if ($volgendeWedstrijd) {
                     $wedstrijd->update([
