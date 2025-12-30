@@ -516,20 +516,28 @@ class EliminatieService
             $is1naar2 = $dubbelRondes && str_ends_with($huidigeRonde, '_1') && str_ends_with($volgendeRonde, '_2');
             $isBrons = $volgendeRonde === 'b_halve_finale_2';
 
-            foreach ($huidigeWedstrijden as $idx => $wedstrijd) {
+            foreach ($huidigeWedstrijden as $wedstrijd) {
+                // Gebruik bracket_positie (1-based) voor correcte koppeling
+                $pos = $wedstrijd->bracket_positie - 1;  // Convert to 0-based
+
                 if ($is1naar2 || $isBrons) {
                     // 1:1 mapping: (1) → (2) of laatste → brons
-                    $volgendeIdx = $idx;
+                    $volgendePos = $pos;
                     $slot = 'wit';  // B-winnaar altijd op wit, A-verliezer op blauw
                 } else {
                     // 2:1 mapping: standaard knockout
-                    $volgendeIdx = (int) floor($idx / 2);
-                    $slot = ($idx % 2 == 0) ? 'wit' : 'blauw';
+                    // Positie 0,1 → 0 | Positie 2,3 → 1 | Positie 4,5 → 2 | etc.
+                    $volgendePos = (int) floor($pos / 2);
+                    $slot = ($pos % 2 == 0) ? 'wit' : 'blauw';
                 }
 
-                if (isset($volgendeWedstrijden[$volgendeIdx])) {
+                // Zoek volgende wedstrijd op bracket_positie
+                $volgendeWedstrijd = collect($volgendeWedstrijden)
+                    ->firstWhere('bracket_positie', $volgendePos + 1);
+
+                if ($volgendeWedstrijd) {
                     $wedstrijd->update([
-                        'volgende_wedstrijd_id' => $volgendeWedstrijden[$volgendeIdx]->id,
+                        'volgende_wedstrijd_id' => $volgendeWedstrijd->id,
                         'winnaar_naar_slot' => $slot,
                     ]);
                 }
