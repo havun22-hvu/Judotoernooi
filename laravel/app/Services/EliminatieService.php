@@ -737,8 +737,11 @@ class EliminatieService
 
             // 2. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
             // Want die was daar geplaatst als verliezer, maar is nu winnaar
-            $this->verwijderUitB($wedstrijd->poule_id, $winnaarId);
-            $correcties[] = "{$winnaarNaam} verwijderd uit B-groep (is nu winnaar)";
+            // ALLEEN bij A-groep! Bij B-groep correcties blijft de winnaar in B-groep
+            if ($wedstrijd->groep === 'A') {
+                $this->verwijderUitB($wedstrijd->poule_id, $winnaarId);
+                $correcties[] = "{$winnaarNaam} verwijderd uit B-groep (is nu winnaar)";
+            }
 
             // 3. Plaats oude winnaar (=nieuwe verliezer) in B-groep
             // De reguliere code hieronder doet dit al
