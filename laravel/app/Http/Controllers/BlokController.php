@@ -414,7 +414,14 @@ class BlokController extends Controller
             ->orderBy('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
             ->map(function ($poule) {
-                // Calculate WP and JP from wedstrijden for each judoka
+                // ELIMINATIE: Haal medaille winnaars direct uit bracket
+                if ($poule->type === 'eliminatie') {
+                    $poule->standings = $this->getEliminatieStandings($poule);
+                    $poule->is_eliminatie = true;
+                    return $poule;
+                }
+
+                // POULE: Calculate WP and JP from wedstrijden for each judoka
                 $standings = $poule->judokas->map(function ($judoka) use ($poule) {
                     $wp = 0;
                     $jp = 0;
@@ -458,10 +465,55 @@ class BlokController extends Controller
                     return 0;
                 })->values();
 
+                $poule->is_eliminatie = false;
                 return $poule;
             });
 
         return view('pages.spreker.interface', compact('toernooi', 'klarePoules'));
+    }
+
+    /**
+     * Get standings for elimination bracket (medal winners only)
+     * Returns: 1=Goud (finale winnaar), 2=Zilver (finale verliezer), 3=Brons (1 of 2)
+     */
+    private function getEliminatieStandings($poule): \Illuminate\Support\Collection
+    {
+        $standings = collect();
+
+        // 1. GOUD = Finale winnaar (A-groep)
+        $finale = $poule->wedstrijden->first(fn($w) => $w->groep === 'A' && $w->ronde === 'finale');
+        if ($finale && $finale->is_gespeeld && $finale->winnaar_id) {
+            $goud = $finale->winnaar_id === $finale->judoka_wit_id
+                ? $poule->judokas->firstWhere('id', $finale->judoka_wit_id)
+                : $poule->judokas->firstWhere('id', $finale->judoka_blauw_id);
+            if ($goud) {
+                $standings->push(['judoka' => $goud, 'wp' => null, 'jp' => null, 'plaats' => 1]);
+            }
+
+            // 2. ZILVER = Finale verliezer
+            $zilver = $finale->winnaar_id === $finale->judoka_wit_id
+                ? $poule->judokas->firstWhere('id', $finale->judoka_blauw_id)
+                : $poule->judokas->firstWhere('id', $finale->judoka_wit_id);
+            if ($zilver) {
+                $standings->push(['judoka' => $zilver, 'wp' => null, 'jp' => null, 'plaats' => 2]);
+            }
+        }
+
+        // 3. BRONS = Winnaars van b_halve_finale_2 of b_brons of b_finale
+        $bronsWedstrijden = $poule->wedstrijden->filter(fn($w) =>
+            in_array($w->ronde, ['b_halve_finale_2', 'b_brons', 'b_finale']) && $w->is_gespeeld && $w->winnaar_id
+        );
+
+        foreach ($bronsWedstrijden as $bronsWed) {
+            $brons = $bronsWed->winnaar_id === $bronsWed->judoka_wit_id
+                ? $poule->judokas->firstWhere('id', $bronsWed->judoka_wit_id)
+                : $poule->judokas->firstWhere('id', $bronsWed->judoka_blauw_id);
+            if ($brons && !$standings->contains(fn($s) => $s['judoka']?->id === $brons->id)) {
+                $standings->push(['judoka' => $brons, 'wp' => null, 'jp' => null, 'plaats' => 3]);
+            }
+        }
+
+        return $standings;
     }
 
     /**
