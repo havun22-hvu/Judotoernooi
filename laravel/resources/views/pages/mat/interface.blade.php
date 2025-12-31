@@ -416,12 +416,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     // Voorkomt dat we om wachtwoord vragen voor ongeldige acties
     // ============================================================
 
+    console.log('=== BLOKKEER-CHECKS ===');
+    console.log('isLocked:', isLocked);
+    console.log('volgendeWedstrijdId:', data.volgendeWedstrijdId, 'type:', typeof data.volgendeWedstrijdId);
+    console.log('targetWedstrijdId:', targetWedstrijdId, 'type:', typeof targetWedstrijdId);
+    console.log('winnaarNaarSlot:', data.winnaarNaarSlot);
+    console.log('positie:', positie);
+
     if (isLocked && data.volgendeWedstrijdId) {
         // Check: Verkeerde wedstrijd? → BLOKKEER direct (geen wachtwoord nodig)
-        if (data.volgendeWedstrijdId != targetWedstrijdId) {
+        // LET OP: == vergelijking voor type coercion (string vs number)
+        if (String(data.volgendeWedstrijdId) !== String(targetWedstrijdId)) {
+            console.log('BLOKKADE: Verkeerde wedstrijd!', data.volgendeWedstrijdId, '!==', targetWedstrijdId);
             alert(
                 `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-                `${naam} kan alleen naar de volgende wedstrijd in het schema.\n` +
+                `${naam} kan alleen naar wedstrijd ${data.volgendeWedstrijdId}, niet naar ${targetWedstrijdId}.\n` +
                 `Sleep naar het juiste vak.`
             );
             return;
@@ -429,6 +438,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
         // Check: Verkeerde positie? → BLOKKEER direct (geen wachtwoord nodig)
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
+            console.log('BLOKKADE: Verkeerde positie!', data.winnaarNaarSlot, '!==', positie);
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             alert(
@@ -437,6 +447,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             );
             return;
         }
+        console.log('BLOKKEER-CHECKS PASSED');
+    } else {
+        console.log('BLOKKEER-CHECKS SKIPPED:', !isLocked ? 'niet locked' : 'geen volgendeWedstrijdId');
     }
 
     // ============================================================
