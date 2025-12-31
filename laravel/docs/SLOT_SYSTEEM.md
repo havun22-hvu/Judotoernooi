@@ -117,8 +117,32 @@ Dit is een **1:1 mapping** (geen 2:1):
 - A-verliezer komt op **BLAUW slot**
 
 ### Flow (2) → volgende (1)
-Dit is de normale **2:1 mapping**:
-- Slot S van B1/8(2) → Slot ceil(S/2) van B1/4(1)
+Dit is de normale **2:1 mapping**, maar met gespiegelde slot toewijzing:
+
+**Bovenste helft** (bracket_positie 1 t/m halverwege):
+- Oneven positie → WIT slot
+- Even positie → BLAUW slot
+
+**Onderste helft** (bracket_positie > halverwege, gespiegeld):
+- Even positie → WIT slot (omgedraaid!)
+- Oneven positie → BLAUW slot (omgedraaid!)
+
+Dit zorgt ervoor dat de visuele flow correct is in de gespiegelde B-bracket layout.
+
+Voorbeeld B-1/8(2) → B-1/4(1) (8 wedstrijden → 4 wedstrijden):
+```
+Bovenste helft (pos 1-4):
+  Wed 1 (pos 1) → wed 1, wit
+  Wed 2 (pos 2) → wed 1, blauw
+  Wed 3 (pos 3) → wed 2, wit
+  Wed 4 (pos 4) → wed 2, blauw
+
+Onderste helft (pos 5-8, gespiegeld):
+  Wed 5 (pos 5) → wed 3, blauw  (omgedraaid)
+  Wed 6 (pos 6) → wed 3, wit    (omgedraaid)
+  Wed 7 (pos 7) → wed 4, blauw  (omgedraaid)
+  Wed 8 (pos 8) → wed 4, wit    (omgedraaid)
+```
 
 ---
 
