@@ -179,6 +179,7 @@ In de `wedstrijden` tabel:
 
 ## Visuele Layout
 
+### A-Groep (normale layout)
 ```
          1/8                    1/4                 1/2              Finale
 
@@ -206,3 +207,76 @@ In de `wedstrijden` tabel:
         │
        ...
 ```
+
+### B-Groep (gespiegelde layout)
+
+De B-groep wordt visueel gespiegeld weergegeven met een **horizon lijn** in het midden.
+Dit is ALLEEN een grafische weergave - de slot nummers lopen gewoon door van boven naar beneden.
+
+```
+         1/8(1)              1/8(2)              1/4(1)           ...
+
+         BOVENSTE HELFT (wedstrijden 1-4)
+┌─────────────┐           ┌─────────────┐
+│ Slot 1 (wit)│           │ Slot 1 (wit)│
+├─────────────┤ Wed 1     ├─────────────┤ Wed 1
+│ Slot 2(blau)│           │ Slot 2(blau)│ ← uit A-1/8
+└─────────────┘           └─────────────┘
+┌─────────────┐           ┌─────────────┐
+│ Slot 3 (wit)│           │ Slot 3 (wit)│
+├─────────────┤ Wed 2     ├─────────────┤ Wed 2
+│ Slot 4(blau)│           │ Slot 4(blau)│ ← uit A-1/8
+└─────────────┘           └─────────────┘
+        ...                     ...
+
+═══════════════════════ HORIZON LIJN ═══════════════════════
+
+         ONDERSTE HELFT (wedstrijden 5-8, visueel gespiegeld)
+┌─────────────┐           ┌─────────────┐
+│ Slot 9 (wit)│           │ Slot 9 (wit)│
+├─────────────┤ Wed 8*    ├─────────────┤ Wed 8*
+│ Slot 10(bla)│           │ Slot 10(bla)│ ← uit A-1/8
+└─────────────┘           └─────────────┘
+┌─────────────┐           ┌─────────────┐
+│ Slot 11(wit)│           │ Slot 11(wit)│
+├─────────────┤ Wed 7*    ├─────────────┤ Wed 7*
+│ Slot 12(bla)│           │ Slot 12(bla)│ ← uit A-1/8
+└─────────────┘           └─────────────┘
+        ...                     ...
+
+* = wedstrijden worden visueel in omgekeerde volgorde getoond,
+    maar slot nummers lopen gewoon door (9, 10, 11, 12, ...)
+```
+
+**BELANGRIJK:**
+- De spiegeling is ALLEEN grafisch (voor symmetrische bracket layout)
+- Slot nummers lopen ALTIJD door van boven naar beneden: 1, 2, 3, ... 15, 16
+- WIT = altijd boven, BLAUW = altijd onder (ook in gespiegelde helft)
+- De wedstrijden in de onderste helft worden in omgekeerde volgorde gerenderd
+
+---
+
+## Debug Slots Toggle
+
+In de mat interface is een **"🔢 Slots AAN/UIT"** knop beschikbaar (in zowel A-groep als B-groep).
+
+Wanneer ingeschakeld:
+- Toont `[slotnummer]` voor elke judoka naam
+- Lege slots tonen ook hun nummer
+- Handig voor debugging en verificatie van slot nummering
+
+**Locatie in code:** `interface.blade.php`
+- Property: `debugSlots: false`
+- Toggle knop in A-groep en B-groep headers
+- Visuele slot nummers worden berekend in render loops (niet uit database)
+
+### Visuele vs Database Slot Nummers
+
+| Type | Beschrijving | Gebruik |
+|------|-------------|---------|
+| **Visuele slots** | Van boven naar beneden doorlopend (1, 2, 3, ...) | Debug weergave |
+| **Database slots** | `locatie_wit`, `locatie_blauw` op wedstrijd | Backend logica |
+
+In de B-groep gespiegelde layout zijn deze ANDERS:
+- Visuele slot 9 kan bij wedstrijd 8 (database slot 15) horen
+- De debug toggle toont de VISUELE nummers (doorlopend)
