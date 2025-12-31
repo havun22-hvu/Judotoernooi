@@ -4,12 +4,44 @@
 > Lees dit EERST bij een nieuwe sessie.
 
 ## Laatste sessie
-**Datum:** 2024-12-29 (avond)
+**Datum:** 2024-12-31 (avond)
 **Door:** Claude
 
 ---
 
 ## Wat vandaag gedaan
+
+### B-Groep Slot Nummering Fix
+
+- ✅ **Visuele slot nummers gefixed** - Lopen nu correct door van boven naar beneden (1-16)
+- ✅ **Spiegeling is nu alleen grafisch** - WIT altijd boven, BLAUW altijd onder
+- ✅ **Debug Slots toggle** - "🔢 Slots AAN/UIT" knop in A-groep én B-groep
+- ✅ **Documentatie SLOT_SYSTEEM.md** - Uitgebreid met B-groep gespiegelde layout uitleg
+
+### Technische Details
+
+**Probleem:** In B-groep onderste helft waren slot nummers gespiegeld (16, 15, 14... ipv 9, 10, 11...)
+
+**Oorzaak:** De `isMirrored` parameter wisselde ook de slot nummers om, maar spiegeling is alleen visueel
+
+**Oplossing:**
+- Visuele slot nummers (`visualSlotWit`, `visualSlotBlauw`) worden nu berekend in render loops
+- `renderBPotje()` accepteert nu optionele visuele slot parameters
+- A-groep: `visualSlotWit = wedIdx * 2 + 1`
+- B-groep onderste helft: `visualSlotWit = halfCount * 2 + mirroredIdx * 2 + 1`
+
+**Bestanden gewijzigd:**
+- `interface.blade.php` - Slot nummering + debug toggle in beide groepen
+- `docs/SLOT_SYSTEEM.md` - Documentatie uitgebreid
+
+### TODO Volgende Sessie
+
+- [ ] Testen met verschillende aantallen judoka's (8, 16, 24, 32)
+- [ ] Verificatie dat winnaar doorschuiven correct werkt met nieuwe slot nummering
+
+---
+
+## Vorige sessie (2024-12-29 avond)
 
 ### Eliminatie System Fixes & Features
 
@@ -21,12 +53,6 @@
 - ✅ **Jury link 403 fix** - Missing poulesPerKlasse in RoleToegang
 - ✅ **B-groep mixing** - B-winnaars naar WIT, A-verliezers naar BLAUW
 - ⏪ **B-groep layout teruggedraaid** - Medailles blijven rechts (was fout geïmplementeerd)
-
-### TODO Volgende Sessie
-
-- [ ] Documentatie B-groep layout (ASCII art) toevoegen aan docs
-- [ ] Positionering (1) en (2) wedstrijden t.o.v. elkaar
-- [ ] Gespiegelde layout correct implementeren
 
 ---
 
