@@ -102,7 +102,12 @@
 
                     <!-- Groep B - Herkansing -->
                     <div x-show="activeTab === 'B'">
-                        <div class="flex justify-end items-center">
+                        <div class="flex justify-between items-center">
+                            <button @click="debugSlots = !debugSlots; $nextTick(() => poules = [...poules])"
+                                    :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'"
+                                    class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
+                                🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
+                            </button>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
@@ -729,6 +734,7 @@ function matInterface() {
         poules: [],
         blokkenData,
         mattenData,
+        debugSlots: false,  // Toggle om slot nummers te tonen
 
         init() {
             if (this.blokId && @json($matten->count()) > 0) {
@@ -1661,8 +1667,8 @@ function matInterface() {
             const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
             const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
 
-            // DEBUG: Toon slot nummers ipv namen (zet op true voor debug)
-            const DEBUG_SLOTS = false;
+            // DEBUG: Toon slot nummers (toggle via knop in UI)
+            const DEBUG_SLOTS = this.debugSlots;
             const slotWit = wed.locatie_wit || (wed.bracket_positie * 2 - 1);
             const slotBlauw = wed.locatie_blauw || (wed.bracket_positie * 2);
 
