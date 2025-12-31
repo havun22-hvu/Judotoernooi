@@ -89,7 +89,12 @@
 
                     <!-- Groep A - Hoofdboom -->
                     <div x-show="activeTab === 'A'">
-                        <div class="flex justify-end">
+                        <div class="flex justify-between items-center">
+                            <button @click="debugSlots = !debugSlots; $nextTick(() => poules = [...poules])"
+                                    :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'"
+                                    class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
+                                🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
+                            </button>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
@@ -1391,9 +1396,10 @@ function matInterface() {
                         const witBewoner = wed.wit ? JSON.stringify({id: wed.wit.id, naam: wed.wit.naam}).replace(/"/g, '&quot;') : 'null';
                         const blauwBewoner = wed.blauw ? JSON.stringify({id: wed.blauw.id, naam: wed.blauw.naam}).replace(/"/g, '&quot;') : 'null';
 
-                        // Bepaal of dit een gespiegelde wedstrijd is (B-groep onderste helft)
-                        const totaalWedsInRonde = sortedWeds.length;
-                        const isMirrored = isBGroep && wedIdx >= totaalWedsInRonde / 2;
+                        // Visuele slot nummers (van boven naar beneden: 1,2,3,4,...)
+                        const visualSlotWit = wedIdx * 2 + 1;
+                        const visualSlotBlauw = wedIdx * 2 + 2;
+                        const DEBUG_SLOTS = this.debugSlots;
 
                         // Wit slot
                         html += `<div class="relative">`;
@@ -1402,10 +1408,13 @@ function matInterface() {
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit', ${poule.poule_id}, ${witBewoner})">`;
                         if (wed.wit) {
+                            const displayName = DEBUG_SLOTS ? `[${visualSlotWit}] ${wed.wit.naam}` : wed.wit.naam;
                             html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                           ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
-                                        <span class="truncate">${wed.wit.naam}</span>${isWitWinnaar ? winnaarIcon : ''}
+                                        <span class="truncate">${displayName}</span>${isWitWinnaar ? winnaarIcon : ''}
                                      </div>`;
+                        } else if (DEBUG_SLOTS) {
+                            html += `<span class="px-1 text-gray-400">[${visualSlotWit}]</span>`;
                         }
                         html += '</div>';
                         // Connector lijnen naar rechts
@@ -1421,10 +1430,13 @@ function matInterface() {
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw', ${poule.poule_id}, ${blauwBewoner})">`;
                         if (wed.blauw) {
+                            const displayName = DEBUG_SLOTS ? `[${visualSlotBlauw}] ${wed.blauw.naam}` : wed.blauw.naam;
                             html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
                                           ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
-                                        <span class="truncate">${wed.blauw.naam}</span>${isBlauwWinnaar ? winnaarIcon : ''}
+                                        <span class="truncate">${displayName}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                      </div>`;
+                        } else if (DEBUG_SLOTS) {
+                            html += `<span class="px-1 text-gray-400">[${visualSlotBlauw}]</span>`;
                         }
                         html += '</div>';
                         if (!isLastRound) {
@@ -1576,8 +1588,11 @@ function matInterface() {
                         const spacing = helftHoogte / halfCount;
                         const topPos = i * spacing + (spacing - potjeHeight) / 2 + verticalOffset;
 
-                        // Alleen A-verliezer tekst in BOVENSTE helft tonen
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam);
+                        // Visuele slot nummers (van boven naar beneden: 1,2,3,4,...)
+                        const visualSlotWit = i * 2 + 1;
+                        const visualSlotBlauw = i * 2 + 2;
+
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, visualSlotWit, visualSlotBlauw);
                     }
 
                     // Horizon lijn (alleen in eerste kolom van eerste niveau)
@@ -1586,7 +1601,7 @@ function matInterface() {
                     }
 
                     // Onderste helft (wedstrijden halfCount tot einde) - gespiegeld
-                    // BELANGRIJK: wit/blauw worden OMGEDRAAID zodat de visuele flow klopt
+                    // De wedstrijden worden visueel gespiegeld, maar slot nummers lopen gewoon door
                     for (let i = halfCount; i < sortedWeds.length; i++) {
                         const wed = sortedWeds[i];
                         if (!wed) continue;
@@ -1598,8 +1613,12 @@ function matInterface() {
                         const mirroredOffset = isRonde1 ? h / 2 : 0; // Halve slot hoogte omlaag voor spiegeling
                         const topPos = helftHoogte + horizonHoogte + mirroredIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
 
-                        // Onderste helft: wit/blauw gespiegeld renderen (isMirrored=true)
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true);
+                        // Visuele slot nummers (doorlopend na bovenste helft: 9,10,11,12,...)
+                        // mirroredIdx = visuele positie binnen onderste helft (0 = bovenaan)
+                        const visualSlotWit = halfCount * 2 + mirroredIdx * 2 + 1;
+                        const visualSlotBlauw = halfCount * 2 + mirroredIdx * 2 + 2;
+
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, visualSlotWit, visualSlotBlauw);
                     }
 
                     html += '</div>';
@@ -1660,30 +1679,29 @@ function matInterface() {
 
         // Helper: render een B-groep potje
         // isRonde2 = true als dit een (2) ronde is waar blauw slot A-verliezer krijgt
-        // isMirrored = true voor onderste helft (wit/blauw visueel omgedraaid)
-        renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2 = false, aRondeNaam = '', isMirrored = false) {
+        // isMirrored = true voor onderste helft (alleen grafisch, slot nummers lopen door)
+        // visualSlotWit/visualSlotBlauw = visuele slot nummers (van boven naar beneden doorlopend)
+        renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2 = false, aRondeNaam = '', isMirrored = false, visualSlotWit = null, visualSlotBlauw = null) {
             const isBye = wed.uitslag_type === 'bye';
             const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
             const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
             const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
 
-            // DEBUG: Toon slot nummers (toggle via knop in UI)
+            // DEBUG: Toon visuele slot nummers (doorlopend van boven naar beneden)
             const DEBUG_SLOTS = this.debugSlots;
-            const slotWit = wed.locatie_wit || (wed.bracket_positie * 2 - 1);
-            const slotBlauw = wed.locatie_blauw || (wed.bracket_positie * 2);
+            // Gebruik visuele slot nummers als doorgegeven, anders fallback naar wedstrijd-gebaseerd
+            const topSlotNr = visualSlotWit ?? (wed.locatie_wit || (wed.bracket_positie * 2 - 1));
+            const bottomSlotNr = visualSlotBlauw ?? (wed.locatie_blauw || (wed.bracket_positie * 2));
 
-            // Bij gespiegelde weergave (onderste helft): visueel blauw boven, wit onder
-            // Maar de DATABASE positie blijft hetzelfde - alleen de VISUELE volgorde draait om
-            const topSlot = isMirrored ? 'blauw' : 'wit';
-            const bottomSlot = isMirrored ? 'wit' : 'blauw';
-            const topJudoka = isMirrored ? wed.blauw : wed.wit;
-            const bottomJudoka = isMirrored ? wed.wit : wed.blauw;
-            const topIsWinnaar = isMirrored ? isBlauwWinnaar : isWitWinnaar;
-            const bottomIsWinnaar = isMirrored ? isWitWinnaar : isBlauwWinnaar;
-            const topSlotNr = isMirrored ? slotBlauw : slotWit;
-            const bottomSlotNr = isMirrored ? slotWit : slotBlauw;
-            const topBgColor = isMirrored ? 'bg-blue-50' : 'bg-white';
-            const bottomBgColor = isMirrored ? 'bg-white' : 'bg-blue-50';
+            // WIT = altijd boven, BLAUW = altijd onder (spiegeling is alleen grafisch)
+            const topSlot = 'wit';
+            const bottomSlot = 'blauw';
+            const topJudoka = wed.wit;
+            const bottomJudoka = wed.blauw;
+            const topIsWinnaar = isWitWinnaar;
+            const bottomIsWinnaar = isBlauwWinnaar;
+            const topBgColor = 'bg-white';
+            const bottomBgColor = 'bg-blue-50';
 
             const topDragData = JSON.stringify({
                 judokaId: topJudoka?.id,
@@ -1716,7 +1734,7 @@ function matInterface() {
 
             let html = `<div class="absolute w-32" style="top: ${topPos}px;">`;
 
-            // Top slot (wit normaal, blauw bij mirrored)
+            // Top slot = WIT (altijd)
             html += `<div class="relative">`;
             html += `<div class="w-32 h-7 ${topBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
                           ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
@@ -1728,9 +1746,6 @@ function matInterface() {
                               ondragstart="event.dataTransfer.setData('text/plain', '${topDragData}')">
                             <span class="truncate">${displayName}</span>${topIsWinnaar ? winnaarIcon : ''}
                          </div>`;
-            } else if (isRonde2 && aRondeNaam && isMirrored) {
-                // Bij gespiegeld: top slot is blauw, daar komt A-verliezer
-                html += `<span class="px-1 text-gray-400 italic text-xs">← uit ${aRondeNaam}</span>`;
             } else if (DEBUG_SLOTS) {
                 html += `<span class="px-1 text-gray-400">[${topSlotNr}]</span>`;
             }
@@ -1740,7 +1755,7 @@ function matInterface() {
             }
             html += '</div>';
 
-            // Bottom slot (blauw normaal, wit bij mirrored)
+            // Bottom slot = BLAUW (altijd)
             html += `<div class="relative">`;
             html += `<div class="w-32 h-7 ${bottomBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
                           ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
@@ -1752,11 +1767,9 @@ function matInterface() {
                               ondragstart="event.dataTransfer.setData('text/plain', '${bottomDragData}')">
                             <span class="truncate">${displayName}</span>${bottomIsWinnaar ? winnaarIcon : ''}
                          </div>`;
-            } else if (isRonde2 && aRondeNaam && !isMirrored) {
-                // Placeholder: toon waar A-judoka vandaan komt (alleen voor niet-gespiegeld, want blauw=A-verliezer)
+            } else if (isRonde2 && aRondeNaam) {
+                // Placeholder: A-verliezer komt altijd op BLAUW slot
                 html += `<span class="px-1 text-gray-400 italic text-xs">← uit ${aRondeNaam}</span>`;
-            } else if (isRonde2 && aRondeNaam && isMirrored) {
-                // Bij gespiegeld: top slot is blauw, daar komt A-verliezer - maar die is al gerenderd boven
             } else if (DEBUG_SLOTS) {
                 html += `<span class="px-1 text-gray-400">[${bottomSlotNr}]</span>`;
             }
