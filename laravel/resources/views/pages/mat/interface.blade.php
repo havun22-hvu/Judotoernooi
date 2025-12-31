@@ -30,6 +30,22 @@
                     <div x-show="poule.wedstrijden.length === 0" class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium">
                         ⚠ Geen wedstrijden
                     </div>
+
+                    <!-- Medaille overzicht voor eliminatie (wanneer afgerond) -->
+                    <template x-if="poule.type === 'eliminatie' && isPouleAfgerond(poule)">
+                        <div class="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 px-3 py-1 rounded-lg border border-yellow-300">
+                            <template x-if="getMedailleWinnaars(poule).goud">
+                                <span class="text-xs font-bold">🥇 <span x-text="getMedailleWinnaars(poule).goud?.naam"></span></span>
+                            </template>
+                            <template x-if="getMedailleWinnaars(poule).zilver">
+                                <span class="text-xs font-bold">🥈 <span x-text="getMedailleWinnaars(poule).zilver?.naam"></span></span>
+                            </template>
+                            <template x-for="(brons, idx) in getMedailleWinnaars(poule).brons" :key="idx">
+                                <span class="text-xs font-bold">🥉 <span x-text="brons?.naam"></span></span>
+                            </template>
+                        </div>
+                    </template>
+
                     <!-- Afgerond: toon klaar tijdstip -->
                     <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'">
                         ✓ Klaar om: <span x-text="poule.spreker_klaar_tijd"></span>
@@ -38,7 +54,7 @@
                     <button
                         x-show="isPouleAfgerond(poule) && !poule.spreker_klaar"
                         @click="markeerKlaar(poule)"
-                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse"
                     >
                         ✓ Afronden
                     </button>
@@ -967,7 +983,36 @@ function matInterface() {
         },
 
         isPouleAfgerond(poule) {
-            return poule.wedstrijden.length > 0 && poule.wedstrijden.every(w => w.is_gespeeld);
+            if (poule.wedstrijden.length === 0) return false;
+
+            // Eliminatie: check finale + brons wedstrijden
+            if (poule.type === 'eliminatie') {
+                return this.isEliminatieAfgerond(poule);
+            }
+
+            // Poule: alle wedstrijden moeten gespeeld zijn
+            return poule.wedstrijden.every(w => w.is_gespeeld);
+        },
+
+        // Check of eliminatie bracket volledig is afgerond
+        // Afgerond = finale gespeeld + alle brons wedstrijden gespeeld
+        isEliminatieAfgerond(poule) {
+            // Check finale (A-groep)
+            const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
+            if (!finale || !finale.is_gespeeld) return false;
+
+            // Check brons wedstrijden (b_halve_finale_2)
+            const bronsWedstrijden = poule.wedstrijden.filter(w =>
+                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons' || w.ronde === 'b_finale'
+            );
+
+            // Als er brons wedstrijden zijn, moeten die ook gespeeld zijn
+            if (bronsWedstrijden.length > 0) {
+                return bronsWedstrijden.every(w => w.is_gespeeld);
+            }
+
+            // Geen brons wedstrijden (kleine bracket) = alleen finale nodig
+            return true;
         },
 
         async markeerKlaar(poule) {
@@ -1783,22 +1828,38 @@ function matInterface() {
             return html;
         },
 
-        // Get finale winnaar
+        // Get finale winnaar (GOUD)
         getFinaleWinnaar(poule, groep) {
             const finale = poule.wedstrijden.find(w => w.groep === groep && w.ronde === 'finale');
             if (!finale || !finale.is_gespeeld || !finale.winnaar_id) return null;
             return finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw;
         },
 
+        // Get finale verliezer (ZILVER)
+        getFinaleVerliezer(poule) {
+            const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
+            if (!finale || !finale.is_gespeeld || !finale.winnaar_id) return null;
+            // Verliezer is degene die NIET de winnaar is
+            return finale.winnaar_id === finale.wit?.id ? finale.blauw : finale.wit;
+        },
+
         // Get brons winnaars (2 stuks bij double elimination)
         getBronsWinnaars(poule) {
             const bronsWedstrijden = poule.wedstrijden.filter(w =>
-                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons'
+                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons' || w.ronde === 'b_finale'
             );
             return bronsWedstrijden
                 .filter(w => w.is_gespeeld && w.winnaar_id)
                 .map(w => w.winnaar_id === w.wit?.id ? w.wit : w.blauw)
                 .filter(j => j);
+        },
+
+        // Get alle medaille winnaars voor eliminatie
+        getMedailleWinnaars(poule) {
+            const goud = this.getFinaleWinnaar(poule, 'A');
+            const zilver = this.getFinaleVerliezer(poule);
+            const brons = this.getBronsWinnaars(poule);
+            return { goud, zilver, brons };
         },
 
         // Drag & drop handler
