@@ -22,10 +22,18 @@
         @foreach($klarePoules as $poule)
         <div class="bg-white rounded-lg shadow overflow-hidden" id="poule-{{ $poule->id }}">
             <!-- Header -->
-            <div class="bg-purple-700 text-white px-4 py-3 flex justify-between items-center">
+            <div class="{{ $poule->is_eliminatie ? 'bg-purple-700' : 'bg-green-700' }} text-white px-4 py-3 flex justify-between items-center">
                 <div>
-                    <div class="font-bold text-lg">Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}</div>
-                    <div class="text-purple-200 text-sm">Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }} | Klaar: {{ $poule->spreker_klaar->format('H:i') }}</div>
+                    <div class="font-bold text-lg">
+                        @if($poule->is_eliminatie)
+                            Eliminatie - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                        @else
+                            Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                        @endif
+                    </div>
+                    <div class="{{ $poule->is_eliminatie ? 'text-purple-200' : 'text-green-200' }} text-sm">
+                        Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }} | Klaar: {{ $poule->spreker_klaar->format('H:i') }}
+                    </div>
                 </div>
                 <button
                     @click="markeerAfgeroepen({{ $poule->id }})"
@@ -35,7 +43,40 @@
                 </button>
             </div>
 
-            <!-- Resultaten tabel -->
+            @if($poule->is_eliminatie)
+            <!-- ELIMINATIE: Medaille winnaars -->
+            <div class="p-4">
+                <div class="grid gap-3">
+                    @foreach($poule->standings as $standing)
+                    @php $plaats = $standing['plaats']; @endphp
+                    <div class="flex items-center gap-3 p-3 rounded-lg
+                        @if($plaats === 1) bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400
+                        @elseif($plaats === 2) bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-400
+                        @else bg-gradient-to-r from-orange-100 to-orange-200 border-2 border-orange-400
+                        @endif">
+                        <div class="text-3xl">
+                            @if($plaats === 1) 🥇
+                            @elseif($plaats === 2) 🥈
+                            @else 🥉
+                            @endif
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg">{{ $standing['judoka']->naam }}</div>
+                            <div class="text-sm text-gray-600">{{ $standing['judoka']->club?->naam ?? '-' }}</div>
+                        </div>
+                        <div class="ml-auto text-2xl font-bold
+                            @if($plaats === 1) text-yellow-700
+                            @elseif($plaats === 2) text-gray-700
+                            @else text-orange-700
+                            @endif">
+                            {{ $plaats }}e
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <!-- POULE: Resultaten tabel -->
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border-collapse">
                     <thead>
@@ -69,6 +110,7 @@
                     </tbody>
                 </table>
             </div>
+            @endif
         </div>
         @endforeach
     </div>
