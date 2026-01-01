@@ -129,7 +129,7 @@ class EliminatieService
         $wedstrijdenPerRonde = [];
 
         // SPECIAAL GEVAL: N is exacte macht van 2 (16, 32, etc.)
-        // Dan is er geen voorronde, alle judoka's starten direct in eerste ronde
+        // Alle wedstrijden in eerste ronde zijn echte wedstrijden (geen byes)
         if ($n == $d) {
             $eersteRonde = $this->getRondeNaamVoorAantal($n);  // 16 → achtste_finale
 
@@ -179,15 +179,15 @@ class EliminatieService
             return $wedstrijdenPerRonde;
         }
 
-        // NORMAAL GEVAL: N is niet exacte macht van 2, dus voorronde nodig
-        $eersteRondeWedstrijden = $n - $d;
+        // NORMAAL GEVAL: N is niet exacte macht van 2, dus eerste ronde heeft byes
+        $eersteRondeWedstrijden = $n - $d;  // Echte wedstrijden (rest zijn byes)
         $eersteRonde = $this->getEersteRondeNaam($n);
 
         // Verdeel: eerst de judoka's die moeten vechten, dan byes
         $wedstrijdJudokas = array_slice($judokaIds, 0, $eersteRondeWedstrijden * 2);
         $byeJudokas = array_slice($judokaIds, $eersteRondeWedstrijden * 2);
 
-        // === EERSTE RONDE (voorronde) ===
+        // === EERSTE RONDE (met byes) ===
         for ($i = 0; $i < $eersteRondeWedstrijden; $i++) {
             $bracketPositie = $i + 1;
             $wedstrijd = Wedstrijd::create([
@@ -369,11 +369,11 @@ class EliminatieService
 
         // === STAP 1: Bereken V1 en V2 ===
         $d = $this->berekenDoel($n);
-        $v1 = $n - $d;      // Verliezers A-voorronde (kan 0 zijn)
+        $v1 = $n - $d;      // Verliezers eerste A-ronde (kan 0 zijn bij exacte macht van 2)
         $v2 = $d / 2;       // Verliezers A-2e ronde (altijd vast!)
 
         // === STAP 2: Bereken totaal eerste golf verliezers ===
-        // Eerste golf = voorronde verliezers + eerste A-ronde verliezers
+        // Eerste golf = V1 (eerste ronde) + V2 (tweede ronde)
         $eersteGolfVerliezers = $v1 + $v2;
 
         // === STAP 3: Bepaal B-start niveau op basis van MINIMALE SLOTS ===
@@ -386,7 +386,7 @@ class EliminatieService
         $bStartRonde = $this->getBRondeNaam($bStartWedstrijden);
 
         // === STAP 4: Bepaal ENKELE of DUBBELE rondes ===
-        // Dubbel als V1 > V2 (voorronde produceert meer verliezers dan A-1e ronde)
+        // Dubbel als V1 > V2 (eerste ronde produceert meer verliezers dan tweede ronde)
         $dubbelRondes = ($v1 > $v2);
 
         // === STAP 5: Bereken B-byes ===
@@ -810,7 +810,7 @@ class EliminatieService
     public function berekenStatistieken(int $n, string $type = 'dubbel'): array
     {
         $d = $this->berekenDoel($n);
-        $v1 = $n - $d;          // Verliezers A-voorronde
+        $v1 = $n - $d;          // Verliezers eerste A-ronde
         $v2 = (int) ($d / 2);   // Verliezers A-2e ronde
 
         $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);
@@ -827,7 +827,7 @@ class EliminatieService
             'judokas' => $n,
             'type' => $type,
             'doel' => $d,
-            'v1' => $v1,                              // Verliezers A-voorronde
+            'v1' => $v1,                              // Verliezers eerste A-ronde
             'v2' => $v2,                              // Verliezers A-2e ronde
             'eerste_golf' => $eersteGolfVerliezers,   // Totaal eerste golf verliezers
             'b_start_wedstrijden' => $bStartWedstrijden, // B-start niveau wedstrijden
@@ -920,9 +920,9 @@ class EliminatieService
      * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
      *
      * A→B VERLIEZER FLOW:
-     * - A-voorronde verliezers → B-start(1) op eerste beschikbaar slot
-     * - A-latere ronde verliezers → B-xxx(2) op BLAUW slot
-     *   (B-winnaars van (1) staan al op WIT)
+     * - Eerste A-ronde verliezers → B-start op WIT of samen met volgende
+     * - Latere A-ronde verliezers → B-xxx(2) op BLAUW slot
+     *   (B-winnaars staan al op WIT)
      *
      * BYE FAIRNESS:
      * - Judoka's die al een bye hadden worden NIET opnieuw met bye geplaatst
@@ -995,11 +995,11 @@ class EliminatieService
      * LOGICA:
      * 1. Check of de corresponderende B-ronde bestaat
      * 2. Zo ja: verliezers naar die B-ronde
-     * 3. Zo nee: dit is de voorronde, verliezers naar B-start(1)
+     * 3. Zo nee: dit is de eerste A-ronde, verliezers naar B-start
      *
      * VOORBEELD (24 judoka's, D=16, V2=8):
-     * - A-1/16 (voorronde) verliezers → B-1/8(1) (want B-1/16 bestaat niet!)
-     * - A-1/8 verliezers → B-1/8(2)
+     * - A-1/16 (eerste ronde) verliezers → B-1/8 WIT (want B-1/16 bestaat niet!)
+     * - A-1/8 verliezers → B-1/8 BLAUW (samen met A-1/16 verliezers)
      * - A-1/4 verliezers → B-1/4(2)
      */
     private function bepaalBRondeVoorVerliezer(int $pouleId, string $aRonde): ?string
@@ -1020,7 +1020,7 @@ class EliminatieService
             return $heeftDubbeleRondes ? 'b_kwartfinale_2' : 'b_kwartfinale';
         }
 
-        // 1/8 finale - check of B-1/8 rondes bestaan, anders is dit de voorronde
+        // 1/8 finale - check of B-1/8 rondes bestaan, anders is dit de eerste A-ronde
         if ($aRonde === 'achtste_finale') {
             $bAchtsteExists = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
@@ -1030,10 +1030,10 @@ class EliminatieService
             if ($bAchtsteExists) {
                 return $heeftDubbeleRondes ? 'b_achtste_finale_2' : 'b_achtste_finale';
             }
-            // B-1/8 bestaat niet = dit is de voorronde, val door naar B-start
+            // B-1/8 bestaat niet = dit is de eerste A-ronde, val door naar B-start
         }
 
-        // 1/16 finale - check of B-1/16 rondes bestaan, anders is dit de voorronde
+        // 1/16 finale - check of B-1/16 rondes bestaan, anders is dit de eerste A-ronde
         if ($aRonde === 'zestiende_finale') {
             $bZestiendeExists = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
@@ -1043,12 +1043,12 @@ class EliminatieService
             if ($bZestiendeExists) {
                 return $heeftDubbeleRondes ? 'b_zestiende_finale_2' : 'b_zestiende_finale';
             }
-            // B-1/16 bestaat niet = dit is de voorronde, val door naar B-start
+            // B-1/16 bestaat niet = dit is de eerste A-ronde, val door naar B-start
         }
 
-        // Eerste ronde (voorronde) → B-start(1)
-        // Inclusief 1/8 en 1/16 als die de eerste ronde zijn en B-equivalent niet bestaat
-        if (in_array($aRonde, ['eerste_ronde', 'voorronde', 'tweeendertigste_finale', 'zestiende_finale', 'achtste_finale'])) {
+        // Eerste A-ronde → B-start
+        // Inclusief 1/8, 1/16, 1/32 als die de eerste ronde zijn en B-equivalent niet bestaat
+        if (in_array($aRonde, ['eerste_ronde', 'tweeendertigste_finale', 'zestiende_finale', 'achtste_finale'])) {
             // Zoek de eerste B-ronde met _1 suffix
             $bStart1 = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
