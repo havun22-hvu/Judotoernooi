@@ -367,16 +367,25 @@ class EliminatieService
         $volgorde = 1000;
         $wedstrijdenPerRonde = [];
 
-        // === STAP 1: Bereken V1 en V2 ===
+        // === STAP 1: Bereken bracket parameters ===
         $d = $this->berekenDoel($n);
-        $v1 = $n - $d;      // Verliezers eerste A-ronde (kan 0 zijn bij exacte macht van 2)
-        $v2 = $d / 2;       // Verliezers A-2e ronde (altijd vast!)
+        $v1 = $n - $d;      // Extra wedstrijden met byes (kan 0 zijn bij exacte macht van 2)
 
-        // === STAP 2: Bereken totaal eerste golf verliezers ===
-        // Eerste golf = V1 (eerste ronde) + V2 (tweede ronde)
-        $eersteGolfVerliezers = $v1 + $v2;
+        // === STAP 2: Bereken ECHTE verliezers per ronde ===
+        // A-1 verliezers = aantal echte wedstrijden in eerste ronde
+        // Als V1 > 0: eerste ronde heeft V1 echte wedstrijden (rest byes)
+        // Als V1 = 0: eerste ronde heeft D/2 echte wedstrijden (geen byes)
+        $a1Verliezers = ($v1 > 0) ? $v1 : (int)($d / 2);
 
-        // === STAP 3: Bepaal B-start niveau op basis van MINIMALE SLOTS ===
+        // A-2 verliezers = aantal wedstrijden in tweede ronde
+        // Als V1 > 0: tweede ronde = D/2 wedstrijden (na eerste ronde met byes)
+        // Als V1 = 0: tweede ronde = D/4 wedstrijden (na eerste volle ronde)
+        $a2Verliezers = ($v1 > 0) ? (int)($d / 2) : (int)($d / 4);
+
+        // === STAP 3: Bereken totaal eerste golf verliezers ===
+        $eersteGolfVerliezers = $a1Verliezers + $a2Verliezers;
+
+        // === STAP 4: Bepaal B-start niveau op basis van MINIMALE SLOTS ===
         // B-level = kleinste niveau waar verliezers PRECIES passen
         // 1-4 verl → B-1/2 (2 wed = 4 slots)
         // 5-8 verl → B-1/4 (4 wed = 8 slots)
@@ -385,15 +394,16 @@ class EliminatieService
         $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($eersteGolfVerliezers);
         $bStartRonde = $this->getBRondeNaam($bStartWedstrijden);
 
-        // === STAP 4: Bepaal ENKELE of DUBBELE rondes ===
-        // Dubbel als V1 > V2 (eerste ronde produceert meer verliezers dan tweede ronde)
-        $dubbelRondes = ($v1 > $v2);
+        // === STAP 5: Bepaal ENKELE of DUBBELE rondes ===
+        // Dubbel als eerste ronde meer verliezers heeft dan tweede ronde
+        // Dan passen ze niet samen en moeten B-winnaars wachten op A-verliezers
+        $dubbelRondes = ($a1Verliezers > $a2Verliezers);
 
-        // === STAP 5: Bereken B-byes ===
+        // === STAP 6: Bereken B-byes ===
         $bCapaciteit = 2 * $bStartWedstrijden;
         $bByes = $bCapaciteit - $eersteGolfVerliezers;
 
-        Log::info("B-groep generatie: N={$n}, D={$d}, V1={$v1}, V2={$v2}, EersteGolf={$eersteGolfVerliezers}, B-start={$bStartRonde}({$bStartWedstrijden} wed), Dubbel=" . ($dubbelRondes ? 'Ja' : 'Nee') . ", B-byes={$bByes}, aantalBrons={$aantalBrons}");
+        Log::info("B-groep generatie: N={$n}, D={$d}, A1-verl={$a1Verliezers}, A2-verl={$a2Verliezers}, EersteGolf={$eersteGolfVerliezers}, B-start={$bStartRonde}({$bStartWedstrijden} wed), Dubbel=" . ($dubbelRondes ? 'Ja' : 'Nee') . ", B-byes={$bByes}, aantalBrons={$aantalBrons}");
 
         // === STAP 5: Genereer B-bracket structuur ===
 
@@ -810,16 +820,19 @@ class EliminatieService
     public function berekenStatistieken(int $n, string $type = 'dubbel'): array
     {
         $d = $this->berekenDoel($n);
-        $v1 = $n - $d;          // Verliezers eerste A-ronde
-        $v2 = (int) ($d / 2);   // Verliezers A-2e ronde
+        $v1 = $n - $d;          // Extra wedstrijden met byes
+
+        // Bereken ECHTE verliezers per ronde
+        $a1Verliezers = ($v1 > 0) ? $v1 : (int)($d / 2);
+        $a2Verliezers = ($v1 > 0) ? (int)($d / 2) : (int)($d / 4);
 
         $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);
         $totaalWedstrijden = ($type === 'ijf') ? ($n - 1 + 4) : max(0, 2 * $n - 5);
 
         // B-structuur bepalen op basis van eerste golf verliezers
-        $eersteGolfVerliezers = $v1 + $v2;
+        $eersteGolfVerliezers = $a1Verliezers + $a2Verliezers;
         $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($eersteGolfVerliezers);
-        $dubbelRondes = ($v1 > $v2);
+        $dubbelRondes = ($a1Verliezers > $a2Verliezers);
         $bCapaciteit = 2 * $bStartWedstrijden;
         $bByes = $bCapaciteit - $eersteGolfVerliezers;
 
@@ -827,18 +840,19 @@ class EliminatieService
             'judokas' => $n,
             'type' => $type,
             'doel' => $d,
-            'v1' => $v1,                              // Verliezers eerste A-ronde
-            'v2' => $v2,                              // Verliezers A-2e ronde
+            'v1' => $v1,                              // Extra wedstrijden met byes
+            'a1_verliezers' => $a1Verliezers,         // Verliezers eerste A-ronde
+            'a2_verliezers' => $a2Verliezers,         // Verliezers tweede A-ronde
             'eerste_golf' => $eersteGolfVerliezers,   // Totaal eerste golf verliezers
             'b_start_wedstrijden' => $bStartWedstrijden, // B-start niveau wedstrijden
             'a_wedstrijden' => $n - 1,
             'b_wedstrijden' => $bWedstrijden,
             'totaal_wedstrijden' => $totaalWedstrijden,
             'eerste_ronde' => $this->getEersteRondeNaam($n),
-            'eerste_ronde_wedstrijden' => $v1,
+            'eerste_ronde_wedstrijden' => ($v1 > 0) ? $v1 : (int)($d / 2),
             'a_byes' => max(0, 2 * $d - $n),          // A-groep byes
             'b_byes' => max(0, $bByes),               // B-groep byes
-            'dubbel_rondes' => $dubbelRondes,         // true als V1 > V2
+            'dubbel_rondes' => $dubbelRondes,         // true als A1 > A2
         ];
     }
 
