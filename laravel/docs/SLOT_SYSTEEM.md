@@ -148,83 +148,21 @@ Onderste helft (wed 5-8, gespiegeld):
 
 ## Flow: A → B (Verliezers)
 
-### Belangrijkste Regel: B-Level = Minimale Slots
+### A-Verliezers naar B-Groep
 
-**NIET:** B-level = A-level waar verliezers vandaan komen
-**WEL:** B-level = kleinste niveau waar verliezers PRECIES passen
+Bij **dubbele rondes** (V1 > V2):
+```
+A-voorronde verliezers → B-start(1) op eerste beschikbaar slot
+A-1/16 verliezers      → B-1/16(2) op BLAUW slot
+A-1/8 verliezers       → B-1/8(2) op BLAUW slot
+A-1/4 verliezers       → B-1/4(2) op BLAUW slot
+A-1/2 verliezers       → B-1/2(2) op BLAUW slot
+```
 
-| Verliezers | B-level | Wedstrijden | Slots |
-|------------|---------|-------------|-------|
-| 1-4        | B-1/2   | 2           | 4     |
-| 5-8        | B-1/4   | 4           | 8     |
-| 9-16       | B-1/8   | 8           | 16    |
-| 17-32      | B-1/16  | 16          | 32    |
-
-### (1) en (2) Suffixen
-
-- **(1)** = eerste golf verliezers (voorronde of vroege A-ronde)
-- **(2)** = tweede golf verliezers naar HETZELFDE B-niveau
-
-Wanneer meerdere A-rondes verliezers produceren die naar hetzelfde B-niveau gaan:
-- Eerste golf → B-level(1), WIT slots
-- Tweede golf → B-level(2), BLAUW slots (of nieuwe WIT als apart)
-
-### Referentietabel: Eerste Golf Verliezers
-
-| N   | D  | V1 | Voorronde | Eerste A-ronde | Totaal | B-bestemming |
-|-----|----|----|-----------|----------------|--------|--------------|
-| 7   | 4  | 3  | 3         | -              | 3      | B-1/2        |
-| 8   | 8  | 0  | 0         | A-1/4: 4       | 4      | B-1/4        |
-| 9   | 8  | 1  | 1         | A-1/4: 4       | 5      | B-1/4        |
-| 10  | 8  | 2  | 2         | A-1/4: 4       | 6      | B-1/4        |
-| 11  | 8  | 3  | 3         | A-1/4: 4       | 7      | B-1/4        |
-| 12  | 8  | 4  | 4         | A-1/4: 4       | 8      | B-1/4(1)     |
-| 13  | 8  | 5  | 5         | A-1/4: 4       | 9      | B-1/8(1)     |
-| 14  | 8  | 6  | 6         | A-1/4: 4       | 10     | B-1/8(1)     |
-| 15  | 8  | 7  | 7         | A-1/4: 4       | 11     | B-1/8(1)     |
-| 16  | 16 | 0  | 0         | A-1/8: 8       | 8      | B-1/8        |
-| 17  | 16 | 1  | 1         | A-1/8: 8       | 9      | B-1/8        |
-| 18  | 16 | 2  | 2         | A-1/8: 8       | 10     | B-1/8        |
-| 19  | 16 | 3  | 3         | A-1/8: 8       | 11     | B-1/8        |
-| 20  | 16 | 4  | 4         | A-1/8: 8       | 12     | B-1/8        |
-| 21  | 16 | 5  | 5         | A-1/8: 8       | 13     | B-1/8        |
-| 22  | 16 | 6  | 6         | A-1/8: 8       | 14     | B-1/8        |
-| 23  | 16 | 7  | 7         | A-1/8: 8       | 15     | B-1/8        |
-| 24  | 16 | 8  | 8         | A-1/8: 8       | 16     | B-1/8(1)+B-1/8(2) |
-| 25  | 16 | 9  | 9         | A-1/8: 8       | 17     | B-1/16(1)    |
-| 26  | 16 | 10 | 10        | A-1/8: 8       | 18     | B-1/16(1)    |
-| 27  | 16 | 11 | 11        | A-1/8: 8       | 19     | B-1/16(1)    |
-| 28  | 16 | 12 | 12        | A-1/8: 8       | 20     | B-1/16(1)    |
-| 29  | 16 | 13 | 13        | A-1/8: 8       | 21     | B-1/16(1)    |
-| 30  | 16 | 14 | 14        | A-1/8: 8       | 22     | B-1/16(1)    |
-| 31  | 16 | 15 | 15        | A-1/8: 8       | 23     | B-1/16(1)    |
-| 32  | 32 | 0  | 0         | A-1/16: 16     | 16     | B-1/8(2)     |
-| 33  | 32 | 1  | 1         | A-1/16: 16     | 17     | B-1/16       |
-| 34  | 32 | 2  | 2         | A-1/16: 16     | 18     | B-1/16       |
-| 35  | 32 | 3  | 3         | A-1/16: 16     | 19     | B-1/16       |
-| 36  | 32 | 4  | 4         | A-1/16: 16     | 20     | B-1/16       |
-| 37  | 32 | 5  | 5         | A-1/16: 16     | 21     | B-1/16       |
-| 38  | 32 | 6  | 6         | A-1/16: 16     | 22     | B-1/16       |
-| 39  | 32 | 7  | 7         | A-1/16: 16     | 23     | B-1/16       |
-| 40  | 32 | 8  | 8         | A-1/16: 16     | 24     | B-1/16       |
-
-### Speciale Gevallen Uitleg
-
-**N=12 (8 verliezers → B-1/4(1)):**
-- 4 voorronde + 4 A-1/4 = 8 verliezers
-- Passen precies in B-1/4 (4 wed = 8 slots)
-- Suffix (1) omdat A-1/2 verliezers later naar B-1/4(2) gaan
-
-**N=24 (16 verliezers → B-1/8(1) + B-1/8(2)):**
-- 8 voorronde → B-1/8(1) op WIT
-- 8 A-1/8 → B-1/8(2) op BLAUW
-- Samen vullen ze B-1/8 compleet
-
-**N=32 (16 verliezers → B-1/8(2)):**
-- Geen voorronde (V1=0)
-- 16 A-1/16 verliezers → passen in B-1/8 (8 wed = 16 slots)
-- NIET B-1/16 met 16 byes!
-- Suffix (2) want ze komen op BLAUW naast B-1/16 winnaars op WIT
+Bij **enkele rondes** (V1 ≤ V2):
+```
+A-verliezers → B-ronde op ODD wedstrijden (1, 3, 5, 7...)
+```
 
 ### Enkele Rondes: ODD Wedstrijden Regel
 
