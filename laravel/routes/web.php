@@ -70,6 +70,11 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     // Reset route
     Route::post('reset', [ToernooiController::class, 'reset'])->name('reset');
 
+    // Afsluiten routes
+    Route::get('afsluiten', [ToernooiController::class, 'afsluiten'])->name('afsluiten');
+    Route::post('afsluiten', [ToernooiController::class, 'bevestigAfsluiten'])->name('afsluiten.bevestig');
+    Route::post('heropenen', [ToernooiController::class, 'heropenen'])->name('heropenen');
+
     // Auth routes (public)
     Route::get('login', [AuthController::class, 'loginForm'])->name('auth.login');
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
@@ -219,6 +224,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::middleware(CheckToernooiRol::class . ':spreker')->group(function () {
         Route::get('spreker', [BlokController::class, 'sprekerInterface'])->name('spreker.interface');
         Route::post('spreker/afgeroepen', [BlokController::class, 'markeerAfgeroepen'])->name('spreker.afgeroepen');
+        Route::post('spreker/terug', [BlokController::class, 'zetAfgeroepenTerug'])->name('spreker.terug');
     });
 
 });
