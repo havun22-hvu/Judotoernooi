@@ -13,6 +13,9 @@ class WedstrijddagController extends Controller
 {
     public function poules(Toernooi $toernooi): View
     {
+        // Herbereken kruisfinale aantallen op basis van actueel aantal voorrondepoules
+        $this->herberkenKruisfinales($toernooi);
+
         // Get all poules with blok info
         $poules = $toernooi->poules()
             ->with(['judokas.club', 'judokas.toernooi', 'blok', 'mat'])
@@ -46,8 +49,8 @@ class WedstrijddagController extends Controller
             ];
 
             $categories = $blokPoules
-                // Filter: toon alleen poules met actieve judoka's (doorgestreepte niet meetellen)
-                ->filter(fn($poule) => $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count() > 0)
+                // Filter: toon poules met actieve judoka's OF kruisfinales (die nog geen judokas hebben)
+                ->filter(fn($poule) => $poule->type === 'kruisfinale' || $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count() > 0)
                 ->groupBy(function ($poule) {
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
                 })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
@@ -198,6 +201,23 @@ class WedstrijddagController extends Controller
 
         // Parse category key (leeftijdsklasse|gewichtsklasse)
         [$leeftijdsklasse, $gewichtsklasse] = explode('|', $validated['category']);
+
+        // Zorg dat kruisfinales een mat_id hebben (kopieer van voorrondepoule)
+        $voorrondeMatId = $toernooi->poules()
+            ->where('leeftijdsklasse', $leeftijdsklasse)
+            ->where('gewichtsklasse', $gewichtsklasse)
+            ->where('type', 'voorronde')
+            ->whereNotNull('mat_id')
+            ->value('mat_id');
+
+        if ($voorrondeMatId) {
+            $toernooi->poules()
+                ->where('leeftijdsklasse', $leeftijdsklasse)
+                ->where('gewichtsklasse', $gewichtsklasse)
+                ->where('type', 'kruisfinale')
+                ->whereNull('mat_id')
+                ->update(['mat_id' => $voorrondeMatId]);
+        }
 
         // Update all poules for this category with doorgestuurd_op timestamp
         $updated = $toernooi->poules()
@@ -480,5 +500,33 @@ class WedstrijddagController extends Controller
         }
 
         return $groottes;
+    }
+
+    /**
+     * Herbereken kruisfinale aantallen op basis van actueel aantal voorrondepoules
+     */
+    private function herberkenKruisfinales(Toernooi $toernooi): void
+    {
+        $kruisfinales = $toernooi->poules()->where('type', 'kruisfinale')->get();
+
+        foreach ($kruisfinales as $kruisfinale) {
+            $aantalVoorrondes = Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $kruisfinale->leeftijdsklasse)
+                ->where('gewichtsklasse', $kruisfinale->gewichtsklasse)
+                ->where('type', 'voorronde')
+                ->count();
+
+            $plaatsen = $kruisfinale->kruisfinale_plaatsen ?? 2;
+            $aantalJudokas = $aantalVoorrondes * $plaatsen;
+            $aantalWedstrijden = $aantalJudokas <= 1 ? 0 : intval(($aantalJudokas * ($aantalJudokas - 1)) / 2);
+
+            // Alleen updaten als gewijzigd
+            if ($kruisfinale->aantal_judokas !== $aantalJudokas || $kruisfinale->aantal_wedstrijden !== $aantalWedstrijden) {
+                $kruisfinale->update([
+                    'aantal_judokas' => $aantalJudokas,
+                    'aantal_wedstrijden' => $aantalWedstrijden,
+                ]);
+            }
+        }
     }
 }

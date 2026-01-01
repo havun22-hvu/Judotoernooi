@@ -51,16 +51,24 @@
     /* Column indicators */
     .col-indicator {
         border: 2px dashed #cbd5e1;
-        min-height: 100px;
+        min-height: 120px;
         transition: all 0.2s ease;
+        background: rgba(241, 245, 249, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     .col-indicator:hover {
         border-color: var(--primary);
         background: var(--primary-light);
     }
     .col-indicator.has-content {
-        border: none;
+        border: 2px dashed transparent;
         background: transparent;
+        justify-content: flex-start;
+    }
+    .col-indicator.has-content:hover {
+        border-color: #cbd5e1;
     }
 
     /* Block palette */
@@ -336,7 +344,78 @@
             <!-- Sections Panel -->
             <div x-show="sidebarTab === 'sections'" class="flex-1 overflow-y-auto p-4">
                 <div class="space-y-2">
-                    <p class="text-sm text-gray-500 mb-4">Voeg een volledige sectie toe:</p>
+                    <!-- Header & Footer -->
+                    <div class="mb-4">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Header & Footer</h3>
+                        <div class="space-y-2">
+                            <button @click="toggleHeaderFooter('header')"
+                                    class="w-full p-3 rounded-lg text-left flex items-center justify-between"
+                                    :class="headerSection ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-6 bg-blue-400 rounded-t"></div>
+                                    <span class="text-sm">Header</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <template x-if="headerSection">
+                                        <button @click.stop="toggleSticky('header')" class="p-1 rounded hover:bg-blue-100"
+                                                :title="headerSection?.settings?.sticky ? 'Sticky (klik om los te maken)' : 'Niet sticky (klik om vast te zetten)'">
+                                            <svg x-show="headerSection?.settings?.sticky" class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                            </svg>
+                                            <svg x-show="!headerSection?.settings?.sticky" class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"/>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                    <span x-show="headerSection" class="text-green-600 text-xs">✓ Actief</span>
+                                    <span x-show="!headerSection" class="text-gray-400 text-xs">+ Toevoegen</span>
+                                </div>
+                            </button>
+                            <button @click="toggleHeaderFooter('footer')"
+                                    class="w-full p-3 rounded-lg text-left flex items-center justify-between"
+                                    :class="footerSection ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-6 bg-gray-500 rounded-b"></div>
+                                    <span class="text-sm">Footer</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <template x-if="footerSection">
+                                        <button @click.stop="toggleSticky('footer')" class="p-1 rounded hover:bg-blue-100"
+                                                :title="footerSection?.settings?.sticky ? 'Sticky (klik om los te maken)' : 'Niet sticky (klik om vast te zetten)'">
+                                            <svg x-show="footerSection?.settings?.sticky" class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                            </svg>
+                                            <svg x-show="!footerSection?.settings?.sticky" class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-9h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h1.9c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10z"/>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                    <span x-show="footerSection" class="text-green-600 text-xs">✓ Actief</span>
+                                    <span x-show="!footerSection" class="text-gray-400 text-xs">+ Toevoegen</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Merge Mode Toggle -->
+                    <div class="mb-4 p-3 rounded-lg" :class="mergeMode ? 'bg-orange-50 border border-orange-200' : 'bg-gray-50'">
+                        <button @click="toggleMergeMode()" class="w-full flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5" :class="mergeMode ? 'text-orange-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                                </svg>
+                                <span class="text-sm font-medium" :class="mergeMode ? 'text-orange-700' : 'text-gray-700'">Cellen samenvoegen</span>
+                            </div>
+                            <span x-show="mergeMode" class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded">AAN</span>
+                        </button>
+                        <p x-show="mergeMode" class="text-xs text-orange-600 mt-2">Klik op 2 aangrenzende cellen om samen te voegen</p>
+                        <p x-show="mergeMode && selectedCells.length > 0" class="text-xs text-orange-700 mt-1 font-medium">
+                            <span x-text="selectedCells.length"></span>/2 cellen geselecteerd
+                        </p>
+                    </div>
+
+                    <!-- Content Sections -->
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Kolom layouts</h3>
                     <button @click="addSection('full')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 bg-gray-300 rounded"></div>
                         <span class="text-sm">Volledige breedte</span>
@@ -393,6 +472,43 @@
                         </div>
                         <span class="text-sm">Sidebar rechts</span>
                     </button>
+
+                    <!-- Grid Layouts -->
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">Grid layouts (rijen & kolommen)</h3>
+                    <button @click="addSection('grid-2x2')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
+                        <div class="w-12 h-10 grid grid-cols-2 grid-rows-2 gap-0.5">
+                            <div class="bg-blue-300 rounded-tl"></div>
+                            <div class="bg-blue-300 rounded-tr"></div>
+                            <div class="bg-blue-300 rounded-bl"></div>
+                            <div class="bg-blue-300 rounded-br"></div>
+                        </div>
+                        <span class="text-sm text-blue-700">2x2 Grid</span>
+                    </button>
+                    <button @click="addSection('grid-2x3')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
+                        <div class="w-12 h-10 grid grid-cols-3 grid-rows-2 gap-0.5">
+                            <div class="bg-blue-300 rounded-tl"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300 rounded-tr"></div>
+                            <div class="bg-blue-300 rounded-bl"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300 rounded-br"></div>
+                        </div>
+                        <span class="text-sm text-blue-700">2x3 Grid</span>
+                    </button>
+                    <button @click="addSection('grid-3x3')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
+                        <div class="w-12 h-10 grid grid-cols-3 grid-rows-3 gap-0.5">
+                            <div class="bg-blue-300 rounded-tl"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300 rounded-tr"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300 rounded-bl"></div>
+                            <div class="bg-blue-300"></div>
+                            <div class="bg-blue-300 rounded-br"></div>
+                        </div>
+                        <span class="text-sm text-blue-700">3x3 Grid</span>
+                    </button>
                 </div>
             </div>
 
@@ -423,10 +539,68 @@
 
         <!-- Canvas Area -->
         <div class="flex-1 overflow-y-auto builder-canvas p-8" :class="'preview-' + previewMode">
-            <div id="sections-container" class="max-w-6xl mx-auto space-y-4" :class="{'max-w-[768px]': previewMode === 'tablet', 'max-w-[375px]': previewMode === 'mobile'}">
+            <div class="max-w-6xl mx-auto" :class="{'max-w-[768px]': previewMode === 'tablet', 'max-w-[375px]': previewMode === 'mobile'}">
 
-                <!-- Sections Loop -->
-                <template x-for="(section, sectionIndex) in sections" :key="section.id">
+                <!-- Header Section -->
+                <template x-if="headerSection">
+                    <div class="header-section-wrapper group mb-4 bg-white rounded-xl shadow-sm overflow-hidden relative"
+                         :class="{'ring-2 ring-blue-500': headerSection.settings?.sticky}">
+                        <!-- Header Badge -->
+                        <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                            <span>HEADER</span>
+                            <template x-if="headerSection.settings?.sticky">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                </svg>
+                            </template>
+                        </div>
+                        <!-- Header Controls -->
+                        <div class="section-controls absolute -top-3 right-4 z-10 flex items-center gap-1 bg-white rounded-full shadow px-2 py-1">
+                            <button @click="editHeaderFooter('header')" class="text-gray-400 hover:text-blue-600 p-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                </svg>
+                            </button>
+                            <button @click="toggleHeaderFooter('header')" class="text-gray-400 hover:text-red-600 p-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Header Content -->
+                        <div :style="getSectionStyle(headerSection)" class="py-4 px-6">
+                            <div class="blocks-container space-y-2" data-section="header" data-col="0">
+                                <template x-for="block in headerSection.columns[0].blocks" :key="block.id">
+                                    <div class="block-wrapper group/block relative" :data-block-id="block.id">
+                                        <div class="absolute -right-2 top-0 z-10 opacity-0 group-hover/block:opacity-100 transition-opacity flex flex-col gap-1 bg-white rounded shadow p-1">
+                                            <button @click="editBlock(block)" class="text-gray-400 hover:text-blue-600 p-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                </svg>
+                                            </button>
+                                            <button @click="removeBlockFromHeaderFooter('header', block.id)" class="text-gray-400 hover:text-red-600 p-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div x-html="renderBlock(block)"></div>
+                                    </div>
+                                </template>
+                                <div x-show="!headerSection.columns[0].blocks || headerSection.columns[0].blocks.length === 0"
+                                     @click="selectHeaderFooterColumn('header')"
+                                     class="text-center py-4 text-gray-400 text-sm cursor-pointer hover:bg-gray-50 rounded">
+                                    <p class="text-xs">Klik om een blok toe te voegen aan de header</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Main Sections Container -->
+                <div id="sections-container" class="space-y-4">
+                    <!-- Sections Loop -->
+                    <template x-for="(section, sectionIndex) in sections" :key="section.id">
                     <div class="section-wrapper group bg-white rounded-xl shadow-sm overflow-hidden" :data-section-id="section.id">
 
                         <!-- Section Controls -->
@@ -457,55 +631,153 @@
                         <!-- Section Content with Background -->
                         <div :style="getSectionStyle(section)" class="relative">
                             <div class="container mx-auto" :class="section.settings?.padding || 'py-12 px-6'">
-                                <!-- Columns Grid -->
-                                <div class="grid gap-6" :class="getColumnClasses(section.layout)">
-                                    <template x-for="(column, colIndex) in section.columns" :key="colIndex">
-                                        <div class="col-indicator rounded-lg p-4 min-h-[100px]"
-                                             :class="{'has-content': column.blocks && column.blocks.length > 0}"
-                                             @dragover.prevent="onDragOver($event)"
-                                             @drop="onDrop($event, section.id, colIndex)">
+                                <!-- Grid Layout (new) -->
+                                <template x-if="section.grid && section.grid.length > 0">
+                                    <div class="grid-container" :style="getGridStyle(section)">
+                                        <template x-for="(cell, cellIndex) in getFlatCells(section)" :key="cell.id">
+                                            <div x-show="!cell.merged"
+                                                 class="grid-cell col-indicator rounded-lg p-4 min-h-[100px] transition-all relative"
+                                                 :class="{
+                                                     'has-content': cell.blocks && cell.blocks.length > 0,
+                                                     'cursor-pointer': !cell.blocks || cell.blocks.length === 0,
+                                                     'ring-2 ring-blue-500 bg-blue-50': isCellSelected(section.id, cell.rowIndex, cell.colIndex),
+                                                     'hover:ring-2 hover:ring-blue-300': mergeMode && !isCellSelected(section.id, cell.rowIndex, cell.colIndex)
+                                                 }"
+                                                 :style="getCellStyle(cell, cell.rowIndex, cell.colIndex)"
+                                                 @dragover.prevent="onDragOver($event)"
+                                                 @drop="onDropGrid($event, section.id, cell.rowIndex, cell.colIndex)"
+                                                 @click="mergeMode ? selectCellForMerge(section.id, cell.rowIndex, cell.colIndex) : selectGridCell(section.id, cell.rowIndex, cell.colIndex)">
 
-                                            <!-- Blocks in Column -->
-                                            <div class="blocks-container space-y-4" :data-section="section.id" :data-col="colIndex">
-                                                <template x-for="(block, blockIndex) in column.blocks" :key="block.id">
-                                                    <div class="block-wrapper group/block relative" :data-block-id="block.id">
+                                                <!-- Merge Mode Indicator -->
+                                                <div x-show="mergeMode" class="absolute top-1 right-1 text-xs bg-blue-100 text-blue-600 px-1 rounded">
+                                                    <span x-text="'R' + (cell.rowIndex+1) + 'C' + (cell.colIndex+1)"></span>
+                                                </div>
 
-                                                        <!-- Block Controls -->
-                                                        <div class="absolute -right-2 top-0 z-10 opacity-0 group-hover/block:opacity-100 transition-opacity flex flex-col gap-1 bg-white rounded shadow p-1">
-                                                            <span class="drag-block-handle cursor-grab text-gray-400 hover:text-gray-600 p-1">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
-                                                                </svg>
-                                                            </span>
-                                                            <button @click="editBlock(block)" class="text-gray-400 hover:text-blue-600 p-1">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                                                </svg>
-                                                            </button>
-                                                            <button @click="removeBlock(section.id, colIndex, block.id)" class="text-gray-400 hover:text-red-600 p-1">
-                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                                </svg>
-                                                            </button>
+                                                <!-- Cell Span Indicator -->
+                                                <div x-show="cell.colSpan > 1 || cell.rowSpan > 1" class="absolute top-1 left-1">
+                                                    <button @click.stop="unmergeCells(section.id, cell.rowIndex, cell.colIndex)"
+                                                            class="text-xs bg-orange-100 text-orange-600 px-1 rounded hover:bg-orange-200"
+                                                            title="Samenvoegen ongedaan maken">
+                                                        <span x-text="cell.colSpan + 'x' + cell.rowSpan"></span> ✕
+                                                    </button>
+                                                </div>
+
+                                                <!-- Blocks in Cell -->
+                                                <div class="blocks-container space-y-4" :data-section="section.id" :data-row="cell.rowIndex" :data-col="cell.colIndex">
+                                                    <template x-for="(block, blockIndex) in cell.blocks" :key="block.id">
+                                                        <div class="block-wrapper group/block relative" :data-block-id="block.id">
+
+                                                            <!-- Block Controls -->
+                                                            <div class="absolute -right-2 top-0 z-10 opacity-0 group-hover/block:opacity-100 transition-opacity flex flex-col gap-1 bg-white rounded shadow p-1">
+                                                                <span class="drag-block-handle cursor-grab text-gray-400 hover:text-gray-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                                                                    </svg>
+                                                                </span>
+                                                                <button @click="editBlock(block)" class="text-gray-400 hover:text-blue-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                                    </svg>
+                                                                </button>
+                                                                <button @click="removeBlockFromGrid(section.id, cell.rowIndex, cell.colIndex, block.id)" class="text-gray-400 hover:text-red-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+
+                                                            <!-- Block Render -->
+                                                            <div x-html="renderBlock(block)"></div>
                                                         </div>
+                                                    </template>
 
-                                                        <!-- Block Render -->
-                                                        <div x-html="renderBlock(block)"></div>
+                                                    <!-- Empty Cell Placeholder -->
+                                                    <div x-show="!cell.blocks || cell.blocks.length === 0"
+                                                         class="text-center text-gray-400 text-sm py-4">
+                                                        <svg class="w-8 h-8 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                        </svg>
+                                                        <p class="text-xs font-medium" x-text="'Kolom ' + (cell.colIndex+1)"></p>
                                                     </div>
-                                                </template>
-
-                                                <!-- Empty Column Placeholder -->
-                                                <div x-show="!column.blocks || column.blocks.length === 0"
-                                                     class="text-center py-8 text-gray-400 text-sm">
-                                                    <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                                    </svg>
-                                                    Sleep een blok hierheen
                                                 </div>
                                             </div>
-                                        </div>
-                                    </template>
-                                </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- Legacy Columns Grid (fallback for old sections) -->
+                                <template x-if="!section.grid || section.grid.length === 0">
+                                    <div class="grid gap-6" :class="getColumnClasses(section.layout)">
+                                        <template x-for="(column, colIndex) in section.columns" :key="colIndex">
+                                            <div class="col-indicator rounded-lg p-4"
+                                                 :class="{'has-content': column.blocks && column.blocks.length > 0, 'cursor-pointer': !column.blocks || column.blocks.length === 0}"
+                                                 @dragover.prevent="onDragOver($event)"
+                                                 @drop="onDrop($event, section.id, colIndex)"
+                                                 @click="selectColumn(section.id, colIndex)">
+
+                                                <!-- Blocks in Column -->
+                                                <div class="blocks-container space-y-4" :data-section="section.id" :data-col="colIndex">
+                                                    <template x-for="(block, blockIndex) in column.blocks" :key="block.id">
+                                                        <div class="block-wrapper group/block relative" :data-block-id="block.id">
+
+                                                            <!-- Block Controls -->
+                                                            <div class="absolute -right-2 top-0 z-10 opacity-0 group-hover/block:opacity-100 transition-opacity flex flex-col gap-1 bg-white rounded shadow p-1">
+                                                                <span class="drag-block-handle cursor-grab text-gray-400 hover:text-gray-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                                                                    </svg>
+                                                                </span>
+                                                                <button @click="editBlock(block)" class="text-gray-400 hover:text-blue-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                                    </svg>
+                                                                </button>
+                                                                <button @click="removeBlock(section.id, colIndex, block.id)" class="text-gray-400 hover:text-red-600 p-1">
+                                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+
+                                                            <!-- Block Render -->
+                                                            <div x-html="renderBlock(block)"></div>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Empty Column Placeholder -->
+                                                    <div x-show="!column.blocks || column.blocks.length === 0"
+                                                         class="text-center text-gray-400 text-sm">
+                                                        <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                                        </svg>
+                                                        <p class="font-medium">Kolom <span x-text="colIndex + 1"></span></p>
+                                                        <p class="text-xs opacity-75">Klik op een blok links om toe te voegen</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Add Row/Column Buttons -->
+                            <div x-show="section.grid" class="flex justify-center gap-4 py-2 border-t border-dashed border-gray-200">
+                                <button @click="addRowToSection(section)"
+                                        class="text-xs text-gray-400 hover:text-blue-600 inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Rij
+                                </button>
+                                <button @click="addColumnToSection(section)"
+                                        :disabled="section.gridConfig?.cols >= 6"
+                                        class="text-xs text-gray-400 hover:text-green-600 inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-green-50 disabled:opacity-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                    Kolom
+                                </button>
+                                <span class="text-xs text-gray-300 px-2 py-1" x-text="(section.gridConfig?.cols || 1) + '×' + (section.grid?.length || 1)"></span>
                             </div>
                         </div>
                     </div>
@@ -537,6 +809,64 @@
                         Sectie toevoegen
                     </button>
                 </div>
+                </div><!-- End sections-container -->
+
+                <!-- Footer Section -->
+                <template x-if="footerSection">
+                    <div class="footer-section-wrapper group mt-4 bg-white rounded-xl shadow-sm overflow-hidden relative"
+                         :class="{'ring-2 ring-gray-500': footerSection.settings?.sticky}">
+                        <!-- Footer Badge -->
+                        <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-700 text-white text-xs px-2 py-1 rounded">
+                            <span>FOOTER</span>
+                            <template x-if="footerSection.settings?.sticky">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                                </svg>
+                            </template>
+                        </div>
+                        <!-- Footer Controls -->
+                        <div class="section-controls absolute -top-3 right-4 z-10 flex items-center gap-1 bg-white rounded-full shadow px-2 py-1">
+                            <button @click="editHeaderFooter('footer')" class="text-gray-400 hover:text-blue-600 p-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                </svg>
+                            </button>
+                            <button @click="toggleHeaderFooter('footer')" class="text-gray-400 hover:text-red-600 p-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Footer Content -->
+                        <div :style="getSectionStyle(footerSection)" class="py-4 px-6">
+                            <div class="blocks-container space-y-2" data-section="footer" data-col="0">
+                                <template x-for="block in footerSection.columns[0].blocks" :key="block.id">
+                                    <div class="block-wrapper group/block relative" :data-block-id="block.id">
+                                        <div class="absolute -right-2 top-0 z-10 opacity-0 group-hover/block:opacity-100 transition-opacity flex flex-col gap-1 bg-white rounded shadow p-1">
+                                            <button @click="editBlock(block)" class="text-gray-400 hover:text-blue-600 p-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                                </svg>
+                                            </button>
+                                            <button @click="removeBlockFromHeaderFooter('footer', block.id)" class="text-gray-400 hover:text-red-600 p-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div x-html="renderBlock(block)"></div>
+                                    </div>
+                                </template>
+                                <div x-show="!footerSection.columns[0].blocks || footerSection.columns[0].blocks.length === 0"
+                                     @click="selectHeaderFooterColumn('footer')"
+                                     class="text-center py-4 text-gray-400 text-sm cursor-pointer hover:bg-gray-50 rounded">
+                                    <p class="text-xs">Klik om een blok toe te voegen aan de footer</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
             </div>
         </div>
 
@@ -629,6 +959,84 @@
                                         :class="editingSection.settings.textColor === '#ffffff' ? 'border-blue-500' : 'border-gray-300'"></button>
                             </div>
                         </div>
+
+                        <!-- Grid Settings (for all grid sections) -->
+                        <template x-if="editingSection.grid">
+                            <div class="border-t pt-4 mt-4">
+                                <h4 class="text-sm font-medium text-gray-700 mb-3">Grid instellingen</h4>
+
+                                <!-- Current Grid Info -->
+                                <div class="mb-4 p-3 bg-blue-50 rounded-lg text-sm">
+                                    <span class="font-medium text-blue-800">
+                                        <span x-text="editingSection.gridConfig?.cols || 1"></span> kolommen ×
+                                        <span x-text="editingSection.grid?.length || 1"></span> rijen
+                                    </span>
+                                </div>
+
+                                <!-- Column Controls -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kolommen</label>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="removeColumnFromSection(editingSection, editingSection.gridConfig.cols - 1)"
+                                                :disabled="editingSection.gridConfig?.cols <= 1"
+                                                class="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                                            − Kolom
+                                        </button>
+                                        <span class="px-3 py-2 bg-gray-100 rounded font-medium" x-text="editingSection.gridConfig?.cols || 1"></span>
+                                        <button @click="addColumnToSection(editingSection)"
+                                                :disabled="editingSection.gridConfig?.cols >= 6"
+                                                class="flex-1 py-2 px-3 bg-green-50 text-green-600 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                                            + Kolom
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Row Controls -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Rijen</label>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="removeRowFromSection(editingSection, editingSection.grid.length - 1)"
+                                                :disabled="editingSection.grid?.length <= 1"
+                                                class="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                                            − Rij
+                                        </button>
+                                        <span class="px-3 py-2 bg-gray-100 rounded font-medium" x-text="editingSection.grid?.length || 1"></span>
+                                        <button @click="addRowToSection(editingSection)"
+                                                :disabled="editingSection.grid?.length >= 6"
+                                                class="flex-1 py-2 px-3 bg-green-50 text-green-600 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                                            + Rij
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Row Gap / Divider Height -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ruimte tussen cellen</label>
+                                    <select x-model="editingSection.settings.gap" @change="saveData()"
+                                            class="w-full border rounded px-3 py-2 text-sm">
+                                        <option value="0.5rem">Extra klein (8px)</option>
+                                        <option value="1rem">Klein (16px)</option>
+                                        <option value="1.5rem">Normaal (24px)</option>
+                                        <option value="2rem">Groot (32px)</option>
+                                        <option value="3rem">Extra groot (48px)</option>
+                                        <option value="4rem">Maximaal (64px)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Row Height -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Rij hoogte</label>
+                                    <select x-model="editingSection.settings.rowHeight" @change="saveData()"
+                                            class="w-full border rounded px-3 py-2 text-sm">
+                                        <option value="auto">Automatisch</option>
+                                        <option value="100px">Klein (100px)</option>
+                                        <option value="150px">Normaal (150px)</option>
+                                        <option value="200px">Groot (200px)</option>
+                                        <option value="300px">Extra groot (300px)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -642,6 +1050,8 @@
 function paginaBuilderPro() {
     return {
         sections: @json($sections ?? []),
+        headerSection: @json($toernooi->pagina_content['header'] ?? null),
+        footerSection: @json($toernooi->pagina_content['footer'] ?? null),
         themeColor: '{{ $toernooi->thema_kleur ?? "#2563eb" }}',
         previewMode: 'desktop',
         sidebarTab: 'blocks',
@@ -685,32 +1095,345 @@ function paginaBuilderPro() {
             return 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         },
 
+        // Header/Footer Methods
+        toggleHeaderFooter(type) {
+            if (type === 'header') {
+                if (this.headerSection) {
+                    if (confirm('Weet je zeker dat je de header wilt verwijderen?')) {
+                        this.headerSection = null;
+                    }
+                } else {
+                    this.headerSection = {
+                        id: this.generateId(),
+                        columns: [{ blocks: [] }],
+                        settings: {
+                            bgColor: '#ffffff',
+                            textColor: '#1f2937',
+                            sticky: false
+                        }
+                    };
+                }
+            } else {
+                if (this.footerSection) {
+                    if (confirm('Weet je zeker dat je de footer wilt verwijderen?')) {
+                        this.footerSection = null;
+                    }
+                } else {
+                    this.footerSection = {
+                        id: this.generateId(),
+                        columns: [{ blocks: [] }],
+                        settings: {
+                            bgColor: '#1f2937',
+                            textColor: '#ffffff',
+                            sticky: false
+                        }
+                    };
+                }
+            }
+            this.saveData();
+        },
+
+        toggleSticky(type) {
+            if (type === 'header' && this.headerSection) {
+                this.headerSection.settings.sticky = !this.headerSection.settings.sticky;
+            } else if (type === 'footer' && this.footerSection) {
+                this.footerSection.settings.sticky = !this.footerSection.settings.sticky;
+            }
+            this.saveData();
+        },
+
+        editHeaderFooter(type) {
+            this.editingBlock = null;
+            this.editingSection = type === 'header' ? this.headerSection : this.footerSection;
+        },
+
+        selectHeaderFooterColumn(type) {
+            this.selectedSectionId = type;
+            this.selectedColIndex = 0;
+        },
+
+        removeBlockFromHeaderFooter(type, blockId) {
+            const section = type === 'header' ? this.headerSection : this.footerSection;
+            if (section) {
+                section.columns[0].blocks = section.columns[0].blocks.filter(b => b.id !== blockId);
+                this.saveData();
+            }
+        },
+
+        // Grid cell selection for merging
+        selectedCells: [],
+        mergeMode: false,
+
         // Section Methods
         addSection(layout) {
-            const columnConfig = {
-                'full': [{ blocks: [] }],
-                'two-cols': [{ blocks: [] }, { blocks: [] }],
-                'two-cols-left': [{ blocks: [] }, { blocks: [] }],
-                'two-cols-right': [{ blocks: [] }, { blocks: [] }],
-                'three-cols': [{ blocks: [] }, { blocks: [] }, { blocks: [] }],
-                'four-cols': [{ blocks: [] }, { blocks: [] }, { blocks: [] }, { blocks: [] }],
-                'sidebar-left': [{ blocks: [] }, { blocks: [] }],
-                'sidebar-right': [{ blocks: [] }, { blocks: [] }]
+            // New grid-based structure: rows containing cells
+            const gridConfig = {
+                'full': { rows: 1, cols: 1 },
+                'two-cols': { rows: 1, cols: 2 },
+                'two-cols-left': { rows: 1, cols: 2, colWidths: ['2fr', '1fr'] },
+                'two-cols-right': { rows: 1, cols: 2, colWidths: ['1fr', '2fr'] },
+                'three-cols': { rows: 1, cols: 3 },
+                'four-cols': { rows: 1, cols: 4 },
+                'sidebar-left': { rows: 1, cols: 2, colWidths: ['250px', '1fr'] },
+                'sidebar-right': { rows: 1, cols: 2, colWidths: ['1fr', '250px'] },
+                // New grid layouts
+                'grid-2x2': { rows: 2, cols: 2 },
+                'grid-2x3': { rows: 2, cols: 3 },
+                'grid-3x3': { rows: 3, cols: 3 },
             };
+
+            const config = gridConfig[layout] || { rows: 1, cols: 1 };
+
+            // Create grid cells
+            const grid = [];
+            for (let r = 0; r < config.rows; r++) {
+                const row = [];
+                for (let c = 0; c < config.cols; c++) {
+                    row.push({
+                        id: this.generateId(),
+                        blocks: [],
+                        rowSpan: 1,
+                        colSpan: 1,
+                        merged: false // true if this cell is merged into another
+                    });
+                }
+                grid.push(row);
+            }
+
+            // Legacy columns format for backwards compatibility
+            const columns = grid[0] || [{ blocks: [] }];
 
             this.sections.push({
                 id: this.generateId(),
                 layout: layout,
-                columns: columnConfig[layout],
+                columns: columns, // Keep for backwards compat
+                grid: grid, // New grid structure
+                gridConfig: config,
                 settings: {
                     bgColor: '#ffffff',
                     bgImage: null,
                     padding: 'py-12 px-6',
-                    textColor: '#1f2937'
+                    textColor: '#1f2937',
+                    rowHeight: 'auto', // or specific height like '200px'
+                    gap: '1.5rem'
                 }
             });
 
             this.$nextTick(() => this.initSortable());
+            this.saveData();
+        },
+
+        // Add row to section
+        addRowToSection(section) {
+            if (!section.grid) {
+                // Convert old format to grid
+                section.grid = [section.columns.map(col => ({
+                    id: this.generateId(),
+                    blocks: col.blocks || [],
+                    rowSpan: 1,
+                    colSpan: 1,
+                    merged: false
+                }))];
+                section.gridConfig = { rows: 1, cols: section.columns.length };
+            }
+
+            const cols = section.gridConfig.cols;
+            const newRow = [];
+            for (let c = 0; c < cols; c++) {
+                newRow.push({
+                    id: this.generateId(),
+                    blocks: [],
+                    rowSpan: 1,
+                    colSpan: 1,
+                    merged: false
+                });
+            }
+            section.grid.push(newRow);
+            section.gridConfig.rows++;
+            this.saveData();
+        },
+
+        // Remove row from section
+        removeRowFromSection(section, rowIndex) {
+            if (section.grid && section.grid.length > 1) {
+                section.grid.splice(rowIndex, 1);
+                section.gridConfig.rows--;
+                this.saveData();
+            }
+        },
+
+        // Add column to section
+        addColumnToSection(section) {
+            if (!section.grid || !section.gridConfig) return;
+
+            // Add a cell to each row
+            section.grid.forEach(row => {
+                row.push({
+                    id: this.generateId(),
+                    blocks: [],
+                    rowSpan: 1,
+                    colSpan: 1,
+                    merged: false
+                });
+            });
+
+            section.gridConfig.cols++;
+            // Update colWidths if exists
+            if (section.gridConfig.colWidths) {
+                section.gridConfig.colWidths.push('1fr');
+            }
+            this.saveData();
+        },
+
+        // Remove column from section
+        removeColumnFromSection(section, colIndex) {
+            if (!section.grid || !section.gridConfig || section.gridConfig.cols <= 1) return;
+
+            // Remove cell from each row at colIndex
+            section.grid.forEach(row => {
+                if (row[colIndex]) {
+                    row.splice(colIndex, 1);
+                }
+            });
+
+            section.gridConfig.cols--;
+            // Update colWidths if exists
+            if (section.gridConfig.colWidths && section.gridConfig.colWidths.length > colIndex) {
+                section.gridConfig.colWidths.splice(colIndex, 1);
+            }
+            this.saveData();
+        },
+
+        // Toggle merge mode
+        toggleMergeMode() {
+            this.mergeMode = !this.mergeMode;
+            if (!this.mergeMode) {
+                this.selectedCells = [];
+            }
+        },
+
+        // Select cell for merging
+        selectCellForMerge(sectionId, rowIndex, colIndex) {
+            if (!this.mergeMode) return;
+
+            const cellId = `${sectionId}-${rowIndex}-${colIndex}`;
+            const existingIndex = this.selectedCells.findIndex(c => c.id === cellId);
+
+            if (existingIndex >= 0) {
+                // Deselect
+                this.selectedCells.splice(existingIndex, 1);
+            } else {
+                // Select (max 2 cells)
+                if (this.selectedCells.length < 2) {
+                    this.selectedCells.push({
+                        id: cellId,
+                        sectionId,
+                        rowIndex,
+                        colIndex
+                    });
+                }
+
+                // If 2 cells selected from same section, try to merge
+                if (this.selectedCells.length === 2) {
+                    this.attemptMergeCells();
+                }
+            }
+        },
+
+        // Check if cell is selected
+        isCellSelected(sectionId, rowIndex, colIndex) {
+            const cellId = `${sectionId}-${rowIndex}-${colIndex}`;
+            return this.selectedCells.some(c => c.id === cellId);
+        },
+
+        // Attempt to merge selected cells
+        attemptMergeCells() {
+            if (this.selectedCells.length !== 2) return;
+
+            const [cell1, cell2] = this.selectedCells;
+
+            // Must be in same section
+            if (cell1.sectionId !== cell2.sectionId) {
+                alert('Cellen moeten in dezelfde sectie zijn');
+                this.selectedCells = [];
+                return;
+            }
+
+            const section = this.sections.find(s => s.id === cell1.sectionId);
+            if (!section || !section.grid) {
+                this.selectedCells = [];
+                return;
+            }
+
+            // Check if cells are adjacent
+            const sameRow = cell1.rowIndex === cell2.rowIndex;
+            const sameCol = cell1.colIndex === cell2.colIndex;
+            const adjacentRow = Math.abs(cell1.rowIndex - cell2.rowIndex) === 1;
+            const adjacentCol = Math.abs(cell1.colIndex - cell2.colIndex) === 1;
+
+            if (sameRow && adjacentCol) {
+                // Horizontal merge
+                const leftCol = Math.min(cell1.colIndex, cell2.colIndex);
+                const rightCol = Math.max(cell1.colIndex, cell2.colIndex);
+
+                const leftCell = section.grid[cell1.rowIndex][leftCol];
+                const rightCell = section.grid[cell1.rowIndex][rightCol];
+
+                // Move blocks from right to left
+                leftCell.blocks = [...leftCell.blocks, ...rightCell.blocks];
+                leftCell.colSpan = (leftCell.colSpan || 1) + (rightCell.colSpan || 1);
+
+                // Mark right cell as merged
+                rightCell.merged = true;
+                rightCell.mergedInto = leftCell.id;
+                rightCell.blocks = [];
+
+                this.saveData();
+            } else if (sameCol && adjacentRow) {
+                // Vertical merge
+                const topRow = Math.min(cell1.rowIndex, cell2.rowIndex);
+                const bottomRow = Math.max(cell1.rowIndex, cell2.rowIndex);
+
+                const topCell = section.grid[topRow][cell1.colIndex];
+                const bottomCell = section.grid[bottomRow][cell1.colIndex];
+
+                // Move blocks from bottom to top
+                topCell.blocks = [...topCell.blocks, ...bottomCell.blocks];
+                topCell.rowSpan = (topCell.rowSpan || 1) + (bottomCell.rowSpan || 1);
+
+                // Mark bottom cell as merged
+                bottomCell.merged = true;
+                bottomCell.mergedInto = topCell.id;
+                bottomCell.blocks = [];
+
+                this.saveData();
+            } else {
+                alert('Alleen aangrenzende cellen kunnen worden samengevoegd');
+            }
+
+            this.selectedCells = [];
+            this.mergeMode = false;
+        },
+
+        // Unmerge a cell
+        unmergeCells(section, rowIndex, colIndex) {
+            const cell = section.grid[rowIndex][colIndex];
+            if (!cell) return;
+
+            // Find all cells merged into this one
+            section.grid.forEach((row, rIdx) => {
+                row.forEach((c, cIdx) => {
+                    if (c.mergedInto === cell.id) {
+                        c.merged = false;
+                        c.mergedInto = null;
+                    }
+                });
+            });
+
+            // Reset spans
+            cell.rowSpan = 1;
+            cell.colSpan = 1;
+
             this.saveData();
         },
 
@@ -778,6 +1501,101 @@ function paginaBuilderPro() {
             return style;
         },
 
+        // Flatten grid cells for proper CSS Grid rendering
+        getFlatCells(section) {
+            if (!section.grid) return [];
+            const flat = [];
+            section.grid.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    flat.push({
+                        ...cell,
+                        rowIndex,
+                        colIndex
+                    });
+                });
+            });
+            return flat;
+        },
+
+        // Grid style for CSS Grid layout
+        getGridStyle(section) {
+            if (!section.grid || !section.gridConfig) return '';
+            const cols = section.gridConfig.cols || 1;
+            const rows = section.grid.length;
+            const gap = section.settings?.gap || '1.5rem';
+            const rowHeight = section.settings?.rowHeight || 'auto';
+            const colWidths = section.gridConfig.colWidths || Array(cols).fill('1fr');
+            const rowTemplate = rowHeight === 'auto' ? 'minmax(100px, auto)' : rowHeight;
+
+            return `display: grid; grid-template-columns: ${colWidths.join(' ')}; grid-template-rows: repeat(${rows}, ${rowTemplate}); gap: ${gap};`;
+        },
+
+        // Cell style for grid-column and grid-row span
+        getCellStyle(cell, rowIndex, colIndex) {
+            let style = '';
+            if (cell.colSpan && cell.colSpan > 1) {
+                style += `grid-column: span ${cell.colSpan};`;
+            }
+            if (cell.rowSpan && cell.rowSpan > 1) {
+                style += `grid-row: span ${cell.rowSpan};`;
+            }
+            return style;
+        },
+
+        // Select grid cell for adding blocks
+        selectedRowIndex: 0,
+
+        selectGridCell(sectionId, rowIndex, colIndex) {
+            this.selectedSectionId = sectionId;
+            this.selectedRowIndex = rowIndex;
+            this.selectedColIndex = colIndex;
+        },
+
+        // Drop handler for grid cells
+        onDropGrid(event, sectionId, rowIndex, colIndex) {
+            event.preventDefault();
+            const blockType = event.dataTransfer.getData('blockType');
+            if (!blockType) return;
+
+            const section = this.sections.find(s => s.id === sectionId);
+            if (!section || !section.grid) return;
+
+            const cell = section.grid[rowIndex]?.[colIndex];
+            if (!cell || cell.merged) return;
+
+            const block = {
+                id: this.generateId(),
+                type: blockType,
+                data: this.getBlockDefaults(blockType)
+            };
+
+            cell.blocks.push(block);
+            this.$nextTick(() => this.initSortable());
+            this.saveData();
+            this.editBlock(block);
+        },
+
+        // Remove block from grid cell
+        removeBlockFromGrid(sectionId, rowIndex, colIndex, blockId) {
+            const section = this.sections.find(s => s.id === sectionId);
+            if (!section || !section.grid) return;
+
+            const cell = section.grid[rowIndex]?.[colIndex];
+            if (!cell) return;
+
+            cell.blocks = cell.blocks.filter(b => b.id !== blockId);
+            this.saveData();
+        },
+
+        // Selected column for adding blocks
+        selectedSectionId: null,
+        selectedColIndex: 0,
+
+        selectColumn(sectionId, colIndex) {
+            this.selectedSectionId = sectionId;
+            this.selectedColIndex = colIndex;
+        },
+
         // Block Methods
         addBlock(type) {
             const defaultData = this.getBlockDefaults(type);
@@ -787,14 +1605,66 @@ function paginaBuilderPro() {
                 data: defaultData
             };
 
-            // Add to first column of first section, or create new section
+            // Check if adding to header or footer
+            if (this.selectedSectionId === 'header' && this.headerSection) {
+                this.headerSection.columns[0].blocks.push(block);
+                this.$nextTick(() => this.initSortable());
+                this.saveData();
+                this.editBlock(block);
+                return;
+            }
+
+            if (this.selectedSectionId === 'footer' && this.footerSection) {
+                this.footerSection.columns[0].blocks.push(block);
+                this.$nextTick(() => this.initSortable());
+                this.saveData();
+                this.editBlock(block);
+                return;
+            }
+
+            // Add to selected column or create new section
             if (this.sections.length === 0) {
                 this.addSection('full');
             }
 
-            this.sections[this.sections.length - 1].columns[0].blocks.push(block);
+            // Find target section and column
+            let targetSection = null;
+            let targetColIndex = 0;
+
+            if (this.selectedSectionId) {
+                targetSection = this.sections.find(s => s.id === this.selectedSectionId);
+                targetColIndex = this.selectedColIndex;
+            }
+
+            if (!targetSection) {
+                targetSection = this.sections[this.sections.length - 1];
+                targetColIndex = 0;
+            }
+
+            // Add to grid cell if section has grid
+            if (targetSection.grid && targetSection.grid.length > 0) {
+                const rowIndex = this.selectedRowIndex || 0;
+                const cell = targetSection.grid[rowIndex]?.[targetColIndex];
+                if (cell && !cell.merged) {
+                    cell.blocks.push(block);
+                    this.$nextTick(() => this.initSortable());
+                    this.saveData();
+                    this.editBlock(block);
+                    return;
+                }
+            }
+
+            // Fallback to columns (legacy)
+            if (!targetSection.columns[targetColIndex]) {
+                targetColIndex = 0;
+            }
+
+            targetSection.columns[targetColIndex].blocks.push(block);
             this.$nextTick(() => this.initSortable());
             this.saveData();
+
+            // Open settings for the new block
+            this.editBlock(block);
         },
 
         getBlockDefaults(type) {
@@ -1861,6 +2731,8 @@ function paginaBuilderPro() {
                     },
                     body: JSON.stringify({
                         sections: this.sections,
+                        header: this.headerSection,
+                        footer: this.footerSection,
                         themeColor: this.themeColor
                     })
                 });
