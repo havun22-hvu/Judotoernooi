@@ -114,6 +114,10 @@
             <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
                 🥋 Mat Interface
             </a>
+            <a href="{{ route('toernooi.afsluiten', $toernooi) }}"
+               class="block {{ $toernooi->isAfgesloten() ? 'bg-green-100 hover:bg-green-200' : 'bg-red-100 hover:bg-red-200' }} p-3 rounded">
+                {{ $toernooi->isAfgesloten() ? '🏆 Afgesloten - Bekijk Resultaten' : '🔒 Toernooi Afsluiten' }}
+            </a>
         </div>
     </div>
 

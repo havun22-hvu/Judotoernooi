@@ -121,6 +121,9 @@ class Toernooi extends Model
         'wedstrijd_schemas',
         'pagina_content',
         'thema_kleur',
+        'afgesloten_at',
+        'herinnering_datum',
+        'herinnering_verstuurd',
     ];
 
     protected $hidden = [
@@ -158,6 +161,9 @@ class Toernooi extends Model
         'verdeling_prioriteiten' => 'array',
         'wedstrijd_schemas' => 'array',
         'pagina_content' => 'array',
+        'afgesloten_at' => 'datetime',
+        'herinnering_datum' => 'date',
+        'herinnering_verstuurd' => 'boolean',
     ];
 
     /**
@@ -259,6 +265,11 @@ class Toernooi extends Model
     {
         $percentage = $this->bezettings_percentage;
         return $percentage !== null && $percentage >= 80 && $percentage < 100;
+    }
+
+    public function isAfgesloten(): bool
+    {
+        return $this->afgesloten_at !== null;
     }
 
     public function getPlaatsenOverAttribute(): ?int
