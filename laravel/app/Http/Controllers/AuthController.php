@@ -74,6 +74,12 @@ class AuthController extends Controller
         $request->session()->forget("toernooi_{$toernooi->id}_rol");
         $request->session()->forget("toernooi_{$toernooi->id}_mat");
 
+        // Op production: redirect naar organisator login (email/wachtwoord)
+        // Op local/development: redirect naar toernooi rol-keuze pagina
+        if (app()->environment('production')) {
+            return redirect()->route('organisator.login')->with('success', 'Je bent uitgelogd');
+        }
+
         return redirect()->route('toernooi.auth.login', $toernooi)->with('success', 'Je bent uitgelogd');
     }
 
