@@ -172,7 +172,8 @@ class WedstrijdSchemaService
                 'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
-                'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
+                'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id, // yellow (next)
+                'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id, // green (current)
                 'judokas' => $poule->judokas->map(fn($j) => [
                     'id' => $j->id,
                     'naam' => $j->naam,
@@ -206,6 +207,8 @@ class WedstrijdSchemaService
                         $wedstrijd['volgende_wedstrijd_id'] = $w->volgende_wedstrijd_id;
                         $wedstrijd['winnaar_naar_slot'] = $w->winnaar_naar_slot;
                         $wedstrijd['uitslag_type'] = $w->uitslag_type;
+                        $wedstrijd['locatie_wit'] = $w->locatie_wit;
+                        $wedstrijd['locatie_blauw'] = $w->locatie_blauw;
                     }
 
                     return $wedstrijd;

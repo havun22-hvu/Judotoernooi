@@ -200,17 +200,20 @@ class MatController extends Controller
     }
 
     /**
-     * Manually set current match for a poule (override automatic order)
-     * Used when table staff needs to change order due to injuries etc.
+     * Manually set current/next match for a poule
+     * - actieve_wedstrijd_id = green (currently playing)
+     * - huidige_wedstrijd_id = yellow (next up)
      */
     public function setHuidigeWedstrijd(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
             'wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+            'type' => 'nullable|in:actief,volgend', // actief=green, volgend=yellow
         ]);
 
         $poule = Poule::findOrFail($validated['poule_id']);
+        $type = $validated['type'] ?? 'volgend'; // Default to old behavior
 
         // Verify poule belongs to this toernooi
         if ($poule->toernooi_id !== $toernooi->id) {
@@ -225,9 +228,17 @@ class MatController extends Controller
             }
         }
 
-        $poule->update(['huidige_wedstrijd_id' => $validated['wedstrijd_id']]);
+        if ($type === 'actief') {
+            $poule->update(['actieve_wedstrijd_id' => $validated['wedstrijd_id']]);
+        } else {
+            $poule->update(['huidige_wedstrijd_id' => $validated['wedstrijd_id']]);
+        }
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,
+            'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
+        ]);
     }
 
     /**
@@ -500,6 +511,8 @@ class MatController extends Controller
      */
     public function verwijderJudoka(Request $request, Toernooi $toernooi): JsonResponse
     {
+        \Log::info('verwijderJudoka aangeroepen', $request->all());
+
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'judoka_id' => 'nullable|exists:judokas,id',
@@ -507,7 +520,10 @@ class MatController extends Controller
             'alleen_positie' => 'nullable|boolean',
         ]);
 
+        \Log::info('verwijderJudoka validated', $validated);
+
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+        \Log::info('Wedstrijd gevonden', ['id' => $wedstrijd->id, 'wit' => $wedstrijd->judoka_wit_id, 'blauw' => $wedstrijd->judoka_blauw_id]);
         $alleenPositie = $validated['alleen_positie'] ?? false;
 
         // Verwijder op basis van positie (voor seeding) of judoka_id
@@ -515,13 +531,25 @@ class MatController extends Controller
             $veld = $validated['positie'] === 'wit' ? 'judoka_wit_id' : 'judoka_blauw_id';
             $judokaId = $wedstrijd->$veld;
             $wedstrijd->update([$veld => null]);
+            \Log::info('Verwijderd via positie', ['veld' => $veld, 'judokaId' => $judokaId]);
         } elseif (!empty($validated['judoka_id'])) {
             $judokaId = $validated['judoka_id'];
+            \Log::info('Verwijder via judoka_id', [
+                'judokaId' => $judokaId,
+                'wit_id' => $wedstrijd->judoka_wit_id,
+                'blauw_id' => $wedstrijd->judoka_blauw_id,
+                'wit_match' => $wedstrijd->judoka_wit_id == $judokaId,
+                'blauw_match' => $wedstrijd->judoka_blauw_id == $judokaId,
+            ]);
             // Remove judoka from the slot they were in
             if ($wedstrijd->judoka_wit_id == $judokaId) {
                 $wedstrijd->update(['judoka_wit_id' => null]);
+                \Log::info('Verwijderd uit WIT slot');
             } elseif ($wedstrijd->judoka_blauw_id == $judokaId) {
                 $wedstrijd->update(['judoka_blauw_id' => null]);
+                \Log::info('Verwijderd uit BLAUW slot');
+            } else {
+                \Log::warning('Judoka niet gevonden in wit of blauw slot!');
             }
         } else {
             return response()->json(['success' => false, 'error' => 'Geen judoka_id of positie opgegeven'], 400);

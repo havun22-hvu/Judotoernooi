@@ -26,7 +26,8 @@ class Poule extends Model
         'aantal_wedstrijden',
         'spreker_klaar',
         'afgeroepen_at',
-        'huidige_wedstrijd_id', // Manual override for current match
+        'huidige_wedstrijd_id', // Manual override for next match (yellow)
+        'actieve_wedstrijd_id', // Currently playing match (green)
     ];
 
     protected $casts = [
