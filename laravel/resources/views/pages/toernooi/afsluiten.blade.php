@@ -3,6 +3,13 @@
 @section('title', 'Toernooi Afsluiten')
 
 @section('content')
+@php
+    $organisator = auth('organisator')->user();
+    $magAfsluiten = $organisator && ($organisator->isSitebeheerder() || $organisator->toernooien->contains($toernooi));
+    $heeftWedstrijden = $statistieken['totaal_wedstrijden'] > 0;
+    $isGespeeld = $statistieken['gespeelde_wedstrijden'] > 0;
+@endphp
+
 <div class="max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Toernooi Afsluiten</h1>
@@ -23,6 +30,69 @@
     </div>
     @endif
 
+    @if(!$isGespeeld && !$toernooi->isAfgesloten())
+    <!-- INTRO: Toernooi nog niet gespeeld -->
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-8 mb-6 shadow-lg">
+        <div class="flex items-start gap-6">
+            <div class="text-6xl">🏅</div>
+            <div>
+                <h2 class="text-2xl font-bold mb-3">Welkom bij Toernooi Afsluiten</h2>
+                <p class="opacity-90 mb-4">
+                    Na afloop van het toernooi kun je hier alles afronden en een compleet overzicht krijgen van de resultaten.
+                </p>
+                <div class="bg-white/20 rounded-lg p-4 mb-4">
+                    <h3 class="font-bold mb-2">Wat je hier straks ziet:</h3>
+                    <ul class="space-y-1 text-sm opacity-90">
+                        <li>📊 Complete statistieken van alle wedstrijden</li>
+                        <li>🏆 Club klassement (absoluut en relatief)</li>
+                        <li>👥 Overzicht deelnemers per leeftijdsklasse</li>
+                        <li>📥 Export naar CSV en PDF</li>
+                        <li>🔒 Mogelijkheid om toernooi definitief af te sluiten</li>
+                    </ul>
+                </div>
+                <div class="bg-yellow-400/30 rounded-lg p-3 text-sm">
+                    <strong>💡 Tip:</strong> Kom hier terug nadat alle wedstrijden zijn gespeeld om het toernooi af te ronden.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Huidige status -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="font-bold text-lg mb-4">Huidige Status</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-blue-600">{{ $statistieken['totaal_judokas'] }}</div>
+                <div class="text-sm text-gray-600">Judoka's</div>
+            </div>
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-green-600">{{ $statistieken['totaal_clubs'] }}</div>
+                <div class="text-sm text-gray-600">Clubs</div>
+            </div>
+            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                <div class="text-2xl font-bold text-purple-600">{{ $statistieken['totaal_poules'] + $statistieken['totaal_eliminaties'] }}</div>
+                <div class="text-sm text-gray-600">Poules</div>
+            </div>
+            <div class="text-center p-3 {{ $heeftWedstrijden ? 'bg-green-50' : 'bg-orange-50' }} rounded-lg">
+                <div class="text-2xl font-bold {{ $heeftWedstrijden ? 'text-green-600' : 'text-orange-600' }}">{{ $statistieken['totaal_wedstrijden'] }}</div>
+                <div class="text-sm text-gray-600">Wedstrijden</div>
+            </div>
+        </div>
+
+        @if(!$heeftWedstrijden)
+        <div class="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4 text-orange-800">
+            <strong>⏳ Nog geen wedstrijden gegenereerd</strong>
+            <p class="text-sm mt-1">Genereer eerst de poule-indeling en wedstrijden voordat het toernooi gespeeld kan worden.</p>
+        </div>
+        @else
+        <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">
+            <strong>📋 Wedstrijden klaar</strong>
+            <p class="text-sm mt-1">Er zijn {{ $statistieken['totaal_wedstrijden'] }} wedstrijden gegenereerd. Start met spelen via de Mat Interface!</p>
+        </div>
+        @endif
+    </div>
+    @else
+
     @if($toernooi->isAfgesloten())
     <!-- Afgesloten banner -->
     <div class="bg-green-100 border-2 border-green-400 rounded-lg p-6 mb-6 text-center">
@@ -37,6 +107,7 @@
         </p>
         @endif
 
+        @if($magAfsluiten)
         <form action="{{ route('toernooi.heropenen', $toernooi) }}" method="POST" class="mt-4">
             @csrf
             <button type="submit"
@@ -45,6 +116,7 @@
                 Toernooi Heropenen
             </button>
         </form>
+        @endif
     </div>
     @endif
 
@@ -210,7 +282,7 @@
     </div>
 
     <!-- Afsluiten actie -->
-    @if(!$toernooi->isAfgesloten())
+    @if(!$toernooi->isAfgesloten() && $magAfsluiten)
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="bg-red-600 text-white px-4 py-3">
             <h3 class="font-bold">Toernooi Definitief Afsluiten</h3>
@@ -230,7 +302,14 @@
             </form>
         </div>
     </div>
+    @elseif(!$toernooi->isAfgesloten() && !$magAfsluiten)
+    <div class="bg-gray-100 border border-gray-300 rounded-lg p-4 text-gray-600 text-center">
+        <span class="text-2xl">🔐</span>
+        <p class="mt-2">Alleen de organisator of sitebeheerder kan dit toernooi afsluiten.</p>
+    </div>
     @endif
+
+    @endif {{-- Einde van @if(!$isGespeeld) @else --}}
 </div>
 
 <style>
