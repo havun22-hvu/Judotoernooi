@@ -276,6 +276,14 @@ class ToernooiController extends Controller
      */
     public function bevestigAfsluiten(Request $request, Toernooi $toernooi): RedirectResponse
     {
+        // Check permissions: only organisator of this tournament or sitebeheerder
+        $organisator = auth('organisator')->user();
+        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->toernooien->contains($toernooi))) {
+            return redirect()
+                ->route('toernooi.afsluiten', $toernooi)
+                ->with('error', 'Je hebt geen rechten om dit toernooi af te sluiten');
+        }
+
         if ($toernooi->isAfgesloten()) {
             return redirect()
                 ->route('toernooi.afsluiten', $toernooi)
@@ -302,6 +310,14 @@ class ToernooiController extends Controller
      */
     public function heropenen(Toernooi $toernooi): RedirectResponse
     {
+        // Check permissions: only organisator of this tournament or sitebeheerder
+        $organisator = auth('organisator')->user();
+        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->toernooien->contains($toernooi))) {
+            return redirect()
+                ->route('toernooi.afsluiten', $toernooi)
+                ->with('error', 'Je hebt geen rechten om dit toernooi te heropenen');
+        }
+
         $toernooi->update([
             'afgesloten_at' => null,
             'herinnering_datum' => null,
