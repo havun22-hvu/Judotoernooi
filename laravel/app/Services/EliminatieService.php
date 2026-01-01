@@ -1099,40 +1099,47 @@ class EliminatieService
     }
 
     /**
-     * Zoek eerste beschikbaar B-slot
+     * Zoek beschikbaar B-slot met RANDOM verdeling
      *
-     * BELANGRIJK voor ENKELE rondes (zonder _2 suffix):
-     * - Verliezers moeten op ODD posities (1, 3, 5, 7...) geplaatst worden
-     * - Zo gaan winnaars naar WIT slots in volgende ronde
-     * - A-verliezers van volgende A-ronde kunnen dan op BLAUW komen
+     * @see docs/SLOT_SYSTEEM.md - "Plaatsing Algoritme (RANDOM)"
      *
-     * Voorbeeld B-1/8 → B-1/4:
-     * - B-1/8 pos 1 winner → B-1/4 pos 1, WIT
-     * - B-1/8 pos 3 winner → B-1/4 pos 2, WIT
-     * - B-1/8 pos 5 winner → B-1/4 pos 3, WIT
-     * - B-1/8 pos 7 winner → B-1/4 pos 4, WIT
+     * ENKELE rondes (zonder _2 suffix):
+     * - Verliezers op ODD wedstrijden (1, 3, 5, 7...) zodat winnaars naar WIT gaan
+     * - RANDOM verdeling om te voorkomen dat A-volgorde B-tegenstanders bepaalt
      *
-     * Volgorde:
-     * 1. Half gevulde ODD posities (vul de wedstrijd af)
-     * 2. Lege ODD posities (nieuwe wedstrijd starten)
-     * 3. Half gevulde EVEN posities (fallback)
-     * 4. Lege EVEN posities (fallback)
+     * Prioriteit:
+     * 1. LEGE ODD wedstrijden (random) - eerst alle wedstrijden 1 judoka geven
+     * 2. HALF GEVULDE ODD wedstrijden (random) - dan tweede slots vullen
+     * 3. Fallback naar EVEN wedstrijden als ODD vol zijn
      */
     private function zoekEersteLegeBSlot(int $pouleId, string $ronde): ?Wedstrijd
     {
         // Voor _2 rondes gelden andere regels (A-verliezers op BLAUW)
-        // Daar is de normale volgorde OK
         $isRonde2 = str_ends_with($ronde, '_2');
 
         if (!$isRonde2) {
-            // ENKELE rondes of (1) rondes: gebruik ODD posities eerst
-            // Dit zorgt dat winnaars naar WIT gaan in volgende ronde
+            // ENKELE rondes of (1) rondes: gebruik ODD wedstrijden met RANDOM verdeling
 
-            // 1. Half gevulde ODD posities
-            $halfBezet = Wedstrijd::where('poule_id', $pouleId)
+            // 1. LEGE ODD wedstrijden - RANDOM selectie
+            // Prioriteit: eerst alle wedstrijden minimaal 1 judoka geven
+            $legeOdd = Wedstrijd::where('poule_id', $pouleId)
                 ->where('groep', 'B')
                 ->where('ronde', $ronde)
-                ->whereRaw('bracket_positie % 2 = 1')  // ODD posities
+                ->whereRaw('bracket_positie % 2 = 1')  // ODD: 1, 3, 5, 7...
+                ->whereNull('judoka_wit_id')
+                ->whereNull('judoka_blauw_id')
+                ->get();
+
+            if ($legeOdd->count() > 0) {
+                return $legeOdd->random();  // RANDOM selectie
+            }
+
+            // 2. HALF GEVULDE ODD wedstrijden - RANDOM selectie
+            // Nu tweede slots vullen
+            $halfVol = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', $ronde)
+                ->whereRaw('bracket_positie % 2 = 1')  // ODD: 1, 3, 5, 7...
                 ->where(function ($q) {
                     $q->where(function ($q2) {
                         $q2->whereNotNull('judoka_wit_id')->whereNull('judoka_blauw_id');
@@ -1140,30 +1147,15 @@ class EliminatieService
                         $q2->whereNull('judoka_wit_id')->whereNotNull('judoka_blauw_id');
                     });
                 })
-                ->orderBy('bracket_positie')
-                ->first();
+                ->get();
 
-            if ($halfBezet) {
-                return $halfBezet;
-            }
-
-            // 2. Lege ODD posities
-            $leegOdd = Wedstrijd::where('poule_id', $pouleId)
-                ->where('groep', 'B')
-                ->where('ronde', $ronde)
-                ->whereRaw('bracket_positie % 2 = 1')  // ODD posities
-                ->whereNull('judoka_wit_id')
-                ->whereNull('judoka_blauw_id')
-                ->orderBy('bracket_positie')
-                ->first();
-
-            if ($leegOdd) {
-                return $leegOdd;
+            if ($halfVol->count() > 0) {
+                return $halfVol->random();  // RANDOM selectie
             }
         }
 
-        // Fallback: normale volgorde (voor _2 rondes of als ODD vol zijn)
-        // 3. Half gevulde wedstrijden
+        // Fallback: voor _2 rondes of als ODD vol zijn
+        // 3. Half gevulde wedstrijden (random)
         $halfBezet = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
             ->where('ronde', $ronde)
@@ -1174,20 +1166,20 @@ class EliminatieService
                     $q2->whereNull('judoka_wit_id')->whereNotNull('judoka_blauw_id');
                 });
             })
-            ->orderBy('bracket_positie')
+            ->inRandomOrder()
             ->first();
 
         if ($halfBezet) {
             return $halfBezet;
         }
 
-        // 4. Volledig lege wedstrijden
+        // 4. Volledig lege wedstrijden (random)
         return Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
             ->where('ronde', $ronde)
             ->whereNull('judoka_wit_id')
             ->whereNull('judoka_blauw_id')
-            ->orderBy('bracket_positie')
+            ->inRandomOrder()
             ->first();
     }
 

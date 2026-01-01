@@ -166,18 +166,8 @@ A-verliezers → B-ronde op ODD wedstrijden (1, 3, 5, 7...)
 
 ### Enkele Rondes: ODD Wedstrijden Regel
 
-Bij enkele rondes (bv. N=16, V1=0, V2=8) komen alle verliezers tegelijk binnen.
+Bij enkele rondes komen alle verliezers tegelijk binnen.
 Ze moeten op **ODD wedstrijden** geplaatst worden zodat winnaars naar WIT gaan.
-
-**Voorbeeld N=16 (8 A-1/8 verliezers → B-1/8):**
-```
-B-1/8 wed 1 (slots 1,2):   verliezer A, verliezer B
-B-1/8 wed 3 (slots 5,6):   verliezer C, verliezer D
-B-1/8 wed 5 (slots 9,10):  verliezer E, verliezer F
-B-1/8 wed 7 (slots 13,14): verliezer G, verliezer H
-
-Wed 2, 4, 6, 8 blijven LEEG
-```
 
 **Waarom ODD wedstrijden?**
 ```
@@ -187,7 +177,48 @@ B-1/8 wed 5 winner → B-1/4 wed 3, WIT (ceil(5/2)=3, oneven=wit)
 B-1/8 wed 7 winner → B-1/4 wed 4, WIT (ceil(7/2)=4, oneven=wit)
 ```
 
-Zo kunnen A-1/4 verliezers op BLAUW in B-1/4 wed 1-4 geplaatst worden.
+Zo kunnen A-verliezers van de volgende ronde op BLAUW geplaatst worden.
+
+### Berekening Volle Wedstrijden vs Byes
+
+Voor W benodigde wedstrijden en X verliezers:
+```
+Volle wedstrijden (2 judoka's) = X - W
+Bye wedstrijden (1 judoka)     = 2W - X
+```
+
+**Voorbeeld B-1/8 → B-1/4 (W=4 ODD wedstrijden: 1, 3, 5, 7):**
+
+| X verliezers | Volle wed | Byes | Verdeling voorbeeld |
+|--------------|-----------|------|---------------------|
+| 8 | 4 | 0 | wed 1,3,5,7 elk 2 judoka's |
+| 7 | 3 | 1 | wed 1,3,5: vol; wed 7: bye |
+| 6 | 2 | 2 | wed 1,3: vol; wed 5,7: bye |
+| 5 | 1 | 3 | wed 1: vol; wed 3,5,7: bye |
+| 4 | 0 | 4 | wed 1,3,5,7 elk 1 judoka (bye) |
+
+### Plaatsing Algoritme (RANDOM)
+
+De verdeling moet RANDOM zijn om te voorkomen dat wedstrijdvolgorde in A-groep
+de tegenstanders in B-groep bepaalt.
+
+**Stappen:**
+1. Bereken aantal volle wedstrijden en byes
+2. RANDOM selecteren welke ODD wedstrijden vol worden vs bye
+3. RANDOM verdelen van verliezers over de geselecteerde wedstrijden
+
+**Voorbeeld 5 verliezers (1 vol, 3 byes):**
+```
+Stap 1: 1 volle wedstrijd, 3 bye wedstrijden
+Stap 2: Random selectie → wed 5 wordt vol, wed 1,3,7 worden bye
+Stap 3: Random verdeling:
+        - wed 1 (bye): verliezer D → B1/8-1
+        - wed 3 (bye): verliezer A → B1/8-5
+        - wed 5 (vol): verliezer C, verliezer E → B1/8-9, B1/8-10
+        - wed 7 (bye): verliezer B → B1/8-13
+```
+
+**Resultaat:** B1/8-1, B1/8-5, B1/8-9, B1/8-10, B1/8-13 (random verdeeld)
 
 ### Waarom BLAUW voor (2) rondes?
 - B-winnaars van ronde (1) staan al op **WIT**
