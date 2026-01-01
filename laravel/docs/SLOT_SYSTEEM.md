@@ -230,6 +230,37 @@ Als (A-1 verliezers + A-2 verliezers) ≤ (2 × A-2 wedstrijden):
     → SAMEN (geen suffix)
 Anders:
     → (1)/(2) suffixen nodig
+
+Vereenvoudigd: Als A-1 verliezers > A-2 verliezers → (1)/(2) nodig
+```
+
+### Test Matrix
+
+| N | D | Eerste A | A-1 verl | Tweede A | A-2 verl | A-1 > A-2? | Verwacht |
+|---|---|----------|----------|----------|----------|------------|----------|
+| 12 | 8 | A-1/8 | 4 | A-1/4 | 4 | Nee | Samen |
+| 16 | 16 | A-1/8 | 8 | A-1/4 | 4 | Ja | (1)/(2) |
+| 24 | 16 | A-1/16 | 8 | A-1/8 | 8 | Nee | Samen |
+| 32 | 32 | A-1/16 | 16 | A-1/8 | 8 | Ja | (1)/(2) |
+| 48 | 32 | A-1/32 | 16 | A-1/16 | 16 | Nee | Samen |
+
+**LET OP:** Huidige code gebruikt `$dubbelRondes = ($v1 > $v2)` waar:
+- V1 = N - D (extra wedstrijden met byes, NIET eerste ronde verliezers)
+- V2 = D / 2 (NIET tweede ronde verliezers)
+
+Dit geeft verkeerde resultaten voor N = exacte macht van 2 (16, 32, 64):
+- N=32: V1=0, V2=16, code zegt ENKELE maar zou (1)/(2) moeten zijn!
+
+**Correcte formule:**
+```php
+// Eerste ronde verliezers = echte wedstrijden in eerste ronde
+$a1Verliezers = max($v1, $d / 2);  // V1 als er byes zijn, anders D/2
+
+// Tweede ronde verliezers = D/4 (helft van eerste "volle" ronde)
+$a2Verliezers = $d / 4;
+
+// Dubbel als eerste golf niet past met tweede golf
+$dubbelRondes = ($a1Verliezers > $a2Verliezers);
 ```
 
 ### ODD Wedstrijden Regel
