@@ -1101,22 +1101,73 @@ class EliminatieService
     /**
      * Zoek eerste beschikbaar B-slot
      *
-     * BELANGRIJK: Voor ENKELE rondes vullen we wedstrijden COMPLEET voordat we
-     * naar de volgende gaan. Anders krijgt iedereen een bye!
+     * BELANGRIJK voor ENKELE rondes (zonder _2 suffix):
+     * - Verliezers moeten op ODD posities (1, 3, 5, 7...) geplaatst worden
+     * - Zo gaan winnaars naar WIT slots in volgende ronde
+     * - A-verliezers van volgende A-ronde kunnen dan op BLAUW komen
+     *
+     * Voorbeeld B-1/8 → B-1/4:
+     * - B-1/8 pos 1 winner → B-1/4 pos 1, WIT
+     * - B-1/8 pos 3 winner → B-1/4 pos 2, WIT
+     * - B-1/8 pos 5 winner → B-1/4 pos 3, WIT
+     * - B-1/8 pos 7 winner → B-1/4 pos 4, WIT
      *
      * Volgorde:
-     * 1. Wedstrijden met 1 slot bezet (vul het andere slot)
-     * 2. Volledig lege wedstrijden (nieuwe wedstrijd starten)
+     * 1. Half gevulde ODD posities (vul de wedstrijd af)
+     * 2. Lege ODD posities (nieuwe wedstrijd starten)
+     * 3. Half gevulde EVEN posities (fallback)
+     * 4. Lege EVEN posities (fallback)
      */
     private function zoekEersteLegeBSlot(int $pouleId, string $ronde): ?Wedstrijd
     {
-        // EERST: wedstrijden met 1 slot bezet (vul de andere positie)
-        // Dit voorkomt dat iedereen op WIT komt met lege BLAUW = byes!
+        // Voor _2 rondes gelden andere regels (A-verliezers op BLAUW)
+        // Daar is de normale volgorde OK
+        $isRonde2 = str_ends_with($ronde, '_2');
+
+        if (!$isRonde2) {
+            // ENKELE rondes of (1) rondes: gebruik ODD posities eerst
+            // Dit zorgt dat winnaars naar WIT gaan in volgende ronde
+
+            // 1. Half gevulde ODD posities
+            $halfBezet = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', $ronde)
+                ->whereRaw('bracket_positie % 2 = 1')  // ODD posities
+                ->where(function ($q) {
+                    $q->where(function ($q2) {
+                        $q2->whereNotNull('judoka_wit_id')->whereNull('judoka_blauw_id');
+                    })->orWhere(function ($q2) {
+                        $q2->whereNull('judoka_wit_id')->whereNotNull('judoka_blauw_id');
+                    });
+                })
+                ->orderBy('bracket_positie')
+                ->first();
+
+            if ($halfBezet) {
+                return $halfBezet;
+            }
+
+            // 2. Lege ODD posities
+            $leegOdd = Wedstrijd::where('poule_id', $pouleId)
+                ->where('groep', 'B')
+                ->where('ronde', $ronde)
+                ->whereRaw('bracket_positie % 2 = 1')  // ODD posities
+                ->whereNull('judoka_wit_id')
+                ->whereNull('judoka_blauw_id')
+                ->orderBy('bracket_positie')
+                ->first();
+
+            if ($leegOdd) {
+                return $leegOdd;
+            }
+        }
+
+        // Fallback: normale volgorde (voor _2 rondes of als ODD vol zijn)
+        // 3. Half gevulde wedstrijden
         $halfBezet = Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
             ->where('ronde', $ronde)
             ->where(function ($q) {
-                // Eén slot bezet, één leeg
                 $q->where(function ($q2) {
                     $q2->whereNotNull('judoka_wit_id')->whereNull('judoka_blauw_id');
                 })->orWhere(function ($q2) {
@@ -1130,7 +1181,7 @@ class EliminatieService
             return $halfBezet;
         }
 
-        // DAN: volledig lege wedstrijden
+        // 4. Volledig lege wedstrijden
         return Wedstrijd::where('poule_id', $pouleId)
             ->where('groep', 'B')
             ->where('ronde', $ronde)
