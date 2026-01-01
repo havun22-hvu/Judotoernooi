@@ -11,9 +11,16 @@ class AuthController extends Controller
 {
     /**
      * Toon login pagina
+     * Op production: redirect naar organisator login
+     * Op local/staging: toon rol-keuze pagina (development mode)
      */
-    public function loginForm(Toernooi $toernooi): View
+    public function loginForm(Toernooi $toernooi): View|RedirectResponse
     {
+        // Op production: deze pagina is niet beschikbaar, redirect naar organisator login
+        if (app()->environment('production')) {
+            return redirect()->route('organisator.login');
+        }
+
         $wachtwoordVereist = [
             'admin' => $toernooi->heeftWachtwoord('admin'),
             'jury' => $toernooi->heeftWachtwoord('jury'),
@@ -27,9 +34,15 @@ class AuthController extends Controller
 
     /**
      * Verwerk login
+     * Op production: niet beschikbaar (redirect naar organisator login)
      */
     public function login(Request $request, Toernooi $toernooi): RedirectResponse
     {
+        // Op production: deze login methode is niet beschikbaar
+        if (app()->environment('production')) {
+            return redirect()->route('organisator.login');
+        }
+
         $validated = $request->validate([
             'rol' => 'required|in:admin,jury,weging,mat,spreker',
             'wachtwoord' => 'nullable|string',
@@ -40,8 +53,8 @@ class AuthController extends Controller
         $wachtwoord = $validated['wachtwoord'] ?? null;
 
         // Check wachtwoord (alleen als er een wachtwoord is ingesteld)
-        // In local environment: skip password check for easier development
-        if (!app()->environment('local') && $toernooi->heeftWachtwoord($rol)) {
+        // In local/staging: skip password check for easier development
+        if (!app()->environment(['local', 'staging']) && $toernooi->heeftWachtwoord($rol)) {
             if (!$toernooi->checkWachtwoord($rol, $wachtwoord)) {
                 return back()->with('error', 'Onjuist wachtwoord');
             }
