@@ -119,29 +119,29 @@ Dit is een **1:1 mapping** (geen 2:1):
 ### Flow (2) → volgende (1)
 Dit is de normale **2:1 mapping**, maar met gespiegelde slot toewijzing:
 
-**Bovenste helft** (bracket_positie 1 t/m halverwege):
-- Oneven positie → WIT slot
-- Even positie → BLAUW slot
+**Bovenste helft** (wedstrijd 1 t/m halverwege):
+- Oneven wedstrijd → WIT slot
+- Even wedstrijd → BLAUW slot
 
-**Onderste helft** (bracket_positie > halverwege, gespiegeld):
-- Even positie → WIT slot (omgedraaid!)
-- Oneven positie → BLAUW slot (omgedraaid!)
+**Onderste helft** (wedstrijd > halverwege, gespiegeld):
+- Even wedstrijd → WIT slot (omgedraaid!)
+- Oneven wedstrijd → BLAUW slot (omgedraaid!)
 
 Dit zorgt ervoor dat de visuele flow correct is in de gespiegelde B-bracket layout.
 
 Voorbeeld B-1/8(2) → B-1/4(1) (8 wedstrijden → 4 wedstrijden):
 ```
-Bovenste helft (pos 1-4):
-  Wed 1 (pos 1) → wed 1, wit
-  Wed 2 (pos 2) → wed 1, blauw
-  Wed 3 (pos 3) → wed 2, wit
-  Wed 4 (pos 4) → wed 2, blauw
+Bovenste helft (wed 1-4):
+  Wed 1 → wed 1, wit
+  Wed 2 → wed 1, blauw
+  Wed 3 → wed 2, wit
+  Wed 4 → wed 2, blauw
 
-Onderste helft (pos 5-8, gespiegeld):
-  Wed 5 (pos 5) → wed 3, blauw  (omgedraaid)
-  Wed 6 (pos 6) → wed 3, wit    (omgedraaid)
-  Wed 7 (pos 7) → wed 4, blauw  (omgedraaid)
-  Wed 8 (pos 8) → wed 4, wit    (omgedraaid)
+Onderste helft (wed 5-8, gespiegeld):
+  Wed 5 → wed 3, blauw  (omgedraaid)
+  Wed 6 → wed 3, wit    (omgedraaid)
+  Wed 7 → wed 4, blauw  (omgedraaid)
+  Wed 8 → wed 4, wit    (omgedraaid)
 ```
 
 ---
@@ -161,8 +161,33 @@ A-1/2 verliezers       → B-1/2(2) op BLAUW slot
 
 Bij **enkele rondes** (V1 ≤ V2):
 ```
-Alle A-verliezers → B-ronde (zonder suffix) op eerste beschikbaar slot
+A-verliezers → B-ronde op ODD wedstrijden (1, 3, 5, 7...)
 ```
+
+### Enkele Rondes: ODD Wedstrijden Regel
+
+Bij enkele rondes (bv. N=16, V1=0, V2=8) komen alle verliezers tegelijk binnen.
+Ze moeten op **ODD wedstrijden** geplaatst worden zodat winnaars naar WIT gaan.
+
+**Voorbeeld N=16 (8 A-1/8 verliezers → B-1/8):**
+```
+B-1/8 wed 1 (slots 1,2):   verliezer A, verliezer B
+B-1/8 wed 3 (slots 5,6):   verliezer C, verliezer D
+B-1/8 wed 5 (slots 9,10):  verliezer E, verliezer F
+B-1/8 wed 7 (slots 13,14): verliezer G, verliezer H
+
+Wed 2, 4, 6, 8 blijven LEEG
+```
+
+**Waarom ODD wedstrijden?**
+```
+B-1/8 wed 1 winner → B-1/4 wed 1, WIT (ceil(1/2)=1, oneven=wit)
+B-1/8 wed 3 winner → B-1/4 wed 2, WIT (ceil(3/2)=2, oneven=wit)
+B-1/8 wed 5 winner → B-1/4 wed 3, WIT (ceil(5/2)=3, oneven=wit)
+B-1/8 wed 7 winner → B-1/4 wed 4, WIT (ceil(7/2)=4, oneven=wit)
+```
+
+Zo kunnen A-1/4 verliezers op BLAUW in B-1/4 wed 1-4 geplaatst worden.
 
 ### Waarom BLAUW voor (2) rondes?
 - B-winnaars van ronde (1) staan al op **WIT**
@@ -194,10 +219,10 @@ Judoka's die al een **bye** hadden in de A-groep:
 
 In de `wedstrijden` tabel:
 - `bracket_positie`: wedstrijdnummer binnen de ronde (1, 2, 3, ...)
-- `locatie_wit`: slotnummer van de wit positie
-- `locatie_blauw`: slotnummer van de blauw positie
+- `locatie_wit`: slotnummer van de wit plek (= 2N-1 voor wedstrijd N)
+- `locatie_blauw`: slotnummer van de blauw plek (= 2N voor wedstrijd N)
 - `volgende_wedstrijd_id`: ID van de wedstrijd waar de winnaar naartoe gaat
-- `winnaar_naar_slot`: 'wit' of 'blauw' - welke positie in de volgende wedstrijd
+- `winnaar_naar_slot`: 'wit' of 'blauw' - welke plek in de volgende wedstrijd
 
 ---
 
