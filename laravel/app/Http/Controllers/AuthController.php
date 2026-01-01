@@ -33,6 +33,58 @@ class AuthController extends Controller
     }
 
     /**
+     * Service Login - alleen voor sitebeheerders
+     * Snelle rol-keuze zonder wachtwoord voor troubleshooting
+     */
+    public function serviceLoginForm(Toernooi $toernooi): View|RedirectResponse
+    {
+        // Alleen voor ingelogde sitebeheerders
+        $organisator = auth('organisator')->user();
+        if (!$organisator || !$organisator->isSitebeheerder()) {
+            abort(403, 'Alleen sitebeheerders hebben toegang tot Service Login');
+        }
+
+        return view('pages.auth.service-login', compact('toernooi'));
+    }
+
+    /**
+     * Verwerk Service Login
+     */
+    public function serviceLogin(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        // Alleen voor ingelogde sitebeheerders
+        $organisator = auth('organisator')->user();
+        if (!$organisator || !$organisator->isSitebeheerder()) {
+            abort(403, 'Alleen sitebeheerders hebben toegang tot Service Login');
+        }
+
+        $validated = $request->validate([
+            'rol' => 'required|in:admin,jury,weging,mat,spreker',
+            'mat_nummer' => 'nullable|integer|min:1',
+        ]);
+
+        $rol = $validated['rol'];
+
+        // Sla sessie op (geen wachtwoord check voor sitebeheerder)
+        $sessionKey = "toernooi_{$toernooi->id}_rol";
+        $request->session()->put($sessionKey, $rol);
+
+        // Voor mat login, sla ook mat nummer op
+        if ($rol === 'mat' && isset($validated['mat_nummer'])) {
+            $request->session()->put("toernooi_{$toernooi->id}_mat", $validated['mat_nummer']);
+        }
+
+        // Redirect naar juiste pagina
+        return match($rol) {
+            'admin' => redirect()->route('toernooi.show', $toernooi)->with('success', 'Service Login: Admin'),
+            'jury' => redirect()->route('toernooi.blok.zaaloverzicht', $toernooi)->with('success', 'Service Login: Jury'),
+            'weging' => redirect()->route('toernooi.weging.interface', $toernooi)->with('success', 'Service Login: Weging'),
+            'mat' => redirect()->route('toernooi.mat.interface', $toernooi)->with('success', 'Service Login: Mat ' . ($validated['mat_nummer'] ?? '')),
+            'spreker' => redirect()->route('toernooi.spreker.interface', $toernooi)->with('success', 'Service Login: Spreker'),
+        };
+    }
+
+    /**
      * Verwerk login
      * Op production: niet beschikbaar (redirect naar organisator login)
      */

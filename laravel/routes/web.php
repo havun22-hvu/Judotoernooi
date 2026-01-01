@@ -80,6 +80,10 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
     Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
 
+    // Service Login (sitebeheerder only)
+    Route::get('service-login', [AuthController::class, 'serviceLoginForm'])->name('auth.service');
+    Route::post('service-login', [AuthController::class, 'serviceLogin'])->name('auth.service.post');
+
     // Admin only routes
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
         // Judokas management (zoek route MOET voor resource staan!)
