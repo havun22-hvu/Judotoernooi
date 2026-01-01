@@ -6,10 +6,68 @@
 <div x-data="sprekerInterface()">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">📢 Spreker Interface</h1>
-        <div class="text-sm text-gray-600">
-            Auto-refresh elke 10 seconden
+        <div class="flex items-center gap-4">
+            <button
+                @click="toonGeschiedenis = !toonGeschiedenis"
+                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+            >
+                <span>📋</span> Vorige uitreikingen
+            </button>
+            <div class="text-sm text-gray-600">
+                Auto-refresh elke 10 seconden
+            </div>
         </div>
     </div>
+
+    <!-- Geschiedenis van afgeroepen poules (opgeslagen in localStorage) -->
+    <div x-show="toonGeschiedenis" x-cloak class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-gray-700 font-bold">📋 Eerder afgeroepen (vandaag)</span>
+            <button @click="toonGeschiedenis = false" class="text-gray-400 hover:text-gray-600">✕</button>
+        </div>
+        <template x-if="geschiedenis.length === 0">
+            <p class="text-gray-500 text-sm">Nog geen prijsuitreikingen vandaag</p>
+        </template>
+        <template x-if="geschiedenis.length > 0">
+            <div class="grid gap-2 max-h-64 overflow-y-auto">
+                <template x-for="item in geschiedenis" :key="item.id + '-' + item.tijd">
+                    <div class="flex justify-between items-center bg-white px-3 py-2 rounded border text-sm">
+                        <span>
+                            <span :class="item.type === 'eliminatie' ? 'text-purple-600' : 'text-green-600'" class="font-medium" x-text="item.naam"></span>
+                        </span>
+                        <span class="text-gray-400" x-text="item.tijd"></span>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+
+    <!-- TERUG SECTIE: Recent afgeroepen poules -->
+    @if($afgeroepen->isNotEmpty())
+    <div class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <div class="flex items-center gap-2 mb-3">
+            <span class="text-orange-700 font-bold">⚠️ AL AFGEROEPEN - per ongeluk? Klik om terug te zetten:</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            @foreach($afgeroepen as $poule)
+            <button
+                onclick="zetTerug({{ $poule->id }}, this)"
+                class="bg-orange-100 hover:bg-green-200 text-orange-800 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors border border-orange-300"
+            >
+                <span>↩️</span>
+                <span class="line-through opacity-70">
+                    @if($poule->type === 'eliminatie')
+                        Elim. {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                    @else
+                        Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                    @endif
+                </span>
+                <span class="text-orange-500 text-xs">({{ $poule->afgeroepen_at->format('H:i') }})</span>
+            </button>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     @if($klarePoules->isEmpty())
     <div class="bg-white rounded-lg shadow p-12 text-center">
@@ -35,8 +93,14 @@
                         Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }} | Klaar: {{ $poule->spreker_klaar->format('H:i') }}
                     </div>
                 </div>
+                @php
+                    $pouleNaam = $poule->is_eliminatie
+                        ? "Elim. {$poule->nummer} - {$poule->leeftijdsklasse} {$poule->gewichtsklasse}"
+                        : "Poule {$poule->nummer} - {$poule->leeftijdsklasse} {$poule->gewichtsklasse}";
+                    $pouleType = $poule->is_eliminatie ? 'eliminatie' : 'poule';
+                @endphp
                 <button
-                    @click="markeerAfgeroepen({{ $poule->id }})"
+                    @click="markeerAfgeroepen({{ $poule->id }}, '{{ addslashes($pouleNaam) }}', '{{ $pouleType }}')"
                     class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2"
                 >
                     ✓ Afgerond
@@ -118,9 +182,98 @@
 </div>
 
 <script>
+// Terug functie - zet afgeroepen poule terug naar klaar
+async function zetTerug(pouleId, button) {
+    try {
+        button.disabled = true;
+        button.innerHTML = '⏳ Bezig...';
+
+        const response = await fetch('{{ route('toernooi.spreker.terug', $toernooi) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ poule_id: pouleId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Pagina herladen om poule weer te tonen
+            location.reload();
+        } else {
+            alert('Fout: ' + (data.message || 'Onbekende fout'));
+            button.disabled = false;
+            button.innerHTML = '↩️ Terug';
+        }
+    } catch (err) {
+        alert('Fout: ' + err.message);
+        button.disabled = false;
+    }
+}
+
 function sprekerInterface() {
+    const STORAGE_KEY = 'spreker_geschiedenis_{{ $toernooi->id }}';
+    const vandaag = new Date().toDateString();
+
     return {
-        async markeerAfgeroepen(pouleId) {
+        toonGeschiedenis: false,
+        geschiedenis: [],
+
+        init() {
+            // Laad geschiedenis uit localStorage
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const data = JSON.parse(stored);
+                // Check of het van vandaag is
+                if (data.datum === vandaag) {
+                    this.geschiedenis = data.items || [];
+                } else {
+                    // Nieuwe dag, wis geschiedenis
+                    this.geschiedenis = [];
+                }
+            }
+
+            // Voeg bestaande afgeroepen poules uit database toe (als nog niet in geschiedenis)
+            const dbAfgeroepen = @json($toernooi->poules()
+                ->whereNotNull('afgeroepen_at')
+                ->whereDate('afgeroepen_at', today())
+                ->get()
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'naam' => $p->type === 'eliminatie'
+                        ? "Elim. {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}"
+                        : "Poule {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}",
+                    'type' => $p->type === 'eliminatie' ? 'eliminatie' : 'poule',
+                    'tijd' => $p->afgeroepen_at->format('H:i')
+                ]));
+
+            dbAfgeroepen.forEach(item => {
+                // Alleen toevoegen als nog niet in geschiedenis
+                if (!this.geschiedenis.find(g => g.id === item.id && g.tijd === item.tijd)) {
+                    this.geschiedenis.push(item);
+                }
+            });
+
+            // Sorteer op tijd (nieuwste eerst)
+            this.geschiedenis.sort((a, b) => b.tijd.localeCompare(a.tijd));
+            this.saveGeschiedenis();
+        },
+
+        saveGeschiedenis() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                datum: vandaag,
+                items: this.geschiedenis
+            }));
+        },
+
+        addToGeschiedenis(pouleId, naam, type, tijd) {
+            // Voeg toe aan begin (nieuwste eerst)
+            this.geschiedenis.unshift({ id: pouleId, naam, type, tijd });
+            this.saveGeschiedenis();
+        },
+
+        async markeerAfgeroepen(pouleId, pouleNaam, pouleType) {
             try {
                 const response = await fetch('{{ route('toernooi.spreker.afgeroepen', $toernooi) }}', {
                     method: 'POST',
@@ -133,6 +286,10 @@ function sprekerInterface() {
 
                 const data = await response.json();
                 if (data.success) {
+                    // Voeg toe aan geschiedenis
+                    const tijd = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+                    this.addToGeschiedenis(pouleId, pouleNaam, pouleType, tijd);
+
                     // Remove poule from view with animation
                     const element = document.getElementById('poule-' + pouleId);
                     if (element) {

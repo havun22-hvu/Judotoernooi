@@ -181,8 +181,12 @@ class BlokController extends Controller
         // After overpoulen, judokas may have changed, so old wedstrijden are invalid
         \App\Models\Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))->delete();
 
-        // Reset doorgestuurd_op for all poules (categories are now inactive)
-        $toernooi->poules()->update(['doorgestuurd_op' => null]);
+        // Reset alle poule statussen - we starten opnieuw!
+        $toernooi->poules()->update([
+            'doorgestuurd_op' => null,
+            'spreker_klaar' => null,
+            'afgeroepen_at' => null,
+        ]);
 
         // Update aantal_judokas en aantal_wedstrijden voor alle poules
         // Dit voorkomt dat poules weggefilterd worden door verouderde tellingen
@@ -469,7 +473,22 @@ class BlokController extends Controller
                 return $poule;
             });
 
-        return view('pages.spreker.interface', compact('toernooi', 'klarePoules'));
+        // Recent afgeroepen poules (laatste 30 minuten) - voor "Terug" functie
+        $afgeroepen = $toernooi->poules()
+            ->whereNotNull('afgeroepen_at')
+            ->where('afgeroepen_at', '>=', now()->subMinutes(30))
+            ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
+            ->orderBy('afgeroepen_at', 'desc')
+            ->get()
+            ->map(function ($poule) {
+                if ($poule->type === 'eliminatie') {
+                    $poule->standings = $this->getEliminatieStandings($poule);
+                    $poule->is_eliminatie = true;
+                }
+                return $poule;
+            });
+
+        return view('pages.spreker.interface', compact('toernooi', 'klarePoules', 'afgeroepen'));
     }
 
     /**
@@ -534,6 +553,24 @@ class BlokController extends Controller
         ]);
     }
 
+    /**
+     * Zet afgeroepen poule terug naar klaar (undo)
+     */
+    public function zetAfgeroepenTerug(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+        $poule->update(['afgeroepen_at' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Poule {$poule->nummer} teruggezet",
+        ]);
+    }
+
     public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
@@ -542,7 +579,14 @@ class BlokController extends Controller
         ]);
 
         $poule = Poule::findOrFail($validated['poule_id']);
-        $poule->update(['mat_id' => $validated['mat_id']]);
+
+        // Reset spreker status als poule opnieuw op mat wordt gezet
+        // (bv. volgende dag of na correctie)
+        $poule->update([
+            'mat_id' => $validated['mat_id'],
+            'spreker_klaar' => null,
+            'afgeroepen_at' => null,
+        ]);
 
         return response()->json([
             'success' => true,
