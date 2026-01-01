@@ -31,21 +31,6 @@
                         ⚠ Geen wedstrijden
                     </div>
 
-                    <!-- Medaille overzicht voor eliminatie (wanneer afgerond) -->
-                    <template x-if="poule.type === 'eliminatie' && isPouleAfgerond(poule)">
-                        <div class="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-amber-100 px-3 py-1 rounded-lg border border-yellow-300">
-                            <template x-if="getMedailleWinnaars(poule).goud">
-                                <span class="text-xs font-bold">🥇 <span x-text="getMedailleWinnaars(poule).goud?.naam"></span></span>
-                            </template>
-                            <template x-if="getMedailleWinnaars(poule).zilver">
-                                <span class="text-xs font-bold">🥈 <span x-text="getMedailleWinnaars(poule).zilver?.naam"></span></span>
-                            </template>
-                            <template x-for="(brons, idx) in getMedailleWinnaars(poule).brons" :key="idx">
-                                <span class="text-xs font-bold">🥉 <span x-text="brons?.naam"></span></span>
-                            </template>
-                        </div>
-                    </template>
-
                     <!-- Afgerond: toon klaar tijdstip -->
                     <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'">
                         ✓ Klaar om: <span x-text="poule.spreker_klaar_tijd"></span>
@@ -377,9 +362,15 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     const naam = data.judokaNaam || 'Deze judoka';
     console.log('isLocked:', isLocked);
 
-    // Check 1: Mag niet naar andere slot in DEZELFDE wedstrijd (ALTIJD)
+    // Check 1: Dezelfde wedstrijd?
     console.log('Check 1: wedstrijdId', data.wedstrijdId, '==', targetWedstrijdId, '?', data.wedstrijdId == targetWedstrijdId);
     if (data.wedstrijdId == targetWedstrijdId) {
+        if (data.positie === positie) {
+            // Zelfde wedstrijd EN zelfde positie = teruggezet op oude plek, negeren
+            console.log('Judoka teruggezet op oude plek, geen actie nodig');
+            return;
+        }
+        // Zelfde wedstrijd maar andere positie = blokkeer
         alert(
             `❌ GEBLOKKEERD: Kan niet verplaatsen binnen dezelfde wedstrijd!\n\n` +
             `${naam} staat al in deze wedstrijd.`
@@ -387,14 +378,14 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return;
     }
 
-    // Check 1b: Slot validatie ALTIJD EERST (voor admin wachtwoord prompt!)
-    // Voorkomt dat we om wachtwoord vragen voor iets dat toch geblokkeerd wordt
-    if (isLocked && data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot) {
+    // Check 1b: Slot validatie ALTIJD (niet alleen bij locked!)
+    // Winnaar mag alleen naar de correcte positie (wit of blauw) in de volgende ronde
+    if (data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot) {
         if (data.winnaarNaarSlot !== positie) {
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             alert(
-                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
+                `❌ VERKEERDE POSITIE!\n\n` +
                 `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
             );
             return;
@@ -449,20 +440,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     console.log('winnaarNaarSlot:', data.winnaarNaarSlot);
     console.log('positie:', positie);
 
-    if (isLocked && data.volgendeWedstrijdId) {
-        // Check: Verkeerde wedstrijd? → BLOKKEER direct (geen wachtwoord nodig)
-        // LET OP: == vergelijking voor type coercion (string vs number)
-        if (String(data.volgendeWedstrijdId) !== String(targetWedstrijdId)) {
-            console.log('BLOKKADE: Verkeerde wedstrijd!', data.volgendeWedstrijdId, '!==', targetWedstrijdId);
-            alert(
-                `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-                `${naam} kan alleen naar wedstrijd ${data.volgendeWedstrijdId}, niet naar ${targetWedstrijdId}.\n` +
-                `Sleep naar het juiste vak.`
-            );
-            return;
-        }
+    // Slot validatie ALTIJD als dit een winnaar-doorschuif is (naar volgende ronde)
+    // Seeding is BINNEN dezelfde ronde, niet naar volgende ronde - dus daar geldt geen slot validatie
+    const isWinnaarDoorschuifPoging = data.volgendeWedstrijdId && String(data.volgendeWedstrijdId) === String(targetWedstrijdId);
 
-        // Check: Verkeerde positie? → BLOKKEER direct (geen wachtwoord nodig)
+    if (isWinnaarDoorschuifPoging) {
+        // Dit is een winnaar-doorschuif naar de volgende ronde - slot validatie is VERPLICHT
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
             console.log('BLOKKADE: Verkeerde positie!', data.winnaarNaarSlot, '!==', positie);
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
@@ -473,9 +456,18 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             );
             return;
         }
-        console.log('BLOKKEER-CHECKS PASSED');
+        console.log('WINNAAR-DOORSCHUIF: slot validatie passed');
+    } else if (isLocked && data.volgendeWedstrijdId) {
+        // Locked bracket, verkeerde wedstrijd → BLOKKEER
+        console.log('BLOKKADE: Verkeerde wedstrijd!', data.volgendeWedstrijdId, '!==', targetWedstrijdId);
+        alert(
+            `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
+            `${naam} kan alleen naar wedstrijd ${data.volgendeWedstrijdId}, niet naar ${targetWedstrijdId}.\n` +
+            `Sleep naar het juiste vak.`
+        );
+        return;
     } else {
-        console.log('BLOKKEER-CHECKS SKIPPED:', !isLocked ? 'niet locked' : 'geen volgendeWedstrijdId');
+        console.log('SEEDING MODE: vrij verplaatsen binnen ronde');
     }
 
     // ============================================================
@@ -1411,7 +1403,10 @@ function matInterface() {
 
                         // Drag data met volgende wedstrijd info voor validatie
                         // isWinnaar en isGespeeld toegevoegd om te checken of doorschuiven toegestaan is
-                        const witDragData = JSON.stringify({
+                        // Escape voor JS string (backslash en single quote) en HTML attribute (double quote)
+                        const escapeForHtml = (str) => str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                        const witDragData = escapeForHtml(JSON.stringify({
                             judokaId: wed.wit?.id,
                             wedstrijdId: wed.id,
                             judokaNaam: wed.wit?.naam || '',
@@ -1422,9 +1417,9 @@ function matInterface() {
                             positie: 'wit',
                             isWinnaar: isWitWinnaar,
                             isGespeeld: wed.is_gespeeld === true
-                        }).replace(/"/g, '&quot;');
+                        }));
 
-                        const blauwDragData = JSON.stringify({
+                        const blauwDragData = escapeForHtml(JSON.stringify({
                             judokaId: wed.blauw?.id,
                             wedstrijdId: wed.id,
                             judokaNaam: wed.blauw?.naam || '',
@@ -1435,11 +1430,11 @@ function matInterface() {
                             positie: 'blauw',
                             isWinnaar: isBlauwWinnaar,
                             isGespeeld: wed.is_gespeeld === true
-                        }).replace(/"/g, '&quot;');
+                        }));
 
                         // Data voor huidige bewoners (voor seeding swap)
-                        const witBewoner = wed.wit ? JSON.stringify({id: wed.wit.id, naam: wed.wit.naam}).replace(/"/g, '&quot;') : 'null';
-                        const blauwBewoner = wed.blauw ? JSON.stringify({id: wed.blauw.id, naam: wed.blauw.naam}).replace(/"/g, '&quot;') : 'null';
+                        const witBewoner = wed.wit ? escapeForHtml(JSON.stringify({id: wed.wit.id, naam: wed.wit.naam})) : 'null';
+                        const blauwBewoner = wed.blauw ? escapeForHtml(JSON.stringify({id: wed.blauw.id, naam: wed.blauw.naam})) : 'null';
 
                         // Visuele slot nummers (van boven naar beneden: 1,2,3,4,...)
                         const visualSlotWit = wedIdx * 2 + 1;
@@ -1575,9 +1570,9 @@ function matInterface() {
             const eersteNiveau = niveaus[0];
             const wedsPerHelft = eersteNiveau ? Math.ceil(eersteNiveau.subRondes[0].wedstrijden.length / 2) : 4;
 
-            // Totale hoogte: 2 helften met ruimte voor horizon
+            // Totale hoogte: 2 helften met ruimte ertussen
             const helftHoogte = wedsPerHelft * (potjeHeight + potjeGap);
-            const horizonHoogte = 20; // Ruimte voor horizon lijn
+            const horizonHoogte = 20; // Ruimte tussen helften (lijn niet zichtbaar)
             const totaleHoogte = 2 * helftHoogte + horizonHoogte;
 
             let html = '';
@@ -1633,20 +1628,14 @@ function matInterface() {
                         const spacing = helftHoogte / halfCount;
                         const topPos = i * spacing + (spacing - potjeHeight) / 2 + verticalOffset;
 
-                        // Visuele slot nummers (van boven naar beneden: 1,2,3,4,...)
-                        const visualSlotWit = i * 2 + 1;
-                        const visualSlotBlauw = i * 2 + 2;
-
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, visualSlotWit, visualSlotBlauw);
+                        // Gebruik database slot nummers (locatie_wit, locatie_blauw)
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, null, null);
                     }
 
-                    // Horizon lijn (alleen in eerste kolom van eerste niveau)
-                    if (niveauIdx === 0 && subRondeIdx === 0) {
-                        html += `<div class="absolute w-full border-t-2 border-dashed border-gray-400" style="top: ${helftHoogte}px;"></div>`;
-                    }
+                    // Geen horizon lijn in B-groep (was verwarrend)
 
                     // Onderste helft (wedstrijden halfCount tot einde) - gespiegeld
-                    // De wedstrijden worden visueel gespiegeld, maar slot nummers lopen gewoon door
+                    // De wedstrijden worden visueel gespiegeld, maar slot nummers komen uit database
                     for (let i = halfCount; i < sortedWeds.length; i++) {
                         const wed = sortedWeds[i];
                         if (!wed) continue;
@@ -1658,12 +1647,8 @@ function matInterface() {
                         const mirroredOffset = isRonde1 ? h / 2 : 0; // Halve slot hoogte omlaag voor spiegeling
                         const topPos = helftHoogte + horizonHoogte + mirroredIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
 
-                        // Visuele slot nummers (doorlopend na bovenste helft: 9,10,11,12,...)
-                        // mirroredIdx = visuele positie binnen onderste helft (0 = bovenaan)
-                        const visualSlotWit = halfCount * 2 + mirroredIdx * 2 + 1;
-                        const visualSlotBlauw = halfCount * 2 + mirroredIdx * 2 + 2;
-
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, visualSlotWit, visualSlotBlauw);
+                        // Gebruik database slot nummers (locatie_wit, locatie_blauw)
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, null, null);
                     }
 
                     html += '</div>';
@@ -1748,7 +1733,10 @@ function matInterface() {
             const topBgColor = 'bg-white';
             const bottomBgColor = 'bg-blue-50';
 
-            const topDragData = JSON.stringify({
+            // Escape functie voor HTML attributes (quotes en single quotes)
+            const escapeForHtml = (str) => str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+            const topDragData = escapeForHtml(JSON.stringify({
                 judokaId: topJudoka?.id,
                 wedstrijdId: wed.id,
                 judokaNaam: topJudoka?.naam || '',
@@ -1759,9 +1747,9 @@ function matInterface() {
                 positie: topSlot,
                 isWinnaar: topIsWinnaar,
                 isGespeeld: wed.is_gespeeld === true
-            }).replace(/"/g, '&quot;');
+            }));
 
-            const bottomDragData = JSON.stringify({
+            const bottomDragData = escapeForHtml(JSON.stringify({
                 judokaId: bottomJudoka?.id,
                 wedstrijdId: wed.id,
                 judokaNaam: bottomJudoka?.naam || '',
@@ -1772,10 +1760,10 @@ function matInterface() {
                 positie: bottomSlot,
                 isWinnaar: bottomIsWinnaar,
                 isGespeeld: wed.is_gespeeld === true
-            }).replace(/"/g, '&quot;');
+            }));
 
-            const topBewoner = topJudoka ? JSON.stringify({id: topJudoka.id, naam: topJudoka.naam}).replace(/"/g, '&quot;') : 'null';
-            const bottomBewoner = bottomJudoka ? JSON.stringify({id: bottomJudoka.id, naam: bottomJudoka.naam}).replace(/"/g, '&quot;') : 'null';
+            const topBewoner = topJudoka ? escapeForHtml(JSON.stringify({id: topJudoka.id, naam: topJudoka.naam})) : 'null';
+            const bottomBewoner = bottomJudoka ? escapeForHtml(JSON.stringify({id: bottomJudoka.id, naam: bottomJudoka.naam})) : 'null';
 
             let html = `<div class="absolute w-32" style="top: ${topPos}px;">`;
 
