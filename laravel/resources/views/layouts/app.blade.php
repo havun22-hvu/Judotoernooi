@@ -35,7 +35,21 @@
                     @endif
                 </div>
                 <div class="flex items-center space-x-4">
-                    @if(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
+                    @if(Auth::guard('organisator')->check())
+                    {{-- Organisator ingelogd (production) --}}
+                    <span class="text-blue-200 text-sm">
+                        @if(Auth::guard('organisator')->user()->isSitebeheerder())
+                            👑 {{ Auth::guard('organisator')->user()->naam }}
+                        @else
+                            📋 {{ Auth::guard('organisator')->user()->naam }}
+                        @endif
+                    </span>
+                    <form action="{{ route('organisator.logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
+                    </form>
+                    @elseif(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
+                    {{-- Toernooi rol ingelogd (local/staging) --}}
                     @php $rol = session("toernooi_{$toernooi->id}_rol"); @endphp
                     <span class="text-blue-200 text-sm">
                         @switch($rol)
@@ -51,8 +65,10 @@
                         <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
                     </form>
                     @else
-                    @if(isset($toernooi))
+                    @if(isset($toernooi) && !app()->environment('production'))
                     <a href="{{ route('toernooi.auth.login', $toernooi) }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    @elseif(!Auth::guard('organisator')->check())
+                    <a href="{{ route('organisator.login') }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
                     @endif
                     @endif
                     <a href="{{ route('toernooi.index') }}" class="hover:text-blue-200">Toernooien</a>
