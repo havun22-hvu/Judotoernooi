@@ -54,7 +54,7 @@
 
 <!-- Per leeftijdsklasse -->
 @forelse($poulesPerKlasse as $leeftijdsklasse => $klassePoules)
-<div class="mb-8" x-data="{ open: true }">
+<div class="mb-8 w-full" x-data="{ open: true }">
     <button @click="open = !open" class="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg hover:bg-blue-700">
         <span class="text-lg font-bold">{{ $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
         <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,6 +597,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+});
+
+// Breedte vastzetten: meet de breedste leeftijdsklasse container
+function fixBlokBreedte() {
+    const blokContainers = document.querySelectorAll('.mb-8.w-full[x-data]');
+    let maxBreedte = 0;
+
+    blokContainers.forEach(container => {
+        const breedte = container.offsetWidth;
+        if (breedte > maxBreedte) maxBreedte = breedte;
+    });
+
+    if (maxBreedte > 0) {
+        blokContainers.forEach(container => {
+            container.style.minWidth = maxBreedte + 'px';
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fixBlokBreedte, 100);
 });
 </script>
 

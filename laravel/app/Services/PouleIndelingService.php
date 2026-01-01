@@ -238,6 +238,14 @@ class PouleIndelingService
                         ? "Kruisfinale {$data['leeftijdsklasse']} {$geslachtLabel} {$data['gewichtsklasse']} ({$plaatsenTekst})"
                         : "Kruisfinale {$data['leeftijdsklasse']} {$data['gewichtsklasse']} ({$plaatsenTekst})";
 
+                    // Get blok_id from voorrondepoules of same category
+                    $voorrondeBlokId = Poule::where('toernooi_id', $toernooi->id)
+                        ->where('leeftijdsklasse', $data['leeftijdsklasse'])
+                        ->where('gewichtsklasse', $data['gewichtsklasse'])
+                        ->where('type', 'voorronde')
+                        ->whereNotNull('blok_id')
+                        ->value('blok_id');
+
                     $kruisfinalePoule = Poule::create([
                         'toernooi_id' => $toernooi->id,
                         'nummer' => $pouleNummer,
@@ -246,6 +254,7 @@ class PouleIndelingService
                         'kruisfinale_plaatsen' => $kruisfinalesAantal,
                         'leeftijdsklasse' => $data['leeftijdsklasse'],
                         'gewichtsklasse' => $data['gewichtsklasse'],
+                        'blok_id' => $voorrondeBlokId,
                         'aantal_judokas' => $aantalJudokasKruisfinale,
                         'aantal_wedstrijden' => $this->berekenAantalWedstrijden($aantalJudokasKruisfinale),
                     ]);

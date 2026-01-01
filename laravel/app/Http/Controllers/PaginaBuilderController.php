@@ -121,6 +121,8 @@ class PaginaBuilderController extends Controller
         // Support both old and new format
         $sections = $request->input('sections');
         $blokken = $request->input('blokken');
+        $header = $request->input('header');
+        $footer = $request->input('footer');
         $themeColor = $request->input('themeColor');
 
         $content = $toernooi->pagina_content ?? [];
@@ -132,6 +134,10 @@ class PaginaBuilderController extends Controller
         if ($blokken !== null) {
             $content['blokken'] = $blokken;
         }
+
+        // Header and footer can be null (to remove them)
+        $content['header'] = $header;
+        $content['footer'] = $footer;
 
         if ($themeColor) {
             $toernooi->thema_kleur = $themeColor;

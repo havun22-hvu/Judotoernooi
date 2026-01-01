@@ -6,10 +6,12 @@
 @php
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
     // Verzamel alle poules met te weinig actieve judoka's (1 of 2)
+    // NEGEER kruisfinales - die hebben nog geen judokas gekoppeld
     $problematischePoules = collect();
     foreach ($blokken as $blok) {
         foreach ($blok['categories'] as $category) {
             foreach ($category['poules'] as $poule) {
+                if ($poule->type === 'kruisfinale') continue;
                 $actief = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
                 if ($actief > 0 && $actief < 3) {
                     $problematischePoules->push([
@@ -63,13 +65,19 @@
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
             // BELANGRIJK: Wedstrijden herberekenen op basis van actieve judokas (niet DB waarde!)
+            // UITZONDERING: Kruisfinales gebruiken geplande aantallen (nog geen judokas gekoppeld)
             $blokJudokas = 0;
             $blokWedstrijden = 0;
             foreach ($blok['categories'] as $cat) {
                 foreach ($cat['poules'] as $p) {
-                    $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
-                    $blokJudokas += $actief;
-                    $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
+                    if ($p->type === 'kruisfinale') {
+                        $blokJudokas += $p->aantal_judokas;
+                        $blokWedstrijden += $p->aantal_wedstrijden;
+                    } else {
+                        $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+                        $blokJudokas += $actief;
+                        $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
+                    }
                 }
             }
         @endphp
@@ -221,6 +229,40 @@
                         {{-- Existing poules --}}
                         <div class="flex flex-wrap gap-4 flex-1">
                             @foreach($category['poules'] as $poule)
+                            @if($poule->type === 'kruisfinale')
+                            {{-- KRUISFINALE: aparte weergave --}}
+                            @php
+                                $aantalVoorrondes = $category['poules']->filter(fn($p) => $p->type === 'voorronde')->count();
+                            @endphp
+                            <div
+                                id="poule-{{ $poule->id }}"
+                                class="border-2 border-purple-400 rounded-lg overflow-hidden min-w-[200px] bg-white kruisfinale-card"
+                                data-poule-id="{{ $poule->id }}"
+                                data-aantal-voorrondes="{{ $aantalVoorrondes }}"
+                            >
+                                <div class="bg-purple-600 text-white px-3 py-2 flex justify-between items-center">
+                                    <div>
+                                        <div class="font-bold text-sm">🏆 Kruisfinale</div>
+                                        <div class="text-xs text-purple-200 kruisfinale-stats">{{ $poule->aantal_judokas }} judoka's | {{ $poule->aantal_wedstrijden }} wedstrijden</div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <select
+                                            onchange="updateKruisfinale({{ $poule->id }}, this.value)"
+                                            class="text-xs bg-purple-500 text-white border border-purple-400 rounded px-1 py-0.5"
+                                            title="Aantal plaatsen per poule"
+                                        >
+                                            @for($i = 1; $i <= 3; $i++)
+                                            <option value="{{ $i }}" {{ ($poule->kruisfinale_plaatsen ?? 2) == $i ? 'selected' : '' }}>Top {{ $i }}</option>
+                                            @endfor
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="p-3 text-sm text-gray-600 kruisfinale-info">
+                                    {{ $aantalVoorrondes }} poules × top {{ $poule->kruisfinale_plaatsen ?? 2 }} = {{ $poule->aantal_judokas }} judoka's door
+                                </div>
+                            </div>
+                            @continue
+                            @endif
                             @php
                                 // Collect removed judokas for info tooltip
                                 $verwijderdeJudokas = $poule->judokas->filter(function($j) use ($tolerantie) {
@@ -361,6 +403,44 @@
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
+
+async function updateKruisfinale(pouleId, plaatsen) {
+    try {
+        const response = await fetch(updateKruisfinaleUrl.replace(':id', pouleId), {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ kruisfinale_plaatsen: parseInt(plaatsen) })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Update de weergave
+            const card = document.getElementById('poule-' + pouleId);
+            if (card) {
+                const statsDiv = card.querySelector('.kruisfinale-stats');
+                if (statsDiv) {
+                    statsDiv.textContent = `${data.aantal_judokas} judoka's | ${data.aantal_wedstrijden} wedstrijden`;
+                }
+                const infoDiv = card.querySelector('.kruisfinale-info');
+                const aantalVoorrondes = card.dataset.aantalVoorrondes || '?';
+                if (infoDiv) {
+                    infoDiv.textContent = `${aantalVoorrondes} poules × top ${plaatsen} = ${data.aantal_judokas} judoka's door`;
+                }
+            }
+        } else {
+            alert(data.message || 'Fout bij aanpassen kruisfinale');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij aanpassen kruisfinale');
+    }
+}
 
 async function zetOmNaarPoules(pouleId, systeem) {
     if (!confirm(`Eliminatie omzetten naar ${systeem === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'alleen poules'}?`)) return;
