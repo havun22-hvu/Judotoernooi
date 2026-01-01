@@ -36,7 +36,7 @@
     <div id="verificatie-resultaat" class="hidden"></div>
 
     <!-- Problematische poules -->
-    <div id="problematische-poules-container">
+    <div id="problematische-poules-container" style="width: fit-content;">
     @if($problematischePoules->count() > 0)
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
         <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
@@ -52,11 +52,12 @@
     @endif
     </div>
 
+    <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
-    <div class="bg-white rounded-lg shadow" x-data="{ 
-    open: localStorage.getItem('blok-poules-{{ $blok['id'] }}') !== null 
-        ? localStorage.getItem('blok-poules-{{ $blok['id'] }}') === 'true' 
-        : {{ $loop->first ? 'true' : 'false' }} 
+    <div class="bg-white rounded-lg shadow w-full blok-item" x-data="{
+    open: localStorage.getItem('blok-poules-{{ $blok['id'] }}') !== null
+        ? localStorage.getItem('blok-poules-{{ $blok['id'] }}') === 'true'
+        : {{ $loop->first ? 'true' : 'false' }}
 }" x-init="$watch('open', val => localStorage.setItem('blok-poules-{{ $blok['id'] }}', val))">
         {{-- Blok header (inklapbaar) --}}
         @php
@@ -351,6 +352,7 @@
         Geen blokken gevonden. Maak eerst blokken aan via de Blokken pagina.
     </div>
     @endforelse
+    </div>
 </div>
 
 <!-- SortableJS for drag and drop -->
@@ -890,6 +892,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+});
+
+// Breedte vastzetten: open tijdelijk een blok om de juiste breedte te meten
+function fixBlokBreedte() {
+    const blokItems = document.querySelectorAll('.blok-item');
+    const container = document.getElementById('blokken-container');
+    if (!blokItems.length || !container) return;
+
+    // Vind een blok dat we kunnen openen om te meten
+    const eersteBlok = blokItems[0];
+    const collapseDiv = eersteBlok.querySelector('[x-show="open"]');
+
+    if (collapseDiv) {
+        // Sla originele state op
+        const wasHidden = collapseDiv.style.display === 'none' || !collapseDiv.offsetHeight;
+
+        // Forceer open voor meting (zonder animatie)
+        collapseDiv.style.display = 'block';
+        collapseDiv.style.height = 'auto';
+        collapseDiv.style.overflow = 'visible';
+
+        // Meet de breedte
+        const breedte = eersteBlok.offsetWidth;
+
+        // Herstel originele state als het gesloten was
+        if (wasHidden) {
+            collapseDiv.style.display = '';
+            collapseDiv.style.height = '';
+            collapseDiv.style.overflow = '';
+        }
+
+        // Zet min-width op container en alle blokken
+        if (breedte > 0) {
+            container.style.minWidth = breedte + 'px';
+            blokItems.forEach(item => {
+                item.style.minWidth = breedte + 'px';
+            });
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fixBlokBreedte, 200);
 });
 </script>
 

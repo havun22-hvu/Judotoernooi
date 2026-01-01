@@ -51,10 +51,10 @@
         ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc']])
         ->values();
 @endphp
-<div class="mb-6" x-data="{ 
-    open: localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') !== null 
-        ? localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') === 'true' 
-        : {{ $loop->first ? 'true' : 'false' }} 
+<div class="mb-6 w-full" x-data="{
+    open: localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') !== null
+        ? localStorage.getItem('blok-zaal-{{ $blok['nummer'] }}') === 'true'
+        : {{ $loop->first ? 'true' : 'false' }}
 }" x-init="$watch('open', val => localStorage.setItem('blok-zaal-{{ $blok['nummer'] }}', val))">
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
@@ -268,5 +268,29 @@ function updateMatCounts() {
         if (countEl) countEl.textContent = wedstrijden + 'w';
     });
 }
+
+// Breedte vastzetten: meet de breedste blok header en zet die als min-width
+function fixBlokBreedte() {
+    const blokContainers = document.querySelectorAll('[x-data*="blok-zaal"]');
+    let maxBreedte = 0;
+
+    // Meet de breedste
+    blokContainers.forEach(container => {
+        const breedte = container.offsetWidth;
+        if (breedte > maxBreedte) maxBreedte = breedte;
+    });
+
+    // Zet min-width op alle containers
+    if (maxBreedte > 0) {
+        blokContainers.forEach(container => {
+            container.style.minWidth = maxBreedte + 'px';
+        });
+    }
+}
+
+// Uitvoeren na laden en na elke Alpine state change
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fixBlokBreedte, 100);
+});
 </script>
 @endsection
