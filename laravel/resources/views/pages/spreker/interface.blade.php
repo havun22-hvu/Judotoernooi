@@ -235,18 +235,23 @@ function sprekerInterface() {
             }
 
             // Voeg bestaande afgeroepen poules uit database toe (als nog niet in geschiedenis)
-            const dbAfgeroepen = @json($toernooi->poules()
-                ->whereNotNull('afgeroepen_at')
-                ->whereDate('afgeroepen_at', today())
-                ->get()
-                ->map(fn($p) => [
-                    'id' => $p->id,
-                    'naam' => $p->type === 'eliminatie'
-                        ? "Elim. {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}"
-                        : "Poule {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}",
-                    'type' => $p->type === 'eliminatie' ? 'eliminatie' : 'poule',
-                    'tijd' => $p->afgeroepen_at->format('H:i')
-                ]));
+            @php
+                $dbAfgeroepenData = $toernooi->poules()
+                    ->whereNotNull('afgeroepen_at')
+                    ->whereDate('afgeroepen_at', today())
+                    ->get()
+                    ->map(function($p) {
+                        return [
+                            'id' => $p->id,
+                            'naam' => $p->type === 'eliminatie'
+                                ? "Elim. {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}"
+                                : "Poule {$p->nummer} - {$p->leeftijdsklasse} {$p->gewichtsklasse}",
+                            'type' => $p->type === 'eliminatie' ? 'eliminatie' : 'poule',
+                            'tijd' => $p->afgeroepen_at->format('H:i')
+                        ];
+                    });
+            @endphp
+            const dbAfgeroepen = @json($dbAfgeroepenData);
 
             dbAfgeroepen.forEach(item => {
                 // Alleen toevoegen als nog niet in geschiedenis
