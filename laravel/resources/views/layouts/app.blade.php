@@ -95,6 +95,79 @@
         </div>
     </footer>
 
+    {{-- Idle Timeout - Auto logout after 20 minutes inactivity --}}
+    @if(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
+    <script>
+        (function() {
+            const IDLE_TIMEOUT = 20 * 60 * 1000; // 20 minutes in ms
+            const WARNING_BEFORE = 2 * 60 * 1000; // Show warning 2 min before
+            let idleTimer;
+            let warningTimer;
+            let warningShown = false;
+
+            function resetTimers() {
+                // Clear existing timers
+                clearTimeout(idleTimer);
+                clearTimeout(warningTimer);
+                warningShown = false;
+
+                // Hide warning if shown
+                const warning = document.getElementById('idle-warning');
+                if (warning) warning.remove();
+
+                // Set warning timer (2 min before logout)
+                warningTimer = setTimeout(showWarning, IDLE_TIMEOUT - WARNING_BEFORE);
+
+                // Set logout timer
+                idleTimer = setTimeout(doLogout, IDLE_TIMEOUT);
+            }
+
+            function showWarning() {
+                if (warningShown) return;
+                warningShown = true;
+
+                const warning = document.createElement('div');
+                warning.id = 'idle-warning';
+                warning.innerHTML = `
+                    <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+                        <div style="background:white;padding:24px;border-radius:8px;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">⚠️ Sessie verloopt bijna</h3>
+                            <p style="margin-bottom:16px;color:#374151;">Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.</p>
+                            <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
+                                    style="background:#2563eb;color:white;padding:10px 24px;border-radius:6px;border:none;cursor:pointer;font-weight:500;">
+                                Actief blijven
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(warning);
+            }
+
+            function doLogout() {
+                // Find and submit logout form
+                const logoutForm = document.querySelector('form[action*="logout"]');
+                if (logoutForm) {
+                    logoutForm.submit();
+                } else {
+                    // Fallback: redirect to login
+                    window.location.href = '{{ route("toernooi.auth.login", $toernooi) }}';
+                }
+            }
+
+            // Expose reset function globally for the "stay active" button
+            window.resetIdleTimers = resetTimers;
+
+            // Reset on user activity
+            ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+                document.addEventListener(event, resetTimers, { passive: true });
+            });
+
+            // Start timers
+            resetTimers();
+        })();
+    </script>
+    @endif
+
     {{-- Service Worker Registration --}}
     <script>
         if ('serviceWorker' in navigator) {
