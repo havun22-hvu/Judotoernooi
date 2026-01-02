@@ -50,6 +50,12 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
             ['nummer', 'asc'],
         ]);
 
+        // Version header for debugging
+        $rows[] = ['Export versie 3 - ' . now()->format('Y-m-d H:i:s')];
+        $rowNum++;
+        $rows[] = [];
+        $rowNum++;
+
         // Check if any poule has no mat assigned
         $heeftGeenMat = $poules->contains(fn($p) => $p->mat_id === null);
         if ($heeftGeenMat) {
