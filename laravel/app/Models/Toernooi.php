@@ -124,6 +124,8 @@ class Toernooi extends Model
         'afgesloten_at',
         'herinnering_datum',
         'herinnering_verstuurd',
+        'betaling_actief',
+        'inschrijfgeld',
     ];
 
     protected $hidden = [
@@ -164,6 +166,8 @@ class Toernooi extends Model
         'afgesloten_at' => 'datetime',
         'herinnering_datum' => 'date',
         'herinnering_verstuurd' => 'boolean',
+        'betaling_actief' => 'boolean',
+        'inschrijfgeld' => 'decimal:2',
     ];
 
     /**
@@ -205,6 +209,11 @@ class Toernooi extends Model
     public function blokken(): HasMany
     {
         return $this->hasMany(Blok::class)->orderBy('nummer');
+    }
+
+    public function betalingen(): HasMany
+    {
+        return $this->hasMany(Betaling::class);
     }
 
     public function matten(): HasMany

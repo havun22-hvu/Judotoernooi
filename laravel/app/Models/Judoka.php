@@ -37,12 +37,15 @@ class Judoka extends Model
         'opmerking',
         'qr_code',
         'synced_at',
+        'betaling_id',
+        'betaald_op',
     ];
 
     protected $casts = [
         'gewicht' => 'decimal:1',
         'gewicht_gewogen' => 'decimal:1',
         'synced_at' => 'datetime',
+        'betaald_op' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -96,6 +99,27 @@ class Judoka extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function betaling(): BelongsTo
+    {
+        return $this->belongsTo(Betaling::class);
+    }
+
+    /**
+     * Check of voor deze judoka betaald is
+     */
+    public function isBetaald(): bool
+    {
+        return $this->betaald_op !== null;
+    }
+
+    /**
+     * Check of deze judoka klaar is om af te rekenen (volledig en nog niet betaald)
+     */
+    public function isKlaarVoorBetaling(): bool
+    {
+        return $this->isVolledig() && !$this->isBetaald();
     }
 
     public function poules(): BelongsToMany

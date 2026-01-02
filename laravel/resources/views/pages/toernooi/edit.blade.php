@@ -1047,6 +1047,82 @@
         </div>
     </div>
 
+    <!-- ONLINE BETALINGEN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Online Betalingen</h2>
+        <p class="text-gray-600 mb-4">
+            Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka's definitief ingeschreven zijn.
+        </p>
+
+        <form action="{{ route('toernooi.betalingen.instellingen', $toernooi) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                    <div>
+                        <h3 class="font-bold">Online betalingen actief</h3>
+                        <p class="text-sm text-gray-500">Coaches moeten betalen bij inschrijving</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="betaling_actief" value="1" class="sr-only peer"
+                               {{ $toernooi->betaling_actief ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="inschrijfgeld" class="block text-gray-700 font-medium mb-1">Inschrijfgeld per judoka</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-gray-500">€</span>
+                            <input type="number" name="inschrijfgeld" id="inschrijfgeld" step="0.01" min="0"
+                                   value="{{ old('inschrijfgeld', $toernooi->inschrijfgeld ?? '15.00') }}"
+                                   class="w-full border rounded px-3 py-2 pl-8" placeholder="15.00">
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Bijv. 15.00 voor €15 per judoka</p>
+                    </div>
+                </div>
+
+                @if($toernooi->betaling_actief)
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h4 class="font-bold text-green-800 mb-2">Betalingen overzicht</h4>
+                    @php
+                        $totaalBetaald = $toernooi->betalingen()->where('status', 'paid')->sum('bedrag');
+                        $aantalBetaaldeJudokas = $toernooi->judokas()->whereNotNull('betaald_op')->count();
+                        $aantalOnbetaaldeJudokas = $toernooi->judokas()->whereNull('betaald_op')->where(function($q) {
+                            $q->whereNotNull('geboortejaar')
+                              ->whereNotNull('geslacht')
+                              ->whereNotNull('band')
+                              ->whereNotNull('gewicht');
+                        })->count();
+                    @endphp
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-2xl font-bold text-green-600">€{{ number_format($totaalBetaald, 2, ',', '.') }}</p>
+                            <p class="text-sm text-gray-600">Totaal ontvangen</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-green-600">{{ $aantalBetaaldeJudokas }}</p>
+                            <p class="text-sm text-gray-600">Betaalde judoka's</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-orange-600">{{ $aantalOnbetaaldeJudokas }}</p>
+                            <p class="text-sm text-gray-600">Wachtend op betaling</p>
+                        </div>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            <div class="mt-4 text-right">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
+                    Betaling Instellingen Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- BLOKTIJDEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Bloktijden</h2>

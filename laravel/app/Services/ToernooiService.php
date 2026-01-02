@@ -85,6 +85,10 @@ class ToernooiService
         $judokas = $toernooi->judokas();
         $poules = $toernooi->poules();
 
+        // Payment statistics
+        $betalingen = $toernooi->betalingen()->where('status', 'paid');
+        $betaaldeJudokas = $judokas->whereNotNull('betaald_op')->count();
+
         return [
             'totaal_judokas' => $judokas->count(),
             'totaal_poules' => $poules->count(),
@@ -95,6 +99,10 @@ class ToernooiService
             'gewogen' => $judokas->whereNotNull('gewicht_gewogen')->count(),
             'per_leeftijdsklasse' => $this->getStatistiekenPerLeeftijdsklasse($toernooi),
             'per_blok' => $this->getStatistiekenPerBlok($toernooi),
+            // Payment stats
+            'betaald_judokas' => $betaaldeJudokas,
+            'totaal_ontvangen' => $betalingen->sum('bedrag'),
+            'aantal_betalingen' => $betalingen->count(),
         ];
     }
 

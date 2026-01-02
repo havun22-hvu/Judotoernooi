@@ -11,38 +11,46 @@
                 <h3 class="font-bold text-lg">{{ $judoka->naam }}</h3>
                 <p class="text-sm text-gray-600">{{ $judoka->club?->naam ?? 'Onbekend' }}</p>
             </div>
-            @if($judoka->weegkaart_token)
             <div class="qr-placeholder">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(route('weegkaart.show', $judoka->weegkaart_token)) }}"
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(route('toernooi.noodplan.weegkaart', [$toernooi, $judoka])) }}"
                      alt="QR" class="w-full h-full">
             </div>
-            @else
-            <div class="qr-placeholder">
-                Geen QR
-            </div>
-            @endif
         </div>
+
+        @php
+            $poule = $judoka->poules->first();
+        @endphp
+
+        @if($poule)
+        <div class="mb-2 p-2 bg-blue-50 rounded text-center">
+            <span class="font-bold text-blue-800">Mat {{ $poule->mat?->nummer ?? '?' }}</span>
+            <span class="mx-1 text-gray-400">|</span>
+            <span class="text-blue-700">Blok {{ $poule->blok?->nummer ?? '?' }}</span>
+            <span class="mx-1 text-gray-400">|</span>
+            <span class="text-blue-700">Poule {{ $poule->nummer }}</span>
+        </div>
+        @else
+        <div class="mb-2 p-2 bg-yellow-50 rounded text-center text-yellow-700 text-sm">
+            Nog geen poule toegewezen
+        </div>
+        @endif
 
         <table class="w-full text-xs">
             <tr>
-                <td class="py-1 text-gray-500">Geboortedatum:</td>
-                <td class="py-1 font-medium">{{ $judoka->geboortedatum?->format('d-m-Y') ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-1 text-gray-500">Leeftijd:</td>
-                <td class="py-1 font-medium">{{ $judoka->geboortedatum?->age ?? '-' }} jaar</td>
-            </tr>
-            <tr>
                 <td class="py-1 text-gray-500">Geslacht:</td>
-                <td class="py-1 font-medium">{{ $judoka->geslacht?->label() ?? '-' }}</td>
+                <td class="py-1 font-medium">{{ $judoka->geslacht_enum?->label() ?? $judoka->geslacht ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="py-1 text-gray-500">Band:</td>
-                <td class="py-1 font-medium">{{ $judoka->band?->label() ?? '-' }}</td>
+                <td class="py-1 font-medium">{{ $judoka->band_enum?->label() ?? $judoka->band ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="py-1 text-gray-500">Gewichtsklasse:</td>
                 <td class="py-1 font-medium">{{ $judoka->gewichtsklasse ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="py-1 text-gray-500">Geboortejaar:</td>
+                <td class="py-1 font-medium">{{ $judoka->geboortejaar ?? '-' }}</td>
             </tr>
             <tr class="border-t">
                 <td class="py-1 text-gray-500">Gewogen:</td>

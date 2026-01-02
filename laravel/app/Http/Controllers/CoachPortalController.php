@@ -144,6 +144,10 @@ class CoachPortalController extends Controller
 
         $leeftijdsklassen = Leeftijdsklasse::cases();
 
+        // Calculate payment info
+        $volledigeOnbetaald = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
+        $betaald = $judokas->filter(fn($j) => $j->isBetaald());
+
         return view('pages.coach.judokas', [
             'uitnodiging' => $uitnodiging,
             'toernooi' => $toernooi,
@@ -159,6 +163,11 @@ class CoachPortalController extends Controller
             'totaalJudokas' => $toernooi->judokas()->count(),
             'eliminatieGewichtsklassen' => $toernooi->eliminatie_gewichtsklassen ?? [],
             'wedstrijdSysteem' => $toernooi->wedstrijd_systeem ?? [],
+            // Payment info
+            'betalingActief' => $toernooi->betaling_actief,
+            'inschrijfgeld' => $toernooi->inschrijfgeld,
+            'volledigeOnbetaald' => $volledigeOnbetaald,
+            'aantalBetaald' => $betaald->count(),
         ]);
     }
 
@@ -364,6 +373,120 @@ class CoachPortalController extends Controller
     }
 
     // ========================================
+    // Payment methods (token-based, legacy)
+    // ========================================
+
+    public function afrekenen(Request $request, string $token): View|RedirectResponse
+    {
+        $uitnodiging = $this->getUitnodiging($token);
+
+        if (!$uitnodiging || !$this->checkIngelogd($request, $uitnodiging)) {
+            return redirect()->route('coach.portal', $token);
+        }
+
+        $toernooi = $uitnodiging->toernooi;
+
+        if (!$toernooi->betaling_actief) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Betalingen zijn niet actief voor dit toernooi');
+        }
+
+        $club = $uitnodiging->club;
+
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->orderBy('naam')
+            ->get();
+
+        $klaarVoorBetaling = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
+        $reedsBetaald = $judokas->filter(fn($j) => $j->isBetaald());
+
+        $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
+
+        return view('pages.coach.afrekenen', [
+            'uitnodiging' => $uitnodiging,
+            'toernooi' => $toernooi,
+            'club' => $club,
+            'klaarVoorBetaling' => $klaarVoorBetaling,
+            'reedsBetaald' => $reedsBetaald,
+            'totaalBedrag' => $totaalBedrag,
+            'inschrijfgeld' => $toernooi->inschrijfgeld,
+        ]);
+    }
+
+    public function betalen(Request $request, string $token): RedirectResponse
+    {
+        $uitnodiging = $this->getUitnodiging($token);
+
+        if (!$uitnodiging || !$this->checkIngelogd($request, $uitnodiging)) {
+            abort(403);
+        }
+
+        $toernooi = $uitnodiging->toernooi;
+
+        if (!$toernooi->betaling_actief) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Betalingen zijn niet actief');
+        }
+
+        $club = $uitnodiging->club;
+
+        $klaarVoorBetaling = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->get()
+            ->filter(fn($j) => $j->isKlaarVoorBetaling());
+
+        if ($klaarVoorBetaling->isEmpty()) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Geen judoka\'s om af te rekenen');
+        }
+
+        $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
+
+        // TODO: Mollie integratie
+        $betaling = \App\Models\Betaling::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+            'mollie_payment_id' => 'SIMULATED_' . uniqid(),
+            'bedrag' => $totaalBedrag,
+            'aantal_judokas' => $klaarVoorBetaling->count(),
+            'status' => \App\Models\Betaling::STATUS_PAID,
+            'betaald_op' => now(),
+        ]);
+
+        foreach ($klaarVoorBetaling as $judoka) {
+            $judoka->update([
+                'betaling_id' => $betaling->id,
+                'betaald_op' => now(),
+            ]);
+        }
+
+        return redirect()->route('coach.betaling.succes', $token)
+            ->with('success', 'Betaling succesvol!');
+    }
+
+    public function betalingSucces(Request $request, string $token): View|RedirectResponse
+    {
+        $uitnodiging = $this->getUitnodiging($token);
+
+        if (!$uitnodiging || !$this->checkIngelogd($request, $uitnodiging)) {
+            return redirect()->route('coach.portal', $token);
+        }
+
+        return view('pages.coach.betaling-succes', [
+            'uitnodiging' => $uitnodiging,
+            'toernooi' => $uitnodiging->toernooi,
+            'club' => $uitnodiging->club,
+        ]);
+    }
+
+    public function betalingGeannuleerd(Request $request, string $token): RedirectResponse
+    {
+        return redirect()->route('coach.judokas', $token)
+            ->with('warning', 'Betaling geannuleerd');
+    }
+
+    // ========================================
     // Portal code + PIN based methods (new system)
     // ========================================
 
@@ -460,6 +583,10 @@ class CoachPortalController extends Controller
 
         $leeftijdsklassen = Leeftijdsklasse::cases();
 
+        // Calculate payment info
+        $volledigeOnbetaald = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
+        $betaald = $judokas->filter(fn($j) => $j->isBetaald());
+
         return view('pages.coach.judokas', [
             'coach' => $coach,
             'toernooi' => $toernooi,
@@ -477,6 +604,11 @@ class CoachPortalController extends Controller
             'code' => $code,
             'eliminatieGewichtsklassen' => $toernooi->eliminatie_gewichtsklassen ?? [],
             'wedstrijdSysteem' => $toernooi->wedstrijd_systeem ?? [],
+            // Payment info
+            'betalingActief' => $toernooi->betaling_actief,
+            'inschrijfgeld' => $toernooi->inschrijfgeld,
+            'volledigeOnbetaald' => $volledigeOnbetaald,
+            'aantalBetaald' => $betaald->count(),
         ]);
     }
 
@@ -803,6 +935,130 @@ class CoachPortalController extends Controller
 
         return redirect()->route('coach.portal.judokas', $code)
             ->with('success', "{$synced} judoka(s) succesvol gesynced!");
+    }
+
+    // ========================================
+    // Payment methods (code-based)
+    // ========================================
+
+    public function afrekenCode(Request $request, string $code): View|RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            return redirect()->route('coach.portal.code', $code);
+        }
+
+        $toernooi = $coach->toernooi;
+
+        if (!$toernooi->betaling_actief) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Betalingen zijn niet actief voor dit toernooi');
+        }
+
+        $club = $coach->club;
+
+        // Get judokas ready for payment
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->orderBy('naam')
+            ->get();
+
+        $klaarVoorBetaling = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
+        $reedsBetaald = $judokas->filter(fn($j) => $j->isBetaald());
+
+        $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
+
+        return view('pages.coach.afrekenen', [
+            'coach' => $coach,
+            'toernooi' => $toernooi,
+            'club' => $club,
+            'klaarVoorBetaling' => $klaarVoorBetaling,
+            'reedsBetaald' => $reedsBetaald,
+            'totaalBedrag' => $totaalBedrag,
+            'inschrijfgeld' => $toernooi->inschrijfgeld,
+            'useCode' => true,
+            'code' => $code,
+        ]);
+    }
+
+    public function betalenCode(Request $request, string $code): RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            abort(403);
+        }
+
+        $toernooi = $coach->toernooi;
+
+        if (!$toernooi->betaling_actief) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Betalingen zijn niet actief');
+        }
+
+        $club = $coach->club;
+
+        // Get judokas ready for payment
+        $klaarVoorBetaling = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->get()
+            ->filter(fn($j) => $j->isKlaarVoorBetaling());
+
+        if ($klaarVoorBetaling->isEmpty()) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Geen judoka\'s om af te rekenen');
+        }
+
+        $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
+
+        // TODO: Mollie integratie - voor nu simuleren we een betaling
+        // Dit wordt later vervangen door echte Mollie integratie
+
+        // Create betaling record
+        $betaling = \App\Models\Betaling::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+            'mollie_payment_id' => 'SIMULATED_' . uniqid(),
+            'bedrag' => $totaalBedrag,
+            'aantal_judokas' => $klaarVoorBetaling->count(),
+            'status' => \App\Models\Betaling::STATUS_PAID, // Simuleer succesvolle betaling
+            'betaald_op' => now(),
+        ]);
+
+        // Mark all judokas as paid
+        foreach ($klaarVoorBetaling as $judoka) {
+            $judoka->update([
+                'betaling_id' => $betaling->id,
+                'betaald_op' => now(),
+            ]);
+        }
+
+        return redirect()->route('coach.portal.betaling.succes', $code)
+            ->with('success', 'Betaling succesvol!');
+    }
+
+    public function betalingSuccesCode(Request $request, string $code): View|RedirectResponse
+    {
+        $coach = $this->getLoggedInCoach($request, $code);
+
+        if (!$coach) {
+            return redirect()->route('coach.portal.code', $code);
+        }
+
+        return view('pages.coach.betaling-succes', [
+            'coach' => $coach,
+            'toernooi' => $coach->toernooi,
+            'club' => $coach->club,
+            'useCode' => true,
+            'code' => $code,
+        ]);
+    }
+
+    public function betalingGeannuleerdCode(Request $request, string $code): RedirectResponse
+    {
+        return redirect()->route('coach.portal.judokas', $code)
+            ->with('warning', 'Betaling geannuleerd');
     }
 
     public function resultatenCode(Request $request, string $code): View|RedirectResponse
