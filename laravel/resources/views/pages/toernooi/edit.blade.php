@@ -1411,6 +1411,11 @@ function togglePassword(button) {
         }
     });
 
+    // Reset dirty flag on form submit (prevents false warning)
+    form.addEventListener('submit', () => {
+        markClean();
+    });
+
     // Warn before leaving if there are unsaved changes
     window.addEventListener('beforeunload', (e) => {
         if (isDirty) {
