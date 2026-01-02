@@ -80,6 +80,76 @@ php artisan config:clear
 php artisan cache:clear
 ```
 
+## Mollie Betalingen (Januari 2026)
+
+### Architectuur
+- **Mollie Connect** - Organisatoren koppelen eigen Mollie account via OAuth
+- **Platform fallback** - Voor organisatoren zonder eigen account (toekomst)
+- **Simulatie mode** - Testen zonder echte Mollie keys (staging)
+
+### Bestanden
+```
+app/
+├── Services/MollieService.php      # Dual mode: Connect + Platform
+├── Http/Controllers/
+│   ├── MollieController.php        # OAuth flow + webhook + simulatie
+│   └── CoachPortalController.php   # Afrekenen flow
+├── Models/Betaling.php             # Payment records
+└── Console/Commands/ResetStaging.php
+resources/views/pages/
+├── betaling/simulate.blade.php     # iDEAL simulatie pagina
+└── toernooi/edit.blade.php         # Mollie Connect UI
+```
+
+### Database velden
+**toernooien tabel:**
+- `betaling_actief` - boolean
+- `inschrijfgeld` - decimal(8,2)
+- `mollie_mode` - enum (connect/platform)
+- `mollie_access_token` - encrypted
+- `mollie_refresh_token` - encrypted
+- `mollie_token_expires_at` - datetime
+- `mollie_organization_id` - string
+- `mollie_organization_name` - string
+- `mollie_onboarded` - boolean
+- `platform_toeslag` - decimal (niet in gebruik)
+
+**betalingen tabel:**
+- `toernooi_id`, `club_id`
+- `mollie_payment_id` - unique
+- `bedrag`, `aantal_judokas`
+- `status` - enum (open/pending/paid/failed/expired/canceled)
+- `betaald_op` - timestamp
+
+**judokas tabel:**
+- `betaling_id` - nullable foreign key
+- `betaald_op` - timestamp
+
+### Routes
+```
+GET  /toernooi/{id}/mollie/authorize  → OAuth start
+GET  /mollie/callback                 → OAuth callback
+POST /toernooi/{id}/mollie/disconnect → Ontkoppelen
+POST /mollie/webhook                  → Payment updates (CSRF excluded!)
+GET  /betaling/simulate               → Simulatie pagina
+POST /betaling/simulate               → Simulatie afronden
+```
+
+### Env variabelen (nog niet ingesteld)
+```
+MOLLIE_KEY=live_xxx              # Platform fallback
+MOLLIE_CLIENT_ID=xxx             # OAuth app
+MOLLIE_CLIENT_SECRET=xxx         # OAuth app
+```
+
+### Status (3 januari 2026)
+- ✅ Migration gedraaid
+- ✅ MollieService met dual mode
+- ✅ OAuth flow UI
+- ✅ Simulatie mode werkend
+- ✅ Coach afrekenen flow
+- ⏳ Woensdag: Cees' Mollie test account koppelen
+
 ## Documentatie
 
 Uitgebreide docs in `laravel/docs/`:
