@@ -71,6 +71,24 @@
                 </div>
             </div>
 
+            <!-- Poule Export -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Poule Export</h3>
+                    <p class="text-sm text-gray-500">Alle poules per blok (1 tab per blok, gesorteerd op mat)</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'xlsx']) }}"
+                       class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                        Excel (.xlsx)
+                    </a>
+                    <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'csv']) }}"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        CSV
+                    </a>
+                </div>
+            </div>
+
             <!-- Weegkaarten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ openWeeg: false, openCoach: false }">
                 <div>

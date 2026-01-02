@@ -9,8 +9,10 @@ use App\Models\CoachKaart;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Exports\PouleExport;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class NoodplanController extends Controller
 {
@@ -225,6 +227,19 @@ class NoodplanController extends Controller
         $poule->load(['judokas', 'wedstrijden']);
 
         return view('pages.noodplan.poule-schema', compact('toernooi', 'poule'));
+    }
+
+    /**
+     * Export poules naar Excel/CSV (1 sheet per blok)
+     */
+    public function exportPoules(Toernooi $toernooi, string $format = 'xlsx')
+    {
+        $filename = sprintf('poules_%s_%s', $toernooi->slug, now()->format('Y-m-d'));
+
+        return match($format) {
+            'csv' => Excel::download(new PouleExport($toernooi), "{$filename}.csv", \Maatwebsite\Excel\Excel::CSV),
+            default => Excel::download(new PouleExport($toernooi), "{$filename}.xlsx"),
+        };
     }
 
     /**
