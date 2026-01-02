@@ -50,13 +50,28 @@ class EliminatieService
      * DOORSCHUIF FORMULE:
      * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
      * - Oneven slot → wit positie, even slot → blauw positie
+     *
+     * GESPIEGELD (B-groep onderste helft):
+     * - Voor visuele spiegeling worden wit/blauw locaties omgedraaid
+     * - slot_wit = 2N (even), slot_blauw = 2N - 1 (oneven)
      */
-    private function berekenLocaties(int $bracketPositie): array
+    private function berekenLocaties(int $bracketPositie, bool $gespiegeld = false): array
     {
         // Formule: slot_wit = 2N-1, slot_blauw = 2N (waar N = bracket_positie)
+        $slotOneven = ($bracketPositie - 1) * 2 + 1;   // = 2N - 1
+        $slotEven = ($bracketPositie - 1) * 2 + 2;     // = 2N
+
+        if ($gespiegeld) {
+            // Onderste helft B-groep: wit/blauw omgedraaid voor visuele spiegeling
+            return [
+                'locatie_wit' => $slotEven,    // Even slot voor wit
+                'locatie_blauw' => $slotOneven, // Oneven slot voor blauw
+            ];
+        }
+
         return [
-            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,   // = 2N - 1
-            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2, // = 2N
+            'locatie_wit' => $slotOneven,
+            'locatie_blauw' => $slotEven,
         ];
     }
 
@@ -180,20 +195,41 @@ class EliminatieService
         }
 
         // NORMAAL GEVAL: N is niet exacte macht van 2, dus eerste ronde heeft byes
-        $eersteRondeWedstrijden = $n - $d;  // Echte wedstrijden (rest zijn byes)
+        // Bracket grootte = D wedstrijden in eerste ronde
+        // Echte wedstrijden = N - D (beide slots gevuld)
+        // Bye wedstrijden = 2*D - N (alleen wit gevuld)
+        $totaalEersteRonde = $d;              // Totaal wedstrijden in eerste ronde
+        $echteWedstrijden = $n - $d;          // Wedstrijden met 2 judoka's
+        $byeWedstrijden = 2 * $d - $n;        // Wedstrijden met 1 judoka (bye)
         $eersteRonde = $this->getEersteRondeNaam($n);
 
-        // Verdeel: eerst de judoka's die moeten vechten, dan byes
-        $wedstrijdJudokas = array_slice($judokaIds, 0, $eersteRondeWedstrijden * 2);
-        $byeJudokas = array_slice($judokaIds, $eersteRondeWedstrijden * 2);
+        // Verdeel judoka's: eerst voor echte wedstrijden, dan byes
+        $wedstrijdJudokas = array_slice($judokaIds, 0, $echteWedstrijden * 2);
+        $byeJudokas = array_slice($judokaIds, $echteWedstrijden * 2);
 
-        // === EERSTE RONDE (met byes) ===
-        for ($i = 0; $i < $eersteRondeWedstrijden; $i++) {
+        // === EERSTE RONDE: echte wedstrijden ===
+        for ($i = 0; $i < $echteWedstrijden; $i++) {
             $bracketPositie = $i + 1;
             $wedstrijd = Wedstrijd::create([
                 'poule_id' => $poule->id,
                 'judoka_wit_id' => $wedstrijdJudokas[$i * 2],
                 'judoka_blauw_id' => $wedstrijdJudokas[$i * 2 + 1],
+                'volgorde' => $volgorde++,
+                'ronde' => $eersteRonde,
+                'groep' => 'A',
+                'bracket_positie' => $bracketPositie,
+                ...$this->berekenLocaties($bracketPositie),
+            ]);
+            $wedstrijdenPerRonde[$eersteRonde][] = $wedstrijd;
+        }
+
+        // === EERSTE RONDE: bye wedstrijden (alleen wit, blauw = null) ===
+        for ($i = 0; $i < $byeWedstrijden; $i++) {
+            $bracketPositie = $echteWedstrijden + $i + 1;
+            $wedstrijd = Wedstrijd::create([
+                'poule_id' => $poule->id,
+                'judoka_wit_id' => $byeJudokas[$i],
+                'judoka_blauw_id' => null,  // BYE - geen tegenstander
                 'volgorde' => $volgorde++,
                 'ronde' => $eersteRonde,
                 'groep' => 'A',
@@ -229,7 +265,8 @@ class EliminatieService
         }
 
         // === KOPPEL WEDSTRIJDEN ===
-        $this->koppelAGroepWedstrijden($wedstrijdenPerRonde, $byeJudokas);
+        // Bye judoka's staan al in eerste ronde, geen extra plaatsing nodig
+        $this->koppelAGroepWedstrijden($wedstrijdenPerRonde, []);
 
         return $wedstrijdenPerRonde;
     }
@@ -385,23 +422,27 @@ class EliminatieService
         // === STAP 3: Bereken totaal eerste golf verliezers ===
         $eersteGolfVerliezers = $a1Verliezers + $a2Verliezers;
 
-        // === STAP 4: Bepaal B-start niveau op basis van MINIMALE SLOTS ===
+        // === STAP 4: Bepaal ENKELE of DUBBELE rondes ===
+        // Dubbel als eerste ronde meer verliezers heeft dan tweede ronde
+        // Dan passen ze niet samen en moeten B-winnaars wachten op A-verliezers
+        $dubbelRondes = ($a1Verliezers > $a2Verliezers);
+
+        // === STAP 5: Bepaal B-start niveau op basis van MINIMALE SLOTS ===
+        // Bij DUBBEL: A1 verliezers vechten eerst onderling
+        // Bij ENKEL: A1 + A2 komen samen in één B-ronde
+        //
         // B-level = kleinste niveau waar verliezers PRECIES passen
         // 1-4 verl → B-1/2 (2 wed = 4 slots)
         // 5-8 verl → B-1/4 (4 wed = 8 slots)
         // 9-16 verl → B-1/8 (8 wed = 16 slots)
         // 17-32 verl → B-1/16 (16 wed = 32 slots)
-        $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($eersteGolfVerliezers);
+        $bStartVerliezers = $dubbelRondes ? $a1Verliezers : $eersteGolfVerliezers;
+        $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($bStartVerliezers);
         $bStartRonde = $this->getBRondeNaam($bStartWedstrijden);
-
-        // === STAP 5: Bepaal ENKELE of DUBBELE rondes ===
-        // Dubbel als eerste ronde meer verliezers heeft dan tweede ronde
-        // Dan passen ze niet samen en moeten B-winnaars wachten op A-verliezers
-        $dubbelRondes = ($a1Verliezers > $a2Verliezers);
 
         // === STAP 6: Bereken B-byes ===
         $bCapaciteit = 2 * $bStartWedstrijden;
-        $bByes = $bCapaciteit - $eersteGolfVerliezers;
+        $bByes = $bCapaciteit - $bStartVerliezers;
 
         Log::info("B-groep generatie: N={$n}, D={$d}, A1-verl={$a1Verliezers}, A2-verl={$a2Verliezers}, EersteGolf={$eersteGolfVerliezers}, B-start={$bStartRonde}({$bStartWedstrijden} wed), Dubbel=" . ($dubbelRondes ? 'Ja' : 'Nee') . ", B-byes={$bByes}, aantalBrons={$aantalBrons}");
 
@@ -432,9 +473,14 @@ class EliminatieService
         // Genereer rondes van groot naar klein
         while ($huidigeWedstrijden >= 2) {
             $rondeNaam = $this->getBRondeNaam($huidigeWedstrijden);
+            $halverwege = $huidigeWedstrijden / 2;
 
             for ($i = 0; $i < $huidigeWedstrijden; $i++) {
                 $bracketPositie = $i + 1;
+                // Onderste helft: gespiegelde locaties (wit/blauw omgedraaid)
+                $isOndersteHelft = $bracketPositie > $halverwege;
+                $locaties = $this->berekenLocaties($bracketPositie, $isOndersteHelft);
+
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
                     'judoka_wit_id' => null,
@@ -443,7 +489,7 @@ class EliminatieService
                     'ronde' => $rondeNaam,
                     'groep' => 'B',
                     'bracket_positie' => $bracketPositie,
-                    ...$this->berekenLocaties($bracketPositie),
+                    ...$locaties,
                 ]);
                 $wedstrijdenPerRonde[$rondeNaam][] = $wedstrijd;
             }
