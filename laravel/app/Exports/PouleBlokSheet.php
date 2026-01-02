@@ -7,9 +7,15 @@ use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PouleBlokSheet implements FromArray, WithTitle, WithStyles
 {
+    protected array $matRows = [];
+    protected array $pouleRows = [];
+    protected array $headerRows = [];
+    protected array $warningRows = [];
+
     public function __construct(
         protected Blok $blok
     ) {}
@@ -21,7 +27,14 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
 
     public function array(): array
     {
+        // Reset row tracking
+        $this->matRows = [];
+        $this->pouleRows = [];
+        $this->headerRows = [];
+        $this->warningRows = [];
+
         $rows = [];
+        $rowNum = 1;
         $currentMat = null;
 
         // Group poules by mat
@@ -33,9 +46,12 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
         // Check if any poule has no mat assigned
         $heeftGeenMat = $poules->contains(fn($p) => $p->mat_id === null);
         if ($heeftGeenMat) {
-            $rows[] = ['⚠️ LET OP: Niet alle poules zijn toegewezen aan een mat!'];
+            $rows[] = ['LET OP: Niet alle poules zijn toegewezen aan een mat!'];
+            $this->warningRows[] = $rowNum++;
             $rows[] = [];
+            $rowNum++;
             $rows[] = [];
+            $rowNum++;
         }
 
         foreach ($poules as $poule) {
@@ -47,35 +63,34 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
                 if ($currentMat !== null) {
                     // Extra lege rijen tussen matten
                     $rows[] = [];
+                    $rowNum++;
                     $rows[] = [];
+                    $rowNum++;
                     $rows[] = [];
+                    $rowNum++;
                 }
                 $rows[] = [$matLabel];
+                $this->matRows[] = $rowNum++;
                 $rows[] = [];
+                $rowNum++;
                 $currentMat = $matNummer;
             }
 
-            // Poule header met alle info
-            $pouleInfo = [];
-            if ($poule->leeftijdsklasse) {
-                $pouleInfo[] = $poule->leeftijdsklasse;
-            }
-            if ($poule->gewichtsklasse) {
-                $pouleInfo[] = $poule->gewichtsklasse;
-            }
-
-            // Gebruik titel als fallback als leeftijds/gewichtsklasse ontbreken
-            if (empty($pouleInfo) && $poule->titel) {
-                $pouleInfo[] = $poule->titel;
-            }
-
-            $pouleInfo[] = "Poule {$poule->nummer}";
-            $pouleInfo[] = "({$poule->aantal_judokas} judoka's, {$poule->aantal_wedstrijden} wedstrijden)";
-
-            $rows[] = [implode(' | ', $pouleInfo)];
+            // Poule header
+            $pouleHeader = sprintf(
+                '%s | %s | Poule %d | (%d judoka\'s, %d wedstrijden)',
+                $poule->leeftijdsklasse ?? 'Onbekend',
+                $poule->gewichtsklasse ?? 'Onbekend',
+                $poule->nummer,
+                $poule->aantal_judokas,
+                $poule->aantal_wedstrijden
+            );
+            $rows[] = [$pouleHeader];
+            $this->pouleRows[] = $rowNum++;
 
             // Column headers
             $rows[] = ['Naam', 'Band', 'Club', 'Gewicht', 'Geslacht', 'Geboortejaar'];
+            $this->headerRows[] = $rowNum++;
 
             // Judoka rows
             foreach ($poule->judokas as $judoka) {
@@ -87,11 +102,12 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
                     $judoka->geslacht === 'M' ? 'Man' : 'Vrouw',
                     $judoka->geboortejaar,
                 ];
+                $rowNum++;
             }
 
-            // Lege rijen na elke poule
+            // Lege rij na elke poule
             $rows[] = [];
-            $rows[] = [];
+            $rowNum++;
         }
 
         return $rows;
@@ -101,50 +117,48 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
     {
         $styles = [];
 
-        // Find mat headers and poule headers to style them
-        $row = 1;
-        foreach ($this->array() as $data) {
-            if (!empty($data) && count($data) === 1) {
-                $value = $data[0] ?? '';
-                if (str_starts_with($value, '⚠️')) {
-                    // Warning - red background
-                    $styles[$row] = [
-                        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'CC0000']],
-                        'fill' => [
-                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'FFEEEE'],
-                        ],
-                    ];
-                } elseif (str_starts_with($value, 'Mat ') || str_starts_with($value, 'Geen mat')) {
-                    // Mat header - bold and larger, dark background
-                    $styles[$row] = [
-                        'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
-                        'fill' => [
-                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => '4472C4'],
-                        ],
-                    ];
-                } elseif (str_contains($value, 'Poule')) {
-                    // Poule header - bold, light blue background
-                    $styles[$row] = [
-                        'font' => ['bold' => true, 'size' => 11],
-                        'fill' => [
-                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'D6DCE4'],
-                        ],
-                    ];
-                }
-            } elseif (!empty($data) && ($data[0] ?? '') === 'Naam') {
-                // Column headers - bold, light gray
-                $styles[$row] = [
-                    'font' => ['bold' => true],
-                    'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => 'F2F2F2'],
-                    ],
-                ];
-            }
-            $row++;
+        // Warning rows - red
+        foreach ($this->warningRows as $row) {
+            $styles[$row] = [
+                'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'CC0000']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'FFEEEE'],
+                ],
+            ];
+        }
+
+        // Mat headers - blue background, white text
+        foreach ($this->matRows as $row) {
+            $styles[$row] = [
+                'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '4472C4'],
+                ],
+            ];
+        }
+
+        // Poule headers - light blue background
+        foreach ($this->pouleRows as $row) {
+            $styles[$row] = [
+                'font' => ['bold' => true, 'size' => 11],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'D6DCE4'],
+                ],
+            ];
+        }
+
+        // Column headers - light gray
+        foreach ($this->headerRows as $row) {
+            $styles[$row] = [
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'F2F2F2'],
+                ],
+            ];
         }
 
         // Auto-size columns
