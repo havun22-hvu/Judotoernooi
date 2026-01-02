@@ -405,7 +405,8 @@
                     6 => [[1,2], [3,4], [5,6], [1,3], [2,5], [4,6], [3,5], [2,4], [1,6], [2,3], [4,5], [3,6], [1,4], [2,6], [1,5]],
                     7 => [[1,2], [3,4], [5,6], [1,7], [2,3], [4,5], [6,7], [1,3], [2,4], [5,7], [3,6], [1,4], [2,5], [3,7], [4,6], [1,5], [2,6], [4,7], [1,6], [3,5], [2,7]],
                 ];
-                $opgeslagenSchemas = old('wedstrijd_schemas', $toernooi->wedstrijd_schemas) ?? [];
+                $rawSchemas = old('wedstrijd_schemas', $toernooi->wedstrijd_schemas);
+                $opgeslagenSchemas = is_array($rawSchemas) ? $rawSchemas : [];
             @endphp
 
             <div class="space-y-4" x-data="wedstrijdSchemas()">
@@ -424,7 +425,8 @@
                 <!-- Schema per grootte -->
                 @foreach([2,3,4,5,6,7] as $grootte)
                 @php
-                    $schema = $opgeslagenSchemas[$grootte] ?? $standaardSchemas[$grootte];
+                    $saved = $opgeslagenSchemas[$grootte] ?? null;
+                    $schema = is_array($saved) ? $saved : $standaardSchemas[$grootte];
                     $aantalWed = count($schema);
                 @endphp
                 <div x-show="activeTab === {{ $grootte }}" x-cloak class="pt-2">

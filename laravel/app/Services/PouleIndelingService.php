@@ -41,12 +41,82 @@ class PouleIndelingService
     }
 
     /**
+     * Recalculate age class and weight class for all judokas
+     * Important after year change when judokas move to different age categories
+     * Uses the tournament year (from datum) for age calculation
+     */
+    public function herberkenKlassen(Toernooi $toernooi): int
+    {
+        $bijgewerkt = 0;
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
+        // Use tournament year, fallback to current year
+        $toernooiJaar = $toernooi->datum?->year ?? (int) date('Y');
+
+        foreach ($toernooi->judokas as $judoka) {
+            $leeftijd = $toernooiJaar - $judoka->geboortejaar;
+            $nieuweLeeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
+
+            // Determine new weight class based on NEW age class and weight
+            $nieuweGewichtsklasse = $judoka->gewichtsklasse;
+            if ($judoka->gewicht) {
+                $nieuweGewichtsklasse = $this->bepaalGewichtsklasseVoorLeeftijd(
+                    $judoka->gewicht,
+                    $nieuweLeeftijdsklasse,
+                    $tolerantie
+                );
+            }
+
+            // Update if changed
+            if ($judoka->leeftijdsklasse !== $nieuweLeeftijdsklasse->label() ||
+                $judoka->gewichtsklasse !== $nieuweGewichtsklasse) {
+                $judoka->update([
+                    'leeftijdsklasse' => $nieuweLeeftijdsklasse->label(),
+                    'gewichtsklasse' => $nieuweGewichtsklasse,
+                ]);
+                $bijgewerkt++;
+            }
+        }
+
+        return $bijgewerkt;
+    }
+
+    /**
+     * Determine weight class for a given weight and age class
+     */
+    private function bepaalGewichtsklasseVoorLeeftijd(float $gewicht, Leeftijdsklasse $leeftijdsklasse, float $tolerantie = 0.5): string
+    {
+        $klassen = $leeftijdsklasse->gewichtsklassen();
+
+        foreach ($klassen as $klasse) {
+            if ($klasse > 0) {
+                // Plus category (minimum weight) - always last
+                return "+{$klasse}";
+            }
+            // Minus category (maximum weight) with tolerance
+            if ($gewicht <= abs($klasse) + $tolerantie) {
+                return "{$klasse}";
+            }
+        }
+
+        // Fallback to highest (+ category)
+        $hoogste = end($klassen);
+        return $hoogste > 0 ? "+{$hoogste}" : "{$hoogste}";
+    }
+
+    /**
      * Generate pool division for a tournament
      */
     public function genereerPouleIndeling(Toernooi $toernooi): array
     {
         // Initialize settings from tournament
         $this->initializeFromToernooi($toernooi);
+
+        // Recalculate age/weight classes for all judokas (important after year change)
+        $this->herberkenKlassen($toernooi);
+
+        // Recalculate judoka codes after class changes
+        $this->herberekenJudokaCodes($toernooi);
 
         return DB::transaction(function () use ($toernooi) {
             // Delete existing pools and their matches
