@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Exclude public API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'publiek/*/favorieten',
+            'mollie/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

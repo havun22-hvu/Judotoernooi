@@ -11,9 +11,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Controllers\PubliekController;
+use App\Services\MollieService;
 
 class CoachPortalController extends Controller
 {
+    public function __construct(
+        private MollieService $mollieService
+    ) {}
+
     private function getUitnodiging(string $token): ?ClubUitnodiging
     {
         return ClubUitnodiging::where('token', $token)
@@ -443,26 +448,61 @@ class CoachPortalController extends Controller
 
         $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
 
-        // TODO: Mollie integratie
+        // Description for bank statement
+        $description = "{$toernooi->naam} - {$club->naam} - {$klaarVoorBetaling->count()} judoka's";
+
+        // Create betaling record first
         $betaling = \App\Models\Betaling::create([
             'toernooi_id' => $toernooi->id,
             'club_id' => $club->id,
-            'mollie_payment_id' => 'SIMULATED_' . uniqid(),
+            'mollie_payment_id' => 'pending_' . uniqid(),
             'bedrag' => $totaalBedrag,
             'aantal_judokas' => $klaarVoorBetaling->count(),
-            'status' => \App\Models\Betaling::STATUS_PAID,
-            'betaald_op' => now(),
+            'status' => \App\Models\Betaling::STATUS_OPEN,
         ]);
 
+        // Link judokas to betaling
         foreach ($klaarVoorBetaling as $judoka) {
-            $judoka->update([
-                'betaling_id' => $betaling->id,
-                'betaald_op' => now(),
-            ]);
+            $judoka->update(['betaling_id' => $betaling->id]);
         }
 
-        return redirect()->route('coach.betaling.succes', $token)
-            ->with('success', 'Betaling succesvol!');
+        // Check if simulation mode or real Mollie
+        if ($this->mollieService->isSimulationMode()) {
+            $payment = $this->mollieService->simulatePayment([
+                'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => route('coach.betaling.succes', $token),
+                'webhookUrl' => route('mollie.webhook'),
+                'metadata' => ['betaling_id' => $betaling->id],
+            ]);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        }
+
+        // Real Mollie payment
+        try {
+            $this->mollieService->ensureValidToken($toernooi);
+
+            $payment = $this->mollieService->createPayment($toernooi, [
+                'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => route('coach.betaling.succes', $token),
+                'webhookUrl' => route('mollie.webhook'),
+                'metadata' => ['betaling_id' => $betaling->id],
+            ]);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        } catch (\Exception $e) {
+            \Log::error('Mollie payment creation failed', ['error' => $e->getMessage()]);
+            $betaling->update(['status' => \App\Models\Betaling::STATUS_FAILED]);
+
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Fout bij aanmaken betaling: ' . $e->getMessage());
+        }
     }
 
     public function betalingSucces(Request $request, string $token): View|RedirectResponse
@@ -1012,30 +1052,62 @@ class CoachPortalController extends Controller
 
         $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
 
-        // TODO: Mollie integratie - voor nu simuleren we een betaling
-        // Dit wordt later vervangen door echte Mollie integratie
+        // Description for bank statement
+        $description = "{$toernooi->naam} - {$club->naam} - {$klaarVoorBetaling->count()} judoka's";
 
-        // Create betaling record
+        // Create betaling record first
         $betaling = \App\Models\Betaling::create([
             'toernooi_id' => $toernooi->id,
             'club_id' => $club->id,
-            'mollie_payment_id' => 'SIMULATED_' . uniqid(),
+            'mollie_payment_id' => 'pending_' . uniqid(),
             'bedrag' => $totaalBedrag,
             'aantal_judokas' => $klaarVoorBetaling->count(),
-            'status' => \App\Models\Betaling::STATUS_PAID, // Simuleer succesvolle betaling
-            'betaald_op' => now(),
+            'status' => \App\Models\Betaling::STATUS_OPEN,
         ]);
 
-        // Mark all judokas as paid
+        // Link judokas to betaling
         foreach ($klaarVoorBetaling as $judoka) {
-            $judoka->update([
-                'betaling_id' => $betaling->id,
-                'betaald_op' => now(),
-            ]);
+            $judoka->update(['betaling_id' => $betaling->id]);
         }
 
-        return redirect()->route('coach.portal.betaling.succes', $code)
-            ->with('success', 'Betaling succesvol!');
+        // Check if simulation mode or real Mollie
+        if ($this->mollieService->isSimulationMode()) {
+            // Simulation mode
+            $payment = $this->mollieService->simulatePayment([
+                'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => route('coach.portal.betaling.succes', $code),
+                'webhookUrl' => route('mollie.webhook'),
+                'metadata' => ['betaling_id' => $betaling->id],
+            ]);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        }
+
+        // Real Mollie payment
+        try {
+            $this->mollieService->ensureValidToken($toernooi);
+
+            $payment = $this->mollieService->createPayment($toernooi, [
+                'amount' => ['currency' => 'EUR', 'value' => number_format($totaalBedrag, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => route('coach.portal.betaling.succes', $code),
+                'webhookUrl' => route('mollie.webhook'),
+                'metadata' => ['betaling_id' => $betaling->id],
+            ]);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        } catch (\Exception $e) {
+            \Log::error('Mollie payment creation failed', ['error' => $e->getMessage()]);
+            $betaling->update(['status' => \App\Models\Betaling::STATUS_FAILED]);
+
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Fout bij aanmaken betaling: ' . $e->getMessage());
+        }
     }
 
     public function betalingSuccesCode(Request $request, string $code): View|RedirectResponse
