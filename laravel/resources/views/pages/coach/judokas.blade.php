@@ -247,9 +247,48 @@
                 <span class="text-yellow-600 text-xl mr-2">⚠</span>
                 <div>
                     <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
-                    <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet gesynced worden. Vul de ontbrekende gegevens aan.</p>
+                    <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet {{ ($betalingActief ?? false) ? 'afgerekend' : 'gesynced' }} worden. Vul de ontbrekende gegevens aan.</p>
                 </div>
             </div>
+        </div>
+        @endif
+
+        {{-- Payment Box --}}
+        @if($betalingActief ?? false)
+        <div class="bg-white rounded-lg shadow p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $aantalBetaald ?? 0 }} betaald</span>
+                    </span>
+                    @if(($volledigeOnbetaald ?? collect())->count() > 0)
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $volledigeOnbetaald->count() }} klaar voor betaling</span>
+                    </span>
+                    @endif
+                    @if($onvolledigeJudokas->count() > 0)
+                    <span class="flex items-center gap-1">
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                        <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} incompleet</span>
+                    </span>
+                    @endif
+                </div>
+                @if(($volledigeOnbetaald ?? collect())->count() > 0)
+                <a href="{{ isset($useCode) && $useCode ? route('coach.portal.afrekenen', $code) : route('coach.afrekenen', $uitnodiging->token) }}"
+                   class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    Afrekenen (€{{ number_format($volledigeOnbetaald->count() * ($inschrijfgeld ?? 0), 2, ',', '.') }})
+                </a>
+                @else
+                <span class="text-gray-400 text-sm">Geen judoka's om af te rekenen</span>
+                @endif
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+                Inschrijfgeld: €{{ number_format($inschrijfgeld ?? 0, 2, ',', '.') }} per judoka.
+                Alleen volledige judoka's kunnen afgerekend worden.
+            </p>
         </div>
         @endif
 
@@ -266,6 +305,7 @@
                     $ontbrekend = $judoka->getOntbrekendeVelden();
                     $isSynced = $judoka->isSynced() && !$judoka->isGewijzigdNaSync();
                     $isGewijzigd = $judoka->isGewijzigdNaSync();
+                    $isBetaald = $judoka->isBetaald();
                     // Check of judoka in eliminatie categorie zit
                     $lkKey = null;
                     if ($judoka->geboortejaar && $judoka->geslacht) {
@@ -274,27 +314,60 @@
                         $lkKey = $lkEnum->configKey();
                     }
                     $isEliminatie = $lkKey && $judoka->gewichtsklasse && isset($eliminatieGewichtsklassen[$lkKey]) && in_array($judoka->gewichtsklasse, $eliminatieGewichtsklassen[$lkKey]);
+
+                    // Validatie warnings
+                    $warnings = [];
+                    if ($judoka->gewicht && $judoka->gewicht > 150) {
+                        $warnings[] = "Gewicht {$judoka->gewicht} kg lijkt erg hoog - is dit correct?";
+                    }
+                    if ($judoka->gewicht && $judoka->gewicht < 15) {
+                        $warnings[] = "Gewicht {$judoka->gewicht} kg lijkt erg laag";
+                    }
+                    if ($judoka->geboortejaar && $judoka->geboortejaar >= date('Y')) {
+                        $warnings[] = "Geboortejaar " . $judoka->geboortejaar . " = dit jaar of later?";
+                    }
+                    if ($judoka->geboortejaar && $judoka->geboortejaar < date('Y') - 50) {
+                        $warnings[] = "Leeftijd " . (date('Y') - $judoka->geboortejaar) . " jaar lijkt erg hoog";
+                    }
                 @endphp
-                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')) }}" x-data="{ editing: false }">
+                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '' }}" x-data="{ editing: false }">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
                         <div class="flex items-start gap-2">
-                            @if($isSynced)
-                            <span class="text-green-500 mt-1" title="Gesynced">✓</span>
-                            @elseif($isGewijzigd)
-                            <span class="text-orange-500 mt-1" title="Gewijzigd na sync">⟳</span>
-                            @elseif($isOnvolledig)
-                            <span class="text-yellow-500 mt-1" title="Incompleet">!</span>
+                            @if($betalingActief ?? false)
+                                @if($isBetaald)
+                                <span class="text-green-600 mt-1" title="Betaald">€</span>
+                                @elseif($isOnvolledig)
+                                <span class="text-yellow-500 mt-1" title="Incompleet - kan niet afrekenen">!</span>
+                                @else
+                                <span class="text-blue-500 mt-1" title="Klaar voor betaling">○</span>
+                                @endif
                             @else
-                            <span class="text-gray-300 mt-1" title="Nog niet gesynced">○</span>
+                                @if($isSynced)
+                                <span class="text-green-500 mt-1" title="Gesynced">✓</span>
+                                @elseif($isGewijzigd)
+                                <span class="text-orange-500 mt-1" title="Gewijzigd na sync">⟳</span>
+                                @elseif($isOnvolledig)
+                                <span class="text-yellow-500 mt-1" title="Incompleet">!</span>
+                                @else
+                                <span class="text-gray-300 mt-1" title="Nog niet gesynced">○</span>
+                                @endif
                             @endif
                             <div>
                                 <p class="font-medium {{ $isOnvolledig ? 'text-yellow-800' : 'text-gray-800' }}">
                                     {{ $judoka->naam }}
-                                    @if($isOnvolledig)
-                                    <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
-                                    @elseif($isGewijzigd)
-                                    <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded ml-2">Gewijzigd</span>
+                                    @if($betalingActief ?? false)
+                                        @if($isBetaald)
+                                        <span class="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded ml-2">Betaald</span>
+                                        @elseif($isOnvolledig)
+                                        <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
+                                        @endif
+                                    @else
+                                        @if($isOnvolledig)
+                                        <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded ml-2">Onvolledig</span>
+                                        @elseif($isGewijzigd)
+                                        <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded ml-2">Gewijzigd</span>
+                                        @endif
                                     @endif
                                 </p>
                             <p class="text-sm text-gray-600">
@@ -316,6 +389,9 @@
                             @endif
                             @if($isOnvolledig)
                             <p class="text-xs text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>
+                            @endif
+                            @if(count($warnings) > 0)
+                            <p class="text-xs text-orange-600 mt-1">⚠ {{ implode(' | ', $warnings) }}</p>
                             @endif
                             </div>
                         </div>

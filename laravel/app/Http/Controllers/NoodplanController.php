@@ -48,19 +48,22 @@ class NoodplanController extends Controller
     /**
      * Print weeglijst - alle judoka's gegroepeerd per blok, alfabetisch gesorteerd
      */
-    public function printWeeglijst(Toernooi $toernooi): View
+    public function printWeeglijst(Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        $blokken = $toernooi->blokken()
-            ->with(['poules.judokas.club'])
-            ->orderBy('nummer')
-            ->get();
+        $query = $toernooi->blokken()->with(['poules.judokas.club'])->orderBy('nummer');
 
-        // Bouw lijst per blok met judoka's alfabetisch gesorteerd
+        if ($blokNummer) {
+            $query->where('nummer', $blokNummer);
+        }
+
+        $blokken = $query->get();
+
+        // Bouw lijst per blok met judoka's alfabetisch gesorteerd op voornaam
         $judokasPerBlok = $blokken->mapWithKeys(function ($blok) {
             $judokas = $blok->poules
                 ->flatMap(fn($p) => $p->judokas)
                 ->unique('id')
-                ->sortBy('naam')
+                ->sortBy(fn($j) => strtolower($j->naam))
                 ->values();
             return [$blok->nummer => $judokas];
         });
@@ -87,7 +90,7 @@ class NoodplanController extends Controller
     public function printWeegkaarten(Toernooi $toernooi): View
     {
         $judokas = $toernooi->judokas()
-            ->with('club')
+            ->with(['club', 'poules.mat', 'poules.blok'])
             ->orderBy('club_id')
             ->orderBy('naam')
             ->get();
@@ -102,6 +105,7 @@ class NoodplanController extends Controller
     {
         $judokas = $toernooi->judokas()
             ->where('club_id', $club->id)
+            ->with(['club', 'poules.mat', 'poules.blok'])
             ->orderBy('naam')
             ->get();
 
@@ -113,7 +117,7 @@ class NoodplanController extends Controller
      */
     public function printWeegkaart(Toernooi $toernooi, Judoka $judoka): View
     {
-        $judokas = collect([$judoka->load('club')]);
+        $judokas = collect([$judoka->load(['club', 'poules.mat', 'poules.blok'])]);
 
         return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas'));
     }

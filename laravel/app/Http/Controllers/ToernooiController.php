@@ -260,6 +260,23 @@ class ToernooiController extends Controller
             ->with('success', 'Bloktijden bijgewerkt');
     }
 
+    public function updateBetalingInstellingen(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'betaling_actief' => 'boolean',
+            'inschrijfgeld' => 'nullable|numeric|min:0|max:999.99',
+        ]);
+
+        $toernooi->update([
+            'betaling_actief' => $validated['betaling_actief'] ?? false,
+            'inschrijfgeld' => $validated['inschrijfgeld'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('toernooi.edit', $toernooi)
+            ->with('success', 'Betalingsinstellingen bijgewerkt');
+    }
+
     /**
      * Show tournament closing page with statistics
      */

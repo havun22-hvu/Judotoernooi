@@ -64,6 +64,7 @@ Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])
     ->name('toernooi.destroy');
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
+Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
 
 // Toernooi sub-routes
 Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
@@ -166,7 +167,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Voor het toernooi (backup)
         Route::get('/poules/{blok?}', [NoodplanController::class, 'printPoules'])->name('poules');
-        Route::get('/weeglijst', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
+        Route::get('/weeglijst/{blok?}', [NoodplanController::class, 'printWeeglijst'])->name('weeglijst');
         Route::get('/zaaloverzicht', [NoodplanController::class, 'printZaaloverzicht'])->name('zaaloverzicht');
         Route::get('/weegkaarten', [NoodplanController::class, 'printWeegkaarten'])->name('weegkaarten');
         Route::get('/weegkaarten/club/{club}', [NoodplanController::class, 'printWeegkaartenClub'])->name('weegkaarten.club');
@@ -247,6 +248,10 @@ Route::prefix('coach')->name('coach.')->group(function () {
     Route::put('{token}/judoka/{judoka}', [CoachPortalController::class, 'updateJudoka'])->name('judoka.update');
     Route::delete('{token}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudoka'])->name('judoka.destroy');
     Route::get('{token}/weegkaarten', [CoachPortalController::class, 'weegkaarten'])->name('weegkaarten');
+    Route::get('{token}/afrekenen', [CoachPortalController::class, 'afrekenen'])->name('afrekenen');
+    Route::post('{token}/betalen', [CoachPortalController::class, 'betalen'])->name('betalen');
+    Route::get('{token}/betaling/succes', [CoachPortalController::class, 'betalingSucces'])->name('betaling.succes');
+    Route::get('{token}/betaling/geannuleerd', [CoachPortalController::class, 'betalingGeannuleerd'])->name('betaling.geannuleerd');
 });
 
 // Coach Portal with shared code and PIN (new system)
@@ -263,6 +268,10 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::post('{code}/coachkaart/{coachKaart}/toewijzen', [CoachPortalController::class, 'toewijzenCoachkaart'])->name('coachkaart.toewijzen');
     Route::get('{code}/resultaten', [CoachPortalController::class, 'resultatenCode'])->name('resultaten');
     Route::post('{code}/sync', [CoachPortalController::class, 'syncJudokasCode'])->name('sync');
+    Route::get('{code}/afrekenen', [CoachPortalController::class, 'afrekenCode'])->name('afrekenen');
+    Route::post('{code}/betalen', [CoachPortalController::class, 'betalenCode'])->name('betalen');
+    Route::get('{code}/betaling/succes', [CoachPortalController::class, 'betalingSuccesCode'])->name('betaling.succes');
+    Route::get('{code}/betaling/geannuleerd', [CoachPortalController::class, 'betalingGeannuleerdCode'])->name('betaling.geannuleerd');
 });
 
 // Weegkaart (public, accessed via QR code)

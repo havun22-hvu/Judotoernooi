@@ -64,6 +64,33 @@
     </div>
 </div>
 
+@if($toernooi->betaling_actief)
+<div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+        <span class="text-green-600">€</span> Betalingsoverzicht
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+            <div class="text-3xl font-bold text-green-600">&euro;{{ number_format($statistieken['totaal_ontvangen'] ?? 0, 2, ',', '.') }}</div>
+            <div class="text-gray-600">Totaal ontvangen</div>
+        </div>
+        <div>
+            <div class="text-3xl font-bold text-blue-600">{{ $statistieken['betaald_judokas'] ?? 0 }}</div>
+            <div class="text-gray-600">Betaalde judoka's</div>
+        </div>
+        <div>
+            <div class="text-3xl font-bold text-gray-600">{{ $statistieken['aantal_betalingen'] ?? 0 }}</div>
+            <div class="text-gray-600">Transacties</div>
+        </div>
+    </div>
+    @if(($statistieken['totaal_judokas'] - ($statistieken['betaald_judokas'] ?? 0)) > 0)
+    <p class="text-sm text-orange-600 mt-4">
+        {{ $statistieken['totaal_judokas'] - ($statistieken['betaald_judokas'] ?? 0) }} judoka('s) nog niet betaald
+    </p>
+    @endif
+</div>
+@endif
+
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">Voorbereiding</h2>

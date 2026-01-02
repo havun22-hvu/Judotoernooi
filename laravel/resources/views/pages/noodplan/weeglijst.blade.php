@@ -7,31 +7,27 @@
 <div class="{{ !$loop->last ? 'page-break' : '' }}">
     <h1 class="text-2xl font-bold text-gray-800 mb-4">Weeglijst Blok {{ $blokNummer }}</h1>
 
-    <table class="w-full text-sm">
+    <table class="w-full text-sm border-collapse">
         <thead>
             <tr class="bg-blue-800 text-white">
-                <th class="px-3 py-2 text-left w-12">#</th>
-                <th class="px-3 py-2 text-left">Naam</th>
-                <th class="px-3 py-2 text-left">Club</th>
-                <th class="px-3 py-2 text-center">Geslacht</th>
-                <th class="px-3 py-2 text-center">Leeftijdsklasse</th>
-                <th class="px-3 py-2 text-center">Band</th>
-                <th class="px-3 py-2 text-center">Gewichtsklasse</th>
-                <th class="px-3 py-2 text-center">Gewogen</th>
+                <th class="px-2 py-2 text-left w-10">#</th>
+                <th class="px-2 py-2 text-left">Naam</th>
+                <th class="px-2 py-2 text-left">Club</th>
+                <th class="px-2 py-2 text-center w-20">Leeftijd</th>
+                <th class="px-2 py-2 text-center w-16">Gew.kl.</th>
+                <th class="px-2 py-2 text-center w-20">Gewicht</th>
             </tr>
         </thead>
         <tbody>
             @foreach($judokas as $idx => $judoka)
-            <tr class="{{ $idx % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
-                <td class="px-3 py-2">{{ $idx + 1 }}</td>
-                <td class="px-3 py-2 font-medium">{{ $judoka->naam }}</td>
-                <td class="px-3 py-2 text-gray-600">{{ $judoka->club?->naam ?? '-' }}</td>
-                <td class="px-3 py-2 text-center">{{ $judoka->geslacht?->value ?? '-' }}</td>
-                <td class="px-3 py-2 text-center">{{ $judoka->leeftijdsklasse ?? '-' }}</td>
-                <td class="px-3 py-2 text-center">{{ $judoka->band_enum?->label() ?? '-' }}</td>
-                <td class="px-3 py-2 text-center">{{ $judoka->gewichtsklasse ?? '-' }}</td>
-                <td class="px-3 py-2 text-center font-bold {{ $judoka->gewicht_gewogen ? 'text-green-600' : 'text-gray-400' }}">
-                    {{ $judoka->gewicht_gewogen ? number_format($judoka->gewicht_gewogen, 1) . ' kg' : '-' }}
+            <tr class="border-b {{ $idx % 2 == 0 ? 'bg-white' : 'bg-gray-50' }}">
+                <td class="px-2 py-1">{{ $idx + 1 }}</td>
+                <td class="px-2 py-1 font-medium">{{ $judoka->naam }}</td>
+                <td class="px-2 py-1 text-gray-600 text-xs">{{ $judoka->club?->naam ?? '-' }}</td>
+                <td class="px-2 py-1 text-center text-xs">{{ $judoka->leeftijdsklasse ?? '-' }}</td>
+                <td class="px-2 py-1 text-center text-xs">{{ $judoka->gewichtsklasse ?? '-' }}</td>
+                <td class="px-2 py-1 text-center border-l">
+                    <span class="inline-block w-16 border-b border-gray-400">&nbsp;</span>
                 </td>
             </tr>
             @endforeach
@@ -39,7 +35,7 @@
     </table>
 
     <div class="mt-4 text-sm text-gray-600">
-        <strong>Totaal Blok {{ $blokNummer }}:</strong> {{ $judokas->count() }} judoka's
+        <strong>Totaal:</strong> {{ $judokas->count() }} judoka's
     </div>
 </div>
 @endforeach
