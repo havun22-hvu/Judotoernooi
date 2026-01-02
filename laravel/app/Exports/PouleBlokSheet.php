@@ -30,29 +30,49 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
             ['nummer', 'asc'],
         ]);
 
+        // Check if any poule has no mat assigned
+        $heeftGeenMat = $poules->contains(fn($p) => $p->mat_id === null);
+        if ($heeftGeenMat) {
+            $rows[] = ['⚠️ LET OP: Niet alle poules zijn toegewezen aan een mat!'];
+            $rows[] = [];
+            $rows[] = [];
+        }
+
         foreach ($poules as $poule) {
-            $matNummer = $poule->mat?->nummer ?? 'Geen mat';
+            $matNummer = $poule->mat?->nummer;
+            $matLabel = $matNummer ? "Mat {$matNummer}" : "Geen mat toegewezen";
 
             // Mat header when mat changes
             if ($currentMat !== $matNummer) {
                 if ($currentMat !== null) {
-                    $rows[] = []; // Empty row between mats
+                    // Extra lege rijen tussen matten
+                    $rows[] = [];
+                    $rows[] = [];
+                    $rows[] = [];
                 }
-                $rows[] = ["Mat {$matNummer}"];
-                $rows[] = []; // Empty row after mat header
+                $rows[] = [$matLabel];
+                $rows[] = [];
                 $currentMat = $matNummer;
             }
 
-            // Poule header: Leeftijdsklasse - Gewichtsklasse - Poule X (Y judoka's, Z wedstrijden)
-            $pouleHeader = sprintf(
-                '%s %s Poule %d (%d judoka\'s, %d wedstrijden)',
-                $poule->leeftijdsklasse ?? '',
-                $poule->gewichtsklasse ?? '',
-                $poule->nummer,
-                $poule->aantal_judokas,
-                $poule->aantal_wedstrijden
-            );
-            $rows[] = [$pouleHeader];
+            // Poule header met alle info
+            $pouleInfo = [];
+            if ($poule->leeftijdsklasse) {
+                $pouleInfo[] = $poule->leeftijdsklasse;
+            }
+            if ($poule->gewichtsklasse) {
+                $pouleInfo[] = $poule->gewichtsklasse;
+            }
+
+            // Gebruik titel als fallback als leeftijds/gewichtsklasse ontbreken
+            if (empty($pouleInfo) && $poule->titel) {
+                $pouleInfo[] = $poule->titel;
+            }
+
+            $pouleInfo[] = "Poule {$poule->nummer}";
+            $pouleInfo[] = "({$poule->aantal_judokas} judoka's, {$poule->aantal_wedstrijden} wedstrijden)";
+
+            $rows[] = [implode(' | ', $pouleInfo)];
 
             // Column headers
             $rows[] = ['Naam', 'Band', 'Club', 'Gewicht', 'Geslacht', 'Geboortejaar'];
@@ -69,7 +89,9 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
                 ];
             }
 
-            $rows[] = []; // Empty row after each poule
+            // Lege rijen na elke poule
+            $rows[] = [];
+            $rows[] = [];
         }
 
         return $rows;
@@ -84,28 +106,43 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
         foreach ($this->array() as $data) {
             if (!empty($data) && count($data) === 1) {
                 $value = $data[0] ?? '';
-                if (str_starts_with($value, 'Mat ')) {
-                    // Mat header - bold and larger
+                if (str_starts_with($value, '⚠️')) {
+                    // Warning - red background
                     $styles[$row] = [
-                        'font' => ['bold' => true, 'size' => 14],
+                        'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'CC0000']],
                         'fill' => [
                             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'DDDDDD'],
+                            'startColor' => ['rgb' => 'FFEEEE'],
+                        ],
+                    ];
+                } elseif (str_starts_with($value, 'Mat ') || str_starts_with($value, 'Geen mat')) {
+                    // Mat header - bold and larger, dark background
+                    $styles[$row] = [
+                        'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => '4472C4'],
                         ],
                     ];
                 } elseif (str_contains($value, 'Poule')) {
-                    // Poule header - bold
+                    // Poule header - bold, light blue background
                     $styles[$row] = [
-                        'font' => ['bold' => true, 'size' => 12],
+                        'font' => ['bold' => true, 'size' => 11],
                         'fill' => [
                             'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'EEEEEE'],
+                            'startColor' => ['rgb' => 'D6DCE4'],
                         ],
                     ];
                 }
             } elseif (!empty($data) && ($data[0] ?? '') === 'Naam') {
-                // Column headers - bold
-                $styles[$row] = ['font' => ['bold' => true]];
+                // Column headers - bold, light gray
+                $styles[$row] = [
+                    'font' => ['bold' => true],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'F2F2F2'],
+                    ],
+                ];
             }
             $row++;
         }
