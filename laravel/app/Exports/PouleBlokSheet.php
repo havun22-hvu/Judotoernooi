@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class PouleBlokSheet implements FromArray, WithTitle, WithStyles
 {
+    protected ?array $cachedData = null;
     protected array $matRows = [];
     protected array $pouleRows = [];
     protected array $headerRows = [];
@@ -25,9 +26,15 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
         return "Blok {$this->blok->nummer}";
     }
 
-    public function array(): array
+    /**
+     * Build and cache the data array
+     */
+    protected function buildData(): array
     {
-        // Reset row tracking
+        if ($this->cachedData !== null) {
+            return $this->cachedData;
+        }
+
         $this->matRows = [];
         $this->pouleRows = [];
         $this->headerRows = [];
@@ -50,8 +57,6 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
             $this->warningRows[] = $rowNum++;
             $rows[] = [];
             $rowNum++;
-            $rows[] = [];
-            $rowNum++;
         }
 
         foreach ($poules as $poule) {
@@ -61,9 +66,7 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
             // Mat header when mat changes
             if ($currentMat !== $matNummer) {
                 if ($currentMat !== null) {
-                    // Extra lege rijen tussen matten
-                    $rows[] = [];
-                    $rowNum++;
+                    // Lege rijen tussen matten
                     $rows[] = [];
                     $rowNum++;
                     $rows[] = [];
@@ -71,10 +74,12 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
                 }
                 $rows[] = [$matLabel];
                 $this->matRows[] = $rowNum++;
-                $rows[] = [];
-                $rowNum++;
                 $currentMat = $matNummer;
             }
+
+            // Lege rij voor poule header
+            $rows[] = [];
+            $rowNum++;
 
             // Poule header
             $pouleHeader = sprintf(
@@ -104,17 +109,22 @@ class PouleBlokSheet implements FromArray, WithTitle, WithStyles
                 ];
                 $rowNum++;
             }
-
-            // Lege rij na elke poule
-            $rows[] = [];
-            $rowNum++;
         }
 
+        $this->cachedData = $rows;
         return $rows;
+    }
+
+    public function array(): array
+    {
+        return $this->buildData();
     }
 
     public function styles(Worksheet $sheet): array
     {
+        // Ensure data is built first
+        $this->buildData();
+
         $styles = [];
 
         // Warning rows - red
