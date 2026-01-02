@@ -1084,6 +1084,44 @@
                     </div>
                 </div>
 
+                <!-- Mollie Account Koppeling -->
+                <div class="p-4 border rounded-lg {{ $toernooi->mollie_onboarded ? 'bg-green-50 border-green-200' : 'bg-gray-50' }}">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold flex items-center gap-2">
+                                @if($toernooi->mollie_onboarded)
+                                <span class="text-green-600">✓</span>
+                                @endif
+                                Mollie Account
+                            </h3>
+                            @if($toernooi->mollie_onboarded)
+                            <p class="text-sm text-green-700">
+                                Gekoppeld: {{ $toernooi->mollie_organization_name ?? 'Onbekend' }}
+                                <span class="text-gray-500">({{ $toernooi->mollie_mode }})</span>
+                            </p>
+                            @else
+                            <p class="text-sm text-gray-500">Koppel je Mollie account om betalingen te ontvangen</p>
+                            @endif
+                        </div>
+                        <div>
+                            @if($toernooi->mollie_onboarded)
+                            <form action="{{ route('mollie.disconnect', $toernooi) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('Weet je zeker dat je de Mollie koppeling wilt verbreken?')">
+                                @csrf
+                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
+                                    Ontkoppelen
+                                </button>
+                            </form>
+                            @else
+                            <a href="{{ route('mollie.authorize', $toernooi) }}"
+                               class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
+                                <span>Koppel Mollie</span>
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 @if($toernooi->betaling_actief)
                 <div class="p-4 bg-green-50 rounded-lg">
                     <h4 class="font-bold text-green-800 mb-2">Betalingen overzicht</h4>

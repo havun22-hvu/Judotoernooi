@@ -17,6 +17,7 @@ use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\PaginaBuilderController;
+use App\Http\Controllers\MollieController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +66,14 @@ Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
+
+// Mollie OAuth & Payments
+Route::get('toernooi/{toernooi}/mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
+Route::get('mollie/callback', [MollieController::class, 'callback'])->name('mollie.callback');
+Route::post('toernooi/{toernooi}/mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
+Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
+Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
+Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
 
 // Toernooi sub-routes
 Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
