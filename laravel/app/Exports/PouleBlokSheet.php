@@ -32,23 +32,32 @@ class PouleBlokSheet implements FromArray, WithTitle, WithEvents
         ]);
 
         // Version header
-        $rows[] = ['VERSIE_4_' . now()->format('H:i:s')];
-        $rows[] = [];
+        $rows[] = ['VERSIE_7_' . now()->format('H:i:s')];
+        $rows[] = [''];  // Lege rij met cel zodat Excel hem niet overslaat
 
+        $isFirstPouleInMat = true;
         foreach ($poules as $poule) {
             $matNummer = $poule->mat?->nummer;
 
             // Mat header when mat changes
             if ($currentMat !== $matNummer) {
                 if ($currentMat !== null) {
-                    // Lege rijen tussen matten
-                    $rows[] = [];
-                    $rows[] = [];
+                    // 3 lege rijen boven mat header
+                    $rows[] = [''];
+                    $rows[] = [''];
+                    $rows[] = [''];
                 }
                 $rows[] = ['MAT_HEADER_' . ($matNummer ?? 'GEEN')];
-                $rows[] = [];
                 $currentMat = $matNummer;
+                $isFirstPouleInMat = true;
             }
+
+            // 2 lege rijen boven poule header (behalve eerste poule na mat)
+            if (!$isFirstPouleInMat) {
+                $rows[] = [''];
+                $rows[] = [''];
+            }
+            $isFirstPouleInMat = false;
 
             // Poule header met marker
             $rows[] = [sprintf(
@@ -74,9 +83,6 @@ class PouleBlokSheet implements FromArray, WithTitle, WithEvents
                     $judoka->geboortejaar,
                 ];
             }
-
-            // Lege rij na poule
-            $rows[] = [];
         }
 
         return $rows;
@@ -145,10 +151,13 @@ class PouleBlokSheet implements FromArray, WithTitle, WithEvents
                     // Alles zonder marker = judoka data, geen styling
                 }
 
-                // Auto-size columns
-                foreach (range('A', 'F') as $col) {
-                    $sheet->getColumnDimension($col)->setAutoSize(true);
-                }
+                // Kolom breedtes met extra spacing
+                $sheet->getColumnDimension('A')->setWidth(30);  // Naam
+                $sheet->getColumnDimension('B')->setWidth(15);  // Band
+                $sheet->getColumnDimension('C')->setWidth(28);  // Club
+                $sheet->getColumnDimension('D')->setWidth(10);  // Gewicht
+                $sheet->getColumnDimension('E')->setWidth(10);  // Geslacht
+                $sheet->getColumnDimension('F')->setWidth(14);  // Geboortejaar
             },
         ];
     }

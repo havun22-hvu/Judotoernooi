@@ -26,21 +26,25 @@
 
         <div class="space-y-4">
             <!-- Poule Export -->
-            <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded">
-                <div>
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <div class="flex items-center justify-between">
                     <h3 class="font-medium text-green-800">Volledige poule-indeling</h3>
-                    <p class="text-sm text-green-600">1 tab per blok, gesorteerd op mat, met leeftijds-/gewichtsklasse en poule nummers</p>
+                    <div class="flex gap-2">
+                        <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'xlsx']) }}"
+                           class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
+                            Excel
+                        </a>
+                        <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'csv']) }}"
+                           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                            CSV
+                        </a>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'xlsx']) }}"
-                       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
-                        Excel (.xlsx)
-                    </a>
-                    <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'csv']) }}"
-                       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
-                        CSV
-                    </a>
-                </div>
+                <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
+                    <li>Per blok een tab</li>
+                    <li>Gesorteerd op mat</li>
+                    <li>Met leeftijds-/gewichtsklasse</li>
+                </ul>
             </div>
 
             <!-- Weegkaarten -->
