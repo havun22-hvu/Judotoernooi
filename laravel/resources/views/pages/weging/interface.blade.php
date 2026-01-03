@@ -18,10 +18,8 @@
         body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
         #qr-reader { width: 100%; }
         #qr-reader video { border-radius: 0.5rem; }
-        #qr-reader__dashboard { display: none !important; }
+        #qr-reader__dashboard, #qr-reader__scan_region > img { display: none !important; }
         .numpad-btn { font-size: 1.25rem; font-weight: bold; min-height: 50px; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .scanning { animation: pulse 1.5s infinite; }
     </style>
 </head>
 <body class="bg-blue-900 min-h-screen text-white" x-data="wegingApp()" x-init="init()">
@@ -59,10 +57,10 @@
                 </button>
             </div>
 
-            <!-- Scanner (top 1/3) -->
-            <div x-show="modus === 'scan'" class="relative" style="height: 30vh;">
-                <div id="qr-reader" class="h-full"></div>
-                <button @click="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+            <!-- Scanner (compact) -->
+            <div x-show="modus === 'scan'" class="relative">
+                <div id="qr-reader" style="max-width: 280px; margin: 0 auto;"></div>
+                <button @click="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs">
                     Stop
                 </button>
             </div>
@@ -306,7 +304,7 @@
                 try {
                     await this.scanner.start(
                         { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 200, height: 200 } },
+                        { fps: 10, qrbox: { width: 180, height: 180 }, aspectRatio: 1.0 },
                         async (text) => {
                             let qr = text;
                             if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
