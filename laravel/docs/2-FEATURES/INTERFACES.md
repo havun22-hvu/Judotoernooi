@@ -8,12 +8,18 @@
 - Website info is al gepubliceerd
 - **Readonly** op wedstrijddag
 
-### Poules (KAN wijzigen op wedstrijddag)
-- Poules tab = alleen voor **indeling**, niet voor standen
-- Poules kunnen wijzigen door:
+### Poules (LOCKED na voorbereiding)
+- Poules tab = alleen voor **indeling**
+- Pouleindeling kan **NIET** meer wijzigen na voorbereiding
+- **Readonly** op wedstrijddag
+
+### Wedstrijddag (KAN wijzigen)
+- Start als **kopie** van de pouleindeling
+- Kan wijzigen door:
   - Overpoulen (te weinig deelnemers)
   - Absentie (judoka komt niet opdagen)
-- Poulestanden staan in **Wedstrijddag**, niet in Poules tab
+- Poulestanden worden hier bijgehouden
+- Dit is de **actieve werkplek** op de wedstrijddag
 
 ### Referentie (readonly)
 - Hoofdjury moet poules/blokken kunnen **inzien** voor referentie
