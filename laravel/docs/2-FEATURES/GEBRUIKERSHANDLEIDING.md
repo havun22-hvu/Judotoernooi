@@ -336,7 +336,10 @@ Na afloop van het toernooi zijn resultaten beschikbaar voor verschillende doelgr
 
 ### Organisator
 - Totaal aantal deelnemers, wedstrijden, poules
-- Statistieken per blok/mat
+- **Gemiddelde wedstrijdduur per leeftijdsklasse en bandkleur**
+  - Jongere/lagere band: vaak volle 2 min (kunnen nog geen ippon maken)
+  - H-15/D-15: 3 min speeltijd maar vaak sneller klaar (ippon binnen 10 sec)
+  - Belangrijk voor planning wedstrijden per blok/mat
 - Overzicht medailles per club
 - Export mogelijkheden
 
