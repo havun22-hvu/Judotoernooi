@@ -2,7 +2,7 @@
     "name": "Weging Interface",
     "short_name": "Weging",
     "description": "Weging en registratie van judoka's",
-    "start_url": "/",
+    "start_url": ".",
     "scope": "/",
     "display": "standalone",
     "orientation": "any",

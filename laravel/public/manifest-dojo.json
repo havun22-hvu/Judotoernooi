@@ -2,7 +2,7 @@
     "name": "Dojo Scanner",
     "short_name": "Dojo",
     "description": "QR Scanner voor dojo ingang",
-    "start_url": "/",
+    "start_url": ".",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait",
