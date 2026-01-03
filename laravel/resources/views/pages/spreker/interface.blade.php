@@ -1,23 +1,45 @@
-@extends('layouts.app')
-@php $pwaApp = 'spreker'; @endphp
-@section('manifest', '/manifest-spreker.json')
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1e40af">
+    <link rel="manifest" href="/manifest-spreker.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <title>Spreker Interface - {{ $toernooi->naam }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body { overscroll-behavior: none; }
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Standalone Header -->
+    <header class="bg-blue-800 text-white px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-50">
+        <div>
+            <h1 class="text-lg font-bold">📢 Spreker Interface</h1>
+            <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
+        </div>
+        <div class="text-2xl font-mono" id="clock"></div>
+    </header>
 
-@section('title', 'Spreker Interface')
-
-@section('content')
+    <main class="p-3">
+    @php $pwaApp = 'spreker'; @endphp
 <div x-data="sprekerInterface()">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">📢 Spreker Interface</h1>
-        <div class="flex items-center gap-4">
-            <button
-                @click="toonGeschiedenis = !toonGeschiedenis"
-                class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
-            >
-                <span>📋</span> Vorige uitreikingen
-            </button>
-            <div class="text-sm text-gray-600">
-                Auto-refresh elke 10 seconden
-            </div>
+    <div class="flex justify-end items-center mb-4 gap-2">
+        <button
+            @click="toonGeschiedenis = !toonGeschiedenis"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+        >
+            <span>📋</span> Vorige
+        </button>
+        <div class="text-xs text-gray-500">
+            Auto-refresh 10s
         </div>
     </div>
 
@@ -317,5 +339,18 @@ function sprekerInterface() {
 setTimeout(function() {
     location.reload();
 }, 10000);
+
+// Clock
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+        now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+updateClock();
+setInterval(updateClock, 1000);
 </script>
-@endsection
+    </main>
+
+    @include('partials.pwa-mobile', ['pwaApp' => 'spreker'])
+</body>
+</html>
