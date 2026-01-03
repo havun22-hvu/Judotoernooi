@@ -54,8 +54,8 @@
 
                 <!-- Scanner (when scanning) -->
                 <div x-show="modus === 'scan'" class="text-center">
-                    <div id="qr-reader" style="max-width: 220px; margin: 0 auto;"></div>
-                    <button @click="stopScanner()" class="mt-2 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
+                    <div id="qr-reader" style="max-width: 300px; margin: 0 auto;"></div>
+                    <button @click="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
                         Stop
                     </button>
                 </div>
@@ -302,7 +302,7 @@
                 try {
                     await this.scanner.start(
                         { facingMode: "environment" },
-                        { fps: 10, qrbox: { width: 180, height: 180 }, aspectRatio: 1.0 },
+                        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
                         async (text) => {
                             let qr = text;
                             if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
