@@ -53,8 +53,8 @@
                 </button>
 
                 <!-- Scanner (when scanning) -->
-                <div x-show="modus === 'scan'" class="text-center">
-                    <div id="qr-reader" style="max-width: 300px; margin: 0 auto;"></div>
+                <div x-show="modus === 'scan'" class="text-center w-full">
+                    <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
                     <button @click="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
                         Stop
                     </button>
