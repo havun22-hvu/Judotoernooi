@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#7c3aed">
+    <meta name="theme-color" content="#1e40af">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="manifest" href="/manifest-weging.json">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
@@ -24,16 +24,16 @@
         .scanning { animation: pulse 1.5s infinite; }
     </style>
 </head>
-<body class="bg-purple-900 min-h-screen text-white" x-data="wegingApp()" x-init="init()">
+<body class="bg-blue-900 min-h-screen text-white" x-data="wegingApp()" x-init="init()">
     <!-- Header -->
-    <header class="bg-purple-800 px-4 py-3 flex items-center justify-between shadow-lg">
+    <header class="bg-blue-800 px-4 py-3 flex items-center justify-between shadow-lg">
         <div>
             <h1 class="text-lg font-bold">Weging</h1>
-            <p class="text-purple-200 text-sm">{{ $toernooi->naam }}</p>
+            <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
         <div class="flex items-center gap-3">
             <div class="text-2xl font-mono" id="clock"></div>
-            <button @click="showAbout = true" class="p-2 hover:bg-purple-700 rounded-lg">
+            <button @click="showAbout = true" class="p-2 hover:bg-blue-700 rounded-lg">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -44,16 +44,16 @@
 
     <main class="p-3 space-y-3">
         <!-- TOP: Scanner section (1/3 of screen) -->
-        <div class="bg-purple-800/50 rounded-lg p-3">
+        <div class="bg-blue-800/50 rounded-lg p-3">
             <!-- Mode toggle -->
             <div class="flex gap-2 mb-3">
                 <button @click="modus = 'zoek'; stopScanner()"
-                        :class="modus === 'zoek' ? 'bg-purple-600 text-white' : 'bg-purple-700/50 text-purple-200'"
+                        :class="modus === 'zoek' ? 'bg-blue-600 text-white' : 'bg-blue-700/50 text-blue-200'"
                         class="flex-1 py-2 rounded font-medium text-sm">
                     🔍 Zoeken
                 </button>
                 <button @click="modus = 'scan'; startScanner()"
-                        :class="modus === 'scan' ? 'bg-purple-600 text-white' : 'bg-purple-700/50 text-purple-200'"
+                        :class="modus === 'scan' ? 'bg-blue-600 text-white' : 'bg-blue-700/50 text-blue-200'"
                         class="flex-1 py-2 rounded font-medium text-sm">
                     📷 Scannen
                 </button>
@@ -71,12 +71,12 @@
             <div x-show="modus === 'zoek'">
                 <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                        placeholder="Zoek op naam..."
-                       class="w-full border-2 border-purple-500 bg-purple-800 rounded-lg px-4 py-3 text-lg focus:border-purple-300 focus:outline-none placeholder-purple-400">
+                       class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-3 text-lg focus:border-blue-300 focus:outline-none placeholder-blue-400">
 
                 <div x-show="resultaten.length > 0" class="mt-2 bg-white rounded-lg max-h-40 overflow-y-auto">
                     <template x-for="judoka in resultaten" :key="judoka.id">
                         <div @click="selecteerJudoka(judoka)"
-                             class="p-3 hover:bg-purple-100 cursor-pointer border-b last:border-0 text-gray-800">
+                             class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
                             <div class="font-medium" x-text="judoka.naam"></div>
                             <div class="text-sm text-gray-600">
                                 <span x-text="judoka.club || 'Geen club'"></span> |
@@ -168,7 +168,7 @@
                     <div class="relative">
                         <input type="text" x-model="gewichtInput" readonly
                                class="w-full border-2 rounded-lg px-4 py-3 text-2xl text-center font-bold"
-                               :class="gewichtInput ? 'border-purple-500' : 'border-gray-300'"
+                               :class="gewichtInput ? 'border-blue-500' : 'border-gray-300'"
                                placeholder="0.0">
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">kg</span>
                     </div>
@@ -207,7 +207,7 @@
             <p class="mb-2"><strong>Weging Interface</strong></p>
             <p class="text-gray-600 mb-4">{{ $toernooi->naam }}</p>
             <p class="text-sm text-gray-500 mb-4">Versie {{ config('toernooi.version') }}</p>
-            <button @click="showAbout = false" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium">
+            <button @click="showAbout = false" class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium">
                 Sluiten
             </button>
         </div>
