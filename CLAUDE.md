@@ -22,6 +22,12 @@
 - Nooit aannemen, altijd verifiëren
 - Als gebruiker iets herhaalt: direct opslaan in docs
 
+**Documentatie discipline:**
+- **EERST** bestaande docs lezen (`laravel/docs/`) voordat je nieuwe info toevoegt
+- **GEEN** dubbele documentatie - check of info al ergens staat
+- **ONDERHOUD** bestaande docs, maak niet steeds nieuwe files
+- Belangrijkste docs: `GEBRUIKERSHANDLEIDING.md`, `BETALINGEN.md`
+
 ### Auto-start servers (bij lokaal testen)
 ```bash
 cd laravel && php artisan serve --port=8001
