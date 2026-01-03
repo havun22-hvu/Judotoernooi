@@ -4,7 +4,7 @@
 
 ## Consistent Layout Pattern
 
-Alle mobiele PWA interfaces (Weging, Dojo Scanner) gebruiken dezelfde layout:
+Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - geen navigatie tabs:
 
 | Element | Positie | Percentage |
 |---------|---------|------------|
@@ -81,9 +81,16 @@ Alle mobiele PWA interfaces (Weging, Dojo Scanner) gebruiken dezelfde layout:
 
 **Pad:** `resources/views/pages/mat/interface.blade.php`
 
+### Layout (Standalone PWA)
+- Standalone header met klok
+- Geen navigatie tabs
+- Blauwe kleur theme (#1e40af)
+
 ### Functionaliteit
+- Blok/Mat selectie
 - Poules per mat bekijken
 - Wedstrijden afwerken (uitslag registreren)
+- Eliminatie bracket met drag & drop
 - Stand bijhouden
 - Poule afronden → naar spreker
 
@@ -93,10 +100,16 @@ Alle mobiele PWA interfaces (Weging, Dojo Scanner) gebruiken dezelfde layout:
 
 **Pad:** `resources/views/pages/spreker/interface.blade.php`
 
+### Layout (Standalone PWA)
+- Standalone header met klok
+- Geen navigatie tabs
+- Auto-refresh elke 10 seconden
+
 ### Functionaliteit
 - Wachtrij afgeronde poules
 - Eindstand met 1e, 2e, 3e plaats
 - Prijsuitreiking markeren
+- Geschiedenis (localStorage)
 
 ---
 
