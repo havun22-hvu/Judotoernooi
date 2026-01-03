@@ -256,7 +256,7 @@ class ToernooiController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.edit', $toernooi)
+            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
             ->with('success', 'Bloktijden bijgewerkt');
     }
 
@@ -273,7 +273,7 @@ class ToernooiController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.edit', $toernooi)
+            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
             ->with('success', 'Betalingsinstellingen bijgewerkt');
     }
 
