@@ -3,7 +3,7 @@
 @section('title', 'Instellingen')
 
 @section('content')
-<div class="max-w-4xl mx-auto" x-data="{ activeTab: 'toernooi' }">
+<div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
             <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
