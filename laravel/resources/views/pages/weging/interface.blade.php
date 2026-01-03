@@ -40,38 +40,30 @@
         </div>
     </header>
 
-    <main class="p-3 space-y-3">
-        <!-- TOP: Scanner section (1/3 of screen) -->
-        <div class="bg-blue-800/50 rounded-lg p-3">
-            <!-- Mode toggle -->
-            <div class="flex gap-2 mb-3">
-                <button @click="modus = 'zoek'; stopScanner()"
-                        :class="modus === 'zoek' ? 'bg-blue-600 text-white' : 'bg-blue-700/50 text-blue-200'"
-                        class="flex-1 py-2 rounded font-medium text-sm">
-                    🔍 Zoeken
-                </button>
+    <main class="p-3 flex flex-col" style="height: calc(100vh - 60px);">
+        <!-- TOP HALF: Scanner/Search area (fixed height) -->
+        <div class="bg-blue-800/50 rounded-lg p-3 mb-3" style="height: 45%;">
+            <!-- Scan button (when not scanning) -->
+            <div x-show="modus === 'zoek' && !zoekterm" class="h-full flex flex-col items-center justify-center">
                 <button @click="modus = 'scan'; startScanner()"
-                        :class="modus === 'scan' ? 'bg-blue-600 text-white' : 'bg-blue-700/50 text-blue-200'"
-                        class="flex-1 py-2 rounded font-medium text-sm">
-                    📷 Scannen
+                        class="bg-green-600 hover:bg-green-700 text-white rounded-full w-32 h-32 flex flex-col items-center justify-center shadow-lg">
+                    <span class="text-4xl mb-1">📷</span>
+                    <span class="font-bold">Scan</span>
                 </button>
-            </div>
-
-            <!-- Scanner (compact) -->
-            <div x-show="modus === 'scan'" class="relative">
-                <div id="qr-reader" style="max-width: 280px; margin: 0 auto;"></div>
-                <button @click="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs">
-                    Stop
-                </button>
-            </div>
-
-            <!-- Search input -->
-            <div x-show="modus === 'zoek'">
                 <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-                       placeholder="Zoek op naam..."
-                       class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-3 text-lg focus:border-blue-300 focus:outline-none placeholder-blue-400">
+                       placeholder="of zoek op naam..."
+                       class="mt-4 w-full max-w-xs border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-blue-300 focus:outline-none placeholder-blue-400">
+            </div>
 
-                <div x-show="resultaten.length > 0" class="mt-2 bg-white rounded-lg max-h-40 overflow-y-auto">
+            <!-- Search results -->
+            <div x-show="modus === 'zoek' && zoekterm" class="h-full flex flex-col">
+                <div class="flex gap-2 mb-2">
+                    <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
+                           placeholder="Zoek op naam..."
+                           class="flex-1 border-2 border-blue-500 bg-blue-800 rounded-lg px-3 py-2 focus:border-blue-300 focus:outline-none placeholder-blue-400">
+                    <button @click="zoekterm = ''; resultaten = []" class="px-3 py-2 bg-blue-700 rounded-lg">✕</button>
+                </div>
+                <div class="flex-1 bg-white rounded-lg overflow-y-auto">
                     <template x-for="judoka in resultaten" :key="judoka.id">
                         <div @click="selecteerJudoka(judoka)"
                              class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
@@ -79,15 +71,27 @@
                             <div class="text-sm text-gray-600">
                                 <span x-text="judoka.club || 'Geen club'"></span> |
                                 <span x-text="judoka.gewichtsklasse + ' kg'"></span>
-                                <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓ gewogen</span>
+                                <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓</span>
                             </div>
                         </div>
                     </template>
+                    <div x-show="zoekterm.length >= 2 && resultaten.length === 0" class="p-4 text-center text-gray-400">
+                        Geen resultaten
+                    </div>
                 </div>
+            </div>
+
+            <!-- Scanner (when scanning) -->
+            <div x-show="modus === 'scan'" class="h-full flex flex-col items-center justify-center relative">
+                <div id="qr-reader" style="max-width: 250px;"></div>
+                <button @click="stopScanner()" class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium">
+                    Stop
+                </button>
             </div>
         </div>
 
-        <!-- UNDER SCANNER: Blok + Stats + Countdown -->
+        <!-- BOTTOM HALF: Blok/Stats + Judoka (fixed position) -->
+        <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
         <div class="bg-white rounded-lg shadow p-3 text-gray-800">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -195,7 +199,7 @@
                      x-text="melding"></div>
             </div>
         </div>
-
+        </div>
     </main>
 
     <!-- About Modal -->
