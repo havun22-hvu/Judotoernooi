@@ -23,7 +23,7 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 3. Poules genereren
 4. Blokkenverdeling (categorieën over tijdsblokken)
 5. "Naar Zaaloverzicht" → **matten toewijzen** + preview
-6. **Resultaat:** Weeglijst, weegkaarten, zaaloverzicht met matverdeling (nog inactief)
+6. **Resultaat:** Weeglijst, weegkaarten, coachkaarten, zaaloverzicht met matverdeling (nog inactief)
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
