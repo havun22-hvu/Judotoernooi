@@ -28,96 +28,32 @@
 
 @section('content')
 <div x-data="wegingInterface()" x-init="init()" class="max-w-6xl mx-auto">
-    <!-- Header with stats -->
+    <!-- Header with blok selection and stats -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
         <div class="flex flex-wrap justify-between items-center gap-4">
-            <h1 class="text-2xl font-bold text-gray-800">Weging Interface</h1>
-            <div class="flex gap-4 text-sm">
-                <span class="px-3 py-1 rounded-full bg-green-100 text-green-800">
-                    Gewogen: <span x-text="stats.gewogen">0</span>
-                </span>
-                <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
-                    Aanwezig: <span x-text="stats.aanwezig">0</span>
-                </span>
-                <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-800">
-                    Totaal: <span x-text="stats.totaal">0</span>
-                </span>
-            </div>
-        </div>
-
-        <!-- Blok filter -->
-        <div class="mt-4 flex flex-wrap gap-2">
-            <button @click="selectBlok(null)"
-                    :class="blokFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-4 py-2 rounded font-medium">
-                Alle blokken
-            </button>
-            @foreach($toernooi->blokken as $blok)
-            <button @click="selectBlok({{ $blok->nummer }})"
-                    :class="blokFilter === {{ $blok->nummer }} ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
-                    class="px-4 py-2 rounded font-medium">
-                Blok {{ $blok->nummer }}
-                @if($blok->weging_start)
-                <span class="text-xs opacity-75">({{ $blok->weging_start->format('H:i') }})</span>
-                @endif
-            </button>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- Countdown timer per blok -->
-    @foreach($toernooi->blokken as $blok)
-    @if($blok->weging_einde && !$blok->weging_gesloten)
-    <div x-data="countdownTimer('{{ $blok->weging_einde->toISOString() }}', {{ $blok->id }}, {{ $blok->nummer }})"
-         x-show="blokFilter === {{ $blok->nummer }} || blokFilter === null"
-         x-init="startCountdown()"
-         class="rounded-lg shadow p-4 mb-4 transition-colors"
-         :class="isExpired ? 'bg-red-100 border-2 border-red-500' : (isWarning ? 'bg-yellow-100 border-2 border-yellow-500' : 'bg-white')">
-        <div class="flex justify-between items-center">
-            <div>
-                <span class="font-bold" :class="isExpired ? 'text-red-800' : (isWarning ? 'text-yellow-800' : 'text-gray-800')">
-                    Blok {{ $blok->nummer }} weging
-                </span>
-                <span class="text-sm ml-2" :class="isExpired ? 'text-red-600' : (isWarning ? 'text-yellow-600' : 'text-gray-500')">
-                    ({{ $blok->weging_start?->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }})
-                </span>
-            </div>
             <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <template x-if="!isExpired">
-                        <div>
-                            <span class="text-sm" :class="isWarning ? 'text-yellow-700' : 'text-gray-500'">Nog</span>
-                            <span class="font-mono text-2xl font-bold ml-2" :class="isExpired ? 'text-red-700' : (isWarning ? 'text-yellow-700' : 'text-blue-600')" x-text="timeDisplay"></span>
-                        </div>
-                    </template>
-                    <template x-if="isExpired">
-                        <div class="text-red-700 font-bold text-lg">
-                            ⏰ Weegtijd voorbij!
-                        </div>
-                    </template>
-                </div>
-                <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST" class="inline">
-                    @csrf
-                    <button type="submit"
-                            onclick="return confirm('Weet je zeker dat je de weging voor Blok {{ $blok->nummer }} wilt afsluiten?')"
-                            class="px-4 py-2 rounded font-medium transition-colors"
-                            :class="isExpired ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'">
-                        Weging afsluiten
-                    </button>
-                </form>
+                <h1 class="text-2xl font-bold text-gray-800">Weging</h1>
+                <!-- Blok selector dropdown -->
+                <select x-model="blokFilter" @change="selectBlok(blokFilter ? parseInt(blokFilter) : null)"
+                        class="border-2 border-gray-300 rounded-lg px-3 py-2 font-medium focus:border-blue-500">
+                    <option value="">Alle blokken</option>
+                    @foreach($toernooi->blokken as $blok)
+                    <option value="{{ $blok->nummer }}">
+                        Blok {{ $blok->nummer }}
+                        @if($blok->weging_start) ({{ $blok->weging_start->format('H:i') }}) @endif
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+            <!-- Stats: Gewogen X / Y totaal -->
+            <div class="text-lg font-medium">
+                <span class="text-green-600" x-text="stats.gewogen">0</span>
+                <span class="text-gray-400">/</span>
+                <span class="text-gray-600" x-text="stats.totaal">0</span>
+                <span class="text-gray-400 text-sm ml-1">gewogen</span>
             </div>
         </div>
     </div>
-    @elseif($blok->weging_gesloten)
-    <div x-show="blokFilter === {{ $blok->nummer }} || blokFilter === null"
-         class="bg-gray-200 rounded-lg shadow p-4 mb-4">
-        <div class="flex justify-between items-center">
-            <span class="font-bold text-gray-600">Blok {{ $blok->nummer }} weging</span>
-            <span class="text-gray-500">✓ Weging gesloten</span>
-        </div>
-    </div>
-    @endif
-    @endforeach
 
     <div class="weging-container">
         <!-- Left: Search/Scan -->
@@ -171,9 +107,61 @@
                 <!-- QR Scanner mode -->
                 <div x-show="modus === 'scan'">
                     <div id="qr-reader"></div>
-                    <p class="text-center text-gray-500 mt-2 text-sm">Richt de camera op de QR-code</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <p class="text-gray-500 text-sm">Richt camera op QR-code</p>
+                        <button @click="stopScanner()" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium">
+                            Stop
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Countdown timer per blok - onder scanner -->
+            @foreach($toernooi->blokken as $blok)
+            @if($blok->weging_einde && !$blok->weging_gesloten)
+            <div x-data="countdownTimer('{{ $blok->weging_einde->toISOString() }}', {{ $blok->id }}, {{ $blok->nummer }})"
+                 x-show="blokFilter == {{ $blok->nummer }} || blokFilter === null || blokFilter === ''"
+                 x-init="startCountdown()"
+                 class="rounded-lg shadow p-3 transition-colors"
+                 :class="isExpired ? 'bg-red-100 border-2 border-red-500' : (isWarning ? 'bg-yellow-100 border-2 border-yellow-500' : 'bg-white')">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-sm" :class="isExpired ? 'text-red-800' : (isWarning ? 'text-yellow-800' : 'text-gray-700')">
+                            Blok {{ $blok->nummer }}
+                        </span>
+                        <span class="text-xs" :class="isExpired ? 'text-red-600' : (isWarning ? 'text-yellow-600' : 'text-gray-400')">
+                            tot {{ $blok->weging_einde->format('H:i') }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <template x-if="!isExpired">
+                            <span class="font-mono text-lg font-bold" :class="isWarning ? 'text-yellow-700' : 'text-blue-600'" x-text="timeDisplay"></span>
+                        </template>
+                        <template x-if="isExpired">
+                            <span class="text-red-700 font-bold text-sm">⏰ Voorbij!</span>
+                        </template>
+                        <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit"
+                                    onclick="return confirm('Weging voor Blok {{ $blok->nummer }} afsluiten?')"
+                                    class="px-3 py-1 rounded text-sm font-medium transition-colors"
+                                    :class="isExpired ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'">
+                                Sluit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @elseif($blok->weging_gesloten)
+            <div x-show="blokFilter == {{ $blok->nummer }} || blokFilter === null || blokFilter === ''"
+                 class="bg-gray-200 rounded-lg shadow p-3">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-sm text-gray-600">Blok {{ $blok->nummer }}</span>
+                    <span class="text-gray-500 text-sm">✓ Gesloten</span>
+                </div>
+            </div>
+            @endif
+            @endforeach
 
             <!-- Recent weighings -->
             <div class="bg-white rounded-lg shadow p-4">
@@ -373,7 +361,7 @@ function wegingInterface() {
         bezig: false,
         blokFilter: null,
         recenteWegingen: [],
-        stats: { gewogen: 0, aanwezig: 0, totaal: 0 },
+        stats: { gewogen: 0, totaal: 0 },
         scanner: null,
 
         init() {
@@ -454,13 +442,23 @@ function wegingInterface() {
                 console.error('Camera error:', err);
                 this.melding = 'Camera niet beschikbaar';
                 this.meldingType = 'error';
+                this.modus = 'zoek';
             }
         },
 
-        async scanQR(qrCode) {
-            // Stop scanner temporarily
+        async stopScanner() {
             if (this.scanner) {
                 try { await this.scanner.stop(); } catch (e) {}
+                this.scanner = null;
+            }
+            this.modus = 'zoek';
+        },
+
+        async scanQR(qrCode) {
+            // Stop scanner after successful scan
+            if (this.scanner) {
+                try { await this.scanner.stop(); } catch (e) {}
+                this.scanner = null;
             }
 
             const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
@@ -480,8 +478,7 @@ function wegingInterface() {
             } else {
                 this.melding = data.message || 'Judoka niet gevonden';
                 this.meldingType = 'error';
-                // Restart scanner
-                setTimeout(() => this.startScanner(), 2000);
+                this.modus = 'zoek'; // Stop scanner, user can manually restart
             }
         },
 
@@ -560,7 +557,6 @@ function wegingInterface() {
                     }
                 });
 
-                this.stats.aanwezig++;
                 this.melding = '✓ Gemarkeerd als aanwezig';
                 this.meldingType = 'success';
 
