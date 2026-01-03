@@ -2,7 +2,7 @@
     "name": "Mat Interface",
     "short_name": "Mat",
     "description": "Wedstrijdbeheer per mat",
-    "start_url": "/",
+    "start_url": ".",
     "scope": "/",
     "display": "standalone",
     "orientation": "landscape",

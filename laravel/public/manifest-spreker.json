@@ -2,7 +2,7 @@
     "name": "Spreker Interface",
     "short_name": "Spreker",
     "description": "Omroep interface voor aankondigingen",
-    "start_url": "/",
+    "start_url": ".",
     "scope": "/",
     "display": "standalone",
     "orientation": "landscape",
