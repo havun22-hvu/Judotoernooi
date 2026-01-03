@@ -14,6 +14,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Verberg spinner pijltjes bij number inputs */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
     <nav class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">

@@ -6,6 +6,11 @@
     <title>{{ $club->naam }} - Judoka's</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8 px-4">
@@ -466,6 +471,29 @@
             </div>
             @endif
         </div>
+
+        <!-- Aanmelding status melding -->
+        @if($judokas->count() > 0)
+        @php
+            $aantalAangemeld = ($betalingActief ?? false)
+                ? ($aantalBetaald ?? 0)
+                : $syncedJudokas->count();
+            $aantalNietAangemeld = $judokas->count() - $aantalAangemeld;
+        @endphp
+        @if($aantalNietAangemeld > 0)
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center justify-center gap-2 text-blue-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="font-medium">
+                    {{ $aantalAangemeld }} van {{ $judokas->count() }} judoka's aangemeld
+                    @if($aantalNietAangemeld > 0)
+                    &mdash; <span class="text-blue-600">{{ $aantalNietAangemeld }} nog niet aangemeld</span>
+                    @endif
+                </span>
+            </div>
+        </div>
+        @endif
+        @endif
 
         <!-- Info footer -->
         <div class="mt-6 text-center text-sm text-gray-500">
