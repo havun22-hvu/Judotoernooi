@@ -63,7 +63,7 @@
             <!-- Scanner view -->
             <div id="scanner-container" class="flex-1 flex flex-col">
                 <!-- Camera (hidden by default) -->
-                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-4 relative hidden">
+                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-4 relative" style="display: none;">
                     <div id="reader" class="w-full"></div>
                     <div id="scanner-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div class="border-2 border-white/50 rounded-lg w-48 h-48 scanning-indicator"></div>
@@ -149,8 +149,8 @@
             if (scannerActive) return;
 
             // Show camera, hide button
-            document.getElementById('camera-container').classList.remove('hidden');
-            document.getElementById('scan-button-container').classList.add('hidden');
+            document.getElementById('camera-container').style.display = 'block';
+            document.getElementById('scan-button-container').style.display = 'none';
 
             html5QrCode = new Html5Qrcode("reader");
 
@@ -176,8 +176,8 @@
                 `;
                 // Show button again after error
                 setTimeout(() => {
-                    document.getElementById('camera-container').classList.add('hidden');
-                    document.getElementById('scan-button-container').classList.remove('hidden');
+                    document.getElementById('camera-container').style.display = 'none';
+                    document.getElementById('scan-button-container').style.display = 'flex';
                 }, 2000);
             }
         }
@@ -196,8 +196,8 @@
             html5QrCode = null;
 
             // Hide camera, show button
-            document.getElementById('camera-container').classList.add('hidden');
-            document.getElementById('scan-button-container').classList.remove('hidden');
+            document.getElementById('camera-container').style.display = 'none';
+            document.getElementById('scan-button-container').style.display = 'flex';
         }
 
         // Handle successful scan
