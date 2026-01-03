@@ -106,15 +106,29 @@
                         <span class="text-gray-600" x-text="stats.totaal">0</span>
                     </div>
                 </div>
-                <!-- Countdown timer -->
+                <!-- Countdown timer + sluit knop -->
                 @foreach($toernooi->blokken as $blok)
                 @if($blok->weging_einde && !$blok->weging_gesloten)
                 <div x-data="countdown('{{ $blok->weging_einde->toISOString() }}')"
                      x-show="blokFilter == '{{ $blok->nummer }}' || blokFilter === ''"
                      x-init="start()"
-                     class="text-right">
-                    <div class="text-xs text-gray-500">Blok {{ $blok->nummer }} tot {{ $blok->weging_einde->format('H:i') }}</div>
-                    <div class="font-mono text-lg font-bold" :class="expired ? 'text-red-600' : (warning ? 'text-yellow-600' : 'text-blue-600')" x-text="display"></div>
+                     class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500">Blok {{ $blok->nummer }} tot {{ $blok->weging_einde->format('H:i') }}</div>
+                        <div class="font-mono text-lg font-bold" :class="expired ? 'text-red-600' : (warning ? 'text-yellow-600' : 'text-blue-600')" x-text="display"></div>
+                    </div>
+                    <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST">
+                        @csrf
+                        <button type="submit" onclick="return confirm('Weging Blok {{ $blok->nummer }} sluiten?')"
+                                class="px-3 py-2 rounded text-sm font-medium transition-colors"
+                                :class="expired ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'">
+                            Sluit
+                        </button>
+                    </form>
+                </div>
+                @elseif($blok->weging_gesloten)
+                <div x-show="blokFilter == '{{ $blok->nummer }}'" class="text-right text-gray-500 text-sm">
+                    ✓ Blok {{ $blok->nummer }} gesloten
                 </div>
                 @endif
                 @endforeach
@@ -184,20 +198,6 @@
             </div>
         </div>
 
-        <!-- Weging afsluiten per blok -->
-        @foreach($toernooi->blokken as $blok)
-        @if($blok->weging_einde && !$blok->weging_gesloten)
-        <div x-show="blokFilter == '{{ $blok->nummer }}'" class="bg-white rounded-lg shadow p-3 text-gray-800">
-            <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST">
-                @csrf
-                <button type="submit" onclick="return confirm('Weging voor Blok {{ $blok->nummer }} afsluiten?')"
-                        class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg">
-                    Blok {{ $blok->nummer }} weging afsluiten
-                </button>
-            </form>
-        </div>
-        @endif
-        @endforeach
     </main>
 
     <!-- About Modal -->
