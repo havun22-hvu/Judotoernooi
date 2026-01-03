@@ -30,6 +30,14 @@
             </div>
             @endif
 
+            <!-- Organisator login link -->
+            <div class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6 text-center">
+                <p class="font-medium">Ben je organisator?</p>
+                <a href="{{ route('organisator.login') }}" class="text-blue-600 hover:text-blue-800 underline font-bold">
+                    → Inloggen als organisator
+                </a>
+            </div>
+
             @if(session('success'))
             <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
                 {{ session('success') }}
