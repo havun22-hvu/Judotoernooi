@@ -1,602 +1,404 @@
-@extends('layouts.app')
-@php $pwaApp = 'weging'; @endphp
-@section('manifest', '/manifest-weging.json')
-
-@section('title', 'Weging Interface')
-
-@push('styles')
-<style>
-    /* Tablet-optimized layout */
-    @media (min-width: 768px) {
-        .weging-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    }
-    /* Large numpad buttons */
-    .numpad-btn {
-        font-size: 1.5rem;
-        font-weight: bold;
-        min-height: 60px;
-    }
-    /* Status colors */
-    .status-gewogen { background-color: #dcfce7; border-color: #16a34a; }
-    .status-aanwezig { background-color: #fef3c7; border-color: #d97706; }
-    .status-afwezig { background-color: #fee2e2; border-color: #dc2626; }
-    /* Scanner viewport */
-    #qr-reader { width: 100%; max-width: 400px; margin: 0 auto; }
-    #qr-reader video { border-radius: 0.5rem; }
-</style>
-@endpush
-
-@section('content')
-<div x-data="wegingInterface()" x-init="init()" class="max-w-6xl mx-auto">
-    <!-- Header with blok selection and stats -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="flex flex-wrap justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <h1 class="text-2xl font-bold text-gray-800">Weging</h1>
-                <!-- Blok selector dropdown -->
-                <select x-model="blokFilter" @change="selectBlok(blokFilter ? parseInt(blokFilter) : null)"
-                        class="border-2 border-gray-300 rounded-lg px-3 py-2 font-medium focus:border-blue-500">
-                    <option value="">Alle blokken</option>
-                    @foreach($toernooi->blokken as $blok)
-                    <option value="{{ $blok->nummer }}">
-                        Blok {{ $blok->nummer }}
-                        @if($blok->weging_start) ({{ $blok->weging_start->format('H:i') }}) @endif
-                    </option>
-                    @endforeach
-                </select>
-            </div>
-            <!-- Stats: Gewogen X / Y totaal -->
-            <div class="text-lg font-medium">
-                <span class="text-green-600" x-text="stats.gewogen">0</span>
-                <span class="text-gray-400">/</span>
-                <span class="text-gray-600" x-text="stats.totaal">0</span>
-                <span class="text-gray-400 text-sm ml-1">gewogen</span>
-            </div>
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="manifest" href="/manifest-weging.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <title>Weging - {{ $toernooi->naam }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+        #qr-reader { width: 100%; }
+        #qr-reader video { border-radius: 0.5rem; }
+        #qr-reader__dashboard { display: none !important; }
+        .numpad-btn { font-size: 1.25rem; font-weight: bold; min-height: 50px; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .scanning { animation: pulse 1.5s infinite; }
+    </style>
+</head>
+<body class="bg-purple-900 min-h-screen text-white" x-data="wegingApp()" x-init="init()">
+    <!-- Header -->
+    <header class="bg-purple-800 px-4 py-3 flex items-center justify-between shadow-lg">
+        <div>
+            <h1 class="text-lg font-bold">Weging</h1>
+            <p class="text-purple-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
-    </div>
+        <div class="flex items-center gap-3">
+            <div class="text-2xl font-mono" id="clock"></div>
+            <button @click="showAbout = true" class="p-2 hover:bg-purple-700 rounded-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </button>
+        </div>
+    </header>
 
-    <div class="weging-container">
-        <!-- Left: Search/Scan -->
-        <div class="space-y-4">
+    <main class="p-3 space-y-3">
+        <!-- TOP: Scanner section (1/3 of screen) -->
+        <div class="bg-purple-800/50 rounded-lg p-3">
             <!-- Mode toggle -->
-            <div class="bg-white rounded-lg shadow p-4">
-                <div class="flex gap-2 mb-4">
-                    <button @click="modus = 'zoek'"
-                            :class="modus === 'zoek' ? 'bg-blue-600 text-white' : 'bg-gray-200'"
-                            class="flex-1 py-3 rounded font-medium flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        Zoeken
-                    </button>
-                    <button @click="modus = 'scan'; startScanner()"
-                            :class="modus === 'scan' ? 'bg-blue-600 text-white' : 'bg-gray-200'"
-                            class="flex-1 py-3 rounded font-medium flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                        </svg>
-                        QR Scan
-                    </button>
-                </div>
+            <div class="flex gap-2 mb-3">
+                <button @click="modus = 'zoek'; stopScanner()"
+                        :class="modus === 'zoek' ? 'bg-purple-600 text-white' : 'bg-purple-700/50 text-purple-200'"
+                        class="flex-1 py-2 rounded font-medium text-sm">
+                    🔍 Zoeken
+                </button>
+                <button @click="modus = 'scan'; startScanner()"
+                        :class="modus === 'scan' ? 'bg-purple-600 text-white' : 'bg-purple-700/50 text-purple-200'"
+                        class="flex-1 py-2 rounded font-medium text-sm">
+                    📷 Scannen
+                </button>
+            </div>
 
-                <!-- Search mode -->
-                <div x-show="modus === 'zoek'">
-                    <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-                           placeholder="Zoek op naam..."
-                           class="w-full border-2 rounded-lg px-4 py-3 text-lg focus:border-blue-500 focus:outline-none">
+            <!-- Scanner (top 1/3) -->
+            <div x-show="modus === 'scan'" class="relative" style="height: 30vh;">
+                <div id="qr-reader" class="h-full"></div>
+                <button @click="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                    Stop
+                </button>
+            </div>
 
-                    <div x-show="resultaten.length > 0" class="mt-2 border rounded-lg max-h-64 overflow-y-auto">
-                        <template x-for="judoka in resultaten" :key="judoka.id">
-                            <div @click="selecteerJudoka(judoka)"
-                                 class="p-3 hover:bg-blue-50 cursor-pointer border-b last:border-0 flex justify-between items-center">
-                                <div>
-                                    <div class="font-medium" x-text="judoka.naam"></div>
-                                    <div class="text-sm text-gray-600">
-                                        <span x-text="judoka.club || 'Geen club'"></span> |
-                                        <span x-text="judoka.gewichtsklasse + ' kg'"></span>
-                                    </div>
-                                </div>
-                                <div x-show="judoka.gewogen" class="text-green-600 text-sm font-medium">
-                                    <span x-text="judoka.gewicht_gewogen + ' kg'"></span>
-                                </div>
+            <!-- Search input -->
+            <div x-show="modus === 'zoek'">
+                <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
+                       placeholder="Zoek op naam..."
+                       class="w-full border-2 border-purple-500 bg-purple-800 rounded-lg px-4 py-3 text-lg focus:border-purple-300 focus:outline-none placeholder-purple-400">
+
+                <div x-show="resultaten.length > 0" class="mt-2 bg-white rounded-lg max-h-40 overflow-y-auto">
+                    <template x-for="judoka in resultaten" :key="judoka.id">
+                        <div @click="selecteerJudoka(judoka)"
+                             class="p-3 hover:bg-purple-100 cursor-pointer border-b last:border-0 text-gray-800">
+                            <div class="font-medium" x-text="judoka.naam"></div>
+                            <div class="text-sm text-gray-600">
+                                <span x-text="judoka.club || 'Geen club'"></span> |
+                                <span x-text="judoka.gewichtsklasse + ' kg'"></span>
+                                <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓ gewogen</span>
                             </div>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- QR Scanner mode -->
-                <div x-show="modus === 'scan'">
-                    <div id="qr-reader"></div>
-                    <div class="flex justify-between items-center mt-2">
-                        <p class="text-gray-500 text-sm">Richt camera op QR-code</p>
-                        <button @click="stopScanner()" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-sm font-medium">
-                            Stop
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Countdown timer per blok - onder scanner -->
-            @foreach($toernooi->blokken as $blok)
-            @if($blok->weging_einde && !$blok->weging_gesloten)
-            <div x-data="countdownTimer('{{ $blok->weging_einde->toISOString() }}', {{ $blok->id }}, {{ $blok->nummer }})"
-                 x-show="blokFilter == {{ $blok->nummer }} || blokFilter === null || blokFilter === ''"
-                 x-init="startCountdown()"
-                 class="rounded-lg shadow p-3 transition-colors"
-                 :class="isExpired ? 'bg-red-100 border-2 border-red-500' : (isWarning ? 'bg-yellow-100 border-2 border-yellow-500' : 'bg-white')">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span class="font-medium text-sm" :class="isExpired ? 'text-red-800' : (isWarning ? 'text-yellow-800' : 'text-gray-700')">
-                            Blok {{ $blok->nummer }}
-                        </span>
-                        <span class="text-xs" :class="isExpired ? 'text-red-600' : (isWarning ? 'text-yellow-600' : 'text-gray-400')">
-                            tot {{ $blok->weging_einde->format('H:i') }}
-                        </span>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <template x-if="!isExpired">
-                            <span class="font-mono text-lg font-bold" :class="isWarning ? 'text-yellow-700' : 'text-blue-600'" x-text="timeDisplay"></span>
-                        </template>
-                        <template x-if="isExpired">
-                            <span class="text-red-700 font-bold text-sm">⏰ Voorbij!</span>
-                        </template>
-                        <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit"
-                                    onclick="return confirm('Weging voor Blok {{ $blok->nummer }} afsluiten?')"
-                                    class="px-3 py-1 rounded text-sm font-medium transition-colors"
-                                    :class="isExpired ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'">
-                                Sluit
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            @elseif($blok->weging_gesloten)
-            <div x-show="blokFilter == {{ $blok->nummer }} || blokFilter === null || blokFilter === ''"
-                 class="bg-gray-200 rounded-lg shadow p-3">
-                <div class="flex justify-between items-center">
-                    <span class="font-medium text-sm text-gray-600">Blok {{ $blok->nummer }}</span>
-                    <span class="text-gray-500 text-sm">✓ Gesloten</span>
-                </div>
-            </div>
-            @endif
-            @endforeach
-
-            <!-- Recent weighings -->
-            <div class="bg-white rounded-lg shadow p-4">
-                <h3 class="font-bold text-gray-700 mb-3">Recente wegingen</h3>
-                <div class="space-y-2 max-h-48 overflow-y-auto">
-                    <template x-for="item in recenteWegingen" :key="item.id">
-                        <div class="flex justify-between items-center text-sm p-2 bg-gray-50 rounded">
-                            <span x-text="item.naam"></span>
-                            <span class="font-medium" x-text="item.gewicht + ' kg'"></span>
                         </div>
                     </template>
-                    <div x-show="recenteWegingen.length === 0" class="text-gray-400 text-sm text-center py-4">
-                        Nog geen wegingen
-                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Judoka details + weight input -->
-        <div class="bg-white rounded-lg shadow p-4">
-            <!-- No selection state -->
-            <div x-show="!geselecteerd" class="text-center py-12 text-gray-400">
-                <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-                <p>Zoek of scan een judoka</p>
+        <!-- UNDER SCANNER: Blok + Stats + Countdown -->
+        <div class="bg-white rounded-lg shadow p-3 text-gray-800">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <select x-model="blokFilter" @change="selectBlok()"
+                            class="border-2 border-gray-300 rounded px-2 py-1 text-sm font-medium">
+                        <option value="">Alle blokken</option>
+                        @foreach($toernooi->blokken as $blok)
+                        <option value="{{ $blok->nummer }}">Blok {{ $blok->nummer }}</option>
+                        @endforeach
+                    </select>
+                    <div class="text-lg font-bold">
+                        <span class="text-green-600" x-text="stats.gewogen">0</span>
+                        <span class="text-gray-400">/</span>
+                        <span class="text-gray-600" x-text="stats.totaal">0</span>
+                    </div>
+                </div>
+                <!-- Countdown timer -->
+                @foreach($toernooi->blokken as $blok)
+                @if($blok->weging_einde && !$blok->weging_gesloten)
+                <div x-data="countdown('{{ $blok->weging_einde->toISOString() }}')"
+                     x-show="blokFilter == '{{ $blok->nummer }}' || blokFilter === ''"
+                     x-init="start()"
+                     class="text-right">
+                    <div class="text-xs text-gray-500">Blok {{ $blok->nummer }} tot {{ $blok->weging_einde->format('H:i') }}</div>
+                    <div class="font-mono text-lg font-bold" :class="expired ? 'text-red-600' : (warning ? 'text-yellow-600' : 'text-blue-600')" x-text="display"></div>
+                </div>
+                @endif
+                @endforeach
+            </div>
+        </div>
+
+        <!-- BOTTOM: Judoka details + Numpad -->
+        <div class="bg-white rounded-lg shadow p-4 text-gray-800">
+            <!-- No selection -->
+            <div x-show="!geselecteerd" class="text-center py-8 text-gray-400">
+                <p class="text-lg">Scan of zoek een judoka</p>
             </div>
 
             <!-- Selected judoka -->
             <div x-show="geselecteerd" x-cloak>
-                <!-- Judoka info card -->
-                <div class="border-2 rounded-lg p-4 mb-4"
-                     :class="geselecteerd?.gewogen ? 'status-gewogen border-green-500' : 'border-gray-200'">
+                <!-- Info card -->
+                <div class="border-2 rounded-lg p-3 mb-3" :class="geselecteerd?.gewogen ? 'border-green-500 bg-green-50' : 'border-gray-200'">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800" x-text="geselecteerd?.naam"></h2>
-                            <p class="text-gray-600" x-text="geselecteerd?.club || 'Geen club'"></p>
+                            <h2 class="text-xl font-bold" x-text="geselecteerd?.naam"></h2>
+                            <p class="text-gray-600 text-sm" x-text="geselecteerd?.club || 'Geen club'"></p>
                         </div>
-                        <button @click="geselecteerd = null; gewichtInput = ''"
-                                class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+                        <button @click="geselecteerd = null; gewichtInput = ''" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
                     </div>
-
-                    <div class="grid grid-cols-3 gap-2 mt-4">
-                        <div class="bg-gray-100 rounded p-2 text-center">
-                            <div class="text-xs text-gray-500">Klasse</div>
-                            <div class="font-bold" x-text="(geselecteerd?.gewichtsklasse || '?') + ' kg'"></div>
-                        </div>
-                        <div class="bg-gray-100 rounded p-2 text-center">
-                            <div class="text-xs text-gray-500">Leeftijd</div>
-                            <div class="font-bold" x-text="geselecteerd?.leeftijdsklasse || '?'"></div>
-                        </div>
-                        <div class="bg-gray-100 rounded p-2 text-center">
-                            <div class="text-xs text-gray-500">Blok</div>
-                            <div class="font-bold" x-text="geselecteerd?.blok ? 'Blok ' + geselecteerd.blok : '-'"></div>
-                        </div>
+                    <div class="flex gap-2 mt-2 text-sm">
+                        <span class="bg-gray-100 px-2 py-1 rounded" x-text="(geselecteerd?.gewichtsklasse || '?') + ' kg'"></span>
+                        <span class="bg-gray-100 px-2 py-1 rounded" x-text="geselecteerd?.leeftijdsklasse || '?'"></span>
+                        <span class="bg-gray-100 px-2 py-1 rounded" x-text="geselecteerd?.blok ? 'Blok ' + geselecteerd.blok : '-'"></span>
                     </div>
-
-                    <!-- Already weighed indicator -->
-                    <div x-show="geselecteerd?.gewogen" class="mt-4 bg-green-100 text-green-800 p-3 rounded text-center">
-                        Al gewogen: <span class="font-bold" x-text="geselecteerd?.gewicht_gewogen + ' kg'"></span>
-                        <span x-show="geselecteerd?.aantal_wegingen" class="text-green-600 text-sm ml-2" x-text="'(' + (geselecteerd?.aantal_wegingen || 0) + 'x gewogen)'"></span>
+                    <div x-show="geselecteerd?.gewogen" class="mt-2 text-green-700 font-medium">
+                        Al gewogen: <span x-text="geselecteerd?.gewicht_gewogen + ' kg'"></span>
                     </div>
-
-                    <!-- Max wegingen warning -->
-                    @if($toernooi->max_wegingen)
-                    <div x-show="(geselecteerd?.aantal_wegingen || 0) >= {{ $toernooi->max_wegingen }}" class="mt-2 bg-red-100 text-red-800 p-3 rounded text-center">
-                        Maximum aantal wegingen ({{ $toernooi->max_wegingen }}x) bereikt!
-                    </div>
-                    @endif
                 </div>
 
                 <!-- Weight input -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2">Gewicht (kg)</label>
+                <div class="mb-3">
                     <div class="relative">
                         <input type="text" x-model="gewichtInput" readonly
-                               class="w-full border-2 rounded-lg px-4 py-4 text-3xl text-center font-bold focus:border-blue-500"
-                               :class="gewichtInput ? 'border-blue-500' : 'border-gray-300'"
+                               class="w-full border-2 rounded-lg px-4 py-3 text-2xl text-center font-bold"
+                               :class="gewichtInput ? 'border-purple-500' : 'border-gray-300'"
                                placeholder="0.0">
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">kg</span>
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">kg</span>
                     </div>
                 </div>
 
-                <!-- Numpad -->
-                <div class="grid grid-cols-3 gap-2 mb-4">
-                    <template x-for="n in ['7','8','9','4','5','6','1','2','3','.','0','C']">
+                <!-- Compact Numpad -->
+                <div class="grid grid-cols-4 gap-1 mb-3">
+                    <template x-for="n in ['7','8','9','C','4','5','6','.','1','2','3','0']">
                         <button @click="numpadInput(n)"
-                                class="numpad-btn bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                :class="n === 'C' ? 'bg-red-100 hover:bg-red-200 text-red-700' : ''"
+                                class="numpad-btn rounded-lg transition-colors"
+                                :class="n === 'C' ? 'bg-red-100 hover:bg-red-200 text-red-700' : 'bg-gray-100 hover:bg-gray-200'"
                                 x-text="n"></button>
                     </template>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="space-y-2">
-                    <button @click="registreerGewicht()"
-                            :disabled="!gewichtInput || bezig"
-                            class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg text-xl flex items-center justify-center gap-2">
-                        <svg x-show="bezig" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span x-text="bezig ? 'Bezig...' : 'Registreer Gewicht'"></span>
-                    </button>
+                <!-- Register button -->
+                <button @click="registreerGewicht()"
+                        :disabled="!gewichtInput || bezig"
+                        class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
+                    <span x-text="bezig ? 'Bezig...' : '✓ Registreer'"></span>
+                </button>
 
-                    @if(!($toernooi->weging_verplicht ?? true))
-                    <!-- Aanwezig/Afwezig knoppen alleen als weging niet verplicht is -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <button @click="markeerAanwezig()"
-                                :disabled="bezig"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 rounded-lg">
-                            ✓ Aanwezig
-                        </button>
-                        <button @click="markeerAfwezig()"
-                                :disabled="bezig"
-                                class="bg-red-500 hover:bg-red-600 text-white font-medium py-3 rounded-lg">
-                            ✕ Afwezig
-                        </button>
-                    </div>
-                    <p class="text-xs text-gray-500 text-center">Weging is niet verplicht op dit toernooi</p>
-                    @endif
-                </div>
-
-                <!-- Feedback message -->
-                <div x-show="melding" x-transition
-                     class="mt-4 p-4 rounded-lg text-center font-medium"
-                     :class="meldingType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                    <span x-text="melding"></span>
-                </div>
+                <!-- Feedback -->
+                <div x-show="melding" x-transition class="mt-3 p-3 rounded-lg text-center font-medium"
+                     :class="meldingType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                     x-text="melding"></div>
             </div>
         </div>
+
+        <!-- Weging afsluiten per blok -->
+        @foreach($toernooi->blokken as $blok)
+        @if($blok->weging_einde && !$blok->weging_gesloten)
+        <div x-show="blokFilter == '{{ $blok->nummer }}'" class="bg-white rounded-lg shadow p-3 text-gray-800">
+            <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST">
+                @csrf
+                <button type="submit" onclick="return confirm('Weging voor Blok {{ $blok->nummer }} afsluiten?')"
+                        class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 rounded-lg">
+                    Blok {{ $blok->nummer }} weging afsluiten
+                </button>
+            </form>
+        </div>
+        @endif
+        @endforeach
+    </main>
+
+    <!-- About Modal -->
+    <div x-show="showAbout" x-cloak class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full text-gray-800">
+            <h2 class="text-xl font-bold mb-4">Over</h2>
+            <p class="mb-2"><strong>Weging Interface</strong></p>
+            <p class="text-gray-600 mb-4">{{ $toernooi->naam }}</p>
+            <p class="text-sm text-gray-500 mb-4">Versie {{ config('toernooi.version') }}</p>
+            <button @click="showAbout = false" class="w-full bg-purple-600 text-white py-2 rounded-lg font-medium">
+                Sluiten
+            </button>
+        </div>
     </div>
-</div>
 
-<!-- QR Scanner library -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+    // Clock
+    function updateClock() {
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 
-<script>
-// Countdown timer component
-function countdownTimer(eindtijd, blokId, blokNummer) {
-    return {
-        eindtijd: new Date(eindtijd),
-        timeDisplay: '',
-        isExpired: false,
-        isWarning: false,
-        interval: null,
-
-        startCountdown() {
-            this.updateTime();
-            this.interval = setInterval(() => this.updateTime(), 1000);
-        },
-
-        updateTime() {
-            const now = new Date();
-            const diff = this.eindtijd - now;
-
-            if (diff <= 0) {
-                this.isExpired = true;
-                this.isWarning = false;
-                this.timeDisplay = '0:00';
-                if (this.interval) {
+    // Countdown timer
+    function countdown(eindtijd) {
+        return {
+            end: new Date(eindtijd),
+            display: '',
+            expired: false,
+            warning: false,
+            interval: null,
+            start() {
+                this.update();
+                this.interval = setInterval(() => this.update(), 1000);
+            },
+            update() {
+                const diff = this.end - new Date();
+                if (diff <= 0) {
+                    this.expired = true;
+                    this.display = 'Voorbij!';
                     clearInterval(this.interval);
+                    return;
                 }
-                return;
-            }
-
-            // Warning at 5 minutes
-            this.isWarning = diff <= 5 * 60 * 1000;
-
-            const minutes = Math.floor(diff / 60000);
-            const seconds = Math.floor((diff % 60000) / 1000);
-
-            if (minutes >= 60) {
-                const hours = Math.floor(minutes / 60);
-                const mins = minutes % 60;
-                this.timeDisplay = `${hours}:${String(mins).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            } else {
-                this.timeDisplay = `${minutes}:${String(seconds).padStart(2, '0')}`;
+                this.warning = diff <= 5 * 60 * 1000;
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                this.display = `${m}:${String(s).padStart(2, '0')}`;
             }
         }
     }
-}
 
-function wegingInterface() {
-    return {
-        modus: 'zoek',
-        zoekterm: '',
-        resultaten: [],
-        geselecteerd: null,
-        gewichtInput: '',
-        melding: '',
-        meldingType: 'success',
-        bezig: false,
-        blokFilter: null,
-        recenteWegingen: [],
-        stats: { gewogen: 0, totaal: 0 },
-        scanner: null,
+    // Main app
+    function wegingApp() {
+        return {
+            modus: 'zoek',
+            zoekterm: '',
+            resultaten: [],
+            geselecteerd: null,
+            gewichtInput: '',
+            melding: '',
+            meldingType: 'success',
+            bezig: false,
+            blokFilter: '',
+            stats: { gewogen: 0, totaal: 0 },
+            scanner: null,
+            showAbout: false,
 
-        init() {
-            this.laadStats();
-        },
+            init() {},
 
-        async laadStats() {
-            // Stats could be loaded from API
-            // For now we use initial data
-        },
+            selectBlok() {
+                this.zoekJudoka();
+            },
 
-        selectBlok(nummer) {
-            this.blokFilter = nummer;
-            this.zoekJudoka();
-        },
+            async zoekJudoka() {
+                if (this.zoekterm.length < 2) {
+                    this.resultaten = [];
+                    return;
+                }
+                let url = `{{ route('toernooi.judoka.zoek', $toernooi) }}?q=${encodeURIComponent(this.zoekterm)}`;
+                if (this.blokFilter) url += `&blok=${this.blokFilter}`;
+                const response = await fetch(url);
+                this.resultaten = await response.json();
+            },
 
-        async zoekJudoka() {
-            if (this.zoekterm.length < 2) {
+            selecteerJudoka(judoka) {
+                this.geselecteerd = judoka;
                 this.resultaten = [];
-                return;
-            }
+                this.zoekterm = '';
+                this.gewichtInput = judoka.gewicht_gewogen ? String(judoka.gewicht_gewogen) : '';
+                this.melding = '';
+            },
 
-            let url = `{{ route('toernooi.judoka.zoek', $toernooi) }}?q=${encodeURIComponent(this.zoekterm)}`;
-            if (this.blokFilter) {
-                url += `&blok=${this.blokFilter}`;
-            }
+            numpadInput(key) {
+                if (key === 'C') { this.gewichtInput = ''; return; }
+                if (key === '.' && this.gewichtInput.includes('.')) return;
+                if (this.gewichtInput.length >= 5) return;
+                this.gewichtInput += key;
+            },
 
-            const response = await fetch(url);
-            this.resultaten = await response.json();
-        },
+            async startScanner() {
+                if (this.scanner) {
+                    try { await this.scanner.stop(); } catch (e) {}
+                }
+                await this.$nextTick();
+                this.scanner = new Html5Qrcode("qr-reader");
+                try {
+                    await this.scanner.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 200, height: 200 } },
+                        async (text) => {
+                            let qr = text;
+                            if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
+                            await this.scanQR(qr);
+                        },
+                        () => {}
+                    );
+                } catch (err) {
+                    this.melding = 'Camera niet beschikbaar';
+                    this.meldingType = 'error';
+                    this.modus = 'zoek';
+                }
+            },
 
-        selecteerJudoka(judoka) {
-            this.geselecteerd = judoka;
-            this.resultaten = [];
-            this.zoekterm = '';
-            this.gewichtInput = judoka.gewicht_gewogen ? String(judoka.gewicht_gewogen) : '';
-            this.melding = '';
-        },
-
-        numpadInput(key) {
-            if (key === 'C') {
-                this.gewichtInput = '';
-                return;
-            }
-            if (key === '.' && this.gewichtInput.includes('.')) return;
-            if (this.gewichtInput.length >= 5) return;
-
-            this.gewichtInput += key;
-        },
-
-        async startScanner() {
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-            }
-
-            await this.$nextTick();
-
-            this.scanner = new Html5Qrcode("qr-reader");
-
-            try {
-                await this.scanner.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
-                    async (decodedText) => {
-                        // Extract QR code from URL or use directly
-                        let qrCode = decodedText;
-                        if (decodedText.includes('/weegkaart/')) {
-                            qrCode = decodedText.split('/weegkaart/').pop();
-                        }
-
-                        await this.scanQR(qrCode);
-                    },
-                    (errorMessage) => {
-                        // Ignore scan errors
-                    }
-                );
-            } catch (err) {
-                console.error('Camera error:', err);
-                this.melding = 'Camera niet beschikbaar';
-                this.meldingType = 'error';
+            async stopScanner() {
+                if (this.scanner) {
+                    try { await this.scanner.stop(); } catch (e) {}
+                    this.scanner = null;
+                }
                 this.modus = 'zoek';
-            }
-        },
+            },
 
-        async stopScanner() {
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-                this.scanner = null;
-            }
-            this.modus = 'zoek';
-        },
-
-        async scanQR(qrCode) {
-            // Stop scanner after successful scan
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-                this.scanner = null;
-            }
-
-            const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ qr_code: qrCode })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.selecteerJudoka(data.judoka);
-                this.modus = 'zoek'; // Switch to search mode to show details
-            } else {
-                this.melding = data.message || 'Judoka niet gevonden';
-                this.meldingType = 'error';
-                this.modus = 'zoek'; // Stop scanner, user can manually restart
-            }
-        },
-
-        async registreerGewicht() {
-            if (!this.geselecteerd || !this.gewichtInput || this.bezig) return;
-
-            this.bezig = true;
-            this.melding = '';
-
-            try {
-                const response = await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/registreer`, {
+            async scanQR(qrCode) {
+                if (this.scanner) {
+                    try { await this.scanner.stop(); } catch (e) {}
+                    this.scanner = null;
+                }
+                const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ gewicht: parseFloat(this.gewichtInput) })
+                    body: JSON.stringify({ qr_code: qrCode })
                 });
-
                 const data = await response.json();
-
                 if (data.success) {
-                    // Update recent list
-                    this.recenteWegingen.unshift({
-                        id: this.geselecteerd.id,
-                        naam: this.geselecteerd.naam,
-                        gewicht: this.gewichtInput
+                    this.selecteerJudoka(data.judoka);
+                    this.modus = 'zoek';
+                    if (navigator.vibrate) navigator.vibrate(100);
+                } else {
+                    this.melding = data.message || 'Niet gevonden';
+                    this.meldingType = 'error';
+                    this.modus = 'zoek';
+                }
+            },
+
+            async registreerGewicht() {
+                if (!this.geselecteerd || !this.gewichtInput || this.bezig) return;
+                this.bezig = true;
+                this.melding = '';
+                try {
+                    const response = await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/registreer`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ gewicht: parseFloat(this.gewichtInput) })
                     });
-                    if (this.recenteWegingen.length > 10) this.recenteWegingen.pop();
-
-                    // Update stats
-                    this.stats.gewogen++;
-
-                    if (data.binnen_klasse) {
-                        this.melding = `✓ Gewicht ${this.gewichtInput} kg geregistreerd!`;
-                        this.meldingType = 'success';
+                    const data = await response.json();
+                    if (data.success) {
+                        this.stats.gewogen++;
+                        if (data.binnen_klasse) {
+                            this.melding = `✓ ${this.gewichtInput} kg geregistreerd`;
+                            this.meldingType = 'success';
+                        } else {
+                            this.melding = `⚠️ ${data.opmerking}`;
+                            this.meldingType = 'error';
+                        }
+                        this.geselecteerd.gewogen = true;
+                        this.geselecteerd.gewicht_gewogen = this.gewichtInput;
+                        setTimeout(() => {
+                            this.geselecteerd = null;
+                            this.gewichtInput = '';
+                            this.melding = '';
+                        }, 2000);
                     } else {
-                        this.melding = `⚠️ ${data.opmerking}`;
+                        this.melding = data.message || 'Fout';
                         this.meldingType = 'error';
                     }
-
-                    // Mark as weighed
-                    this.geselecteerd.gewogen = true;
-                    this.geselecteerd.gewicht_gewogen = this.gewichtInput;
-
-                    // Clear after 2 seconds for next judoka
-                    setTimeout(() => {
-                        this.geselecteerd = null;
-                        this.gewichtInput = '';
-                        this.melding = '';
-                    }, 2000);
-                } else {
-                    this.melding = data.message || 'Fout bij registreren';
+                } catch (error) {
+                    this.melding = 'Fout: ' + error.message;
                     this.meldingType = 'error';
+                } finally {
+                    this.bezig = false;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                this.melding = 'Fout bij registreren: ' + error.message;
-                this.meldingType = 'error';
-            } finally {
-                this.bezig = false;
-            }
-        },
-
-        async markeerAanwezig() {
-            if (!this.geselecteerd || this.bezig) return;
-
-            this.bezig = true;
-
-            try {
-                await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/aanwezig`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-
-                this.melding = '✓ Gemarkeerd als aanwezig';
-                this.meldingType = 'success';
-
-                setTimeout(() => {
-                    this.geselecteerd = null;
-                    this.gewichtInput = '';
-                    this.melding = '';
-                }, 1500);
-            } finally {
-                this.bezig = false;
-            }
-        },
-
-        async markeerAfwezig() {
-            if (!this.geselecteerd || this.bezig) return;
-
-            this.bezig = true;
-
-            try {
-                await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/afwezig`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
-                });
-
-                this.melding = '✕ Gemarkeerd als afwezig';
-                this.meldingType = 'error';
-
-                setTimeout(() => {
-                    this.geselecteerd = null;
-                    this.gewichtInput = '';
-                    this.melding = '';
-                }, 1500);
-            } finally {
-                this.bezig = false;
             }
         }
     }
-}
-</script>
-@endsection
+    </script>
+
+    @include('partials.pwa-mobile', ['pwaApp' => 'weging'])
+</body>
+</html>
