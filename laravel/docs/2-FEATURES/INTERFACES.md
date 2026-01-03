@@ -2,6 +2,19 @@
 
 > **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag
 
+## Wie ziet wat?
+
+| Rol | Interface | Navigatie tabs |
+|-----|-----------|----------------|
+| **Superadmin/Organisator** | layouts.app | ✅ Volledig |
+| **Hoofdjury** | layouts.app | ✅ Volledig (read-only) |
+| **Weging** | Standalone PWA | ❌ |
+| **Mat** | Standalone PWA | ❌ |
+| **Spreker** | Standalone PWA | ❌ |
+| **Dojo** | Standalone PWA | ❌ |
+
+---
+
 ## Consistent Layout Pattern
 
 Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - geen navigatie tabs:
