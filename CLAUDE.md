@@ -48,14 +48,36 @@ cd laravel && php artisan serve --port=8001
 
 ## Dit Project
 
-- **Framework:** Laravel 11
-- **Local DB:** SQLite
-- **Server DB:** MySQL (judo_toernooi)
-- **Features:** Toernooi management, deelnemers import, poule indeling, weging, mat interface
+| Aspect | Waarde |
+|--------|--------|
+| **Framework** | Laravel 11 + Blade + Alpine.js + Tailwind |
+| **Local DB** | SQLite |
+| **Server DB** | MySQL (judo_toernooi) |
+
+### Features
+- Toernooi management, deelnemers import, poule indeling
+- Weging interface, mat interface, eliminatie systeem
+- **Mollie betalingen** (Connect + Platform mode)
+
+## Mollie Betalingen
+
+> **Uitgebreide docs:** `.claude/context.md` en `laravel/docs/2-FEATURES/BETALINGEN.md`
+
+| Modus | Geld naar | Toeslag |
+|-------|-----------|---------|
+| **Connect** | Organisator's eigen Mollie | Nee |
+| **Platform** | JudoToernooi's Mollie | €0,50 |
+
+**Key files:**
+- `app/Services/MollieService.php` - Hybride service
+- `config/services.php` - Mollie config
+- `app/Models/Toernooi.php` - Helper methods
 
 ## Knowledge Base
 
-Voor uitgebreide info:
-- **Context:** `.claude/context.md` (features, database, deploy)
-- **Project docs:** `laravel/docs/` (installatie, API, database schema)
-- **HavunCore KB:** `D:\GitHub\HavunCore\docs\kb\`
+| Onderwerp | Locatie |
+|-----------|---------|
+| Project details | `.claude/context.md` |
+| Mollie betalingen | `laravel/docs/2-FEATURES/BETALINGEN.md` |
+| Project docs | `laravel/docs/` |
+| HavunCore KB | `D:\GitHub\HavunCore\docs\kb\`
