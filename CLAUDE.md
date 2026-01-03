@@ -23,10 +23,17 @@
 - Als gebruiker iets herhaalt: direct opslaan in docs
 
 **Documentatie discipline:**
-- **EERST** bestaande docs lezen (`laravel/docs/`) voordat je nieuwe info toevoegt
+- **Oriënteer** via hoofd docs: `CLAUDE.md` → `laravel/docs/README.md`
+- **Hiërarchisch**: hoofd docs verwijzen naar detail docs → lees die EERST
 - **GEEN** dubbele documentatie - check of info al ergens staat
 - **ONDERHOUD** bestaande docs, maak niet steeds nieuwe files
-- Belangrijkste docs: `GEBRUIKERSHANDLEIDING.md`, `BETALINGEN.md`
+
+**Hoofd docs → Detail docs:**
+| Onderwerp | Hoofd | Detail |
+|-----------|-------|--------|
+| Workflow toernooi | README.md | `GEBRUIKERSHANDLEIDING.md` |
+| Betalingen | CLAUDE.md | `BETALINGEN.md` |
+| Interfaces/PWA | README.md | `INTERFACES.md` |
 
 ### Auto-start servers (bij lokaal testen)
 ```bash
