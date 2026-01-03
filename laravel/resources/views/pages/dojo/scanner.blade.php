@@ -63,38 +63,38 @@
 
         <!-- Main content -->
         <main class="flex-1 flex flex-col p-4">
-            <!-- Scanner view -->
-            <div id="scanner-container" class="flex-1 flex flex-col">
-                <!-- Camera (hidden by default) -->
-                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-4 relative" style="display: none;">
-                    <div id="reader" class="w-full"></div>
+            <!-- Scanner view - top 1/3 of screen -->
+            <div id="scanner-container" class="flex flex-col">
+                <!-- Camera (hidden by default) - compact at top -->
+                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-3 relative" style="display: none; height: 35vh;">
+                    <div id="reader" class="w-full h-full"></div>
                     <div id="scanner-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="border-2 border-white/50 rounded-lg w-48 h-48 scanning-indicator"></div>
+                        <div class="border-2 border-white/50 rounded-lg w-40 h-40 scanning-indicator"></div>
                     </div>
                     <button onclick="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-medium z-10">
                         Stop
                     </button>
                 </div>
 
-                <!-- Scan button (shown when camera is off) -->
-                <div id="scan-button-container" class="flex-1 flex flex-col items-center justify-center">
-                    <button onclick="startScanner()" class="bg-green-600 hover:bg-green-700 text-white rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-lg transform active:scale-95 transition-transform">
-                        <svg class="w-20 h-20 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Scan button (shown when camera is off) - compact at top -->
+                <div id="scan-button-container" class="flex flex-col items-center justify-center py-8">
+                    <button onclick="startScanner()" class="bg-green-600 hover:bg-green-700 text-white rounded-full w-36 h-36 flex flex-col items-center justify-center shadow-lg transform active:scale-95 transition-transform">
+                        <svg class="w-16 h-16 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
                         </svg>
-                        <span class="text-xl font-bold">Scan</span>
+                        <span class="text-lg font-bold">Scan</span>
                     </button>
-                    <p class="text-blue-200 mt-4">Tik om camera te starten</p>
+                    <p class="text-blue-200 mt-2 text-sm">Tik om camera te starten</p>
                 </div>
 
                 <!-- Instructions -->
-                <div class="bg-blue-800/50 rounded-lg p-4 text-center mt-4">
-                    <p class="text-lg">Scan de QR-code op de coach kaart</p>
-                    <p class="text-blue-200 text-sm mt-1">Controleer de foto met de persoon</p>
+                <div class="bg-blue-800/50 rounded-lg p-3 text-center">
+                    <p class="text-base">Scan de QR-code op de coach kaart</p>
+                    <p class="text-blue-200 text-xs mt-1">Controleer de foto met de persoon</p>
                 </div>
 
                 <!-- Manual entry -->
-                <div class="mt-4">
+                <div class="mt-3">
                     <button onclick="showManualEntry()" class="w-full bg-blue-700 hover:bg-blue-600 py-3 rounded-lg font-medium">
                         Handmatig invoeren
                     </button>
