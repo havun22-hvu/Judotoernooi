@@ -2,6 +2,31 @@
 
 Alle belangrijke wijzigingen worden hier bijgehouden.
 
+## [2026-01-03] - Weging PWA & Authenticatie Cleanup
+
+### Gewijzigd
+- **Weging Interface** (`pages/weging/interface.blade.php`): Complete rewrite als standalone PWA
+  - Geen navigatie meer (geen layouts.app)
+  - Fixed layout: scanner bovenin (45%), controls onderin (55%)
+  - Zoekinput altijd zichtbaar onder scanner (springt niet meer)
+  - Blauwe kleur theme (#1e40af)
+  - Scanner: 300px max-width, 220px qrbox
+- **Dojo Scanner** (`pages/dojo/scanner.blade.php`): Layout verbeteringen
+  - Scanner compacter in bovenste deel scherm
+  - Betere mobiele ervaring
+
+### Fixes
+- **Tab redirect fix** (`ToernooiController.php`): Na bloktijden opslaan blijft user op Organisatie tab
+  - Toegevoegd: `?tab=organisatie` parameter aan redirect
+  - View leest tab parameter voor Alpine.js initialisatie
+
+### Verwijderd
+- **Legacy wachtwoorden sectie** (`pages/toernooi/edit.blade.php`): 135 regels verwijderd
+  - Alleen organisator en superadmin login blijft
+  - Toernooi-level wachtwoorden niet meer nodig
+
+---
+
 ## [2026-01-01] - B-Groep Start Niveau Fix
 
 ### Fixes

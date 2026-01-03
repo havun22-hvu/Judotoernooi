@@ -166,6 +166,29 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 
 ---
 
+## Authenticatie
+
+### Huidige Situatie
+- **Organisator login** - Via Laravel Auth (email/wachtwoord)
+- **Superadmin login** - Via Laravel Auth
+- ~~Legacy wachtwoorden~~ - **Verwijderd** (3 jan 2026)
+
+### Wat is verwijderd?
+- Toernooi-level wachtwoorden (per rol: weging, mat, spreker, etc.)
+- 135 regels uit `pages/toernooi/edit.blade.php`
+- Organisatie tab toont nu alleen bloktijden
+
+### Routes (toegang)
+```
+/login              → Organisator/superadmin login
+/toernooi/{id}/*    → Authenticated routes
+/weging/*           → Publiek (geen auth meer nodig)
+/mat/*              → Publiek
+/spreker/*          → Publiek
+```
+
+---
+
 ## Project Structuur
 
 ```
