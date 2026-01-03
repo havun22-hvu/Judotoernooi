@@ -200,19 +200,30 @@
 
     // Service Worker Updates
     let newWorker = null;
+    const APP_VERSION = '{{ $appVersion }}';
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
-            // Check for updates every 60 seconds
-            setInterval(() => reg.update(), 60000);
+        // Register with cache-busting query param
+        navigator.serviceWorker.register('/sw.js?v=' + APP_VERSION).then(reg => {
+            // Immediate update check on load
+            reg.update();
+
+            // Check for updates every 30 seconds
+            setInterval(() => reg.update(), 30000);
 
             reg.addEventListener('updatefound', () => {
                 newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // New version available
+                        // New version available - show banner immediately
                         document.getElementById('pwa-update-section').classList.remove('hidden');
                         document.getElementById('pwa-update-banner').classList.remove('hidden');
+                        // Auto-apply after 2 seconds for seamless update
+                        setTimeout(() => {
+                            if (confirm('Nieuwe versie beschikbaar! Nu updaten?')) {
+                                applyUpdate();
+                            }
+                        }, 1000);
                     }
                 });
             });
@@ -221,7 +232,13 @@
             if (reg.active) {
                 const channel = new MessageChannel();
                 channel.port1.onmessage = (event) => {
-                    document.getElementById('pwa-sw-version').textContent = `SW: v${event.data.version}`;
+                    const swVersion = event.data.version;
+                    document.getElementById('pwa-sw-version').textContent = `SW: v${swVersion}`;
+                    // Check if SW version matches app version
+                    if (swVersion !== APP_VERSION) {
+                        console.log('Version mismatch! App:', APP_VERSION, 'SW:', swVersion);
+                        reg.update(); // Force update check
+                    }
                 };
                 reg.active.postMessage('CHECK_UPDATE', [channel.port2]);
             }
