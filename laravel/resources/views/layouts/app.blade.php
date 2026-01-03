@@ -196,19 +196,7 @@
     </script>
     @endif
 
-    {{-- Service Worker Registration --}}
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('SW registered:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('SW registration failed:', error);
-                    });
-            });
-        }
-    </script>
+    {{-- PWA Support (includes Service Worker registration) --}}
+    @include('partials.pwa-mobile')
 </body>
 </html>

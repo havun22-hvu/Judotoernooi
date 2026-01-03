@@ -8,6 +8,7 @@ Welkom bij de documentatie van het WestFries Open JudoToernooi Management Systee
 docs/
 ├── 1-GETTING-STARTED/     # Installatie en configuratie
 ├── 2-FEATURES/            # Feature documentatie
+│   ├── BETALINGEN.md      # Mollie integratie
 │   └── ELIMINATIE/        # Double elimination systeem
 ├── 3-TECHNICAL/           # API, database, ontwikkelaar
 ├── 4-PLANNING/            # Toekomstige features
@@ -24,6 +25,7 @@ docs/
 
 ### 2. Features
 - [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding
+- [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie (Connect + Platform)
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
 - [Eliminatie Systeem](./2-FEATURES/ELIMINATIE/README.md) - Double elimination
@@ -81,9 +83,11 @@ laravel/
 ├── app/
 │   ├── Enums/           # Band, Geslacht, Leeftijdsklasse
 │   ├── Http/Controllers/
-│   ├── Models/          # Eloquent models
-│   └── Services/        # Business logic (EliminatieService, etc.)
-├── config/toernooi.php  # Toernooi configuratie
+│   ├── Models/          # Toernooi, Judoka, Betaling, etc.
+│   └── Services/        # MollieService, EliminatieService, etc.
+├── config/
+│   ├── toernooi.php     # Toernooi configuratie
+│   └── services.php     # Mollie API config
 ├── database/migrations/
 ├── docs/                # Deze documentatie
 ├── resources/views/     # Blade templates

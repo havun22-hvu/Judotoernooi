@@ -4,40 +4,55 @@
 > Lees dit EERST bij een nieuwe sessie.
 
 ## Laatste sessie
-**Datum:** 2024-12-31 (avond)
+**Datum:** 2026-01-03
 **Door:** Claude
 
 ---
 
-## Wat vandaag gedaan
+## Wat recent gedaan
 
-### B-Groep Slot Nummering Fix
+### Mollie Betalingen Integratie
 
-- ✅ **Visuele slot nummers gefixed** - Lopen nu correct door van boven naar beneden (1-16)
-- ✅ **Spiegeling is nu alleen grafisch** - WIT altijd boven, BLAUW altijd onder
-- ✅ **Debug Slots toggle** - "🔢 Slots AAN/UIT" knop in A-groep én B-groep
-- ✅ **Documentatie SLOT_SYSTEEM.md** - Uitgebreid met B-groep gespiegelde layout uitleg
+- ✅ **Database migration** - Velden voor betalingen in toernooien en judokas tabellen
+- ✅ **MollieService** - Hybride service (Connect + Platform mode)
+- ✅ **Toernooi model** - Helper methods (`usesMollieConnect()`, `calculatePaymentAmount()`, etc.)
+- ✅ **Config** - Mollie configuratie in `config/services.php`
+- ✅ **Simulatie mode** - Voor lokaal testen zonder echte Mollie keys
+- ✅ **Documentatie** - `laravel/docs/2-FEATURES/BETALINGEN.md`
 
-### Technische Details
+### Twee Betalingsmodi
 
-**Probleem:** In B-groep onderste helft waren slot nummers gespiegeld (16, 15, 14... ipv 9, 10, 11...)
-
-**Oorzaak:** De `isMirrored` parameter wisselde ook de slot nummers om, maar spiegeling is alleen visueel
-
-**Oplossing:**
-- Visuele slot nummers (`visualSlotWit`, `visualSlotBlauw`) worden nu berekend in render loops
-- `renderBPotje()` accepteert nu optionele visuele slot parameters
-- A-groep: `visualSlotWit = wedIdx * 2 + 1`
-- B-groep onderste helft: `visualSlotWit = halfCount * 2 + mirroredIdx * 2 + 1`
-
-**Bestanden gewijzigd:**
-- `interface.blade.php` - Slot nummering + debug toggle in beide groepen
-- `docs/SLOT_SYSTEEM.md` - Documentatie uitgebreid
+| Modus | Geld naar | Toeslag |
+|-------|-----------|---------|
+| **Connect** | Organisator's eigen Mollie (OAuth) | Geen |
+| **Platform** | JudoToernooi's Mollie | €0,50 |
 
 ### TODO Volgende Sessie
 
-- [ ] Testen met verschillende aantallen judoka's (8, 16, 24, 32)
-- [ ] Verificatie dat winnaar doorschuiven correct werkt met nieuwe slot nummering
+- [ ] MollieController (OAuth + webhook)
+- [ ] BetalingController (start + return)
+- [ ] Routes registreren + CSRF uitsluiting webhook
+- [ ] Views: instellingen sectie, coach afrekenen, return pagina
+- [ ] Testen met Cees' Mollie account (woensdag gepland)
+
+### Relevante Bestanden
+
+| Bestand | Doel |
+|---------|------|
+| `app/Services/MollieService.php` | API calls, OAuth, token management |
+| `app/Models/Betaling.php` | Payment records |
+| `app/Models/Toernooi.php` | Mollie helper methods |
+| `laravel/docs/2-FEATURES/BETALINGEN.md` | Volledige documentatie |
+
+---
+
+## Vorige sessie (2024-12-31)
+
+### B-Groep Slot Nummering Fix
+
+- ✅ Visuele slot nummers gefixed (1-16 doorlopend)
+- ✅ Spiegeling alleen grafisch (WIT boven, BLAUW onder)
+- ✅ Debug Slots toggle in A-groep én B-groep
 
 ---
 

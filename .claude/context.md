@@ -2,6 +2,26 @@
 
 > Technische details en specificaties
 
+## Project Overzicht
+
+| Aspect | Waarde |
+|--------|--------|
+| **Naam** | WestFries Open JudoToernooi |
+| **Type** | Laravel 11 + Blade + Alpine.js + Tailwind |
+| **Eigenaar** | Judoschool Cees Veen |
+| **Status** | Staging (development) |
+
+## Omgevingen
+
+| Omgeving | URL | Pad | Database |
+|----------|-----|-----|----------|
+| **Local** | localhost:8001 | `D:\GitHub\judotoernooi\laravel` | SQLite |
+| **Staging** | staging.judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+
+**Server:** 188.245.159.115 (root, SSH key)
+
+---
+
 ## Functionaliteit
 
 ### Core Features
@@ -11,25 +31,159 @@
 - **Blok/Mat Planning** - Verdeling over tijdsblokken en matten
 - **Weging Interface** - QR scanner en naam zoeken
 - **Mat Interface** - Wedstrijden beheren en uitslagen registreren
+- **Eliminatie** - Double elimination met kruisfinales
 
 ### Classificatie
-- **Leeftijdsklassen:** U9, U11, U13, U15, U18, U21, Senioren
-- **Banden:** Wit, Geel, Oranje, Groen, Blauw, Bruin, Zwart
-- **Gewichtsklassen:** Per leeftijd/geslacht gedefinieerd
+- **Leeftijdsklassen:** Mini's, Pupillen A/B/C, U15, U18, U21, Senioren
+- **Banden:** Wit → Zwart
+- **Gewichtsklassen:** Per leeftijd/geslacht (JBN 2025/2026)
+
+---
+
+## Mollie Betalingen
+
+> **Docs:** `laravel/docs/2-FEATURES/BETALINGEN.md`
+
+### Twee Modi
+
+| Modus | Geld naar | OAuth nodig | Toeslag |
+|-------|-----------|-------------|---------|
+| **Connect** | Organisator's Mollie | Ja | Nee |
+| **Platform** | JudoToernooi's Mollie | Nee | Ja (€0,50) |
+
+### Database Velden
+
+**toernooien tabel:**
+```
+betaling_actief          - boolean: betalingen aan/uit
+inschrijfgeld            - decimal: bedrag per judoka
+mollie_mode              - 'connect' of 'platform'
+platform_toeslag         - decimal: toeslag in euro's
+platform_toeslag_percentage - boolean: toeslag als %?
+mollie_account_id        - string (connect mode)
+mollie_access_token      - text, encrypted
+mollie_refresh_token     - text, encrypted
+mollie_token_expires_at  - datetime
+mollie_onboarded         - boolean: succesvol gekoppeld?
+mollie_organization_name - string: naam van Mollie org
+```
+
+**betalingen tabel:**
+```
+toernooi_id, club_id     - foreign keys
+mollie_payment_id        - string, unique
+bedrag                   - decimal
+aantal_judokas           - integer
+status                   - open/pending/paid/failed/expired/canceled
+betaald_op               - timestamp
+```
+
+**judokas tabel:**
+```
+betaling_id              - nullable foreign key
+betaald_op               - timestamp
+```
+
+### Bestanden
+
+```
+app/Services/MollieService.php     - Hybride service (Connect + Platform)
+app/Models/Betaling.php            - Payment records
+app/Models/Toernooi.php            - Mollie helper methods
+config/services.php                - Mollie configuratie
+```
+
+### Toernooi Model Methods
+
+```php
+$toernooi->usesMollieConnect()       // Eigen Mollie?
+$toernooi->usesPlatformPayments()    // Via platform?
+$toernooi->hasMollieConfigured()     // Klaar voor betalingen?
+$toernooi->calculatePaymentAmount(5) // Bedrag incl. toeslag
+$toernooi->getMollieStatusText()     // Status voor UI
+$toernooi->getPlatformFee()          // Toeslag ophalen
+```
+
+### Routes (TODO)
+
+```
+GET  /mollie/authorize/{toernooi}  → Start OAuth flow
+GET  /mollie/callback              → OAuth callback
+POST /mollie/disconnect/{toernooi} → Ontkoppelen
+POST /mollie/webhook               → Payment updates (CSRF excluded!)
+GET  /betaling/return              → Na betaling redirect
+GET  /betaling/simulate/{id}       → Simulatie pagina (staging)
+```
+
+### Environment Variables
+
+```env
+# Platform mode
+MOLLIE_PLATFORM_API_KEY=live_xxx
+MOLLIE_PLATFORM_TEST_KEY=test_xxx
+
+# Connect mode (OAuth)
+MOLLIE_CLIENT_ID=app_xxx
+MOLLIE_CLIENT_SECRET=xxx
+MOLLIE_REDIRECT_URI=${APP_URL}/mollie/callback
+
+# Platform fee
+MOLLIE_PLATFORM_FEE=0.50
+```
+
+### OAuth Flow (Connect Mode)
+
+```
+1. Organisator → Instellingen → "Koppel Mollie"
+2. Redirect → Mollie OAuth authorize URL
+3. Organisator logt in, authoriseert app
+4. Callback met code → exchange voor tokens
+5. Tokens encrypted opslaan bij toernooi
+6. mollie_onboarded = true
+```
+
+### Webhook (Kritiek!)
+
+```php
+// routes/web.php - CSRF uitsluiten
+Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+```
+
+- Webhook is source of truth (niet redirect)
+- Kan meerdere keren komen → idempotent maken
+- Valideer payment ID, check status, update database
+
+### Status (3 januari 2026)
+
+- ✅ Migration aangemaakt
+- ✅ MollieService met dual mode
+- ✅ Toernooi model uitgebreid
+- ✅ Config en .env.example
+- ⏳ Routes en Controller
+- ⏳ Views voor instellingen
+- ⏳ Woensdag: Cees' Mollie koppelen
+
+---
 
 ## Project Structuur
 
 ```
 laravel/
 ├── app/
-│   ├── Enums/           # Leeftijdsklasse, Band, Geslacht, etc.
-│   ├── Models/          # Toernooi, Judoka, Poule, Wedstrijd, etc.
-│   ├── Services/        # PouleIndeling, Weging, Import, etc.
+│   ├── Enums/              # Leeftijdsklasse, Band, Geslacht
+│   ├── Models/             # Toernooi, Judoka, Poule, Betaling
+│   ├── Services/           # MollieService, EliminatieService
 │   └── Http/Controllers/
-├── database/migrations/ # Database schema
-├── config/toernooi.php  # Toernooi configuratie
-└── docs/                # Uitgebreide documentatie
+├── config/
+│   ├── toernooi.php        # Toernooi defaults
+│   └── services.php        # Mollie config
+├── database/migrations/
+├── docs/                   # Documentatie
+└── resources/views/
 ```
+
+---
 
 ## Database
 
@@ -38,123 +192,42 @@ laravel/
 | Local | SQLite | database/database.sqlite | - |
 | Server | MySQL | judo_toernooi | judotoernooi |
 
+---
+
 ## Local Development
 
 ```bash
 cd laravel
 cp .env.example .env
-# .env: DB_CONNECTION=sqlite, SESSION_DRIVER=file, CACHE_STORE=file
-touch database/database.sqlite
 php artisan key:generate
+touch database/database.sqlite
 php artisan migrate
 php artisan serve --port=8001
 ```
 
 **Let op:**
 - Local: SQLite (geen MySQL nodig)
-- Local: Login zonder wachtwoord (APP_ENV=local)
 - Poort 8001 (8000 is Herdenkingsportaal)
 
-## Import Data
+---
 
-CSV formaat voor judoka's:
-```csv
-Naam,Geboortedatum,Geslacht,Band,Club,Gewicht
-Jan Jansen,2015-03-15,M,Oranje,Cees Veen,32.5
-```
-
-## Test Accounts (Local)
-
-| Rol | URL | PIN |
-|-----|-----|-----|
-| Coach Havun | `/school/2JzfLbjWXvuv` | `08130` |
-
-## Deploy Commands
+## Deploy (Staging)
 
 ```bash
+ssh root@188.245.159.115
 cd /var/www/judotoernooi/laravel
-git pull
+
+git pull origin master
 composer install --no-dev
 php artisan migrate
-php artisan config:clear
-php artisan cache:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
 
-## Mollie Betalingen (Januari 2026)
+---
 
-### Architectuur
-- **Mollie Connect** - Organisatoren koppelen eigen Mollie account via OAuth
-- **Platform fallback** - Voor organisatoren zonder eigen account (toekomst)
-- **Simulatie mode** - Testen zonder echte Mollie keys (staging)
+## Gerelateerde HavunCore Docs
 
-### Bestanden
-```
-app/
-├── Services/MollieService.php      # Dual mode: Connect + Platform
-├── Http/Controllers/
-│   ├── MollieController.php        # OAuth flow + webhook + simulatie
-│   └── CoachPortalController.php   # Afrekenen flow
-├── Models/Betaling.php             # Payment records
-└── Console/Commands/ResetStaging.php
-resources/views/pages/
-├── betaling/simulate.blade.php     # iDEAL simulatie pagina
-└── toernooi/edit.blade.php         # Mollie Connect UI
-```
-
-### Database velden
-**toernooien tabel:**
-- `betaling_actief` - boolean
-- `inschrijfgeld` - decimal(8,2)
-- `mollie_mode` - enum (connect/platform)
-- `mollie_access_token` - encrypted
-- `mollie_refresh_token` - encrypted
-- `mollie_token_expires_at` - datetime
-- `mollie_organization_id` - string
-- `mollie_organization_name` - string
-- `mollie_onboarded` - boolean
-- `platform_toeslag` - decimal (niet in gebruik)
-
-**betalingen tabel:**
-- `toernooi_id`, `club_id`
-- `mollie_payment_id` - unique
-- `bedrag`, `aantal_judokas`
-- `status` - enum (open/pending/paid/failed/expired/canceled)
-- `betaald_op` - timestamp
-
-**judokas tabel:**
-- `betaling_id` - nullable foreign key
-- `betaald_op` - timestamp
-
-### Routes
-```
-GET  /toernooi/{id}/mollie/authorize  → OAuth start
-GET  /mollie/callback                 → OAuth callback
-POST /toernooi/{id}/mollie/disconnect → Ontkoppelen
-POST /mollie/webhook                  → Payment updates (CSRF excluded!)
-GET  /betaling/simulate               → Simulatie pagina
-POST /betaling/simulate               → Simulatie afronden
-```
-
-### Env variabelen (nog niet ingesteld)
-```
-MOLLIE_KEY=live_xxx              # Platform fallback
-MOLLIE_CLIENT_ID=xxx             # OAuth app
-MOLLIE_CLIENT_SECRET=xxx         # OAuth app
-```
-
-### Status (3 januari 2026)
-- ✅ Migration gedraaid
-- ✅ MollieService met dual mode
-- ✅ OAuth flow UI
-- ✅ Simulatie mode werkend
-- ✅ Coach afrekenen flow
-- ⏳ Woensdag: Cees' Mollie test account koppelen
-
-## Documentatie
-
-Uitgebreide docs in `laravel/docs/`:
-- INSTALLATIE.md - Server setup
-- CONFIGURATIE.md - App configuratie
-- GEBRUIKERSHANDLEIDING.md - Hoe te gebruiken
-- DATABASE.md - Schema uitleg
-- API.md - REST API documentatie
+- `HavunCore/docs/kb/patterns/mollie-payments.md` - Mollie pattern
+- `HavunCore/.claude/context.md` - Server credentials
