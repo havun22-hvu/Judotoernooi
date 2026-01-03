@@ -1,82 +1,26 @@
-# Interfaces per Rol
+# Interfaces - PWA & Devices
 
-## Voorbereiding vs Wedstrijddag - Belangrijk!
+> **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag
 
-### Blokken (LOCKED na voorbereiding)
-- Blokindeling kan **NIET** meer wijzigen na voorbereiding
-- Weegkaarten zijn al geprint/verstuurd
-- Website info is al gepubliceerd
-- **Readonly** op wedstrijddag
+## PWA Apps per Rol
 
-### Poules (LOCKED na voorbereiding)
-- Poules tab = alleen voor **indeling**
-- Pouleindeling kan **NIET** meer wijzigen na voorbereiding
-- **Readonly** op wedstrijddag
+| Interface | PWA Naam | Device | Manifest |
+|-----------|----------|--------|----------|
+| **Dojo Scanner** | Dojo Scanner | 📱 Smartphone | manifest-dojo.json |
+| **Weging** | Weging | 📱 Smartphone / Tablet | manifest-weging.json |
+| **Mat** | Mat Interface | 💻 PC / Laptop / Tablet | manifest-mat.json |
+| **Spreker** | Spreker | 📋 iPad / Tablet | manifest-spreker.json |
 
-### Wedstrijddag (KAN wijzigen)
-- Start als **kopie** van de pouleindeling
-- Kan wijzigen door:
-  - Overpoulen (te weinig deelnemers)
-  - Absentie (judoka komt niet opdagen)
-- Poulestanden worden hier bijgehouden
-- Dit is de **actieve werkplek** op de wedstrijddag
+## Installatie
 
-### Referentie (readonly)
-- Hoofdjury moet poules/blokken kunnen **inzien** voor referentie
-- Bijv. bij protesten, vragen van coaches
-- Maar **niet bewerken** op wedstrijddag
+1. Open de interface pagina in browser
+2. Klik tandwiel (⚙️) rechtsboven → Instellingen
+3. Klik "Installeer [App Naam]"
+4. PWA opent direct deze pagina (niet homepage)
 
----
+## Versie & Updates
 
-## Overzicht Wedstrijddag
-
-| Interface | Device | Gebruiker | Doel |
-|-----------|--------|-----------|------|
-| **Dojo Scanner** | Smartphone | Ingang | QR codes scannen bij binnenkomst |
-| **Weging** | Smartphone/Tablet | Weegteam | Judoka's wegen en registreren |
-| **Mat** | PC/Laptop/Tablet | Tafelmedewerker | Wedstrijden per mat beheren |
-| **Spreker** | iPad/Tablet | Omroeper | Aankondigingen en oproepen |
-
-## Jurytafel (Hoofdtafel)
-
-De jurytafel heeft tijdens de **wedstrijddag** alleen nodig:
-
-### Essentieel
-- **Weeglijst** - Controle wie gewogen is
-- **Wedstrijddag** - Overzicht lopende wedstrijden
-- **Zaaloverzicht** - Alle matten in 1 beeld
-
-### Bonus (indien nodig)
-- **Matten** - Direct ingrijpen bij specifieke mat
-- **Spreker** - Omroep overnemen
-
-### Niet nodig op wedstrijddag
-- ~~Poules~~ - Voorbereidingstab (al ingedeeld)
-- ~~Blokken~~ - Voorbereidingstab (al gepland)
-- ~~Judoka's~~ - Alleen voor wijzigingen
-
-## Voorbereiding vs Wedstrijddag
-
-| Tab | Voorbereiding | Wedstrijddag |
-|-----|---------------|--------------|
-| Judoka's | Beheren | - |
-| Poules | Indelen | - |
-| Blokken | Plannen | - |
-| Weging | - | Actief |
-| Wedstrijddag | - | Actief |
-| Zaaloverzicht | - | Actief |
-| Matten | - | Actief |
-| Spreker | - | Actief |
-
-## PWA Installatie
-
-Elke interface kan als losse PWA geinstalleerd worden:
-
-```
-Dojo Scanner  → manifest-dojo.json    → Smartphone
-Weging        → manifest-weging.json  → Smartphone/Tablet
-Mat           → manifest-mat.json     → PC/Laptop/Tablet
-Spreker       → manifest-spreker.json → iPad/Tablet
-```
-
-**Tip:** Installeer de PWA vanaf de juiste pagina (bijv. `/toernooi/5/dojo/scanner`), dan opent de app direct die interface.
+- Versie in `config/toernooi.php` → `version`
+- Service Worker in `public/sw.js` → `VERSION`
+- **Beide verhogen bij release!**
+- Forceer Update knop in instellingen modal
