@@ -1,4 +1,6 @@
 @extends('layouts.app')
+@php $pwaApp = 'spreker'; @endphp
+@section('manifest', '/manifest-spreker.json')
 
 @section('title', 'Spreker Interface')
 

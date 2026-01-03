@@ -1,4 +1,6 @@
 @extends('layouts.app')
+@php $pwaApp = 'mat'; @endphp
+@section('manifest', '/manifest-mat.json')
 
 @section('title', 'Mat Interface')
 

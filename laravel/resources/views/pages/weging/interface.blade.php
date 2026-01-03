@@ -1,4 +1,6 @@
 @extends('layouts.app')
+@php $pwaApp = 'weging'; @endphp
+@section('manifest', '/manifest-weging.json')
 
 @section('title', 'Weging Interface')
 
