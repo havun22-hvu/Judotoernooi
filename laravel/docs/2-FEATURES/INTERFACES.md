@@ -2,6 +2,24 @@
 
 > **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag
 
+## Consistent Layout Pattern
+
+Alle mobiele PWA interfaces (Weging, Dojo Scanner) gebruiken dezelfde layout:
+
+| Element | Positie | Percentage |
+|---------|---------|------------|
+| Header | Top | ~60px |
+| Scanner area | Boven | 45% |
+| Controls/Info | Onder | 55% |
+
+**Kenmerken:**
+- Vaste hoogtes (geen springende elementen)
+- Scanner: 300px max-width, 220px qrbox
+- Blauwe kleur theme (#1e40af)
+- Input/button altijd zichtbaar onder scanner
+
+---
+
 ## PWA Apps per Rol
 
 | Interface | PWA Naam | Device | Manifest |
@@ -42,14 +60,20 @@
 **Pad:** `resources/views/pages/dojo/scanner.blade.php`
 
 ### Layout (Standalone PWA)
-- Compact scanner bovenin (35vh)
-- Handmatig invoeren optie
-- Resultaat overlay bij scan
+- **Identiek aan Weging** - 45%/55% split
+- Fixed layout: scanner bovenin (45%), info onderin (55%)
+- Blauwe kleur theme (#1e40af)
 
 ### Functionaliteit
 - Scan coach kaart QR-code
 - Valideer coach toegang
 - Toon foto voor verificatie
+- Handmatig invoeren optie (altijd zichtbaar onder scanner)
+
+### Scanner Specs
+- Html5Qrcode library
+- Max-width: 300px, qrbox: 220px
+- Min-height: 200px voor zichtbaarheid
 
 ---
 
