@@ -173,6 +173,18 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 - **Superadmin login** - Via Laravel Auth
 - ~~Legacy wachtwoorden~~ - **Verwijderd** (3 jan 2026)
 
+### Wie ziet wat?
+
+| Rol | Navigatie tabs | Toegang |
+|-----|----------------|---------|
+| **Superadmin** | ✅ Volledig | Alles |
+| **Organisator** | ✅ Volledig | Eigen toernooien |
+| **Hoofdjury** | ✅ Volledig | Read-only poules/blokken |
+| **Weging** | ❌ Standalone PWA | Alleen weging interface |
+| **Mat** | ❌ Standalone PWA | Alleen mat interface |
+| **Spreker** | ❌ Standalone PWA | Alleen spreker interface |
+| **Dojo** | ❌ Standalone PWA | Alleen dojo scanner |
+
 ### Wat is verwijderd?
 - Toernooi-level wachtwoorden (per rol: weging, mat, spreker, etc.)
 - 135 regels uit `pages/toernooi/edit.blade.php`
@@ -181,10 +193,11 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 ### Routes (toegang)
 ```
 /login              → Organisator/superadmin login
-/toernooi/{id}/*    → Authenticated routes
-/weging/*           → Publiek (geen auth meer nodig)
-/mat/*              → Publiek
-/spreker/*          → Publiek
+/toernooi/{id}/*    → Authenticated routes (admin/jury)
+/weging/*           → Standalone PWA (publiek)
+/mat/*              → Standalone PWA (publiek)
+/spreker/*          → Standalone PWA (publiek)
+/dojo/*             → Standalone PWA (publiek)
 ```
 
 ---
