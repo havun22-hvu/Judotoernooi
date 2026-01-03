@@ -12,6 +12,7 @@
 8. [Zaaloverzicht & Activatie](#zaaloverzicht--activatie)
 9. [Mat Interface](#mat-interface)
 10. [Spreker & Prijsuitreiking](#spreker--prijsuitreiking)
+11. [Statistieken & Resultaten](#statistieken--resultaten)
 
 ## Overzicht
 
@@ -328,3 +329,23 @@ Voor de organisator:
 - Overzicht alle prijsuitreikingen
 - Status per poule (uitgereikt/wachtend)
 - Totaal aantal medailles
+
+## Statistieken & Resultaten
+
+Na afloop van het toernooi zijn resultaten beschikbaar voor verschillende doelgroepen:
+
+### Organisator
+- Totaal aantal deelnemers, wedstrijden, poules
+- Statistieken per blok/mat
+- Overzicht medailles per club
+- Export mogelijkheden
+
+### Judocoaches (Coach Portal)
+- Resultaten eigen judoka's
+- Uitslagen en plaatsingen
+- Wedstrijdhistorie
+
+### Openbare Website
+- Live uitslagen tijdens toernooi
+- Eindstanden per categorie
+- Medaillespiegel per club
