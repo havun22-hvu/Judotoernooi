@@ -62,16 +62,30 @@
         <main class="flex-1 flex flex-col p-4">
             <!-- Scanner view -->
             <div id="scanner-container" class="flex-1 flex flex-col">
-                <!-- Camera -->
-                <div class="bg-black rounded-lg overflow-hidden mb-4 relative">
+                <!-- Camera (hidden by default) -->
+                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-4 relative hidden">
                     <div id="reader" class="w-full"></div>
                     <div id="scanner-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div class="border-2 border-white/50 rounded-lg w-48 h-48 scanning-indicator"></div>
                     </div>
+                    <button onclick="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-medium z-10">
+                        Stop
+                    </button>
+                </div>
+
+                <!-- Scan button (shown when camera is off) -->
+                <div id="scan-button-container" class="flex-1 flex flex-col items-center justify-center">
+                    <button onclick="startScanner()" class="bg-green-600 hover:bg-green-700 text-white rounded-full w-48 h-48 flex flex-col items-center justify-center shadow-lg transform active:scale-95 transition-transform">
+                        <svg class="w-20 h-20 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                        </svg>
+                        <span class="text-xl font-bold">Scan</span>
+                    </button>
+                    <p class="text-blue-200 mt-4">Tik om camera te starten</p>
                 </div>
 
                 <!-- Instructions -->
-                <div class="bg-blue-800/50 rounded-lg p-4 text-center">
+                <div class="bg-blue-800/50 rounded-lg p-4 text-center mt-4">
                     <p class="text-lg">Scan de QR-code op de coach kaart</p>
                     <p class="text-blue-200 text-sm mt-1">Controleer de foto met de persoon</p>
                 </div>
@@ -119,6 +133,7 @@
         let html5QrCode = null;
         let scanCount = 0;
         let isProcessing = false;
+        let scannerActive = false;
 
         // Update clock
         function updateClock() {
@@ -131,6 +146,12 @@
 
         // Start scanner
         async function startScanner() {
+            if (scannerActive) return;
+
+            // Show camera, hide button
+            document.getElementById('camera-container').classList.remove('hidden');
+            document.getElementById('scan-button-container').classList.add('hidden');
+
             html5QrCode = new Html5Qrcode("reader");
 
             try {
@@ -144,6 +165,7 @@
                     onScanSuccess,
                     onScanFailure
                 );
+                scannerActive = true;
             } catch (err) {
                 console.error("Camera error:", err);
                 document.getElementById('reader').innerHTML = `
@@ -152,7 +174,30 @@
                         <p class="text-sm mt-1">Gebruik handmatig invoeren</p>
                     </div>
                 `;
+                // Show button again after error
+                setTimeout(() => {
+                    document.getElementById('camera-container').classList.add('hidden');
+                    document.getElementById('scan-button-container').classList.remove('hidden');
+                }, 2000);
             }
+        }
+
+        // Stop scanner
+        async function stopScanner() {
+            if (!scannerActive || !html5QrCode) return;
+
+            try {
+                await html5QrCode.stop();
+            } catch (err) {
+                console.error("Stop error:", err);
+            }
+
+            scannerActive = false;
+            html5QrCode = null;
+
+            // Hide camera, show button
+            document.getElementById('camera-container').classList.add('hidden');
+            document.getElementById('scan-button-container').classList.remove('hidden');
         }
 
         // Handle successful scan
@@ -272,8 +317,7 @@
             }
         });
 
-        // Start scanner on load
-        document.addEventListener('DOMContentLoaded', startScanner);
+        // Scanner starts manually via button click
     </script>
 </body>
 </html>
