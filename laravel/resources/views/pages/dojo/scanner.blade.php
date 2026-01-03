@@ -13,124 +13,117 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
-        body {
-            overscroll-behavior: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        #reader {
-            width: 100%;
-            border: none !important;
-        }
-        #reader video {
-            border-radius: 0.5rem;
-        }
-        #reader__scan_region {
-            background: transparent !important;
-        }
-        #reader__dashboard {
-            display: none !important;
-        }
-        .result-overlay {
-            animation: fadeIn 0.3s ease-out;
-        }
+        body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+        #reader { width: 100%; }
+        #reader video { border-radius: 0.5rem; }
+        #reader__scan_region { background: transparent !important; }
+        #reader__dashboard { display: none !important; }
+        .result-overlay { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .scanning-indicator {
-            animation: pulse 1.5s infinite;
-        }
     </style>
 </head>
 <body class="bg-blue-900 min-h-screen text-white">
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-blue-800 px-4 py-3 flex items-center justify-between shadow-lg">
-            <div>
-                <h1 class="text-lg font-bold">Dojo Scanner</h1>
-                <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
-            </div>
-            <div class="text-right">
-                <div class="text-2xl font-mono" id="clock"></div>
-                <div class="text-blue-200 text-sm" id="scan-count">0 gescand</div>
-            </div>
-        </header>
+    <!-- Header -->
+    <header class="bg-blue-800 px-4 py-3 flex items-center justify-between shadow-lg">
+        <div>
+            <h1 class="text-lg font-bold">Dojo Scanner</h1>
+            <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
+        </div>
+        <div class="text-right">
+            <div class="text-2xl font-mono" id="clock"></div>
+            <div class="text-blue-200 text-sm" id="scan-count">0 gescand</div>
+        </div>
+    </header>
 
-        <!-- Main content -->
-        <main class="flex-1 flex flex-col p-4">
-            <!-- Scanner view - top 1/3 of screen -->
-            <div id="scanner-container" class="flex flex-col">
-                <!-- Camera (hidden by default) - compact at top -->
-                <div id="camera-container" class="bg-black rounded-lg overflow-hidden mb-3 relative" style="display: none; height: 35vh;">
-                    <div id="reader" class="w-full h-full"></div>
-                    <div id="scanner-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div class="border-2 border-white/50 rounded-lg w-40 h-40 scanning-indicator"></div>
-                    </div>
-                    <button onclick="stopScanner()" class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-medium z-10">
+    <main class="p-3 flex flex-col relative" style="height: calc(100vh - 60px);">
+        <!-- TOP HALF: Scanner area (fixed height 45%) -->
+        <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%;">
+            <!-- Scanner area (fixed) -->
+            <div class="flex-1 flex items-center justify-center">
+                <!-- Scan button (when not scanning) -->
+                <button id="scan-button" onclick="startScanner()"
+                        class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
+                    <span class="text-3xl mb-1">📷</span>
+                    <span class="font-bold text-sm">Scan</span>
+                </button>
+
+                <!-- Scanner (when scanning) -->
+                <div id="scanner-container" class="text-center w-full" style="display: none;">
+                    <div id="reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
+                    <button onclick="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
                         Stop
                     </button>
                 </div>
+            </div>
 
-                <!-- Scan button (shown when camera is off) - compact at top -->
-                <div id="scan-button-container" class="flex flex-col items-center justify-center py-8">
-                    <button onclick="startScanner()" class="bg-green-600 hover:bg-green-700 text-white rounded-full w-36 h-36 flex flex-col items-center justify-center shadow-lg transform active:scale-95 transition-transform">
-                        <svg class="w-16 h-16 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-                        </svg>
-                        <span class="text-lg font-bold">Scan</span>
+            <!-- Manual input (fixed position below scanner) -->
+            <div class="mt-2">
+                <button onclick="showManualEntry()"
+                        class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center text-blue-300 hover:bg-blue-700">
+                    Of voer code handmatig in...
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM HALF: Info & Instructions (fixed position 55%) -->
+        <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
+            <!-- Instructions -->
+            <div class="bg-white rounded-lg shadow p-4 text-gray-800">
+                <h2 class="font-bold text-lg mb-2">Instructies</h2>
+                <ol class="list-decimal list-inside space-y-1 text-sm">
+                    <li>Scan de QR-code op de coach kaart</li>
+                    <li>Controleer de foto met de persoon</li>
+                    <li>Bevestig of weiger toegang</li>
+                </ol>
+            </div>
+
+            <!-- Stats -->
+            <div class="bg-white rounded-lg shadow p-4 text-gray-800">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Coaches gescand vandaag</span>
+                    <span class="text-2xl font-bold text-green-600" id="total-scanned">0</span>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="bg-blue-800/50 rounded-lg p-3 text-center text-sm">
+                <p>Scan de QR-code op de coach kaart</p>
+                <p class="text-blue-300 mt-1">Controleer de foto met de persoon</p>
+            </div>
+        </div>
+
+        <!-- Result overlay (hidden by default) -->
+        <div id="result-container" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+            <div class="result-overlay w-full max-w-md">
+                <!-- Will be filled dynamically -->
+            </div>
+        </div>
+
+        <!-- Manual entry modal (hidden by default) -->
+        <div id="manual-entry" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl p-6 w-full max-w-md text-gray-800">
+                <h2 class="text-xl font-bold mb-4">Handmatig invoeren</h2>
+                <p class="text-gray-600 mb-4">Voer de code onder de QR-code in:</p>
+                <input type="text" id="manual-code"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
+                       placeholder="XXXXXX" maxlength="32"
+                       oninput="this.value = this.value.toUpperCase()">
+                <div class="flex gap-3 mt-4">
+                    <button onclick="hideManualEntry()"
+                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
+                        Annuleren
                     </button>
-                    <p class="text-blue-200 mt-2 text-sm">Tik om camera te starten</p>
-                </div>
-
-                <!-- Instructions -->
-                <div class="bg-blue-800/50 rounded-lg p-3 text-center">
-                    <p class="text-base">Scan de QR-code op de coach kaart</p>
-                    <p class="text-blue-200 text-xs mt-1">Controleer de foto met de persoon</p>
-                </div>
-
-                <!-- Manual entry -->
-                <div class="mt-3">
-                    <button onclick="showManualEntry()" class="w-full bg-blue-700 hover:bg-blue-600 py-3 rounded-lg font-medium">
-                        Handmatig invoeren
+                    <button onclick="submitManualCode()"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
+                        Controleren
                     </button>
                 </div>
             </div>
-
-            <!-- Result overlay (hidden by default) -->
-            <div id="result-container" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-                <div class="result-overlay w-full max-w-md">
-                    <!-- Will be filled dynamically -->
-                </div>
-            </div>
-
-            <!-- Manual entry modal (hidden by default) -->
-            <div id="manual-entry" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-                <div class="bg-white rounded-xl p-6 w-full max-w-md text-gray-800">
-                    <h2 class="text-xl font-bold mb-4">Handmatig invoeren</h2>
-                    <p class="text-gray-600 mb-4">Voer de code onder de QR-code in:</p>
-                    <input type="text" id="manual-code"
-                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
-                           placeholder="XXXXXX" maxlength="32"
-                           oninput="this.value = this.value.toUpperCase()">
-                    <div class="flex gap-3 mt-4">
-                        <button onclick="hideManualEntry()"
-                                class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
-                            Annuleren
-                        </button>
-                        <button onclick="submitManualCode()"
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
-                            Controleren
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <script>
         let html5QrCode = null;
@@ -151,9 +144,8 @@
         async function startScanner() {
             if (scannerActive) return;
 
-            // Show camera, hide button
-            document.getElementById('camera-container').style.display = 'block';
-            document.getElementById('scan-button-container').style.display = 'none';
+            document.getElementById('scan-button').style.display = 'none';
+            document.getElementById('scanner-container').style.display = 'block';
 
             html5QrCode = new Html5Qrcode("reader");
 
@@ -162,7 +154,7 @@
                     { facingMode: "environment" },
                     {
                         fps: 10,
-                        qrbox: { width: 200, height: 200 },
+                        qrbox: { width: 220, height: 220 },
                         aspectRatio: 1.0
                     },
                     onScanSuccess,
@@ -177,10 +169,9 @@
                         <p class="text-sm mt-1">Gebruik handmatig invoeren</p>
                     </div>
                 `;
-                // Show button again after error
                 setTimeout(() => {
-                    document.getElementById('camera-container').style.display = 'none';
-                    document.getElementById('scan-button-container').style.display = 'flex';
+                    document.getElementById('scanner-container').style.display = 'none';
+                    document.getElementById('scan-button').style.display = 'flex';
                 }, 2000);
             }
         }
@@ -198,9 +189,8 @@
             scannerActive = false;
             html5QrCode = null;
 
-            // Hide camera, show button
-            document.getElementById('camera-container').style.display = 'none';
-            document.getElementById('scan-button-container').style.display = 'flex';
+            document.getElementById('scanner-container').style.display = 'none';
+            document.getElementById('scan-button').style.display = 'flex';
         }
 
         // Handle successful scan
@@ -208,14 +198,12 @@
             if (isProcessing) return;
             isProcessing = true;
 
-            // Extract QR code from URL if needed
             let qrCode = decodedText;
             const match = decodedText.match(/coach-kaart\/([a-zA-Z0-9]+)/);
             if (match) {
                 qrCode = match[1];
             }
 
-            // Vibrate for feedback
             if (navigator.vibrate) {
                 navigator.vibrate(100);
             }
@@ -241,8 +229,6 @@
                     return;
                 }
 
-                // The scan endpoint returns HTML, so we'll fetch the JSON data instead
-                // For now, redirect to the scan result page
                 window.location.href = `/coach-kaart/${qrCode}/scan`;
 
             } catch (error) {
@@ -258,23 +244,12 @@
         // Show result overlay
         function showResult(data) {
             const container = document.getElementById('result-container');
-            const resultHtml = generateResultHtml(data);
-            container.querySelector('.result-overlay').innerHTML = resultHtml;
-            container.classList.remove('hidden');
-
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                hideResult();
-            }, 5000);
-        }
-
-        function generateResultHtml(data) {
             const bgColor = data.status === 'valid' ? 'bg-green-600' :
                            data.status === 'already_scanned' ? 'bg-yellow-500' : 'bg-red-600';
             const icon = data.status === 'valid' ? '✓' :
                         data.status === 'already_scanned' ? '!' : '✗';
 
-            return `
+            container.querySelector('.result-overlay').innerHTML = `
                 <div class="${bgColor} rounded-xl p-6 text-center text-white">
                     <div class="text-6xl mb-4">${icon}</div>
                     ${data.foto ? `<img src="${data.foto}" class="w-48 h-48 object-cover rounded-full mx-auto mb-4 border-4 border-white">` : ''}
@@ -286,6 +261,9 @@
                     </button>
                 </div>
             `;
+            container.classList.remove('hidden');
+
+            setTimeout(() => hideResult(), 5000);
         }
 
         function hideResult() {
@@ -313,14 +291,11 @@
             await checkCoachKaart(code);
         }
 
-        // Handle enter key in manual input
         document.getElementById('manual-code').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 submitManualCode();
             }
         });
-
-        // Scanner starts manually via button click
     </script>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'dojo'])
