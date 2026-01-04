@@ -135,6 +135,9 @@ function deviceToegangen() {
             try {
                 const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi) }}', {
                     credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
                 });
                 if (response.ok) {
                     this.toegangen = await response.json();
@@ -185,7 +188,11 @@ function deviceToegangen() {
             try {
                 const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}/reset`, {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
                 });
                 if (response.ok) {
                     toegang.is_gebonden = false;
@@ -203,7 +210,11 @@ function deviceToegangen() {
             try {
                 const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}`, {
                     method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
                 });
                 if (response.ok) {
                     this.toegangen = this.toegangen.filter(t => t.id !== toegang.id);
@@ -219,7 +230,11 @@ function deviceToegangen() {
             try {
                 const response = await fetch('{{ route("toernooi.device-toegang.reset-all", $toernooi) }}', {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
                 });
                 if (response.ok) {
                     this.toegangen.forEach(t => {
