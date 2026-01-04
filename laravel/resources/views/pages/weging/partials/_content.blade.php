@@ -271,12 +271,11 @@ function wegingApp() {
                     { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 200, height: 200 } },
                     async (text) => {
-                        // QR gevonden!
-                        console.log('QR SCANNED:', text);
-                        this.melding = 'QR gevonden!';
+                        // QR gevonden - toon debug info op scherm
+                        this.melding = 'QR: ' + text.substring(0, 50);
                         let qr = text;
                         if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
-                        console.log('QR CODE EXTRACTED:', qr);
+                        this.melding = 'Code: ' + qr.substring(0, 20);
                         await this.scanQR(qr);
                     },
                     (errorMessage) => {
