@@ -68,9 +68,10 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Klasse</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Leeftijd</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewicht</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewogen</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijd</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
@@ -80,6 +81,7 @@
                     <tr class="hover:bg-gray-50" :class="judoka.gewogen ? '' : 'bg-yellow-50'">
                         <td class="px-4 py-3 font-medium" x-text="judoka.naam"></td>
                         <td class="px-4 py-3 text-gray-600" x-text="judoka.club || '-'"></td>
+                        <td class="px-4 py-3" x-text="judoka.leeftijdsklasse || '-'"></td>
                         <td class="px-4 py-3" x-text="judoka.gewichtsklasse + ' kg'"></td>
                         <td class="px-4 py-3" x-text="judoka.blok ? 'Blok ' + judoka.blok : '-'"></td>
                         <td class="px-4 py-3">
@@ -94,7 +96,7 @@
                     </tr>
                 </template>
                 <tr x-show="gefilterd.length === 0">
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                         Geen judoka's gevonden
                     </td>
                 </tr>
