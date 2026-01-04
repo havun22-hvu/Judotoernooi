@@ -283,10 +283,21 @@ routes/web.php:
 
 ## 10. Bouwvolgorde
 
+### Standaard toegangen bij nieuw toernooi
+
+Bij het aanmaken van een nieuw toernooi worden automatisch de volgende toegangen aangemaakt:
+- 1x Hoofdjury
+- 1x Mat (Mat 1)
+- 1x Weging
+- 1x Spreker
+- 1x Dojo
+
+Dit geeft de organisator direct een werkende setup zonder handmatig toegangen te moeten aanmaken.
+
 ### Fase 1: Database & Models
-- [ ] Migration voor `device_toegangen` tabel
-- [ ] DeviceToegang model
-- [ ] Coach_kaarten migration uitbreiding
+- [x] Migration voor `device_toegangen` tabel
+- [x] DeviceToegang model
+- [x] Coach_kaarten migration uitbreiding
 
 ### Fase 2: Device Binding Flow
 - [ ] Route `/toegang/{code}`
