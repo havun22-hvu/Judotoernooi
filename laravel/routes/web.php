@@ -214,6 +214,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::middleware(CheckToernooiRol::class . ':weging')->group(function () {
         Route::get('weging', [WegingController::class, 'index'])->name('weging.index');
         Route::get('weging/interface', [WegingController::class, 'interface'])->name('weging.interface');
+        Route::get('weging/lijst-json', [WegingController::class, 'lijstJson'])->name('weging.lijst-json');
         Route::get('weging/blok/{blok}', [WegingController::class, 'index'])->name('weging.blok');
         Route::post('weging/{judoka}/registreer', [WegingController::class, 'registreer'])->name('weging.registreer');
         Route::post('weging/{judoka}/aanwezig', [WegingController::class, 'markeerAanwezig'])->name('weging.aanwezig');

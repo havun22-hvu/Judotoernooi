@@ -102,7 +102,36 @@ class WegingController extends Controller
     {
         $toernooi->load('blokken');
 
-        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
-        return view('pages.weging.interface-admin', compact('toernooi'));
+        // Admin versie: live weeglijst (zie docs: INTERFACES.md)
+        $judokas = $this->getJudokasVoorLijst($toernooi);
+
+        return view('pages.weging.interface-admin', compact('toernooi', 'judokas'));
+    }
+
+    /**
+     * JSON endpoint voor live weeglijst auto-refresh
+     */
+    public function lijstJson(Toernooi $toernooi): JsonResponse
+    {
+        return response()->json($this->getJudokasVoorLijst($toernooi));
+    }
+
+    /**
+     * Helper: haal judokas op in formaat voor weeglijst
+     */
+    private function getJudokasVoorLijst(Toernooi $toernooi): array
+    {
+        $judokas = $this->wegingService->getWeeglijst($toernooi);
+
+        return $judokas->map(fn($j) => [
+            'id' => $j->id,
+            'naam' => $j->naam,
+            'club' => $j->club?->naam,
+            'gewichtsklasse' => $j->gewichtsklasse,
+            'blok' => $j->poules->first()?->blok?->nummer,
+            'gewogen' => $j->gewicht_gewogen !== null,
+            'gewicht_gewogen' => $j->gewicht_gewogen,
+            'gewogen_om' => $j->wegingen->first()?->created_at?->format('H:i'),
+        ])->toArray();
     }
 }
