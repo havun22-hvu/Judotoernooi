@@ -352,6 +352,50 @@ class PubliekController extends Controller
     }
 
     /**
+     * Scan QR code and return judoka info (public, read-only)
+     */
+    public function scanQR(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $qrCode = $request->input('qr_code', '');
+
+        if (empty($qrCode)) {
+            return response()->json(['success' => false, 'message' => 'Geen QR code']);
+        }
+
+        // Extract qr_code from URL if full URL is provided
+        if (str_contains($qrCode, '/weegkaart/')) {
+            $parts = explode('/weegkaart/', $qrCode);
+            $qrCode = end($parts);
+            $qrCode = strtok($qrCode, '?');
+            $qrCode = strtok($qrCode, '#');
+            $qrCode = rtrim($qrCode, '/');
+        }
+
+        $judoka = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('qr_code', $qrCode)
+            ->with(['club', 'poules.blok'])
+            ->first();
+
+        if (!$judoka) {
+            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'judoka' => [
+                'id' => $judoka->id,
+                'naam' => $judoka->naam,
+                'club' => $judoka->club?->naam,
+                'leeftijdsklasse' => $judoka->leeftijdsklasse,
+                'gewichtsklasse' => $judoka->gewichtsklasse,
+                'blok' => $judoka->poules->first()?->blok?->nummer,
+                'gewogen' => $judoka->gewicht_gewogen !== null,
+                'gewicht_gewogen' => $judoka->gewicht_gewogen,
+            ],
+        ]);
+    }
+
+    /**
      * Export results as CSV for organizer
      * Sorted by age class (young to old) and weight (light to heavy)
      */

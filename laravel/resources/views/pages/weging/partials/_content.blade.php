@@ -292,8 +292,8 @@ function wegingApp() {
             this.melding = 'Zoeken: ' + qrCode.substring(0, 20) + '...';
             this.meldingType = 'success';
 
-            // Use current origin to avoid cached wrong URLs
-            const url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/weging/scan-qr`;
+            // Use publiek route (no auth required)
+            const url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/scan-qr`;
             console.log('Fetching URL:', url);
             try {
                 const response = await fetch(url, {
