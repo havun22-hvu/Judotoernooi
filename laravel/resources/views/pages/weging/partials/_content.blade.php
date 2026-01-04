@@ -32,8 +32,8 @@
                class="w-full py-3 border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
     </div>
 
-    <!-- Search results (overlay) -->
-    <div x-show="resultaten.length > 0" class="absolute left-3 right-3 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto z-10" style="top: 320px;">
+    <!-- Search results (overlay) - LAGER in beeld -->
+    <div x-show="resultaten.length > 0" class="absolute left-3 right-3 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto z-10" style="top: 450px;">
         <template x-for="judoka in resultaten" :key="judoka.id">
             <div @click="selecteerJudoka(judoka)"
                  class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
