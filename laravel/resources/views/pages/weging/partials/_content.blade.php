@@ -272,9 +272,11 @@ function wegingApp() {
                     { fps: 10, qrbox: { width: 200, height: 200 } },
                     async (text) => {
                         // QR gevonden!
+                        console.log('QR SCANNED:', text);
                         this.melding = 'QR gevonden!';
                         let qr = text;
                         if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
+                        console.log('QR CODE EXTRACTED:', qr);
                         await this.scanQR(qr);
                     },
                     (errorMessage) => {
@@ -299,6 +301,7 @@ function wegingApp() {
         },
 
         async scanQR(qrCode) {
+            console.log('scanQR called with:', qrCode);
             if (this.scanner) {
                 try { await this.scanner.stop(); } catch (e) {}
                 this.scanner = null;
@@ -307,8 +310,10 @@ function wegingApp() {
             this.melding = 'Zoeken: ' + qrCode.substring(0, 20) + '...';
             this.meldingType = 'success';
 
+            const url = `{{ route('toernooi.weging.scan-qr', $toernooi) }}`;
+            console.log('Fetching URL:', url);
             try {
-                const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -316,7 +321,9 @@ function wegingApp() {
                     },
                     body: JSON.stringify({ qr_code: qrCode })
                 });
+                console.log('Response status:', response.status);
                 const data = await response.json();
+                console.log('Response data:', data);
                 if (data.success) {
                     this.selecteerJudoka(data.judoka);
                     this.melding = '';
@@ -326,6 +333,7 @@ function wegingApp() {
                     this.meldingType = 'error';
                 }
             } catch (err) {
+                console.error('Fetch error:', err);
                 this.melding = 'API fout: ' + err.message;
                 this.meldingType = 'error';
             }
