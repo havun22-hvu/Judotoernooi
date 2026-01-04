@@ -127,6 +127,7 @@ class WegingController extends Controller
             'id' => $j->id,
             'naam' => $j->naam,
             'club' => $j->club?->naam,
+            'leeftijdsklasse' => $j->leeftijdsklasse,
             'gewichtsklasse' => $j->gewichtsklasse,
             'blok' => $j->poules->first()?->blok?->nummer,
             'gewogen' => $j->gewicht_gewogen !== null,
