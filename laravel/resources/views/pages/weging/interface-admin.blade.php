@@ -26,10 +26,11 @@
                 </select>
             </div>
 
-            <!-- Stats per blok -->
-            <div class="flex items-center gap-6">
+            <!-- Stats per blok (vaste breedte, highlight actieve) -->
+            <div class="flex items-center gap-4">
                 @foreach($toernooi->blokken as $blok)
-                <div class="text-center" x-show="blokFilter === '' || blokFilter == '{{ $blok->nummer }}'">
+                <div class="text-center w-20 transition-opacity"
+                     :class="blokFilter !== '' && blokFilter != '{{ $blok->nummer }}' ? 'opacity-40' : ''">
                     <div class="text-xs text-gray-500">Blok {{ $blok->nummer }}</div>
                     <div class="text-lg font-bold">
                         <span class="text-green-600" x-text="stats.blok{{ $blok->nummer }}?.gewogen || 0"></span>
@@ -46,7 +47,7 @@
                 </div>
                 @endforeach
 
-                <div class="text-center border-l pl-6">
+                <div class="text-center border-l pl-4 w-20">
                     <div class="text-xs text-gray-500">Totaal</div>
                     <div class="text-xl font-bold">
                         <span class="text-green-600" x-text="stats.totaalGewogen"></span>
