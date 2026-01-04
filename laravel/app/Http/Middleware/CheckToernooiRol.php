@@ -27,6 +27,9 @@ class CheckToernooiRol
             'organisator_check' => auth('organisator')->check(),
             'organisator_id' => auth('organisator')->id(),
             'expects_json' => $request->expectsJson(),
+            'session_id' => session()->getId(),
+            'has_session' => $request->hasSession(),
+            'cookies' => array_keys($request->cookies->all()),
         ]);
 
         if (!$toernooi instanceof Toernooi) {
