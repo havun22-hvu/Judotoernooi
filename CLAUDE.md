@@ -18,7 +18,7 @@
 ```
 
 > **Type:** Laravel 11 toernooi management systeem
-> **URL:** https://judotournament.org (production - geen staging)
+> **URL:** https://judotournament.org (production)
 > **Doel:** WestFries Open Judo Toernooi beheren
 
 ## Rules (ALWAYS follow)
@@ -71,7 +71,8 @@ cd laravel && php artisan serve --port=8007
 | Omgeving | Pad |
 |----------|-----|
 | Local | D:\GitHub\judotoernooi\laravel |
-| Server | /var/www/judotoernooi/laravel |
+| Staging | /var/www/staging.judotoernooi/laravel |
+| Production | /var/www/judotoernooi/laravel |
 
 **Server:** 188.245.159.115 (root, SSH key)
 **GitHub:** https://github.com/havun22-hvu/judotoernooi

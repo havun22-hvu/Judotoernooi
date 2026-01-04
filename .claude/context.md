@@ -16,9 +16,10 @@
 | Omgeving | URL | Pad | Database |
 |----------|-----|-----|----------|
 | **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite |
-| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+| **Staging** | (geen publiek domein) | `/var/www/staging.judotoernooi/laravel` | MySQL (staging_judo_toernooi) |
+| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL (judo_toernooi) |
 
-> **Let op:** Er is geen aparte staging omgeving. Testen gebeurt lokaal.
+> **Staging:** Alleen op server, geen publiek domein. Test via SSH of direct IP.
 
 ```bash
 php artisan serve --port=8007   # http://localhost:8007
@@ -257,7 +258,8 @@ laravel/
 | Omgeving | Type | Database | User |
 |----------|------|----------|------|
 | Local | SQLite | database/database.sqlite | - |
-| Server | MySQL | judo_toernooi | judotoernooi |
+| Staging | MySQL | staging_judo_toernooi | judotoernooi |
+| Production | MySQL | judo_toernooi | judotoernooi |
 
 ---
 
@@ -275,6 +277,22 @@ php artisan serve --port=8007
 **Let op:**
 - Local: SQLite (geen MySQL nodig)
 - Poort 8007 (zie HavunCore server.md voor alle poorten)
+
+---
+
+## Deploy (Staging)
+
+```bash
+ssh root@188.245.159.115
+cd /var/www/staging.judotoernooi/laravel
+
+git pull origin master
+composer install --no-dev
+php artisan migrate
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
 
 ---
 
