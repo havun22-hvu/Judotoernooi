@@ -157,16 +157,27 @@ class WegingService
      */
     public function vindJudokaViaQR(string $qrCode): ?Judoka
     {
+        $original = $qrCode;
+
         // Extract qr_code from URL if full URL is provided
         if (str_contains($qrCode, '/weegkaart/')) {
             $parts = explode('/weegkaart/', $qrCode);
             $qrCode = end($parts);
-            // Remove any trailing slashes or query params
+            // Remove any trailing slashes, query params, or hash
             $qrCode = strtok($qrCode, '?');
+            $qrCode = strtok($qrCode, '#');
             $qrCode = rtrim($qrCode, '/');
         }
 
-        return Judoka::where('qr_code', $qrCode)->first();
+        \Log::info('QR Scan', ['original' => $original, 'extracted' => $qrCode]);
+
+        $judoka = Judoka::where('qr_code', $qrCode)->first();
+
+        if (!$judoka) {
+            \Log::warning('QR not found', ['qr_code' => $qrCode]);
+        }
+
+        return $judoka;
     }
 
     /**
