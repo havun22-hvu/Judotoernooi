@@ -181,7 +181,6 @@ class RoleToegang extends Controller
             'matten' => $toernooi->matten,
             'toegang' => $toegang,
             'matNummer' => $toegang->mat_nummer,
-            'standalone' => true,
         ]);
     }
 
