@@ -26,9 +26,10 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 3. **Einde inschrijving** → "Valideer judoka's" → QR-codes aangemaakt (definitief)
 4. Poules genereren
 5. Blokverdeling → poules krijgen blok toegewezen
-6. **Zaaloverzicht** → organisator wijst handmatig matten toe (slepen)
-7. **"Maak weegkaarten"** → voorbereiding geseald, weegkaarten + coachkaarten klaar
-8. **Resultaat:** Weeglijst, weegkaarten (blok+mat), coachkaarten, zaaloverzicht
+6. **"Verdeel over matten"** → automatische verdeling (organisator kan nog schuiven)
+7. **Zaaloverzicht** → controleer verdeling, pas aan indien nodig
+8. **"Maak weegkaarten"** → voorbereiding geseald, weegkaarten tonen blok + mat
+9. **Resultaat:** Weeglijst, weegkaarten (blok+mat), coachkaarten klaar
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
@@ -40,8 +41,8 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 7. Poule klaar → spreker voor prijsuitreiking
 
 **Belangrijk:**
-- Tijdens voorbereiding: matten worden HANDMATIG toegewezen (niet automatisch)
-- Na "Maak weegkaarten": voorbereiding is geseald, geen wijzigingen meer
+- Matten worden automatisch verdeeld, maar organisator kan schuiven vóór "Maak weegkaarten"
+- Weegkaarten tonen pas mat nummer NA "Maak weegkaarten" (voorbereiding geseald)
 - Wedstrijdschema's worden PAS gegenereerd bij activatie op toernooidag (chip klikken)
 
 ## Voorbereiding
@@ -180,14 +181,14 @@ Verdeling blokken |--------------------| Aansluiting gewichten
 
 ### Zaaloverzicht & Mat Toewijzing
 
-Na de blokverdeling ("Zet op mat") gaat de organisator naar het **Zaaloverzicht**:
+Na "Verdeel over matten" gaat de organisator naar het **Zaaloverzicht**:
 
-1. **Preview modus** - Poules zijn verdeeld over blokken, maar nog NIET over matten
-2. **Handmatig toewijzen** - Sleep poules naar de gewenste mat per blok
-3. **Balanceren** - Zorg dat elke mat ongeveer evenveel wedstrijden heeft
+1. **Automatische verdeling** - Poules zijn automatisch over matten verdeeld
+2. **Aanpassen** - Sleep poules naar andere mat indien gewenst
+3. **Balanceren** - Check dat elke mat ongeveer evenveel wedstrijden heeft
 4. **Controleren** - Bekijk de verdeling voor elk blok
 
-**Let op:** Matten worden NIET automatisch toegewezen. De organisator bepaalt zelf welke poule op welke mat komt.
+**Let op:** Na "Verdeel over matten" zijn poules al toegewezen aan matten. De organisator kan nog schuiven vóór "Maak weegkaarten".
 
 ### Voorbereiding Afronden ("Maak weegkaarten")
 
@@ -208,8 +209,8 @@ Wanneer alle poules op de juiste matten staan:
 **Vereisten voor weegkaarten:**
 1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
 2. Blokverdeling gedaan → blokken toegewezen
-3. Mat toewijzing gedaan → matten handmatig toegewezen
-4. "Maak weegkaarten" geklikt → voorbereiding geseald
+3. "Verdeel over matten" gedaan → matten toegewezen (automatisch, kan aangepast)
+4. "Maak weegkaarten" geklikt → voorbereiding geseald, mat info op weegkaart
 
 ### Zaaloverzicht
 
