@@ -265,6 +265,11 @@ Het Zaaloverzicht toont per blok en mat:
 - Aantal wedstrijden per mat
 - Status van de weging
 
+**UI na "Maak weegkaarten":**
+- Kleine groene indicator naast titel: "✓ Voorbereiding afgerond (datum)"
+- Geen grote banners of herhaalde meldingen (te storend)
+- Status ook zichtbaar op Dashboard
+
 ## Toernooidag
 
 De toernooidag begint waar de voorbereiding eindigt. Nu worden judoka's daadwerkelijk gewogen en kunnen afwijkingen optreden.
