@@ -1174,6 +1174,54 @@
         </form>
     </div>
 
+    <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
+    @if($toernooi->weegkaarten_gemaakt_op)
+    <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">
+        <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">⚠️</span> Noodknop: Heropen Voorbereiding
+        </h2>
+        <p class="text-red-700 mb-4">
+            Voorbereiding is afgerond op <strong>{{ $toernooi->weegkaarten_gemaakt_op->format('d-m-Y H:i') }}</strong>.
+            Judoka's, poules en blokken zijn nu read-only.
+        </p>
+
+        <div class="bg-red-100 border border-red-300 rounded p-3 mb-4 text-sm text-red-800">
+            <strong>⚠️ LET OP - ALLEEN GEBRUIKEN BIJ NOOD!</strong>
+            <ul class="list-disc list-inside mt-2">
+                <li>Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!</li>
+                <li>Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden</li>
+                <li>Na wijzigingen: opnieuw "Maak weegkaarten" klikken</li>
+                <li>Oude geprinte weegkaarten zijn dan ONGELDIG</li>
+            </ul>
+        </div>
+
+        <button @click="showConfirm = true" x-show="!showConfirm"
+                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+            Heropen Voorbereiding
+        </button>
+
+        <div x-show="showConfirm" x-cloak class="bg-white border border-red-300 rounded-lg p-4 mt-4">
+            <p class="font-medium text-red-800 mb-3">Bevestig met het organisator wachtwoord:</p>
+            <form action="{{ route('toernooi.heropen-voorbereiding', $toernooi) }}" method="POST" class="flex items-end gap-3">
+                @csrf
+                <div class="flex-1">
+                    <label class="block text-sm text-gray-600 mb-1">Wachtwoord</label>
+                    <input type="password" name="wachtwoord" x-model="wachtwoord" required
+                           class="w-full border rounded px-3 py-2" placeholder="Voer wachtwoord in">
+                </div>
+                <button type="submit" :disabled="!wachtwoord"
+                        class="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold rounded-lg">
+                    Bevestig Heropenen
+                </button>
+                <button type="button" @click="showConfirm = false; wachtwoord = ''"
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                    Annuleren
+                </button>
+            </form>
+        </div>
+    </div>
+    @endif
+
     </div><!-- End TAB: ORGANISATIE -->
 
     <!-- TAB: TEST (alleen voor admin) -->

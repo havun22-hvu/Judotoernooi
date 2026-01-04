@@ -236,6 +236,28 @@ Wanneer alle poules op de juiste matten staan:
 3. "Verdeel over matten" gedaan → matten toegewezen (automatisch, kan aangepast)
 4. "Maak weegkaarten" geklikt → voorbereiding geseald, mat info op weegkaart
 
+### Noodknop: Heropen Voorbereiding
+
+**Let op:** Dit is een NOOD-situatie! Alleen gebruiken als het echt noodzakelijk is.
+
+Na "Maak weegkaarten" zijn judoka's, poules en blokken read-only. Als er toch wijzigingen nodig zijn:
+
+1. Ga naar **Instellingen** → **Organisatie**
+2. Klik **"Heropen voorbereiding"** (onderaan, met waarschuwing)
+3. Bevestig met wachtwoord
+4. Voorbereiding is weer bewerkbaar
+
+**Gevolgen van heropenen:**
+- Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!
+- Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden
+- Na wijzigingen: opnieuw "Maak weegkaarten" klikken
+- Oude geprinte weegkaarten zijn dan ONGELDIG
+
+**Wanneer gebruiken:**
+- Judoka verkeerd ingedeeld ontdekt na printen
+- Blok/mat wijziging absoluut noodzakelijk
+- NOOIT voor kleine cosmetische wijzigingen
+
 ### Zaaloverzicht
 
 Het Zaaloverzicht toont per blok en mat:
