@@ -239,9 +239,8 @@ class BlokController extends Controller
         // Seal preparation
         $toernooi->update(['weegkaarten_gemaakt_op' => now()]);
 
-        return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', 'Voorbereiding afgerond! Weegkaarten en coachkaarten zijn nu klaar met blok + mat info.');
+        // No flash message needed - indicator next to title is sufficient
+        return redirect()->route('toernooi.blok.zaaloverzicht', $toernooi);
     }
 
     /**
