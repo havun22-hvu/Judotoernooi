@@ -1,46 +1,50 @@
     @php $pwaApp = 'weging'; @endphp
 <div x-data="wegingApp()" x-init="init()">
-    <!-- TOP HALF: Scanner/Search area (fixed height) -->
-    <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%; min-height: 280px;">
-        <!-- Scanner area (fixed) -->
-        <div class="flex-1 flex items-center justify-center">
+    <!-- TOP: Scanner gebied -->
+    <div class="bg-blue-800/50 rounded-lg p-3 mb-2">
+        <!-- Scanner area -->
+        <div class="flex items-center justify-center" style="min-height: 220px;">
             <!-- Scan button (when not scanning) -->
             <button x-show="modus === 'zoek'" @click="modus = 'scan'; startScanner()"
-                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
-                <span class="text-3xl mb-1">📷</span>
-                <span class="font-bold text-sm">Scan</span>
+                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-32 h-32 flex flex-col items-center justify-center shadow-lg">
+                <span class="text-4xl mb-1">📷</span>
+                <span class="font-bold">Scan</span>
             </button>
 
             <!-- Scanner (when scanning) -->
-            <div x-show="modus === 'scan'" class="text-center w-full">
-                <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
-                <button @click="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
-                    Stop
-                </button>
+            <div x-show="modus === 'scan'" class="w-full">
+                <div id="qr-reader" style="width: 100%; max-width: 280px; margin: 0 auto;"></div>
             </div>
         </div>
 
-        <!-- Search input (fixed position below scanner) -->
-        <div class="mt-2">
-            <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-                   placeholder="of zoek op naam..."
-                   class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-blue-300 focus:outline-none placeholder-blue-400 text-white">
+        <!-- Stop knop ONDER scanner -->
+        <div x-show="modus === 'scan'" class="text-center mt-2">
+            <button @click="stopScanner()" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                Stop Scanner
+            </button>
         </div>
+    </div>
 
-        <!-- Search results (overlay) -->
-        <div x-show="resultaten.length > 0" class="absolute left-3 right-3 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto z-10" style="top: 52%;">
-            <template x-for="judoka in resultaten" :key="judoka.id">
-                <div @click="selecteerJudoka(judoka)"
-                     class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
-                    <div class="font-medium" x-text="judoka.naam"></div>
-                    <div class="text-sm text-gray-600">
-                        <span x-text="judoka.club || 'Geen club'"></span> |
-                        <span x-text="judoka.gewichtsklasse + ' kg'"></span>
-                        <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓</span>
-                    </div>
+    <!-- Zoek input - sticky vaste plek -->
+    <div class="mb-2">
+        <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
+               placeholder="Zoek op naam..."
+               class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-blue-300 focus:outline-none placeholder-blue-400 text-white">
+    </div>
+
+    <!-- Search results (overlay) -->
+    <div x-show="resultaten.length > 0" class="absolute left-3 right-3 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto z-10" style="top: 320px;">
+        <template x-for="judoka in resultaten" :key="judoka.id">
+            <div @click="selecteerJudoka(judoka)"
+                 class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
+                <div class="font-medium" x-text="judoka.naam"></div>
+                <div class="text-sm text-gray-600">
+                    <span x-text="judoka.club || 'Geen club'"></span> |
+                    <span x-text="judoka.gewichtsklasse + ' kg'"></span>
+                    <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓</span>
                 </div>
-            </template>
-        </div>
+            </div>
+        </template>
     </div>
 
     <!-- BOTTOM HALF: Blok/Stats + Judoka (fixed position) -->

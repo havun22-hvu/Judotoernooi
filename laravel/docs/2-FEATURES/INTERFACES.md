@@ -146,8 +146,17 @@ De Weging heeft **2 totaal verschillende versies**:
 ### Scanner Gedrag
 - **Auto-stop**: Scanner stopt automatisch na succesvolle scan
 - **QR URL extractie**: Scanner herkent volledige weegkaart URLs en extraheert QR code
-- **Stop knop**: Alleen zichtbaar tijdens actief scannen
+- **Stop knop**: ONDER de scanner (niet ernaast) zodat altijd bereikbaar
 - **Numpad**: Verschijnt na selectie judoka voor gewichtinvoer
+
+### Weging Interface Layout (mobiel)
+Van boven naar beneden:
+1. **Header**: Titel + klok + countdown geselecteerd blok (klein)
+2. **Scanner gebied**: Ruim, scan knop groot en duidelijk
+3. **Stop knop**: Direct ONDER scanner (niet ernaast!)
+4. **Zoek input**: Sticky op vaste plek onder stop knop
+5. **Blok dropdown + stats**: gewogen/totaal
+6. **Judoka details + Numpad**: Onderste deel scherm
 
 ---
 
