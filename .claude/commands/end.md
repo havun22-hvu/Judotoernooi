@@ -2,13 +2,29 @@
 
 > **VERPLICHT** bij elke sessie-afsluiting - laat het project netjes achter!
 
-## 1. MD Bestanden Netjes Achterlaten (KRITIEK!)
+## 1. Review Smallwork.md (EERST!)
+
+Lees `.claude/smallwork.md` en check elke entry:
+
+```
+Voor elke fix in smallwork.md:
+  ├── Moet dit naar permanente docs?
+  │     ├── Feature/functionaliteit → SPEC.md of FEATURES.md
+  │     ├── Styling → STYLING.md
+  │     ├── Business rule → relevante doc
+  │     └── Technisch/eenmalig → blijft in smallwork
+  │
+  └── Verplaats indien nodig en vink af
+```
+
+## 2. MD Bestanden Netjes Achterlaten (KRITIEK!)
 
 ### Controleer en update:
 
 ```
 CLAUDE.md                    ← Zijn er nieuwe regels/restricties?
 .claude/context.md           ← Is er nieuwe project kennis?
+.claude/smallwork.md         ← Is alles afgehandeld?
 ```
 
 ### Vraag jezelf:
@@ -26,7 +42,7 @@ CLAUDE.md                    ← Zijn er nieuwe regels/restricties?
 | How-to procedure | `D:\GitHub\HavunCore\docs\kb\runbooks\` |
 | Architectuur beslissing | `D:\GitHub\HavunCore\docs\kb\decisions\` |
 
-## 2. Maak een Handover voor Volgende Sessie
+## 3. Maak een Handover voor Volgende Sessie
 
 Voeg toe aan `.claude/context.md` of maak `.claude/handover.md`:
 
@@ -49,7 +65,7 @@ Voeg toe aan `.claude/context.md` of maak `.claude/handover.md`:
 - [Issue 1]
 ```
 
-## 3. Git Commit & Push
+## 4. Git Commit & Push
 
 ```bash
 git add .
@@ -57,7 +73,7 @@ git commit -m "docs: Session handover [datum] + [korte beschrijving]"
 git push origin master
 ```
 
-## 4. Deploy naar Server (indien nodig)
+## 5. Deploy naar Server (indien nodig)
 
 ```bash
 ssh root@188.245.159.115
@@ -66,13 +82,13 @@ git pull
 php artisan config:clear && php artisan cache:clear
 ```
 
-## 5. Branch Cleanup
+## 6. Branch Cleanup
 
 ```bash
 git branch --merged | grep -v master | xargs git branch -d
 ```
 
-## 6. Bevestig aan Gebruiker
+## 7. Bevestig aan Gebruiker
 
 ```
 📋 Sessie Samenvatting:
@@ -80,6 +96,9 @@ git branch --merged | grep -v master | xargs git branch -d
 
 📝 Gedocumenteerd:
   - [Welke MD files bijgewerkt]
+
+🔧 Smallwork:
+  - [X items afgehandeld, Y naar permanente docs]
 
 ⏳ Openstaand:
   - [Nog te doen]
@@ -92,6 +111,7 @@ Sessie afgerond. Typ 'exit' of Ctrl+D om te sluiten.
 
 ## NIET DOEN BIJ AFSLUITEN
 
+❌ Afsluiten zonder smallwork.md te reviewen
 ❌ Afsluiten zonder MD files te checken
 ❌ Kennis "in je hoofd houden" - de volgende Claude weet het niet!
 ❌ Geen handover maken bij openstaande items

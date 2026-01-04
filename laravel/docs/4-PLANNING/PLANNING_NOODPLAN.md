@@ -243,7 +243,10 @@ J = Judopunten (Yuko=5, Waza-Ari=7, Ippon=10)
 - Elke poule op nieuwe pagina (page-break)
 - Weegkaarten/coachkaarten: meerdere per A4 pagina
 - Weeg/coachkaarten opties:
-  - **Alle**: eind inschrijving, print alles in één keer
+  - **Alle**: na "Verdeel over matten", print alles in één keer
   - **Per club**: dropdown selectie
   - **1 specifieke**: bij calamiteiten (coach ziek, plotselinge wijziging)
+- **Let op:** Weegkaarten vereisen:
+  1. "Valideer judoka's" (na einde inschrijving) → QR-codes aangemaakt
+  2. Blokverdeling + "Verdeel over matten" (tab Blokken) → blokinfo beschikbaar
 - {blok?} parameter: optioneel, zonder = alle blokken

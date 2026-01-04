@@ -82,7 +82,7 @@
 - **Wie:** Trainer van uitgenodigde club
 - **Taken:**
   - Judoka's aanmelden/beheren
-  - Weegkaarten printen
+  - Weegkaarten bekijken/delen (pas beschikbaar na blokverdeling)
 - **Authenticatie:** Gedeelde URL + 5-cijfer PIN
 - **Beheer:** Judoschool regelt dit zelf (max 3 coaches per club)
 

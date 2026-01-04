@@ -88,9 +88,11 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 - Geen page reload - JavaScript update
 - Vastgezette ● categorieën blijven altijd staan
 
-### Naar Zaaloverzicht →
+### Naar Zaaloverzicht → (ook: "Verdeel over matten")
 - Sla huidige blokverdeling op in database
 - **Wijs matten toe** aan poules (gebalanceerde verdeling)
+- **Weegkaarten worden nu beschikbaar** (QR-code + bloknaam + weging tijden)
+  - Vereist: eerst "Valideer judoka's" uitgevoerd (QR-codes aangemaakt)
 - Ga naar zaaloverzicht (preview met matverdeling)
 - Matten kunnen na overpoelen nog aangepast worden
 
