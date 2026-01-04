@@ -133,9 +133,13 @@ function deviceToegangen() {
 
         async loadToegangen() {
             try {
-                const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi) }}');
+                const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi) }}', {
+                    credentials: 'same-origin',
+                });
                 if (response.ok) {
                     this.toegangen = await response.json();
+                } else {
+                    console.error('Load failed:', response.status);
                 }
             } catch (e) {
                 console.error('Failed to load toegangen:', e);
@@ -156,15 +160,19 @@ function deviceToegangen() {
             try {
                 const response = await fetch('{{ route("toernooi.device-toegang.store", $toernooi) }}', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
                     },
                     body: JSON.stringify(data),
                 });
                 if (response.ok) {
                     const nieuweT = await response.json();
                     this.toegangen.push(nieuweT);
+                } else {
+                    console.error('Add failed:', response.status, await response.text());
                 }
             } catch (e) {
                 console.error('Failed to add toegang:', e);

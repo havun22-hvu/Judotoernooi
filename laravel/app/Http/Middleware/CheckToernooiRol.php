@@ -21,6 +21,9 @@ class CheckToernooiRol
         $toernooi = $request->route('toernooi');
 
         if (!$toernooi instanceof Toernooi) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Toernooi niet gevonden'], 404);
+            }
             return redirect()->route('dashboard');
         }
 
@@ -41,6 +44,9 @@ class CheckToernooiRol
 
         // Niet ingelogd
         if (!$huidigeRol) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Niet ingelogd'], 401);
+            }
             return redirect()
                 ->route('toernooi.auth.login', $toernooi)
                 ->with('error', 'Je moet eerst inloggen');
@@ -53,6 +59,9 @@ class CheckToernooiRol
 
         // Check of huidige rol toegang heeft
         if (!in_array($huidigeRol, $rollen)) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Geen toegang'], 403);
+            }
             return redirect()
                 ->route('toernooi.auth.login', $toernooi)
                 ->with('error', 'Je hebt geen toegang tot deze pagina');

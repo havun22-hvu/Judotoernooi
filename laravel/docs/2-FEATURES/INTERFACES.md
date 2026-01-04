@@ -28,11 +28,18 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 3. Eerste keer: opent URL → voert PIN in → device wordt gebonden
 4. Daarna: device wordt herkend → direct naar interface
 
-### Beheer
+### Beheer (Instellingen → Organisatie)
 - Toegangen aanmaken/verwijderen per rol
 - Device status zien (gebonden / wachtend)
 - Device resetten (nieuw device kan binden)
 - Automatische reset bij "Einde toernooi"
+
+### Layout Organisatie tab
+De Organisatie tab bevat:
+1. **Device Toegangen** - URLs + PINs beheren
+2. **Snelkoppelingen** - Pagina Builder + Noodplan
+3. **Online Betalingen** - Mollie configuratie
+4. **Bloktijden** - Weeg- en starttijden (stappen van 15 min)
 
 ---
 
