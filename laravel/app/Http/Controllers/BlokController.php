@@ -172,8 +172,8 @@ class BlokController extends Controller
     }
 
     /**
-     * Redirect to zaaloverzicht after blokverdeling (voorbereiding)
-     * Matten worden NIET automatisch toegewezen - organisator doet dit handmatig
+     * Distribute poules over mats and redirect to zaaloverzicht (voorbereiding)
+     * Organizer can still adjust mat assignments before sealing with "Maak weegkaarten"
      */
     public function zetOpMat(Toernooi $toernooi): RedirectResponse
     {
@@ -194,12 +194,12 @@ class BlokController extends Controller
             $poule->updateStatistieken();
         }
 
-        // NOTE: Matten worden NIET automatisch toegewezen!
-        // Organisator wijst handmatig matten toe in zaaloverzicht
+        // Automatische verdeling over matten (organisator kan nog aanpassen)
+        $this->verdelingService->verdeelOverMatten($toernooi);
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', 'Blokverdeling klaar. Wijs nu handmatig matten toe.');
+            ->with('success', 'Poules verdeeld over matten. Controleer en pas aan indien nodig, klik dan "Maak weegkaarten".');
     }
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
