@@ -1,7 +1,7 @@
     @php $pwaApp = 'weging'; @endphp
 <div x-data="wegingApp()" x-init="init()">
-    <!-- Scanner gebied: bovenste 1/3 van scherm (33vh) -->
-    <div class="bg-blue-800/50 rounded-lg p-3" style="height: 33vh; min-height: 200px;">
+    <!-- Scanner gebied: bovenste 1/3, OVERFLOW HIDDEN zodat video niet uitbreekt -->
+    <div class="bg-blue-800/50 rounded-lg overflow-hidden" style="height: 33vh; min-height: 200px;">
         <!-- Scan button (when not scanning) -->
         <div x-show="modus === 'zoek'" class="flex items-center justify-center h-full">
             <button @click="modus = 'scan'; startScanner()"
@@ -11,25 +11,25 @@
             </button>
         </div>
 
-        <!-- Scanner (when scanning) -->
-        <div x-show="modus === 'scan'" class="flex items-center justify-center h-full">
-            <div id="qr-reader" style="width: 100%; max-width: 300px;"></div>
+        <!-- Scanner (when scanning) - video blijft binnen container -->
+        <div x-show="modus === 'scan'" class="h-full overflow-hidden">
+            <div id="qr-reader" class="mx-auto" style="width: 100%; max-width: 300px; height: 100%;"></div>
         </div>
     </div>
 
-    <!-- Stop knop: direct onder scanner, ~50px, alleen tijdens scannen -->
-    <div class="mt-4" style="height: 50px;">
+    <!-- Stop knop: ONDER scanner box -->
+    <div class="mt-3">
         <button x-show="modus === 'scan'" @click="stopScanner()"
-                class="w-full h-full bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
+                class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
             ⏹ Stop Scanner
         </button>
     </div>
 
-    <!-- Zoek input: vaste positie onder stop knop, ~50px, altijd zichtbaar -->
-    <div class="mt-4" style="height: 50px;">
+    <!-- Zoek input: ONDER stop knop -->
+    <div class="mt-3">
         <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                placeholder="Zoek op naam..."
-               class="w-full h-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
+               class="w-full py-3 border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
     </div>
 
     <!-- Search results (overlay) -->
