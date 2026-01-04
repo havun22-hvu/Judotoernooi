@@ -10,6 +10,7 @@ use App\Services\ToernooiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class ToernooiController extends Controller
@@ -275,6 +276,30 @@ class ToernooiController extends Controller
         return redirect()
             ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
             ->with('success', 'Betalingsinstellingen bijgewerkt');
+    }
+
+    /**
+     * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
+     */
+    public function heropenVoorbereiding(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $request->validate([
+            'wachtwoord' => 'required|string',
+        ]);
+
+        // Verify password against admin password
+        if (!Hash::check($request->wachtwoord, $toernooi->wachtwoord_admin)) {
+            return redirect()
+                ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+                ->with('error', 'Onjuist wachtwoord. Voorbereiding niet heropend.');
+        }
+
+        // Reset weegkaarten_gemaakt_op
+        $toernooi->update(['weegkaarten_gemaakt_op' => null]);
+
+        return redirect()
+            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->with('success', '⚠️ Voorbereiding heropend! Vergeet niet om "Maak weegkaarten" opnieuw te klikken na wijzigingen.');
     }
 
     /**

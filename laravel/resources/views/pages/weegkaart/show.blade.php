@@ -15,7 +15,6 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        /* Smartphone optimized - fits nicely on screen */
         #weegkaart {
             max-width: 360px;
             margin: 0 auto;
@@ -24,19 +23,19 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 pb-24">
     <div id="weegkaart" class="bg-white rounded-xl shadow-xl w-full overflow-hidden">
-        {{-- Compact header --}}
+        {{-- Header --}}
         <div class="bg-blue-700 text-white px-3 py-2 flex justify-between items-center">
             <span class="text-sm font-medium truncate">{{ $judoka->toernooi->naam ?? 'Judo Toernooi' }}</span>
             <span class="text-blue-200 text-sm">{{ $judoka->toernooi->datum?->format('d-m-Y') ?? '' }}</span>
         </div>
 
-        {{-- NAAM PROMINENT - dit moet de weegkamer goed kunnen lezen --}}
+        {{-- NAAM PROMINENT --}}
         <div class="px-3 py-3 bg-gray-50 border-b-2 border-blue-200">
             <h1 class="text-2xl font-black text-gray-900 text-center leading-tight">{{ $judoka->naam }}</h1>
             <p class="text-base font-medium text-blue-600 text-center mt-1">{{ $judoka->club?->naam ?? 'Geen club' }}</p>
         </div>
 
-        {{-- Classification row - compact horizontal --}}
+        {{-- Classification row --}}
         @php
             $bandColors = [
                 'wit' => 'bg-white text-gray-800 border-2 border-gray-400',
@@ -70,44 +69,39 @@
             </div>
         </div>
 
-        {{-- BLOK INFO - GROOT EN DUIDELIJK --}}
+        {{-- BLOK/MAT + TIJDEN - Compact --}}
         @if($blok)
-        <div class="bg-amber-100 border-b-2 border-amber-300">
-            {{-- Blok + Mat + Starttijd header --}}
-            <div class="px-3 py-2 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="bg-amber-500 text-white text-lg font-black px-3 py-1 rounded">{{ $blok->naam }}</span>
-                    @if($mat)
-                    <span class="bg-blue-600 text-white text-lg font-black px-3 py-1 rounded">Mat {{ $mat->nummer }}</span>
-                    @endif
+        <div class="px-3 py-2 bg-amber-50 border-b flex items-center justify-between">
+            {{-- Blok + Mat badges (kleiner) --}}
+            <div class="flex items-center gap-1">
+                <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
+                @if($mat)
+                <span class="bg-blue-600 text-white text-sm font-bold px-2 py-0.5 rounded">Mat {{ $mat->nummer }}</span>
+                @endif
+            </div>
+            {{-- Tijden --}}
+            <div class="text-right text-xs">
+                @if($blok->weging_start && $blok->weging_einde)
+                <div class="text-gray-600">
+                    <span class="font-medium">Weging:</span>
+                    <span class="font-bold text-gray-800">{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</span>
                 </div>
+                @endif
                 @if($blok->starttijd)
-                <div class="text-right">
-                    <span class="text-xs text-amber-700">Start</span>
-                    <span class="text-lg font-bold text-amber-900 ml-1">{{ $blok->starttijd->format('H:i') }}</span>
+                <div class="text-gray-600">
+                    <span class="font-medium">Start:</span>
+                    <span class="font-bold text-gray-800">{{ $blok->starttijd->format('H:i') }}</span>
                 </div>
                 @endif
             </div>
-            {{-- Weegtijden --}}
-            @if($blok->weging_start && $blok->weging_einde)
-            <div class="px-3 pb-2">
-                <div class="bg-white rounded px-3 py-2 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span class="text-sm font-medium text-gray-600">Weging:</span>
-                    <span class="text-lg font-bold text-gray-900">{{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}</span>
-                </div>
-            </div>
-            @endif
         </div>
         @else
-        <div class="px-3 py-3 bg-gray-100 border-b text-center">
+        <div class="px-3 py-2 bg-gray-100 border-b text-center">
             <span class="text-sm text-gray-500">⏳ Nog niet ingedeeld</span>
         </div>
         @endif
 
-        {{-- QR CODE - GROOT voor makkelijk scannen --}}
+        {{-- QR CODE --}}
         <div class="p-4 flex flex-col items-center bg-white">
             <img
                 src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(route('weegkaart.show', $judoka->qr_code)) }}"
@@ -118,9 +112,12 @@
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</p>
         </div>
 
-        {{-- Footer instruction --}}
-        <div class="px-3 py-2 bg-blue-50 text-center border-t">
+        {{-- Footer --}}
+        <div class="px-3 py-2 bg-blue-50 border-t flex justify-between items-center">
             <p class="text-xs text-blue-700 font-medium">📱 Toon bij weging • Scan QR-code</p>
+            @if($judoka->toernooi->weegkaarten_gemaakt_op)
+            <p class="text-[10px] text-gray-400">{{ $judoka->toernooi->weegkaarten_gemaakt_op->format('d-m H:i') }}</p>
+            @endif
         </div>
     </div>
 

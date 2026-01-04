@@ -69,6 +69,7 @@ Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
+Route::post('toernooi/{toernooi}/heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('toernooi.heropen-voorbereiding');
 
 // Mollie OAuth & Payments
 Route::get('toernooi/{toernooi}/mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
