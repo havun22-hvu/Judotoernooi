@@ -259,17 +259,20 @@ function wegingApp() {
             if (this.scanner) {
                 try { await this.scanner.stop(); } catch (e) {}
             }
-            this.melding = 'Scanner actief...';
+            this.melding = 'Camera starten...';
             this.meldingType = 'success';
             await this.$nextTick();
+            // Extra delay om div zichtbaar te laten worden
+            await new Promise(resolve => setTimeout(resolve, 300));
             this.scanner = new Html5Qrcode("qr-reader");
             try {
+                this.melding = 'Camera openen...';
                 await this.scanner.start(
                     { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
+                    { fps: 10, qrbox: { width: 200, height: 200 } },
                     async (text) => {
                         // QR gevonden!
-                        this.melding = 'QR gevonden: ' + text.substring(0, 30) + '...';
+                        this.melding = 'QR gevonden!';
                         let qr = text;
                         if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
                         await this.scanQR(qr);
@@ -278,10 +281,12 @@ function wegingApp() {
                         // Scan error (normaal bij zoeken) - negeer
                     }
                 );
+                this.melding = 'Richt camera op QR code';
             } catch (err) {
-                this.melding = 'Camera fout: ' + err.message;
+                this.melding = 'Camera fout: ' + (err.message || err);
                 this.meldingType = 'error';
                 this.modus = 'zoek';
+                console.error('Scanner error:', err);
             }
         },
 
