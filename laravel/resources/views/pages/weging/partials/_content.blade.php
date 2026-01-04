@@ -298,23 +298,31 @@ function wegingApp() {
                 try { await this.scanner.stop(); } catch (e) {}
                 this.scanner = null;
             }
-            const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ qr_code: qrCode })
-            });
-            const data = await response.json();
-            if (data.success) {
-                this.selecteerJudoka(data.judoka);
-                this.modus = 'zoek';
-                if (navigator.vibrate) navigator.vibrate(100);
-            } else {
-                this.melding = data.message || 'Niet gevonden';
+            this.modus = 'zoek';
+            this.melding = 'Zoeken: ' + qrCode.substring(0, 20) + '...';
+            this.meldingType = 'success';
+
+            try {
+                const response = await fetch(`{{ route('toernooi.weging.scan-qr', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ qr_code: qrCode })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.selecteerJudoka(data.judoka);
+                    this.melding = '';
+                    if (navigator.vibrate) navigator.vibrate(100);
+                } else {
+                    this.melding = data.message || 'Niet gevonden';
+                    this.meldingType = 'error';
+                }
+            } catch (err) {
+                this.melding = 'API fout: ' + err.message;
                 this.meldingType = 'error';
-                this.modus = 'zoek';
             }
         },
 
