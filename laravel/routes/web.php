@@ -144,6 +144,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('blok/zet-op-mat', [BlokController::class, 'zetOpMat'])->name('blok.zet-op-mat');
         Route::post('blok/{blok}/sluit-weging', [BlokController::class, 'sluitWeging'])->name('blok.sluit-weging');
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
+        Route::post('blok/maak-weegkaarten', [BlokController::class, 'maakWeegkaarten'])->name('blok.maak-weegkaarten');
         Route::post('blok/activeer-categorie', [BlokController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
         Route::post('blok/reset-categorie', [BlokController::class, 'resetCategorie'])->name('blok.reset-categorie');
         Route::post('blok/reset-alles', [BlokController::class, 'resetAlles'])->name('blok.reset-alles');

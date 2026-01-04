@@ -6,6 +6,19 @@
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
     <div class="flex items-center gap-4">
+        @if(!$toernooi->weegkaarten_gemaakt_op)
+        <form action="{{ route('toernooi.blok.maak-weegkaarten', $toernooi) }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                    onclick="return confirm('Voorbereiding afronden?\n\nWeegkaarten en coachkaarten worden klaargemaakt met blok + mat info.\n\nDit kan niet ongedaan gemaakt worden.')">
+                ✓ Maak weegkaarten
+            </button>
+        </form>
+        @else
+        <span class="px-4 py-2 bg-green-100 text-green-800 rounded font-bold">
+            ✓ Voorbereiding afgerond ({{ $toernooi->weegkaarten_gemaakt_op->format('d-m H:i') }})
+        </span>
+        @endif
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
         </a>
@@ -14,6 +27,10 @@
         </a>
     </div>
 </div>
+
+@if(session('error'))
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm">{{ session('error') }}</div>
+@endif
 
 @if(session('success'))
 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
