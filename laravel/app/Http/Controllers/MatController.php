@@ -50,7 +50,8 @@ class MatController extends Controller
         $blokken = $toernooi->blokken;
         $matten = $toernooi->matten;
 
-        return view('pages.mat.interface', compact('toernooi', 'blokken', 'matten'));
+        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
+        return view('pages.mat.interface-admin', compact('toernooi', 'blokken', 'matten'));
     }
 
     public function getWedstrijden(Request $request, Toernooi $toernooi): JsonResponse
