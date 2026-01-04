@@ -488,7 +488,8 @@ class BlokController extends Controller
                 return $poule;
             });
 
-        return view('pages.spreker.interface', compact('toernooi', 'klarePoules', 'afgeroepen'));
+        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
+        return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen'));
     }
 
     /**
