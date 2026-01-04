@@ -22,6 +22,20 @@
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+    @if($isAdmin ?? false)
+    {{-- Admin navigation bar --}}
+    <nav class="bg-gray-800 text-white px-4 py-2 flex items-center justify-between text-sm">
+        <div class="flex items-center gap-4">
+            <a href="{{ route('toernooi.show', $toernooi) }}" class="hover:text-blue-300">← Dashboard</a>
+            <span class="text-gray-400">|</span>
+            <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="hover:text-blue-300">Poules</a>
+            <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="hover:text-blue-300">Blokken</a>
+            <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="hover:text-blue-300">Judoka's</a>
+        </div>
+        <span class="text-gray-400">Admin modus</span>
+    </nav>
+    @endif
+
     <!-- Standalone Header -->
     <header class="bg-blue-800 text-white px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-50">
         <div>
@@ -1987,12 +2001,15 @@ function matInterface() {
 // Clock
 function updateClock() {
     const now = new Date();
-    document.getElementById('clock').textContent =
-        now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    const clockEl = document.getElementById('clock');
+    if (clockEl) {
+        clockEl.textContent = now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    }
 }
 updateClock();
 setInterval(updateClock, 1000);
 </script>
+
     </main>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'mat'])
