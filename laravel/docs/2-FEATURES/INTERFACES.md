@@ -62,17 +62,20 @@ De Organisatie tab bevat:
 
 Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - geen navigatie tabs:
 
-| Element | Positie | Percentage |
-|---------|---------|------------|
+| Element | Positie | Hoogte |
+|---------|---------|--------|
 | Header | Top | ~60px |
-| Scanner area | Boven | 45% |
-| Controls/Info | Onder | 55% |
+| Scanner area | Bovenste 1/3 | ~33% van scherm |
+| Stop knop | Direct onder scanner | ~50px |
+| Zoek input | Direct onder stop knop | ~50px |
+| Controls/Info | Rest van scherm | Scrollable |
 
 **Kenmerken:**
-- Vaste hoogtes (geen springende elementen)
+- Scanner neemt bovenste 1/3 van het scherm
+- Stop knop ALTIJD direct onder scanner (niet ernaast!)
+- Zoekvak ALTIJD direct onder stop knop (vaste positie)
 - Scanner: 300px max-width, 220px qrbox
 - Blauwe kleur theme (#1e40af)
-- Input/button altijd zichtbaar onder scanner
 
 ---
 
@@ -151,12 +154,16 @@ De Weging heeft **2 totaal verschillende versies**:
 
 ### Weging Interface Layout (mobiel)
 Van boven naar beneden:
-1. **Header**: Titel + klok + countdown geselecteerd blok (klein)
-2. **Scanner gebied**: Ruim, scan knop groot en duidelijk
-3. **Stop knop**: Direct ONDER scanner (niet ernaast!)
-4. **Zoek input**: Sticky op vaste plek onder stop knop
+1. **Header**: Titel + klok + countdown geselecteerd blok (klein) - ~60px
+2. **Scanner gebied**: Bovenste 1/3 van scherm (~33vh)
+   - Niet scannen: grote groene "Scan" knop gecentreerd
+   - Wel scannen: camera preview (300px max-width)
+3. **Stop knop**: Direct ONDER scanner gebied, volle breedte, rood - ~50px
+   - Alleen zichtbaar tijdens scannen
+4. **Zoek input**: VASTE positie onder stop knop gebied, volle breedte - ~50px
+   - Altijd zichtbaar, ook tijdens scannen
 5. **Blok dropdown + stats**: gewogen/totaal
-6. **Judoka details + Numpad**: Onderste deel scherm
+6. **Judoka details + Numpad**: Onderste deel scherm (scrollable)
 
 ---
 

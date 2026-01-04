@@ -1,9 +1,9 @@
     @php $pwaApp = 'weging'; @endphp
 <div x-data="wegingApp()" x-init="init()">
-    <!-- TOP: Scanner gebied -->
-    <div class="bg-blue-800/50 rounded-lg p-3 mb-2">
+    <!-- Scanner gebied: bovenste 1/3 van scherm (33vh) -->
+    <div class="bg-blue-800/50 rounded-lg p-3" style="height: 33vh; min-height: 200px;">
         <!-- Scan button (when not scanning) -->
-        <div x-show="modus === 'zoek'" class="flex items-center justify-center" style="min-height: 180px;">
+        <div x-show="modus === 'zoek'" class="flex items-center justify-center h-full">
             <button @click="modus = 'scan'; startScanner()"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                 <span class="text-3xl mb-1">📷</span>
@@ -11,25 +11,25 @@
             </button>
         </div>
 
-        <!-- Scanner (when scanning) - volledige grootte -->
-        <div x-show="modus === 'scan'">
-            <div id="qr-reader" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
+        <!-- Scanner (when scanning) -->
+        <div x-show="modus === 'scan'" class="flex items-center justify-center h-full">
+            <div id="qr-reader" style="width: 100%; max-width: 300px;"></div>
         </div>
     </div>
 
-    <!-- Stop knop - ONDER scanner box, alleen zichtbaar tijdens scannen -->
-    <div x-show="modus === 'scan'" class="mb-2">
-        <button @click="stopScanner()"
-                class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
+    <!-- Stop knop: direct onder scanner, ~50px, alleen tijdens scannen -->
+    <div class="mt-2" style="height: 50px;">
+        <button x-show="modus === 'scan'" @click="stopScanner()"
+                class="w-full h-full bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
             ⏹ Stop Scanner
         </button>
     </div>
 
-    <!-- Zoek input - ONDER stop knop, altijd zichtbaar -->
-    <div class="mb-2">
+    <!-- Zoek input: vaste positie onder stop knop, ~50px, altijd zichtbaar -->
+    <div class="mt-2" style="height: 50px;">
         <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                placeholder="Zoek op naam..."
-               class="w-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
+               class="w-full h-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
     </div>
 
     <!-- Search results (overlay) -->
