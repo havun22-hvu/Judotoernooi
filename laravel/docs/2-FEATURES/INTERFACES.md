@@ -16,16 +16,13 @@
 | **Spreker** | Standalone PWA | Geen | URL + PIN + device |
 | **Dojo** | Standalone PWA | Geen | URL + PIN + device |
 
-### Belangrijk verschil: Admin vs Vrijwilliger interface
+### Admin vs Device-bound
 
-Wanneer dezelfde interface (bijv. Mat) wordt geopend:
+Sommige interfaces (Mat, Weging, etc.) hebben 2 versies:
+- **Admin** via menu → `layouts.app` met volledig menu
+- **Device-bound** via speciale URL → Standalone PWA zonder menu
 
-| Wie | Via | Ziet |
-|-----|-----|------|
-| **Admin/Organisator** | Menu → Mat Interface | Navigatie balk bovenaan (Dashboard, Poules, etc.) |
-| **Vrijwilliger (device-bound)** | Speciale URL + PIN | Standalone PWA zonder navigatie |
-
-**Reden:** Vrijwilligers moeten gefocust blijven op hun taak. Admins moeten kunnen navigeren om overzicht te houden.
+Zie de specifieke interface sectie voor details.
 
 ---
 
@@ -139,20 +136,42 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 ## Mat Interface
 
-**Pad:** `resources/views/pages/mat/interface.blade.php`
+De Mat Interface heeft **2 versies** afhankelijk van wie het opent:
 
-### Toegang
+### Versie 1: Admin/Hoofdjury (met menu)
+
+**Route:** `/toernooi/{toernooi}/mat/interface`
+**View:** `resources/views/pages/mat/interface-admin.blade.php`
+**Layout:** `layouts.app` - volledig menu bovenaan
+
+**Toegang:**
+- Ingelogd als organisator, beheerder of hoofdjury
+- Via menu: Matten → Mat Interface
+
+**Doel:** Overzicht houden, kunnen navigeren naar andere pagina's
+
+### Versie 2: Tafeljury bij de mat (standalone PWA)
+
+**Route:** `/toegang/{code}` (bijv. `/toegang/4BRJIYPTHSTK`)
+**View:** `resources/views/pages/mat/interface.blade.php`
+**Layout:** Standalone PWA - geen menu, alleen header met klok
+
+**Toegang:**
 - URL + PIN + device binding
 - **Gekoppeld aan specifieke mat** (Mat 1, Mat 2, etc.)
 - Beheer via Instellingen → Organisatie → Mat toegangen
 
-### Layout (Standalone PWA)
-- Standalone header met klok
-- Geen navigatie tabs
-- Blauwe kleur theme (#1e40af)
+**Doel:** Gefocust werken, geen afleiding door navigatie
 
-### Functionaliteit
-- Blok/Mat selectie (alleen toegewezen mat)
+### Layout verschil
+
+| Versie | Menu | Header | Navigatie |
+|--------|------|--------|-----------|
+| **Admin** | layouts.app (blauw menu) | Standaard | Volledig |
+| **Tafeljury** | Geen | Standalone + klok | Geen |
+
+### Functionaliteit (beide versies)
+- Blok/Mat selectie
 - Poules per mat bekijken
 - Wedstrijden afwerken (uitslag registreren)
 - Eliminatie bracket met drag & drop
