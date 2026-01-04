@@ -73,9 +73,13 @@
         {{-- BLOK INFO - GROOT EN DUIDELIJK --}}
         @if($blok)
         <div class="bg-amber-100 border-b-2 border-amber-300">
+            {{-- Blok + Mat + Starttijd header --}}
             <div class="px-3 py-2 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="bg-amber-500 text-white text-lg font-black px-3 py-1 rounded">{{ $blok->naam }}</span>
+                    @if($mat)
+                    <span class="bg-blue-600 text-white text-lg font-black px-3 py-1 rounded">Mat {{ $mat->nummer }}</span>
+                    @endif
                 </div>
                 @if($blok->starttijd)
                 <div class="text-right">
@@ -84,6 +88,7 @@
                 </div>
                 @endif
             </div>
+            {{-- Weegtijden --}}
             @if($blok->weging_start && $blok->weging_einde)
             <div class="px-3 pb-2">
                 <div class="bg-white rounded px-3 py-2 flex items-center justify-center gap-2">

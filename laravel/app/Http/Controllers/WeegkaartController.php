@@ -13,12 +13,14 @@ class WeegkaartController extends Controller
     public function show(string $token): View
     {
         $judoka = Judoka::where('qr_code', $token)
-            ->with(['club', 'toernooi', 'poules.blok'])
+            ->with(['club', 'toernooi', 'poules.blok', 'poules.mat'])
             ->firstOrFail();
 
-        // Get the first poule's blok (judoka typically in one blok)
-        $blok = $judoka->poules->first()?->blok;
+        // Get the first poule's blok and mat (judoka typically in one blok)
+        $poule = $judoka->poules->first();
+        $blok = $poule?->blok;
+        $mat = $poule?->mat;
 
-        return view('pages.weegkaart.show', compact('judoka', 'blok'));
+        return view('pages.weegkaart.show', compact('judoka', 'blok', 'mat'));
     }
 }
