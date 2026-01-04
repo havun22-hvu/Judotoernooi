@@ -248,7 +248,16 @@
         navigator.serviceWorker.addEventListener('message', (event) => {
             if (event.data.type === 'SW_UPDATED') {
                 console.log('SW updated to:', event.data.version);
-                window.location.reload();
+                // Force clear all caches and reload
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        Promise.all(names.map(name => caches.delete(name))).then(() => {
+                            window.location.reload(true);
+                        });
+                    });
+                } else {
+                    window.location.reload(true);
+                }
             }
         });
     }

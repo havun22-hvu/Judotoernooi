@@ -1,6 +1,6 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-const VERSION = '1.0.9';
+const VERSION = '1.0.10';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -31,11 +31,12 @@ self.addEventListener('activate', (event) => {
     console.log(`[SW] Activating version ${VERSION}`);
     event.waitUntil(
         caches.keys().then((cacheNames) => {
+            // Delete ALL old caches, not just judo-toernooi ones
             return Promise.all(
                 cacheNames
-                    .filter((name) => name.startsWith('judo-toernooi-') && name !== CACHE_NAME)
+                    .filter((name) => name !== CACHE_NAME)
                     .map((name) => {
-                        console.log(`[SW] Deleting old cache: ${name}`);
+                        console.log(`[SW] Deleting cache: ${name}`);
                         return caches.delete(name);
                     })
             );
@@ -43,12 +44,13 @@ self.addEventListener('activate', (event) => {
             // Take control of all clients immediately
             return self.clients.claim();
         }).then(() => {
-            // Notify all clients about the update
+            // Notify all clients about the update and force reload
             return self.clients.matchAll().then(clients => {
                 clients.forEach(client => {
                     client.postMessage({
                         type: 'SW_UPDATED',
-                        version: VERSION
+                        version: VERSION,
+                        forceReload: true
                     });
                 });
             });
