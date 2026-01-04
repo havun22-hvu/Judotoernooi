@@ -20,6 +20,15 @@ class CheckToernooiRol
     {
         $toernooi = $request->route('toernooi');
 
+        // Debug logging
+        \Log::info('CheckToernooiRol debug', [
+            'toernooi_type' => gettype($toernooi),
+            'toernooi_class' => is_object($toernooi) ? get_class($toernooi) : null,
+            'organisator_check' => auth('organisator')->check(),
+            'organisator_id' => auth('organisator')->id(),
+            'expects_json' => $request->expectsJson(),
+        ]);
+
         if (!$toernooi instanceof Toernooi) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Toernooi niet gevonden'], 404);
