@@ -13,6 +13,9 @@
     <div class="bg-white rounded-lg shadow p-4 mb-4">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-4">
+                <input type="text" x-model="zoekterm" @input="filterJudokas()"
+                       placeholder="Zoek naam of club..."
+                       class="border-2 border-gray-300 rounded px-3 py-2 w-48">
                 <select x-model="blokFilter" @change="filterJudokas()" class="border-2 border-gray-300 rounded px-3 py-2 font-medium">
                     <option value="">Alle blokken</option>
                     @foreach($toernooi->blokken as $blok)
@@ -133,6 +136,7 @@ function weeglijst() {
     return {
         judokas: @json($judokas),
         gefilterd: [],
+        zoekterm: '',
         blokFilter: '',
         statusFilter: '',
         stats: {
@@ -171,6 +175,15 @@ function weeglijst() {
 
         filterJudokas() {
             let result = [...this.judokas];
+
+            // Zoeken op naam of club
+            if (this.zoekterm.length >= 2) {
+                const zoek = this.zoekterm.toLowerCase();
+                result = result.filter(j =>
+                    j.naam.toLowerCase().includes(zoek) ||
+                    (j.club && j.club.toLowerCase().includes(zoek))
+                );
+            }
 
             if (this.blokFilter) {
                 result = result.filter(j => j.blok == this.blokFilter);
