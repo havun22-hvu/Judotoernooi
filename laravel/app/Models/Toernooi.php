@@ -261,6 +261,11 @@ class Toernooi extends Model
         return $this->hasMany(ClubUitnodiging::class);
     }
 
+    public function deviceToegangen(): HasMany
+    {
+        return $this->hasMany(DeviceToegang::class);
+    }
+
     public function isInschrijvingOpen(): bool
     {
         if (!$this->inschrijving_deadline) {

@@ -18,6 +18,8 @@ use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Controllers\MollieController;
+use App\Http\Controllers\DeviceToegangController;
+use App\Http\Controllers\DeviceToegangBeheerController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -90,9 +92,15 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
     Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    // Service Login (sitebeheerder only)
-    Route::get('service-login', [AuthController::class, 'serviceLoginForm'])->name('auth.service');
-    Route::post('service-login', [AuthController::class, 'serviceLogin'])->name('auth.service.post');
+    // Device Toegang Beheer API routes
+    Route::middleware(CheckToernooiRol::class . ':admin')->prefix('api/device-toegang')->name('device-toegang.')->group(function () {
+        Route::get('/', [DeviceToegangBeheerController::class, 'index'])->name('index');
+        Route::post('/', [DeviceToegangBeheerController::class, 'store'])->name('store');
+        Route::post('{toegang}/reset', [DeviceToegangBeheerController::class, 'reset'])->name('reset');
+        Route::post('{toegang}/regenerate-pin', [DeviceToegangBeheerController::class, 'regeneratePin'])->name('regenerate-pin');
+        Route::delete('{toegang}', [DeviceToegangBeheerController::class, 'destroy'])->name('destroy');
+        Route::post('reset-all', [DeviceToegangBeheerController::class, 'resetAll'])->name('reset-all');
+    });
 
     // Admin only routes
     Route::middleware(CheckToernooiRol::class . ':admin')->group(function () {
@@ -292,8 +300,23 @@ Route::get('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activ
 Route::post('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeerOpslaan'])->name('coach-kaart.activeer.opslaan');
 Route::get('coach-kaart/{qrCode}/scan', [CoachKaartController::class, 'scan'])->name('coach-kaart.scan');
 
-// Role access via secret code (vrijwilligers)
+// Role access via secret code (vrijwilligers) - LEGACY
 Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
+
+// Device binding routes (new system)
+Route::prefix('toegang')->name('toegang.')->group(function () {
+    Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show');
+    Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify');
+});
+
+// Device-bound interfaces (new system)
+Route::middleware('device.binding')->group(function () {
+    Route::get('weging/{toegang}', [RoleToegang::class, 'wegingDeviceBound'])->name('weging.interface');
+    Route::get('mat/{toegang}', [RoleToegang::class, 'matDeviceBound'])->name('mat.interface');
+    Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
+    Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
+    Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
+});
 
 // Generic role interfaces (session-based, no toernooi in URL)
 Route::middleware('rol.sessie')->group(function () {

@@ -1,8 +1,8 @@
-# JudoToernooi - Authenticatie & Organisatie Systeem
+# JudoToernooi - Authenticatie & Device Binding Systeem
 
-> **Status:** Implementatie fase
-> **Laatst bijgewerkt:** 2024-12-13
-> **Doel:** Complete documentatie voor Claude Code om het project voort te zetten
+> **Status:** Planning bijgewerkt
+> **Laatst bijgewerkt:** 2026-01-04
+> **Zie ook:** `ROLLEN_HIERARCHIE.md` voor complete rolbeschrijvingen
 
 ---
 
@@ -10,83 +10,177 @@
 
 ### 1.1 Platform Niveau
 
-| Rol | Wie | Verantwoordelijkheid |
-|-----|-----|---------------------|
-| **Sitebeheerder** | Henk (ontwikkelaar) | Platform beheer, technische support, noodgevallen |
+| Rol | Authenticatie | Beschrijving |
+|-----|---------------|--------------|
+| **Superadmin** | Wachtwoord (prod) / PIN (dev) | Henk, technische beheer |
 
-### 1.2 Toernooi Niveau - Organisatie Kant
+### 1.2 Toernooi Niveau - Met Wachtwoord
 
 | Rol | Authenticatie | Beschrijving |
 |-----|---------------|--------------|
-| **Organisator** | Email + Wachtwoord | Hoofdverantwoordelijke, betaalt lease, beheert alles |
-| **Hoofdjury** | Geheime URL | Toegang tot jury functies, dag van toernooi |
-| **Weging** | Geheime URL | Weeg-interface, dag van toernooi |
-| **Mat** | Geheime URL | Mat-interface per mat, dag van toernooi |
-| **Spreker** | Geheime URL | Omroep-interface, dag van toernooi |
+| **Organisator** | Email + wachtwoord | Leased site, volledige toegang + financieel |
+| **Beheerders** | Email + wachtwoord | Toegevoegd door organisator, geen financieel |
 
-### 1.3 Toernooi Niveau - Uitnodigingen Kant
+### 1.3 Toernooi Niveau - Met Device Binding
 
 | Rol | Authenticatie | Beschrijving |
 |-----|---------------|--------------|
-| **Coach** | Gedeelde URL + 5-cijfer PIN | Beheert judoka's van eigen club |
+| **Hoofdjury** | URL + PIN + device | Toezicht, mag device management |
+| **Mat** | URL + PIN + device | Per mat, wedstrijden afhandelen |
+| **Weging** | URL + PIN + device | Judoka's wegen |
+| **Spreker** | URL + PIN + device | Omroepen |
+| **Dojo** | URL + PIN + device | Toegangscontrole |
+
+### 1.4 Uitnodigingen Kant
+
+| Rol | Authenticatie | Beschrijving |
+|-----|---------------|--------------|
+| **Coach** | URL + 5-cijfer PIN | Judoka's aanmelden, max 3 per club |
+| **Coachkaart** | Device binding + foto | Fysieke toegang dojo |
 
 ---
 
 ## 2. URL Structuur
 
-### 2.1 Overzicht
-
 ```
 judotournament.org/                     → Homepage (publiek)
-judotournament.org/organisator/login    → Organisator login
-judotournament.org/organisator/dashboard → Organisator dashboard
+judotournament.org/login                → Organisator/Beheerder login
 
-judotournament.org/team/{12-char-code}  → Vrijwilliger toegang (redirect)
-judotournament.org/weging               → Weging interface (na redirect)
-judotournament.org/mat                  → Mat selectie (na redirect)
-judotournament.org/jury                 → Hoofdjury interface (na redirect)
-judotournament.org/spreker              → Spreker interface (na redirect)
+judotournament.org/toegang/{code}       → Device binding flow (nieuw!)
+  → PIN invoeren → device binden → redirect naar interface
 
-judotournament.org/school/{12-char-code} → Coach portal
+judotournament.org/weging/{toegang_id}  → Weging interface (device-gebonden)
+judotournament.org/mat/{toegang_id}     → Mat interface (device-gebonden)
+judotournament.org/jury/{toegang_id}    → Hoofdjury interface (device-gebonden)
+judotournament.org/spreker/{toegang_id} → Spreker interface (device-gebonden)
+judotournament.org/dojo/{toegang_id}    → Dojo scanner (device-gebonden)
+
+judotournament.org/school/{code}        → Coach portal
 judotournament.org/live/{slug}          → Publieke pagina (ouders)
 ```
 
-### 2.2 Vrijwilligers Geheime URLs
+---
 
-Elke rol krijgt een unieke 12-karakter code. De code verdwijnt uit de adresbalk na klikken.
+## 3. Device Binding Systeem
 
-**Flow:**
+### 3.1 Flow
+
 ```
-1. Organisator deelt link: "Klik hier: Weging" → /team/Abc123xxxYyy
-2. Vrijwilliger klikt
-3. Sessie onthoudt: toernooi_id + rol
-4. Redirect naar /weging
-5. Adresbalk toont: judotournament.org/weging (code weg!)
+1. Organisator maakt toegang aan (Instellingen → Organisatie)
+   → Systeem genereert: unieke URL + 4-cijfer PIN
+
+2. Organisator/Hoofdjury deelt URL + PIN met vrijwilliger
+   → Via WhatsApp, email, mondeling, etc.
+
+3. Vrijwilliger opent URL op device
+   → Ziet PIN invoerveld
+
+4. Vrijwilliger voert PIN in
+   → Device token wordt gegenereerd
+   → Token opgeslagen: localStorage + server (device_toegangen tabel)
+   → Redirect naar interface
+
+5. Volgende keer: device herkend via token
+   → Direct naar interface (geen PIN nodig)
+
+6. Token verloren (browser data gewist)?
+   → PIN opnieuw invoeren → nieuwe binding
 ```
 
-**Database: `toernooien` tabel**
-```
-- code_hoofdjury (12 chars, unique)
-- code_weging (12 chars, unique)
-- code_mat (12 chars, unique)
-- code_spreker (12 chars, unique)
+### 3.2 Database: `device_toegangen` tabel
+
+```sql
+CREATE TABLE device_toegangen (
+    id BIGINT PRIMARY KEY,
+    toernooi_id BIGINT NOT NULL,
+    rol ENUM('hoofdjury', 'mat', 'weging', 'spreker', 'dojo'),
+    mat_nummer INT NULL,              -- alleen voor rol='mat'
+    code VARCHAR(12) UNIQUE,          -- unieke URL code
+    pincode VARCHAR(4),               -- 4-cijfer PIN
+    device_token VARCHAR(64) NULL,    -- gebonden device
+    device_info VARCHAR(255) NULL,    -- "iPhone Safari" etc.
+    gebonden_op TIMESTAMP NULL,
+    laatst_actief TIMESTAMP NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
 ```
 
-**Beveiliging:**
-- Elke rol heeft EIGEN geheime code
-- Weger kan niet bij hoofdjury (andere code)
-- 54^12 = 1.2 × 10²¹ mogelijke codes (onmogelijk te raden)
-- Code alleen zichtbaar in gedeelde link, niet in browser
+### 3.3 Beheer UI (Instellingen → Organisatie)
+
+```
+Hoofdjury toegangen:
+├── Hoofdjury 1: [URL kopiëren] PIN: 4821 [iPhone Safari ✓] [Reset] [Verwijder]
+└── [+ Hoofdjury toegang toevoegen]
+
+Mat toegangen:
+├── Mat 1: [URL kopiëren] PIN: 7362 [Android Chrome ✓] [Reset] [Verwijder]
+├── Mat 2: [URL kopiëren] PIN: 9134 [- wacht op binding] [Verwijder]
+└── [+ Mat toegang toevoegen]
+
+Weging toegangen:
+├── Weging 1: [URL kopiëren] PIN: 5847 [iPad Safari ✓] [Reset] [Verwijder]
+└── [+ Weging toegang toevoegen]
+
+Spreker toegangen:
+└── [+ Spreker toegang toevoegen]
+
+Dojo toegangen:
+└── [+ Dojo toegang toevoegen]
+```
+
+**Acties:**
+- **Kopiëren:** Kopieert volledige URL naar clipboard
+- **Reset:** Wist device binding, nieuw device kan binden met zelfde PIN
+- **Verwijder:** Verwijdert toegang volledig
+
+**Wie mag dit:**
+- Organisator: alles
+- Hoofdjury: alles (behalve eigen toegang verwijderen)
 
 ---
 
-## 3. Authenticatie Systemen
+## 4. Coachkaart Device Binding
 
-### 3.1 Organisator Login ✅ GEBOUWD
+### 4.1 Probleem
+QR-codes makkelijk te delen (screenshot, doorsturen) → ongeautoriseerde toegang dojo
+
+### 4.2 Oplossing
+
+```
+1. Coach ontvangt coachkaart link
+
+2. Opent link op telefoon
+   → Device wordt gebonden (eerste keer)
+
+3. Keuze: Upload pasfoto OF Maak selfie
+   → Foto wordt opgeslagen
+
+4. QR-code wordt zichtbaar
+   → Alleen op dit device
+
+5. Bij dojo-ingang: scan QR
+   → Dojo-scanner toont foto
+   → Vrijwilliger vergelijkt gezicht met persoon
+```
+
+### 4.3 Database: `coach_kaarten` tabel (uitbreiding)
+
+```sql
+ALTER TABLE coach_kaarten ADD COLUMN device_token VARCHAR(64) NULL;
+ALTER TABLE coach_kaarten ADD COLUMN device_info VARCHAR(255) NULL;
+ALTER TABLE coach_kaarten ADD COLUMN gebonden_op TIMESTAMP NULL;
+```
+
+---
+
+## 5. Organisator Login
+
+### 5.1 Bestaand systeem (behouden)
 
 ```
 Type: Email + Wachtwoord
-URL: /organisator/login
+URL: /login
 Features:
   - Registratie
   - Login/Logout
@@ -94,253 +188,122 @@ Features:
   - Remember me functie
 ```
 
-**Database: `organisators` tabel**
-```sql
-CREATE TABLE organisators (
-    id BIGINT PRIMARY KEY,
-    naam VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    telefoon VARCHAR(20),
-    password VARCHAR(255),
-    email_verified_at TIMESTAMP NULL,
-    laatste_login TIMESTAMP NULL,
-    remember_token VARCHAR(100),
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-
-CREATE TABLE organisator_toernooi (
-    organisator_id BIGINT,
-    toernooi_id BIGINT,
-    rol ENUM('eigenaar', 'beheerder'),
-    PRIMARY KEY (organisator_id, toernooi_id)
-);
-```
-
-### 3.2 Vrijwilligers Geheime Links ✅ GEBOUWD
+### 5.2 Beheerders toevoegen (nieuw)
 
 ```
-Type: Geheime URL per rol (geen wachtwoord/PIN nodig)
-URL: /team/{code} → redirect naar /weging, /mat, /jury, of /spreker
-Beheer: Organisator kopieert links in Instellingen → Organisatie tab
-```
+Organisator kan emails toevoegen:
+  Instellingen → Organisatie → Beheerders
 
-### 3.3 Coach PIN Systeem ✅ GEBOUWD
-
-```
-Type: Gedeelde URL + 5-cijfer PIN
-URL: /school/{portal_code}
-Max: 3 coaches per club per toernooi
-PIN identificeert welke coach inlogt
-```
-
-**Database: `coaches` tabel**
-```
-- id
-- club_id
-- toernooi_id
-- portal_code (12 chars, gedeeld per club+toernooi)
-- naam
-- email (optioneel)
-- telefoon (optioneel)
-- pincode (5 chars)
-- laatst_ingelogd_op
+  - Email invoeren
+  - Uitnodiging wordt verstuurd
+  - Beheerder maakt account aan
+  - Krijgt toegang tot dit toernooi (zonder financieel)
 ```
 
 ---
 
-## 4. Instellingen Pagina
+## 6. Superadmin Login
 
-### 4.1 Tab Structuur ✅ GEBOUWD
+### 6.1 Production
+- Reguliere login met email + wachtwoord
+- Alleen henkvu@gmail.com
 
-**Tab: Toernooi**
-- Algemeen (naam, datum, locatie)
-- Inschrijving (deadline, max deelnemers)
-- Matten & Blokken
-- Poule instellingen
-- Weging
-- Gewichtsklassen
-
-**Tab: Organisatie**
-- Vrijwilligers Links (kopieer knoppen per rol)
-- Bloktijden
-- Wachtwoorden (legacy)
+### 6.2 Local/Staging
+- Simpele PIN (4-cijfer)
+- Snelle toegang voor development/testing
 
 ---
 
-## 5. Publieke Pagina's (Ouders/Toeschouwers) ❌ NOG BOUWEN
+## 7. Einde Toernooi
 
-### 5.1 Doel
+Wanneer organisator "Einde toernooi" triggert:
 
-Ouders kunnen zien:
-- In welke poule hun judoka zit
-- Op welke mat
-- Wanneer ze aan de beurt zijn
-- Live uitslagen
+1. **Alle device bindings worden gereset**
+   - `device_toegangen.device_token = NULL`
+   - `coach_kaarten.device_token = NULL`
 
-### 5.2 Toegang
+2. **Statistieken worden berekend**
+   - Aantal wedstrijden
+   - Aantal deelnemers
+   - Resultaten per club
+   - etc.
 
-```
-URL: /live/{toernooi-slug}
-Geen login nodig
-Zoekfunctie op judoka naam
-```
-
----
-
-## 6. Homepage ❌ NOG BOUWEN
-
-### 6.1 Elementen
-
-```
-- Logo JudoToernooi
-- Korte uitleg wat het platform doet
-- "Inloggen als Organisator" knop
-- "Ik ben Coach" knop (met uitleg over link)
-- Footer met contact/support info
-```
+3. **Statistieken worden getoond**
+   - Op organisator dashboard
+   - Op publieke pagina
 
 ---
 
-## 7. Bouwvolgorde
+## 8. Te Verwijderen
 
-### Fase 1: Basis Authenticatie ✅ KLAAR
-
-```
-1.1 [x] Organisator account systeem
-    - Registratie met email + wachtwoord
-    - Login/Logout
-    - Wachtwoord vergeten
-
-1.2 [x] Vrijwilligers geheime URLs
-    - Unieke code per rol per toernooi
-    - Redirect naar generieke URLs
-    - Code verdwijnt uit adresbalk
-
-1.3 [x] Instellingen tabs
-    - Toernooi tab
-    - Organisatie tab met kopieer knoppen
-
-1.4 [x] Coach systeem
-    - Gedeelde portal_code per club
-    - PIN login per coach
-```
-
-### Fase 2: Homepage & Publiek
-
-```
-2.1 [ ] Homepage met logo/uitleg
-2.2 [ ] Publieke pagina voor ouders (/live/{slug})
-    - Zoek judoka
-    - Toon poule/mat/volgorde
-    - Live uitslagen
-```
-
-### Fase 3: Print Functionaliteit
-
-```
-3.1 [ ] Print knoppen toevoegen
-    - Poules pagina
-    - Weeglijst
-    - Weegkaarten (coach portal)
-
-3.2 [ ] Lege wedstrijdschema templates
-    - PDF of print-ready HTML
-    - 2-7 judokas varianten
-```
-
-### Fase 4: Lease & Betaling
-
-```
-4.1 [ ] Preview modus implementeren
-4.2 [ ] Mollie integratie (via Havuncore)
-4.3 [ ] Organisator settings bewaren voor volgend jaar
-```
-
-### Fase 5: Havuncore Integraties
-
-```
-5.1 [ ] Chat systeem
-5.2 [ ] QR App login (optioneel)
-5.3 [ ] Internationale betalingen
-```
+- ~~Service Login pagina~~ (`pages/auth/service-login.blade.php`)
+- ~~Toernooi-level wachtwoorden per rol~~
 
 ---
 
-## 8. Belangrijke Bestanden
+## 9. Belangrijke Bestanden
 
-### Controllers
-
-```
-app/Http/Controllers/OrganisatorAuthController.php  - Organisator login/register
-app/Http/Controllers/RoleToegang.php                - Vrijwilligers geheime URLs
-app/Http/Controllers/CoachPortalController.php      - Coach PIN login
-app/Http/Controllers/ClubController.php             - Club/coach beheer
-app/Http/Controllers/ToernooiController.php         - Toernooi CRUD + dashboard
-```
-
-### Models
+### Controllers (nieuw/aan te passen)
 
 ```
-app/Models/Organisator.php   - Authenticatable model voor organisators
-app/Models/Toernooi.php      - Toernooi met role codes
-app/Models/Coach.php         - Coach met PIN/portal_code
-app/Models/Club.php          - Club met coaches relatie
+app/Http/Controllers/DeviceToegangController.php   - Device binding flow
+app/Http/Controllers/OrganisatieController.php     - Toegangen beheer UI
 ```
 
-### Middleware
+### Models (nieuw)
 
 ```
-app/Http/Middleware/CheckRolSessie.php  - Controleert rol sessie voor /weging etc.
+app/Models/DeviceToegang.php   - Device toegang records
 ```
 
-### Views
+### Middleware (nieuw)
 
 ```
-resources/views/organisator/auth/login.blade.php
-resources/views/organisator/auth/register.blade.php
-resources/views/organisator/dashboard.blade.php
-resources/views/pages/toernooi/edit.blade.php       - Instellingen met tabs
-resources/views/pages/coach/login-pin.blade.php     - Coach PIN login
+app/Http/Middleware/CheckDeviceBinding.php  - Controleert device token
+```
+
+### Views (nieuw/aan te passen)
+
+```
+resources/views/pages/toegang/pin.blade.php        - PIN invoer pagina
+resources/views/pages/toernooi/organisatie.blade.php - Toegangen beheer
 ```
 
 ### Routes
 
 ```
 routes/web.php:
-  /organisator/*           - Organisator auth routes
-  /team/{code}             - Vrijwilliger toegang
-  /weging, /mat, /jury, /spreker - Generieke rol interfaces
-  /school/{code}           - Coach portal
+  /login                    - Organisator/Beheerder login
+  /toegang/{code}           - Device binding entry point
+  /toegang/{code}/verify    - PIN verificatie
+  /api/toegang/reset/{id}   - Reset device binding
 ```
 
 ---
 
-## 9. Terminologie
+## 10. Bouwvolgorde
 
-```
-Sitebeheerder = Henk (ontwikkelaar, platform eigenaar)
-Organisator   = Toernooi organiserende club (betaalt lease)
-Admin         = Synoniem voor Organisator (NIET sitebeheerder)
-Coach         = Trainer van UITGENODIGDE club (beheert judoka's)
-Vrijwilligers = Hoofdjury, Weging, Mat, Spreker (alleen wedstrijddag)
-```
+### Fase 1: Database & Models
+- [ ] Migration voor `device_toegangen` tabel
+- [ ] DeviceToegang model
+- [ ] Coach_kaarten migration uitbreiding
 
-### Niet verwarren:
+### Fase 2: Device Binding Flow
+- [ ] Route `/toegang/{code}`
+- [ ] PIN invoer view
+- [ ] Binding logica (token genereren, opslaan)
+- [ ] Middleware voor device check
 
-```
-❌ Coach ≠ iemand aan organisatie kant
-✅ Coach = trainer van UITGENODIGDE club die judoka's aanmeldt
+### Fase 3: Beheer UI
+- [ ] Organisatie tab uitbreiden
+- [ ] Toegangen CRUD
+- [ ] Kopieer/Reset/Verwijder acties
 
-❌ Admin ≠ Sitebeheerder
-✅ Admin = Organisator van het toernooi
-```
+### Fase 4: Coachkaart Uitbreiding
+- [ ] Device binding bij activatie
+- [ ] Foto upload/selfie
+- [ ] QR alleen tonen als gebonden + foto
 
----
-
-## 10. Volgende Stappen
-
-1. **Homepage bouwen** met logo, uitleg en login knoppen
-2. **Publieke pagina** voor ouders (/live/{slug})
-3. **Email configuratie** voor wachtwoord reset
-4. **Print functionaliteit** toevoegen
+### Fase 5: Cleanup
+- [ ] Service Login verwijderen
+- [ ] Oude wachtwoord velden verwijderen

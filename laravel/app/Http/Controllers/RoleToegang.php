@@ -148,6 +148,102 @@ class RoleToegang extends Controller
         ]);
     }
 
+    // ========================================
+    // Device-bound interface methods (new system)
+    // ========================================
+
+    /**
+     * Weging interface (device-bound)
+     */
+    public function wegingDeviceBound(Request $request): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        return view('pages.weging.interface', [
+            'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken,
+            'toegang' => $toegang,
+        ]);
+    }
+
+    /**
+     * Mat interface (device-bound)
+     */
+    public function matDeviceBound(Request $request): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        return view('pages.mat.interface', [
+            'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken,
+            'matten' => $toernooi->matten,
+            'toegang' => $toegang,
+            'matNummer' => $toegang->mat_nummer,
+        ]);
+    }
+
+    /**
+     * Jury/Hoofdjury interface (device-bound)
+     */
+    public function juryDeviceBound(Request $request): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        // Define age class order (youngest to oldest)
+        $leeftijdsklasseVolgorde = [
+            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
+            'U9' => 1, 'U11' => 2, 'U13' => 3, 'U15' => 4, 'U18' => 5, 'U21' => 6, 'Senioren' => 7,
+        ];
+
+        $poules = $toernooi->poules()
+            ->with(['blok', 'mat', 'judokas.club'])
+            ->withCount('judokas')
+            ->get();
+
+        // Sort by age class and weight class
+        $poules = $poules->sortBy([
+            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => (int) filter_var($a->gewichtsklasse, FILTER_SANITIZE_NUMBER_INT) <=> (int) filter_var($b->gewichtsklasse, FILTER_SANITIZE_NUMBER_INT),
+            fn ($a, $b) => $a->nummer <=> $b->nummer,
+        ]);
+
+        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+
+        return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse', 'toegang'));
+    }
+
+    /**
+     * Spreker interface (device-bound)
+     */
+    public function sprekerDeviceBound(Request $request): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        return view('pages.blok.spreker', [
+            'toernooi' => $toernooi,
+            'blokken' => $toernooi->blokken()->with('matten')->get(),
+            'toegang' => $toegang,
+        ]);
+    }
+
+    /**
+     * Dojo scanner interface (device-bound)
+     */
+    public function dojoDeviceBound(Request $request): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        return view('pages.dojo.scanner', [
+            'toernooi' => $toernooi,
+            'toegang' => $toegang,
+        ]);
+    }
+
     /**
      * Get toernooi from session
      */

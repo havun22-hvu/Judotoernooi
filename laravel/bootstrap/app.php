@@ -11,6 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
+            'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
         ]);
 
         // Exclude public API routes from CSRF verification

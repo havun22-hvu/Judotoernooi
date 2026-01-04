@@ -21,6 +21,9 @@ class CoachKaart extends Model
         'geactiveerd_op',
         'is_gescand',
         'gescand_op',
+        'device_token',
+        'device_info',
+        'gebonden_op',
     ];
 
     protected $casts = [
@@ -28,6 +31,7 @@ class CoachKaart extends Model
         'geactiveerd_op' => 'datetime',
         'is_gescand' => 'boolean',
         'gescand_op' => 'datetime',
+        'gebonden_op' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -90,6 +94,42 @@ class CoachKaart extends Model
     }
 
     public static function generateActivatieToken(): string
+    {
+        return bin2hex(random_bytes(32));
+    }
+
+    public function isDeviceGebonden(): bool
+    {
+        return !empty($this->device_token);
+    }
+
+    public function bindDevice(string $token, string $deviceInfo): void
+    {
+        $this->update([
+            'device_token' => $token,
+            'device_info' => $deviceInfo,
+            'gebonden_op' => now(),
+        ]);
+    }
+
+    public function resetDevice(): void
+    {
+        $this->update([
+            'device_token' => null,
+            'device_info' => null,
+            'gebonden_op' => null,
+        ]);
+    }
+
+    public function kanQrTonen(string $deviceToken): bool
+    {
+        // QR only visible if: device is bound, this is the bound device, and has photo
+        return $this->isDeviceGebonden()
+            && $this->device_token === $deviceToken
+            && $this->foto;
+    }
+
+    public static function generateDeviceToken(): string
     {
         return bin2hex(random_bytes(32));
     }

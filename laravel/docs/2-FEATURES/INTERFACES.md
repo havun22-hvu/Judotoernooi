@@ -1,17 +1,38 @@
 # Interfaces - PWA & Devices
 
 > **Workflow info:** Zie `GEBRUIKERSHANDLEIDING.md` voor voorbereiding vs wedstrijddag
+> **Authenticatie:** Zie `PLANNING_AUTHENTICATIE_SYSTEEM.md` voor device binding details
 
 ## Wie ziet wat?
 
-| Rol | Interface | Navigatie tabs |
-|-----|-----------|----------------|
-| **Superadmin/Organisator** | layouts.app | ✅ Volledig |
-| **Hoofdjury** | layouts.app | ✅ Volledig (read-only) |
-| **Weging** | Standalone PWA | ❌ |
-| **Mat** | Standalone PWA | ❌ |
-| **Spreker** | Standalone PWA | ❌ |
-| **Dojo** | Standalone PWA | ❌ |
+| Rol | Interface | Navigatie tabs | Authenticatie |
+|-----|-----------|----------------|---------------|
+| **Superadmin** | layouts.app | Volledig | Wachtwoord (prod) / PIN (dev) |
+| **Organisator** | layouts.app | Volledig + financieel | Email + wachtwoord |
+| **Beheerders** | layouts.app | Volledig (geen financieel) | Email + wachtwoord |
+| **Hoofdjury** | layouts.app | Volledig (geen financieel) | URL + PIN + device |
+| **Weging** | Standalone PWA | Geen | URL + PIN + device |
+| **Mat** | Standalone PWA | Geen | URL + PIN + device |
+| **Spreker** | Standalone PWA | Geen | URL + PIN + device |
+| **Dojo** | Standalone PWA | Geen | URL + PIN + device |
+
+---
+
+## Device Binding voor PWA's
+
+Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
+
+### Flow
+1. Organisator/Hoofdjury maakt toegang aan (Instellingen → Organisatie)
+2. Vrijwilliger ontvangt URL + PIN
+3. Eerste keer: opent URL → voert PIN in → device wordt gebonden
+4. Daarna: device wordt herkend → direct naar interface
+
+### Beheer
+- Toegangen aanmaken/verwijderen per rol
+- Device status zien (gebonden / wachtend)
+- Device resetten (nieuw device kan binden)
+- Automatische reset bij "Einde toernooi"
 
 ---
 
@@ -37,16 +58,20 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 | Interface | PWA Naam | Device | Manifest |
 |-----------|----------|--------|----------|
-| **Dojo Scanner** | Dojo Scanner | 📱 Smartphone | manifest-dojo.json |
-| **Weging** | Weging | 📱 Smartphone / Tablet | manifest-weging.json |
-| **Mat** | Mat Interface | 💻 PC / Laptop / Tablet | manifest-mat.json |
-| **Spreker** | Spreker | 📋 iPad / Tablet | manifest-spreker.json |
+| **Dojo Scanner** | Dojo Scanner | Smartphone | manifest-dojo.json |
+| **Weging** | Weging | Smartphone / Tablet | manifest-weging.json |
+| **Mat** | Mat Interface | PC / Laptop / Tablet | manifest-mat.json |
+| **Spreker** | Spreker | iPad / Tablet | manifest-spreker.json |
 
 ---
 
 ## Weging Interface
 
 **Pad:** `resources/views/pages/weging/interface.blade.php`
+
+### Toegang
+- URL + PIN + device binding
+- Beheer via Instellingen → Organisatie → Weging toegangen
 
 ### Layout (Standalone PWA)
 - **Geen** navigatie/header van layouts.app
@@ -72,15 +97,19 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 **Pad:** `resources/views/pages/dojo/scanner.blade.php`
 
+### Toegang
+- URL + PIN + device binding
+- Beheer via Instellingen → Organisatie → Dojo toegangen
+
 ### Layout (Standalone PWA)
 - **Identiek aan Weging** - 45%/55% split
 - Fixed layout: scanner bovenin (45%), info onderin (55%)
 - Blauwe kleur theme (#1e40af)
 
 ### Functionaliteit
-- Scan coach kaart QR-code
+- Scan coachkaart QR-code
+- **Toont foto van coach** → vrijwilliger vergelijkt met persoon
 - Valideer coach toegang
-- Toon foto voor verificatie
 - Handmatig invoeren optie (altijd zichtbaar onder scanner)
 
 ### Scanner Specs
@@ -94,13 +123,18 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 **Pad:** `resources/views/pages/mat/interface.blade.php`
 
+### Toegang
+- URL + PIN + device binding
+- **Gekoppeld aan specifieke mat** (Mat 1, Mat 2, etc.)
+- Beheer via Instellingen → Organisatie → Mat toegangen
+
 ### Layout (Standalone PWA)
 - Standalone header met klok
 - Geen navigatie tabs
 - Blauwe kleur theme (#1e40af)
 
 ### Functionaliteit
-- Blok/Mat selectie
+- Blok/Mat selectie (alleen toegewezen mat)
 - Poules per mat bekijken
 - Wedstrijden afwerken (uitslag registreren)
 - Eliminatie bracket met drag & drop
@@ -112,6 +146,10 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 ## Spreker Interface
 
 **Pad:** `resources/views/pages/spreker/interface.blade.php`
+
+### Toegang
+- URL + PIN + device binding
+- Beheer via Instellingen → Organisatie → Spreker toegangen
 
 ### Layout (Standalone PWA)
 - Standalone header met klok
@@ -126,10 +164,25 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 ---
 
-## Installatie
+## Hoofdjury Interface
 
-1. Open de interface pagina in browser
-2. Klik tandwiel (⚙️) rechtsboven → Instellingen
+**Pad:** Gebruikt reguliere `layouts.app`
+
+### Toegang
+- URL + PIN + device binding
+- Beheer via Instellingen → Organisatie → Hoofdjury toegangen
+
+### Functionaliteit
+- Volledig overzicht (alle tabs)
+- Device management (URLs + PINs uitdelen)
+- **Geen** toegang tot financieel
+
+---
+
+## Installatie PWA
+
+1. Open de interface pagina in browser (na device binding)
+2. Klik tandwiel (rechtsonder) → Instellingen
 3. Klik "Installeer [App Naam]"
 4. PWA opent direct deze pagina (niet homepage)
 
