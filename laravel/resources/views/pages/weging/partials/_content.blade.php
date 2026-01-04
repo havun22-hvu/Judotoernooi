@@ -2,52 +2,52 @@
 
 <!-- Main container -->
 <div class="flex flex-col h-full">
-    <!-- TOP: Scanner area (45% height like dojo) -->
-    <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%;">
+    <!-- TOP: Scanner area (35% height) -->
+    <div class="bg-blue-800/50 rounded-lg p-2 mb-2 flex flex-col" style="height: 35%;">
         <!-- Scanner area -->
         <div class="flex-1 flex items-center justify-center">
             <!-- Scan button (when not scanning) -->
             <button id="scan-button" onclick="startScanner()"
-                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
-                <span class="text-3xl mb-1">📷</span>
+                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg">
+                <span class="text-2xl mb-1">📷</span>
                 <span class="font-bold text-sm">Scan</span>
             </button>
 
             <!-- Scanner (when scanning) -->
             <div id="scanner-container" class="text-center w-full" style="display: none;">
-                <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
-                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                <div id="qr-reader" style="width: 100%; max-width: 280px; min-height: 180px; margin: 0 auto;"></div>
+                <button onclick="stopScanner()" class="mt-1 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
                     Stop
                 </button>
             </div>
         </div>
 
-        <!-- Search input (fixed position below scanner) -->
-        <div class="mt-2">
+        <!-- Search input -->
+        <div class="mt-1">
             <input type="text" id="search-input"
                    placeholder="Of zoek op naam..."
                    oninput="searchJudoka(this.value)"
-                   class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
+                   class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-3 py-2 text-center text-sm focus:border-white focus:outline-none placeholder-blue-300 text-white">
             <!-- Search results dropdown -->
-            <div id="search-results" class="hidden mt-2 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            <div id="search-results" class="hidden mt-1 bg-white rounded-lg shadow-lg max-h-40 overflow-y-auto">
             </div>
         </div>
     </div>
 
-    <!-- BOTTOM: Judoka section or empty state (55% height) -->
-    <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
+    <!-- MIDDLE: Judoka section or empty state -->
+    <div class="flex-1 flex flex-col space-y-2 overflow-y-auto mb-2">
         <!-- Empty state -->
-        <div id="empty-state" class="bg-white rounded-lg shadow p-4 text-gray-800">
-            <h2 class="font-bold text-lg mb-2">Instructies</h2>
-            <ol class="list-decimal list-inside space-y-1 text-sm">
-                <li>Scan de QR-code op de weegkaart</li>
-                <li>Voer het gewogen gewicht in</li>
-                <li>Bevestig met de groene knop</li>
+        <div id="empty-state" class="bg-white rounded-lg shadow p-3 text-gray-800">
+            <h2 class="font-bold mb-1">Instructies</h2>
+            <ol class="list-decimal list-inside text-sm space-y-0.5">
+                <li>Scan QR-code op weegkaart</li>
+                <li>Voer gewicht in</li>
+                <li>Bevestig met groene knop</li>
             </ol>
         </div>
 
         <!-- Selected judoka + numpad (hidden initially) -->
-        <div id="judoka-section" class="hidden bg-white rounded-lg shadow p-4 text-gray-800">
+        <div id="judoka-section" class="hidden bg-white rounded-lg shadow p-3 text-gray-800">
             <!-- Judoka info -->
             <div id="judoka-info" class="border-2 rounded-lg p-3 mb-3">
             </div>
@@ -88,20 +88,16 @@
             <div id="feedback" class="hidden mt-3 p-3 rounded-lg text-center font-medium"></div>
         </div>
 
-        <!-- Stats -->
-        <div class="bg-white rounded-lg shadow p-4 text-gray-800">
-            <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Judoka's gewogen vandaag</span>
-                <span class="text-2xl font-bold text-green-600" id="stats">0</span>
-            </div>
-        </div>
+    </div>
 
-        <!-- History section -->
-        <div id="history-section" class="bg-blue-800/50 rounded-lg p-3 text-sm">
-            <p class="text-center text-blue-200">Recent gewogen:</p>
-            <div id="history-list" class="mt-2 space-y-1">
-                <p class="text-blue-300 text-center">Nog geen judoka's gewogen</p>
-            </div>
+    <!-- BOTTOM: Stats + History (fixed at bottom) -->
+    <div class="bg-white rounded-lg shadow p-2 text-gray-800">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium">Recent gewogen</span>
+            <span class="text-lg font-bold text-green-600" id="stats">0</span>
+        </div>
+        <div id="history-list" class="space-y-1 max-h-24 overflow-y-auto text-sm">
+            <p class="text-gray-400 text-center">Nog geen judoka's gewogen</p>
         </div>
     </div>
 </div>
@@ -368,14 +364,14 @@ function updateHistoryDisplay() {
 
     const list = document.getElementById('history-list');
     if (history.length === 0) {
-        list.innerHTML = '<p class="text-blue-300 text-center">Nog geen judoka\'s gewogen</p>';
+        list.innerHTML = '<p class="text-gray-400 text-center">Nog geen judoka\'s gewogen</p>';
         return;
     }
 
     list.innerHTML = history.map(h => `
-        <div class="flex justify-between items-center py-1 ${h.binnenKlasse ? 'text-white' : 'text-yellow-300'}">
-            <span>${h.naam}</span>
-            <span class="font-mono">${h.gewicht} kg</span>
+        <div class="flex justify-between items-center py-0.5 ${h.binnenKlasse ? 'text-gray-700' : 'text-yellow-600'}">
+            <span class="truncate">${h.naam}</span>
+            <span class="font-mono ml-2">${h.gewicht} kg</span>
         </div>
     `).join('');
 }
