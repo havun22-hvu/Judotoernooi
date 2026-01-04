@@ -3,8 +3,30 @@
 @section('title', 'Poules')
 
 @section('content')
+{{-- Statistieken sectie (blijft zichtbaar) --}}
+<div id="poule-statistieken" class="bg-white rounded-lg shadow p-4 mb-6 no-print">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div>
+            <div class="text-2xl font-bold text-blue-600" id="stat-poules">{{ $poules->count() }}</div>
+            <div class="text-sm text-gray-600">Poules</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold text-green-600" id="stat-wedstrijden">{{ $poules->sum('aantal_wedstrijden') }}</div>
+            <div class="text-sm text-gray-600">Wedstrijden</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold text-purple-600" id="stat-judokas">{{ $poules->sum('judokas_count') }}</div>
+            <div class="text-sm text-gray-600">Judoka's</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $p->judokas_count > 0 && $p->judokas_count < 3)->count() }}</div>
+            <div class="text-sm text-gray-600">Problemen</div>
+        </div>
+    </div>
+</div>
+
 <div class="flex justify-between items-center mb-6 no-print">
-    <h1 class="text-3xl font-bold text-gray-800">Poules ({{ $poules->count() }})</h1>
+    <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
@@ -362,31 +384,35 @@ async function verifieerPoules() {
         const data = await response.json();
 
         if (data.success) {
+            // Update statistieken bovenaan
+            document.getElementById('stat-poules').textContent = data.totaal_poules;
+            document.getElementById('stat-wedstrijden').textContent = data.totaal_wedstrijden;
+            document.getElementById('stat-problematisch').textContent = data.problemen.length;
+            document.getElementById('poule-count').textContent = data.totaal_poules;
+
             let html = '';
             const hasProblems = data.problemen.length > 0;
+            const refreshNeeded = data.herberekend > 0;
 
             if (hasProblems) {
                 html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                    <h3 class="font-bold text-yellow-800 mb-2">Verificatie: ${data.problemen.length} probleem(en) gevonden</h3>
+                    <h3 class="font-bold text-yellow-800 mb-2">⚠️ Verificatie: ${data.problemen.length} probleem(en) gevonden</h3>
                     <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
                         ${data.problemen.map(p => `<li>${p.message}</li>`).join('')}
                     </ul>
-                    <p class="text-yellow-600 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                    ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${data.herberekend} poules herberekend - <button onclick="location.reload()" class="underline hover:no-underline">Pagina vernieuwen</button> om wijzigingen te zien</p>` : ''}
                 </div>`;
             } else {
                 html = `<div class="bg-green-50 border border-green-300 rounded-lg p-4">
-                    <h3 class="font-bold text-green-800 mb-2">Verificatie geslaagd!</h3>
-                    <p class="text-green-700 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                    <h3 class="font-bold text-green-800 mb-2">✅ Verificatie geslaagd!</h3>
+                    <p class="text-green-700 text-sm">Alle ${data.totaal_poules} poules zijn correct. ${data.totaal_wedstrijden} wedstrijden gepland.</p>
+                    ${refreshNeeded ? `<p class="text-green-600 text-sm mt-2">${data.herberekend} poules herberekend - <button onclick="location.reload()" class="underline hover:no-underline">Pagina vernieuwen</button> om wijzigingen te zien</p>` : ''}
                 </div>`;
             }
 
             resultaatDiv.className = 'mb-6';
             resultaatDiv.innerHTML = html;
-
-            // Reload page if matches were recalculated
-            if (data.herberekend > 0) {
-                setTimeout(() => location.reload(), 2000);
-            }
+            resultaatDiv.classList.remove('hidden');
         }
     } catch (error) {
         console.error('Error:', error);
