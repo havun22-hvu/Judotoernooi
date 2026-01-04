@@ -104,10 +104,11 @@ De Weging heeft **2 totaal verschillende versies**:
 **Doel:** Live overzicht van weegstatus alle judoka's
 
 **Functionaliteit:**
-- Tabel met alle judoka's en hun weegstatus
-- Filter per blok
+- Tabel met kolommen: Naam, Club, Leeftijd, Gewicht(sklasse), Blok, Gewogen, Tijd
+- Niet-gewogen rijen geel gemarkeerd
+- Filter per blok en status (gewogen/niet gewogen)
 - Live updates (auto-refresh elke 10 seconden)
-- Statistieken: gewogen/totaal per blok
+- Statistieken: gewogen/totaal per blok (vaste breedte, altijd zichtbaar)
 - Countdown timer naar eindtijd weging per blok
 
 ### Versie 2: Weging vrijwilliger - Scanner PWA (standalone)

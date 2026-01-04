@@ -214,11 +214,18 @@ De toernooidag begint waar de voorbereiding eindigt. Nu worden judoka's daadwerk
 
 ## Weging
 
-### Weging Interface
+### Weging Interface (Admin/Hoofdjury)
 
-1. Ga naar **Weging** > **Interface**
+1. Ga naar **Weging** > **Weging Interface**
+2. Zie live overzicht van alle judoka's met weegstatus
+3. Filter per blok of status (gewogen/niet gewogen)
+4. Tabel toont: Naam, Club, Leeftijd, Gewicht, Blok, Gewogen, Tijd
+
+### Weging Scanner (Vrijwilliger PWA)
+
+1. Open de toegangs-URL + PIN (via Instellingen → Organisatie)
 2. **Zoeken**: Typ naam of scan QR-code
-3. **Registreren**: Vul gewicht in en bevestig
+3. **Registreren**: Vul gewicht in via numpad en bevestig
 
 ### Gewichtscontrole
 

@@ -73,7 +73,6 @@
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewogen</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijd</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -89,14 +88,10 @@
                             <span x-show="!judoka.gewogen" class="text-gray-400">-</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500" x-text="judoka.gewogen_om || '-'"></td>
-                        <td class="px-4 py-3">
-                            <span x-show="judoka.gewogen" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Gewogen</span>
-                            <span x-show="!judoka.gewogen" class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Wacht</span>
-                        </td>
                     </tr>
                 </template>
                 <tr x-show="gefilterd.length === 0">
-                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                         Geen judoka's gevonden
                     </td>
                 </tr>
