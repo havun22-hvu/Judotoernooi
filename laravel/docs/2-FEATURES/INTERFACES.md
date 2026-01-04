@@ -106,6 +106,7 @@ De Weging heeft **2 totaal verschillende versies**:
 **Functionaliteit:**
 - Tabel met kolommen: Naam, Club, Leeftijd, Gewicht(sklasse), Blok, Gewogen, Tijd
 - Niet-gewogen rijen geel gemarkeerd
+- Zoeken op naam of club
 - Filter per blok en status (gewogen/niet gewogen)
 - Live updates (auto-refresh elke 10 seconden)
 - Statistieken: gewogen/totaal per blok (vaste breedte, altijd zichtbaar)

@@ -218,8 +218,9 @@ De toernooidag begint waar de voorbereiding eindigt. Nu worden judoka's daadwerk
 
 1. Ga naar **Weging** > **Weging Interface**
 2. Zie live overzicht van alle judoka's met weegstatus
-3. Filter per blok of status (gewogen/niet gewogen)
-4. Tabel toont: Naam, Club, Leeftijd, Gewicht, Blok, Gewogen, Tijd
+3. Zoek op naam of club
+4. Filter per blok of status (gewogen/niet gewogen)
+5. Tabel toont: Naam, Club, Leeftijd, Gewicht, Blok, Gewogen, Tijd
 
 ### Weging Scanner (Vrijwilliger PWA)
 
