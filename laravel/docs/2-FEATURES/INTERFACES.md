@@ -143,6 +143,12 @@ De Weging heeft **2 totaal verschillende versies**:
 - Min-height: 200px voor zichtbaarheid
 - Zoekinput altijd zichtbaar onder scanner
 
+### Scanner Gedrag
+- **Auto-stop**: Scanner stopt automatisch na succesvolle scan
+- **QR URL extractie**: Scanner herkent volledige weegkaart URLs en extraheert QR code
+- **Stop knop**: Alleen zichtbaar tijdens actief scannen
+- **Numpad**: Verschijnt na selectie judoka voor gewichtinvoer
+
 ---
 
 ## Dojo Scanner Interface
@@ -282,6 +288,31 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 2. Klik tandwiel (rechtsonder) → Instellingen
 3. Klik "Installeer [App Naam]"
 4. PWA opent direct deze pagina (niet homepage)
+
+## Weegkaart (Judoka's eigen kaart)
+
+**Route:** `/weegkaart/{qr_code}`
+**View:** `resources/views/pages/weegkaart/show.blade.php`
+**Controller:** `WeegkaartController@show`
+
+### Inhoud Weegkaart
+- **Header**: Toernooi naam + datum
+- **Naam**: Groot en prominent (voor weegkamer)
+- **Club**: Onder de naam
+- **Classificatie**: Leeftijd, gewicht, band, geslacht
+- **Blok info** (indien toegewezen):
+  - Blok naam (bijv. "Blok 1")
+  - Starttijd wedstrijden
+  - Weegtijden (start - einde)
+  - **Mat nummer** (alleen na "Maak weegkaarten")
+- **QR code**: Voor scannen bij weging
+- **Download/Delen**: Knoppen voor opslaan en delen
+
+### Vereisten
+1. Judoka moet in poule zitten → blok wordt getoond
+2. Poule moet mat hebben + `weegkaarten_gemaakt_op` gezet → mat wordt getoond
+
+---
 
 ## Versie & Updates
 
