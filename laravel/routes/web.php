@@ -222,6 +222,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('weging/{judoka}/aanwezig', [WegingController::class, 'markeerAanwezig'])->name('weging.aanwezig');
         Route::post('weging/{judoka}/afwezig', [WegingController::class, 'markeerAfwezig'])->name('weging.afwezig');
         Route::post('weging/scan-qr', [WegingController::class, 'scanQR'])->name('weging.scan-qr');
+        // Judoka zoeken voor weging interface
+        Route::get('judoka/zoek-weging', [JudokaController::class, 'zoek'])->name('weging.judoka.zoek');
     });
 
     // Wedstrijddag routes (admin only)

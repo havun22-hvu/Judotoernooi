@@ -18,7 +18,7 @@
     </div>
 
     <!-- Stop knop: direct onder scanner, ~50px, alleen tijdens scannen -->
-    <div class="mt-2" style="height: 50px;">
+    <div class="mt-4" style="height: 50px;">
         <button x-show="modus === 'scan'" @click="stopScanner()"
                 class="w-full h-full bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
             ⏹ Stop Scanner
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Zoek input: vaste positie onder stop knop, ~50px, altijd zichtbaar -->
-    <div class="mt-2" style="height: 50px;">
+    <div class="mt-4" style="height: 50px;">
         <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                placeholder="Zoek op naam..."
                class="w-full h-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
@@ -213,7 +213,7 @@ function wegingApp() {
                 return;
             }
             // Use current origin to avoid cached wrong URLs
-            let url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/judoka/zoek?q=${encodeURIComponent(this.zoekterm)}`;
+            let url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/judoka/zoek-weging?q=${encodeURIComponent(this.zoekterm)}`;
             if (this.blokFilter) url += `&blok=${this.blokFilter}`;
             try {
                 const response = await fetch(url);
