@@ -25,22 +25,24 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
    - **Coach portal** - Coaches voegen zelf judoka's toe
 3. **Einde inschrijving** → "Valideer judoka's" → QR-codes aangemaakt (definitief)
 4. Poules genereren
-5. Blokverdeling + "Verdeel over matten" → **weegkaarten beschikbaar** (QR + blokinfo)
-6. **Resultaat:** Weeglijst, weegkaarten, coachkaarten, zaaloverzicht (nog inactief)
+5. Blokverdeling → poules krijgen blok toegewezen
+6. **Zaaloverzicht** → organisator wijst handmatig matten toe (slepen)
+7. **"Maak weegkaarten"** → voorbereiding geseald, weegkaarten + coachkaarten klaar
+8. **Resultaat:** Weeglijst, weegkaarten (blok+mat), coachkaarten, zaaloverzicht
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
 2. Einde weegtijd per blok
 3. **Wedstrijddag Poules** → overpoelen (te zware/afwezige judoka's)
 4. Per categorie: **"Naar zaaloverzicht"** klikken (knop wordt groen)
-5. **Zaaloverzicht** → witte chip klikken → mat toewijzen + wedstrijdschema genereren (chip wordt groen)
+5. **Zaaloverzicht** → witte chip klikken → wedstrijdschema genereren (chip wordt groen)
 6. Wedstrijden op mat
 7. Poule klaar → spreker voor prijsuitreiking
 
 **Belangrijk:**
-- Tijdens voorbereiding: geen aanwezig/afwezig status
-- Matten worden PAS toegewezen bij activatie in zaaloverzicht (niet eerder!)
-- Wedstrijdschema's worden PAS gegenereerd bij activatie (chip klikken)
+- Tijdens voorbereiding: matten worden HANDMATIG toegewezen (niet automatisch)
+- Na "Maak weegkaarten": voorbereiding is geseald, geen wijzigingen meer
+- Wedstrijdschema's worden PAS gegenereerd bij activatie op toernooidag (chip klikken)
 
 ## Voorbereiding
 
@@ -176,32 +178,43 @@ Verdeling blokken |--------------------| Aansluiting gewichten
   - Blok totalen en afwijkingen
   - Overzicht panel bloktoewijzingen
 
-### Verdeel over Matten (knop in tab Blokken)
+### Zaaloverzicht & Mat Toewijzing
 
-Wanneer alle categorieën in blokken zijn ingedeeld:
+Na de blokverdeling ("Zet op mat") gaat de organisator naar het **Zaaloverzicht**:
 
-1. Klik **"Verdeel over matten"** knop (in tab Blokken)
-2. Systeem verdeelt poules automatisch over de beschikbare matten
-3. **Weegkaarten worden nu beschikbaar** voor coaches in het Coach Portal
-   - QR-code (aangemaakt bij "Valideer judoka's")
-   - Bloknaam + weging tijden (uit blokverdeling)
-   - Coaches kunnen weegkaarten delen met judoka's
+1. **Preview modus** - Poules zijn verdeeld over blokken, maar nog NIET over matten
+2. **Handmatig toewijzen** - Sleep poules naar de gewenste mat per blok
+3. **Balanceren** - Zorg dat elke mat ongeveer evenveel wedstrijden heeft
+4. **Controleren** - Bekijk de verdeling voor elk blok
+
+**Let op:** Matten worden NIET automatisch toegewezen. De organisator bepaalt zelf welke poule op welke mat komt.
+
+### Voorbereiding Afronden ("Maak weegkaarten")
+
+Wanneer alle poules op de juiste matten staan:
+
+1. Klik **"Maak weegkaarten"** knop in het Zaaloverzicht
+2. Systeem genereert weegkaarten en coachkaarten met definitieve info
+3. **Voorbereiding is nu "geseald"** - geen wijzigingen meer mogelijk
+4. Knop verdwijnt na uitvoering
+
+**Weegkaart toont (na "Maak weegkaarten"):**
+- Naam en club
+- QR-code (voor scanner bij weging)
+- **Blok nummer** + weegtijden
+- **Mat nummer** (definitief!)
+- Gewichtsklasse, geboortejaar, band, geslacht
 
 **Vereisten voor weegkaarten:**
 1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
-2. Blokverdeling gedaan + "Verdeel over matten" → blokinfo beschikbaar
-
-**Weegkaart toont:**
-- Naam en club
-- QR-code (voor scanner bij weging)
-- Blok nummer + weegtijden
-- Gewichtsklasse, geboortejaar, band, geslacht
-- **Geen mat nummer** (mat is nog niet definitief bij uitdelen weegkaarten)
+2. Blokverdeling gedaan → blokken toegewezen
+3. Mat toewijzing gedaan → matten handmatig toegewezen
+4. "Maak weegkaarten" geklikt → voorbereiding geseald
 
 ### Zaaloverzicht
 
 Het Zaaloverzicht toont per blok en mat:
-- Welke poules waar staan
+- Welke poules waar staan (na handmatige toewijzing)
 - Aantal wedstrijden per mat
 - Status van de weging
 

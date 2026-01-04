@@ -172,8 +172,8 @@ class BlokController extends Controller
     }
 
     /**
-     * Assign mats to poules and redirect to zaaloverzicht (voorbereiding)
-     * Removes any existing wedstrijden so categories are INACTIVE
+     * Redirect to zaaloverzicht after blokverdeling (voorbereiding)
+     * Matten worden NIET automatisch toegewezen - organisator doet dit handmatig
      */
     public function zetOpMat(Toernooi $toernooi): RedirectResponse
     {
@@ -194,12 +194,12 @@ class BlokController extends Controller
             $poule->updateStatistieken();
         }
 
-        // Assign mats to poules (balanced distribution)
-        $this->verdelingService->verdeelOverMatten($toernooi);
+        // NOTE: Matten worden NIET automatisch toegewezen!
+        // Organisator wijst handmatig matten toe in zaaloverzicht
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi)
-            ->with('success', 'Poules verdeeld over matten (inactief)');
+            ->with('success', 'Blokverdeling klaar. Wijs nu handmatig matten toe.');
     }
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
@@ -220,6 +220,28 @@ class BlokController extends Controller
         $categories = $this->getCategoryStatuses($toernooi);
 
         return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories'));
+    }
+
+    /**
+     * Seal preparation: mark weegkaarten as created
+     * After this, preparation is "sealed" and weegkaarten show mat info
+     */
+    public function maakWeegkaarten(Toernooi $toernooi): RedirectResponse
+    {
+        // Check if all poules have mat_id assigned
+        $poulesZonderMat = $toernooi->poules()->whereNull('mat_id')->count();
+        if ($poulesZonderMat > 0) {
+            return redirect()
+                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->with('error', "Nog {$poulesZonderMat} poules zonder mat. Wijs eerst alle poules aan een mat toe.");
+        }
+
+        // Seal preparation
+        $toernooi->update(['weegkaarten_gemaakt_op' => now()]);
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', 'Voorbereiding afgerond! Weegkaarten en coachkaarten zijn nu klaar met blok + mat info.');
     }
 
     /**
