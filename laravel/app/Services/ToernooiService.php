@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Blok;
+use App\Models\DeviceToegang;
 use App\Models\Mat;
 use App\Models\Toernooi;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,9 @@ class ToernooiService
             // Create mats
             $this->maakMatten($toernooi);
 
+            // Create default device toegangen
+            $this->maakStandaardToegangen($toernooi);
+
             return $toernooi;
         });
     }
@@ -65,6 +69,29 @@ class ToernooiService
             Mat::create([
                 'toernooi_id' => $toernooi->id,
                 'nummer' => $i,
+            ]);
+        }
+    }
+
+    /**
+     * Create default device toegangen for tournament
+     * Creates: 1x Hoofdjury, 1x Mat, 1x Weging, 1x Spreker, 1x Dojo
+     */
+    private function maakStandaardToegangen(Toernooi $toernooi): void
+    {
+        $rollen = [
+            ['rol' => 'hoofdjury', 'mat_nummer' => null],
+            ['rol' => 'mat', 'mat_nummer' => 1],
+            ['rol' => 'weging', 'mat_nummer' => null],
+            ['rol' => 'spreker', 'mat_nummer' => null],
+            ['rol' => 'dojo', 'mat_nummer' => null],
+        ];
+
+        foreach ($rollen as $rolData) {
+            DeviceToegang::create([
+                'toernooi_id' => $toernooi->id,
+                'rol' => $rolData['rol'],
+                'mat_nummer' => $rolData['mat_nummer'],
             ]);
         }
     }
