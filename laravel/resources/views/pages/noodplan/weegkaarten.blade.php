@@ -22,12 +22,23 @@
         @endphp
 
         @if($poule)
+        @php $blok = $poule->blok; @endphp
         <div class="mb-2 p-2 bg-blue-50 rounded text-center">
-            <span class="font-bold text-blue-800">Blok {{ $poule->blok?->nummer ?? '?' }}</span>
+            <span class="font-bold text-blue-800">Blok {{ $blok?->nummer ?? '?' }}</span>
             @if($toernooi->weegkaarten_gemaakt_op && $poule->mat)
             <span class="text-blue-600 ml-2">| Mat {{ $poule->mat->nummer }}</span>
             @endif
         </div>
+        @if($blok)
+        <div class="text-xs text-center mb-2">
+            @if($blok->weging_start && $blok->weging_einde)
+            <span class="text-gray-600">Weging: <strong>{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</strong></span>
+            @endif
+            @if($blok->starttijd)
+            <span class="text-gray-600 ml-2">| Start: <strong>{{ $blok->starttijd->format('H:i') }}</strong></span>
+            @endif
+        </div>
+        @endif
         @else
         <div class="mb-2 p-2 bg-yellow-50 rounded text-center text-yellow-700 text-sm">
             Nog geen poule toegewezen
