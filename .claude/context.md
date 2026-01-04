@@ -15,8 +15,12 @@
 
 | Omgeving | URL | Pad | Database |
 |----------|-----|-----|----------|
-| **Local** | localhost:8001 | `D:\GitHub\judotoernooi\laravel` | SQLite |
+| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi` | SQLite |
 | **Staging** | staging.judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+
+```bash
+php artisan serve --port=8007   # http://localhost:8007
+```
 
 **Server:** 188.245.159.115 (root, SSH key)
 
