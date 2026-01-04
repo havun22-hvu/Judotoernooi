@@ -9,14 +9,16 @@
 | **Naam** | WestFries Open JudoToernooi |
 | **Type** | Laravel 11 + Blade + Alpine.js + Tailwind |
 | **Eigenaar** | Judoschool Cees Veen |
-| **Status** | Staging (development) |
+| **Status** | Production (live) |
 
 ## Omgevingen
 
 | Omgeving | URL | Pad | Database |
 |----------|-----|-----|----------|
-| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi` | SQLite |
-| **Staging** | staging.judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite |
+| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL |
+
+> **Let op:** Er is geen aparte staging omgeving. Testen gebeurt lokaal.
 
 ```bash
 php artisan serve --port=8007   # http://localhost:8007
@@ -267,16 +269,16 @@ cp .env.example .env
 php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
-php artisan serve --port=8001
+php artisan serve --port=8007
 ```
 
 **Let op:**
 - Local: SQLite (geen MySQL nodig)
-- Poort 8001 (8000 is Herdenkingsportaal)
+- Poort 8007 (zie HavunCore server.md voor alle poorten)
 
 ---
 
-## Deploy (Staging)
+## Deploy (Production)
 
 ```bash
 ssh root@188.245.159.115
