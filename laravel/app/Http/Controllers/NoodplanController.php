@@ -28,9 +28,9 @@ class NoodplanController extends Controller
 
         // Actieve poules (momenteel bezig op een mat)
         $actievePoules = Poule::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('mat_nummer')
+            ->whereNotNull('mat_id')
             ->where('status', 'bezig')
-            ->with(['judokas'])
+            ->with(['judokas', 'mat'])
             ->get();
 
         return view('pages.noodplan.index', compact('toernooi', 'blokken', 'clubs', 'actievePoules'));
@@ -77,7 +77,7 @@ class NoodplanController extends Controller
     public function printZaaloverzicht(Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()
-            ->with(['poules' => fn($q) => $q->whereNotNull('mat_nummer')->orderBy('mat_nummer')])
+            ->with(['poules' => fn($q) => $q->whereNotNull('mat_id')->with('mat')->orderBy('mat_id')])
             ->orderBy('nummer')
             ->get();
 
