@@ -212,12 +212,12 @@ function wegingApp() {
                 this.resultaten = [];
                 return;
             }
-            // Use current origin to avoid cached wrong URLs
-            let url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/judoka/zoek-weging?q=${encodeURIComponent(this.zoekterm)}`;
-            if (this.blokFilter) url += `&blok=${this.blokFilter}`;
+            // Use publiek route (no auth required)
+            let url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
             try {
                 const response = await fetch(url);
-                this.resultaten = await response.json();
+                const data = await response.json();
+                this.resultaten = data.judokas || [];
             } catch (e) {
                 console.error('Zoek error:', e);
             }
