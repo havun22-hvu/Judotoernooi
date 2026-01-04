@@ -50,10 +50,7 @@ class MatController extends Controller
         $blokken = $toernooi->blokken;
         $matten = $toernooi->matten;
 
-        // Pass isAdmin flag to show navigation for organisator users
-        $isAdmin = auth('organisator')->check();
-
-        return view('pages.mat.interface', compact('toernooi', 'blokken', 'matten', 'isAdmin'));
+        return view('pages.mat.interface', compact('toernooi', 'blokken', 'matten'));
     }
 
     public function getWedstrijden(Request $request, Toernooi $toernooi): JsonResponse
