@@ -212,10 +212,15 @@ function wegingApp() {
                 this.resultaten = [];
                 return;
             }
-            let url = `{{ route('toernooi.judoka.zoek', $toernooi) }}?q=${encodeURIComponent(this.zoekterm)}`;
+            // Use current origin to avoid cached wrong URLs
+            let url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/judoka/zoek?q=${encodeURIComponent(this.zoekterm)}`;
             if (this.blokFilter) url += `&blok=${this.blokFilter}`;
-            const response = await fetch(url);
-            this.resultaten = await response.json();
+            try {
+                const response = await fetch(url);
+                this.resultaten = await response.json();
+            } catch (e) {
+                console.error('Zoek error:', e);
+            }
         },
 
         selecteerJudoka(judoka) {
@@ -287,7 +292,8 @@ function wegingApp() {
             this.melding = 'Zoeken: ' + qrCode.substring(0, 20) + '...';
             this.meldingType = 'success';
 
-            const url = `{{ route('toernooi.weging.scan-qr', $toernooi) }}`;
+            // Use current origin to avoid cached wrong URLs
+            const url = `${window.location.origin}/toernooi/{{ $toernooi->slug }}/weging/scan-qr`;
             console.log('Fetching URL:', url);
             try {
                 const response = await fetch(url, {
@@ -321,7 +327,8 @@ function wegingApp() {
             this.bezig = true;
             this.melding = '';
             try {
-                const response = await fetch(`{{ url('toernooi/' . $toernooi->id . '/weging') }}/${this.geselecteerd.id}/registreer`, {
+                // Use current origin to avoid cached wrong URLs
+                const response = await fetch(`${window.location.origin}/toernooi/{{ $toernooi->slug }}/weging/${this.geselecteerd.id}/registreer`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
