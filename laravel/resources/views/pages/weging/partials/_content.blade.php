@@ -2,21 +2,21 @@
 
 <!-- Main container -->
 <div class="flex flex-col h-full">
-    <!-- TOP: Scanner area (35% height) -->
-    <div class="bg-blue-800/50 rounded-lg p-2 mb-2 flex flex-col" style="height: 35%;">
+    <!-- TOP: Scanner area (45% height) -->
+    <div class="bg-blue-800/50 rounded-lg p-3 mb-2 flex flex-col" style="height: 45%;">
         <!-- Scanner area -->
         <div class="flex-1 flex items-center justify-center">
             <!-- Scan button (when not scanning) -->
             <button id="scan-button" onclick="startScanner()"
-                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-24 h-24 flex flex-col items-center justify-center shadow-lg">
-                <span class="text-2xl mb-1">📷</span>
+                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
+                <span class="text-3xl mb-1">📷</span>
                 <span class="font-bold text-sm">Scan</span>
             </button>
 
             <!-- Scanner (when scanning) -->
             <div id="scanner-container" class="text-center w-full" style="display: none;">
-                <div id="qr-reader" style="width: 100%; max-width: 280px; min-height: 180px; margin: 0 auto;"></div>
-                <button onclick="stopScanner()" class="mt-1 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
+                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
                     Stop
                 </button>
             </div>
@@ -108,8 +108,8 @@ let selectedJudoka = null;
 let weightInput = '';
 let scanner = null;
 let scannerActive = false;
-let history = [];
-let totalWeighed = 0;
+let history = JSON.parse(localStorage.getItem('weging_history') || '[]');
+let totalWeighed = parseInt(localStorage.getItem('weging_total') || '0');
 
 // Clock
 function updateClock() {
@@ -353,11 +353,16 @@ async function registreerGewicht() {
 
 // History
 function addToHistory(naam, gewicht, binnenKlasse) {
-    history.unshift({ naam, gewicht, binnenKlasse, tijd: new Date() });
-    if (history.length > 5) history.pop();
+    history.unshift({ naam, gewicht, binnenKlasse, tijd: new Date().toISOString() });
+    if (history.length > 10) history.pop();
     totalWeighed++;
+    localStorage.setItem('weging_history', JSON.stringify(history));
+    localStorage.setItem('weging_total', totalWeighed);
     updateHistoryDisplay();
 }
+
+// Load history on page load
+updateHistoryDisplay();
 
 function updateHistoryDisplay() {
     document.getElementById('stats').textContent = totalWeighed;
