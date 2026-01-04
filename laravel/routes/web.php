@@ -93,6 +93,18 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
     Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
 
+    // Debug route (tijdelijk)
+    Route::get('api/auth-debug', function (\Illuminate\Http\Request $request, \App\Models\Toernooi $toernooi) {
+        return response()->json([
+            'organisator_check' => auth('organisator')->check(),
+            'organisator_id' => auth('organisator')->id(),
+            'organisator_name' => auth('organisator')->user()?->naam,
+            'session_rol' => $request->session()->get("toernooi_{$toernooi->id}_rol"),
+            'session_id' => session()->getId(),
+            'cookies' => array_keys($request->cookies->all()),
+        ]);
+    })->name('auth-debug');
+
     // Device Toegang Beheer API routes
     Route::middleware(CheckToernooiRol::class . ':admin')->prefix('api/device-toegang')->name('device-toegang.')->group(function () {
         Route::get('/', [DeviceToegangBeheerController::class, 'index'])->name('index');
