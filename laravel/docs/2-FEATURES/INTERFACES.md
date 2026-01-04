@@ -16,6 +16,17 @@
 | **Spreker** | Standalone PWA | Geen | URL + PIN + device |
 | **Dojo** | Standalone PWA | Geen | URL + PIN + device |
 
+### Belangrijk verschil: Admin vs Vrijwilliger interface
+
+Wanneer dezelfde interface (bijv. Mat) wordt geopend:
+
+| Wie | Via | Ziet |
+|-----|-----|------|
+| **Admin/Organisator** | Menu → Mat Interface | Navigatie balk bovenaan (Dashboard, Poules, etc.) |
+| **Vrijwilliger (device-bound)** | Speciale URL + PIN | Standalone PWA zonder navigatie |
+
+**Reden:** Vrijwilligers moeten gefocust blijven op hun taak. Admins moeten kunnen navigeren om overzicht te houden.
+
 ---
 
 ## Device Binding voor PWA's
