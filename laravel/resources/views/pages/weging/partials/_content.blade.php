@@ -3,11 +3,11 @@
     <!-- TOP: Scanner gebied -->
     <div class="bg-blue-800/50 rounded-lg p-3 mb-2">
         <!-- Scanner area -->
-        <div class="flex items-center justify-center" style="min-height: 220px;">
+        <div class="flex items-center justify-center" style="min-height: 180px;">
             <!-- Scan button (when not scanning) -->
             <button x-show="modus === 'zoek'" @click="modus = 'scan'; startScanner()"
-                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-32 h-32 flex flex-col items-center justify-center shadow-lg">
-                <span class="text-4xl mb-1">📷</span>
+                    class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
+                <span class="text-3xl mb-1">📷</span>
                 <span class="font-bold">Scan</span>
             </button>
 
@@ -23,13 +23,13 @@
                 Stop Scanner
             </button>
         </div>
-    </div>
 
-    <!-- Zoek input - sticky vaste plek -->
-    <div class="mb-2">
-        <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-               placeholder="Zoek op naam..."
-               class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-blue-300 focus:outline-none placeholder-blue-400 text-white">
+        <!-- Zoek input - BINNEN scanner box, altijd zichtbaar -->
+        <div class="mt-3">
+            <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
+                   placeholder="Zoek op naam..."
+                   class="w-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
+        </div>
     </div>
 
     <!-- Search results (overlay) -->
