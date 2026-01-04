@@ -16,7 +16,8 @@ Lees deze bestanden in volgorde en bevestig aan de gebruiker:
 
 ```
 4. D:\GitHub\HavunCore\docs\kb\runbooks\claude-werkwijze.md  ← LEES-DENK-DOE-DOCUMENTEER
-5. D:\GitHub\HavunCore\docs\kb\PKM-SYSTEEM.md                ← Waar staat wat
+5. D:\GitHub\HavunCore\docs\kb\runbooks\docs-first-workflow.md ← DOCS-FIRST (KRITIEK!)
+6. D:\GitHub\HavunCore\docs\kb\PKM-SYSTEEM.md                ← Waar staat wat
 ```
 
 ## Stap 3: Bevestig aan gebruiker
@@ -28,15 +29,31 @@ Na het lezen, geef een KORTE bevestiging:
   - CLAUDE.md (X regels)
   - context.md (X regels)
   - claude-werkwijze.md
+  - docs-first-workflow.md
   - PKM-SYSTEEM.md
 
 📋 Dit project: [korte beschrijving]
 ⚠️ Verboden: [belangrijkste restricties]
+📄 DOCS-FIRST: Ik schrijf alleen code zoals het in de docs staat.
 
 Klaar om te beginnen. Wat wil je doen?
 ```
 
 ## Stap 4: ONTHOUD deze principes
+
+### ⛔ DOCS-FIRST WORKFLOW (HOOFDREGEL!)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  CODE MAG ALLEEN GESCHREVEN WORDEN ALS HET IN DE       │
+│  MD FILES STAAT. NIET ZOALS IK DENK DAT HET MOET.      │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Bij ELKE vraag:**
+1. Is dit groot (feature/styling/tekst) of klein (bug/typo)?
+2. **GROOT** → Zoek docs → Meld wat er staat → Wacht op bevestiging → Update docs → Code
+3. **KLEIN** → Log in `.claude/smallwork.md` → Fix → Klaar
 
 ### LEES-DENK-DOE-DOCUMENTEER
 1. **LEES** - Eerst relevante docs/code lezen
@@ -45,19 +62,32 @@ Klaar om te beginnen. Wat wil je doen?
 4. **DOCUMENTEER** - Sla nieuwe kennis op
 
 ### Kernregels
-- **NOOIT** het wiel opnieuw uitvinden - zoek eerst in bestaande docs/code
-- **NOOIT** aannemen - vraag bij twijfel en WACHT op antwoord
-- **ALTIJD** documenteren - als iets nieuw is, direct opslaan
-- **ALTIJD** bestaande patterns volgen - check HavunCore/docs/kb/patterns/
+- **NOOIT** code schrijven voordat docs gecheckt zijn
+- **NOOIT** aannemen hoe iets moet werken - het staat in de docs of ik vraag
+- **ALTIJD** inconsistenties in docs melden VOORDAT ik code schrijf
+- **ALTIJD** docs updaten VOORDAT code geschreven wordt
 
-### Bij elke taak
-1. Bestaat hier al een oplossing voor? → Check docs/kb/
-2. Is dit eerder besproken? → Check CLAUDE.md en context.md
-3. Moet ik iets vragen? → Vraag en WACHT
+### Response template bij feature/wijziging vraag
+
+```
+📄 Over [onderwerp] vond ik:
+
+[file1.md]:
+  - [wat er staat]
+
+[file2.md]:
+  - [wat er staat]
+
+⚠️ Inconsistenties: [ja/nee + details]
+❓ Ontbreekt: [wat mist in docs]
+
+Is dit correct en compleet?
+```
 
 ## NIET DOEN
 
-❌ Direct beginnen met code schrijven zonder docs te lezen
-❌ Zelf oplossingen verzinnen die al bestaan
-❌ Informatie vergeten die al gedocumenteerd is
-❌ Doorgaan bij onduidelijkheid zonder te vragen
+❌ Direct beginnen met code schrijven
+❌ Zelf oplossingen verzinnen - het staat in docs of nergens
+❌ Code schrijven terwijl docs inconsistent zijn
+❌ Docs aanpassen NADAT code geschreven is
+❌ "Ik denk dat..." zonder doc-verificatie

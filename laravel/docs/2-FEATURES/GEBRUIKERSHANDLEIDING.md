@@ -20,11 +20,13 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 
 ### Fase 1: Voorbereiding (weken/maanden voor toernooi)
 1. Toernooi aanmaken
-2. Deelnemers importeren
-3. Poules genereren
-4. Blokkenverdeling (categorieën over tijdsblokken)
-5. "Naar Zaaloverzicht" → **matten toewijzen** + preview
-6. **Resultaat:** Weeglijst, weegkaarten, coachkaarten, zaaloverzicht met matverdeling (nog inactief)
+2. Inschrijving (tot sluitingsdatum):
+   - **Handmatige import** - Organisator importeert CSV/Excel
+   - **Coach portal** - Coaches voegen zelf judoka's toe
+3. **Einde inschrijving** → "Valideer judoka's" → QR-codes aangemaakt (definitief)
+4. Poules genereren
+5. Blokverdeling + "Verdeel over matten" → **weegkaarten beschikbaar** (QR + blokinfo)
+6. **Resultaat:** Weeglijst, weegkaarten, coachkaarten, zaaloverzicht (nog inactief)
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
@@ -67,8 +69,25 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 Het systeem:
 - Berekent automatisch de leeftijdsklasse
 - Bepaalt de gewichtsklasse op basis van gewicht
-- Genereert een unieke judoka-code
-- Maakt een QR-code voor snelle identificatie
+
+**Let op:**
+- QR-codes worden pas aangemaakt bij "Valideer judoka's" (na einde inschrijving)
+- Weegkaarten zijn pas beschikbaar NA "Verdeel over matten" (bevatten blokinfo)
+
+## Valideer Judoka's (Einde Inschrijving)
+
+Na de sluitingsdatum van de inschrijving:
+
+1. Ga naar **Toernooi** > **Judoka's** > **Valideer**
+2. Systeem controleert alle judoka's op:
+   - Volledige gegevens (naam, geboortejaar, geslacht, band, gewicht)
+   - Correcte gewichtsklasse
+3. **QR-codes worden nu aangemaakt** (definitief)
+   - Gebaseerd op definitieve naam, band, gewicht
+   - `judoka_code` = LLGGBGVV (Leeftijd-Gewicht-Band-Geslacht-Volgnummer)
+4. Na validatie kunnen gegevens niet meer door coaches gewijzigd worden
+
+**Belangrijk:** Tot dit moment kunnen coaches nog wijzigingen doorvoeren. Na validatie zijn de gegevens definitief.
 
 ## Poule Indeling
 
@@ -156,6 +175,21 @@ Verdeling blokken |--------------------| Aansluiting gewichten
 - Bij elke wijziging updaten:
   - Blok totalen en afwijkingen
   - Overzicht panel bloktoewijzingen
+
+### Verdeel over Matten (knop in tab Blokken)
+
+Wanneer alle categorieën in blokken zijn ingedeeld:
+
+1. Klik **"Verdeel over matten"** knop (in tab Blokken)
+2. Systeem verdeelt poules automatisch over de beschikbare matten
+3. **Weegkaarten worden nu beschikbaar** voor coaches in het Coach Portal
+   - QR-code (aangemaakt bij "Valideer judoka's")
+   - Bloknaam + weging tijden (uit blokverdeling)
+   - Coaches kunnen weegkaarten delen met judoka's
+
+**Vereisten voor weegkaarten:**
+1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
+2. Blokverdeling gedaan + "Verdeel over matten" → blokinfo beschikbaar
 
 ### Zaaloverzicht
 
