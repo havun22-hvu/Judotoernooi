@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'version' => '1.0.10',
+    'version' => '1.0.11',
     'version_date' => '2026-01-04',
 
     /*

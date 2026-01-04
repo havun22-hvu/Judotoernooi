@@ -1,9 +1,9 @@
     @php $pwaApp = 'weging'; @endphp
 <div x-data="wegingApp()" x-init="init()">
-    <!-- TOP: Scanner gebied -->
+    <!-- TOP: Scanner gebied - VASTE HOOGTE -->
     <div class="bg-blue-800/50 rounded-lg p-3 mb-2">
-        <!-- Scanner area -->
-        <div class="flex items-center justify-center" style="min-height: 180px;">
+        <!-- Scanner area - VASTE HOOGTE zodat zoekvak niet springt -->
+        <div class="flex items-center justify-center" style="height: 220px;">
             <!-- Scan button (when not scanning) -->
             <button x-show="modus === 'zoek'" @click="modus = 'scan'; startScanner()"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
@@ -14,22 +14,21 @@
             <!-- Scanner (when scanning) -->
             <div x-show="modus === 'scan'" class="w-full">
                 <div id="qr-reader" style="width: 100%; max-width: 280px; margin: 0 auto;"></div>
+                <!-- Stop knop ONDER scanner -->
+                <div class="text-center mt-2">
+                    <button @click="stopScanner()" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                        Stop Scanner
+                    </button>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Stop knop ONDER scanner -->
-        <div x-show="modus === 'scan'" class="text-center mt-2">
-            <button @click="stopScanner()" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
-                Stop Scanner
-            </button>
-        </div>
-
-        <!-- Zoek input - BINNEN scanner box, altijd zichtbaar -->
-        <div class="mt-3">
-            <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-                   placeholder="Zoek op naam..."
-                   class="w-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
-        </div>
+    <!-- Zoek input - STICKY VASTE POSITIE buiten scanner box -->
+    <div class="mb-2">
+        <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
+               placeholder="Zoek op naam..."
+               class="w-full border-2 border-blue-400 bg-blue-900 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
     </div>
 
     <!-- Search results (overlay) -->
