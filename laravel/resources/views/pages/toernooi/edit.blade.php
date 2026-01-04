@@ -989,63 +989,8 @@
     <!-- TAB: ORGANISATIE -->
     <div x-show="activeTab === 'organisatie'" x-cloak>
 
-    <!-- VRIJWILLIGERS LINKS -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ copied: null }">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers Links</h2>
-        <p class="text-gray-600 mb-4">
-            Deel deze links met je vrijwilligers. Elke rol heeft een unieke geheime link - geen wachtwoord nodig.
-            <br><span class="text-sm text-gray-500">Na klikken verdwijnt de code uit de adresbalk.</span>
-        </p>
-
-        <div class="space-y-4">
-            @php
-                $rollen = [
-                    'hoofdjury' => ['icon' => '⚖️', 'naam' => 'Hoofdjury', 'desc' => 'Overzicht alle poules'],
-                    'weging' => ['icon' => '⚖️', 'naam' => 'Weging', 'desc' => 'Weeglijst en registratie'],
-                    'mat' => ['icon' => '🥋', 'naam' => 'Mat', 'desc' => 'Wedstrijden per mat'],
-                    'spreker' => ['icon' => '🎙️', 'naam' => 'Spreker', 'desc' => 'Omroep interface'],
-                    'dojo' => ['icon' => '🚪', 'naam' => 'Dojo', 'desc' => 'Scanner bij ingang'],
-                ];
-            @endphp
-
-            @foreach($rollen as $rol => $info)
-            <div class="p-4 border rounded-lg bg-gray-50">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <span class="text-2xl mr-3">{{ $info['icon'] }}</span>
-                        <div>
-                            <h3 class="font-bold">{{ $info['naam'] }}</h3>
-                            <p class="text-sm text-gray-500">{{ $info['desc'] }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button"
-                                @click="navigator.clipboard.writeText('{{ $toernooi->getRoleUrl($rol) }}'); copied = '{{ $rol }}'; setTimeout(() => copied = null, 2000)"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm whitespace-nowrap">
-                            <span x-show="copied !== '{{ $rol }}'">Kopieer link</span>
-                            <span x-show="copied === '{{ $rol }}'" x-cloak>Gekopieerd!</span>
-                        </button>
-                        <a href="{{ $toernooi->getRoleUrl($rol) }}" target="_blank"
-                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm" title="Test link">
-                            Test
-                        </a>
-                    </div>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-bold text-blue-800 mb-2">Voorbeeld bericht voor WhatsApp/Email:</h4>
-            <div class="bg-white p-3 rounded border text-sm text-gray-700">
-                Hoi! Morgen is het toernooi. Klik op je link om in te loggen:<br><br>
-                @foreach($rollen as $rol => $info)
-                👉 <strong>{{ $info['naam'] }}</strong><br>
-                @endforeach
-            </div>
-            <p class="text-xs text-blue-600 mt-2">Stuur elke vrijwilliger alleen zijn/haar eigen link!</p>
-        </div>
-    </div>
+    <!-- DEVICE TOEGANGEN (nieuw systeem met device binding) -->
+    @include('pages.toernooi.partials.device-toegangen')
 
     <!-- ONLINE BETALINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">

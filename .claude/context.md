@@ -166,38 +166,63 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 
 ---
 
-## Authenticatie
+## Authenticatie & Device Binding
 
-### Huidige Situatie
-- **Organisator login** - Via Laravel Auth (email/wachtwoord)
-- **Superadmin login** - Via Laravel Auth
-- ~~Legacy wachtwoorden~~ - **Verwijderd** (3 jan 2026)
+> **Volledige docs:** `laravel/docs/4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md`
+> **Rollen:** `laravel/docs/6-INTERNAL/ROLLEN_HIERARCHIE.md`
 
-### Wie ziet wat?
+### Overzicht
 
-| Rol | Navigatie tabs | Toegang |
-|-----|----------------|---------|
-| **Superadmin** | ✅ Volledig | Alles |
-| **Organisator** | ✅ Volledig | Eigen toernooien |
-| **Hoofdjury** | ✅ Volledig | Read-only poules/blokken |
-| **Weging** | ❌ Standalone PWA | Alleen weging interface |
-| **Mat** | ❌ Standalone PWA | Alleen mat interface |
-| **Spreker** | ❌ Standalone PWA | Alleen spreker interface |
-| **Dojo** | ❌ Standalone PWA | Alleen dojo scanner |
+| Rol | Authenticatie | Financieel |
+|-----|---------------|------------|
+| **Superadmin** | Wachtwoord (prod) / PIN (dev) | ✅ |
+| **Organisator** | Email + wachtwoord | ✅ |
+| **Beheerders** | Email + wachtwoord (toegevoegd) | ❌ |
+| **Hoofdjury** | URL + PIN + device binding | ❌ |
+| **Mat/Weging/Spreker/Dojo** | URL + PIN + device binding | ❌ |
+| **Coachkaart** | Device binding + foto | - |
 
-### Wat is verwijderd?
-- Toernooi-level wachtwoorden (per rol: weging, mat, spreker, etc.)
-- 135 regels uit `pages/toernooi/edit.blade.php`
-- Organisatie tab toont nu alleen bloktijden
+### Device Binding Systeem
 
-### Routes (toegang)
+**Flow:**
+1. Organisator maakt toegang aan (Instellingen → Organisatie)
+2. Vrijwilliger krijgt URL + PIN
+3. Eerste login: PIN invoeren → device wordt gebonden
+4. Daarna: device herkend → direct toegang
+5. Token verloren? → PIN opnieuw invoeren
+
+**Database:** `device_toegangen` tabel
 ```
-/login              → Organisator/superadmin login
-/toernooi/{id}/*    → Authenticated routes (admin/jury)
-/weging/*           → Standalone PWA (publiek)
-/mat/*              → Standalone PWA (publiek)
-/spreker/*          → Standalone PWA (publiek)
-/dojo/*             → Standalone PWA (publiek)
+toernooi_id, rol, mat_nummer, code, pincode, device_token, device_info
+```
+
+### Coachkaart Device Binding
+
+**Tegen delen van QR-codes:**
+1. Coach activeert kaart op telefoon → device binding
+2. Upload pasfoto OF maak selfie
+3. QR pas zichtbaar na foto
+4. Dojo-scanner toont foto → vrijwilliger vergelijkt gezicht
+
+### Einde Toernooi
+
+Wanneer getriggerd:
+- Alle device bindings gereset
+- Statistieken berekend en getoond
+
+### Te verwijderen
+- ~~Service Login pagina~~ (`pages/auth/service-login.blade.php`)
+- ~~Toernooi-level wachtwoorden per rol~~
+
+### Routes
+```
+/login              → Organisator/Beheerder login
+/toegang/{code}     → Device binding flow (PIN invoer)
+/weging/{id}        → Weging interface (device-gebonden)
+/mat/{id}           → Mat interface (device-gebonden)
+/jury/{id}          → Hoofdjury interface (device-gebonden)
+/spreker/{id}       → Spreker interface (device-gebonden)
+/dojo/{id}          → Dojo scanner (device-gebonden)
 ```
 
 ---
