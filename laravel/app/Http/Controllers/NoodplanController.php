@@ -29,7 +29,7 @@ class NoodplanController extends Controller
         // Actieve poules (momenteel bezig op een mat)
         $actievePoules = Poule::where('toernooi_id', $toernooi->id)
             ->whereNotNull('mat_id')
-            ->where('status', 'bezig')
+            ->whereNotNull('actieve_wedstrijd_id')
             ->with(['judokas', 'mat'])
             ->get();
 
