@@ -1,30 +1,31 @@
     @php $pwaApp = 'weging'; @endphp
 <div x-data="wegingApp()" x-init="init()">
-    <!-- TOP: Scanner gebied - VASTE HOOGTE -->
+    <!-- TOP: Scanner gebied -->
     <div class="bg-blue-800/50 rounded-lg p-3 mb-2">
-        <!-- Scanner area - VASTE HOOGTE zodat zoekvak niet springt -->
-        <div class="flex items-center justify-center" style="height: 220px;">
-            <!-- Scan button (when not scanning) -->
-            <button x-show="modus === 'zoek'" @click="modus = 'scan'; startScanner()"
+        <!-- Scan button (when not scanning) -->
+        <div x-show="modus === 'zoek'" class="flex items-center justify-center" style="min-height: 180px;">
+            <button @click="modus = 'scan'; startScanner()"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                 <span class="text-3xl mb-1">📷</span>
                 <span class="font-bold">Scan</span>
             </button>
+        </div>
 
-            <!-- Scanner (when scanning) -->
-            <div x-show="modus === 'scan'" class="w-full">
-                <div id="qr-reader" style="width: 100%; max-width: 280px; margin: 0 auto;"></div>
-                <!-- Stop knop ONDER scanner -->
-                <div class="text-center mt-2">
-                    <button @click="stopScanner()" class="px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
-                        Stop Scanner
-                    </button>
-                </div>
-            </div>
+        <!-- Scanner (when scanning) - volledige grootte -->
+        <div x-show="modus === 'scan'">
+            <div id="qr-reader" style="width: 100%; max-width: 300px; margin: 0 auto;"></div>
         </div>
     </div>
 
-    <!-- Zoek input - STICKY VASTE POSITIE buiten scanner box -->
+    <!-- Stop knop - ONDER scanner box, alleen zichtbaar tijdens scannen -->
+    <div x-show="modus === 'scan'" class="mb-2">
+        <button @click="stopScanner()"
+                class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
+            ⏹ Stop Scanner
+        </button>
+    </div>
+
+    <!-- Zoek input - ONDER stop knop, altijd zichtbaar -->
     <div class="mb-2">
         <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
                placeholder="Zoek op naam..."
@@ -251,7 +252,7 @@ function wegingApp() {
                 this.melding = 'Camera openen...';
                 await this.scanner.start(
                     { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 200, height: 200 } },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
                     async (text) => {
                         // QR gevonden - toon debug info op scherm
                         this.melding = 'QR: ' + text.substring(0, 50);
