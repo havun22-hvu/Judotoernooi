@@ -60,21 +60,23 @@ De Organisatie tab bevat:
 
 ## Consistent Layout Pattern
 
-Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - geen navigatie tabs:
+Alle PWA scanner interfaces (Weging, Dojo Scanner) zijn **standalone** met identieke layout:
 
 | Element | Positie | Hoogte |
 |---------|---------|--------|
 | Header | Top | ~60px |
-| Scanner area | Bovenste 1/3 | ~33% van scherm |
-| Stop knop | Direct onder scanner | ~50px |
-| Zoek input | Direct onder stop knop | ~50px |
-| Controls/Info | Rest van scherm | Scrollable |
+| Scanner area | Bovenste helft | 45% van scherm |
+| Content area | Onderste helft | 55% van scherm |
+
+**Scanner Area (45%) bevat:**
+1. **Scan knop** (inactief): Grote groene ronde knop (w-28 h-28)
+2. **Scanner** (actief): Camera preview + rode stop knop eronder
+3. **Zoekveld**: "Of zoek op naam..." - altijd zichtbaar onderaan
 
 **Kenmerken:**
-- Scanner neemt bovenste 1/3 van het scherm
+- Scanner pas actief NA klikken op groene knop
 - Stop knop ALTIJD direct onder scanner (niet ernaast!)
-- Zoekvak ALTIJD direct onder stop knop (vaste positie)
-- Scanner: 300px max-width, 220px qrbox
+- Scanner: max-width 300px, qrbox 220x220, min-height 200px
 - Blauwe kleur theme (#1e40af)
 
 ---
@@ -152,18 +154,26 @@ De Weging heeft **2 totaal verschillende versies**:
 - **Stop knop**: ONDER de scanner (niet ernaast) zodat altijd bereikbaar
 - **Numpad**: Verschijnt na selectie judoka voor gewichtinvoer
 
-### Weging Interface Layout (mobiel)
-Van boven naar beneden:
-1. **Header**: Titel + klok + countdown geselecteerd blok (klein) - ~60px
-2. **Scanner gebied**: Bovenste 1/3 van scherm (~33vh)
-   - Niet scannen: grote groene "Scan" knop gecentreerd
-   - Wel scannen: camera preview (300px max-width)
-3. **Stop knop**: Direct ONDER scanner gebied, volle breedte, rood - ~50px
-   - Alleen zichtbaar tijdens scannen
-4. **Zoek input**: VASTE positie onder stop knop gebied, volle breedte - ~50px
-   - Altijd zichtbaar, ook tijdens scannen
-5. **Blok dropdown + stats**: gewogen/totaal
-6. **Judoka details + Numpad**: Onderste deel scherm (scrollable)
+### Weging Interface Layout (mobiel) - v1.1.3
+
+**Identiek aan Dojo Scanner layout (45%/55% split)**
+
+**Bovenste 45% - Scanner Area** (`bg-blue-800/50`):
+1. **Scan knop** (inactief): Grote groene ronde knop gecentreerd
+2. **Scanner** (actief): Camera preview + rode "Stop" knop eronder
+3. **Zoekveld**: "Of zoek op naam..." - altijd zichtbaar onderaan area
+
+**Onderste 55% - Content Area**:
+1. **Instructies** (geen judoka geselecteerd): Genummerde stappen
+2. **Judoka sectie** (judoka geselecteerd):
+   - Judoka info (naam, club, gewichtsklasse, blok)
+   - Gewicht input veld
+   - Numpad (4x3 grid + C knop)
+   - Groene "Registreer" knop
+   - Feedback melding
+3. **Stats + History** (altijd zichtbaar onderaan):
+   - "Recent gewogen" + totaal aantal
+   - Lijst laatste 10 gewogen (opgeslagen in localStorage)
 
 ---
 
@@ -175,20 +185,29 @@ Van boven naar beneden:
 - URL + PIN + device binding
 - Beheer via Instellingen → Organisatie → Dojo toegangen
 
-### Layout (Standalone PWA)
-- **Identiek aan Weging** - 45%/55% split
-- Fixed layout: scanner bovenin (45%), info onderin (55%)
-- Blauwe kleur theme (#1e40af)
+### Layout (Standalone PWA) - REFERENTIE VOOR ALLE SCANNERS
+
+**Bovenste 45% - Scanner Area** (`bg-blue-800/50`):
+1. **Scan knop** (inactief): Grote groene ronde knop (w-28 h-28)
+2. **Scanner** (actief): Camera preview + rode "Stop" knop eronder
+3. **Handmatig invoeren**: "Of voer code handmatig in..." knop
+
+**Onderste 55% - Content Area**:
+1. **Instructies**: Genummerde stappen (wit vlak)
+2. **Stats**: "Coaches gescand vandaag" + teller
+3. **Info**: Blauwe info balk
+
+**Kleur theme:** #1e40af (blue-800)
 
 ### Functionaliteit
 - Scan coachkaart QR-code
 - **Toont foto van coach** → vrijwilliger vergelijkt met persoon
 - Valideer coach toegang
-- Handmatig invoeren optie (altijd zichtbaar onder scanner)
+- Handmatig invoeren optie (modal)
 
 ### Scanner Specs
 - Html5Qrcode library
-- Max-width: 300px, qrbox: 220px
+- Max-width: 300px, qrbox: 220x220, aspectRatio: 1.0
 - Min-height: 200px voor zichtbaarheid
 
 ---
