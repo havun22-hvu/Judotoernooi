@@ -12,7 +12,7 @@
                 <p class="text-sm text-gray-600">{{ $judoka->club?->naam ?? 'Onbekend' }}</p>
             </div>
             <div class="qr-placeholder">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(route('toernooi.noodplan.weegkaart', [$toernooi, $judoka])) }}"
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(route('weegkaart.show', $judoka->qr_code)) }}"
                      alt="QR" class="w-full h-full">
             </div>
         </div>
