@@ -348,6 +348,9 @@ Route::get('/publiek/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
 Route::post('/publiek/{toernooi}/scan-qr', [PubliekController::class, 'scanQR'])
     ->name('publiek.scan-qr');
 
+Route::post('/publiek/{toernooi}/weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])
+    ->name('publiek.weging.registreer');
+
 Route::post('/publiek/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
     ->name('publiek.favorieten');
 
