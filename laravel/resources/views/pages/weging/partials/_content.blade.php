@@ -327,8 +327,8 @@ function wegingApp() {
             this.bezig = true;
             this.melding = '';
             try {
-                // Use current origin to avoid cached wrong URLs
-                const response = await fetch(`${window.location.origin}/toernooi/{{ $toernooi->slug }}/weging/${this.geselecteerd.id}/registreer`, {
+                // Use publiek route (no auth required)
+                const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${this.geselecteerd.id}/registreer`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

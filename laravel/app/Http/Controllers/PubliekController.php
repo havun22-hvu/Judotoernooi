@@ -396,6 +396,58 @@ class PubliekController extends Controller
     }
 
     /**
+     * Register weight for judoka (public route for PWA)
+     */
+    public function registreerGewicht(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    {
+        // Verify judoka belongs to this tournament
+        if ($judoka->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden'], 404);
+        }
+
+        $validated = $request->validate([
+            'gewicht' => 'required|numeric|min:10|max:200',
+        ]);
+
+        $gewicht = $validated['gewicht'];
+        $tolerantie = config('toernooi.gewicht_tolerantie', 0.5);
+
+        // Get weight class limits
+        $gewichtsklasse = $judoka->gewichtsklasse;
+        $binnenKlasse = true;
+        $opmerking = null;
+
+        if ($gewichtsklasse) {
+            // Parse weight class (e.g., "-30" or "30" for +30)
+            if (str_starts_with($gewichtsklasse, '-')) {
+                $maxGewicht = abs((float) $gewichtsklasse) + $tolerantie;
+                if ($gewicht > $maxGewicht) {
+                    $binnenKlasse = false;
+                    $opmerking = "Te zwaar voor klasse {$gewichtsklasse} kg (max {$maxGewicht} kg)";
+                }
+            } else {
+                $minGewicht = (float) $gewichtsklasse - $tolerantie;
+                if ($gewicht < $minGewicht) {
+                    $binnenKlasse = false;
+                    $opmerking = "Te licht voor klasse +{$gewichtsklasse} kg (min {$minGewicht} kg)";
+                }
+            }
+        }
+
+        // Save weight
+        $judoka->update([
+            'gewicht_gewogen' => $gewicht,
+            'gewogen_op' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'binnen_klasse' => $binnenKlasse,
+            'opmerking' => $opmerking,
+        ]);
+    }
+
+    /**
      * Export results as CSV for organizer
      * Sorted by age class (young to old) and weight (light to heavy)
      */
