@@ -63,7 +63,7 @@
 
     <!-- Weeglijst tabel -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full">
+        <table class="w-full table-fixed">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
