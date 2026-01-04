@@ -78,6 +78,29 @@ Het systeem:
 - Weegkaarten tonen blokinfo NA "Verdeel over matten"
 - Weegkaarten tonen mat nummer pas NA "Maak weegkaarten" (voorbereiding geseald)
 
+### Coach Portal (Clubs Beheren)
+
+Coaches kunnen zelf judoka's aanmelden via het Coach Portal:
+
+1. Ga naar **Toernooi** > **Clubs**
+2. Voeg clubs toe met naam, email, telefoon
+3. Per club wordt automatisch een coach + PIN aangemaakt
+4. Stuur uitnodigingen:
+   - **Alle Uitnodigen** - Stuurt email naar alle clubs met email
+   - **Email** knop per club - Stuurt individuele email
+
+**URL en PIN direct bekijken:**
+
+Per club toont de tabel de Coach Portal toegang:
+- **URL** knop → kopieert portal URL naar klembord
+- **PIN** knop → toont PIN en kopieert naar klembord
+- **Volledige URL** → zichtbaar in de tabel (voor handmatig delen via WhatsApp etc.)
+
+**Wanneer email kwijt is:**
+- Organisator kan URL + PIN direct zien in de clubs tabel
+- Kopieer en deel via WhatsApp, SMS, of mondeling
+- Geen nieuwe email nodig
+
 ## Valideer Judoka's (Einde Inschrijving)
 
 Na de sluitingsdatum van de inschrijving:

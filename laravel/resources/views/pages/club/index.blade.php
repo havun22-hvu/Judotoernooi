@@ -81,17 +81,29 @@
                 </td>
                 <td class="px-4 py-3">
                     @if($coach)
-                    <div class="flex items-center gap-2">
-                        <button @click="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
-                                class="px-2 py-1 text-xs rounded"
-                                :class="copiedUrl === 'url-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'">
-                            <span x-text="copiedUrl === 'url-{{ $club->id }}' ? '✓ URL' : 'URL'"></span>
-                        </button>
-                        <button @click="navigator.clipboard.writeText('{{ $coach->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
-                                class="px-2 py-1 text-xs rounded"
-                                :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'">
-                            <span x-text="copiedUrl === 'pin-{{ $club->id }}' ? '✓ PIN' : 'PIN: {{ $coach->pincode }}'"></span>
-                        </button>
+                    <div class="space-y-1">
+                        {{-- URL + kopieer knop --}}
+                        <div class="flex items-center gap-1">
+                            <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600 max-w-[200px] truncate" title="{{ $portalUrl }}">
+                                {{ $portalUrl }}
+                            </code>
+                            <button @click="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                                    class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
+                                    :class="copiedUrl === 'url-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'"
+                                    title="Kopieer URL">
+                                <span x-text="copiedUrl === 'url-{{ $club->id }}' ? '✓' : '📋'"></span>
+                            </button>
+                        </div>
+                        {{-- PIN --}}
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $coach->pincode }}</span>
+                            <button @click="navigator.clipboard.writeText('{{ $coach->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                                    class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
+                                    :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'"
+                                    title="Kopieer PIN">
+                                <span x-text="copiedUrl === 'pin-{{ $club->id }}' ? '✓' : '📋'"></span>
+                            </button>
+                        </div>
                     </div>
                     @else
                     <span class="text-xs text-gray-400">Geen coach</span>
