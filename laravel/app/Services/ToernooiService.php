@@ -109,25 +109,21 @@ class ToernooiService
      */
     public function getStatistieken(Toernooi $toernooi): array
     {
-        $judokas = $toernooi->judokas();
-        $poules = $toernooi->poules();
-
-        // Payment statistics
+        // Use fresh queries to avoid mutation issues
         $betalingen = $toernooi->betalingen()->where('status', 'paid');
-        $betaaldeJudokas = $judokas->whereNotNull('betaald_op')->count();
 
         return [
-            'totaal_judokas' => $judokas->count(),
-            'totaal_poules' => $poules->count(),
-            'totaal_wedstrijden' => $poules->sum('aantal_wedstrijden'),
-            'aanwezig' => $judokas->where('aanwezigheid', 'aanwezig')->count(),
-            'afwezig' => $judokas->where('aanwezigheid', 'afwezig')->count(),
-            'onbekend' => $judokas->where('aanwezigheid', 'onbekend')->count(),
-            'gewogen' => $judokas->whereNotNull('gewicht_gewogen')->count(),
+            'totaal_judokas' => $toernooi->judokas()->count(),
+            'totaal_poules' => $toernooi->poules()->count(),
+            'totaal_wedstrijden' => $toernooi->poules()->sum('aantal_wedstrijden'),
+            'aanwezig' => $toernooi->judokas()->where('aanwezigheid', 'aanwezig')->count(),
+            'afwezig' => $toernooi->judokas()->where('aanwezigheid', 'afwezig')->count(),
+            'onbekend' => $toernooi->judokas()->where('aanwezigheid', 'onbekend')->count(),
+            'gewogen' => $toernooi->judokas()->whereNotNull('gewicht_gewogen')->count(),
             'per_leeftijdsklasse' => $this->getStatistiekenPerLeeftijdsklasse($toernooi),
             'per_blok' => $this->getStatistiekenPerBlok($toernooi),
             // Payment stats
-            'betaald_judokas' => $betaaldeJudokas,
+            'betaald_judokas' => $toernooi->judokas()->whereNotNull('betaald_op')->count(),
             'totaal_ontvangen' => $betalingen->sum('bedrag'),
             'aantal_betalingen' => $betalingen->count(),
         ];
