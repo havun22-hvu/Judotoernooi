@@ -164,9 +164,15 @@
             @else
             <div class="p-8 text-center text-gray-500">
                 Nog geen judoka's opgegeven.
+                @if(isset($useCode) && $useCode)
+                <a href="{{ route('coach.portal.judokas', $code) }}" class="text-blue-600 hover:underline">
+                    Voeg eerst judoka's toe.
+                </a>
+                @else
                 <a href="{{ route('coach.judokas', $uitnodiging->token) }}" class="text-blue-600 hover:underline">
                     Voeg eerst judoka's toe.
                 </a>
+                @endif
             </div>
             @endif
         </div>
