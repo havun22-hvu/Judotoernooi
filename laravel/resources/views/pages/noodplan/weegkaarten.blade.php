@@ -23,11 +23,7 @@
 
         @if($poule)
         <div class="mb-2 p-2 bg-blue-50 rounded text-center">
-            <span class="font-bold text-blue-800">Mat {{ $poule->mat?->nummer ?? '?' }}</span>
-            <span class="mx-1 text-gray-400">|</span>
-            <span class="text-blue-700">Blok {{ $poule->blok?->nummer ?? '?' }}</span>
-            <span class="mx-1 text-gray-400">|</span>
-            <span class="text-blue-700">Poule {{ $poule->nummer }}</span>
+            <span class="font-bold text-blue-800">Blok {{ $poule->blok?->nummer ?? '?' }}</span>
         </div>
         @else
         <div class="mb-2 p-2 bg-yellow-50 rounded text-center text-yellow-700 text-sm">

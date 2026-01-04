@@ -191,6 +191,13 @@ Wanneer alle categorieën in blokken zijn ingedeeld:
 1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
 2. Blokverdeling gedaan + "Verdeel over matten" → blokinfo beschikbaar
 
+**Weegkaart toont:**
+- Naam en club
+- QR-code (voor scanner bij weging)
+- Blok nummer + weegtijden
+- Gewichtsklasse, geboortejaar, band, geslacht
+- **Geen mat nummer** (mat is nog niet definitief bij uitdelen weegkaarten)
+
 ### Zaaloverzicht
 
 Het Zaaloverzicht toont per blok en mat:
