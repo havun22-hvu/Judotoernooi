@@ -1,369 +1,382 @@
-    @php $pwaApp = 'weging'; @endphp
-<div x-data="wegingApp()" x-init="init()">
-    <!-- Scanner gebied: bovenste 1/3, OVERFLOW HIDDEN zodat video niet uitbreekt -->
-    <div class="bg-blue-800/50 rounded-lg overflow-hidden" style="height: 33vh; min-height: 200px;">
-        <!-- Scan button (when not scanning) -->
-        <div x-show="modus === 'zoek'" class="flex items-center justify-center h-full">
-            <button @click="modus = 'scan'; startScanner()"
+@php $pwaApp = 'weging'; @endphp
+
+<!-- Main container -->
+<div class="flex flex-col h-full">
+    <!-- TOP: Scanner area (45% height like dojo) -->
+    <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%;">
+        <!-- Scanner area -->
+        <div class="flex-1 flex items-center justify-center">
+            <!-- Scan button (when not scanning) -->
+            <button id="scan-button" onclick="startScanner()"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                 <span class="text-3xl mb-1">📷</span>
-                <span class="font-bold">Scan</span>
+                <span class="font-bold text-sm">Scan</span>
             </button>
-        </div>
 
-        <!-- Scanner (when scanning) - video blijft binnen container -->
-        <div x-show="modus === 'scan'" class="h-full overflow-hidden">
-            <div id="qr-reader" class="mx-auto" style="width: 100%; max-width: 300px; height: 100%;"></div>
-        </div>
-    </div>
-
-    <!-- Stop knop: ONDER scanner box -->
-    <div class="mt-3">
-        <button x-show="modus === 'scan'" @click="stopScanner()"
-                class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white text-lg">
-            ⏹ Stop Scanner
-        </button>
-    </div>
-
-    <!-- Zoek input: ONDER stop knop -->
-    <div class="mt-3">
-        <input type="text" x-model="zoekterm" @input.debounce.300ms="zoekJudoka()"
-               placeholder="Zoek op naam..."
-               class="w-full py-3 border-2 border-blue-400 bg-blue-900 rounded-lg px-4 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
-    </div>
-
-    <!-- Search results (overlay) - LAGER in beeld -->
-    <div x-show="resultaten.length > 0" class="absolute left-3 right-3 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto z-10" style="top: 450px;">
-        <template x-for="judoka in resultaten" :key="judoka.id">
-            <div @click="selecteerJudoka(judoka)"
-                 class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0 text-gray-800">
-                <div class="font-medium" x-text="judoka.naam"></div>
-                <div class="text-sm text-gray-600">
-                    <span x-text="judoka.club || 'Geen club'"></span> |
-                    <span x-text="judoka.gewichtsklasse + ' kg'"></span>
-                    <span x-show="judoka.gewogen" class="text-green-600 ml-2">✓</span>
-                </div>
+            <!-- Scanner (when scanning) -->
+            <div id="scanner-container" class="text-center w-full" style="display: none;">
+                <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
+                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                    Stop
+                </button>
             </div>
-        </template>
+        </div>
+
+        <!-- Search input (fixed position below scanner) -->
+        <div class="mt-2">
+            <input type="text" id="search-input"
+                   placeholder="Of zoek op naam..."
+                   oninput="searchJudoka(this.value)"
+                   class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center focus:border-white focus:outline-none placeholder-blue-300 text-white">
+            <!-- Search results dropdown -->
+            <div id="search-results" class="hidden mt-2 bg-white rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            </div>
+        </div>
     </div>
 
-    <!-- BOTTOM HALF: Blok/Stats + Judoka (fixed position) -->
+    <!-- BOTTOM: Judoka section or empty state (55% height) -->
     <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
-    <div class="bg-white rounded-lg shadow p-3 text-gray-800">
-        <div class="flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <select x-model="blokFilter" @change="selectBlok()"
-                        class="border-2 border-gray-300 rounded px-2 py-1 text-sm font-medium">
-                    <option value="">Alle blokken</option>
-                    @foreach($toernooi->blokken as $blok)
-                    <option value="{{ $blok->nummer }}">Blok {{ $blok->nummer }}</option>
-                    @endforeach
-                </select>
-                <div class="text-lg font-bold">
-                    <span class="text-green-600" x-text="stats.gewogen">0</span>
-                    <span class="text-gray-400">/</span>
-                    <span class="text-gray-600" x-text="stats.totaal">0</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- BOTTOM: Judoka details + Numpad -->
-    <div class="bg-white rounded-lg shadow p-4 text-gray-800">
-        <!-- No selection -->
-        <div x-show="!geselecteerd" class="text-center py-8 text-gray-400">
-            <p class="text-lg">Scan of zoek een judoka</p>
+        <!-- Empty state -->
+        <div id="empty-state" class="bg-white rounded-lg shadow p-4 text-gray-800">
+            <h2 class="font-bold text-lg mb-2">Instructies</h2>
+            <ol class="list-decimal list-inside space-y-1 text-sm">
+                <li>Scan de QR-code op de weegkaart</li>
+                <li>Voer het gewogen gewicht in</li>
+                <li>Bevestig met de groene knop</li>
+            </ol>
         </div>
 
-        <!-- Selected judoka -->
-        <div x-show="geselecteerd" x-cloak>
-            <!-- Info card -->
-            <div class="border-2 rounded-lg p-3 mb-3" :class="geselecteerd?.gewogen ? 'border-green-500 bg-green-50' : 'border-gray-200'">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h2 class="text-xl font-bold" x-text="geselecteerd?.naam"></h2>
-                        <p class="text-gray-600 text-sm" x-text="geselecteerd?.club || 'Geen club'"></p>
-                    </div>
-                    <button @click="geselecteerd = null; gewichtInput = ''" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
-                </div>
-                <div class="flex gap-2 mt-2 text-sm">
-                    <span class="bg-gray-100 px-2 py-1 rounded" x-text="(geselecteerd?.gewichtsklasse || '?') + ' kg'"></span>
-                    <span class="bg-gray-100 px-2 py-1 rounded" x-text="geselecteerd?.leeftijdsklasse || '?'"></span>
-                    <span class="bg-gray-100 px-2 py-1 rounded" x-text="geselecteerd?.blok ? 'Blok ' + geselecteerd.blok : '-'"></span>
-                </div>
-                <div x-show="geselecteerd?.gewogen" class="mt-2 text-green-700 font-medium">
-                    Al gewogen: <span x-text="geselecteerd?.gewicht_gewogen + ' kg'"></span>
-                </div>
+        <!-- Selected judoka + numpad (hidden initially) -->
+        <div id="judoka-section" class="hidden bg-white rounded-lg shadow p-4 text-gray-800">
+            <!-- Judoka info -->
+            <div id="judoka-info" class="border-2 rounded-lg p-3 mb-3">
             </div>
 
             <!-- Weight input -->
             <div class="mb-3">
                 <div class="relative">
-                    <input type="text" x-model="gewichtInput" readonly
-                           class="w-full border-2 rounded-lg px-4 py-3 text-2xl text-center font-bold"
-                           :class="gewichtInput ? 'border-blue-500' : 'border-gray-300'"
+                    <input type="text" id="weight-input" readonly
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-2xl text-center font-bold"
                            placeholder="0.0">
                     <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">kg</span>
                 </div>
             </div>
 
-            <!-- Compact Numpad -->
-            <div class="grid grid-cols-4 gap-1 mb-3">
-                <template x-for="n in ['7','8','9','C','4','5','6','.','1','2','3','0']">
-                    <button @click="numpadInput(n)"
-                            class="numpad-btn rounded-lg transition-colors"
-                            :class="n === 'C' ? 'bg-red-100 hover:bg-red-200 text-red-700' : 'bg-gray-100 hover:bg-gray-200'"
-                            x-text="n"></button>
-                </template>
+            <!-- Numpad -->
+            <div class="grid grid-cols-4 gap-2 mb-3">
+                <button onclick="numpadInput('7')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">7</button>
+                <button onclick="numpadInput('8')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">8</button>
+                <button onclick="numpadInput('9')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">9</button>
+                <button onclick="numpadInput('C')" class="bg-red-100 hover:bg-red-200 text-red-700 rounded-lg py-3 text-xl font-bold">C</button>
+                <button onclick="numpadInput('4')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">4</button>
+                <button onclick="numpadInput('5')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">5</button>
+                <button onclick="numpadInput('6')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">6</button>
+                <button onclick="numpadInput('.')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">.</button>
+                <button onclick="numpadInput('1')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">1</button>
+                <button onclick="numpadInput('2')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">2</button>
+                <button onclick="numpadInput('3')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">3</button>
+                <button onclick="numpadInput('0')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">0</button>
             </div>
 
             <!-- Register button -->
-            <button @click="registreerGewicht()"
-                    :disabled="!gewichtInput || bezig"
-                    class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
-                <span x-text="bezig ? 'Bezig...' : '✓ Registreer'"></span>
+            <button onclick="registreerGewicht()" id="register-btn"
+                    class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-lg text-lg">
+                ✓ Registreer
             </button>
 
-            <!-- Feedback -->
-            <div x-show="melding" x-transition class="mt-3 p-3 rounded-lg text-center font-medium"
-                 :class="meldingType === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
-                 x-text="melding"></div>
+            <!-- Feedback message -->
+            <div id="feedback" class="hidden mt-3 p-3 rounded-lg text-center font-medium"></div>
         </div>
-    </div>
-    </div>
 
-    <!-- About Modal -->
-    <div x-show="showAbout" x-cloak class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl p-6 max-w-sm w-full text-gray-800">
-            <h2 class="text-xl font-bold mb-4">Over</h2>
-            <p class="mb-2"><strong>Weging Interface</strong></p>
-            <p class="text-gray-600 mb-4">{{ $toernooi->naam }}</p>
-            <p class="text-sm text-gray-500 mb-4">Versie {{ config('toernooi.version') }}</p>
-            <button @click="showAbout = false" class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium">
-                Sluiten
-            </button>
+        <!-- Stats -->
+        <div class="bg-white rounded-lg shadow p-4 text-gray-800">
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Judoka's gewogen vandaag</span>
+                <span class="text-2xl font-bold text-green-600" id="stats">0</span>
+            </div>
+        </div>
+
+        <!-- History section -->
+        <div id="history-section" class="bg-blue-800/50 rounded-lg p-3 text-sm">
+            <p class="text-center text-blue-200">Recent gewogen:</p>
+            <div id="history-list" class="mt-2 space-y-1">
+                <p class="text-blue-300 text-center">Nog geen judoka's gewogen</p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+// State
+let selectedJudoka = null;
+let weightInput = '';
+let scanner = null;
+let scannerActive = false;
+let history = [];
+let totalWeighed = 0;
+
 // Clock
 function updateClock() {
-    const clockEl = document.getElementById('clock');
-    if (clockEl) {
-        clockEl.textContent = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
-    }
+    const el = document.getElementById('clock');
+    if (el) el.textContent = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 }
 updateClock();
 setInterval(updateClock, 1000);
 
-// Countdown timer
-function countdown(eindtijd) {
-    return {
-        end: new Date(eindtijd),
-        display: '',
-        expired: false,
-        warning: false,
-        interval: null,
-        start() {
-            this.update();
-            this.interval = setInterval(() => this.update(), 1000);
-        },
-        update() {
-            const diff = this.end - new Date();
-            if (diff <= 0) {
-                this.expired = true;
-                this.display = 'Voorbij!';
-                clearInterval(this.interval);
-                return;
-            }
-            this.warning = diff <= 5 * 60 * 1000;
-            const m = Math.floor(diff / 60000);
-            const s = Math.floor((diff % 60000) / 1000);
-            this.display = `${m}:${String(s).padStart(2, '0')}`;
-        }
+// Start scanner
+async function startScanner() {
+    if (scannerActive) return;
+
+    document.getElementById('scan-button').style.display = 'none';
+    document.getElementById('scanner-container').style.display = 'block';
+
+    scanner = new Html5Qrcode("qr-reader");
+
+    try {
+        await scanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 220, height: 220 },
+                aspectRatio: 1.0
+            },
+            onScanSuccess,
+            () => {}
+        );
+        scannerActive = true;
+    } catch (err) {
+        console.error('Camera error:', err);
+        document.getElementById('qr-reader').innerHTML = `
+            <div class="bg-red-900 text-white p-4 rounded-lg text-center">
+                <p class="font-bold">Camera niet beschikbaar</p>
+                <p class="text-sm mt-1">Gebruik het zoekveld</p>
+            </div>
+        `;
+        setTimeout(() => {
+            document.getElementById('scanner-container').style.display = 'none';
+            document.getElementById('scan-button').style.display = 'flex';
+        }, 2000);
     }
 }
 
-// Main app
-function wegingApp() {
-    return {
-        modus: 'zoek',
-        zoekterm: '',
-        resultaten: [],
-        geselecteerd: null,
-        gewichtInput: '',
-        melding: '',
-        meldingType: 'success',
-        bezig: false,
-        blokFilter: '',
-        stats: { gewogen: 0, totaal: 0 },
-        scanner: null,
-        showAbout: false,
+// Stop scanner
+async function stopScanner() {
+    if (!scannerActive || !scanner) return;
 
-        init() {},
-
-        selectBlok() {
-            this.zoekJudoka();
-        },
-
-        async zoekJudoka() {
-            if (this.zoekterm.length < 2) {
-                this.resultaten = [];
-                return;
-            }
-            // Use publiek route (no auth required)
-            let url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                this.resultaten = data.judokas || [];
-            } catch (e) {
-                console.error('Zoek error:', e);
-            }
-        },
-
-        selecteerJudoka(judoka) {
-            this.geselecteerd = judoka;
-            this.resultaten = [];
-            this.zoekterm = '';
-            this.gewichtInput = judoka.gewicht_gewogen ? String(judoka.gewicht_gewogen) : '';
-            this.melding = '';
-        },
-
-        numpadInput(key) {
-            if (key === 'C') { this.gewichtInput = ''; return; }
-            if (key === '.' && this.gewichtInput.includes('.')) return;
-            if (this.gewichtInput.length >= 5) return;
-            this.gewichtInput += key;
-        },
-
-        async startScanner() {
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-            }
-            this.melding = 'Camera starten...';
-            this.meldingType = 'success';
-            await this.$nextTick();
-            // Extra delay om div zichtbaar te laten worden
-            await new Promise(resolve => setTimeout(resolve, 300));
-            this.scanner = new Html5Qrcode("qr-reader");
-            try {
-                this.melding = 'Camera openen...';
-                await this.scanner.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 220, height: 220 } },
-                    async (text) => {
-                        // QR gevonden - toon debug info op scherm
-                        this.melding = 'QR: ' + text.substring(0, 50);
-                        let qr = text;
-                        if (text.includes('/weegkaart/')) qr = text.split('/weegkaart/').pop();
-                        this.melding = 'Code: ' + qr.substring(0, 20);
-                        await this.scanQR(qr);
-                    },
-                    (errorMessage) => {
-                        // Scan error (normaal bij zoeken) - negeer
-                    }
-                );
-                this.melding = 'Richt camera op QR code';
-            } catch (err) {
-                this.melding = 'Camera fout: ' + (err.message || err);
-                this.meldingType = 'error';
-                this.modus = 'zoek';
-                console.error('Scanner error:', err);
-            }
-        },
-
-        async stopScanner() {
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-                this.scanner = null;
-            }
-            this.modus = 'zoek';
-        },
-
-        async scanQR(qrCode) {
-            console.log('scanQR called with:', qrCode);
-            if (this.scanner) {
-                try { await this.scanner.stop(); } catch (e) {}
-                this.scanner = null;
-            }
-            this.modus = 'zoek';
-            this.melding = 'Zoeken: ' + qrCode.substring(0, 20) + '...';
-            this.meldingType = 'success';
-
-            // Use publiek route (no auth required)
-            const url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/scan-qr`;
-            console.log('Fetching URL:', url);
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ qr_code: qrCode })
-                });
-                console.log('Response status:', response.status);
-                const data = await response.json();
-                console.log('Response data:', data);
-                if (data.success) {
-                    this.selecteerJudoka(data.judoka);
-                    this.melding = '';
-                    if (navigator.vibrate) navigator.vibrate(100);
-                } else {
-                    this.melding = data.message || 'Niet gevonden';
-                    this.meldingType = 'error';
-                }
-            } catch (err) {
-                console.error('Fetch error:', err);
-                this.melding = 'API fout: ' + err.message;
-                this.meldingType = 'error';
-            }
-        },
-
-        async registreerGewicht() {
-            if (!this.geselecteerd || !this.gewichtInput || this.bezig) return;
-            this.bezig = true;
-            this.melding = '';
-            try {
-                // Use publiek route (no auth required)
-                const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${this.geselecteerd.id}/registreer`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ gewicht: parseFloat(this.gewichtInput) })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    this.stats.gewogen++;
-                    if (data.binnen_klasse) {
-                        this.melding = `✓ ${this.gewichtInput} kg geregistreerd`;
-                        this.meldingType = 'success';
-                    } else {
-                        this.melding = `⚠️ ${data.opmerking}`;
-                        this.meldingType = 'error';
-                    }
-                    this.geselecteerd.gewogen = true;
-                    this.geselecteerd.gewicht_gewogen = this.gewichtInput;
-                    setTimeout(() => {
-                        this.geselecteerd = null;
-                        this.gewichtInput = '';
-                        this.melding = '';
-                    }, 2000);
-                } else {
-                    this.melding = data.message || 'Fout';
-                    this.meldingType = 'error';
-                }
-            } catch (error) {
-                this.melding = 'Fout: ' + error.message;
-                this.meldingType = 'error';
-            } finally {
-                this.bezig = false;
-            }
-        }
+    try {
+        await scanner.stop();
+    } catch (err) {
+        console.error('Stop error:', err);
     }
+
+    scannerActive = false;
+    scanner = null;
+
+    document.getElementById('scanner-container').style.display = 'none';
+    document.getElementById('scan-button').style.display = 'flex';
+}
+
+// Handle successful scan
+async function onScanSuccess(text) {
+    let qrCode = text;
+    if (text.includes('/weegkaart/')) {
+        qrCode = text.split('/weegkaart/').pop();
+    }
+
+    if (navigator.vibrate) navigator.vibrate(100);
+
+    try {
+        const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/scan-qr`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ qr_code: qrCode })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await stopScanner();
+            selectJudoka(data.judoka);
+        }
+    } catch (e) {
+        console.error('Scan error:', e);
+    }
+}
+
+// Search functionality
+let searchTimeout = null;
+async function searchJudoka(query) {
+    clearTimeout(searchTimeout);
+    const results = document.getElementById('search-results');
+
+    if (query.length < 2) {
+        results.classList.add('hidden');
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.judokas && data.judokas.length > 0) {
+                results.innerHTML = data.judokas.map(j => `
+                    <div onclick="selectJudoka(${JSON.stringify(j).replace(/"/g, '&quot;')})"
+                         class="p-3 hover:bg-blue-100 cursor-pointer border-b last:border-0">
+                        <div class="font-medium text-gray-800">${j.naam}</div>
+                        <div class="text-sm text-gray-600">${j.club || 'Geen club'} | ${j.gewichtsklasse} kg</div>
+                    </div>
+                `).join('');
+                results.classList.remove('hidden');
+            } else {
+                results.innerHTML = '<div class="p-3 text-gray-500 text-center">Geen resultaten</div>';
+                results.classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error('Search error:', e);
+        }
+    }, 300);
+}
+
+// Select judoka
+function selectJudoka(judoka) {
+    selectedJudoka = judoka;
+    weightInput = judoka.gewicht_gewogen ? String(judoka.gewicht_gewogen) : '';
+
+    document.getElementById('search-results').classList.add('hidden');
+    document.getElementById('search-input').value = '';
+    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('judoka-section').classList.remove('hidden');
+
+    const isGewogen = judoka.gewogen || judoka.gewicht_gewogen;
+    document.getElementById('judoka-info').innerHTML = `
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-xl font-bold">${judoka.naam}</h2>
+                <p class="text-gray-600 text-sm">${judoka.club || 'Geen club'}</p>
+            </div>
+            <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <div class="flex gap-2 mt-2 text-sm">
+            <span class="bg-gray-100 px-2 py-1 rounded">${judoka.gewichtsklasse || '?'} kg</span>
+            <span class="bg-gray-100 px-2 py-1 rounded">${judoka.leeftijdsklasse || '?'}</span>
+            ${judoka.blok ? `<span class="bg-gray-100 px-2 py-1 rounded">Blok ${judoka.blok}</span>` : ''}
+        </div>
+        ${isGewogen ? `<div class="mt-2 text-green-700 font-medium">✓ Al gewogen: ${judoka.gewicht_gewogen} kg</div>` : ''}
+    `;
+    document.getElementById('judoka-info').className = `border-2 rounded-lg p-3 mb-3 ${isGewogen ? 'border-green-500 bg-green-50' : 'border-gray-200'}`;
+
+    updateWeightDisplay();
+}
+
+function clearSelection() {
+    selectedJudoka = null;
+    weightInput = '';
+    document.getElementById('judoka-section').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+    document.getElementById('feedback').classList.add('hidden');
+}
+
+// Numpad
+function numpadInput(key) {
+    if (key === 'C') {
+        weightInput = '';
+    } else if (key === '.') {
+        if (!weightInput.includes('.')) weightInput += key;
+    } else {
+        if (weightInput.length < 5) weightInput += key;
+    }
+    updateWeightDisplay();
+}
+
+function updateWeightDisplay() {
+    const input = document.getElementById('weight-input');
+    input.value = weightInput || '';
+    input.className = `w-full border-2 rounded-lg px-4 py-3 text-2xl text-center font-bold ${weightInput ? 'border-blue-500' : 'border-gray-300'}`;
+}
+
+// Register weight
+async function registreerGewicht() {
+    if (!selectedJudoka || !weightInput) return;
+
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true;
+    btn.textContent = 'Bezig...';
+
+    try {
+        const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${selectedJudoka.id}/registreer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ gewicht: parseFloat(weightInput) })
+        });
+
+        const data = await response.json();
+        const feedback = document.getElementById('feedback');
+
+        if (data.success) {
+            // Add to history
+            addToHistory(selectedJudoka.naam, weightInput, data.binnen_klasse);
+
+            if (data.binnen_klasse) {
+                feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-green-100 text-green-800';
+                feedback.textContent = `✓ ${weightInput} kg geregistreerd`;
+            } else {
+                feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-yellow-100 text-yellow-800';
+                feedback.textContent = `⚠️ ${data.opmerking}`;
+            }
+            feedback.classList.remove('hidden');
+
+            if (navigator.vibrate) navigator.vibrate(100);
+
+            // Clear after 2 seconds
+            setTimeout(() => {
+                clearSelection();
+            }, 2000);
+        } else {
+            feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
+            feedback.textContent = data.message || 'Fout bij registreren';
+            feedback.classList.remove('hidden');
+        }
+    } catch (e) {
+        console.error('Register error:', e);
+        const feedback = document.getElementById('feedback');
+        feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
+        feedback.textContent = 'Verbindingsfout';
+        feedback.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '✓ Registreer';
+    }
+}
+
+// History
+function addToHistory(naam, gewicht, binnenKlasse) {
+    history.unshift({ naam, gewicht, binnenKlasse, tijd: new Date() });
+    if (history.length > 5) history.pop();
+    totalWeighed++;
+    updateHistoryDisplay();
+}
+
+function updateHistoryDisplay() {
+    document.getElementById('stats').textContent = totalWeighed;
+
+    const list = document.getElementById('history-list');
+    if (history.length === 0) {
+        list.innerHTML = '<p class="text-blue-300 text-center">Nog geen judoka\'s gewogen</p>';
+        return;
+    }
+
+    list.innerHTML = history.map(h => `
+        <div class="flex justify-between items-center py-1 ${h.binnenKlasse ? 'text-white' : 'text-yellow-300'}">
+            <span>${h.naam}</span>
+            <span class="font-mono">${h.gewicht} kg</span>
+        </div>
+    `).join('');
 }
 </script>
