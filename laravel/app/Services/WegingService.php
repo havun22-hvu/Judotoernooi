@@ -153,9 +153,19 @@ class WegingService
 
     /**
      * Find judoka by QR code
+     * Accepts both raw qr_code and full URL (e.g., /weegkaart/ABC123)
      */
     public function vindJudokaViaQR(string $qrCode): ?Judoka
     {
+        // Extract qr_code from URL if full URL is provided
+        if (str_contains($qrCode, '/weegkaart/')) {
+            $parts = explode('/weegkaart/', $qrCode);
+            $qrCode = end($parts);
+            // Remove any trailing slashes or query params
+            $qrCode = strtok($qrCode, '?');
+            $qrCode = rtrim($qrCode, '/');
+        }
+
         return Judoka::where('qr_code', $qrCode)->first();
     }
 
