@@ -89,9 +89,9 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 ## Weging Interface
 
-De Weging Interface heeft **2 versies** afhankelijk van wie het opent:
+De Weging heeft **2 totaal verschillende versies**:
 
-### Versie 1: Admin/Hoofdjury (met menu)
+### Versie 1: Admin/Hoofdjury - Weeglijst (met menu)
 
 **Route:** `/toernooi/{toernooi}/weging/interface`
 **View:** `resources/views/pages/weging/interface-admin.blade.php`
@@ -101,9 +101,16 @@ De Weging Interface heeft **2 versies** afhankelijk van wie het opent:
 - Ingelogd als organisator, beheerder of hoofdjury
 - Via menu: Weging → Weging Interface
 
-**Doel:** Overzicht houden, kunnen navigeren naar andere pagina's
+**Doel:** Live overzicht van weegstatus alle judoka's
 
-### Versie 2: Weging vrijwilliger (standalone PWA)
+**Functionaliteit:**
+- Tabel met alle judoka's en hun weegstatus
+- Filter per blok
+- Live updates (auto-refresh elke 10 seconden)
+- Statistieken: gewogen/totaal per blok
+- Countdown timer naar eindtijd weging per blok
+
+### Versie 2: Weging vrijwilliger - Scanner PWA (standalone)
 
 **Route:** `/toegang/{code}`
 **View:** `resources/views/pages/weging/interface.blade.php`
@@ -113,23 +120,22 @@ De Weging Interface heeft **2 versies** afhankelijk van wie het opent:
 - URL + PIN + device binding
 - Beheer via Instellingen → Organisatie → Weging toegangen
 
-**Doel:** Gefocust werken, geen afleiding door navigatie
+**Doel:** Snel wegen met QR scanner en numpad
 
-### Layout verschil
-
-| Versie | Menu | Layout |
-|--------|------|--------|
-| **Admin** | layouts.app (blauw menu) | Standaard |
-| **Vrijwilliger** | Geen | Fixed 45%/55% split |
-
-### Functionaliteit (beide versies)
+**Functionaliteit:**
 - **Scan QR** of **zoek op naam** → judoka selecteren
 - Numpad voor gewicht invoeren
 - Statistieken: gewogen/totaal per blok
-- Countdown timer naar eindtijd weging (indien ingesteld)
-- Blok sluiten wanneer weegtijd voorbij is
+- Countdown timer naar eindtijd weging
 
-### Scanner Specs
+### Layout verschil
+
+| Versie | Inhoud | Layout |
+|--------|--------|--------|
+| **Admin** | Weeglijst (tabel) | layouts.app met menu |
+| **Vrijwilliger** | Scanner + numpad | Standalone PWA 45%/55% split |
+
+### Scanner Specs (alleen vrijwilliger versie)
 - Html5Qrcode library
 - Max-width: 300px, qrbox: 220px
 - Min-height: 200px voor zichtbaarheid
