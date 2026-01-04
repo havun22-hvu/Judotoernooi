@@ -5,78 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-
 class AuthController extends Controller
 {
     /**
-     * Toon login pagina
-     * Op production: redirect naar organisator login
-     * Op local/staging: toon rol-keuze pagina (development mode)
+     * Toon login info pagina
+     * Redirect naar organisator login - service login is verwijderd
      */
-    public function loginForm(Toernooi $toernooi): View|RedirectResponse
+    public function loginForm(Toernooi $toernooi): RedirectResponse
     {
-        // Op production: deze pagina is niet beschikbaar, redirect naar organisator login
-        if (app()->environment('production')) {
-            return redirect()->route('organisator.login');
-        }
-
-        $wachtwoordVereist = [
-            'admin' => $toernooi->heeftWachtwoord('admin'),
-            'jury' => $toernooi->heeftWachtwoord('jury'),
-            'weging' => $toernooi->heeftWachtwoord('weging'),
-            'mat' => $toernooi->heeftWachtwoord('mat'),
-            'spreker' => $toernooi->heeftWachtwoord('spreker'),
-        ];
-
-        return view('pages.auth.login', compact('toernooi', 'wachtwoordVereist'));
+        // Altijd redirect naar organisator login
+        // Vrijwilligers gebruiken device binding URLs (via Instellingen → Organisatie)
+        return redirect()->route('organisator.login');
     }
 
     /**
-     * Verwerk login
-     * Op production: niet beschikbaar (redirect naar organisator login)
+     * Verwerk login - niet meer beschikbaar
+     * Service login is vervangen door device binding
      */
     public function login(Request $request, Toernooi $toernooi): RedirectResponse
     {
-        // Op production: deze login methode is niet beschikbaar
-        if (app()->environment('production')) {
-            return redirect()->route('organisator.login');
-        }
-
-        $validated = $request->validate([
-            'rol' => 'required|in:admin,jury,weging,mat,spreker',
-            'wachtwoord' => 'nullable|string',
-            'mat_nummer' => 'nullable|integer|min:1',
-        ]);
-
-        $rol = $validated['rol'];
-        $wachtwoord = $validated['wachtwoord'] ?? null;
-
-        // Check wachtwoord (alleen als er een wachtwoord is ingesteld)
-        // In local/staging: skip password check for easier development
-        if (!app()->environment(['local', 'staging']) && $toernooi->heeftWachtwoord($rol)) {
-            if (!$toernooi->checkWachtwoord($rol, $wachtwoord)) {
-                return back()->with('error', 'Onjuist wachtwoord');
-            }
-        }
-
-        // Sla sessie op
-        $sessionKey = "toernooi_{$toernooi->id}_rol";
-        $request->session()->put($sessionKey, $rol);
-
-        // Voor mat login, sla ook mat nummer op
-        if ($rol === 'mat' && isset($validated['mat_nummer'])) {
-            $request->session()->put("toernooi_{$toernooi->id}_mat", $validated['mat_nummer']);
-        }
-
-        // Redirect naar juiste pagina
-        return match($rol) {
-            'admin' => redirect()->route('toernooi.show', $toernooi)->with('success', 'Ingelogd als Admin'),
-            'jury' => redirect()->route('toernooi.blok.zaaloverzicht', $toernooi)->with('success', 'Ingelogd als Jury'),
-            'weging' => redirect()->route('toernooi.weging.interface', $toernooi)->with('success', 'Ingelogd voor Weging'),
-            'mat' => redirect()->route('toernooi.mat.interface', $toernooi)->with('success', 'Ingelogd voor Mat ' . ($validated['mat_nummer'] ?? '')),
-            'spreker' => redirect()->route('toernooi.spreker.interface', $toernooi)->with('success', 'Ingelogd als Spreker'),
-        };
+        // Service login is verwijderd, redirect naar organisator login
+        return redirect()->route('organisator.login')
+            ->with('info', 'Gebruik je persoonlijke toegangslink of log in als organisator.');
     }
 
     /**
@@ -87,13 +37,7 @@ class AuthController extends Controller
         $request->session()->forget("toernooi_{$toernooi->id}_rol");
         $request->session()->forget("toernooi_{$toernooi->id}_mat");
 
-        // Op production: redirect naar organisator login (email/wachtwoord)
-        // Op local/development: redirect naar toernooi rol-keuze pagina
-        if (app()->environment('production')) {
-            return redirect()->route('organisator.login')->with('success', 'Je bent uitgelogd');
-        }
-
-        return redirect()->route('toernooi.auth.login', $toernooi)->with('success', 'Je bent uitgelogd');
+        return redirect()->route('organisator.login')->with('success', 'Je bent uitgelogd');
     }
 
     /**
