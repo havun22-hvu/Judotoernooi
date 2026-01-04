@@ -345,6 +345,9 @@ Route::middleware('rol.sessie')->group(function () {
 Route::get('/publiek/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
     ->name('publiek.zoeken');
 
+Route::post('/publiek/{toernooi}/scan-qr', [PubliekController::class, 'scanQR'])
+    ->name('publiek.scan-qr');
+
 Route::post('/publiek/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
     ->name('publiek.favorieten');
 
