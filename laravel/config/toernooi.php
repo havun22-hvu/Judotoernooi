@@ -50,6 +50,7 @@ return [
     */
 
     'admin_password' => env('ADMIN_PASSWORD', 'WestFries2026'),
+    'superadmin_pin' => env('SUPERADMIN_PIN', '1234'),
 
     /*
     |--------------------------------------------------------------------------
