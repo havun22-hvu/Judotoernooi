@@ -63,7 +63,8 @@
             </div>
         </div>
 
-        {{-- QR CODE --}}
+        {{-- QR CODE - only on bound device --}}
+        @if($isCorrectDevice)
         <div class="p-4 flex flex-col items-center bg-white">
             <img
                 src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(route('coach-kaart.scan', $coachKaart->qr_code)) }}"
@@ -73,6 +74,19 @@
             >
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ $coachKaart->qr_code }}</p>
         </div>
+        @else
+        <div class="p-6 bg-red-50 text-center">
+            <div class="text-red-600 text-4xl mb-3">🔒</div>
+            <h3 class="font-bold text-red-800 mb-2">Verkeerd apparaat</h3>
+            <p class="text-red-600 text-sm mb-4">
+                Deze coach kaart is geactiveerd op een ander apparaat.
+                De QR-code is alleen zichtbaar op het originele apparaat.
+            </p>
+            <p class="text-xs text-gray-500">
+                Geactiveerd op: {{ $coachKaart->device_info ?? 'Onbekend' }}
+            </p>
+        </div>
+        @endif
 
         {{-- Footer --}}
         <div class="px-3 py-2 bg-purple-50 text-center border-t">
@@ -80,7 +94,8 @@
         </div>
     </div>
 
-    {{-- Action buttons --}}
+    {{-- Action buttons - only on correct device --}}
+    @if($isCorrectDevice)
     <div class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
         <button
             onclick="downloadCoachkaart()"
@@ -101,6 +116,7 @@
             Delen
         </button>
     </div>
+    @endif
 
     <script>
         async function downloadCoachkaart() {

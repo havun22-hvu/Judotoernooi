@@ -50,6 +50,7 @@ return [
     */
 
     'admin_password' => env('ADMIN_PASSWORD', '***REMOVED***'),
+    'superadmin_pin' => env('SUPERADMIN_PIN', '1234'),
 
     /*
     |--------------------------------------------------------------------------

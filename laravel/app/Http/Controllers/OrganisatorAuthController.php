@@ -22,7 +22,10 @@ class OrganisatorAuthController extends Controller
             return redirect()->route('organisator.dashboard');
         }
 
-        return view('organisator.auth.login');
+        // On local/staging, show PIN login option for superadmin
+        $showPinLogin = app()->environment(['local', 'staging']);
+
+        return view('organisator.auth.login', compact('showPinLogin'));
     }
 
     /**
@@ -48,6 +51,41 @@ class OrganisatorAuthController extends Controller
         return back()->withErrors([
             'email' => 'Deze gegevens komen niet overeen met onze records.',
         ])->onlyInput('email');
+    }
+
+    /**
+     * Handle PIN login for superadmin on local/staging
+     */
+    public function pinLogin(Request $request): RedirectResponse
+    {
+        // Only allowed on local/staging
+        if (!app()->environment(['local', 'staging'])) {
+            abort(404);
+        }
+
+        $request->validate([
+            'pin' => 'required|digits:4',
+        ]);
+
+        // Check PIN (stored in env or hardcoded for dev)
+        $correctPin = config('toernooi.superadmin_pin', '1234');
+
+        if ($request->pin !== $correctPin) {
+            return back()->withErrors(['pin' => 'Ongeldige PIN']);
+        }
+
+        // Find or create superadmin
+        $superadmin = Organisator::where('email', 'henkvu@gmail.com')->first();
+
+        if (!$superadmin) {
+            return back()->withErrors(['pin' => 'Superadmin account niet gevonden']);
+        }
+
+        Auth::guard('organisator')->login($superadmin, true);
+        $request->session()->regenerate();
+        $superadmin->updateLaatsteLogin();
+
+        return redirect()->intended(route('organisator.dashboard'));
     }
 
     /**

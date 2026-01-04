@@ -7,6 +7,7 @@ use App\Models\CoachKaart;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -15,7 +16,7 @@ class CoachKaartController extends Controller
     /**
      * Show a coach card - redirects to activation if not activated
      */
-    public function show(string $qrCode): View|RedirectResponse
+    public function show(Request $request, string $qrCode): View|RedirectResponse
     {
         $coachKaart = CoachKaart::where('qr_code', $qrCode)
             ->with(['club', 'toernooi'])
@@ -39,11 +40,16 @@ class CoachKaartController extends Controller
             ->where('id', '<=', $coachKaart->id)
             ->count();
 
+        // Check device binding - QR only visible on bound device
+        $deviceToken = $request->cookie('coach_kaart_' . $coachKaart->id);
+        $isCorrectDevice = $coachKaart->isDeviceGebonden() && $deviceToken === $coachKaart->device_token;
+
         return view('pages.coach-kaart.show', compact(
             'coachKaart',
             'aantalJudokas',
             'totaalKaarten',
-            'kaartNummer'
+            'kaartNummer',
+            'isCorrectDevice'
         ));
     }
 
@@ -65,7 +71,7 @@ class CoachKaartController extends Controller
     }
 
     /**
-     * Process activation - save name and photo
+     * Process activation - save name, photo and bind device
      */
     public function activeerOpslaan(Request $request, string $qrCode): RedirectResponse
     {
@@ -81,15 +87,71 @@ class CoachKaartController extends Controller
         // Store the photo
         $path = $request->file('foto')->store('coach-fotos', 'public');
 
+        // Generate device token and bind
+        $deviceToken = CoachKaart::generateDeviceToken();
+        $deviceInfo = $this->getDeviceInfo($request->userAgent());
+
         $coachKaart->update([
             'naam' => $validated['naam'],
             'foto' => $path,
             'is_geactiveerd' => true,
             'geactiveerd_op' => now(),
+            'device_token' => $deviceToken,
+            'device_info' => $deviceInfo,
+            'gebonden_op' => now(),
         ]);
 
+        // Set cookie (1 year expiry)
+        $cookie = Cookie::make(
+            'coach_kaart_' . $coachKaart->id,
+            $deviceToken,
+            60 * 24 * 365, // 1 year
+            '/',
+            null,
+            true, // secure
+            true  // httpOnly
+        );
+
         return redirect()->route('coach-kaart.show', $qrCode)
-            ->with('success', 'Coach kaart geactiveerd!');
+            ->with('success', 'Coach kaart geactiveerd!')
+            ->withCookie($cookie);
+    }
+
+    /**
+     * Parse user agent to get device info.
+     */
+    protected function getDeviceInfo(?string $userAgent): string
+    {
+        if (!$userAgent) {
+            return 'Onbekend device';
+        }
+
+        $device = 'Onbekend';
+        $browser = 'Onbekend';
+
+        if (str_contains($userAgent, 'iPhone')) {
+            $device = 'iPhone';
+        } elseif (str_contains($userAgent, 'iPad')) {
+            $device = 'iPad';
+        } elseif (str_contains($userAgent, 'Android')) {
+            $device = 'Android';
+        } elseif (str_contains($userAgent, 'Windows')) {
+            $device = 'Windows';
+        } elseif (str_contains($userAgent, 'Mac')) {
+            $device = 'Mac';
+        }
+
+        if (str_contains($userAgent, 'Chrome') && !str_contains($userAgent, 'Edg')) {
+            $browser = 'Chrome';
+        } elseif (str_contains($userAgent, 'Safari') && !str_contains($userAgent, 'Chrome')) {
+            $browser = 'Safari';
+        } elseif (str_contains($userAgent, 'Firefox')) {
+            $browser = 'Firefox';
+        } elseif (str_contains($userAgent, 'Edg')) {
+            $browser = 'Edge';
+        }
+
+        return "{$device} {$browser}";
     }
 
     /**

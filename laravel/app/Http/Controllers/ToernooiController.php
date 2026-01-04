@@ -317,9 +317,24 @@ class ToernooiController extends Controller
             'herinnering_verstuurd' => false,
         ]);
 
+        // Reset all device bindings for vrijwilligers
+        $toernooi->deviceToegangen()->update([
+            'device_token' => null,
+            'device_info' => null,
+            'gebonden_op' => null,
+        ]);
+
+        // Reset all coach kaart device bindings
+        \App\Models\CoachKaart::where('toernooi_id', $toernooi->id)
+            ->update([
+                'device_token' => null,
+                'device_info' => null,
+                'gebonden_op' => null,
+            ]);
+
         return redirect()
             ->route('toernooi.afsluiten', $toernooi)
-            ->with('success', 'Toernooi succesvol afgesloten! Bedankt voor het gebruik van JudoToernooi.');
+            ->with('success', 'Toernooi succesvol afgesloten! Alle device bindings zijn gereset.');
     }
 
     /**

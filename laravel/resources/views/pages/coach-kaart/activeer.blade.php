@@ -85,8 +85,8 @@
         {{-- Footer --}}
         <div class="px-4 py-3 bg-gray-50 border-t text-center">
             <p class="text-xs text-gray-500">
-                Na activatie is deze kaart gekoppeld aan jouw foto.<br>
-                Delen van de kaart zonder foto heeft geen zin.
+                Na activatie is deze kaart gekoppeld aan dit apparaat en jouw foto.<br>
+                De QR-code is alleen zichtbaar op dit apparaat.
             </p>
         </div>
     </div>
