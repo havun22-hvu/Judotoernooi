@@ -18,7 +18,7 @@
 ```
 
 > **Type:** Laravel 11 toernooi management systeem
-> **URL:** https://staging.judotournament.org
+> **URL:** https://judotournament.org (production - geen staging)
 > **Doel:** WestFries Open Judo Toernooi beheren
 
 ## Rules (ALWAYS follow)
@@ -54,7 +54,7 @@
 
 ### Auto-start servers (bij lokaal testen)
 ```bash
-cd laravel && php artisan serve --port=8001
+cd laravel && php artisan serve --port=8007
 ```
 
 ### Forbidden without permission
