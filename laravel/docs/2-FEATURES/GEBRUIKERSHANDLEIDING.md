@@ -75,7 +75,8 @@ Het systeem:
 
 **Let op:**
 - QR-codes worden pas aangemaakt bij "Valideer judoka's" (na einde inschrijving)
-- Weegkaarten zijn pas beschikbaar NA "Verdeel over matten" (bevatten blokinfo)
+- Weegkaarten tonen blokinfo NA "Verdeel over matten"
+- Weegkaarten tonen mat nummer pas NA "Maak weegkaarten" (voorbereiding geseald)
 
 ## Valideer Judoka's (Einde Inschrijving)
 
@@ -215,7 +216,7 @@ Wanneer alle poules op de juiste matten staan:
 ### Zaaloverzicht
 
 Het Zaaloverzicht toont per blok en mat:
-- Welke poules waar staan (na handmatige toewijzing)
+- Welke poules waar staan (automatisch verdeeld, kan aangepast worden)
 - Aantal wedstrijden per mat
 - Status van de weging
 
