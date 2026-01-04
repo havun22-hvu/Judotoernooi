@@ -18,11 +18,18 @@
 
 ### Admin vs Device-bound
 
-Sommige interfaces (Mat, Weging, etc.) hebben 2 versies:
-- **Admin** via menu → `layouts.app` met volledig menu
-- **Device-bound** via speciale URL → Standalone PWA zonder menu
+De interfaces Mat, Spreker en Weging hebben elk **2 versies**:
 
-Zie de specifieke interface sectie voor details.
+| Interface | Admin/Organisator/Hoofdjury | Device-bound vrijwilliger |
+|-----------|---------------------------|--------------------------|
+| **Mat** | layouts.app (met menu) | Standalone PWA |
+| **Spreker** | layouts.app (met menu) | Standalone PWA |
+| **Weging** | layouts.app (met menu) | Standalone PWA |
+
+- **Admin/Organisator/Hoofdjury** → via menu → zien `layouts.app` met volledig menu
+- **Device-bound vrijwilliger** → via speciale URL + PIN → zien Standalone PWA zonder menu
+
+Zie de specifieke interface secties voor routes en views.
 
 ---
 
@@ -82,18 +89,40 @@ Alle PWA interfaces (Weging, Dojo Scanner, Mat, Spreker) zijn **standalone** - g
 
 ## Weging Interface
 
-**Pad:** `resources/views/pages/weging/interface.blade.php`
+De Weging Interface heeft **2 versies** afhankelijk van wie het opent:
 
-### Toegang
+### Versie 1: Admin/Hoofdjury (met menu)
+
+**Route:** `/toernooi/{toernooi}/weging/interface`
+**View:** `resources/views/pages/weging/interface-admin.blade.php`
+**Layout:** `layouts.app` - volledig menu bovenaan
+
+**Toegang:**
+- Ingelogd als organisator, beheerder of hoofdjury
+- Via menu: Weging → Weging Interface
+
+**Doel:** Overzicht houden, kunnen navigeren naar andere pagina's
+
+### Versie 2: Weging vrijwilliger (standalone PWA)
+
+**Route:** `/toegang/{code}`
+**View:** `resources/views/pages/weging/interface.blade.php`
+**Layout:** Standalone PWA - geen menu
+
+**Toegang:**
 - URL + PIN + device binding
 - Beheer via Instellingen → Organisatie → Weging toegangen
 
-### Layout (Standalone PWA)
-- **Geen** navigatie/header van layouts.app
-- Fixed layout: scanner bovenin (45%), controls onderin (55%)
-- Blauwe kleur theme (#1e40af)
+**Doel:** Gefocust werken, geen afleiding door navigatie
 
-### Functionaliteit
+### Layout verschil
+
+| Versie | Menu | Layout |
+|--------|------|--------|
+| **Admin** | layouts.app (blauw menu) | Standaard |
+| **Vrijwilliger** | Geen | Fixed 45%/55% split |
+
+### Functionaliteit (beide versies)
 - **Scan QR** of **zoek op naam** → judoka selecteren
 - Numpad voor gewicht invoeren
 - Statistieken: gewogen/totaal per blok
@@ -182,22 +211,45 @@ De Mat Interface heeft **2 versies** afhankelijk van wie het opent:
 
 ## Spreker Interface
 
-**Pad:** `resources/views/pages/spreker/interface.blade.php`
+De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 
-### Toegang
+### Versie 1: Admin/Hoofdjury (met menu)
+
+**Route:** `/toernooi/{toernooi}/spreker/interface`
+**View:** `resources/views/pages/spreker/interface-admin.blade.php`
+**Layout:** `layouts.app` - volledig menu bovenaan
+
+**Toegang:**
+- Ingelogd als organisator, beheerder of hoofdjury
+- Via menu: Spreker
+
+**Doel:** Overzicht houden, kunnen navigeren naar andere pagina's
+
+### Versie 2: Spreker vrijwilliger (standalone PWA)
+
+**Route:** `/toegang/{code}`
+**View:** `resources/views/pages/spreker/interface.blade.php`
+**Layout:** Standalone PWA - geen menu
+
+**Toegang:**
 - URL + PIN + device binding
 - Beheer via Instellingen → Organisatie → Spreker toegangen
 
-### Layout (Standalone PWA)
-- Standalone header met klok
-- Geen navigatie tabs
-- Auto-refresh elke 10 seconden
+**Doel:** Gefocust werken, geen afleiding door navigatie
 
-### Functionaliteit
+### Layout verschil
+
+| Versie | Menu | Kenmerken |
+|--------|------|-----------|
+| **Admin** | layouts.app (blauw menu) | Standaard |
+| **Vrijwilliger** | Geen | Standalone header + klok, auto-refresh |
+
+### Functionaliteit (beide versies)
 - Wachtrij afgeronde poules
 - Eindstand met 1e, 2e, 3e plaats
 - Prijsuitreiking markeren
 - Geschiedenis (localStorage)
+- Auto-refresh elke 10 seconden
 
 ---
 

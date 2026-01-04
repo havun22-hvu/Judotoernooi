@@ -102,6 +102,7 @@ class WegingController extends Controller
     {
         $toernooi->load('blokken');
 
-        return view('pages.weging.interface', compact('toernooi'));
+        // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
+        return view('pages.weging.interface-admin', compact('toernooi'));
     }
 }
