@@ -60,8 +60,10 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 3. **Leeftijds- en Gewichtsklassen** - Per categorie:
    - Max leeftijd
    - Naam (label)
+   - Geslacht (Gemengd / Jongens / Meisjes)
    - Wedstrijdsysteem (Poules / Kruisfinale / Eliminatie)
-   - Gewichtsklassen (comma-separated)
+   - Max kg verschil (0 = vaste klassen, >0 = dynamische indeling)
+   - Gewichtsklassen (alleen bij max kg = 0)
    - Buttons: JBN 2025, JBN 2026
 
 #### Tab: Organisatie
