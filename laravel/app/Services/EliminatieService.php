@@ -36,42 +36,29 @@ class EliminatieService
     /**
      * Bereken locatie_wit en locatie_blauw op basis van bracket_positie
      *
-     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
      *
      * SLOT FORMULES (wedstrijd N):
-     * - slot_wit = (N - 1) * 2 + 1 = 2N - 1
-     * - slot_blauw = (N - 1) * 2 + 2 = 2N
+     * - slot_wit = 2N - 1 (oneven)
+     * - slot_blauw = 2N (even)
+     *
+     * Slots worden ALTIJD van boven naar beneden genummerd, ZONDER spiegeling!
      *
      * Voorbeeld 1/8 finale (8 wedstrijden, 16 slots):
      * - Wedstrijd 1: slot 1 (wit), slot 2 (blauw)
      * - Wedstrijd 2: slot 3 (wit), slot 4 (blauw)
-     * - Wedstrijd 6: slot 11 (wit), slot 12 (blauw)
+     * - Wedstrijd 8: slot 15 (wit), slot 16 (blauw)
      *
      * DOORSCHUIF FORMULE:
      * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
-     * - Oneven slot → wit positie, even slot → blauw positie
-     *
-     * GESPIEGELD (B-groep onderste helft):
-     * - Voor visuele spiegeling worden wit/blauw locaties omgedraaid
-     * - slot_wit = 2N (even), slot_blauw = 2N - 1 (oneven)
+     * - Oneven doel-slot → wit positie, even doel-slot → blauw positie
      */
-    private function berekenLocaties(int $bracketPositie, bool $gespiegeld = false): array
+    private function berekenLocaties(int $bracketPositie): array
     {
         // Formule: slot_wit = 2N-1, slot_blauw = 2N (waar N = bracket_positie)
-        $slotOneven = ($bracketPositie - 1) * 2 + 1;   // = 2N - 1
-        $slotEven = ($bracketPositie - 1) * 2 + 2;     // = 2N
-
-        if ($gespiegeld) {
-            // Onderste helft B-groep: wit/blauw omgedraaid voor visuele spiegeling
-            return [
-                'locatie_wit' => $slotEven,    // Even slot voor wit
-                'locatie_blauw' => $slotOneven, // Oneven slot voor blauw
-            ];
-        }
-
         return [
-            'locatie_wit' => $slotOneven,
-            'locatie_blauw' => $slotEven,
+            'locatie_wit' => ($bracketPositie - 1) * 2 + 1,   // = 2N - 1 (oneven)
+            'locatie_blauw' => ($bracketPositie - 1) * 2 + 2, // = 2N (even)
         ];
     }
 
@@ -465,6 +452,8 @@ class EliminatieService
      *
      * aantalBrons = 2: B-start → ... → B-1/2 → B-1/2(2) = 2x BRONS
      * aantalBrons = 1: B-start → ... → B-1/2 → B-1/2(2) → B-finale = 1x BRONS
+     *
+     * Slots worden van boven naar beneden genummerd, ZONDER spiegeling!
      */
     private function genereerEnkeleBRondes(Poule $poule, int $startWedstrijden, int &$volgorde, array &$wedstrijdenPerRonde, int $aantalBrons = 2): void
     {
@@ -473,13 +462,9 @@ class EliminatieService
         // Genereer rondes van groot naar klein
         while ($huidigeWedstrijden >= 2) {
             $rondeNaam = $this->getBRondeNaam($huidigeWedstrijden);
-            $halverwege = $huidigeWedstrijden / 2;
 
             for ($i = 0; $i < $huidigeWedstrijden; $i++) {
                 $bracketPositie = $i + 1;
-                // Onderste helft: gespiegelde locaties (wit/blauw omgedraaid)
-                $isOndersteHelft = $bracketPositie > $halverwege;
-                $locaties = $this->berekenLocaties($bracketPositie, $isOndersteHelft);
 
                 $wedstrijd = Wedstrijd::create([
                     'poule_id' => $poule->id,
@@ -489,7 +474,7 @@ class EliminatieService
                     'ronde' => $rondeNaam,
                     'groep' => 'B',
                     'bracket_positie' => $bracketPositie,
-                    ...$locaties,
+                    ...$this->berekenLocaties($bracketPositie),
                 ]);
                 $wedstrijdenPerRonde[$rondeNaam][] = $wedstrijd;
             }
@@ -620,9 +605,9 @@ class EliminatieService
     /**
      * Koppel B-groep wedstrijden op basis van bracket_positie
      *
-     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
      *
-     * SLOT SYSTEEM B-GROEP:
+     * SLOT SYSTEEM B-GROEP (van boven naar beneden, GEEN spiegeling!):
      * - Wedstrijd N heeft: slot_wit = 2N-1, slot_blauw = 2N
      * - Winnaar van slot S → slot ceil(S/2) in volgende ronde
      *
@@ -636,18 +621,6 @@ class EliminatieService
      * 2. SPECIALE 1:1 MAPPING ((1) → (2)):
      *    - Wed N → wed N (zelfde positie)
      *    - Winnaar ALTIJD naar WIT (A-verliezer komt op BLAUW)
-     *
-     * VOORBEELD 1/8(2) → 1/4(1) (8 wedstrijden in bron, 4 in doel):
-     * Bovenste helft (pos 1-4, normale volgorde):
-     * - Wed 1 (pos 1, oneven) → wed 1, wit
-     * - Wed 2 (pos 2, even)   → wed 1, blauw
-     * - Wed 3 (pos 3, oneven) → wed 2, wit
-     * - Wed 4 (pos 4, even)   → wed 2, blauw
-     * Onderste helft (pos 5-8, gespiegeld - slots omgedraaid):
-     * - Wed 5 (pos 5, oneven) → wed 3, blauw (omgedraaid!)
-     * - Wed 6 (pos 6, even)   → wed 3, wit   (omgedraaid!)
-     * - Wed 7 (pos 7, oneven) → wed 4, blauw (omgedraaid!)
-     * - Wed 8 (pos 8, even)   → wed 4, wit   (omgedraaid!)
      */
     private function koppelBGroepWedstrijden(array $wedstrijdenPerRonde, bool $dubbelRondes): void
     {
@@ -668,15 +641,8 @@ class EliminatieService
 
             Log::info("Koppel {$huidigeRonde} (" . count($huidigeWedstrijden) . ") → {$volgendeRonde} (" . count($volgendeWedstrijden) . "): is1naar2={$is1naar2}, isBrons={$isBrons}");
 
-            // Bepaal halverwege punt voor gespiegelde onderste helft
-            $aantalWedstrijden = count($huidigeWedstrijden);
-            $halverwege = $aantalWedstrijden / 2;
-
             foreach ($huidigeWedstrijden as $wedstrijd) {
                 $bracketPos = $wedstrijd->bracket_positie;
-
-                // Is deze wedstrijd in de onderste helft (gespiegeld)?
-                $isOndersteHelft = $bracketPos > $halverwege;
 
                 if ($is1naar2 || $isBrons) {
                     // 1:1 MAPPING: (1) → (2) of laatste → brons
@@ -689,15 +655,7 @@ class EliminatieService
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
 
                     // Formule: oneven bracket_positie → WIT, even → BLAUW
-                    // MAAR: in onderste helft (gespiegeld) is de visuele volgorde omgekeerd
-                    // Dus daar draaien we de slot om
-                    if ($isOndersteHelft) {
-                        // Onderste helft: even → WIT, oneven → BLAUW (omgekeerd)
-                        $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
-                    } else {
-                        // Bovenste helft: normaal (oneven → WIT, even → BLAUW)
-                        $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
-                    }
+                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
                 // Zoek volgende wedstrijd op bracket_positie
@@ -1362,11 +1320,12 @@ class EliminatieService
      * Herstel B-groep koppelingen voor bestaande bracket
      * Gebruik dit als de volgende_wedstrijd_id of winnaar_naar_slot fout staat
      *
-     * @see docs/SLOT_SYSTEEM.md voor volledige documentatie
+     * @see docs/2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md voor volledige documentatie
      *
      * Gebruikt dezelfde logica als koppelBGroepWedstrijden():
      * - 2:1 MAPPING: oneven bracket_positie → wit, even → blauw
      * - 1:1 MAPPING: (1) → (2) altijd naar wit
+     * - GEEN spiegeling, slots van boven naar beneden!
      */
     public function herstelBKoppelingen(int $pouleId): int
     {
@@ -1406,15 +1365,8 @@ class EliminatieService
 
             Log::info("Koppel {$huidigeRonde} → {$volgendeRonde}: is1naar2={$is1naar2}, isBrons={$isBrons}");
 
-            // Bepaal halverwege punt voor gespiegelde onderste helft
-            $aantalWedstrijden = count($huidigeWedstrijden);
-            $halverwege = $aantalWedstrijden / 2;
-
             foreach ($huidigeWedstrijden as $wedstrijd) {
                 $bracketPos = $wedstrijd->bracket_positie;
-
-                // Is deze wedstrijd in de onderste helft (gespiegeld)?
-                $isOndersteHelft = $bracketPos > $halverwege;
 
                 if ($is1naar2 || $isBrons) {
                     // 1:1 MAPPING: winnaar altijd naar WIT
@@ -1426,14 +1378,7 @@ class EliminatieService
                     $volgendeBracketPos = (int) ceil($bracketPos / 2);
 
                     // Formule: oneven bracket_positie → WIT, even → BLAUW
-                    // MAAR: in onderste helft (gespiegeld) is de visuele volgorde omgekeerd
-                    if ($isOndersteHelft) {
-                        // Onderste helft: even → WIT, oneven → BLAUW (omgekeerd)
-                        $slot = ($bracketPos % 2 === 0) ? 'wit' : 'blauw';
-                    } else {
-                        // Bovenste helft: normaal (oneven → WIT, even → BLAUW)
-                        $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
-                    }
+                    $slot = ($bracketPos % 2 === 1) ? 'wit' : 'blauw';
                 }
 
                 $volgendeWedstrijd = collect($volgendeWedstrijden)

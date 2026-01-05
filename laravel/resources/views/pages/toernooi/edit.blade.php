@@ -312,9 +312,10 @@
                     // Get weight classes with judoka counts per age class
                     $gewichtsklassenPerLeeftijd = [];
                     foreach ($toernooi->judokas()->get()->groupBy('leeftijdsklasse') as $lk => $judokas) {
-                        // Convert "Heren -15" to "heren_15", "Mini's" to "minis"
+                        // Convert "Heren -15" to "heren_15", "Mini's" to "minis", "B-pupillen" to "b_pupillen"
                         $lkKey = strtolower($lk);
-                        $lkKey = str_replace(["'s", " -", " "], ["s", "_", "_"], $lkKey);
+                        $lkKey = str_replace("'s", "s", $lkKey);
+                        $lkKey = preg_replace('/[\s\-]+/', '_', $lkKey);
                         $gewichtsklassenPerLeeftijd[$lkKey] = $judokas->groupBy('gewichtsklasse')
                             ->map(fn($g) => $g->count())
                             ->sortKeys()
