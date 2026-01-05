@@ -705,8 +705,9 @@
                     $geslacht = $data['geslacht'] ?? 'gemengd';
                     $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
                 @endphp
-                <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50" data-key="{{ $key }}">
+                <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move" data-key="{{ $key }}" draggable="true">
                     <div class="flex flex-wrap items-center gap-3 mb-2">
+                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
@@ -830,8 +831,9 @@
                 let index = 0;
                 for (const [key, item] of Object.entries(data)) {
                     const div = document.createElement('div');
-                    div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
+                    div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
                     div.dataset.key = key;
+                    div.draggable = true;
                     const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
                     const geslacht = item.geslacht || 'gemengd';
                     const maxKg = item.max_kg_verschil || 0;
@@ -839,6 +841,7 @@
                     const dynamischHidden = maxKg > 0 ? '' : 'hidden';
                     div.innerHTML = `
                         <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Max leeftijd:</label>
                                 <input type="number" name="gewichtsklassen_leeftijd[${key}]"
@@ -996,10 +999,12 @@
                 const items = container.querySelectorAll('.gewichtsklasse-item');
                 const newKey = 'custom_' + Date.now();
                 const div = document.createElement('div');
-                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
+                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
                 div.dataset.key = newKey;
+                div.draggable = true;
                 div.innerHTML = `
                     <div class="flex flex-wrap items-center gap-3 mb-2">
+                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
@@ -1076,6 +1081,69 @@
                     e.target.classList.toggle('text-gray-400', val >= 99);
                 }
                 updateJsonInput();
+            });
+
+            // Drag & Drop for reordering categories
+            let draggedItem = null;
+
+            container.addEventListener('dragstart', (e) => {
+                const item = e.target.closest('.gewichtsklasse-item');
+                if (item) {
+                    draggedItem = item;
+                    item.classList.add('opacity-50', 'border-dashed', 'border-blue-400');
+                    e.dataTransfer.effectAllowed = 'move';
+                }
+            });
+
+            container.addEventListener('dragend', (e) => {
+                const item = e.target.closest('.gewichtsklasse-item');
+                if (item) {
+                    item.classList.remove('opacity-50', 'border-dashed', 'border-blue-400');
+                }
+                draggedItem = null;
+                // Remove all drag-over styling
+                container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                    el.classList.remove('border-t-4', 'border-t-blue-500');
+                });
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const targetItem = e.target.closest('.gewichtsklasse-item');
+                if (targetItem && targetItem !== draggedItem) {
+                    // Remove previous indicators
+                    container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                        el.classList.remove('border-t-4', 'border-t-blue-500');
+                    });
+                    // Add indicator to target
+                    targetItem.classList.add('border-t-4', 'border-t-blue-500');
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const targetItem = e.target.closest('.gewichtsklasse-item');
+                if (targetItem && draggedItem && targetItem !== draggedItem) {
+                    // Get positions
+                    const items = [...container.querySelectorAll('.gewichtsklasse-item')];
+                    const draggedIndex = items.indexOf(draggedItem);
+                    const targetIndex = items.indexOf(targetItem);
+
+                    // Insert before or after based on position
+                    if (draggedIndex < targetIndex) {
+                        targetItem.after(draggedItem);
+                    } else {
+                        targetItem.before(draggedItem);
+                    }
+
+                    // Update JSON
+                    updateJsonInput();
+                }
+                // Remove indicators
+                container.querySelectorAll('.gewichtsklasse-item').forEach(el => {
+                    el.classList.remove('border-t-4', 'border-t-blue-500');
+                });
             });
 
             // Initial update
