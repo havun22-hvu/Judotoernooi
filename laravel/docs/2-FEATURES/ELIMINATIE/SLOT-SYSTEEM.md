@@ -2,35 +2,86 @@
 
 > Definieert hoe judoka's door de bracket bewegen.
 
+## BELANGRIJKSTE REGEL
+
+**Slots worden ALTIJD van boven naar beneden genummerd, zonder spiegeling!**
+
+```
+1/16 finale (16 wedstrijden, 32 slots):
+- Slot 1  = bovenste slot (wedstrijd 1, wit)
+- Slot 2  = tweede slot (wedstrijd 1, blauw)
+- Slot 3  = derde slot (wedstrijd 2, wit)
+- ...
+- Slot 31 = voorlaatste slot (wedstrijd 16, wit)
+- Slot 32 = onderste slot (wedstrijd 16, blauw)
+```
+
+**GEEN gespiegelde weergave, GEEN complexe herberekening!**
+
 ## Definities
 
 | Term | Betekenis |
 |------|-----------|
 | **Wedstrijd** | Een gevecht tussen 2 judoka's |
 | **Slot** | Een plek in een wedstrijd (wit of blauw) |
-| **Wit (shiro)** | Bovenste positie in wedstrijd |
-| **Blauw (ao)** | Onderste positie in wedstrijd |
+| **Wit (shiro)** | Bovenste positie in wedstrijd (oneven slot) |
+| **Blauw (ao)** | Onderste positie in wedstrijd (even slot) |
 
 ## Slot Nummering
 
 Elke wedstrijd N heeft twee slots:
 
 ```
-Slot WIT   = 2N - 1
-Slot BLAUW = 2N
+Slot WIT   = 2N - 1  (oneven)
+Slot BLAUW = 2N      (even)
 ```
 
-### Voorbeeld: 1/8 finale (8 wedstrijden)
+### Voorbeeld: 1/8 finale (8 wedstrijden, 16 slots)
 
 ```
-Wedstrijd 1:  slot 1 (wit),  slot 2 (blauw)
-Wedstrijd 2:  slot 3 (wit),  slot 4 (blauw)
-Wedstrijd 3:  slot 5 (wit),  slot 6 (blauw)
-Wedstrijd 4:  slot 7 (wit),  slot 8 (blauw)
-Wedstrijd 5:  slot 9 (wit),  slot 10 (blauw)
-Wedstrijd 6:  slot 11 (wit), slot 12 (blauw)
-Wedstrijd 7:  slot 13 (wit), slot 14 (blauw)
-Wedstrijd 8:  slot 15 (wit), slot 16 (blauw)
+Visueel (van boven naar beneden):
+
+Slot 1  ┌─────────┐
+Slot 2  │ Wed 1   │
+        └─────────┘
+Slot 3  ┌─────────┐
+Slot 4  │ Wed 2   │
+        └─────────┘
+Slot 5  ┌─────────┐
+Slot 6  │ Wed 3   │
+        └─────────┘
+Slot 7  ┌─────────┐
+Slot 8  │ Wed 4   │
+        └─────────┘
+Slot 9  ┌─────────┐
+Slot 10 │ Wed 5   │
+        └─────────┘
+Slot 11 ┌─────────┐
+Slot 12 │ Wed 6   │
+        └─────────┘
+Slot 13 ┌─────────┐
+Slot 14 │ Wed 7   │
+        └─────────┘
+Slot 15 ┌─────────┐
+Slot 16 │ Wed 8   │
+        └─────────┘
+```
+
+### Voorbeeld: 1/4 finale (4 wedstrijden, 8 slots)
+
+```
+Slot 1  ┌─────────┐
+Slot 2  │ Wed 1   │
+        └─────────┘
+Slot 3  ┌─────────┐
+Slot 4  │ Wed 2   │
+        └─────────┘
+Slot 5  ┌─────────┐
+Slot 6  │ Wed 3   │
+        └─────────┘
+Slot 7  ┌─────────┐
+Slot 8  │ Wed 4   │
+        └─────────┘
 ```
 
 ## Unieke Slot ID Format
@@ -116,79 +167,56 @@ A-1/8 verliezer        → B-1/8(2) wed N, BLAUW slot
 
 ### Flow (2) → Volgende (1)
 
-Dit is de normale **2:1 mapping** met spiegeling:
+Dit is de normale **2:1 mapping** (GEEN spiegeling):
 
-**Bovenste helft** (wed 1 t/m midden):
-- Oneven wed → WIT
-- Even wed → BLAUW
-
-**Onderste helft** (gespiegeld):
-- Even wed → WIT (omgedraaid!)
-- Oneven wed → BLAUW (omgedraaid!)
+```
+Winnaar wed N → wed ceil(N/2) in volgende ronde
+- Oneven wed (1,3,5,7) → WIT slot
+- Even wed (2,4,6,8)   → BLAUW slot
+```
 
 ### Voorbeeld B-1/8(2) → B-1/4(1)
 
 ```
-Bovenste helft (wed 1-4):
-  Wed 1 → wed 1, wit
-  Wed 2 → wed 1, blauw
-  Wed 3 → wed 2, wit
-  Wed 4 → wed 2, blauw
-
-Onderste helft (wed 5-8, gespiegeld):
-  Wed 5 → wed 3, blauw  (omgedraaid!)
-  Wed 6 → wed 3, wit    (omgedraaid!)
-  Wed 7 → wed 4, blauw  (omgedraaid!)
-  Wed 8 → wed 4, wit    (omgedraaid!)
+Wed 1 → wed 1, wit
+Wed 2 → wed 1, blauw
+Wed 3 → wed 2, wit
+Wed 4 → wed 2, blauw
+Wed 5 → wed 3, wit
+Wed 6 → wed 3, blauw
+Wed 7 → wed 4, wit
+Wed 8 → wed 4, blauw
 ```
 
 ## Visuele Layout
 
-### A-Groep (normaal)
+### A-Groep en B-Groep (identiek, van boven naar beneden)
 
 ```
       1/8           1/4           1/2         Finale
 
 ┌─────────┐
-│ Slot 1  │
-├─────────┤ Wed 1
+│ Slot 1  │ Wed 1
 │ Slot 2  │──┐
-└─────────┘  │     ┌─────────┐
-             ├────►│ Slot 1  │
-┌─────────┐  │     ├─────────┤ Wed 1
+└─────────┘  │
+             ├────►┌─────────┐
+┌─────────┐  │     │ Slot 1  │ Wed 1
 │ Slot 3  │──┘     │ Slot 2  │──┐
-├─────────┤ Wed 2  └─────────┘  │
-│ Slot 4  │                     │
+│ Slot 4  │ Wed 2  └─────────┘  │
 └─────────┘                     │
                                 ├────► Finale
+┌─────────┐                     │
+│ Slot 5  │──┐                  │
+│ Slot 6  │  │     ┌─────────┐  │
+└─────────┘  ├────►│ Slot 3  │──┘
+             │     │ Slot 4  │ Wed 2
+┌─────────┐  │     └─────────┘
+│ Slot 7  │──┘
+│ Slot 8  │ Wed 4
+└─────────┘
 ```
 
-### B-Groep (gespiegeld rond horizon)
-
-```
-B-1/8(1)      B-1/8(2)      B-1/4(1)      B-1/4(2)      B-1/2
-
-   BOVENSTE HELFT
-┌───┐
-│   ├──►┌───┐
-└───┘   │   ├──►┌───┐
-        └───┘   │   ├──►┌───┐
-                └───┘   │   ├──►┌───┐
-                        └───┘   │   │
-════════════════════════════════════════ HORIZON
-                        ┌───┐   │   │
-                ┌───┐   │   ├──►│   │──►  BRONS
-        ┌───┐   │   ├──►└───┘   │   │
-┌───┐   │   ├──►└───┘           │   │
-│   ├──►└───┘                   └───┘
-└───┘
-   ONDERSTE HELFT (gespiegeld)
-```
-
-**Belangrijk:**
-- Spiegeling is ALLEEN grafisch
-- Slot nummers lopen altijd door: 1, 2, 3, ...
-- WIT = altijd boven, BLAUW = altijd onder
+**GEEN spiegeling!** Slots lopen simpelweg van boven (1) naar beneden (N).
 
 ## Database Velden
 
