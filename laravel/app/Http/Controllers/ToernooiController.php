@@ -67,6 +67,8 @@ class ToernooiController extends Controller
             $standaard = Toernooi::getStandaardGewichtsklassen();
             $leeftijden = $request->input('gewichtsklassen_leeftijd', []);
             $labels = $request->input('gewichtsklassen_label', []);
+            $geslachten = $request->input('gewichtsklassen_geslacht', []);
+            $maxKgVerschillen = $request->input('gewichtsklassen_max_kg', []);
 
             foreach ($data['gewichtsklassen'] as $key => $value) {
                 $gewichten = array_map('trim', explode(',', $value));
@@ -74,6 +76,8 @@ class ToernooiController extends Controller
                 $gewichtsklassen[$key] = [
                     'label' => $labels[$key] ?? $standaard[$key]['label'] ?? ucfirst(str_replace('_', ' ', $key)),
                     'max_leeftijd' => (int) ($leeftijden[$key] ?? $standaard[$key]['max_leeftijd'] ?? 99),
+                    'geslacht' => $geslachten[$key] ?? 'gemengd',
+                    'max_kg_verschil' => (float) ($maxKgVerschillen[$key] ?? 0),
                     'gewichten' => array_values($gewichten),
                 ];
             }
@@ -82,7 +86,7 @@ class ToernooiController extends Controller
         }
 
         // Remove temporary fields from data
-        unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label']);
+        unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg']);
 
         // Check if sorting settings changed
         $volgordeGewijzigd = isset($data['judoka_code_volgorde'])
