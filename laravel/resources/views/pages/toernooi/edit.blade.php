@@ -689,6 +689,22 @@
                         </div>
                     </label>
                 </div>
+                <div class="flex gap-6 mt-3 pt-3 border-t border-yellow-200">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-yellow-800">Max kg verschil:</label>
+                        <input type="number" name="max_kg_verschil" step="0.5" min="1" max="10"
+                               value="{{ $toernooi->max_kg_verschil ?? 3 }}"
+                               class="w-16 px-2 py-1 border rounded text-sm text-center">
+                        <span class="text-xs text-gray-500">kg</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-yellow-800">Max leeftijd verschil:</label>
+                        <input type="number" name="max_leeftijd_verschil" min="1" max="5"
+                               value="{{ $toernooi->max_leeftijd_verschil ?? 2 }}"
+                               class="w-16 px-2 py-1 border rounded text-sm text-center">
+                        <span class="text-xs text-gray-500">jaar</span>
+                    </div>
+                </div>
             </div>
 
             @php
