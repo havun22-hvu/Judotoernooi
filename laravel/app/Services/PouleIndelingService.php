@@ -190,7 +190,21 @@ class PouleIndelingService
                         ];
                     }
 
-                    $titel = "{$leeftijdsklasse} {$gewichtsklasse} - Eliminatie";
+                    // Build dynamic title with actual ranges
+                    $leeftijden = $judokas->pluck('leeftijd')->filter()->toArray();
+                    $gewichten = $judokas->pluck('gewicht')->filter()->toArray();
+                    $leeftijdRange = !empty($leeftijden)
+                        ? (min($leeftijden) == max($leeftijden) ? min($leeftijden) . 'j' : min($leeftijden) . '-' . max($leeftijden) . 'j')
+                        : '';
+                    $gewichtRange = !empty($gewichten)
+                        ? (min($gewichten) == max($gewichten) ? min($gewichten) . 'kg' : min($gewichten) . '-' . max($gewichten) . 'kg')
+                        : $gewichtsklasse;
+                    $geslachtLabel = match ($geslacht) { 'M' => 'M', 'V' => 'V', default => null };
+                    $titelParts = [$leeftijdsklasse];
+                    if ($geslachtLabel) $titelParts[] = $geslachtLabel;
+                    if ($leeftijdRange) $titelParts[] = $leeftijdRange;
+                    if ($gewichtRange) $titelParts[] = $gewichtRange;
+                    $titel = implode(' ', $titelParts) . ' - Eliminatie';
 
                     $poule = Poule::create([
                         'toernooi_id' => $toernooi->id,
@@ -297,16 +311,17 @@ class PouleIndelingService
                     $aantalJudokasKruisfinale = $aantalPoules * $kruisfinalesAantal;
 
                     $geslachtLabel = match ($data['geslacht']) {
-                        'M' => 'Jongens',
-                        'V' => 'Meisjes',
+                        'M' => 'M',
+                        'V' => 'V',
                         default => null,
                     };
 
                     // Include qualifying places in title
                     $plaatsenTekst = $kruisfinalesAantal === 1 ? 'top 1' : "top {$kruisfinalesAantal}";
-                    $titel = $geslachtLabel
-                        ? "Kruisfinale {$data['leeftijdsklasse']} {$geslachtLabel} {$data['gewichtsklasse']} ({$plaatsenTekst})"
-                        : "Kruisfinale {$data['leeftijdsklasse']} {$data['gewichtsklasse']} ({$plaatsenTekst})";
+                    $titelParts = ['Kruisfinale', $data['leeftijdsklasse']];
+                    if ($geslachtLabel) $titelParts[] = $geslachtLabel;
+                    $titelParts[] = $data['gewichtsklasse'];
+                    $titel = implode(' ', $titelParts) . " ({$plaatsenTekst})";
 
                     // Get blok_id from voorrondepoules of same category
                     $voorrondeBlokId = Poule::where('toernooi_id', $toernooi->id)
@@ -662,60 +677,64 @@ class PouleIndelingService
 
     /**
      * Create standardized pool title
-     * - With weight classes: "A-pupillen -30 kg"
-     * - Without weight classes + gewicht_band: "A-pupillen 23-26 kg"
-     * - Without weight classes + band_gewicht: "A-pupillen wit-geel"
+     * Dynamic title based on actual judoka values:
+     * - "Jeugd 9-10j 30-33kg" (dynamic ranges)
+     * - "Mini's M 7-8j 24-27kg" (with gender)
      */
     private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band'): string
     {
         $lk = $leeftijdsklasse ?: 'Onbekend';
 
-        // Add gender for older categories
+        // Gender label (short form)
         $geslachtLabel = match ($geslacht) {
-            'M' => 'Jongens',
-            'V' => 'Meisjes',
+            'M' => 'M',
+            'V' => 'V',
             default => null,
         };
 
-        // Determine the range/class label
-        $rangeLabel = '';
-
-        if ($gebruikGewichtsklassen && !empty($gewichtsklasse)) {
-            // With weight classes: show weight class
-            $rangeLabel = $gewichtsklasse;
-            if (!str_contains($rangeLabel, 'kg')) {
-                $rangeLabel .= ' kg';
-            }
-        } elseif (!empty($pouleJudokas)) {
-            // Without weight classes: calculate range from judokas
-            if ($volgorde === 'band_gewicht') {
-                // Band-first: show band range
-                $banden = array_map(fn($j) => $j->band, $pouleJudokas);
-                $bandOrder = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
-                usort($banden, fn($a, $b) => ($bandOrder[$a] ?? 99) <=> ($bandOrder[$b] ?? 99));
-                $minBand = ucfirst($banden[0] ?? 'wit');
-                $maxBand = ucfirst(end($banden) ?: 'wit');
-                $rangeLabel = $minBand === $maxBand ? $minBand : "{$minBand}-{$maxBand}";
-            } else {
-                // Weight-first: show weight range
-                $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
-                if (!empty($gewichten)) {
-                    $minGewicht = min($gewichten);
-                    $maxGewicht = max($gewichten);
-                    $rangeLabel = $minGewicht == $maxGewicht
-                        ? "{$minGewicht} kg"
-                        : "{$minGewicht}-{$maxGewicht} kg";
-                }
+        // Calculate age range from judokas
+        $leeftijdRange = '';
+        if (!empty($pouleJudokas)) {
+            $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
+            if (!empty($leeftijden)) {
+                $minLeeftijd = min($leeftijden);
+                $maxLeeftijd = max($leeftijden);
+                $leeftijdRange = $minLeeftijd == $maxLeeftijd
+                    ? "{$minLeeftijd}j"
+                    : "{$minLeeftijd}-{$maxLeeftijd}j";
             }
         }
 
-        // Build title
+        // Calculate weight range from judokas
+        $gewichtRange = '';
+        if ($gebruikGewichtsklassen && !empty($gewichtsklasse)) {
+            // With weight classes: show weight class
+            $gewichtRange = $gewichtsklasse;
+            if (!str_contains($gewichtRange, 'kg')) {
+                $gewichtRange .= 'kg';
+            }
+        } elseif (!empty($pouleJudokas)) {
+            // Without weight classes: calculate range from judokas
+            $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+            if (!empty($gewichten)) {
+                $minGewicht = min($gewichten);
+                $maxGewicht = max($gewichten);
+                $gewichtRange = $minGewicht == $maxGewicht
+                    ? "{$minGewicht}kg"
+                    : "{$minGewicht}-{$maxGewicht}kg";
+            }
+        }
+
+        // Build title: "Jeugd M 9-10j 30-33kg"
         $parts = [$lk];
         if ($geslachtLabel) {
             $parts[] = $geslachtLabel;
         }
-        if ($rangeLabel) {
-            $parts[] = $rangeLabel;
+        if ($leeftijdRange) {
+            $parts[] = $leeftijdRange;
+        }
+        if ($gewichtRange) {
+            $parts[] = $gewichtRange;
         }
 
         return implode(' ', $parts);
