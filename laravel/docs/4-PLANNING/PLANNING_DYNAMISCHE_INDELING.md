@@ -35,14 +35,33 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## JBN Presets
+## Presets
 
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ [JBN 2025]  [JBN 2026]  [Eigen preset ▼]  [Opslaan als preset] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Standaard Presets (JBN)
 De knoppen **JBN 2025** en **JBN 2026** laden de officiële JBN indeling:
 - Alle leeftijdsklassen met correcte leeftijdsgrenzen
 - Vaste gewichtsklassen per categorie (max_kg_verschil = 0)
 - Geslacht: Mini's & Pupillen gemengd, vanaf U15 gescheiden
 
-Na laden kan organisator aanpassen:
+### Eigen Presets
+Organisator kan huidige configuratie opslaan als eigen preset:
+- Klik **Opslaan als preset** → voer naam in
+- Preset wordt opgeslagen bij de organisator (user)
+- Later laden via dropdown **Eigen preset**
+
+**Database:** `user_presets` tabel
+```
+id, user_id, naam, configuratie (JSON), created_at
+```
+
+### Na laden preset
+Organisator kan altijd aanpassen:
 - Geslacht per groep wijzigen
 - Overschakelen naar dynamische indeling (max_kg_verschil > 0)
 - Gewichtsklassen aanpassen
