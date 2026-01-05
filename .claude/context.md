@@ -43,7 +43,16 @@ php artisan serve --port=8007   # http://localhost:8007
 ### Classificatie
 - **Leeftijdsklassen:** Mini's, Pupillen A/B/C, U15, U18, U21, Senioren
 - **Banden:** Wit → Zwart
-- **Gewichtsklassen:** Per leeftijd/geslacht (JBN 2025/2026)
+- **Geslacht:** Per leeftijdsgroep instelbaar (Gemengd / Jongens / Meisjes)
+
+### Indeling Modi (per leeftijdsgroep)
+
+| Modus | Wanneer | Hoe |
+|-------|---------|-----|
+| **Vaste klassen** | max_kg_verschil = 0 | JBN gewichtsklassen |
+| **Dynamisch** | max_kg_verschil > 0 | Groepen op basis van werkelijk gewicht |
+
+> **Planning:** `laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md`
 
 ---
 
