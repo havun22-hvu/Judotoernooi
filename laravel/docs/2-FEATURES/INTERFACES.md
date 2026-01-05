@@ -49,12 +49,29 @@ Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 - Device resetten (nieuw device kan binden)
 - Automatische reset bij "Einde toernooi"
 
-### Layout Organisatie tab
-De Organisatie tab bevat:
+### Toernooi Instellingen (3 tabs)
+
+**Route:** `/toernooi/{id}/edit`
+**View:** `resources/views/pages/toernooi/edit.blade.php`
+
+#### Tab: Toernooi
+1. **Basis Gegevens** - Naam, datum, locatie
+2. **Wedstrijdschema's** - Volgorde wedstrijden per poulegrootte
+3. **Leeftijds- en Gewichtsklassen** - Per categorie:
+   - Max leeftijd
+   - Naam (label)
+   - Wedstrijdsysteem (Poules / Kruisfinale / Eliminatie)
+   - Gewichtsklassen (comma-separated)
+   - Buttons: JBN 2025, JBN 2026
+
+#### Tab: Organisatie
 1. **Device Toegangen** - URLs + PINs beheren
 2. **Snelkoppelingen** - Pagina Builder + Noodplan
 3. **Online Betalingen** - Mollie configuratie
 4. **Bloktijden** - Weeg- en starttijden (stappen van 15 min)
+
+#### Tab: Test
+- Test/debug functies voor development
 
 ---
 
