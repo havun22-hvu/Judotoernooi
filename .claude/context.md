@@ -13,13 +13,13 @@
 
 ## Omgevingen
 
-| Omgeving | URL | Pad | Database |
-|----------|-----|-----|----------|
-| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite |
-| **Staging** | (geen publiek domein) | `/var/www/staging.judotoernooi/laravel` | MySQL (staging_judo_toernooi) |
-| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL (judo_toernooi) |
+| Omgeving | URL | Pad | Database | APP_ENV |
+|----------|-----|-----|----------|---------|
+| **Local** | localhost:8007 | `D:\GitHub\JudoToernooi\laravel` | SQLite | local |
+| **Staging** | (geen publiek domein) | `/var/www/staging.judotoernooi/laravel` | MySQL (staging_judo_toernooi) | staging |
+| **Production** | judotournament.org | `/var/www/judotoernooi/laravel` | MySQL (judo_toernooi) | production |
 
-> **Staging:** Alleen op server, geen publiek domein. Test via SSH of direct IP.
+> **Staging:** Alleen op server, geen publiek domein. Test via SSH.
 
 ```bash
 php artisan serve --port=8007   # http://localhost:8007
