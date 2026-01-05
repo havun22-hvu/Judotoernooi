@@ -100,6 +100,26 @@ Hoofdtabel voor toernooien.
 | is_actief | boolean | Actief toernooi |
 | poules_gegenereerd_op | timestamp | Timestamp poule generatie |
 | blokken_verdeeld_op | timestamp | Timestamp blok verdeling |
+| judoka_code_volgorde | varchar(20) | Sorteervolgorde: gewicht_band of band_gewicht |
+| max_kg_verschil | decimal(3,1) | Max kg verschil dynamische indeling (default 3.0) |
+| max_leeftijd_verschil | tinyint | Max leeftijd verschil dynamische indeling (default 2) |
+| gebruik_gewichtsklassen | boolean | Gebruik vaste gewichtsklassen |
+| gewichtsklassen | json | Configuratie per leeftijdsgroep |
+
+### gewichtsklassen_presets
+
+Opgeslagen preset configuraties per organisator.
+
+| Kolom | Type | Beschrijving |
+|-------|------|--------------|
+| id | bigint | Primary key |
+| organisator_id | bigint | FK naar organisators |
+| naam | varchar(100) | Naam van de preset |
+| configuratie | json | Gewichtsklassen configuratie |
+| created_at | timestamp | Aangemaakt op |
+| updated_at | timestamp | Gewijzigd op |
+
+**Unique constraint:** `[organisator_id, naam]`
 
 ### clubs
 

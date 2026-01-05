@@ -280,6 +280,66 @@ Markeert een poule als afgeroepen (prijzen zijn uitgereikt, naar archief).
 }
 ```
 
+## Organisator Routes (Auth Required)
+
+Routes die authenticatie als organisator vereisen.
+
+### Gewichtsklassen Presets
+
+#### GET `/organisator/presets`
+
+Haalt alle presets op voor de ingelogde organisator.
+
+**Response:**
+
+```json
+[
+  {
+    "id": 1,
+    "naam": "Mijn preset",
+    "configuratie": {
+      "minis": { "label": "Mini's", "max_leeftijd": 8, "geslacht": "gemengd", "gewichten": ["-24", "-27", "-30"] }
+    }
+  }
+]
+```
+
+#### POST `/organisator/presets`
+
+Slaat een nieuwe preset op.
+
+**Body:**
+
+```json
+{
+  "naam": "Mijn preset",
+  "configuratie": { ... }
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "preset": { "id": 1, "naam": "Mijn preset", ... },
+  "message": "Preset opgeslagen"
+}
+```
+
+#### DELETE `/organisator/presets/{id}`
+
+Verwijdert een preset.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Preset verwijderd"
+}
+```
+
 ## Error Responses
 
 Bij fouten wordt een JSON response met de volgende structuur geretourneerd:

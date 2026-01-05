@@ -118,14 +118,30 @@ Na de sluitingsdatum van de inschrijving:
 
 ## Poule Indeling
 
+### Gewichtsklassen Instellingen
+
+Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
+
+**Met vaste gewichtsklassen:**
+- Gebruik JBN 2025 of JBN 2026 preset
+- Of eigen gewichtsklassen per categorie
+- Geslacht instelbaar per categorie (Gemengd/M/V)
+
+**Zonder vaste gewichtsklassen (dynamisch):**
+- Sorteer op: Gewicht→Band of Band→Gewicht
+- Stel max kg verschil in (default 3 kg)
+- Stel max leeftijd verschil in (default 2 jaar)
+
+**Presets opslaan:** Sla je configuratie op als eigen preset voor later gebruik.
+
 ### Automatische Poule Generatie
 
 1. Ga naar **Toernooi** > **Poules** > **Genereer Poule-indeling**
 2. Het systeem verdeelt judoka's automatisch op basis van:
-   - Leeftijdsklasse
-   - Gewichtsklasse
-   - Geslacht (vanaf -15 jaar)
-   - Band/niveau
+   - Leeftijdsgroep (max 2 jaar verschil - veiligheid)
+   - Gewicht (vaste klassen of max kg verschil)
+   - Geslacht (per categorie instelbaar)
+   - Band/niveau (sortering binnen groep)
 
 ### Poule Regels
 
