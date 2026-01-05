@@ -725,8 +725,8 @@
                             <select name="gewichtsklassen_geslacht[{{ $key }}]"
                                     class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>Gemengd</option>
-                                <option value="jongens" {{ $geslacht == 'jongens' ? 'selected' : '' }}>Jongens</option>
-                                <option value="meisjes" {{ $geslacht == 'meisjes' ? 'selected' : '' }}>Meisjes</option>
+                                <option value="jongens" {{ $geslacht == 'jongens' ? 'selected' : '' }}>M</option>
+                                <option value="meisjes" {{ $geslacht == 'meisjes' ? 'selected' : '' }}>V</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
@@ -857,8 +857,8 @@
                                 <select name="gewichtsklassen_geslacht[${key}]"
                                         class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
                                     <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>Gemengd</option>
-                                    <option value="jongens" ${geslacht === 'jongens' ? 'selected' : ''}>Jongens</option>
-                                    <option value="meisjes" ${geslacht === 'meisjes' ? 'selected' : ''}>Meisjes</option>
+                                    <option value="jongens" ${geslacht === 'jongens' ? 'selected' : ''}>M</option>
+                                    <option value="meisjes" ${geslacht === 'meisjes' ? 'selected' : ''}>V</option>
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
@@ -1018,8 +1018,8 @@
                             <select name="gewichtsklassen_geslacht[${newKey}]"
                                     class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="gemengd" selected>Gemengd</option>
-                                <option value="jongens">Jongens</option>
-                                <option value="meisjes">Meisjes</option>
+                                <option value="jongens">M</option>
+                                <option value="meisjes">V</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
