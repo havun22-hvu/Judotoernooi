@@ -20,6 +20,8 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
+│ [JBN 2025]  [JBN 2026]  ← Presets: vult alles automatisch in   │
+├─────────────────────────────────────────────────────────────────┤
 │ Max: [8]  Naam: [Mini's]  Geslacht: [Gemengd ▼]                │
 │ Systeem: [Poules ▼]  Max kg verschil: [3]                      │
 │ (Gewichtsklassen niet nodig - dynamische indeling)             │
@@ -32,6 +34,18 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 │ Gewichtsklassen: -60, -66, -73, -81, +81                        │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+## JBN Presets
+
+De knoppen **JBN 2025** en **JBN 2026** laden de officiële JBN indeling:
+- Alle leeftijdsklassen met correcte leeftijdsgrenzen
+- Vaste gewichtsklassen per categorie (max_kg_verschil = 0)
+- Geslacht: Mini's & Pupillen gemengd, vanaf U15 gescheiden
+
+Na laden kan organisator aanpassen:
+- Geslacht per groep wijzigen
+- Overschakelen naar dynamische indeling (max_kg_verschil > 0)
+- Gewichtsklassen aanpassen
 
 ## Algoritme: Dynamische Indeling
 
