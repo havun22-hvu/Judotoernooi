@@ -67,16 +67,18 @@ Organisator kan altijd aanpassen:
 - Overschakelen naar dynamische indeling (max_kg_verschil > 0)
 - Gewichtsklassen aanpassen
 
-## Algoritme: Dynamische Indeling
+## Algoritme: Dynamische Indeling (2 stappen)
 
 ```
 Input: Judoka's van één leeftijdsgroep + max_kg_verschil
 
+═══════════════════════════════════════════════════════════
+STAP 1: GROEPERING OP GEWICHT (veiligheid)
+═══════════════════════════════════════════════════════════
+
 1. Filter judoka's op geslacht (indien niet gemengd)
 
-2. Sorteer judoka's:
-   - Primair: gewicht (licht → zwaar)
-   - Secundair: band (wit → zwart)
+2. Sorteer alle judoka's op gewicht (licht → zwaar)
 
 3. Vind breekpunten:
    - Loop door gesorteerde lijst
@@ -84,10 +86,20 @@ Input: Judoka's van één leeftijdsgroep + max_kg_verschil
 
 4. Creëer gewichtsgroepen:
    - Elke groep = judoka's tussen twee breekpunten
+   - Alle judoka's binnen een groep hebben max X kg verschil
 
-5. Per gewichtsgroep → verdeel in poules:
-   - Gebruik bestaande berekenPouleGroottes()
-   - Volg voorkeursvolgorde (standaard: 5, 4, 6, 3)
+═══════════════════════════════════════════════════════════
+STAP 2: POULE-INDELING OP BAND (per gewichtsgroep)
+═══════════════════════════════════════════════════════════
+
+5. Per gewichtsgroep:
+   a. Sorteer op band (wit → zwart)
+   b. Verdeel sequentieel in poules (voorkeur: 5, 4, 6, 3)
+   c. Eerste poules = beginners, laatste poules = ervaren
+
+Resultaat:
+- Veilig: iedereen binnen max kg verschil
+- Eerlijk: gelijk niveau zoveel mogelijk bij elkaar
 ```
 
 ## Voorbeeld
