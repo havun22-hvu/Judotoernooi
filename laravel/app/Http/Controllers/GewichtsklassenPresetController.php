@@ -14,7 +14,7 @@ class GewichtsklassenPresetController extends Controller
      */
     public function index(): JsonResponse
     {
-        $presets = GewichtsklassenPreset::where('user_id', Auth::guard('organisator')->id())
+        $presets = GewichtsklassenPreset::where('organisator_id', Auth::guard('organisator')->id())
             ->orderBy('naam')
             ->get(['id', 'naam', 'configuratie']);
 
@@ -31,11 +31,11 @@ class GewichtsklassenPresetController extends Controller
             'configuratie' => 'required|array',
         ]);
 
-        $userId = Auth::guard('organisator')->id();
+        $organisatorId = Auth::guard('organisator')->id();
 
         // Update existing or create new
         $preset = GewichtsklassenPreset::updateOrCreate(
-            ['user_id' => $userId, 'naam' => $validated['naam']],
+            ['organisator_id' => $organisatorId, 'naam' => $validated['naam']],
             ['configuratie' => $validated['configuratie']]
         );
 
@@ -52,7 +52,7 @@ class GewichtsklassenPresetController extends Controller
     public function destroy(GewichtsklassenPreset $preset): JsonResponse
     {
         // Check ownership
-        if ($preset->user_id !== Auth::guard('organisator')->id()) {
+        if ($preset->organisator_id !== Auth::guard('organisator')->id()) {
             return response()->json(['error' => 'Niet toegestaan'], 403);
         }
 

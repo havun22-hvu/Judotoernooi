@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class GewichtsklassenPreset extends Model
 {
-    protected $fillable = ['user_id', 'naam', 'configuratie'];
+    protected $fillable = ['organisator_id', 'naam', 'configuratie'];
 
     protected $casts = [
         'configuratie' => 'array',
     ];
 
-    public function user()
+    public function organisator()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Organisator::class);
     }
 }
