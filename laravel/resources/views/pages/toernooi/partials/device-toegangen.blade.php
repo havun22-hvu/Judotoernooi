@@ -140,12 +140,14 @@ function deviceToegangen() {
                     },
                 });
                 if (response.ok) {
-                    this.toegangen = await response.json();
-                } else {
-                    console.error('Load failed:', response.status);
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        this.toegangen = await response.json();
+                    }
                 }
+                // Silently ignore auth errors (401/403) - user may not have access
             } catch (e) {
-                console.error('Failed to load toegangen:', e);
+                // Network error - silently fail
             }
         },
 
