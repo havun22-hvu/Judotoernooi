@@ -304,8 +304,12 @@ class MollieService
         ]));
     }
 
-    public function validateOAuthState(string $state): ?int
+    public function validateOAuthState(?string $state): ?int
     {
+        if ($state === null) {
+            return null;
+        }
+
         try {
             $data = json_decode(base64_decode($state), true);
 
