@@ -1175,7 +1175,9 @@
     <div x-show="activeTab === 'organisatie'" x-cloak>
 
     <!-- DEVICE TOEGANGEN (nieuw systeem met device binding) -->
-    @include('pages.toernooi.partials.device-toegangen')
+    @if(Auth::guard('organisator')->check() || session("toernooi_{$toernooi->id}_rol") === 'admin')
+        @include('pages.toernooi.partials.device-toegangen')
+    @endif
 
     <!-- SNELKOPPELINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
