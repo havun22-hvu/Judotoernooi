@@ -337,17 +337,17 @@ MOLLIE_PLATFORM_FEE=0.50
 - [x] Toernooi model methods
 - [x] Config en .env.example
 - [x] Documentatie
+- [x] MollieController (OAuth + webhook)
+- [x] Routes registreren
+- [x] CSRF uitsluiting voor webhook
+- [x] Views: instellingen sectie (Organisatie tab)
+- [x] Views: coach afrekenen flow (`pages/coach/afrekenen.blade.php`)
+- [x] Views: betaling return pagina (`pages/coach/betaling-succes.blade.php`)
+- [x] Simulatie pagina (staging)
+- [x] .env variabelen op production (5 jan 2026)
 
 ### TODO
-- [ ] MollieController (OAuth + webhook)
-- [ ] BetalingController (start + return)
-- [ ] Routes registreren
-- [ ] CSRF uitsluiting voor webhook
-- [ ] Views: instellingen sectie
-- [ ] Views: coach afrekenen
-- [ ] Views: betaling return pagina
-- [ ] Simulatie pagina (staging)
-- [ ] Testen met Cees' Mollie account
+- [ ] Testen met echt Mollie account (Connect mode)
 
 ---
 

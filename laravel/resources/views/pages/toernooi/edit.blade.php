@@ -694,8 +694,12 @@
 
             <div id="gewichtsklassen-container" class="space-y-3">
                 @foreach($gewichtsklassen as $key => $data)
+                @php
+                    $geslacht = $data['geslacht'] ?? 'gemengd';
+                    $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
+                @endphp
                 <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50" data-key="{{ $key }}">
-                    <div class="flex items-center gap-4 mb-2">
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
@@ -707,7 +711,16 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[{{ $key }}]"
                                    value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Geslacht:</label>
+                            <select name="gewichtsklassen_geslacht[{{ $key }}]"
+                                    class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>Gemengd</option>
+                                <option value="jongens" {{ $geslacht == 'jongens' ? 'selected' : '' }}>Jongens</option>
+                                <option value="meisjes" {{ $geslacht == 'meisjes' ? 'selected' : '' }}>Meisjes</option>
+                            </select>
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Systeem:</label>
@@ -720,12 +733,26 @@
                         </div>
                         <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
-                        <input type="text" name="gewichtsklassen[{{ $key }}]"
-                               value="{{ implode(', ', $data['gewichten']) }}"
-                               class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
-                               placeholder="-20, -23, -26, +26">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                            <input type="number" name="gewichtsklassen_max_kg[{{ $key }}]"
+                                   value="{{ $maxKgVerschil }}"
+                                   class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   min="0" max="10" step="0.5"
+                                   onchange="toggleGewichtsklassen(this)">
+                            <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
+                        </div>
+                        <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
+                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                            <input type="text" name="gewichtsklassen[{{ $key }}]"
+                                   value="{{ implode(', ', $data['gewichten'] ?? []) }}"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                   placeholder="-20, -23, -26, +26">
+                        </div>
+                        <div class="dynamisch-label flex-1 text-sm text-blue-600 italic {{ $maxKgVerschil > 0 ? '' : 'hidden' }}">
+                            Dynamische indeling op basis van werkelijk gewicht
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -764,13 +791,32 @@
                     const key = item.dataset.key;
                     const leeftijd = parseInt(item.querySelector('.leeftijd-input').value) || 99;
                     const label = item.querySelector('.label-input').value;
+                    const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
+                    const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
                     const gewichten = item.querySelector('.gewichten-input').value
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g);
-                    data[key] = { label, max_leeftijd: leeftijd, gewichten };
+                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
+            }
+
+            // Toggle gewichtsklassen visibility based on max_kg_verschil
+            window.toggleGewichtsklassen = function(input) {
+                const item = input.closest('.gewichtsklasse-item');
+                const gewichtenContainer = item.querySelector('.gewichten-container');
+                const dynamischLabel = item.querySelector('.dynamisch-label');
+                const maxKg = parseFloat(input.value) || 0;
+
+                if (maxKg > 0) {
+                    gewichtenContainer?.classList.add('hidden');
+                    dynamischLabel?.classList.remove('hidden');
+                } else {
+                    gewichtenContainer?.classList.remove('hidden');
+                    dynamischLabel?.classList.add('hidden');
+                }
+                updateJsonInput();
             }
 
             function renderCategorieen(data) {
@@ -781,8 +827,12 @@
                     div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
                     div.dataset.key = key;
                     const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
+                    const geslacht = item.geslacht || 'gemengd';
+                    const maxKg = item.max_kg_verschil || 0;
+                    const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
+                    const dynamischHidden = maxKg > 0 ? '' : 'hidden';
                     div.innerHTML = `
-                        <div class="flex items-center gap-4 mb-2">
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Max leeftijd:</label>
                                 <input type="number" name="gewichtsklassen_leeftijd[${key}]"
@@ -794,16 +844,48 @@
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Geslacht:</label>
+                                <select name="gewichtsklassen_geslacht[${key}]"
+                                        class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
+                                    <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>Gemengd</option>
+                                    <option value="jongens" ${geslacht === 'jongens' ? 'selected' : ''}>Jongens</option>
+                                    <option value="meisjes" ${geslacht === 'meisjes' ? 'selected' : ''}>Meisjes</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Systeem:</label>
+                                <select name="wedstrijd_systeem[${key}]"
+                                        class="border rounded px-2 py-1 text-sm bg-white">
+                                    <option value="poules">Poules</option>
+                                    <option value="poules_kruisfinale">Kruisfinale</option>
+                                    <option value="eliminatie">Eliminatie</option>
+                                </select>
                             </div>
                             <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
                         </div>
-                        <div>
-                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
-                            <input type="text" name="gewichtsklassen[${key}]"
-                                   value="${item.gewichten.join(', ')}"
-                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
-                                   placeholder="-20, -23, -26, +26">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                                <input type="number" name="gewichtsklassen_max_kg[${key}]"
+                                       value="${maxKg}"
+                                       class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                       min="0" max="10" step="0.5"
+                                       onchange="toggleGewichtsklassen(this)">
+                                <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
+                            </div>
+                            <div class="gewichten-container flex-1 ${gewichtenHidden}">
+                                <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                                <input type="text" name="gewichtsklassen[${key}]"
+                                       value="${item.gewichten.join(', ')}"
+                                       class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                       placeholder="-20, -23, -26, +26">
+                            </div>
+                            <div class="dynamisch-label flex-1 text-sm text-blue-600 italic ${dynamischHidden}">
+                                Dynamische indeling op basis van werkelijk gewicht
+                            </div>
                         </div>
                     `;
                     container.appendChild(div);
@@ -833,7 +915,7 @@
                 div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50';
                 div.dataset.key = newKey;
                 div.innerHTML = `
-                    <div class="flex items-center gap-4 mb-2">
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
@@ -845,16 +927,48 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${newKey}]"
                                    value="Nieuwe categorie"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-32">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Geslacht:</label>
+                            <select name="gewichtsklassen_geslacht[${newKey}]"
+                                    class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="gemengd" selected>Gemengd</option>
+                                <option value="jongens">Jongens</option>
+                                <option value="meisjes">Meisjes</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Systeem:</label>
+                            <select name="wedstrijd_systeem[${newKey}]"
+                                    class="border rounded px-2 py-1 text-sm bg-white">
+                                <option value="poules" selected>Poules</option>
+                                <option value="poules_kruisfinale">Kruisfinale</option>
+                                <option value="eliminatie">Eliminatie</option>
+                            </select>
                         </div>
                         <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
                     </div>
-                    <div>
-                        <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
-                        <input type="text" name="gewichtsklassen[${newKey}]"
-                               value=""
-                               class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
-                               placeholder="-20, -23, -26, +26">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                            <input type="number" name="gewichtsklassen_max_kg[${newKey}]"
+                                   value="0"
+                                   class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   min="0" max="10" step="0.5"
+                                   onchange="toggleGewichtsklassen(this)">
+                            <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
+                        </div>
+                        <div class="gewichten-container flex-1">
+                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
+                            <input type="text" name="gewichtsklassen[${newKey}]"
+                                   value=""
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                   placeholder="-20, -23, -26, +26">
+                        </div>
+                        <div class="dynamisch-label flex-1 text-sm text-blue-600 italic hidden">
+                            Dynamische indeling op basis van werkelijk gewicht
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);

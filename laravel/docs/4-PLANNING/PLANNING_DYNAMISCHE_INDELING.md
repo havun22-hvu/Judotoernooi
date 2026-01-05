@@ -127,11 +127,12 @@ Bestaande `gewichtsklassen` JSON uitbreiden met nieuwe velden per categorie:
 
 ## Implementatie Stappen
 
-### Fase 1: Database & UI
-- [ ] Gewichtsklassen JSON structuur uitbreiden
-- [ ] UI aanpassen: geslacht dropdown per categorie
-- [ ] UI aanpassen: max kg verschil input per categorie
-- [ ] Gewichtsklassen input verbergen als max_kg > 0
+### Fase 1: Database & UI (5 jan 2026)
+- [x] Gewichtsklassen JSON structuur uitbreiden
+- [x] UI aanpassen: geslacht dropdown per categorie
+- [x] UI aanpassen: max kg verschil input per categorie
+- [x] Gewichtsklassen input verbergen als max_kg > 0
+- [x] Controller updaten voor nieuwe velden
 
 ### Fase 2: Indeling Algoritme
 - [ ] Nieuwe service: `DynamischeIndelingService`
