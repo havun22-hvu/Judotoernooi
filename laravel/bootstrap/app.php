@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
         ]);
 
+        // Redirect guests to organisator login
+        $middleware->redirectGuestsTo('/organisator/login');
+
         // Exclude public API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'publiek/*/favorieten',
