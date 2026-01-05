@@ -67,39 +67,82 @@ Organisator kan altijd aanpassen:
 - Overschakelen naar dynamische indeling (max_kg_verschil > 0)
 - Gewichtsklassen aanpassen
 
-## Algoritme: Dynamische Indeling (2 stappen)
+## Algoritme: Dynamische Indeling
 
 ```
-Input: Judoka's van één leeftijdsgroep + max_kg_verschil
+═══════════════════════════════════════════════════════════════════
+HIËRARCHIE (van groot naar klein)
+═══════════════════════════════════════════════════════════════════
 
-═══════════════════════════════════════════════════════════
-STAP 1: GROEPERING OP GEWICHT (veiligheid)
-═══════════════════════════════════════════════════════════
+1. GESLACHT    - M/V apart (indien niet gemengd)
+2. LEEFTIJD    - Organisator bepaalt groepen + namen (versleepbaar)
+3. GROEPERING  - 1e sortering: bepaalt de KLASSEN (zie opties)
+4. SORTERING   - 2e sortering: bepaalt VOLGORDE binnen de klasse
 
-1. Filter judoka's op geslacht (indien niet gemengd)
+═══════════════════════════════════════════════════════════════════
+DRIE OPTIES VOOR GROEPERING + SORTERING
+═══════════════════════════════════════════════════════════════════
 
-2. Sorteer alle judoka's op gewicht (licht → zwaar)
+┌─────────────────────────────────────────────────────────────────┐
+│ OPTIE 1: Vaste gewichtsklassen                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ 1e: Groepering op vaste klassen (-30, -35, -40, etc.)           │
+│ 2e: Binnen klasse sorteren op band                              │
+└─────────────────────────────────────────────────────────────────┘
 
-3. Vind breekpunten:
-   - Loop door gesorteerde lijst
-   - Breekpunt waar verschil met vorige > max_kg_verschil
+┌─────────────────────────────────────────────────────────────────┐
+│ OPTIE 2: Dynamisch GEWICHT → BAND                               │
+├─────────────────────────────────────────────────────────────────┤
+│ 1e: Groepering op gewicht (breekpunten bij >X kg verschil)      │
+│     → 30-33kg wordt 1 klasse, exact gewicht niet meer relevant  │
+│ 2e: Binnen klasse sorteren op band                              │
+└─────────────────────────────────────────────────────────────────┘
 
-4. Creëer gewichtsgroepen:
-   - Elke groep = judoka's tussen twee breekpunten
-   - Alle judoka's binnen een groep hebben max X kg verschil
+┌─────────────────────────────────────────────────────────────────┐
+│ OPTIE 3: Dynamisch BAND → GEWICHT                               │
+├─────────────────────────────────────────────────────────────────┤
+│ 1e: Groepering op band (wit, geel, oranje, etc.)                │
+│     → alle witte banden = 1 klasse                              │
+│ 2e: Binnen klasse sorteren op gewicht (+ max kg check)          │
+└─────────────────────────────────────────────────────────────────┘
 
-═══════════════════════════════════════════════════════════
-STAP 2: POULE-INDELING OP BAND (per gewichtsgroep)
-═══════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════════════
+VOORBEELD: OPTIE 2 (GEWICHT → BAND)
+═══════════════════════════════════════════════════════════════════
 
-5. Per gewichtsgroep:
-   a. Sorteer op band (wit → zwart)
-   b. Verdeel sequentieel in poules (voorkeur: 5, 4, 6, 3)
-   c. Eerste poules = beginners, laatste poules = ervaren
+STAP 1: Sorteer op gewicht → bepaalt GRENZEN (breekpunten)
 
-Resultaat:
-- Veilig: iedereen binnen max kg verschil
-- Eerlijk: gelijk niveau zoveel mogelijk bij elkaar
+        28, 29, 30, 31, 32 │ 38, 39, 40
+                           ↑
+                      breekpunt (>3kg)
+
+        Klasse A = 28-32kg (als 1 groep!)
+        Klasse B = 38-40kg
+
+
+STAP 2: Binnen Klasse A → sorteer ALLEEN op band
+
+        Judoka's in Klasse A:
+        - Piet: 30kg, oranje
+        - Jan: 32kg, wit
+        - Kees: 28kg, geel
+        - Lisa: 31kg, wit
+
+        Gesorteerd op BAND (exact gewicht niet meer relevant):
+        1. Jan (32kg, wit)    ← wit eerst, ook al zwaarder
+        2. Lisa (31kg, wit)
+        3. Kees (28kg, geel)
+        4. Piet (30kg, oranje)
+
+        → Verdeel in poules (voorkeur: 5, 4, 6, 3)
+
+═══════════════════════════════════════════════════════════════════
+JUDOKACODE (weerspiegelt hiërarchie)
+═══════════════════════════════════════════════════════════════════
+
+[Leeftijd]-[Gewicht]-[Band]-[M/V]
+
+Voorbeeld: 08-032-03-M = Leeftijd 8, 32kg, oranje band, Jongen
 ```
 
 ## Voorbeeld
