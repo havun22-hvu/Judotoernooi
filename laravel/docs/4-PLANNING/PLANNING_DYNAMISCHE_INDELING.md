@@ -9,29 +9,43 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 1. **Vaste gewichtsklassen** (huidige systeem, JBN normen)
 2. **Dynamische indeling** (nieuw, op basis van max kg verschil)
 
+## JBN Leeftijdsklassen (referentie)
+
+| Klasse | Leeftijd | Opmerking |
+|--------|----------|-----------|
+| Mini's | tot 8 jaar | 2 jaar range (7-8) |
+| Pupillen A | tot 10 jaar | 2 jaar range (9-10) |
+| Pupillen B | tot 12 jaar | 2 jaar range (11-12) |
+| U15 | tot 15 jaar | 2 jaar range (13-14) |
+| U18 | tot 18 jaar | 3 jaar range (15-17) |
+| Senioren | 18+ | |
+
+**Let op:** JBN gebruikt "tot" (exclusief), niet "t/m" (inclusief).
+
 ## Nieuwe Velden per Leeftijdsgroep
 
 | Veld | Type | Opties | Beschrijving |
 |------|------|--------|--------------|
 | `geslacht` | enum | gemengd / jongens / meisjes | Welke judoka's in deze groep |
 | `max_kg_verschil` | decimal | 0-10 | 0 = vaste klassen, >0 = dynamisch |
+| `max_leeftijd_verschil` | int | 0-3 | 0 = vaste leeftijdsklassen, >0 = dynamisch |
 
-## UI Voorbeeld
+## UI: Zonder Gewichtsklassen
+
+Wanneer "Gewichtsklassen gebruiken" UIT staat, kan de organisator kiezen:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ [JBN 2025]  [JBN 2026]  ← Presets: vult alles automatisch in   │
+│ Zonder gewichtsklassen: Judoka's worden alleen per              │
+│ leeftijdsgroep ingedeeld. Kies de sorteervolgorde:              │
 ├─────────────────────────────────────────────────────────────────┤
-│ Max: [8]  Naam: [Mini's]  Geslacht: [Gemengd ▼]                │
-│ Systeem: [Poules ▼]  Max kg verschil: [3]                      │
-│ (Gewichtsklassen niet nodig - dynamische indeling)             │
+│ ○ Gewicht → Band                                                │
+│   Sorteer op werkelijk gewicht, dan band                        │
+│                                                                 │
+│ ○ Band → Gewicht                                                │
+│   Sorteer op band (laag→hoog), dan gewicht                      │
 ├─────────────────────────────────────────────────────────────────┤
-│ Max: [15]  Naam: [Dames -15]  Geslacht: [Meisjes ▼]            │
-│ Systeem: [Kruisfinale ▼]  Max kg verschil: [3]                 │
-├─────────────────────────────────────────────────────────────────┤
-│ Max: [99]  Naam: [Heren]  Geslacht: [Jongens ▼]                │
-│ Systeem: [Poules ▼]  Max kg verschil: [0]                      │
-│ Gewichtsklassen: -60, -66, -73, -81, +81                        │
+│ Max kg verschil: [3]  Max leeftijd verschil: [2]                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -52,138 +66,125 @@ De knoppen **JBN 2025** en **JBN 2026** laden de officiële JBN indeling:
 ### Eigen Presets
 Organisator kan huidige configuratie opslaan als eigen preset:
 - Klik **Opslaan als preset** → voer naam in
-- Preset wordt opgeslagen bij de organisator (user)
+- Preset wordt opgeslagen bij de organisator
 - Later laden via dropdown **Eigen preset**
 
 **Database:** `gewichtsklassen_presets` tabel
 ```
-id, user_id, naam, configuratie (JSON), timestamps
-unique: [user_id, naam]
+id, organisator_id, naam, configuratie (JSON), timestamps
+unique: [organisator_id, naam]
 ```
-
-### Na laden preset
-Organisator kan altijd aanpassen:
-- Geslacht per groep wijzigen
-- Overschakelen naar dynamische indeling (max_kg_verschil > 0)
-- Gewichtsklassen aanpassen
 
 ## Algoritme: Dynamische Indeling
 
 ```
 ═══════════════════════════════════════════════════════════════════
-HIËRARCHIE (van groot naar klein)
+VASTE HIËRARCHIE (veiligheid eerst!)
 ═══════════════════════════════════════════════════════════════════
 
 1. GESLACHT    - M/V apart (indien niet gemengd)
-2. LEEFTIJD    - Organisator bepaalt groepen + namen (versleepbaar)
-3. GROEPERING  - 1e sortering: bepaalt de KLASSEN (zie opties)
-4. SORTERING   - 2e sortering: bepaalt VOLGORDE binnen de klasse
+2. LEEFTIJD    - Max 2 jaar verschil (HARD - veiligheid)
+3. GEWICHT     - Max 3 kg verschil (HARD - veiligheid)
+4. BAND        - Sortering voor eerlijke poules (ZACHT)
 
 ═══════════════════════════════════════════════════════════════════
-DRIE OPTIES VOOR GROEPERING + SORTERING
+BELANGRIJKE CONSTRAINT: LEEFTIJD
 ═══════════════════════════════════════════════════════════════════
+
+Een 8-jarige mag NOOIT tegen een 12-jarige!
+→ Max 2 jaar verschil is HARDE grens (net als JBN)
+→ Dit geldt voor ALLE algoritmes
+
+═══════════════════════════════════════════════════════════════════
+TWEE OPTIES NA LEEFTIJDSGROEPERING
+═══════════════════════════════════════════════════════════════════
+
+Binnen een leeftijdsgroep (max 2 jaar verschil):
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ OPTIE 1: Vaste gewichtsklassen                                  │
+│ OPTIE 1: GEWICHT → BAND                                         │
 ├─────────────────────────────────────────────────────────────────┤
-│ 1e: Groepering op vaste klassen (-30, -35, -40, etc.)           │
+│ 1e: Groepering op gewicht (breekpunten bij >3 kg verschil)      │
+│     → 30-33kg wordt 1 klasse                                    │
 │ 2e: Binnen klasse sorteren op band                              │
+│     → Beginners eerst, ervaren later                            │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ OPTIE 2: Dynamisch GEWICHT → BAND                               │
-├─────────────────────────────────────────────────────────────────┤
-│ 1e: Groepering op gewicht (breekpunten bij >X kg verschil)      │
-│     → 30-33kg wordt 1 klasse, exact gewicht niet meer relevant  │
-│ 2e: Binnen klasse sorteren op band                              │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│ OPTIE 3: Dynamisch BAND → GEWICHT                               │
+│ OPTIE 2: BAND → GEWICHT                                         │
 ├─────────────────────────────────────────────────────────────────┤
 │ 1e: Groepering op band (wit, geel, oranje, etc.)                │
-│     → alle witte banden = 1 klasse                              │
-│ 2e: Binnen klasse sorteren op gewicht (+ max kg check)          │
+│     → Alle witte banden = 1 klasse                              │
+│ 2e: Binnen klasse sorteren op gewicht (+ max kg check!)         │
+│     → Lichter eerst, zwaarder later                             │
 └─────────────────────────────────────────────────────────────────┘
 
 ═══════════════════════════════════════════════════════════════════
-VOORBEELD: OPTIE 2 (GEWICHT → BAND)
+VASTE GEWICHTSKLASSEN (bestaand systeem)
 ═══════════════════════════════════════════════════════════════════
 
-STAP 1: Sorteer op gewicht → bepaalt GRENZEN (breekpunten)
-
-        28, 29, 30, 31, 32 │ 38, 39, 40
-                           ↑
-                      breekpunt (>3kg)
-
-        Klasse A = 28-32kg (als 1 groep!)
-        Klasse B = 38-40kg
-
-
-STAP 2: Binnen Klasse A → sorteer ALLEEN op band
-
-        Judoka's in Klasse A:
-        - Piet: 30kg, oranje
-        - Jan: 32kg, wit
-        - Kees: 28kg, geel
-        - Lisa: 31kg, wit
-
-        Gesorteerd op BAND (exact gewicht niet meer relevant):
-        1. Jan (32kg, wit)    ← wit eerst, ook al zwaarder
-        2. Lisa (31kg, wit)
-        3. Kees (28kg, geel)
-        4. Piet (30kg, oranje)
-
-        → Verdeel in poules (voorkeur: 5, 4, 6, 3)
-
-═══════════════════════════════════════════════════════════════════
-JUDOKACODE (weerspiegelt hiërarchie)
-═══════════════════════════════════════════════════════════════════
-
-[Leeftijd]-[Gewicht]-[Band]-[M/V]
-
-Voorbeeld: 08-032-03-M = Leeftijd 8, 32kg, oranje band, Jongen
+Als max_kg_verschil = 0:
+→ Gebruik vaste klassen (-30, -35, -40, etc.)
+→ Binnen klasse sorteren op band
+→ Dit is identiek aan dynamisch, alleen grenzen zijn vooraf bepaald
 ```
 
-## Voorbeeld
+## Varianten Generatie (zoals Blokverdeling)
 
-**Input:** 8 judoka's, max 3 kg verschil
+Net als bij de blokverdeling kunnen we meerdere indelingen berekenen en de beste presenteren:
+
 ```
-Gesorteerd: 28kg, 29kg, 30kg, 31kg, 32kg, 38kg, 39kg, 40kg
-                                              ↑
-                                         breekpunt (6kg > 3kg)
-
-Groep 1: 28-32kg (5 judoka's) → 1 poule van 5
-Groep 2: 38-40kg (3 judoka's) → 1 poule van 3
+┌─────────────────────────────────────────────────────────────────┐
+│ POULE INDELING - VARIANTEN                                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ Variant 1: Score 116.9  ✓ Beste                                 │
+│   - Leeftijd max: 2 jaar                                        │
+│   - Gewicht max: 3.0 kg                                         │
+│   - 86 poules, 398 judoka's                                     │
+│                                                                 │
+│ Variant 2: Score 121.4                                          │
+│   - Leeftijd max: 2 jaar                                        │
+│   - Gewicht max: 2.5 kg                                         │
+│   - 92 poules, 395 judoka's                                     │
+│                                                                 │
+│ Variant 3: Score 128.7                                          │
+│   ...                                                           │
+│                                                                 │
+│ [Kies Variant 1]  [Kies Variant 2]  [Kies Variant 3]            │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Database Wijzigingen
+### Score Berekening
 
-### Migration: toernooien tabel
+| Criterium | Gewicht | Max grens | Penalty bij overschrijding |
+|-----------|---------|-----------|---------------------------|
+| Leeftijd | 40% | 2 jaar | 10x (HARD) |
+| Gewicht | 40% | 3 kg | 10x (HARD) |
+| Band | 20% | 2 niveaus | 5x (ZACHT) |
 
-Bestaande `gewichtsklassen` JSON uitbreiden met nieuwe velden per categorie:
+**Lagere score = betere indeling**
 
-```php
-// Huidige structuur
-'minis' => [
-    'max_leeftijd' => 8,
-    'label' => "Mini's",
-    'gewichten' => ['-20', '-23', '-26', '+26'],
-]
+## Testresultaten (400 judoka's)
 
-// Nieuwe structuur
-'minis' => [
-    'max_leeftijd' => 8,
-    'label' => "Mini's",
-    'geslacht' => 'gemengd',           // nieuw: gemengd/jongens/meisjes
-    'max_kg_verschil' => 3,            // nieuw: 0 = vaste klassen
-    'gewichten' => [],                  // leeg bij dynamische indeling
-]
 ```
+                        │ GEWICHT>BAND │ BAND>GEWICHT │ LEEFTIJD>GEWICHT>BAND
+────────────────────────┼──────────────┼──────────────┼──────────────────────
+Leeftijd max            │     4j ✗     │     4j ✗     │     2j ✓
+Gewicht max             │     3kg      │     3kg      │     3kg
+Band max                │     4        │     0 ✓      │     4
+────────────────────────┼──────────────┼──────────────┼──────────────────────
+SCORE                   │   136.3      │   130.9      │   116.9 ✓
+```
+
+**Conclusie:** LEEFTIJD > GEWICHT > BAND is het beste algoritme:
+- Geen leeftijdsoverschrijdingen (8j vs 12j onmogelijk)
+- Beste totaalscore
+- Bijna alle judoka's ingedeeld
 
 ## Implementatie Stappen
 
-### Fase 1: Database & UI (5 jan 2026)
+### Fase 1: Database & UI (5 jan 2026) ✓
 - [x] Gewichtsklassen JSON structuur uitbreiden
 - [x] UI aanpassen: geslacht dropdown per categorie
 - [x] UI aanpassen: max kg verschil input per categorie
@@ -192,16 +193,24 @@ Bestaande `gewichtsklassen` JSON uitbreiden met nieuwe velden per categorie:
 - [x] Eigen presets: migration + model
 - [x] Eigen presets: controller endpoints (GET/POST/DELETE)
 - [x] Eigen presets: UI dropdown + opslaan knop
+- [x] Drag & drop voor categorieën
 
 ### Fase 2: Indeling Algoritme
 - [ ] Nieuwe service: `DynamischeIndelingService`
-- [ ] Breekpunten algoritme implementeren
+- [ ] Leeftijd-eerst algoritme implementeren
+- [ ] Varianten genereren (zoals blokverdeling)
+- [ ] Score berekening
 - [ ] Integreren met bestaande `PouleIndelingService`
 
-### Fase 3: Testen
-- [ ] Unit tests voor breekpunten algoritme
-- [ ] Test met verschillende datasets
-- [ ] Edge cases: grote gewichtsgaten, weinig judoka's
+### Fase 3: UI Varianten
+- [ ] Varianten weergave in poule-overzicht
+- [ ] Kies variant functionaliteit
+- [ ] Score visualisatie
+
+### Fase 4: Testen
+- [ ] Unit tests voor algoritme
+- [ ] Test met 100, 400, 800 judoka's
+- [ ] Edge cases: grote gaten, weinig judoka's
 
 ## Edge Cases
 
@@ -210,9 +219,11 @@ Bestaande `gewichtsklassen` JSON uitbreiden met nieuwe velden per categorie:
 | Groep met 1-2 judoka's | Voeg toe aan dichtstbijzijnde groep |
 | Alle judoka's binnen max kg | Eén grote groep, verdeel in poules |
 | Geen judoka's in leeftijdsgroep | Skip |
+| Te groot leeftijdsverschil | Forceer breekpunt |
 
 ## Notities
 
-- Band-sortering is secundair: zorgt voor oplopende ervaring binnen gewichtsgroep
+- Leeftijd is ALTIJD eerste filter (veiligheid!)
+- Band-sortering is secundair: zorgt voor eerlijke poules
 - Clubspreiding blijft werken zoals nu
 - Wedstrijdsysteem (poules/kruisfinale/eliminatie) blijft per leeftijdsgroep
