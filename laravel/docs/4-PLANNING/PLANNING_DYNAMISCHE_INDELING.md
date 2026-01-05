@@ -49,6 +49,13 @@ Wanneer "Gewichtsklassen gebruiken" UIT staat, kan de organisator kiezen:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Toernooi-niveau Instellingen
+
+| Veld | Database | Default | Beschrijving |
+|------|----------|---------|--------------|
+| Max kg verschil | `toernooien.max_kg_verschil` | 3.0 | Voor dynamische indeling |
+| Max leeftijd verschil | `toernooien.max_leeftijd_verschil` | 2 | Voor dynamische indeling |
+
 ## Presets
 
 ```
@@ -61,7 +68,7 @@ Wanneer "Gewichtsklassen gebruiken" UIT staat, kan de organisator kiezen:
 De knoppen **JBN 2025** en **JBN 2026** laden de officiële JBN indeling:
 - Alle leeftijdsklassen met correcte leeftijdsgrenzen
 - Vaste gewichtsklassen per categorie (max_kg_verschil = 0)
-- Geslacht: Mini's & Pupillen gemengd, vanaf U15 gescheiden
+- Geslacht per categorie: Mini's & Pupillen gemengd, vanaf U15 M/V apart
 
 ### Eigen Presets
 Organisator kan huidige configuratie opslaan als eigen preset:
@@ -186,7 +193,7 @@ SCORE                   │   136.3      │   130.9      │   116.9 ✓
 
 ### Fase 1: Database & UI (5 jan 2026) ✓
 - [x] Gewichtsklassen JSON structuur uitbreiden
-- [x] UI aanpassen: geslacht dropdown per categorie
+- [x] UI aanpassen: geslacht dropdown per categorie (M/V/Gemengd)
 - [x] UI aanpassen: max kg verschil input per categorie
 - [x] Gewichtsklassen input verbergen als max_kg > 0
 - [x] Controller updaten voor nieuwe velden
@@ -194,12 +201,15 @@ SCORE                   │   136.3      │   130.9      │   116.9 ✓
 - [x] Eigen presets: controller endpoints (GET/POST/DELETE)
 - [x] Eigen presets: UI dropdown + opslaan knop
 - [x] Drag & drop voor categorieën
+- [x] Verwijderd: "Jongens/meiden gescheiden" toggle (nu per categorie)
+- [x] Toernooi-niveau: max_kg_verschil en max_leeftijd_verschil velden
 
-### Fase 2: Indeling Algoritme
-- [ ] Nieuwe service: `DynamischeIndelingService`
-- [ ] Leeftijd-eerst algoritme implementeren
-- [ ] Varianten genereren (zoals blokverdeling)
-- [ ] Score berekening
+### Fase 2: Indeling Algoritme (6 jan 2026) ✓
+- [x] Nieuwe service: `DynamischeIndelingService`
+- [x] Leeftijd-eerst algoritme implementeren
+- [x] Varianten genereren (zoals blokverdeling)
+- [x] Score berekening
+- [x] Test command: `php artisan test:dynamische-indeling {aantal}`
 - [ ] Integreren met bestaande `PouleIndelingService`
 
 ### Fase 3: UI Varianten
