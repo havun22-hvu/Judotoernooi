@@ -8,22 +8,20 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * SQLite doesn't support dropping columns well, so recreate the table
      */
     public function up(): void
     {
-        Schema::table('gewichtsklassen_presets', function (Blueprint $table) {
-            // Drop old foreign key and column
-            $table->dropForeign(['user_id']);
-            $table->dropColumn('user_id');
-        });
+        // Drop and recreate for SQLite compatibility
+        Schema::dropIfExists('gewichtsklassen_presets');
 
-        Schema::table('gewichtsklassen_presets', function (Blueprint $table) {
-            // Add new column with correct foreign key
-            $table->foreignId('organisator_id')->after('id')->constrained('organisators')->onDelete('cascade');
-        });
+        Schema::create('gewichtsklassen_presets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('organisator_id')->constrained('organisators')->onDelete('cascade');
+            $table->string('naam', 100);
+            $table->json('configuratie');
+            $table->timestamps();
 
-        // Recreate unique constraint
-        Schema::table('gewichtsklassen_presets', function (Blueprint $table) {
             $table->unique(['organisator_id', 'naam']);
         });
     }
@@ -33,14 +31,15 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('gewichtsklassen_presets', function (Blueprint $table) {
-            $table->dropForeign(['organisator_id']);
-            $table->dropUnique(['organisator_id', 'naam']);
-            $table->dropColumn('organisator_id');
-        });
+        Schema::dropIfExists('gewichtsklassen_presets');
 
-        Schema::table('gewichtsklassen_presets', function (Blueprint $table) {
-            $table->foreignId('user_id')->after('id')->constrained()->onDelete('cascade');
+        Schema::create('gewichtsklassen_presets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('naam', 100);
+            $table->json('configuratie');
+            $table->timestamps();
+
             $table->unique(['user_id', 'naam']);
         });
     }
