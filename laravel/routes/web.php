@@ -20,6 +20,7 @@ use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Controllers\MollieController;
 use App\Http\Controllers\DeviceToegangController;
 use App\Http\Controllers\DeviceToegangBeheerController;
+use App\Http\Controllers\GewichtsklassenPresetController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,11 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
     Route::middleware('auth:organisator')->group(function () {
         Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
         Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('dashboard');
+
+        // Gewichtsklassen presets
+        Route::get('presets', [GewichtsklassenPresetController::class, 'index'])->name('presets.index');
+        Route::post('presets', [GewichtsklassenPresetController::class, 'store'])->name('presets.store');
+        Route::delete('presets/{preset}', [GewichtsklassenPresetController::class, 'destroy'])->name('presets.destroy');
     });
 });
 

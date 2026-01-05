@@ -55,9 +55,10 @@ Organisator kan huidige configuratie opslaan als eigen preset:
 - Preset wordt opgeslagen bij de organisator (user)
 - Later laden via dropdown **Eigen preset**
 
-**Database:** `user_presets` tabel
+**Database:** `gewichtsklassen_presets` tabel
 ```
-id, user_id, naam, configuratie (JSON), created_at
+id, user_id, naam, configuratie (JSON), timestamps
+unique: [user_id, naam]
 ```
 
 ### Na laden preset
@@ -133,6 +134,9 @@ Bestaande `gewichtsklassen` JSON uitbreiden met nieuwe velden per categorie:
 - [x] UI aanpassen: max kg verschil input per categorie
 - [x] Gewichtsklassen input verbergen als max_kg > 0
 - [x] Controller updaten voor nieuwe velden
+- [x] Eigen presets: migration + model
+- [x] Eigen presets: controller endpoints (GET/POST/DELETE)
+- [x] Eigen presets: UI dropdown + opslaan knop
 
 ### Fase 2: Indeling Algoritme
 - [ ] Nieuwe service: `DynamischeIndelingService`
