@@ -646,12 +646,19 @@
                             <span>Jongens/meiden gescheiden (Mini's & Pupillen)</span>
                         </label>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center flex-wrap">
                         <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
                             JBN 2025
                         </button>
                         <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
                             JBN 2026
+                        </button>
+                        <div class="border-l border-gray-300 h-6 mx-1"></div>
+                        <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[140px]">
+                            <option value="">Eigen preset...</option>
+                        </select>
+                        <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="Huidige configuratie opslaan">
+                            💾 Opslaan
                         </button>
                     </div>
                 </div>
@@ -744,10 +751,9 @@
                             <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
                         </div>
                         <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
-                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
                             <input type="text" name="gewichtsklassen[{{ $key }}]"
                                    value="{{ implode(', ', $data['gewichten'] ?? []) }}"
-                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
                                    placeholder="-20, -23, -26, +26">
                         </div>
                         <div class="dynamisch-label flex-1 text-sm text-blue-600 italic {{ $maxKgVerschil > 0 ? '' : 'hidden' }}">
@@ -877,10 +883,9 @@
                                 <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
                             </div>
                             <div class="gewichten-container flex-1 ${gewichtenHidden}">
-                                <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
                                 <input type="text" name="gewichtsklassen[${key}]"
                                        value="${item.gewichten.join(', ')}"
-                                       class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                       class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
                                        placeholder="-20, -23, -26, +26">
                             </div>
                             <div class="dynamisch-label flex-1 text-sm text-blue-600 italic ${dynamischHidden}">
@@ -904,6 +909,85 @@
             document.getElementById('btn-jbn-2026').addEventListener('click', () => {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
                     renderCategorieen(gescheidenToggle.checked ? jbn2026Gescheiden : jbn2026Gemengd);
+                }
+            });
+
+            // Eigen presets
+            const presetsDropdown = document.getElementById('eigen-presets-dropdown');
+            let eigenPresets = [];
+
+            // Load user presets on page load
+            async function loadEigenPresets() {
+                try {
+                    const response = await fetch('{{ route("organisator.presets.index") }}');
+                    if (response.ok) {
+                        eigenPresets = await response.json();
+                        presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
+                        eigenPresets.forEach(preset => {
+                            const option = document.createElement('option');
+                            option.value = preset.id;
+                            option.textContent = preset.naam;
+                            presetsDropdown.appendChild(option);
+                        });
+                    }
+                } catch (e) {
+                    console.error('Kon presets niet laden:', e);
+                }
+            }
+            loadEigenPresets();
+
+            // Load selected preset
+            presetsDropdown.addEventListener('change', () => {
+                const presetId = presetsDropdown.value;
+                if (!presetId) return;
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                if (!preset) return;
+
+                if (confirm(`Preset "${preset.naam}" laden? Dit vervangt alle huidige instellingen.`)) {
+                    renderCategorieen(preset.configuratie);
+                }
+                presetsDropdown.value = ''; // Reset dropdown
+            });
+
+            // Save current config as preset
+            document.getElementById('btn-save-preset').addEventListener('click', async () => {
+                const naam = prompt('Naam voor deze preset:');
+                if (!naam || !naam.trim()) return;
+
+                // Collect current configuration
+                const configuratie = {};
+                container.querySelectorAll('.gewichtsklasse-item').forEach(item => {
+                    const key = item.dataset.key;
+                    configuratie[key] = {
+                        max_leeftijd: parseInt(item.querySelector('.leeftijd-input')?.value) || 99,
+                        label: item.querySelector('.label-input')?.value || key,
+                        geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
+                        max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
+                        gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
+                    };
+                });
+
+                try {
+                    const response = await fetch('{{ route("organisator.presets.store") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ naam: naam.trim(), configuratie })
+                    });
+
+                    if (response.ok) {
+                        alert('Preset opgeslagen!');
+                        loadEigenPresets(); // Refresh dropdown
+                    } else {
+                        const data = await response.json();
+                        alert('Fout: ' + (data.message || 'Kon preset niet opslaan'));
+                    }
+                } catch (e) {
+                    console.error('Fout bij opslaan:', e);
+                    alert('Er ging iets mis bij het opslaan');
                 }
             });
 
@@ -960,10 +1044,9 @@
                             <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
                         </div>
                         <div class="gewichten-container flex-1">
-                            <label class="text-gray-600 text-sm">Gewichtsklassen:</label>
                             <input type="text" name="gewichtsklassen[${newKey}]"
                                    value=""
-                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm mt-1"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
                                    placeholder="-20, -23, -26, +26">
                         </div>
                         <div class="dynamisch-label flex-1 text-sm text-blue-600 italic hidden">
