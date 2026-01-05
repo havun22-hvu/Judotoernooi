@@ -641,10 +641,6 @@
                                    class="w-4 h-4 text-blue-600 border-gray-300 rounded">
                             <span>Gewichtsklassen gebruiken</span>
                         </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="gescheiden-toggle" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
-                            <span>Jongens/meiden gescheiden (Mini's & Pupillen)</span>
-                        </label>
                     </div>
                     <div class="flex gap-2 items-center flex-wrap">
                         <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
@@ -801,11 +797,8 @@
             const jsonInput = document.getElementById('gewichtsklassen_json_input');
 
             // JBN presets (gemengd = default, gescheiden = uitzondering)
-            const jbn2025Gemengd = @json(\App\Models\Toernooi::getJbn2025GewichtsklassenGemengd());
-            const jbn2026Gemengd = @json(\App\Models\Toernooi::getJbn2026GewichtsklassenGemengd());
-            const jbn2025Gescheiden = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
-            const jbn2026Gescheiden = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
-            const gescheidenToggle = document.getElementById('gescheiden-toggle');
+            const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
+            const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
 
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
@@ -921,13 +914,13 @@
             // JBN buttons
             document.getElementById('btn-jbn-2025').addEventListener('click', () => {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
-                    renderCategorieen(gescheidenToggle.checked ? jbn2025Gescheiden : jbn2025Gemengd);
+                    renderCategorieen(jbn2025);
                 }
             });
 
             document.getElementById('btn-jbn-2026').addEventListener('click', () => {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
-                    renderCategorieen(gescheidenToggle.checked ? jbn2026Gescheiden : jbn2026Gemengd);
+                    renderCategorieen(jbn2026);
                 }
             });
 
