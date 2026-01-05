@@ -231,6 +231,22 @@ SCORE                   │   136.3      │   130.9      │   116.9 ✓
 | Geen judoka's in leeftijdsgroep | Skip |
 | Te groot leeftijdsverschil | Forceer breekpunt |
 
+## Poule Titels
+
+Titels zijn nu dynamisch op basis van werkelijke waarden:
+
+| Type | Oud formaat | Nieuw formaat |
+|------|-------------|---------------|
+| Voorronde | "A-pupillen -30 kg" | "Jeugd 9-10j 30-33kg" |
+| Eliminatie | "A-pupillen -30 kg - Eliminatie" | "Jeugd M 9-10j 30-33kg - Eliminatie" |
+| Kruisfinale | "Kruisfinale A-pupillen Jongens -30 kg" | "Kruisfinale Jeugd M -30kg (top 2)" |
+
+**Onderdelen:**
+- Categorie label (uit instellingen: "Mini's", "Jeugd", etc.)
+- Geslacht: M/V (kort, ipv "Jongens"/"Meisjes")
+- Leeftijd range: berekend uit judoka's (bijv. "9-10j")
+- Gewicht range: berekend uit judoka's (bijv. "30-33kg")
+
 ## Notities
 
 - Leeftijd is ALTIJD eerste filter (veiligheid!)
