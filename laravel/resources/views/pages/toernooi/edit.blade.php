@@ -919,23 +919,30 @@
             const presetsDropdown = document.getElementById('eigen-presets-dropdown');
             let eigenPresets = [];
 
-            // Load user presets on page load
+            // Load user presets on page load (only for organisator)
             async function loadEigenPresets() {
+                @if(Auth::guard('organisator')->check())
                 try {
-                    const response = await fetch('{{ route("organisator.presets.index") }}');
+                    const response = await fetch('{{ route("organisator.presets.index") }}', {
+                        credentials: 'same-origin'
+                    });
                     if (response.ok) {
-                        eigenPresets = await response.json();
-                        presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
-                        eigenPresets.forEach(preset => {
-                            const option = document.createElement('option');
-                            option.value = preset.id;
-                            option.textContent = preset.naam;
-                            presetsDropdown.appendChild(option);
-                        });
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            eigenPresets = await response.json();
+                            presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
+                            eigenPresets.forEach(preset => {
+                                const option = document.createElement('option');
+                                option.value = preset.id;
+                                option.textContent = preset.naam;
+                                presetsDropdown.appendChild(option);
+                            });
+                        }
                     }
                 } catch (e) {
-                    console.error('Kon presets niet laden:', e);
+                    // Silently fail - presets are optional
                 }
+                @endif
             }
             loadEigenPresets();
 
@@ -974,6 +981,7 @@
                 try {
                     const response = await fetch('{{ route("organisator.presets.store") }}', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
