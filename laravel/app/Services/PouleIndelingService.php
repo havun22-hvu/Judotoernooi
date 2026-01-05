@@ -190,7 +190,13 @@ class PouleIndelingService
                         ];
                     }
 
-                    // Build dynamic title with actual ranges
+                    // Build dynamic title with actual ranges and config label
+                    $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+                    $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
+                    $lkLabel = ($configKey && isset($gewichtsklassenConfig[$configKey]['label']))
+                        ? $gewichtsklassenConfig[$configKey]['label']
+                        : $leeftijdsklasse;
+
                     $leeftijden = $judokas->pluck('leeftijd')->filter()->toArray();
                     $gewichten = $judokas->pluck('gewicht')->filter()->toArray();
                     $leeftijdRange = !empty($leeftijden)
@@ -200,7 +206,7 @@ class PouleIndelingService
                         ? (min($gewichten) == max($gewichten) ? min($gewichten) . 'kg' : min($gewichten) . '-' . max($gewichten) . 'kg')
                         : $gewichtsklasse;
                     $geslachtLabel = match ($geslacht) { 'M' => 'M', 'V' => 'V', default => null };
-                    $titelParts = [$leeftijdsklasse];
+                    $titelParts = [$lkLabel];
                     if ($geslachtLabel) $titelParts[] = $geslachtLabel;
                     if ($leeftijdRange) $titelParts[] = $leeftijdRange;
                     if ($gewichtRange) $titelParts[] = $gewichtRange;
@@ -242,12 +248,13 @@ class PouleIndelingService
                 // Split into optimal pools (normal flow)
                 $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
-                // Get sorting mode for title generation
+                // Get sorting mode and config for title generation
                 $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
                 $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
+                $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
                 foreach ($pouleVerdelingen as $pouleJudokas) {
-                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde);
+                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig);
 
                     $poule = Poule::create([
                         'toernooi_id' => $toernooi->id,
@@ -316,9 +323,16 @@ class PouleIndelingService
                         default => null,
                     };
 
+                    // Get label from config
+                    $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+                    $configKey = $this->leeftijdsklasseToConfigKey($data['leeftijdsklasse']);
+                    $lkLabel = ($configKey && isset($gewichtsklassenConfig[$configKey]['label']))
+                        ? $gewichtsklassenConfig[$configKey]['label']
+                        : $data['leeftijdsklasse'];
+
                     // Include qualifying places in title
                     $plaatsenTekst = $kruisfinalesAantal === 1 ? 'top 1' : "top {$kruisfinalesAantal}";
-                    $titelParts = ['Kruisfinale', $data['leeftijdsklasse']];
+                    $titelParts = ['Kruisfinale', $lkLabel];
                     if ($geslachtLabel) $titelParts[] = $geslachtLabel;
                     $titelParts[] = $data['gewichtsklasse'];
                     $titel = implode(' ', $titelParts) . " ({$plaatsenTekst})";
@@ -681,9 +695,17 @@ class PouleIndelingService
      * - "Jeugd 9-10j 30-33kg" (dynamic ranges)
      * - "Mini's M 7-8j 24-27kg" (with gender)
      */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band'): string
+    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null): string
     {
+        // Get label from tournament config if available
         $lk = $leeftijdsklasse ?: 'Onbekend';
+        if ($gewichtsklassenConfig) {
+            // Find matching config key based on leeftijdsklasse
+            $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
+            if ($configKey && isset($gewichtsklassenConfig[$configKey]['label'])) {
+                $lk = $gewichtsklassenConfig[$configKey]['label'];
+            }
+        }
 
         // Gender label (short form)
         $geslachtLabel = match ($geslacht) {
@@ -738,6 +760,37 @@ class PouleIndelingService
         }
 
         return implode(' ', $parts);
+    }
+
+    /**
+     * Convert leeftijdsklasse label to config key
+     */
+    private function leeftijdsklasseToConfigKey(string $leeftijdsklasse): ?string
+    {
+        // Map old JBN labels to config keys
+        $mapping = [
+            "Mini's" => 'minis',
+            'A-pupillen' => 'a_pupillen',
+            'B-pupillen' => 'b_pupillen',
+            'Dames -15' => 'dames_15',
+            'Heren -15' => 'heren_15',
+            'Dames -18' => 'dames_18',
+            'Heren -18' => 'heren_18',
+            'Dames' => 'dames',
+            'Heren' => 'heren',
+            // Also support direct config keys
+            'minis' => 'minis',
+            'a_pupillen' => 'a_pupillen',
+            'b_pupillen' => 'b_pupillen',
+            'dames_15' => 'dames_15',
+            'heren_15' => 'heren_15',
+            'dames_18' => 'dames_18',
+            'heren_18' => 'heren_18',
+            'dames' => 'dames',
+            'heren' => 'heren',
+        ];
+
+        return $mapping[$leeftijdsklasse] ?? null;
     }
 
     /**
