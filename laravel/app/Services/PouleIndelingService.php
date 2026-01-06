@@ -16,21 +16,26 @@ class PouleIndelingService
     private array $voorkeur;
     private bool $clubspreiding;
     private array $prioriteiten;
+    private ?Toernooi $toernooi = null;
+    private array $gewichtsklassenConfig = [];
+    private DynamischeIndelingService $dynamischeIndelingService;
 
     /**
      * Initialize with tournament-specific settings
      */
     public function initializeFromToernooi(Toernooi $toernooi): void
     {
+        $this->toernooi = $toernooi;
         $this->voorkeur = $toernooi->getPouleGrootteVoorkeurOfDefault();
         // Min/max are derived from preference list
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
         $this->clubspreiding = $toernooi->clubspreiding ?? true;
         $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+        $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     }
 
-    public function __construct()
+    public function __construct(DynamischeIndelingService $dynamischeIndelingService)
     {
         // Default values, will be overridden by initializeFromToernooi
         $this->voorkeur = [5, 4, 6, 3];
@@ -38,6 +43,7 @@ class PouleIndelingService
         $this->maxJudokas = 6;
         $this->clubspreiding = true;
         $this->prioriteiten = ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+        $this->dynamischeIndelingService = $dynamischeIndelingService;
     }
 
     /**
@@ -245,62 +251,142 @@ class PouleIndelingService
                     continue; // Skip normal pool creation
                 }
 
-                // Split into optimal pools (normal flow)
-                $pouleVerdelingen = $this->maakOptimalePoules($judokas);
-
                 // Get sorting mode and config for title generation
                 $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
                 $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
                 $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
-                foreach ($pouleVerdelingen as $pouleJudokas) {
-                    $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig);
+                // Check if this category uses dynamic grouping (max_kg_verschil > 0 and no fixed weight classes)
+                $usesDynamic = !$gebruikGewichtsklassen && $this->usesDynamicGrouping($leeftijdsklasse);
 
-                    $poule = Poule::create([
-                        'toernooi_id' => $toernooi->id,
-                        'nummer' => $pouleNummer,
-                        'titel' => $titel,
-                        'type' => 'voorronde',
-                        'leeftijdsklasse' => $leeftijdsklasse,
-                        'gewichtsklasse' => $gewichtsklasse,
-                        'aantal_judokas' => count($pouleJudokas),
-                    ]);
+                if ($usesDynamic) {
+                    // DYNAMIC GROUPING: Use DynamischeIndelingService to create weight groups
+                    $maxKg = $this->getMaxKgVerschil($leeftijdsklasse);
+                    $maxLeeftijd = $this->getMaxLeeftijdVerschil($leeftijdsklasse);
 
-                    // Attach judokas to pool
-                    $positie = 1;
-                    foreach ($pouleJudokas as $judoka) {
-                        $poule->judokas()->attach($judoka->id, ['positie' => $positie++]);
+                    $indeling = $this->dynamischeIndelingService->berekenIndeling(
+                        $judokas,
+                        $maxLeeftijd,
+                        $maxKg
+                    );
+
+                    // Create pools from dynamische indeling result
+                    foreach ($indeling['poules'] as $pouleData) {
+                        $pouleJudokas = $pouleData['judokas'];
+                        if (empty($pouleJudokas)) continue;
+
+                        // Build dynamic title with weight range from pool
+                        $gewichtRange = $pouleData['gewicht_groep'] ?? '';
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, false, $volgorde, $gewichtsklassenConfig);
+
+                        $poule = Poule::create([
+                            'toernooi_id' => $toernooi->id,
+                            'nummer' => $pouleNummer,
+                            'titel' => $titel,
+                            'type' => 'voorronde',
+                            'leeftijdsklasse' => $leeftijdsklasse,
+                            'gewichtsklasse' => $gewichtRange,
+                            'aantal_judokas' => count($pouleJudokas),
+                        ]);
+
+                        // Attach judokas to pool
+                        $positie = 1;
+                        foreach ($pouleJudokas as $judoka) {
+                            $poule->judokas()->attach($judoka->id, ['positie' => $positie++]);
+                        }
+
+                        // Calculate matches
+                        $poule->updateStatistieken();
+
+                        $statistieken['totaal_poules']++;
+                        $statistieken['totaal_wedstrijden'] += $poule->aantal_wedstrijden;
+
+                        if (!isset($statistieken['per_leeftijdsklasse'][$leeftijdsklasse])) {
+                            $statistieken['per_leeftijdsklasse'][$leeftijdsklasse] = [
+                                'poules' => 0,
+                                'wedstrijden' => 0,
+                                'kruisfinales' => 0,
+                            ];
+                        }
+                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['poules']++;
+                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
+
+                        // Track for kruisfinale (use leeftijdsklasse + gewichtRange)
+                        $categorieKey = "{$leeftijdsklasse}|{$gewichtRange}" . ($geslacht ? "|{$geslacht}" : '');
+                        if (!isset($voorrondesPerCategorie[$categorieKey])) {
+                            $voorrondesPerCategorie[$categorieKey] = [
+                                'leeftijdsklasse' => $leeftijdsklasse,
+                                'gewichtsklasse' => $gewichtRange,
+                                'geslacht' => $geslacht,
+                                'aantal_poules' => 0,
+                            ];
+                        }
+                        $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+
+                        $pouleNummer++;
                     }
 
-                    // Calculate matches
-                    $poule->updateStatistieken();
+                    // Log dynamic grouping stats
+                    $statistieken['dynamische_indeling'][$leeftijdsklasse] = [
+                        'max_kg_verschil' => $maxKg,
+                        'max_leeftijd_verschil' => $maxLeeftijd,
+                        'score' => $indeling['score'],
+                        'stats' => $indeling['stats'],
+                    ];
 
-                    $statistieken['totaal_poules']++;
-                    $statistieken['totaal_wedstrijden'] += $poule->aantal_wedstrijden;
+                } else {
+                    // STANDARD GROUPING: Split into optimal pools (existing flow)
+                    $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
-                    if (!isset($statistieken['per_leeftijdsklasse'][$leeftijdsklasse])) {
-                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse] = [
-                            'poules' => 0,
-                            'wedstrijden' => 0,
-                            'kruisfinales' => 0,
-                        ];
-                    }
-                    $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['poules']++;
-                    $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
+                    foreach ($pouleVerdelingen as $pouleJudokas) {
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig);
 
-                    // Track for kruisfinale per categorie (leeftijdsklasse + gewichtsklasse + geslacht)
-                    $categorieKey = $sleutel;
-                    if (!isset($voorrondesPerCategorie[$categorieKey])) {
-                        $voorrondesPerCategorie[$categorieKey] = [
+                        $poule = Poule::create([
+                            'toernooi_id' => $toernooi->id,
+                            'nummer' => $pouleNummer,
+                            'titel' => $titel,
+                            'type' => 'voorronde',
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtsklasse,
-                            'geslacht' => $geslacht,
-                            'aantal_poules' => 0,
-                        ];
-                    }
-                    $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+                            'aantal_judokas' => count($pouleJudokas),
+                        ]);
 
-                    $pouleNummer++;
+                        // Attach judokas to pool
+                        $positie = 1;
+                        foreach ($pouleJudokas as $judoka) {
+                            $poule->judokas()->attach($judoka->id, ['positie' => $positie++]);
+                        }
+
+                        // Calculate matches
+                        $poule->updateStatistieken();
+
+                        $statistieken['totaal_poules']++;
+                        $statistieken['totaal_wedstrijden'] += $poule->aantal_wedstrijden;
+
+                        if (!isset($statistieken['per_leeftijdsklasse'][$leeftijdsklasse])) {
+                            $statistieken['per_leeftijdsklasse'][$leeftijdsklasse] = [
+                                'poules' => 0,
+                                'wedstrijden' => 0,
+                                'kruisfinales' => 0,
+                            ];
+                        }
+                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['poules']++;
+                        $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
+
+                        // Track for kruisfinale per categorie (leeftijdsklasse + gewichtsklasse + geslacht)
+                        $categorieKey = $sleutel;
+                        if (!isset($voorrondesPerCategorie[$categorieKey])) {
+                            $voorrondesPerCategorie[$categorieKey] = [
+                                'leeftijdsklasse' => $leeftijdsklasse,
+                                'gewichtsklasse' => $gewichtsklasse,
+                                'geslacht' => $geslacht,
+                                'aantal_poules' => 0,
+                            ];
+                        }
+                        $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+
+                        $pouleNummer++;
+                    }
                 }
             }
 
@@ -429,11 +515,11 @@ class PouleIndelingService
     }
 
     /**
-     * Group judokas by age class, (optionally) weight class, and (for U15+) gender
+     * Group judokas by age class, (optionally) weight class, and gender based on config
      * Sorted by judoka_code for correct ordering
      *
-     * If gebruik_gewichtsklassen is OFF: group only by leeftijd (+ geslacht for older)
-     * If gebruik_gewichtsklassen is ON: group by leeftijd + gewichtsklasse (+ geslacht for older)
+     * If gebruik_gewichtsklassen is OFF: group only by leeftijd (+ geslacht from config)
+     * If gebruik_gewichtsklassen is ON: group by leeftijd + gewichtsklasse (+ geslacht from config)
      */
     private function groepeerJudokas(Toernooi $toernooi): Collection
     {
@@ -445,13 +531,18 @@ class PouleIndelingService
             ->orderBy('judoka_code')
             ->get();
 
-        $groepen = $judokas->groupBy(function (Judoka $judoka) use ($gebruikGewichtsklassen) {
+        $groepen = $judokas->groupBy(function (Judoka $judoka) use ($gebruikGewichtsklassen, $toernooi) {
             $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
             $geslacht = strtoupper($judoka->geslacht);
 
-            // For U15, U18, U21 and Senioren: separate by gender
-            $oudereCategorien = ['U15', 'U18', 'U21', 'Senioren'];
-            $includeGeslacht = in_array($leeftijdsklasse, $oudereCategorien);
+            // Get config for this age class to determine gender handling
+            $configKey = $this->findConfigKeyForJudoka($judoka, $toernooi);
+            $config = $this->gewichtsklassenConfig[$configKey] ?? null;
+
+            // Determine if we should separate by gender based on config
+            // geslacht='gemengd' means mixed, 'M' or 'V' means single gender category
+            $configGeslacht = $config['geslacht'] ?? 'gemengd';
+            $includeGeslacht = $configGeslacht !== 'gemengd';
 
             if ($gebruikGewichtsklassen) {
                 // Met gewichtsklassen: groepeer per leeftijd + gewichtsklasse
@@ -484,6 +575,76 @@ class PouleIndelingService
 
             return sprintf('%02d%04d', $leeftijdOrder, $gewichtNum + $gewichtPlus);
         });
+    }
+
+    /**
+     * Find the config key for a judoka based on their age and gender
+     */
+    private function findConfigKeyForJudoka(Judoka $judoka, Toernooi $toernooi): ?string
+    {
+        $leeftijd = $judoka->leeftijd ?? ($toernooi->datum?->year ?? date('Y')) - $judoka->geboortejaar;
+        $geslacht = strtoupper($judoka->geslacht);
+
+        // Find matching config based on max_leeftijd
+        foreach ($this->gewichtsklassenConfig as $key => $config) {
+            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
+            $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
+
+            // Check age match
+            if ($leeftijd <= $maxLeeftijd) {
+                // Check gender match (gemengd matches all, or specific gender must match)
+                if ($configGeslacht === 'GEMENGD' || $configGeslacht === $geslacht) {
+                    return $key;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get config for a leeftijdsklasse label
+     */
+    private function getConfigForLeeftijdsklasse(string $leeftijdsklasse): ?array
+    {
+        $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
+        return $this->gewichtsklassenConfig[$configKey] ?? null;
+    }
+
+    /**
+     * Check if a category should use dynamic grouping (max_kg_verschil > 0)
+     */
+    private function usesDynamicGrouping(string $leeftijdsklasse): bool
+    {
+        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
+        if (!$config) {
+            return false;
+        }
+        $maxKg = $config['max_kg_verschil'] ?? 0;
+        return $maxKg > 0;
+    }
+
+    /**
+     * Get max kg verschil for a leeftijdsklasse
+     */
+    private function getMaxKgVerschil(string $leeftijdsklasse): float
+    {
+        // First check category-specific config
+        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
+        if ($config && isset($config['max_kg_verschil']) && $config['max_kg_verschil'] > 0) {
+            return (float) $config['max_kg_verschil'];
+        }
+        // Fallback to tournament-level setting
+        return (float) ($this->toernooi?->max_kg_verschil ?? 3.0);
+    }
+
+    /**
+     * Get max leeftijd verschil for a leeftijdsklasse
+     */
+    private function getMaxLeeftijdVerschil(string $leeftijdsklasse): int
+    {
+        // Use tournament-level setting (same for all categories for safety)
+        return (int) ($this->toernooi?->max_leeftijd_verschil ?? 2);
     }
 
     /**
