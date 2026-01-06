@@ -17,7 +17,7 @@
                     $problematischePoules->push([
                         'id' => $poule->id,
                         'nummer' => $poule->nummer,
-                        'leeftijdsklasse' => $poule->leeftijdsklasse,
+                        'label' => $category['label'],
                         'gewichtsklasse' => $poule->gewichtsklasse,
                         'actief' => $actief,
                     ]);
@@ -46,7 +46,7 @@
         <div id="problematische-links" class="flex flex-wrap gap-2">
             @foreach($problematischePoules as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-                #{{ $p['nummer'] }} {{ $p['leeftijdsklasse'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
+                #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
         </div>
@@ -102,7 +102,7 @@
                 <div class="flex justify-between items-center px-4 py-3 {{ $isEliminatie ? 'bg-orange-100' : 'bg-gray-100' }} border-b">
                     <div class="flex items-center gap-3">
                         <h2 class="text-lg font-bold {{ $isEliminatie ? 'text-orange-800' : '' }}">
-                            @if($isEliminatie)⚔️ @endif{{ $category['leeftijdsklasse'] }} {{ $category['gewichtsklasse'] }}
+                            @if($isEliminatie)⚔️ @endif{{ $category['label'] }} {{ $category['gewichtsklasse'] }}
                             @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">(Eliminatie)</span>@endif
                         </h2>
                         @php
@@ -294,7 +294,7 @@
                             >
                                 <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
                                     <div class="pointer-events-none flex-1">
-                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }}</div>
+                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $category['label'] }} / {{ $poule->gewichtsklasse }}</div>
                                         <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">

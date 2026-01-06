@@ -36,6 +36,35 @@
 
 ---
 
+## Sessie: 6 januari 2026
+
+### Fix: Custom labels voor poule titels
+- **Type:** Bug fix
+- **Wat:** Poule overzicht toonde JBN labels (A-pupillen, B-pupillen) i.p.v. custom labels uit toernooi config
+- **Waarom:** `PouleController@index` stuurde geen label mapping naar de view
+- **Bestanden:**
+  - `app/Http/Controllers/PouleController.php` - labels mapping toegevoegd
+  - `resources/views/pages/poule/index.blade.php` - 3 plekken aangepast
+  - `app/Http/Controllers/WedstrijddagController.php` - ook aangepast (andere route)
+- **Naar permanente docs?** ☑ Nee - technische implementatie
+
+### Fix: Gewichtsklassen checkbox opslag
+- **Type:** Bug fix
+- **Wat:** "Gewichtsklassen gebruiken" checkbox werd niet correct opgeslagen
+- **Waarom:** `x-model` en `checked` attribute conflicteerden in Alpine.js
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php:638-640`
+- **Oplossing:** `checked` attribute verwijderd, alleen `x-model` behouden
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Feature: Leeftijd/gewicht ranges in poule headers
+- **Type:** Enhancement
+- **Wat:** Poule headers tonen nu werkelijke leeftijd en gewicht ranges (bijv. "8-9j, 25.2-27.1kg")
+- **Waarom:** Gebruiker wilde meer context zien bij elke poule
+- **Bestanden:** `resources/views/pages/poule/index.blade.php:98-116, 128-131`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

@@ -31,8 +31,24 @@ class WedstrijddagController extends Controller
 
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
+        // Laad gewichtsklassen config voor custom labels
+        $gewichtsklassenConfig = $toernooi->gewichtsklassen ?? [];
+
+        // Mapping van JBN leeftijdsklassen naar config keys
+        $leeftijdsklasseToKey = [
+            "Mini's" => 'minis',
+            'A-pupillen' => 'a_pupillen',
+            'B-pupillen' => 'b_pupillen',
+            'Dames -15' => 'dames_15',
+            'Heren -15' => 'heren_15',
+            'Dames -18' => 'dames_18',
+            'Heren -18' => 'heren_18',
+            'Dames' => 'dames',
+            'Heren' => 'heren',
+        ];
+
         // Group by blok first, then by category within each blok
-        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie) {
+        $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
             // Group by category and sort
@@ -53,15 +69,24 @@ class WedstrijddagController extends Controller
                 ->filter(fn($poule) => $poule->type === 'kruisfinale' || $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count() > 0)
                 ->groupBy(function ($poule) {
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-                })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde) {
+                })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
                     [$leeftijdsklasse, $gewichtsklasse] = explode('|', $key);
                     // Extract numeric weight for sorting
                     $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gewichtsklasse));
                     // Check if this is an elimination category
                     $isEliminatie = $categoryPoules->first()?->type === 'eliminatie';
+
+                    // Bepaal custom label uit config
+                    $configKey = $leeftijdsklasseToKey[$leeftijdsklasse] ?? null;
+                    $label = $leeftijdsklasse; // default: JBN label
+                    if ($configKey && isset($gewichtsklassenConfig[$configKey]['label'])) {
+                        $label = $gewichtsklassenConfig[$configKey]['label'];
+                    }
+
                     return [
                         'key' => $key,
                         'leeftijdsklasse' => $leeftijdsklasse,
+                        'label' => $label,
                         'gewichtsklasse' => $gewichtsklasse,
                         'leeftijd_sort' => $leeftijdVolgorde[$leeftijdsklasse] ?? 99,
                         'gewicht_sort' => $gewichtNum,

@@ -44,6 +44,30 @@ class PouleController extends Controller
             'Heren' => 6,
         ];
 
+        // Mapping JBN leeftijdsklassen naar config keys
+        $leeftijdsklasseToKey = [
+            "Mini's" => 'minis',
+            'A-pupillen' => 'a_pupillen',
+            'B-pupillen' => 'b_pupillen',
+            'Dames -15' => 'dames_15',
+            'Heren -15' => 'heren_15',
+            'Dames -18' => 'dames_18',
+            'Heren -18' => 'heren_18',
+            'Dames' => 'dames',
+            'Heren' => 'heren',
+        ];
+
+        // Bouw labels mapping: JBN label -> custom label uit config
+        $gewichtsklassenConfig = $toernooi->gewichtsklassen ?? [];
+        $leeftijdsklasseLabels = [];
+        foreach ($leeftijdsklasseToKey as $jbnLabel => $configKey) {
+            if (isset($gewichtsklassenConfig[$configKey]['label'])) {
+                $leeftijdsklasseLabels[$jbnLabel] = $gewichtsklassenConfig[$configKey]['label'];
+            } else {
+                $leeftijdsklasseLabels[$jbnLabel] = $jbnLabel; // fallback naar JBN label
+            }
+        }
+
         $poules = $toernooi->poules()
             ->with(['blok', 'mat', 'judokas.club'])
             ->withCount('judokas')
@@ -59,7 +83,7 @@ class PouleController extends Controller
         // Group by leeftijdsklasse (preserving sort order)
         $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
 
-        return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse'));
+        return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse', 'leeftijdsklasseLabels'));
     }
 
     /**
