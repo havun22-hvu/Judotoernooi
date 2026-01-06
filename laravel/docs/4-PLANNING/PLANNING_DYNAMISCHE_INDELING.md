@@ -210,7 +210,31 @@ SCORE                   │   136.3      │   130.9      │   116.9 ✓
 - [x] Varianten genereren (zoals blokverdeling)
 - [x] Score berekening
 - [x] Test command: `php artisan test:dynamische-indeling {aantal}`
-- [ ] Integreren met bestaande `PouleIndelingService`
+- [x] Integreren met bestaande `PouleIndelingService`
+
+### Integratie Details (Fase 2)
+
+De `PouleIndelingService` detecteert automatisch wanneer dynamische indeling nodig is:
+
+```php
+// Per leeftijdsgroep: check of dynamische indeling geconfigureerd is
+$usesDynamic = !$gebruikGewichtsklassen && $this->usesDynamicGrouping($leeftijdsklasse);
+
+if ($usesDynamic) {
+    // Gebruik DynamischeIndelingService voor deze groep
+    $indeling = $this->dynamischeIndelingService->berekenIndeling($judokas, $maxLeeftijd, $maxKg);
+    // Maak poules van de resultaten...
+}
+```
+
+**Voorwaarden voor dynamische indeling:**
+1. `gebruik_gewichtsklassen` = false (geen vaste klassen)
+2. `max_kg_verschil` > 0 in de categorie config
+
+**Geslacht per categorie:**
+- Wordt nu uit de config gelezen per leeftijdsgroep
+- `gemengd` = jongens en meisjes samen
+- `M` of `V` = alleen dat geslacht in aparte groep
 
 ### Fase 3: UI Varianten
 - [ ] Varianten weergave in poule-overzicht
