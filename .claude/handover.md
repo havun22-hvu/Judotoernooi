@@ -1,46 +1,54 @@
 # Handover - Laatste Sessie
 
-## Datum: 6 januari 2026
+## Datum: 6 januari 2026 (middag)
 
 ### Wat is gedaan:
 
-1. **Custom labels voor poule titels**
-   - Probleem: Poule overzicht toonde JBN labels ("A-pupillen") i.p.v. custom labels uit config ("Jeugd")
-   - Oorzaak: Verkeerde controller (WedstrijddagController i.p.v. PouleController) was aangepast
-   - Oplossing: `PouleController@index` aangepast met `$leeftijdsklasseLabels` mapping
+1. **DynamischeIndelingService geïntegreerd met PouleIndelingService** ✅
+   - `PouleIndelingService` injecteert nu `DynamischeIndelingService`
+   - Automatische detectie wanneer dynamische indeling nodig is
+   - Geslacht per categorie nu uit config gelezen (niet meer hardcoded)
 
-2. **Checkbox bug gefixed**
-   - "Gewichtsklassen gebruiken" werd niet correct opgeslagen
-   - Oorzaak: `x-model` en `checked` attribute conflicteerden in Alpine.js
-   - Oplossing: `checked` attribute verwijderd
+2. **Voorwaarden voor dynamische indeling:**
+   - `gebruik_gewichtsklassen = false` (geen vaste klassen)
+   - `max_kg_verschil > 0` in de categorie config
+   - Beide condities moeten waar zijn
 
-3. **Leeftijd/gewicht ranges in poule headers**
-   - Poule headers tonen nu: `#11 Jeugd (8-9j, 25.2-27.1kg)`
-   - Berekend uit werkelijke judoka data per poule
+3. **Nieuwe helper methods in PouleIndelingService:**
+   - `usesDynamicGrouping($leeftijdsklasse)` - check of dynamisch nodig
+   - `getMaxKgVerschil($leeftijdsklasse)` - haalt max kg uit config of toernooi
+   - `getMaxLeeftijdVerschil($leeftijdsklasse)` - haalt max leeftijd uit toernooi
+   - `findConfigKeyForJudoka($judoka, $toernooi)` - zoekt config key voor judoka
 
 ### Openstaande items:
 
-- [ ] Dynamische indeling algoritme integreren met `PouleIndelingService` (Fase 2 van planning)
+- [x] ~~Dynamische indeling algoritme integreren met `PouleIndelingService`~~ (Fase 2 DONE)
 - [ ] UI voor varianten selectie (Fase 3)
+- [ ] Score visualisatie (Fase 3)
 - [ ] Unit tests voor dynamische indeling (Fase 4)
 
 ### Belangrijke context voor volgende keer:
 
-**JBN labels → Config keys mapping:**
+**Dynamische indeling flow:**
 ```php
-$leeftijdsklasseToKey = [
-    "Mini's" => 'minis',
-    'A-pupillen' => 'a_pupillen',
-    'B-pupillen' => 'b_pupillen',
-    'Dames -15' => 'dames_15',
-    'Heren -15' => 'heren_15',
-    // etc.
-];
+// In genereerPouleIndeling()
+$usesDynamic = !$gebruikGewichtsklassen && $this->usesDynamicGrouping($leeftijdsklasse);
+
+if ($usesDynamic) {
+    $indeling = $this->dynamischeIndelingService->berekenIndeling($judokas, $maxLeeftijd, $maxKg);
+    // Maak poules van $indeling['poules']
+}
 ```
 
-**Routes:**
-- `/toernooi/{slug}/poule` → `PouleController@index` (overzicht)
-- `/toernooi/{slug}/wedstrijddag/poules` → `WedstrijddagController@poules` (wedstrijddag)
+**Statistieken output bij dynamische indeling:**
+```php
+$statistieken['dynamische_indeling'][$leeftijdsklasse] = [
+    'max_kg_verschil' => 3.0,
+    'max_leeftijd_verschil' => 2,
+    'score' => 22.9,
+    'stats' => [...],
+];
+```
 
 ### Bekende issues/bugs:
 
@@ -49,9 +57,10 @@ $leeftijdsklasseToKey = [
 ### Gewijzigde bestanden:
 
 ```
-laravel/app/Http/Controllers/PouleController.php
-laravel/app/Http/Controllers/WedstrijddagController.php
-laravel/resources/views/pages/poule/index.blade.php
-laravel/resources/views/pages/toernooi/edit.blade.php
-laravel/resources/views/pages/wedstrijddag/poules.blade.php
+laravel/app/Services/PouleIndelingService.php (261 regels toegevoegd)
+laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md (fase 2 afgevinkt)
 ```
+
+### Branch:
+
+`feature/dynamische-indeling` - gepusht naar origin
