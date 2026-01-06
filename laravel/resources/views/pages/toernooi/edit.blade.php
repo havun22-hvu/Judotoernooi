@@ -637,7 +637,6 @@
                             <input type="hidden" name="gebruik_gewichtsklassen" value="0">
                             <input type="checkbox" name="gebruik_gewichtsklassen" value="1"
                                    x-model="gebruikGewichtsklassen"
-                                   {{ old('gebruik_gewichtsklassen', $toernooi->gebruik_gewichtsklassen ?? true) ? 'checked' : '' }}
                                    class="w-4 h-4 text-blue-600 border-gray-300 rounded">
                             <span>Gewichtsklassen gebruiken</span>
                         </label>

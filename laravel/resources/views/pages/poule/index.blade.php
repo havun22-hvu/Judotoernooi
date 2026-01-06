@@ -66,7 +66,7 @@
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-            #{{ $p->nummer }} {{ $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg (<span data-probleem-count="{{ $p->id }}">{{ $p->judokas_count }}</span>)
+            #{{ $p->nummer }} {{ $leeftijdsklasseLabels[$p->leeftijdsklasse] ?? $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg (<span data-probleem-count="{{ $p->id }}">{{ $p->judokas_count }}</span>)
         </a>
         @endforeach
     </div>
@@ -78,7 +78,7 @@
 @forelse($poulesPerKlasse as $leeftijdsklasse => $klassePoules)
 <div class="mb-8 w-full" x-data="{ open: true }">
     <button @click="open = !open" class="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg hover:bg-blue-700">
-        <span class="text-lg font-bold">{{ $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
+        <span class="text-lg font-bold">{{ $leeftijdsklasseLabels[$leeftijdsklasse] ?? $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
         <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
@@ -94,6 +94,26 @@
                 $isEliminatie = $poule->type === 'eliminatie';
                 $isKruisfinale = $poule->isKruisfinale();
                 $isProbleem = $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$isKruisfinale && !$isEliminatie;
+
+                // Bereken leeftijd en gewicht ranges uit judoka's
+                $leeftijdRange = '';
+                $gewichtRange = '';
+                if ($poule->judokas->count() > 0) {
+                    $huidigJaar = now()->year;
+                    $leeftijden = $poule->judokas->map(fn($j) => $huidigJaar - $j->geboortejaar)->filter();
+                    $gewichten = $poule->judokas->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)->filter();
+
+                    if ($leeftijden->count() > 0) {
+                        $minL = $leeftijden->min();
+                        $maxL = $leeftijden->max();
+                        $leeftijdRange = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
+                    }
+                    if ($gewichten->count() > 0) {
+                        $minG = $gewichten->min();
+                        $maxG = $gewichten->max();
+                        $gewichtRange = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+                    }
+                }
             @endphp
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
@@ -105,7 +125,10 @@
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
-                                #{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg
+                                <span class="text-gray-900">#{{ $poule->nummer }} {{ $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse }}</span>
+                                @if($leeftijdRange || $gewichtRange)
+                                    <span class="font-normal text-gray-500 text-xs ml-1">({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})</span>
+                                @endif
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
