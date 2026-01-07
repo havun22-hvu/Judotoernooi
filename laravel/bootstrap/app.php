@@ -24,5 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle 419 Page Expired (CSRF token expired) - redirect to login
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            return redirect()
+                ->route('organisator.login')
+                ->with('warning', 'Sessie verlopen. Log opnieuw in.');
+        });
     })->create();

@@ -333,7 +333,7 @@
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
                                                 <div class="min-w-0">
-                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
+                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
@@ -365,7 +365,7 @@
                                         <div class="flex items-center gap-1 flex-1 min-w-0">
                                             <span class="text-red-500 text-xs flex-shrink-0">●</span>
                                             <div class="min-w-0">
-                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->gewichtsklasse }})</span></div>
+                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                             </div>
                                         </div>

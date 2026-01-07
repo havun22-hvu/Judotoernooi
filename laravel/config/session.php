@@ -35,8 +35,8 @@ return [
     // Long lifetime for tournament days (12+ hours), but expire on browser close
     'lifetime' => (int) env('SESSION_LIFETIME', 720), // 12 hours
 
-    // Session expires when browser is closed
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
+    // Session stays active even after browser close (handy for tournament days)
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
     |--------------------------------------------------------------------------
