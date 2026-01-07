@@ -100,10 +100,11 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
     Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    // Device Toegang Beheer API routes
+    // Device Toegang Beheer API routes (Vrijwilligers)
     Route::middleware(CheckToernooiRol::class . ':admin')->prefix('api/device-toegang')->name('device-toegang.')->group(function () {
         Route::get('/', [DeviceToegangBeheerController::class, 'index'])->name('index');
         Route::post('/', [DeviceToegangBeheerController::class, 'store'])->name('store');
+        Route::put('{toegang}', [DeviceToegangBeheerController::class, 'update'])->name('update');
         Route::post('{toegang}/reset', [DeviceToegangBeheerController::class, 'reset'])->name('reset');
         Route::post('{toegang}/regenerate-pin', [DeviceToegangBeheerController::class, 'regeneratePin'])->name('regenerate-pin');
         Route::delete('{toegang}', [DeviceToegangBeheerController::class, 'destroy'])->name('destroy');

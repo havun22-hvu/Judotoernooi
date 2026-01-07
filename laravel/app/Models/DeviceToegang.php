@@ -12,6 +12,9 @@ class DeviceToegang extends Model
 
     protected $fillable = [
         'toernooi_id',
+        'naam',
+        'telefoon',
+        'email',
         'rol',
         'mat_nummer',
         'code',
