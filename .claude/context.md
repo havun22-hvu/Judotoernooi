@@ -209,7 +209,7 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 
 **Database:** `device_toegangen` tabel
 ```
-toernooi_id, rol, mat_nummer, code, pincode, device_token, device_info
+toernooi_id, naam, telefoon, email, rol, mat_nummer, code, pincode, device_token, device_info
 ```
 
 ### Coachkaart Device Binding

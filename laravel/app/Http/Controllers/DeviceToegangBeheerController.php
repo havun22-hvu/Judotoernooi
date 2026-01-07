@@ -15,11 +15,15 @@ class DeviceToegangBeheerController extends Controller
     public function index(Toernooi $toernooi): JsonResponse
     {
         $toegangen = $toernooi->deviceToegangen()
+            ->orderBy('naam')
             ->orderBy('rol')
             ->orderBy('mat_nummer')
             ->get()
             ->map(fn($t) => [
                 'id' => $t->id,
+                'naam' => $t->naam,
+                'telefoon' => $t->telefoon,
+                'email' => $t->email,
                 'rol' => $t->rol,
                 'mat_nummer' => $t->mat_nummer,
                 'label' => $t->getLabel(),
@@ -40,18 +44,27 @@ class DeviceToegangBeheerController extends Controller
     public function store(Request $request, Toernooi $toernooi): JsonResponse
     {
         $request->validate([
+            'naam' => 'required|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
             'rol' => 'required|in:hoofdjury,mat,weging,spreker,dojo',
             'mat_nummer' => 'nullable|integer|min:1',
         ]);
 
         $toegang = DeviceToegang::create([
             'toernooi_id' => $toernooi->id,
+            'naam' => $request->naam,
+            'telefoon' => $request->telefoon,
+            'email' => $request->email,
             'rol' => $request->rol,
             'mat_nummer' => $request->rol === 'mat' ? $request->mat_nummer : null,
         ]);
 
         return response()->json([
             'id' => $toegang->id,
+            'naam' => $toegang->naam,
+            'telefoon' => $toegang->telefoon,
+            'email' => $toegang->email,
             'rol' => $toegang->rol,
             'mat_nummer' => $toegang->mat_nummer,
             'label' => $toegang->getLabel(),
@@ -62,6 +75,44 @@ class DeviceToegangBeheerController extends Controller
             'device_info' => null,
             'status' => 'Wacht op binding',
         ], 201);
+    }
+
+    /**
+     * Update a device toegang.
+     */
+    public function update(Request $request, DeviceToegang $toegang): JsonResponse
+    {
+        $request->validate([
+            'naam' => 'required|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'rol' => 'required|in:hoofdjury,mat,weging,spreker,dojo',
+            'mat_nummer' => 'nullable|integer|min:1',
+        ]);
+
+        $toegang->update([
+            'naam' => $request->naam,
+            'telefoon' => $request->telefoon,
+            'email' => $request->email,
+            'rol' => $request->rol,
+            'mat_nummer' => $request->rol === 'mat' ? $request->mat_nummer : null,
+        ]);
+
+        return response()->json([
+            'id' => $toegang->id,
+            'naam' => $toegang->naam,
+            'telefoon' => $toegang->telefoon,
+            'email' => $toegang->email,
+            'rol' => $toegang->rol,
+            'mat_nummer' => $toegang->mat_nummer,
+            'label' => $toegang->getLabel(),
+            'code' => $toegang->code,
+            'pincode' => $toegang->pincode,
+            'url' => $toegang->getUrl(),
+            'is_gebonden' => $toegang->isGebonden(),
+            'device_info' => $toegang->device_info,
+            'status' => $toegang->getStatusText(),
+        ]);
     }
 
     /**

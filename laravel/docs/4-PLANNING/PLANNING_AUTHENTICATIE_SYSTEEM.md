@@ -93,14 +93,24 @@ judotournament.org/live/{slug}          → Publieke pagina (ouders)
 CREATE TABLE device_toegangen (
     id BIGINT PRIMARY KEY,
     toernooi_id BIGINT NOT NULL,
+
+    -- Vrijwilliger gegevens
+    naam VARCHAR(255) NOT NULL,       -- naam vrijwilliger
+    telefoon VARCHAR(20) NULL,        -- telefoonnummer
+    email VARCHAR(255) NULL,          -- email adres
+
+    -- Rol en toegang
     rol ENUM('hoofdjury', 'mat', 'weging', 'spreker', 'dojo'),
     mat_nummer INT NULL,              -- alleen voor rol='mat'
     code VARCHAR(12) UNIQUE,          -- unieke URL code
     pincode VARCHAR(4),               -- 4-cijfer PIN
+
+    -- Device binding
     device_token VARCHAR(64) NULL,    -- gebonden device
     device_info VARCHAR(255) NULL,    -- "iPhone Safari" etc.
     gebonden_op TIMESTAMP NULL,
     laatst_actief TIMESTAMP NULL,
+
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
@@ -108,31 +118,30 @@ CREATE TABLE device_toegangen (
 
 ### 3.3 Beheer UI (Instellingen → Organisatie)
 
+**Vrijwilligers overzicht** - Tabel met alle vrijwilligers:
+
+| Naam | Telefoon | Email | Rol | Status | Acties |
+|------|----------|-------|-----|--------|--------|
+| Jan de Vries | 06-12345678 | jan@email.nl | Mat 1 | ✓ Gebonden | [URL] [Reset] [Bewerk] [Verwijder] |
+| Piet Jansen | 06-87654321 | - | Weging | ⏳ Wacht | [URL] [Reset] [Bewerk] [Verwijder] |
+| Marie Bakker | - | marie@email.nl | Spreker | ✓ Gebonden | [URL] [Reset] [Bewerk] [Verwijder] |
+
 ```
-Hoofdjury toegangen:
-├── Hoofdjury 1: [URL kopiëren] PIN: 4821 [iPhone Safari ✓] [Reset] [Verwijder]
-└── [+ Hoofdjury toegang toevoegen]
+[+ Vrijwilliger toevoegen]
 
-Mat toegangen:
-├── Mat 1: [URL kopiëren] PIN: 7362 [Android Chrome ✓] [Reset] [Verwijder]
-├── Mat 2: [URL kopiëren] PIN: 9134 [- wacht op binding] [Verwijder]
-└── [+ Mat toegang toevoegen]
-
-Weging toegangen:
-├── Weging 1: [URL kopiëren] PIN: 5847 [iPad Safari ✓] [Reset] [Verwijder]
-└── [+ Weging toegang toevoegen]
-
-Spreker toegangen:
-└── [+ Spreker toegang toevoegen]
-
-Dojo toegangen:
-└── [+ Dojo toegang toevoegen]
+Modal: Vrijwilliger toevoegen/bewerken
+├── Naam: [____________] (verplicht)
+├── Telefoon: [____________]
+├── Email: [____________]
+├── Rol: [dropdown: Hoofdjury/Mat/Weging/Spreker/Dojo]
+└── Mat nummer: [__] (alleen bij rol=Mat)
 ```
 
 **Acties:**
-- **Kopiëren:** Kopieert volledige URL naar clipboard
+- **URL:** Kopieert volledige URL + PIN naar clipboard
 - **Reset:** Wist device binding, nieuw device kan binden met zelfde PIN
-- **Verwijder:** Verwijdert toegang volledig
+- **Bewerk:** Wijzig naam, telefoon, email, rol
+- **Verwijder:** Verwijdert vrijwilliger volledig
 
 **Wie mag dit:**
 - Organisator: alles
