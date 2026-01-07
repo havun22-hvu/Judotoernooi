@@ -132,7 +132,22 @@
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
-                            @if($poule->judokas_count === 0 && !$isKruisfinale && !$isEliminatie)
+                            @if($isEliminatie)
+                            {{-- Eliminatie: omzetten dropdown --}}
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
+                                    Omzetten ▾
+                                </button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
+                                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
+                                        Alleen poules
+                                    </button>
+                                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
+                                        Poules + kruisfinale
+                                    </button>
+                                </div>
+                            </div>
+                            @elseif($poule->judokas_count === 0 && !$isKruisfinale)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                             @endif
                         </div>
@@ -163,7 +178,7 @@
                     <div class="px-2 py-1.5 bg-gray-50 rounded text-sm judoka-item hover:bg-orange-50 border border-gray-200"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}">
-                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
+                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                     </div>
                     @else
@@ -173,7 +188,7 @@
                          data-poule-id="{{ $poule->id }}">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
-                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
                             <div class="text-right text-xs ml-2">
@@ -243,6 +258,7 @@ const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi)
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
+const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
@@ -322,6 +338,34 @@ async function updateKruisfinalesPlaatsen(pouleId, plaatsen) {
     } catch (error) {
         console.error('Error:', error);
         showToast('Fout bij opslaan', true);
+    }
+}
+
+async function zetOmNaarPoules(pouleId, systeem) {
+    if (!confirm(`Eliminatie omzetten naar ${systeem === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'alleen poules'}?`)) return;
+
+    try {
+        const response = await fetch(zetOmNaarPoulesUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ poule_id: pouleId, systeem: systeem })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message || 'Omgezet naar poules');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.message || 'Fout bij omzetten', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Fout bij omzetten', true);
     }
 }
 

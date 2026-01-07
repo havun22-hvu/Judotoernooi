@@ -631,24 +631,24 @@
                     <h2 class="text-xl font-bold text-gray-800">Leeftijds- en Gewichtsklassen</h2>
                     <p class="text-gray-600 text-sm mt-1">Pas leeftijdsgrenzen en gewichtsklassen aan per categorie.</p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <div class="flex flex-col gap-1 text-sm">
-                        <label class="flex items-center gap-2">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-sm">
                             <input type="hidden" name="gebruik_gewichtsklassen" value="0">
                             <input type="checkbox" name="gebruik_gewichtsklassen" value="1"
-                                   x-model="gebruikGewichtsklassen"
+                                   :checked="gebruikGewichtsklassen"
+                                   @change="gebruikGewichtsklassen = $event.target.checked"
                                    class="w-4 h-4 text-blue-600 border-gray-300 rounded">
                             <span>Gewichtsklassen gebruiken</span>
                         </label>
-                    </div>
-                    <div class="flex gap-2 items-center flex-wrap">
                         <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
                             JBN 2025
                         </button>
                         <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
                             JBN 2026
                         </button>
-                        <div class="border-l border-gray-300 h-6 mx-1"></div>
+                    </div>
+                    <div class="flex gap-2 items-center">
                         <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[140px]">
                             <option value="">Eigen preset...</option>
                         </select>

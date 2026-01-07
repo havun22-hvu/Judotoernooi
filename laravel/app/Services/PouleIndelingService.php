@@ -270,6 +270,9 @@ class PouleIndelingService
                         $maxKg
                     );
 
+                    // Check if this age class uses elimination system
+                    $isDynamicEliminatie = $systeem === 'eliminatie';
+
                     // Create pools from dynamische indeling result
                     foreach ($indeling['poules'] as $pouleData) {
                         $pouleJudokas = $pouleData['judokas'];
@@ -277,13 +280,14 @@ class PouleIndelingService
 
                         // Build dynamic title with weight range from pool
                         $gewichtRange = $pouleData['gewicht_groep'] ?? '';
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, false, $volgorde, $gewichtsklassenConfig);
+                        $pouleType = $isDynamicEliminatie ? 'eliminatie' : 'voorronde';
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
                             'nummer' => $pouleNummer,
                             'titel' => $titel,
-                            'type' => 'voorronde',
+                            'type' => $pouleType,
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtRange,
                             'aantal_judokas' => count($pouleJudokas),
