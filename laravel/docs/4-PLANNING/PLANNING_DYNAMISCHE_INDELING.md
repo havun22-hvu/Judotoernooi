@@ -1,6 +1,6 @@
 # Planning: Dynamische Poule Indeling
 
-> **Status:** Gepland voor 2026
+> **Status:** In ontwikkeling (Fase 1-2 voltooid, Fase 3-4 gepland)
 > **Doel:** Flexibele indeling op basis van gewichtsverschil i.p.v. vaste gewichtsklassen
 
 ## Overzicht
@@ -32,22 +32,23 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 
 ## UI: Zonder Gewichtsklassen
 
-Wanneer "Gewichtsklassen gebruiken" UIT staat, kan de organisator kiezen:
+Wanneer "Gewichtsklassen gebruiken" UIT staat, verschijnt een drag & drop interface:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ Zonder gewichtsklassen: Judoka's worden alleen per              │
-│ leeftijdsgroep ingedeeld. Kies de sorteervolgorde:              │
+│ leeftijdsgroep ingedeeld.                                       │
 ├─────────────────────────────────────────────────────────────────┤
-│ ○ Gewicht → Band                                                │
-│   Sorteer op werkelijk gewicht, dan band                        │
-│                                                                 │
-│ ○ Band → Gewicht                                                │
-│   Sorteer op band (laag→hoog), dan gewicht                      │
+│ Prioriteit: (sleep om te wisselen)                     (i)      │
+│ [1. 🏋️ Gewicht] [2. 🥋 Band] [3. 👥 Groepsgrootte] [4. 🏠 Club] │
 ├─────────────────────────────────────────────────────────────────┤
 │ Max kg verschil: [3]  Max leeftijd verschil: [2]                │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Info popup (i):** Legt uit hoe de sorteer volgorde werkt:
+- Hoogste prioriteit bepaalt eerste sortering
+- Voorbeeld: Gewicht eerst → judoka's gesorteerd op gewicht, dan band binnen dezelfde gewichtsgroep
 
 ## Toernooi-niveau Instellingen
 
@@ -327,6 +328,16 @@ door elkaar gehusseld, ook als gewicht prioriteit 1 had.
 - Als gewicht hogere prioriteit heeft dan clubspreiding → max kg verschil bij swap
 - Swap wordt geblokkeerd als gewichtsverschil groter is dan `max_kg_verschil` (default 3kg)
 - Prioriteiten worden nu volledig gerespecteerd
+
+### Auto-herberekening judoka codes (8 jan 2026) ✓
+Bij wijziging van `verdeling_prioriteiten` (drag & drop volgorde) worden judoka codes
+automatisch herberekend bij opslaan van instellingen.
+
+### Import onvolledige judoka's (7 jan 2026) ✓
+- Judoka's zonder geboortejaar worden nu geïmporteerd (niet meer overgeslagen)
+- Nieuw veld `is_onvolledig` om te markeren
+- Filter knop "Onvolledig" in judoka lijst
+- Gewicht wordt afgeleid van gewichtsklasse als die wel is ingevuld (bv. "-34" → 34 kg)
 
 ## Notities
 
