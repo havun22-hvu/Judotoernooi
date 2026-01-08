@@ -325,3 +325,29 @@ php artisan view:cache
 
 - `HavunCore/docs/kb/patterns/mollie-payments.md` - Mollie pattern
 - `HavunCore/.claude/context.md` - Server credentials
+
+---
+
+## Laatste Sessie: 8 januari 2026
+
+### Wat is gedaan:
+- Import onvolledige judoka's (zonder geboortejaar) + filter "Onvolledig"
+- Gewicht afleiden van gewichtsklasse bij import ("-34" → 34 kg)
+- Vereenvoudiging instellingen: 1 drag & drop i.p.v. 2 overlappende settings
+- Info popup (i) bij prioriteiten met uitleg sorteervolgorde
+- Poule statistieken (leeftijd/gewicht ranges) updaten bij drag & drop
+- Bugfix: clubspreiding respecteert nu gewicht prioriteit
+- Auto-herberekening judoka codes bij wijziging prioriteiten
+
+### Openstaande items:
+- [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
+- [ ] Testen: poules met gewicht prioriteit 1 → geen 20kg/26kg mix
+- [ ] Testen: versleep judoka → statistieken update
+- [ ] Testen: import CSV met ontbrekend geboortejaar → "Onvolledig" filter
+- [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
+- [ ] Fase 4 dynamische indeling: unit tests
+
+### Branch info:
+- **Branch:** `feature/dynamische-indeling`
+- **Commits:** 3 nieuwe (f44deee, c492d4a, a2c345b)
+- **Docs bijgewerkt:** PLANNING_DYNAMISCHE_INDELING.md, GEBRUIKERSHANDLEIDING.md
