@@ -152,11 +152,15 @@ class JudokaController extends Controller
 
         $resultaat = $this->importService->importeerDeelnemers($toernooi, $rows);
 
-        $message = "Import voltooid: {$resultaat['geimporteerd']} geïmporteerd, {$resultaat['overgeslagen']} overgeslagen.";
+        $message = "Import voltooid: {$resultaat['geimporteerd']} geïmporteerd";
+        if ($resultaat['overgeslagen'] > 0) {
+            $message .= ", {$resultaat['overgeslagen']} duplicaten bijgewerkt";
+        }
 
         if (!empty($resultaat['fouten'])) {
-            $message .= " " . count($resultaat['fouten']) . " fouten.";
+            $message .= ", " . count($resultaat['fouten']) . " fouten";
         }
+        $message .= ".";
 
         return redirect()
             ->route('toernooi.judoka.index', $toernooi)

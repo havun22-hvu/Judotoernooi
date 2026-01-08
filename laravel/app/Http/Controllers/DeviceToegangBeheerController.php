@@ -44,7 +44,7 @@ class DeviceToegangBeheerController extends Controller
     public function store(Request $request, Toernooi $toernooi): JsonResponse
     {
         $request->validate([
-            'naam' => 'required|string|max:255',
+            'naam' => 'nullable|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'rol' => 'required|in:hoofdjury,mat,weging,spreker,dojo',
@@ -53,7 +53,7 @@ class DeviceToegangBeheerController extends Controller
 
         $toegang = DeviceToegang::create([
             'toernooi_id' => $toernooi->id,
-            'naam' => $request->naam,
+            'naam' => $request->naam ?? '',
             'telefoon' => $request->telefoon,
             'email' => $request->email,
             'rol' => $request->rol,
@@ -83,7 +83,7 @@ class DeviceToegangBeheerController extends Controller
     public function update(Request $request, DeviceToegang $toegang): JsonResponse
     {
         $request->validate([
-            'naam' => 'required|string|max:255',
+            'naam' => 'nullable|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'rol' => 'required|in:hoofdjury,mat,weging,spreker,dojo',
@@ -91,7 +91,7 @@ class DeviceToegangBeheerController extends Controller
         ]);
 
         $toegang->update([
-            'naam' => $request->naam,
+            'naam' => $request->naam ?? '',
             'telefoon' => $request->telefoon,
             'email' => $request->email,
             'rol' => $request->rol,

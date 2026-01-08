@@ -271,9 +271,66 @@ Titels zijn nu dynamisch op basis van werkelijke waarden:
 - Leeftijd range: berekend uit judoka's (bijv. "9-10j")
 - Gewicht range: berekend uit judoka's (bijv. "30-33kg")
 
+## Vereenvoudiging Instellingen (7 jan 2026)
+
+### Probleem
+Er waren twee overlappende instellingen:
+1. `verdeling_prioriteiten` - drag & drop met groepsgrootte/bandkleur/clubspreiding
+2. `judoka_code_volgorde` - gewicht_band of band_gewicht (bij groepen)
+
+Dit was verwarrend voor gebruikers.
+
+### Oplossing
+**Verplaatsen:** drag & drop prioriteiten naar groepsindeling sectie
+
+**Nieuwe UI bij groepsindeling (zonder gewichtsklassen):**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Zonder gewichtsklassen: Judoka's worden alleen per              │
+│ leeftijdsgroep ingedeeld.                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ Prioriteit: (sleep om te wisselen)                              │
+│ [1. 🏋️ Gewicht] [2. 🥋 Band] [3. 👥 Groepsgrootte] [4. 🏠 Club] │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Reden:**
+- Alle indelings-instellingen op één plek
+- Verwijdert verwarring tussen twee aparte instellingen
+- Drag & drop geeft flexibiliteit
+
+### Implementatie (7 jan 2026) ✓
+- [x] Verwijder `verdeling_prioriteiten` uit bovenste sectie (Poule instellingen)
+- [x] Verplaats drag & drop naar groepsindeling sectie (bij "Zonder gewichtsklassen")
+- [x] Voeg "Gewicht" toe als prioriteit item (vervangt `judoka_code_volgorde`)
+- [x] Update PouleIndelingService: lees volgorde uit `verdeling_prioriteiten`
+- [x] Verwijder `judoka_code_volgorde` radio buttons (niet meer nodig)
+
+**Nieuwe prioriteit keys:** `gewicht`, `band`, `groepsgrootte`, `clubspreiding`
+**Oude keys (deprecated):** `bandkleur` → `band`
+**Info popup:** (i) icoon met uitleg over sorteer volgorde
+
+### Drag & Drop Poule Statistieken (7 jan 2026) ✓
+Bij verslepen van judoka's tussen poules worden nu ook bijgewerkt:
+- [x] Aantal judoka's
+- [x] Aantal wedstrijden
+- [x] Min-max leeftijd
+- [x] Min-max gewicht
+
+### Bugfix: Clubspreiding respecteert prioriteiten (8 jan 2026) ✓
+**Probleem:** Bij clubspreiding werden judoka's met groot gewichtsverschil (20kg vs 26kg)
+door elkaar gehusseld, ook als gewicht prioriteit 1 had.
+
+**Oorzaak:** `pasClubspreidingToe()` checkte alleen band-compatibiliteit bij swaps.
+
+**Oplossing:**
+- Als gewicht hogere prioriteit heeft dan clubspreiding → max kg verschil bij swap
+- Swap wordt geblokkeerd als gewichtsverschil groter is dan `max_kg_verschil` (default 3kg)
+- Prioriteiten worden nu volledig gerespecteerd
+
 ## Notities
 
 - Leeftijd is ALTIJD eerste filter (veiligheid!)
 - Band-sortering is secundair: zorgt voor eerlijke poules
-- Clubspreiding blijft werken zoals nu
+- Clubspreiding als aan/uit optie bij groepsindeling
 - Wedstrijdsysteem (poules/kruisfinale/eliminatie) blijft per leeftijdsgroep
