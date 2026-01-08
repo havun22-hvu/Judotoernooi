@@ -268,11 +268,17 @@ class PouleIndelingService
                     $groepsgroottePrio = array_search('groepsgrootte', $this->prioriteiten);
                     $groepsgroottePrio = $groepsgroottePrio !== false ? $groepsgroottePrio + 1 : 3;
 
+                    // Haal poule grootte voorkeur uit toernooi instellingen
+                    $pouleGrootteVoorkeur = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
+
                     $indeling = $this->dynamischeIndelingService->berekenIndeling(
                         $judokas,
                         $maxLeeftijd,
                         $maxKg,
-                        ['groepsgrootte_prioriteit' => $groepsgroottePrio]
+                        [
+                            'groepsgrootte_prioriteit' => $groepsgroottePrio,
+                            'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
+                        ]
                     );
 
                     // Check if this age class uses elimination system

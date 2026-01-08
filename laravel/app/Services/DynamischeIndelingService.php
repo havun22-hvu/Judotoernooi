@@ -954,44 +954,41 @@ class DynamischeIndelingService
     /**
      * Score een verdeling (lager = beter)
      *
-     * Bij hoge striktheid (prioriteit 1):
-     * - 5 = ideaal (0 penalty)
-     * - 4 = acceptabel (kleine penalty)
-     * - 3/6 = liever niet (grote penalty)
+     * Gebruikt poule_grootte_voorkeur uit config (ingesteld door organisator)
+     * Bijv. [5, 4, 3, 6] betekent: 5 is beste, dan 4, dan 3, dan 6
      */
     private function scoreVerdeling(array $verdeling, int $striktheid): float
     {
+        // Haal voorkeur volgorde uit config (organisator instelling)
+        // Bijv. [5, 4, 3, 6] = 5 beste, dan 4, dan 3, dan 6
+        $voorkeur = $this->config['poule_grootte_voorkeur'] ?? [5, 4, 6, 3];
+
+        // Tel hoeveel poules van elke grootte er zijn
+        $counts = array_count_values($verdeling);
+
+        // Score = gewogen som van (positie in voorkeur)
+        // We belonen poules van voorkeur[0] het meest, voorkeur[3] het minst
         $score = 0;
 
+        foreach ($voorkeur as $index => $grootte) {
+            $aantal = $counts[$grootte] ?? 0;
+            // Penalty = positie (0, 1, 2, 3) vermenigvuldigd met aantal
+            $score += $index * $aantal * $striktheid;
+        }
+
+        // Penalty voor groottes die niet in voorkeur staan
         foreach ($verdeling as $grootte) {
-            // Ideaal = 5
-            if ($grootte === 5) {
-                $score += 0;
-            }
-            // Acceptabel = 4
-            elseif ($grootte === 4) {
-                $score += 2 * $striktheid;
-            }
-            // Minder gewenst = 6
-            elseif ($grootte === 6) {
-                $score += 5 * $striktheid;
-            }
-            // Liever niet = 3
-            elseif ($grootte === 3) {
-                $score += 8 * $striktheid;
-            }
-            // Onacceptabel < 3 of > 6
-            else {
+            if (!in_array($grootte, $voorkeur)) {
                 $score += 100 * $striktheid;
             }
         }
 
-        // Bonus voor uniforme groottes (alle poules even groot)
+        // Kleine penalty voor niet-uniforme groottes
         $verschil = max($verdeling) - min($verdeling);
-        $score += $verschil * $striktheid;
+        $score += $verschil * 0.5;
 
-        // Kleine bonus voor minder poules (als groottes gelijk zijn)
-        $score += count($verdeling) * 0.1;
+        // Minimale voorkeur voor minder poules (bij gelijke score)
+        $score += count($verdeling) * 0.01;
 
         return $score;
     }
