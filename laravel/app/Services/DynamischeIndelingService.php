@@ -104,9 +104,9 @@ class DynamischeIndelingService
         $poules = [];
         $totaalIngedeeld = 0;
 
-        // Stap 2: Per groep, sorteer op band en maak poules
+        // Stap 2: Per groep, sorteer op band en maak poules (met gewichtslimiet check)
         foreach ($groepen as $groep) {
-            $groepPoules = $this->maakPoules($groep['judokas']);
+            $groepPoules = $this->maakPoules($groep['judokas'], $maxKgVerschil);
 
             foreach ($groepPoules as $poule) {
                 $poules[] = [
@@ -120,6 +120,12 @@ class DynamischeIndelingService
                 $totaalIngedeeld += count($poule);
             }
         }
+
+        // FINALE VALIDATIE: check en fix alle poules die de harde limiet overschrijden
+        $poules = $this->valideerEnFixAllePoules($poules, $maxKgVerschil);
+
+        // Herbereken totaal ingedeeld na finale fix
+        $totaalIngedeeld = array_sum(array_map(fn($p) => count($p['judokas']), $poules));
 
         // Bereken totale score
         $score = $this->berekenTotaleScore($poules, $maxLeeftijdVerschil, $maxKgVerschil);
@@ -136,6 +142,92 @@ class DynamischeIndelingService
             ],
             'stats' => $this->berekenStatistieken($poules),
         ];
+    }
+
+    /**
+     * Finale validatie: check alle poules en split/herverdeel waar nodig
+     */
+    private function valideerEnFixAllePoules(array $poules, float $maxKgVerschil): array
+    {
+        $gefixtPoules = [];
+
+        foreach ($poules as $poule) {
+            $judokas = $poule['judokas'];
+            $gewichten = array_map(fn($j) => $j->gewicht, $judokas);
+            $verschil = max($gewichten) - min($gewichten);
+
+            if ($verschil <= $maxKgVerschil) {
+                // Poule is OK
+                $gefixtPoules[] = $poule;
+            } else {
+                // Poule overschrijdt limiet - split op gewicht
+                $gesplitst = $this->splitPouleOpGewicht($judokas, $maxKgVerschil, $poule);
+                foreach ($gesplitst as $nieuwePoule) {
+                    $gefixtPoules[] = $nieuwePoule;
+                }
+            }
+        }
+
+        return $gefixtPoules;
+    }
+
+    /**
+     * Split een poule die te groot gewichtsverschil heeft
+     */
+    private function splitPouleOpGewicht(array $judokas, float $maxKgVerschil, array $origPoule): array
+    {
+        // Sorteer op gewicht
+        usort($judokas, fn($a, $b) => $a->gewicht <=> $b->gewicht);
+
+        $nieuwePoules = [];
+        $huidigeJudokas = [];
+        $minGewicht = null;
+
+        foreach ($judokas as $judoka) {
+            if (empty($huidigeJudokas)) {
+                $huidigeJudokas[] = $judoka;
+                $minGewicht = $judoka->gewicht;
+            } elseif ($judoka->gewicht - $minGewicht <= $maxKgVerschil) {
+                $huidigeJudokas[] = $judoka;
+            } else {
+                // Breekpunt: maak poule van huidige judoka's
+                if (count($huidigeJudokas) >= 2) {
+                    $nieuwePoules[] = [
+                        'judokas' => $huidigeJudokas,
+                        'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                        'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                        'band_range' => $this->berekenBandRange($huidigeJudokas),
+                        'leeftijd_groep' => $origPoule['leeftijd_groep'] ?? '',
+                        'gewicht_groep' => $this->formatGewichtRange($huidigeJudokas),
+                    ];
+                }
+                $huidigeJudokas = [$judoka];
+                $minGewicht = $judoka->gewicht;
+            }
+        }
+
+        // Laatste groep
+        if (count($huidigeJudokas) >= 2) {
+            $nieuwePoules[] = [
+                'judokas' => $huidigeJudokas,
+                'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                'band_range' => $this->berekenBandRange($huidigeJudokas),
+                'leeftijd_groep' => $origPoule['leeftijd_groep'] ?? '',
+                'gewicht_groep' => $this->formatGewichtRange($huidigeJudokas),
+            ];
+        } elseif (!empty($huidigeJudokas) && !empty($nieuwePoules)) {
+            // 1 judoka over: voeg toe aan laatste poule als het past
+            $laatstePoule = array_pop($nieuwePoules);
+            $laatsteGewichten = array_map(fn($j) => $j->gewicht, $laatstePoule['judokas']);
+            if ($huidigeJudokas[0]->gewicht - min($laatsteGewichten) <= $maxKgVerschil) {
+                $laatstePoule['judokas'][] = $huidigeJudokas[0];
+                $laatstePoule['gewicht_range'] = $this->berekenGewichtRange($laatstePoule['judokas']);
+            }
+            $nieuwePoules[] = $laatstePoule;
+        }
+
+        return $nieuwePoules;
     }
 
     /**
@@ -188,6 +280,7 @@ class DynamischeIndelingService
 
     /**
      * Voeg hele kleine groepen (2-3 judoka's) samen met de dichtstbijzijnde buurgroep
+     * ALLEEN als het resultaat binnen de HARDE LIMIETEN valt
      */
     private function voegKleineGroepenSamen(array $groepen, float $maxKg, int $maxLeeftijd): array
     {
@@ -213,7 +306,7 @@ class DynamischeIndelingService
                     continue;
                 }
 
-                // Zoek beste buurgroep om mee samen te voegen
+                // Zoek beste buurgroep om mee samen te voegen (alleen binnen harde limieten)
                 $besteMatch = null;
                 $besteMatchScore = PHP_INT_MAX;
                 $besteMatchIndex = -1;
@@ -221,27 +314,31 @@ class DynamischeIndelingService
                 // Check vorige groep
                 if ($i > 0) {
                     $vorigeGroep = $groepen[$i - 1];
-                    $score = $this->berekenSamenvoegScore($groep, $vorigeGroep, $maxKg, $maxLeeftijd);
-                    if ($score < $besteMatchScore) {
-                        $besteMatchScore = $score;
-                        $besteMatch = $vorigeGroep;
-                        $besteMatchIndex = $i - 1;
+                    if ($this->kanSamenvoegen($groep, $vorigeGroep, $maxKg, $maxLeeftijd)) {
+                        $score = $this->berekenSamenvoegScore($groep, $vorigeGroep, $maxKg, $maxLeeftijd);
+                        if ($score < $besteMatchScore) {
+                            $besteMatchScore = $score;
+                            $besteMatch = $vorigeGroep;
+                            $besteMatchIndex = $i - 1;
+                        }
                     }
                 }
 
                 // Check volgende groep
                 if ($i < count($groepen) - 1) {
                     $volgendeGroep = $groepen[$i + 1];
-                    $score = $this->berekenSamenvoegScore($groep, $volgendeGroep, $maxKg, $maxLeeftijd);
-                    if ($score < $besteMatchScore) {
-                        $besteMatchScore = $score;
-                        $besteMatch = $volgendeGroep;
-                        $besteMatchIndex = $i + 1;
+                    if ($this->kanSamenvoegen($groep, $volgendeGroep, $maxKg, $maxLeeftijd)) {
+                        $score = $this->berekenSamenvoegScore($groep, $volgendeGroep, $maxKg, $maxLeeftijd);
+                        if ($score < $besteMatchScore) {
+                            $besteMatchScore = $score;
+                            $besteMatch = $volgendeGroep;
+                            $besteMatchIndex = $i + 1;
+                        }
                     }
                 }
 
-                // Voeg samen als er een acceptabele match is (score < 1000 = binnen 2x tolerantie)
-                if ($besteMatch && $besteMatchScore < 1000) {
+                // Voeg samen als er een match is binnen de harde limieten
+                if ($besteMatch) {
                     // Merge judoka's
                     $samengevoegd = $besteMatch['judokas']->concat($groep['judokas'])->sortBy('gewicht')->values();
 
@@ -261,6 +358,23 @@ class DynamischeIndelingService
         }
 
         return array_values($groepen);
+    }
+
+    /**
+     * Check of twee groepen samengevoegd kunnen worden binnen de HARDE LIMIETEN
+     */
+    private function kanSamenvoegen(array $groep1, array $groep2, float $maxKg, int $maxLeeftijd): bool
+    {
+        $alleJudokas = $groep1['judokas']->concat($groep2['judokas']);
+
+        $gewichten = $alleJudokas->pluck('gewicht');
+        $leeftijden = $alleJudokas->pluck('leeftijd');
+
+        $gewichtVerschil = $gewichten->max() - $gewichten->min();
+        $leeftijdVerschil = $leeftijden->max() - $leeftijden->min();
+
+        // HARDE LIMIETEN: beide moeten binnen de grenzen zijn
+        return $gewichtVerschil <= $maxKg && $leeftijdVerschil <= $maxLeeftijd;
     }
 
     /**
@@ -467,7 +581,8 @@ class DynamischeIndelingService
                         $zwaarste = $vorigeGroep['judokas']->sortByDesc('gewicht')->first();
 
                         // Check of deze judoka past in de huidige groep (gewicht + leeftijd)
-                        if ($this->pastInGroep($zwaarste, $groep['judokas']->all(), $maxKgVerschil * 1.5, $maxLeeftijdVerschil)) {
+                        // HARDE LIMIET: geen tolerantie, alleen swap als binnen max verschil
+                        if ($this->pastInGroep($zwaarste, $groep['judokas']->all(), $maxKgVerschil, $maxLeeftijdVerschil)) {
                             // Verplaats judoka
                             $groepen[$i - 1]['judokas'] = $vorigeGroep['judokas']->reject(fn($j) => $j->id === $zwaarste->id)->values();
                             $groepen[$i]['judokas'] = $groep['judokas']->push($zwaarste)->sortBy('gewicht')->values();
@@ -492,7 +607,8 @@ class DynamischeIndelingService
                         $lichtste = $volgendeGroep['judokas']->sortBy('gewicht')->first();
 
                         // Check of deze judoka past in de huidige groep (gewicht + leeftijd)
-                        if ($this->pastInGroep($lichtste, $groep['judokas']->all(), $maxKgVerschil * 1.5, $maxLeeftijdVerschil)) {
+                        // HARDE LIMIET: geen tolerantie, alleen swap als binnen max verschil
+                        if ($this->pastInGroep($lichtste, $groep['judokas']->all(), $maxKgVerschil, $maxLeeftijdVerschil)) {
                             // Verplaats judoka
                             $groepen[$i + 1]['judokas'] = $volgendeGroep['judokas']->reject(fn($j) => $j->id === $lichtste->id)->values();
                             $groepen[$i]['judokas'] = $groep['judokas']->push($lichtste)->sortBy('gewicht')->values();
@@ -518,15 +634,18 @@ class DynamischeIndelingService
     }
 
     /**
-     * Maak poules van een groep judoka's, gesorteerd op band
+     * Maak poules van een groep judoka's
+     *
+     * Sortering op band: lagere banden in poule 1, hogere in poule 2 (wit bij wit, bruin bij bruin)
+     * NA het splitsen: check gewichtslimiet per poule, swap indien nodig
      */
-    private function maakPoules(Collection $judokas): array
+    private function maakPoules(Collection $judokas, float $maxKgVerschil = 3.0): array
     {
         if ($judokas->count() < 2) {
             return [];
         }
 
-        // Sorteer op band (wit eerst)
+        // Sorteer op band (wit eerst) - lagere banden komen in eerste poules
         $gesorteerd = $judokas->sortBy(function ($judoka) {
             return self::BAND_VOLGORDE[$judoka->band] ?? 99;
         })->values();
@@ -543,7 +662,167 @@ class DynamischeIndelingService
             $offset += $grootte;
         }
 
+        // Check en fix gewichtslimiet per poule
+        if (count($poules) > 1) {
+            $poules = $this->fixGewichtLimietInPoules($poules, $maxKgVerschil);
+        }
+
         return $poules;
+    }
+
+    /**
+     * Fix gewichtslimiet overschrijdingen door judoka's te swappen tussen poules
+     * Behoud zo veel mogelijk de band-balans (lagere banden in lagere poules)
+     * Fallback: als swaps niet helpen, herverdeel op gewicht
+     */
+    private function fixGewichtLimietInPoules(array $poules, float $maxKgVerschil): array
+    {
+        $maxIteraties = 20;
+        $iteratie = 0;
+
+        while ($iteratie < $maxIteraties) {
+            $iteratie++;
+            $gewijzigd = false;
+
+            // Check elke poule op gewichtslimiet overschrijding
+            for ($p = 0; $p < count($poules); $p++) {
+                $poule = $poules[$p];
+                $gewichten = array_map(fn($j) => $j->gewicht, $poule);
+                $verschil = max($gewichten) - min($gewichten);
+
+                if ($verschil <= $maxKgVerschil) {
+                    continue; // Poule is OK
+                }
+
+                // Poule overschrijdt limiet - probeer te swappen
+                // Zoek de judoka met het hoogste of laagste gewicht om te swappen
+                $minIdx = array_search(min($gewichten), $gewichten);
+                $maxIdx = array_search(max($gewichten), $gewichten);
+
+                // Probeer de "uitschieter" te swappen naar een andere poule
+                $uitschieters = [
+                    ['idx' => $maxIdx, 'judoka' => $poule[$maxIdx], 'type' => 'max'],
+                    ['idx' => $minIdx, 'judoka' => $poule[$minIdx], 'type' => 'min'],
+                ];
+
+                foreach ($uitschieters as $uitschieter) {
+                    $judoka = $uitschieter['judoka'];
+                    $judokaIdx = $uitschieter['idx'];
+
+                    // Zoek een swap kandidaat in een andere poule
+                    for ($q = 0; $q < count($poules); $q++) {
+                        if ($q === $p) continue;
+
+                        foreach ($poules[$q] as $kandidaatIdx => $kandidaat) {
+                            // Check of swap beide poules binnen limiet brengt
+                            if ($this->swapVerbetert($poules[$p], $judokaIdx, $poules[$q], $kandidaatIdx, $maxKgVerschil)) {
+                                // Doe de swap
+                                $poules[$p][$judokaIdx] = $kandidaat;
+                                $poules[$q][$kandidaatIdx] = $judoka;
+                                $gewijzigd = true;
+                                break 3; // Start opnieuw
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!$gewijzigd) {
+                break; // Geen verbeteringen meer mogelijk via swaps
+            }
+        }
+
+        // Fallback: als er nog steeds overschrijdingen zijn, herverdeel op gewicht
+        if ($this->heeftOverschrijdingen($poules, $maxKgVerschil)) {
+            $poules = $this->herverdeelOpGewicht($poules, $maxKgVerschil);
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Check of er nog poules zijn die de gewichtslimiet overschrijden
+     */
+    private function heeftOverschrijdingen(array $poules, float $maxKgVerschil): bool
+    {
+        foreach ($poules as $poule) {
+            $gewichten = array_map(fn($j) => $j->gewicht, $poule);
+            if (max($gewichten) - min($gewichten) > $maxKgVerschil) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Herverdeel alle judoka's over poules op basis van gewicht (fallback)
+     * Garandeert gewichtslimiet door dynamisch te splitsen waar nodig
+     */
+    private function herverdeelOpGewicht(array $poules, float $maxKgVerschil): array
+    {
+        // Verzamel alle judoka's en sorteer op gewicht
+        $alleJudokas = [];
+        foreach ($poules as $poule) {
+            foreach ($poule as $judoka) {
+                $alleJudokas[] = $judoka;
+            }
+        }
+        usort($alleJudokas, fn($a, $b) => $a->gewicht <=> $b->gewicht);
+
+        // Verdeel dynamisch: breek af waar gewichtsverschil te groot wordt
+        $nieuwePoules = [];
+        $huidigePoule = [];
+        $minGewicht = null;
+
+        foreach ($alleJudokas as $judoka) {
+            if (empty($huidigePoule)) {
+                $huidigePoule[] = $judoka;
+                $minGewicht = $judoka->gewicht;
+            } elseif ($judoka->gewicht - $minGewicht <= $maxKgVerschil) {
+                // Past binnen de limiet
+                $huidigePoule[] = $judoka;
+            } else {
+                // Breekpunt: start nieuwe poule
+                if (count($huidigePoule) >= 2) {
+                    $nieuwePoules[] = $huidigePoule;
+                }
+                $huidigePoule = [$judoka];
+                $minGewicht = $judoka->gewicht;
+            }
+        }
+
+        // Laatste poule
+        if (count($huidigePoule) >= 2) {
+            $nieuwePoules[] = $huidigePoule;
+        } elseif (!empty($huidigePoule) && !empty($nieuwePoules)) {
+            // 1 judoka over: voeg toe aan laatste poule als het past
+            $laatstePoule = array_pop($nieuwePoules);
+            $laatsteGewichten = array_map(fn($j) => $j->gewicht, $laatstePoule);
+            if ($huidigePoule[0]->gewicht - min($laatsteGewichten) <= $maxKgVerschil) {
+                $laatstePoule[] = $huidigePoule[0];
+            }
+            $nieuwePoules[] = $laatstePoule;
+        }
+
+        return $nieuwePoules;
+    }
+
+    /**
+     * Check of een swap beide poules binnen de HARDE LIMIET brengt
+     */
+    private function swapVerbetert(array $poule1, int $idx1, array $poule2, int $idx2, float $maxKg): bool
+    {
+        // Simuleer swap
+        $nieuwGewichten1 = array_map(fn($j) => $j->gewicht, $poule1);
+        $nieuwGewichten2 = array_map(fn($j) => $j->gewicht, $poule2);
+        $nieuwGewichten1[$idx1] = $poule2[$idx2]->gewicht;
+        $nieuwGewichten2[$idx2] = $poule1[$idx1]->gewicht;
+
+        $nieuw1 = max($nieuwGewichten1) - min($nieuwGewichten1);
+        $nieuw2 = max($nieuwGewichten2) - min($nieuwGewichten2);
+
+        // HARDE LIMIET: beide poules MOETEN binnen de limiet komen
+        return $nieuw1 <= $maxKg && $nieuw2 <= $maxKg;
     }
 
     /**

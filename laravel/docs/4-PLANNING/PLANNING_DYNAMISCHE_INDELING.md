@@ -87,12 +87,25 @@ unique: [organisator_id, naam]
 
 ```
 ═══════════════════════════════════════════════════════════════════
+HARDE LIMIETEN (instelbaar, daarna ABSOLUUT)
+═══════════════════════════════════════════════════════════════════
+
+De organisator stelt in:
+- Max leeftijd verschil (default: 2 jaar)
+- Max kg verschil (default: 3 kg)
+
+Wat ingesteld wordt is een ABSOLUTE grens:
+→ Judoka's die niet passen mogen NOOIT in dezelfde poule
+→ Geen uitzonderingen, geen penalties - gewoon niet toegestaan
+→ Sorteer prioriteiten veranderen alleen de VOLGORDE, niet de limieten
+
+═══════════════════════════════════════════════════════════════════
 VASTE HIËRARCHIE (veiligheid eerst!)
 ═══════════════════════════════════════════════════════════════════
 
 1. GESLACHT    - M/V apart (indien niet gemengd)
-2. LEEFTIJD    - Max 2 jaar verschil (HARD - veiligheid)
-3. GEWICHT     - Max 3 kg verschil (HARD - veiligheid)
+2. LEEFTIJD    - Max [ingesteld] jaar verschil (HARD)
+3. GEWICHT     - Max [ingesteld] kg verschil (HARD)
 4. BAND        - Sortering voor eerlijke poules (ZACHT)
 
 ═══════════════════════════════════════════════════════════════════
