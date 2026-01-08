@@ -73,8 +73,9 @@ Het systeem:
 - Berekent automatisch de leeftijdsklasse (indien geboortejaar bekend)
 - Bepaalt de gewichtsklasse op basis van gewicht
 - Als alleen gewichtsklasse is opgegeven (bv. "-34"), wordt gewicht afgeleid (34 kg)
-- **Onvolledige judoka's** worden geïmporteerd en gemarkeerd
+- **Onvolledige judoka's** (ontbrekend geboortejaar/geslacht) worden geïmporteerd en gemarkeerd
 - Filter op onvolledige judoka's via de "Onvolledig" knop in de deelnemerslijst
+- Import melding toont aantal geïmporteerd + aantal duplicaten bijgewerkt
 
 **Let op:**
 - QR-codes worden pas aangemaakt bij "Valideer judoka's" (na einde inschrijving)
@@ -92,8 +93,7 @@ Elke judoka krijgt een unieke code (bv. `U1234M01`) voor poule-indeling. Deze co
 **Wanneer worden codes (her)berekend?**
 - Na elke **import** - automatisch
 - Bij klikken op **"Valideren"** knop
-
-**Belangrijk:** Als je toernooi-instellingen wijzigt (zoals sorteervolgorde band/gewicht), moet je opnieuw **Valideren** om de judoka codes te herberekenen!
+- Bij wijziging **prioriteit instellingen** (drag & drop volgorde) - automatisch bij opslaan
 
 ### Coach Portal (Clubs Beheren)
 
@@ -145,7 +145,8 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 - Geslacht instelbaar per categorie (Gemengd/M/V)
 
 **Zonder vaste gewichtsklassen (dynamisch):**
-- Sorteer op: Gewicht→Band of Band→Gewicht
+- Drag & drop prioriteiten: Gewicht, Band, Groepsgrootte, Club
+- Klik (i) icoon voor uitleg over sorteer volgorde
 - Stel max kg verschil in (default 3 kg)
 - Stel max leeftijd verschil in (default 2 jaar)
 
@@ -172,6 +173,11 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 2. Klik **Verplaats Judoka**
 3. Selecteer de judoka en de doelpoule
 4. Bevestig de verplaatsing
+
+**Bij verplaatsen worden automatisch bijgewerkt:**
+- Aantal judoka's en wedstrijden per poule
+- Min-max leeftijd per poule
+- Min-max gewicht per poule
 
 ## Blok/Mat Verdeling
 
