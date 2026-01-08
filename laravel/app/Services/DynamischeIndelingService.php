@@ -33,6 +33,7 @@ class DynamischeIndelingService
         'weight_gewicht' => 0.4,
         'weight_band' => 0.2,
         'groepsgrootte_prioriteit' => 3, // 1 = hoogste prioriteit (strikt 5), 4 = laagste (flexibel)
+        'verdeling_prioriteiten' => ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'],
     ];
 
     /**
@@ -651,9 +652,24 @@ class DynamischeIndelingService
             return [];
         }
 
-        // Sorteer op band (wit eerst) - lagere banden komen in eerste poules
-        $gesorteerd = $judokas->sortBy(function ($judoka) {
-            return self::BAND_VOLGORDE[$judoka->band] ?? 99;
+        // Bepaal sorteervolgorde op basis van verdeling_prioriteiten
+        // Als gewicht eerst komt, sorteer op gewicht (primair) dan band
+        // Als band eerst komt, sorteer op band (primair) dan gewicht
+        $prioriteiten = $this->config['verdeling_prioriteiten'] ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+        $gewichtIndex = array_search('gewicht', $prioriteiten);
+        $bandIndex = array_search('band', $prioriteiten);
+
+        // Gewicht heeft hogere prioriteit als het eerder in de array staat
+        $gewichtEerst = $gewichtIndex !== false && ($bandIndex === false || $gewichtIndex < $bandIndex);
+
+        $gesorteerd = $judokas->sortBy(function ($judoka) use ($gewichtEerst) {
+            if ($gewichtEerst) {
+                // Primair op gewicht, secundair op band
+                return [$judoka->gewicht, self::BAND_VOLGORDE[$judoka->band] ?? 99];
+            } else {
+                // Primair op band, secundair op gewicht
+                return [self::BAND_VOLGORDE[$judoka->band] ?? 99, $judoka->gewicht];
+            }
         })->values();
 
         $poules = [];
@@ -956,29 +972,40 @@ class DynamischeIndelingService
      *
      * Gebruikt poule_grootte_voorkeur uit config (ingesteld door organisator)
      * Bijv. [5, 4, 3, 6] betekent: 5 is beste, dan 4, dan 3, dan 6
+     *
+     * Penalties zijn exponentieel zodat laatste voorkeur zwaar weegt:
+     * - Positie 0: penalty 0
+     * - Positie 1: penalty 1
+     * - Positie 2: penalty 3
+     * - Positie 3: penalty 7
+     *
+     * Voorbeeld met [5, 4, 3, 6] en 11 judoka's:
+     * - [6, 5] = 7×1 + 0×1 = 7  (6 is laatste voorkeur!)
+     * - [5, 3, 3] = 0×1 + 3×2 = 6
+     * - [4, 4, 3] = 1×2 + 3×1 = 5
+     * → [4, 4, 3] wint
      */
     private function scoreVerdeling(array $verdeling, int $striktheid): float
     {
         // Haal voorkeur volgorde uit config (organisator instelling)
-        // Bijv. [5, 4, 3, 6] = 5 beste, dan 4, dan 3, dan 6
         $voorkeur = $this->config['poule_grootte_voorkeur'] ?? [5, 4, 6, 3];
 
-        // Tel hoeveel poules van elke grootte er zijn
-        $counts = array_count_values($verdeling);
+        // Exponentiële penalties: 0, 1, 3, 7 (2^n - 1)
+        $penalties = [0, 1, 3, 7];
 
-        // Score = gewogen som van (positie in voorkeur)
-        // We belonen poules van voorkeur[0] het meest, voorkeur[3] het minst
-        $score = 0;
-
+        // Bouw penalty map
+        $penaltyMap = [];
         foreach ($voorkeur as $index => $grootte) {
-            $aantal = $counts[$grootte] ?? 0;
-            // Penalty = positie (0, 1, 2, 3) vermenigvuldigd met aantal
-            $score += $index * $aantal * $striktheid;
+            $penaltyMap[$grootte] = $penalties[$index] ?? 15;
         }
 
-        // Penalty voor groottes die niet in voorkeur staan
+        $score = 0;
+
         foreach ($verdeling as $grootte) {
-            if (!in_array($grootte, $voorkeur)) {
+            if (isset($penaltyMap[$grootte])) {
+                $score += $penaltyMap[$grootte] * $striktheid;
+            } else {
+                // Grootte niet in voorkeur = grote penalty
                 $score += 100 * $striktheid;
             }
         }

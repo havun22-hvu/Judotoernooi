@@ -278,6 +278,7 @@ class PouleIndelingService
                         [
                             'groepsgrootte_prioriteit' => $groepsgroottePrio,
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
+                            'verdeling_prioriteiten' => $this->prioriteiten,
                         ]
                     );
 
