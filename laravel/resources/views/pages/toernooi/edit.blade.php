@@ -831,13 +831,39 @@
                     const label = item.querySelector('.label-input').value;
                     const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
                     const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
-                    const gewichten = item.querySelector('.gewichten-input').value
+                    const maxLeeftijdVerschil = parseInt(item.querySelector('.max-leeftijd-input')?.value) || 1;
+                    const gewichten = item.querySelector('.gewichten-input')?.value
                         .split(',')
                         .map(g => g.trim())
-                        .filter(g => g);
-                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, gewichten };
+                        .filter(g => g) || [];
+                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLeeftijdVerschil, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
+            }
+
+            // Global functies voor radio buttons
+            window.loadGeenStandaard = function() {
+                if (confirm('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?')) {
+                    container.innerHTML = '';
+                    updateJsonInput();
+                } else {
+                    // Reset radio naar vorige waarde
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            window.loadJbn2025 = function() {
+                if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
+                    renderCategorieen(jbn2025);
+                } else {
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            window.loadJbn2026 = function() {
+                if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
+                    renderCategorieen(jbn2026);
+                }
             }
 
             // Toggle gewichtsklassen visibility based on max_kg_verschil
@@ -870,6 +896,7 @@
                     const maxKg = item.max_kg_verschil || 0;
                     const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
                     const dynamischHidden = maxKg > 0 ? '' : 'hidden';
+                    const maxLeeftijdVerschil = item.max_leeftijd_verschil || 1;
                     div.innerHTML = `
                         <div class="flex flex-wrap items-center gap-3 mb-2">
                             <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
@@ -916,6 +943,14 @@
                                        onchange="toggleGewichtsklassen(this)">
                                 <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
                             </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm">Max leeftijd verschil:</label>
+                                <input type="number" name="gewichtsklassen_max_leeftijd[${key}]"
+                                       value="${maxLeeftijdVerschil}"
+                                       class="max-leeftijd-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                       min="1" max="5">
+                                <span class="text-xs text-gray-500">jaar</span>
+                            </div>
                             <div class="gewichten-container flex-1 ${gewichtenHidden}">
                                 <input type="text" name="gewichtsklassen[${key}]"
                                        value="${item.gewichten.join(', ')}"
@@ -932,19 +967,6 @@
                 }
                 updateJsonInput();
             }
-
-            // JBN buttons
-            document.getElementById('btn-jbn-2025').addEventListener('click', () => {
-                if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
-                    renderCategorieen(jbn2025);
-                }
-            });
-
-            document.getElementById('btn-jbn-2026').addEventListener('click', () => {
-                if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
-                    renderCategorieen(jbn2026);
-                }
-            });
 
             // Eigen presets
             const presetsDropdown = document.getElementById('eigen-presets-dropdown');
@@ -1081,19 +1103,27 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max kg verschil:</label>
                             <input type="number" name="gewichtsklassen_max_kg[${newKey}]"
-                                   value="0"
+                                   value="3"
                                    class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
                             <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
                         </div>
-                        <div class="gewichten-container flex-1">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max leeftijd verschil:</label>
+                            <input type="number" name="gewichtsklassen_max_leeftijd[${newKey}]"
+                                   value="2"
+                                   class="max-leeftijd-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   min="1" max="5">
+                            <span class="text-xs text-gray-500">jaar</span>
+                        </div>
+                        <div class="gewichten-container flex-1 hidden">
                             <input type="text" name="gewichtsklassen[${newKey}]"
                                    value=""
                                    class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
                                    placeholder="-20, -23, -26, +26">
                         </div>
-                        <div class="dynamisch-label flex-1 text-sm text-blue-600 italic hidden">
+                        <div class="dynamisch-label flex-1 text-sm text-blue-600 italic">
                             Dynamische indeling op basis van werkelijk gewicht
                         </div>
                     </div>
