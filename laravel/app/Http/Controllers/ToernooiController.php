@@ -88,9 +88,11 @@ class ToernooiController extends Controller
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg']);
 
-        // Check if sorting settings changed
-        $volgordeGewijzigd = isset($data['judoka_code_volgorde'])
-            && $data['judoka_code_volgorde'] !== $toernooi->judoka_code_volgorde;
+        // Check if sorting settings changed (prioriteiten or legacy judoka_code_volgorde)
+        $prioriteitenGewijzigd = isset($data['verdeling_prioriteiten'])
+            && json_encode($data['verdeling_prioriteiten']) !== json_encode($toernooi->verdeling_prioriteiten ?? []);
+        $volgordeGewijzigd = $prioriteitenGewijzigd
+            || (isset($data['judoka_code_volgorde']) && $data['judoka_code_volgorde'] !== $toernooi->judoka_code_volgorde);
 
         // Handle gebruik_gewichtsklassen checkbox (0 from hidden field, 1 from checkbox)
         $nieuweGebruikGewichtsklassen = (bool) ($data['gebruik_gewichtsklassen'] ?? 1);
