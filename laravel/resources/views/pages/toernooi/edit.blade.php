@@ -1112,7 +1112,7 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd verschil:</label>
                             <input type="number" name="gewichtsklassen_max_leeftijd[${newKey}]"
-                                   value="2"
+                                   value="1"
                                    class="max-leeftijd-input w-16 border rounded px-2 py-1 text-center text-sm"
                                    min="1" max="5">
                             <span class="text-xs text-gray-500">jaar</span>
