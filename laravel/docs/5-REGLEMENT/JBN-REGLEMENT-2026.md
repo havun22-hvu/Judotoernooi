@@ -18,6 +18,16 @@ Ingangsdatum: 1 januari 2026
 | -18 jaar | 15-17 jaar | 17 |
 | -21 jaar | 18-20 jaar | 20 |
 
+### Geslacht: gemengd vs gescheiden
+
+**JBN standaard:** Jongens en meisjes zijn **gemengd** tot en met -13 jaar (Pupillen C).
+Vanaf -15 jaar worden categorieën **gescheiden** in Heren en Dames.
+
+| Categorie | Geslacht |
+|-----------|----------|
+| -7 t/m -13 jaar | Gemengd |
+| -15 jaar en ouder | Gescheiden (Heren/Dames) |
+
 ## Wedstrijdregels per categorie
 
 ### Start van de wedstrijd

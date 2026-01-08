@@ -360,119 +360,27 @@ class Toernooi extends Model
     /**
      * JBN 2025 regels (huidige): -8, -10, -12, -15, -18, -21, Senioren
      * Officieel volgens BondsVademecum hoofdstuk 4.03a (1 juli 2025)
+     * Gemengd tot -12 jaar, gescheiden vanaf -15 jaar
      */
     public static function getJbn2025Gewichtsklassen(): array
-    {
-        return [
-            'minis_m' => [
-                'label' => "Mini's (jongens)",
-                'max_leeftijd' => 7,
-                'geslacht' => 'M',
-                'gewichten' => ['-18', '-21', '-24', '-27', '-30', '-34', '-38', '+38'],
-            ],
-            'minis_v' => [
-                'label' => "Mini's (meisjes)",
-                'max_leeftijd' => 7,
-                'geslacht' => 'V',
-                'gewichten' => ['-18', '-20', '-22', '-25', '-28', '-32', '-36', '+36'],
-            ],
-            'pupillen_a_m' => [
-                'label' => 'Pupillen A (jongens)',
-                'max_leeftijd' => 9,
-                'geslacht' => 'M',
-                'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
-            ],
-            'pupillen_a_v' => [
-                'label' => 'Pupillen A (meisjes)',
-                'max_leeftijd' => 9,
-                'geslacht' => 'V',
-                'gewichten' => ['-20', '-22', '-25', '-28', '-32', '-36', '-40', '-44', '-48', '+48'],
-            ],
-            'pupillen_b_m' => [
-                'label' => 'Pupillen B (jongens)',
-                'max_leeftijd' => 11,
-                'geslacht' => 'M',
-                'gewichten' => ['-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '-55', '+55'],
-            ],
-            'pupillen_b_v' => [
-                'label' => 'Pupillen B (meisjes)',
-                'max_leeftijd' => 11,
-                'geslacht' => 'V',
-                'gewichten' => ['-22', '-25', '-28', '-32', '-36', '-40', '-44', '-48', '-52', '+52'],
-            ],
-            'dames_15' => [
-                'label' => 'Dames -15',
-                'max_leeftijd' => 14,
-                'geslacht' => 'V',
-                'gewichten' => ['-32', '-36', '-40', '-44', '-48', '-52', '-57', '-63', '+63'],
-            ],
-            'heren_15' => [
-                'label' => 'Heren -15',
-                'max_leeftijd' => 14,
-                'geslacht' => 'M',
-                'gewichten' => ['-34', '-38', '-42', '-46', '-50', '-55', '-60', '-66', '+66'],
-            ],
-            'dames_18' => [
-                'label' => 'Dames -18',
-                'max_leeftijd' => 17,
-                'geslacht' => 'V',
-                'gewichten' => ['-40', '-44', '-48', '-52', '-57', '-63', '-70', '+70'],
-            ],
-            'heren_18' => [
-                'label' => 'Heren -18',
-                'max_leeftijd' => 17,
-                'geslacht' => 'M',
-                'gewichten' => ['-46', '-50', '-55', '-60', '-66', '-73', '-81', '-90', '+90'],
-            ],
-            'dames_21' => [
-                'label' => 'Dames -21',
-                'max_leeftijd' => 20,
-                'geslacht' => 'V',
-                'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
-            ],
-            'heren_21' => [
-                'label' => 'Heren -21',
-                'max_leeftijd' => 20,
-                'geslacht' => 'M',
-                'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
-            ],
-            'dames' => [
-                'label' => 'Dames Senioren',
-                'max_leeftijd' => 99,
-                'geslacht' => 'V',
-                'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
-            ],
-            'heren' => [
-                'label' => 'Heren Senioren',
-                'max_leeftijd' => 99,
-                'geslacht' => 'M',
-                'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
-            ],
-        ];
-    }
-
-    /**
-     * JBN 2025 gemengd (tot 12 jaar)
-     */
-    public static function getJbn2025GewichtsklassenGemengd(): array
     {
         return [
             'minis' => [
                 'label' => "Mini's",
                 'max_leeftijd' => 7,
-                'geslacht' => null,
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-18', '-21', '-24', '-27', '-30', '-34', '-38', '+38'],
             ],
             'pupillen_a' => [
                 'label' => 'Pupillen A',
                 'max_leeftijd' => 9,
-                'geslacht' => null,
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
             ],
             'pupillen_b' => [
                 'label' => 'Pupillen B',
                 'max_leeftijd' => 11,
-                'geslacht' => null,
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '-55', '+55'],
             ],
             'dames_15' => [
@@ -530,57 +438,34 @@ class Toernooi extends Model
      * JBN 2026 regels (nieuw): -7, -9, -11, -13, -15
      * Leeftijdsgrenzen volgens BondsVademecum 4.02 (31 jan 2025)
      * Gewichtsklassen: voorlopig gebaseerd op JBN 2025 (officiële 2026 nog niet gepubliceerd)
+     * Gemengd tot -13 jaar, gescheiden vanaf -15 jaar
      */
     public static function getJbn2026Gewichtsklassen(): array
     {
         return [
-            'minis_m' => [
-                'label' => "Mini's (jongens)",
+            'minis' => [
+                'label' => "Mini's",
                 'max_leeftijd' => 6,
-                'geslacht' => 'M',
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-18', '-21', '-24', '-27', '-30', '-34', '+34'],
             ],
-            'minis_v' => [
-                'label' => "Mini's (meisjes)",
-                'max_leeftijd' => 6,
-                'geslacht' => 'V',
-                'gewichten' => ['-18', '-20', '-22', '-25', '-28', '-32', '+32'],
-            ],
-            'pupillen_a_m' => [
-                'label' => 'Pupillen A (jongens)',
+            'pupillen_a' => [
+                'label' => 'Pupillen A',
                 'max_leeftijd' => 8,
-                'geslacht' => 'M',
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '+42'],
             ],
-            'pupillen_a_v' => [
-                'label' => 'Pupillen A (meisjes)',
-                'max_leeftijd' => 8,
-                'geslacht' => 'V',
-                'gewichten' => ['-20', '-22', '-25', '-28', '-32', '-36', '-40', '+40'],
-            ],
-            'pupillen_b_m' => [
-                'label' => 'Pupillen B (jongens)',
+            'pupillen_b' => [
+                'label' => 'Pupillen B',
                 'max_leeftijd' => 10,
-                'geslacht' => 'M',
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
             ],
-            'pupillen_b_v' => [
-                'label' => 'Pupillen B (meisjes)',
-                'max_leeftijd' => 10,
-                'geslacht' => 'V',
-                'gewichten' => ['-22', '-25', '-28', '-32', '-36', '-40', '-44', '-48', '+48'],
-            ],
-            'pupillen_c_m' => [
-                'label' => 'Pupillen C (jongens)',
+            'pupillen_c' => [
+                'label' => 'Pupillen C',
                 'max_leeftijd' => 12,
-                'geslacht' => 'M',
+                'geslacht' => 'gemengd',
                 'gewichten' => ['-27', '-30', '-34', '-38', '-42', '-46', '-50', '-55', '+55'],
-            ],
-            'pupillen_c_v' => [
-                'label' => 'Pupillen C (meisjes)',
-                'max_leeftijd' => 12,
-                'geslacht' => 'V',
-                'gewichten' => ['-25', '-28', '-32', '-36', '-40', '-44', '-48', '-52', '+52'],
             ],
             'dames_15' => [
                 'label' => 'Dames -15',
