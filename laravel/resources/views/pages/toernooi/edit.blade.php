@@ -610,110 +610,107 @@
             </div>
         </div>
 
-        <!-- GEWICHTSKLASSEN PER LEEFTIJD -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ gebruikGewichtsklassen: {{ ($toernooi->gebruik_gewichtsklassen ?? true) ? 'true' : 'false' }} }">
+        <!-- CATEGORIEËN INSTELLING -->
+        @php
+            $categorieType = $toernooi->categorie_type ?? 'geen_standaard';
+            if ($toernooi->gebruik_gewichtsklassen ?? false) {
+                // Backwards compatibility: als gebruik_gewichtsklassen aan staat, is het JBN
+                $categorieType = 'jbn_2026';
+            }
+        @endphp
+        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">Leeftijds- en Gewichtsklassen</h2>
-                    <p class="text-gray-600 text-sm mt-1">Pas leeftijdsgrenzen en gewichtsklassen aan per categorie.</p>
+                    <h2 class="text-xl font-bold text-gray-800">Categorieën Instelling</h2>
+                    <p class="text-gray-600 text-sm mt-1">Kies een startpunt en pas categorieën aan.</p>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <div class="flex items-center gap-4">
-                        <label class="flex items-center gap-2 text-sm">
-                            <input type="hidden" name="gebruik_gewichtsklassen" value="0">
-                            <input type="checkbox" name="gebruik_gewichtsklassen" value="1"
-                                   :checked="gebruikGewichtsklassen"
-                                   @change="gebruikGewichtsklassen = $event.target.checked"
-                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded">
-                            <span>Gewichtsklassen gebruiken</span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Hoofdkeuze: radio buttons -->
+                    <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="geen_standaard"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadGeenStandaard()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                Geen standaard
+                            </span>
                         </label>
-                        <button type="button" id="btn-jbn-2025" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded text-sm">
-                            JBN 2025
-                        </button>
-                        <button type="button" id="btn-jbn-2026" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
-                            JBN 2026
-                        </button>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="jbn_2025"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadJbn2025()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                JBN 2025
+                            </span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="jbn_2026"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadJbn2026()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                JBN 2026
+                            </span>
+                        </label>
                     </div>
-                    <div class="flex gap-2 items-center">
-                        <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[140px]">
-                            <option value="">Eigen preset...</option>
-                        </select>
-                        <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="Huidige configuratie opslaan">
-                            💾 Opslaan
-                        </button>
-                    </div>
+                    <!-- Eigen presets -->
+                    <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[120px]">
+                        <option value="">Preset...</option>
+                    </select>
+                    <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="Huidige configuratie opslaan">
+                        💾 Opslaan
+                    </button>
                 </div>
             </div>
 
-            <!-- Sortering alleen tonen als gewichtsklassen UIT staan -->
-            <div x-show="!gebruikGewichtsklassen" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p class="text-yellow-800 text-sm mb-2">
-                    <strong>Zonder gewichtsklassen:</strong> Judoka's worden alleen per leeftijdsgroep ingedeeld.
-                </p>
-
+            <!-- Sorteer prioriteit: alleen tonen bij "Geen standaard" -->
+            <div x-show="categorieType === 'geen_standaard'" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <!-- Prioriteit drag & drop -->
-                <div class="mb-3">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-yellow-800 text-sm font-medium">Sorteer prioriteit:</span>
-                        <button type="button"
-                                x-data="{ open: false }"
-                                @click="open = !open"
-                                class="relative text-yellow-600 hover:text-yellow-800">
-                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
-                            <div x-show="open"
-                                 @click.away="open = false"
-                                 x-transition
-                                 class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
-                                <p class="font-medium mb-1">Sorteer volgorde judoka's</p>
-                                <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd bij het maken van poules. Sleep de items om de volgorde aan te passen.</p>
-                                <ul class="text-xs mt-2 space-y-1">
-                                    <li><strong>Gewicht:</strong> Judoka's met vergelijkbaar gewicht bij elkaar</li>
-                                    <li><strong>Band:</strong> Judoka's met zelfde niveau bij elkaar</li>
-                                    <li><strong>Groepsgrootte:</strong> Optimale poule grootte</li>
-                                    <li><strong>Club:</strong> Judoka's van zelfde club verspreiden</li>
-                                </ul>
-                            </div>
-                        </button>
-                        <div id="prioriteit-container" class="flex gap-2">
-                            @php
-                                $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
-                                // Backwards compatibility: convert old keys
-                                $prioriteiten = array_map(fn($k) => $k === 'bandkleur' ? 'band' : $k, $prioriteiten);
-                                // Ensure all 4 keys exist
-                                $allKeys = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
-                                foreach ($allKeys as $key) {
-                                    if (!in_array($key, $prioriteiten)) {
-                                        array_unshift($prioriteiten, $key);
-                                    }
-                                }
-                                $prioriteiten = array_values(array_unique($prioriteiten));
-                                $labels = ['gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band', 'groepsgrootte' => '👥 Groepsgrootte', 'clubspreiding' => '🏠 Club'];
-                            @endphp
-                            @foreach($prioriteiten as $idx => $key)
-                            <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="{{ $key }}">{{ $idx + 1 }}. {{ $labels[$key] ?? $key }}</div>
-                            @endforeach
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-yellow-800 text-sm font-medium">Sorteer prioriteit:</span>
+                    <button type="button"
+                            x-data="{ open: false }"
+                            @click="open = !open"
+                            class="relative text-yellow-600 hover:text-yellow-800">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
+                        <div x-show="open"
+                             @click.away="open = false"
+                             x-transition
+                             class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
+                            <p class="font-medium mb-1">Sorteer volgorde bij grote aantallen</p>
+                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd bij het maken van poules. Sleep de items om de volgorde aan te passen.</p>
+                            <ul class="text-xs mt-2 space-y-1">
+                                <li><strong>Gewicht:</strong> Judoka's met vergelijkbaar gewicht bij elkaar</li>
+                                <li><strong>Band:</strong> Judoka's met zelfde niveau bij elkaar (wit ≠ bruin)</li>
+                                <li><strong>Groepsgrootte:</strong> Optimale poule grootte (4-5)</li>
+                                <li><strong>Club:</strong> Judoka's van zelfde club verspreiden</li>
+                            </ul>
                         </div>
-                        <span class="text-yellow-600 text-xs">(sleep om te wisselen)</span>
+                    </button>
+                    <div id="prioriteit-container" class="flex gap-2">
+                        @php
+                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+                            // Backwards compatibility: convert old keys
+                            $prioriteiten = array_map(fn($k) => $k === 'bandkleur' ? 'band' : $k, $prioriteiten);
+                            // Ensure all 4 keys exist
+                            $allKeys = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+                            foreach ($allKeys as $key) {
+                                if (!in_array($key, $prioriteiten)) {
+                                    array_unshift($prioriteiten, $key);
+                                }
+                            }
+                            $prioriteiten = array_values(array_unique($prioriteiten));
+                            $labels = ['gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band', 'groepsgrootte' => '👥 Groepsgrootte', 'clubspreiding' => '🏠 Club'];
+                        @endphp
+                        @foreach($prioriteiten as $idx => $key)
+                        <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="{{ $key }}">{{ $idx + 1 }}. {{ $labels[$key] ?? $key }}</div>
+                        @endforeach
                     </div>
-                    <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
+                    <span class="text-yellow-600 text-xs">(sleep om te wisselen)</span>
                 </div>
-
-                <div class="flex gap-6 pt-3 border-t border-yellow-200">
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm text-yellow-800">Max kg verschil:</label>
-                        <input type="number" name="max_kg_verschil" step="0.5" min="1" max="10"
-                               value="{{ $toernooi->max_kg_verschil ?? 3 }}"
-                               class="w-16 px-2 py-1 border rounded text-sm text-center">
-                        <span class="text-xs text-gray-500">kg</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <label class="text-sm text-yellow-800">Max leeftijd verschil:</label>
-                        <input type="number" name="max_leeftijd_verschil" min="1" max="5"
-                               value="{{ $toernooi->max_leeftijd_verschil ?? 2 }}"
-                               class="w-16 px-2 py-1 border rounded text-sm text-center">
-                        <span class="text-xs text-gray-500">jaar</span>
-                    </div>
-                </div>
+                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
             </div>
 
             @php
@@ -730,21 +727,25 @@
                     $geslacht = $data['geslacht'] ?? 'gemengd';
                     $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
                 @endphp
+                @php
+                    $maxLeeftijdVerschil = $data['max_leeftijd_verschil'] ?? 1;
+                @endphp
                 <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move" data-key="{{ $key }}" draggable="true">
                     <div class="flex flex-wrap items-center gap-3 mb-2">
                         <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Naam:</label>
+                            <input type="text" name="gewichtsklassen_label[{{ $key }}]"
+                                   value="{{ $data['label'] }}"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                        </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
                                    value="{{ $data['max_leeftijd'] ?? 99 }}"
                                    class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold {{ ($data['max_leeftijd'] ?? 99) < 99 ? 'text-blue-600' : 'text-gray-400' }}"
                                    min="5" max="99">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Naam:</label>
-                            <input type="text" name="gewichtsklassen_label[{{ $key }}]"
-                                   value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                            <span class="text-xs text-gray-500">jaar</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Geslacht:</label>
@@ -758,7 +759,7 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Systeem:</label>
                             <select name="wedstrijd_systeem[{{ $key }}]"
-                                    class="border rounded px-2 py-1 text-sm bg-white">
+                                    class="systeem-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
                                 <option value="poules_kruisfinale" {{ ($wedstrijdSysteem[$key] ?? '') == 'poules_kruisfinale' ? 'selected' : '' }}>Kruisfinale</option>
                                 <option value="eliminatie" {{ ($wedstrijdSysteem[$key] ?? '') == 'eliminatie' ? 'selected' : '' }}>Eliminatie</option>
@@ -774,7 +775,15 @@
                                    class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
-                            <span class="text-xs text-gray-500">(0 = vaste klassen)</span>
+                            <span class="text-xs text-gray-500">kg</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Max leeftijd verschil:</label>
+                            <input type="number" name="gewichtsklassen_max_leeftijd[{{ $key }}]"
+                                   value="{{ $maxLeeftijdVerschil }}"
+                                   class="max-leeftijd-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   min="1" max="5">
+                            <span class="text-xs text-gray-500">jaar</span>
                         </div>
                         <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
                             <input type="text" name="gewichtsklassen[{{ $key }}]"
@@ -783,7 +792,7 @@
                                    placeholder="-20, -23, -26, +26">
                         </div>
                         <div class="dynamisch-label flex-1 text-sm text-blue-600 italic {{ $maxKgVerschil > 0 ? '' : 'hidden' }}">
-                            Dynamische indeling op basis van werkelijk gewicht
+                            Dynamische indeling
                         </div>
                     </div>
                 </div>

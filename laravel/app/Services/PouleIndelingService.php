@@ -264,10 +264,15 @@ class PouleIndelingService
                     $maxKg = $this->getMaxKgVerschil($leeftijdsklasse);
                     $maxLeeftijd = $this->getMaxLeeftijdVerschil($leeftijdsklasse);
 
+                    // Bepaal groepsgrootte prioriteit (1 = hoogste, 4 = laagste)
+                    $groepsgroottePrio = array_search('groepsgrootte', $this->prioriteiten);
+                    $groepsgroottePrio = $groepsgroottePrio !== false ? $groepsgroottePrio + 1 : 3;
+
                     $indeling = $this->dynamischeIndelingService->berekenIndeling(
                         $judokas,
                         $maxLeeftijd,
-                        $maxKg
+                        $maxKg,
+                        ['groepsgrootte_prioriteit' => $groepsgroottePrio]
                     );
 
                     // Check if this age class uses elimination system
