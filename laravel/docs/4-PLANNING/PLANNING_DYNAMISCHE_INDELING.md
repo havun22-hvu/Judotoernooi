@@ -127,6 +127,50 @@ bepaalt de prioriteit hoe judoka's worden gegroepeerd:
 
 ## Algoritme: Dynamische Indeling
 
+### Samenvatting (TL;DR)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HOE WERKT DE DYNAMISCHE POULE INDELING?                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│ STAP 1: GROEPEREN (harde constraints)                           │
+│   → Judoka's worden gegroepeerd zodat:                          │
+│     • Gewichtsverschil ≤ max kg (bijv. 3 kg)                    │
+│     • Leeftijdsverschil ≤ max jaar (bijv. 2 jaar)               │
+│                                                                 │
+│ STAP 2: SORTEREN (configureerbaar)                              │
+│   → Op basis van verdeling_prioriteiten:                        │
+│     • Gewicht eerst → sorteer op gewicht, dan band              │
+│     • Band eerst → sorteer op band, dan gewicht                 │
+│                                                                 │
+│ STAP 3: VERDELEN IN POULES                                      │
+│   → Kies verdeling met laagste penalty:                         │
+│                                                                 │
+│   Voorbeeld met voorkeur [5,4,3,6]:                             │
+│   ┌──────────────┬─────────┐                                    │
+│   │ Poulegrootte │ Penalty │                                    │
+│   ├──────────────┼─────────┤                                    │
+│   │ 5 (1e keus)  │ 0       │                                    │
+│   │ 4 (2e keus)  │ 1       │                                    │
+│   │ 3 (3e keus)  │ 3       │                                    │
+│   │ 6 (4e keus)  │ 7       │                                    │
+│   └──────────────┴─────────┘                                    │
+│                                                                 │
+│   11 judoka's:                                                  │
+│   • [6,5] → penalty 7+0 = 7                                     │
+│   • [5,3,3] → penalty 0+3+3 = 6                                 │
+│   • [4,4,3] → penalty 1+1+3 = 5 ✅ GEKOZEN                      │
+│                                                                 │
+│ STAP 4: VALIDATIE                                               │
+│   → Check alle poules op gewichtslimiet                         │
+│   → Fix indien nodig (split/swap)                               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Gedetailleerde Uitleg
+
 ```
 ═══════════════════════════════════════════════════════════════════
 HARDE LIMIETEN (instelbaar, daarna ABSOLUUT)
