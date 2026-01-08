@@ -242,17 +242,65 @@ De organisator bepaalt **twee** dingen:
 ### Algoritme Samenvatting
 
 ```
-1. Groepeer judoka's op gewicht + leeftijd (harde constraints)
-2. Per groep:
-   a. Lees poule_grootte_voorkeur uit toernooi instellingen
-   b. Bereken alle mogelijke verdelingen (3-6 per poule)
-   c. Score elke verdeling op basis van voorkeur volgorde
-   d. Kies verdeling met laagste score
-3. Sorteer judoka's op band (lagere eerst)
-4. Verdeel over poules
-5. Pas clubspreiding toe (swap indien mogelijk)
-6. Valideer gewichtslimiet, fix indien nodig
+STAP 1: PARTITIONERING (harde constraints)
+══════════════════════════════════════════
+- Splits op geslacht (indien niet gemengd)
+- Splits op leeftijd (max X jaar verschil)
+- Splits op gewicht (max Y kg verschil)
+→ Resultaat: disjuncte gewichtsgroepen
+
+STAP 2: POULEGROOTTE BEPALEN (per gewichtsgroep)
+══════════════════════════════════════════
+- Lees poule_grootte_voorkeur (bijv. [5,4,3,6])
+- Bereken alle mogelijke verdelingen (3-6 per poule)
+- Score elke verdeling op voorkeur
+- Kies verdeling met laagste score
+
+STAP 3: SORTERING (binnen harde constraints!)
+══════════════════════════════════════════
+Lees verdeling_prioriteiten:
+
+  IF gewicht op positie 1:
+    sort(judokas, gewicht ASC, band ASC)
+    → Lichtste judoka's in eerste poule
+
+  IF band op positie 1:
+    sort(judokas, band ASC, gewicht ASC)
+    → Lagere banden in eerste poule
+
+⚠️ Sortering breekt NOOIT harde constraints!
+   Alle judoka's in groep voldoen al aan max_kg en max_leeftijd.
+
+STAP 4: VERDEEL OVER POULES
+══════════════════════════════════════════
+- Verdeel gesorteerde judoka's over poules
+- Poule 1 = eerste N judoka's
+- Poule 2 = volgende M judoka's
+- etc.
+
+STAP 5: CLUBSPREIDING (optimalisatie)
+══════════════════════════════════════════
+- Swap judoka's tussen poules indien:
+  - Verbetert clubspreiding
+  - Breekt geen harde constraints
+
+STAP 6: VALIDATIE
+══════════════════════════════════════════
+- Check alle poules op gewichtslimiet
+- Fix indien nodig (split/swap)
 ```
+
+### Harde vs Zachte Constraints
+
+| Type | Constraint | Breekbaar? |
+|------|------------|------------|
+| **HARD** | max_kg_verschil | Nee, nooit |
+| **HARD** | max_leeftijd_verschil | Nee, nooit |
+| **HARD** | Poulegrootte 3-6 | Nee, nooit |
+| **HARD** | Geslacht (indien apart) | Nee, nooit |
+| **ZACHT** | Poulegrootte voorkeur | Ja, via prioriteit |
+| **ZACHT** | Band sortering | Ja, via prioriteit |
+| **ZACHT** | Clubspreiding | Ja, best effort |
 
 ## Varianten Generatie (zoals Blokverdeling)
 
