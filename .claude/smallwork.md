@@ -101,6 +101,38 @@
 
 ---
 
+## Sessie: 9 januari 2026
+
+### Fix: JBN presets gemengd voor jeugd
+- **Type:** Bug fix / Data correctie
+- **Wat:** JBN 2025/2026 presets gebruiken nu `geslacht='gemengd'` voor Mini's t/m Pupillen
+- **Waarom:** JBN standaard: jongens/meisjes pas gescheiden vanaf -15 jaar
+- **Bestanden:** `app/Models/Toernooi.php` (getJbn2025Gewichtsklassen, getJbn2026Gewichtsklassen)
+- **Naar permanente docs?** ☑ Ja → JBN-REGLEMENT-2026.md (geslacht regel toegevoegd)
+
+### Fix: Default max_leeftijd_verschil naar 1 jaar
+- **Type:** Bug fix
+- **Wat:** Nieuwe categorie krijgt nu standaard 1 jaar i.p.v. 2 jaar verschil
+- **Waarom:** Consistentie met bestaande categorieën
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php:1115`
+- **Naar permanente docs?** ☑ Nee - UI default
+
+### Fix: Start met lege categorieën
+- **Type:** Enhancement
+- **Wat:** `getAlleGewichtsklassen()` retourneert nu lege array als geen config
+- **Waarom:** Gebruiker wil zelf kiezen: JBN preset of handmatig
+- **Bestanden:** `app/Models/Toernooi.php:getAlleGewichtsklassen()`
+- **Naar permanente docs?** ☑ Nee - technische default
+
+### Cleanup: Overbodige gemengd methods verwijderd
+- **Type:** Refactor
+- **Wat:** `getJbn2025GewichtsklassenGemengd()` en `getJbn2026GewichtsklassenGemengd()` verwijderd
+- **Waarom:** Standaard presets zijn nu zelf gemengd
+- **Bestanden:** `app/Models/Toernooi.php`
+- **Naar permanente docs?** ☑ Nee - code cleanup
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

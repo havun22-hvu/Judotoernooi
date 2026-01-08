@@ -328,26 +328,25 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 8 januari 2026
+## Laatste Sessie: 9 januari 2026
 
 ### Wat is gedaan:
-- Import onvolledige judoka's (zonder geboortejaar) + filter "Onvolledig"
-- Gewicht afleiden van gewichtsklasse bij import ("-34" → 34 kg)
-- Vereenvoudiging instellingen: 1 drag & drop i.p.v. 2 overlappende settings
-- Info popup (i) bij prioriteiten met uitleg sorteervolgorde
-- Poule statistieken (leeftijd/gewicht ranges) updaten bij drag & drop
-- Bugfix: clubspreiding respecteert nu gewicht prioriteit
-- Auto-herberekening judoka codes bij wijziging prioriteiten
+- JBN 2025/2026 presets: Mini's t/m Pupillen nu **gemengd** (niet meer gescheiden m/v)
+- JBN regel gedocumenteerd: gescheiden pas vanaf -15 jaar
+- Default max_leeftijd_verschil: 2 → 1 jaar bij nieuwe categorie
+- Start met lege categorieën (gebruiker kiest zelf preset of handmatig)
+- Cleanup: overbodige `getJbn20XXGewichtsklassenGemengd()` methods verwijderd
 
 ### Openstaande items:
 - [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
 - [ ] Testen: poules met gewicht prioriteit 1 → geen 20kg/26kg mix
 - [ ] Testen: versleep judoka → statistieken update
 - [ ] Testen: import CSV met ontbrekend geboortejaar → "Onvolledig" filter
+- [ ] Testen: JBN preset laden → gemengde categorieën voor jeugd
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 
 ### Branch info:
 - **Branch:** `feature/dynamische-indeling`
-- **Commits:** 3 nieuwe (f44deee, c492d4a, a2c345b)
-- **Docs bijgewerkt:** PLANNING_DYNAMISCHE_INDELING.md, GEBRUIKERSHANDLEIDING.md
+- **Commits:** 4 nieuwe (1863e39, f316ae4, 3e2b6cb)
+- **Docs bijgewerkt:** JBN-REGLEMENT-2026.md (geslacht regel)
