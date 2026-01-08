@@ -152,6 +152,35 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 
 **Presets opslaan:** Sla je configuratie op als eigen preset voor later gebruik.
 
+### Hoe Werkt de Dynamische Indeling?
+
+Het systeem verdeelt judoka's in 4 stappen:
+
+**Stap 1: Groeperen (veiligheid eerst)**
+- Judoka's worden gegroepeerd op basis van harde limieten
+- Max gewichtsverschil (bijv. 3 kg) - wordt NOOIT overschreden
+- Max leeftijdsverschil (bijv. 2 jaar) - wordt NOOIT overschreden
+
+**Stap 2: Sorteren (op basis van prioriteit)**
+- Als "Gewicht" bovenaan staat: lichtste judoka's eerst, dan op band
+- Als "Band" bovenaan staat: witte banden eerst, dan op gewicht
+
+**Stap 3: Verdelen in poules**
+- Het systeem kiest de beste poulegrootte-verdeling
+- Voorbeeld met voorkeur [5, 4, 3, 6] bij 11 judoka's:
+
+| Optie | Verdeling | Berekening | Score |
+|-------|-----------|------------|-------|
+| A | [6, 5] | 6=7 punten, 5=0 punten | 7 |
+| B | [5, 3, 3] | 5=0, 3=3, 3=3 punten | 6 |
+| C | [4, 4, 3] | 4=1, 4=1, 3=3 punten | **5** ✅ |
+
+**Stap 4: Validatie**
+- Alle poules worden gecontroleerd op gewichtslimiet
+- Indien nodig worden judoka's geswapt
+
+**Belangrijk:** De harde limieten (gewicht/leeftijd) worden NOOIT overschreden, ongeacht de prioriteit-instellingen.
+
 ### Automatische Poule Generatie
 
 1. Ga naar **Toernooi** > **Poules** > **Genereer Poule-indeling**
