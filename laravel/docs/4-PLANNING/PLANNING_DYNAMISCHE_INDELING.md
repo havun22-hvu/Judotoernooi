@@ -192,6 +192,68 @@ Als max_kg_verschil = 0:
 → Dit is identiek aan dynamisch, alleen grenzen zijn vooraf bepaald
 ```
 
+## Poulegrootte Verdeling
+
+### Twee Instellingen
+
+De organisator bepaalt **twee** dingen:
+
+1. **`poule_grootte_voorkeur`** - Volgorde van voorkeur voor poule groottes
+   - Bijv. `[5, 4, 3, 6]` = 5 beste, dan 4, dan 3, dan 6
+   - Of `[5, 4, 6, 3]` = 5 beste, dan 4, dan 6, dan 3 (default)
+
+2. **`verdeling_prioriteiten`** - Prioriteit tussen criteria
+   - Bijv. `[groepsgrootte, gewicht, band, clubspreiding]`
+   - Als groepsgrootte op 1 staat → strikt de voorkeur volgen
+   - Als groepsgrootte op 4 staat → flexibeler voor andere criteria
+
+### Voorkeur Volgorde (instelbaar)
+
+| Positie | Penalty | Voorbeeld [5,4,3,6] | Voorbeeld [5,4,6,3] |
+|---------|---------|---------------------|---------------------|
+| 1e keus | 0 | 5 (ideaal) | 5 (ideaal) |
+| 2e keus | laag | 4 (goed) | 4 (goed) |
+| 3e keus | medium | 3 (acceptabel) | 6 (acceptabel) |
+| 4e keus | hoog | 6 (liever niet) | 3 (liever niet) |
+
+### Voorbeelden Verdeling
+
+**Met voorkeur [5, 4, 3, 6]:**
+
+| Aantal | Verdeling | Uitleg |
+|--------|-----------|--------|
+| 10 | [5, 5] | Perfect |
+| 11 | [5, 3, 3] | Één 5 + twee 3's (beter dan 6+5) |
+| 12 | [4, 4, 4] | Drie gelijke poules |
+| 13 | [5, 4, 4] | Één 5, twee 4's |
+| 14 | [5, 5, 4] | Twee 5's, één 4 |
+| 15 | [5, 5, 5] | Perfect |
+| 16 | [5, 5, 3, 3] | Twee 5's + twee 3's (beter dan 6+5+5) |
+| 17 | [5, 4, 4, 4] | Één 5, drie 4's |
+| 20 | [5, 5, 5, 5] | Perfect |
+
+**Met voorkeur [5, 4, 6, 3] (default):**
+
+| Aantal | Verdeling | Uitleg |
+|--------|-----------|--------|
+| 11 | [6, 5] | Één 6 + één 5 (6 voor 3 in voorkeur) |
+| 16 | [6, 5, 5] | Één 6, twee 5's |
+
+### Algoritme Samenvatting
+
+```
+1. Groepeer judoka's op gewicht + leeftijd (harde constraints)
+2. Per groep:
+   a. Lees poule_grootte_voorkeur uit toernooi instellingen
+   b. Bereken alle mogelijke verdelingen (3-6 per poule)
+   c. Score elke verdeling op basis van voorkeur volgorde
+   d. Kies verdeling met laagste score
+3. Sorteer judoka's op band (lagere eerst)
+4. Verdeel over poules
+5. Pas clubspreiding toe (swap indien mogelijk)
+6. Valideer gewichtslimiet, fix indien nodig
+```
+
 ## Varianten Generatie (zoals Blokverdeling)
 
 Net als bij de blokverdeling kunnen we meerdere indelingen berekenen en de beste presenteren:
