@@ -22,66 +22,108 @@ Nieuw indelingssysteem waarbij de organisator per leeftijdsgroep kan kiezen tuss
 
 **Let op:** JBN gebruikt "tot" (exclusief), niet "t/m" (inclusief).
 
-## Nieuwe Velden per Leeftijdsgroep
+## UI: Categorieën Instelling (NIEUW - jan 2026)
 
-| Veld | Type | Opties | Beschrijving |
-|------|------|--------|--------------|
-| `geslacht` | enum | gemengd / jongens / meisjes | Welke judoka's in deze groep |
-| `max_kg_verschil` | decimal | 0-10 | 0 = vaste klassen, >0 = dynamisch |
-| `max_leeftijd_verschil` | int | 0-3 | 0 = vaste leeftijdsklassen, >0 = dynamisch |
-
-## UI: Zonder Gewichtsklassen
-
-Wanneer "Gewichtsklassen gebruiken" UIT staat, verschijnt een drag & drop interface:
-
+### Hoofdkeuze Bovenaan
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Zonder gewichtsklassen: Judoka's worden alleen per              │
-│ leeftijdsgroep ingedeeld.                                       │
-├─────────────────────────────────────────────────────────────────┤
-│ Prioriteit: (sleep om te wisselen)                     (i)      │
-│ [1. 🏋️ Gewicht] [2. 🥋 Band] [3. 👥 Groepsgrootte] [4. 🏠 Club] │
-├─────────────────────────────────────────────────────────────────┤
-│ Max kg verschil: [3]  Max leeftijd verschil: [2]                │
+│ Categorieën Instelling                                          │
+│                                                                 │
+│ [○ Geen standaard] [○ JBN 2025] [● JBN 2026] [Preset ▼] [Save] │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Info popup (i):** Legt uit hoe de sorteer volgorde werkt:
-- Hoogste prioriteit bepaalt eerste sortering
-- Voorbeeld: Gewicht eerst → judoka's gesorteerd op gewicht, dan band binnen dezelfde gewichtsgroep
+Drie keuzes:
+1. **Geen standaard** - Leeg starten, zelf categorieën opbouwen
+2. **JBN 2025** - Officiële JBN 2025 regels (vaste gewichtsklassen)
+3. **JBN 2026** - Officiële JBN 2026 regels (vaste gewichtsklassen)
 
-## Toernooi-niveau Instellingen
-
-| Veld | Database | Default | Beschrijving |
-|------|----------|---------|--------------|
-| Max kg verschil | `toernooien.max_kg_verschil` | 3.0 | Voor dynamische indeling |
-| Max leeftijd verschil | `toernooien.max_leeftijd_verschil` | 2 | Voor dynamische indeling |
-
-## Presets
+### Bij "GEEN STANDAARD" (dynamische indeling)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ [JBN 2025]  [JBN 2026]  [Eigen preset ▼]  [Opslaan als preset] │
+│ Sorteer prioriteit: (i)  - bij categorieën met grote aantallen │
+│ [1. Gewicht] [2. Band] [3. Groepsgrootte] [4. Club]            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                        (leeg)                                   │
+│                                                                 │
+│ [+ Categorie toevoegen]                                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Standaard Presets (JBN)
-De knoppen **JBN 2025** en **JBN 2026** laden de officiële JBN indeling:
-- Alle leeftijdsklassen met correcte leeftijdsgrenzen
-- Vaste gewichtsklassen per categorie (max_kg_verschil = 0)
-- Geslacht per categorie: Mini's & Pupillen gemengd, vanaf U15 M/V apart
+**Na toevoegen van een categorie:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ ≡ Naam: [        ]  Max leeftijd: [  ] jaar                    │
+│   Geslacht: [Gemengd ▼]  Systeem: [Poules ▼]              [×]  │
+│   Max kg verschil: [3] kg   Max leeftijd verschil: [1] jaar    │
+│                                                                 │
+│ [+ Categorie toevoegen]                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Velden per categorie:**
+| Veld | Type | Default | Beschrijving |
+|------|------|---------|--------------|
+| Naam | text | - | Label voor deze categorie (bijv. "Mini's", "Jeugd") |
+| Max leeftijd | number | - | Leeftijdsgrens (exclusief) |
+| Geslacht | select | Gemengd | Gemengd / Jongens / Meisjes |
+| Systeem | select | Poules | Poules / Poules+Kruisfinale / Eliminatie |
+| Max kg verschil | number | 3 | HARDE limiet voor gewichtsverschil |
+| Max leeftijd verschil | number | 1 | HARDE limiet voor leeftijdsverschil |
+
+### Bij "JBN 2025" of "JBN 2026" (vaste gewichtsklassen)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Vaste gewichtsklassen volgens JBN normen                        │
+│ Sortering: op BAND binnen gewichtsklasse                        │
+├─────────────────────────────────────────────────────────────────┤
+│ Mini's (-8j):        -18, -21, -24, -27, -30, -34, +34 kg      │
+│ Pupillen A (-10j):   -21, -24, -27, -30, -34, -38, +38 kg      │
+│ Pupillen B (-12j):   -24, -27, -30, -34, -38, -42, +42 kg      │
+│ Dames -15:           -32, -36, -40, -44, -48, -52, +52 kg      │
+│ Heren -15:           -34, -38, -42, -46, -50, -55, +55 kg      │
+│ ...                                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Verschil JBN vs Geen standaard:**
+| Aspect | JBN 2025/2026 | Geen standaard |
+|--------|---------------|----------------|
+| Gewichtsklassen | Vast (-18, -21, etc.) | Dynamisch (max kg verschil) |
+| Sortering | Op BAND binnen klasse | Op prioriteit (gewicht/band) |
+| Leeftijdsgroepen | Vast per JBN | Zelf invullen |
+| Geslacht | Volgens JBN | Zelf kiezen |
 
 ### Eigen Presets
 Organisator kan huidige configuratie opslaan als eigen preset:
-- Klik **Opslaan als preset** → voer naam in
+- Klik **Opslaan** → voer naam in
 - Preset wordt opgeslagen bij de organisator
-- Later laden via dropdown **Eigen preset**
+- Later laden via dropdown **Preset**
 
 **Database:** `gewichtsklassen_presets` tabel
 ```
 id, organisator_id, naam, configuratie (JSON), timestamps
 unique: [organisator_id, naam]
 ```
+
+## Sorteer Prioriteit (bij dynamische indeling)
+
+Bij categorieën met grote aantallen (bijv. 30 judoka's in 8-9 jaar, 34-36 kg)
+bepaalt de prioriteit hoe judoka's worden gegroepeerd:
+
+| Prioriteit | Betekenis |
+|------------|-----------|
+| 1. Gewicht | Eerst groeperen zodat gewichtsverschil ≤ max kg |
+| 2. Band | Lagere banden bij elkaar, hogere bij elkaar (wit ≠ bruin) |
+| 3. Groepsgrootte | Optimaliseren voor ideale poule grootte (4-5 judoka's) |
+| 4. Club | Clubspreiding (vermijd 2 van zelfde club in 1 poule) |
+
+**Voorbeelden:**
+- Gewicht > Band: Eerst op gewicht groeperen, dan band als secundaire factor
+- Band > Gewicht: Eerst op band groeperen (wit bij wit), dan gewicht
 
 ## Algoritme: Dynamische Indeling
 

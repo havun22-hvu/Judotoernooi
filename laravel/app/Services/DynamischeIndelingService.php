@@ -32,6 +32,7 @@ class DynamischeIndelingService
         'weight_leeftijd' => 0.4,
         'weight_gewicht' => 0.4,
         'weight_band' => 0.2,
+        'groepsgrootte_prioriteit' => 3, // 1 = hoogste prioriteit (strikt 5), 4 = laagste (flexibel)
     ];
 
     /**
@@ -96,8 +97,13 @@ class DynamischeIndelingService
     public function berekenIndeling(
         Collection $judokas,
         int $maxLeeftijdVerschil = 2,
-        float $maxKgVerschil = 3.0
+        float $maxKgVerschil = 3.0,
+        array $config = []
     ): array {
+        // Merge config met defaults
+        if (!empty($config)) {
+            $this->config = array_merge($this->config, $config);
+        }
         // Stap 1: Groepeer op gewicht EN leeftijd tegelijk (gewicht prioriteit)
         $groepen = $this->groepeerOpGewichtEnLeeftijd($judokas, $maxKgVerschil, $maxLeeftijdVerschil);
 
@@ -834,6 +840,14 @@ class DynamischeIndelingService
      * - 8 judoka's → [4, 4], niet [5, 3]
      * - 11 judoka's → [4, 4, 3] of [5, 3, 3], niet [5, 4, 2]
      */
+    /**
+     * Bereken optimale poule groottes
+     *
+     * Als groepsgrootte prioriteit = 1: strikt 5 aanhouden, rest 4, desnoods 3/6
+     * Als groepsgrootte prioriteit = 4: flexibeler, 3-6 acceptabel
+     *
+     * Voorkeur: 5 > 4 > 6 > 3
+     */
     private function berekenPouleGroottes(int $aantal): array
     {
         if ($aantal <= 0) {
@@ -845,43 +859,141 @@ class DynamischeIndelingService
             return [$aantal]; // 1 poule
         }
 
-        // Bereken beste verdeling: minimaliseer verschil tussen poules
-        // en vermijd poules < 4 waar mogelijk
+        $prioriteit = $this->config['groepsgrootte_prioriteit'] ?? 3;
+
+        // Prioriteit 1 = zeer strikt (5 gewenst), 4 = flexibel
+        // Penalty multiplier: prioriteit 1 = 10x, prioriteit 4 = 1x
+        $striktheid = max(1, 5 - $prioriteit); // 4, 3, 2, 1
+
         $besteVerdeling = null;
         $besteScore = PHP_INT_MAX;
 
-        // Probeer 2, 3, 4 poules
-        for ($aantalPoules = 2; $aantalPoules <= min(4, ceil($aantal / 3)); $aantalPoules++) {
-            $basisGrootte = intdiv($aantal, $aantalPoules);
-            $rest = $aantal % $aantalPoules;
+        // Probeer verschillende aantal poules
+        $maxPoules = min(ceil($aantal / 3), 10);
 
-            $verdeling = array_fill(0, $aantalPoules, $basisGrootte);
-            // Verdeel de rest over de eerste poules
-            for ($i = 0; $i < $rest; $i++) {
-                $verdeling[$i]++;
-            }
+        for ($aantalPoules = 2; $aantalPoules <= $maxPoules; $aantalPoules++) {
+            // Genereer alle mogelijke verdelingen voor dit aantal poules
+            $verdelingen = $this->genereerVerdelingen($aantal, $aantalPoules);
 
-            // Bereken score (lagere = beter)
-            // Penalty voor poules < 4, grote penalty voor poules < 3
-            $score = 0;
-            foreach ($verdeling as $grootte) {
-                if ($grootte < 3) $score += 100;
-                elseif ($grootte < 4) $score += 10;
-                elseif ($grootte > 6) $score += 5;
-            }
-            // Bonus voor gelijke groottes
-            $score += (max($verdeling) - min($verdeling)) * 2;
+            foreach ($verdelingen as $verdeling) {
+                $score = $this->scoreVerdeling($verdeling, $striktheid);
 
-            if ($score < $besteScore) {
-                $besteScore = $score;
-                $besteVerdeling = $verdeling;
+                if ($score < $besteScore) {
+                    $besteScore = $score;
+                    $besteVerdeling = $verdeling;
+                }
             }
         }
 
         // Sorteer van groot naar klein
-        rsort($besteVerdeling);
+        if ($besteVerdeling) {
+            rsort($besteVerdeling);
+        }
 
-        return $besteVerdeling;
+        return $besteVerdeling ?? [$aantal];
+    }
+
+    /**
+     * Genereer mogelijke verdelingen voor N judoka's in M poules
+     * Alleen verdelingen waarbij elke poule 3-6 judoka's heeft
+     */
+    private function genereerVerdelingen(int $aantal, int $aantalPoules): array
+    {
+        $verdelingen = [];
+
+        // Basis verdeling
+        $basis = intdiv($aantal, $aantalPoules);
+        $rest = $aantal % $aantalPoules;
+
+        // Check of basis verdeling geldig is (3-6 per poule)
+        if ($basis < 3 || $basis > 6) {
+            // Probeer aangrenzende waardes
+            if ($basis < 3) {
+                $basis = 3;
+            } elseif ($basis > 6) {
+                $basis = 6;
+            }
+        }
+
+        // Genereer variaties rond de basis
+        $variaties = $this->genereerVariaties($aantal, $aantalPoules, 3, 6);
+
+        return $variaties;
+    }
+
+    /**
+     * Recursief variaties genereren
+     */
+    private function genereerVariaties(int $rest, int $poulesOver, int $min, int $max, array $huidig = []): array
+    {
+        if ($poulesOver === 0) {
+            return $rest === 0 ? [$huidig] : [];
+        }
+
+        $resultaten = [];
+
+        // Bepaal range voor deze poule
+        $minVoorDeze = max($min, $rest - ($poulesOver - 1) * $max);
+        $maxVoorDeze = min($max, $rest - ($poulesOver - 1) * $min);
+
+        for ($grootte = $minVoorDeze; $grootte <= $maxVoorDeze; $grootte++) {
+            $nieuweHuidig = array_merge($huidig, [$grootte]);
+            $subResultaten = $this->genereerVariaties(
+                $rest - $grootte,
+                $poulesOver - 1,
+                $min,
+                $max,
+                $nieuweHuidig
+            );
+            $resultaten = array_merge($resultaten, $subResultaten);
+        }
+
+        return $resultaten;
+    }
+
+    /**
+     * Score een verdeling (lager = beter)
+     *
+     * Bij hoge striktheid (prioriteit 1):
+     * - 5 = ideaal (0 penalty)
+     * - 4 = acceptabel (kleine penalty)
+     * - 3/6 = liever niet (grote penalty)
+     */
+    private function scoreVerdeling(array $verdeling, int $striktheid): float
+    {
+        $score = 0;
+
+        foreach ($verdeling as $grootte) {
+            // Ideaal = 5
+            if ($grootte === 5) {
+                $score += 0;
+            }
+            // Acceptabel = 4
+            elseif ($grootte === 4) {
+                $score += 2 * $striktheid;
+            }
+            // Minder gewenst = 6
+            elseif ($grootte === 6) {
+                $score += 5 * $striktheid;
+            }
+            // Liever niet = 3
+            elseif ($grootte === 3) {
+                $score += 8 * $striktheid;
+            }
+            // Onacceptabel < 3 of > 6
+            else {
+                $score += 100 * $striktheid;
+            }
+        }
+
+        // Bonus voor uniforme groottes (alle poules even groot)
+        $verschil = max($verdeling) - min($verdeling);
+        $score += $verschil * $striktheid;
+
+        // Kleine bonus voor minder poules (als groottes gelijk zijn)
+        $score += count($verdeling) * 0.1;
+
+        return $score;
     }
 
     /**
