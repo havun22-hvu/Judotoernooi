@@ -65,6 +65,42 @@
 
 ---
 
+## Sessie: 7-8 januari 2026
+
+### Fix: Import onvolledige judoka's
+- **Type:** Enhancement
+- **Wat:** Judoka's zonder geboortejaar worden nu geïmporteerd i.p.v. overgeslagen
+- **Waarom:** Gebruiker wilde alle judoka's importeren, ook met onvolledige data
+- **Bestanden:**
+  - `app/Services/ImportService.php` - import logica aangepast
+  - `app/Models/Judoka.php` - cast `is_onvolledig` toegevoegd
+  - `database/migrations/..._add_is_onvolledig_to_judokas_table.php` - nieuw veld
+  - `resources/views/pages/judoka/index.blade.php` - filter knop
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (regel 76-78)
+
+### Fix: Gewicht afleiden van gewichtsklasse
+- **Type:** Bug fix
+- **Wat:** Als alleen gewichtsklasse is ingevuld ("-34"), wordt gewicht afgeleid (34 kg)
+- **Waarom:** Import bestanden bevatten soms alleen gewichtsklasse
+- **Bestanden:** `app/Services/ImportService.php:gewichtVanKlasse()`
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (regel 75)
+
+### Fix: Clubspreiding respecteert gewicht prioriteit
+- **Type:** Bug fix
+- **Wat:** Bij swappen voor clubspreiding wordt nu ook gewichtsverschil gecheckt
+- **Waarom:** 20kg en 26kg judoka's werden gemixt ondanks gewicht prioriteit 1
+- **Bestanden:** `app/Services/PouleIndelingService.php:pasClubspreidingToe()`
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md (regel 321-330)
+
+### Fix: Auto-herberekening judoka codes bij wijziging prioriteiten
+- **Type:** Bug fix
+- **Wat:** Bij wijziging drag & drop prioriteiten worden codes automatisch herberekend
+- **Waarom:** Oude check keek alleen naar verwijderd veld `judoka_code_volgorde`
+- **Bestanden:** `app/Http/Controllers/ToernooiController.php:update()`
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (regel 95)
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
