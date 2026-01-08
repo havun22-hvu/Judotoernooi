@@ -39,6 +39,7 @@ class Judoka extends Model
         'synced_at',
         'betaling_id',
         'betaald_op',
+        'is_onvolledig',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class Judoka extends Model
         'gewicht_gewogen' => 'decimal:1',
         'synced_at' => 'datetime',
         'betaald_op' => 'datetime',
+        'is_onvolledig' => 'boolean',
     ];
 
     protected static function booted(): void

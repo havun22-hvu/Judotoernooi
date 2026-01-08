@@ -80,14 +80,18 @@ class ImportService
         $geslacht = $this->getWaarde($rij, $mapping['geslacht']);
         $geboortejaar = $this->getWaarde($rij, $mapping['geboortejaar']);
 
-        // Skip empty rows
-        if (empty($naam) || empty($geboortejaar)) {
+        // Skip rows without name (name is required)
+        if (empty($naam)) {
             return null;
         }
 
+        // Track if judoka has incomplete data
+        // Weight is not required if weight class is provided
+        $isOnvolledig = empty($geboortejaar) || empty($geslacht) || (empty($gewicht) && empty($gewichtsklasseRaw));
+
         // Parse and validate data
         $naam = $this->normaliseerNaam($naam);
-        $geboortejaar = $this->parseGeboortejaar($geboortejaar);
+        $geboortejaar = !empty($geboortejaar) ? $this->parseGeboortejaar($geboortejaar) : null;
         $geslacht = $this->parseGeslacht($geslacht);
         $band = $this->parseBand($band);
         $gewicht = $this->parseGewicht($gewicht);
@@ -98,25 +102,39 @@ class ImportService
             $club = Club::findOrCreateByName($clubNaam);
         }
 
-        // Calculate age class
-        $leeftijd = date('Y') - $geboortejaar;
-        $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
+        // Calculate age class (only if we have birth year)
+        $leeftijdsklasse = null;
+        if ($geboortejaar) {
+            $leeftijd = date('Y') - $geboortejaar;
+            $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
+        }
 
-        // Always calculate weight class from actual weight if provided (takes precedence)
-        // This ensures correct classification based on tolerance
+        // Calculate weight class (only if we have age class and weight)
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-        if ($gewicht) {
+        $gewichtsklasse = 'onbekend';
+        if ($leeftijdsklasse && $gewicht) {
             $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse, $tolerantie);
-        } else {
-            // No weight provided, use CSV weight class or unknown
+        } elseif ($gewichtsklasseRaw) {
+            // Use CSV weight class if provided
             $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
+
+            // If no weight but weight class given, derive weight from class (use upper limit)
+            if (!$gewicht && $gewichtsklasse !== 'onbekend') {
+                $gewicht = $this->gewichtVanKlasse($gewichtsklasse);
+            }
         }
 
         // Check for duplicate (same name + birth year + tournament) - case insensitive
-        $bestaande = Judoka::where('toernooi_id', $toernooi->id)
-            ->whereRaw('LOWER(naam) = ?', [strtolower($naam)])
-            ->where('geboortejaar', $geboortejaar)
-            ->first();
+        $query = Judoka::where('toernooi_id', $toernooi->id)
+            ->whereRaw('LOWER(naam) = ?', [strtolower($naam)]);
+
+        if ($geboortejaar) {
+            $query->where('geboortejaar', $geboortejaar);
+        } else {
+            $query->whereNull('geboortejaar');
+        }
+
+        $bestaande = $query->first();
 
         if ($bestaande) {
             // Update existing judoka instead of creating new one
@@ -125,8 +143,9 @@ class ImportService
                 'geslacht' => $geslacht,
                 'band' => $band,
                 'gewicht' => $gewicht,
-                'leeftijdsklasse' => $leeftijdsklasse->label(),
+                'leeftijdsklasse' => $leeftijdsklasse?->label(),
                 'gewichtsklasse' => $gewichtsklasse,
+                'is_onvolledig' => $isOnvolledig,
             ]);
             return null; // Return null to count as skipped
         }
@@ -140,8 +159,9 @@ class ImportService
             'geslacht' => $geslacht,
             'band' => $band,
             'gewicht' => $gewicht,
-            'leeftijdsklasse' => $leeftijdsklasse->label(),
+            'leeftijdsklasse' => $leeftijdsklasse?->label(),
             'gewichtsklasse' => $gewichtsklasse,
+            'is_onvolledig' => $isOnvolledig,
         ]);
 
         return $judoka;
@@ -320,5 +340,17 @@ class ImportService
 
         // Fallback: create plus category from last minus class
         return "+" . abs($laatsteKlasse);
+    }
+
+    /**
+     * Derive weight from weight class
+     * -34 => 34.0, +63 => 63.0
+     */
+    private function gewichtVanKlasse(string $klasse): ?float
+    {
+        if (preg_match('/[+-]?(\d+)/', $klasse, $matches)) {
+            return (float) $matches[1];
+        }
+        return null;
     }
 }

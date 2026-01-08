@@ -287,6 +287,12 @@ class PouleController extends Controller
         $vanPoule->updateStatistieken();
         $naarPoule->updateStatistieken();
 
+        // Calculate ranges for both poules
+        $huidigJaar = now()->year;
+
+        $vanRanges = $this->berekenPouleRanges($vanPoule, $huidigJaar);
+        $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
+
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} verplaatst naar {$naarPoule->titel}",
@@ -295,12 +301,14 @@ class PouleController extends Controller
                 'nummer' => $vanPoule->nummer,
                 'judokas_count' => $vanPoule->aantal_judokas,
                 'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
+                ...$vanRanges,
             ],
             'naar_poule' => [
                 'id' => $naarPoule->id,
                 'nummer' => $naarPoule->nummer,
                 'judokas_count' => $naarPoule->aantal_judokas,
                 'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
+                ...$naarRanges,
             ],
         ]);
     }
@@ -692,5 +700,43 @@ class PouleController extends Controller
             'rondes' => array_keys($perRonde),
             'koppelingen' => $perRonde,
         ]);
+    }
+
+    /**
+     * Calculate min/max age and weight ranges for a poule
+     */
+    private function berekenPouleRanges(Poule $poule, int $huidigJaar): array
+    {
+        $judokas = $poule->judokas;
+
+        if ($judokas->isEmpty()) {
+            return [
+                'leeftijd_range' => '',
+                'gewicht_range' => '',
+            ];
+        }
+
+        $leeftijden = $judokas->map(fn($j) => $j->geboortejaar ? $huidigJaar - $j->geboortejaar : null)->filter();
+        $gewichten = $judokas->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)->filter();
+
+        $leeftijdRange = '';
+        $gewichtRange = '';
+
+        if ($leeftijden->count() > 0) {
+            $minL = $leeftijden->min();
+            $maxL = $leeftijden->max();
+            $leeftijdRange = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
+        }
+
+        if ($gewichten->count() > 0) {
+            $minG = $gewichten->min();
+            $maxG = $gewichten->max();
+            $gewichtRange = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+        }
+
+        return [
+            'leeftijd_range' => $leeftijdRange,
+            'gewicht_range' => $gewichtRange,
+        ];
     }
 }

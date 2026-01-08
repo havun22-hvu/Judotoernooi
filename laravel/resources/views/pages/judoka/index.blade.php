@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $incompleteJudokas = $judokas->filter(fn($j) => !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewichtsklasse);
+    $incompleteJudokas = $judokas->filter(fn($j) => $j->is_onvolledig || !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewichtsklasse);
 @endphp
 
 <div class="flex justify-between items-center mb-4">
@@ -71,6 +71,11 @@
                     :class="fuzzyLevel ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
                 Fuzzy <span x-text="fuzzyLevel ? 'aan' : 'uit'"></span>
+            </button>
+            <button @click="toonOnvolledig = !toonOnvolledig"
+                    :class="toonOnvolledig ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
+                    class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
+                Onvolledig ({{ $incompleteJudokas->count() }})
             </button>
             <div x-show="zoekterm" class="bg-green-100 border border-green-300 rounded-lg px-4 py-2 flex items-center gap-2">
                 <span class="text-green-800 font-bold text-lg" x-text="filteredJudokas.length"></span>
@@ -159,6 +164,7 @@ function judokaTable() {
         sortAsc: true,
         zoekterm: '',
         fuzzyLevel: 0,
+        toonOnvolledig: false,
         judokas: [
             @foreach($judokas as $judoka)
             {
@@ -172,22 +178,33 @@ function judokaTable() {
                 band: @json($judoka->band ? ucfirst($judoka->band) : null),
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 club: @json($judoka->club?->naam),
-                incompleet: {{ (!$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
+                incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}'
             },
             @endforeach
         ],
 
         get filteredJudokas() {
-            if (!this.zoekterm) return this.judokas;
-            const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-            const maxDist = this.fuzzyLevel;
-            return this.judokas.filter(j => {
-                const searchText = [
-                    j.naam, j.club, j.leeftijdsklasse, j.gewichtsklasse, j.geslacht, j.band
-                ].filter(Boolean).join(' ').toLowerCase();
-                return terms.every(term => fuzzyMatch(term, searchText, maxDist));
-            });
+            let result = this.judokas;
+
+            // Filter on incomplete if enabled
+            if (this.toonOnvolledig) {
+                result = result.filter(j => j.incompleet);
+            }
+
+            // Filter on search term
+            if (this.zoekterm) {
+                const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+                const maxDist = this.fuzzyLevel;
+                result = result.filter(j => {
+                    const searchText = [
+                        j.naam, j.club, j.leeftijdsklasse, j.gewichtsklasse, j.geslacht, j.band
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return terms.every(term => fuzzyMatch(term, searchText, maxDist));
+                });
+            }
+
+            return result;
         },
 
         get sortedJudokas() {

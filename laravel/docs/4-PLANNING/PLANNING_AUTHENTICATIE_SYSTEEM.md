@@ -118,30 +118,49 @@ CREATE TABLE device_toegangen (
 
 ### 3.3 Beheer UI (Instellingen → Organisatie)
 
-**Vrijwilligers overzicht** - Tabel met alle vrijwilligers:
+**Twee secties:**
 
-| Naam | Telefoon | Email | Rol | Status | Acties |
-|------|----------|-------|-----|--------|--------|
-| Jan de Vries | 06-12345678 | jan@email.nl | Mat 1 | ✓ Gebonden | [URL] [Reset] [Bewerk] [Verwijder] |
-| Piet Jansen | 06-87654321 | - | Weging | ⏳ Wacht | [URL] [Reset] [Bewerk] [Verwijder] |
-| Marie Bakker | - | marie@email.nl | Spreker | ✓ Gebonden | [URL] [Reset] [Bewerk] [Verwijder] |
+#### Sectie 1: Device Toegangen (tabs per rol)
+
+Organisator maakt toegangen aan per rol, deelt URL + PIN zelf uit (via WhatsApp etc.):
 
 ```
-[+ Vrijwilliger toevoegen]
+Tabs: [Hoofdjury] [Mat] [Weging] [Spreker] [Dojo]
 
-Modal: Vrijwilliger toevoegen/bewerken
-├── Naam: [____________] (verplicht)
+Per toegang:
+┌─────────────────────────────────────────────────────────────────┐
+│ Mat 1                    PIN: 4821   [Kopieer URL] [Test] [×]   │
+│ ⏳ Wacht op binding                                              │
+├─────────────────────────────────────────────────────────────────┤
+│ + Vrijwilliger koppelen                                         │
+│ (of: Jan de Vries 📞 06-123 ✉️ jan@email.nl [bewerk])           │
+└─────────────────────────────────────────────────────────────────┘
+
+[+ Mat toegang toevoegen]
+```
+
+**Modal: Vrijwilliger koppelen** (optioneel, voor administratie):
+```
+├── Naam: [____________]
 ├── Telefoon: [____________]
 ├── Email: [____________]
-├── Rol: [dropdown: Hoofdjury/Mat/Weging/Spreker/Dojo]
-└── Mat nummer: [__] (alleen bij rol=Mat)
 ```
 
-**Acties:**
-- **URL:** Kopieert volledige URL + PIN naar clipboard
-- **Reset:** Wist device binding, nieuw device kan binden met zelfde PIN
-- **Bewerk:** Wijzig naam, telefoon, email, rol
-- **Verwijder:** Verwijdert vrijwilliger volledig
+#### Sectie 2: Vrijwilligers Overzicht
+
+Overzicht van alle vrijwilligers die gekoppeld zijn aan een toegang:
+
+| Naam | Telefoon | Email | Rol | Status |
+|------|----------|-------|-----|--------|
+| Jan de Vries | 06-12345678 | jan@email.nl | Mat 1 | ✓ Gebonden |
+| Piet Jansen | 06-87654321 | - | Weging | ⏳ Wacht |
+
+**Acties (bij toegang):**
+- **Kopieer URL:** Kopieert URL + PIN naar clipboard
+- **Test:** Opent URL in nieuw tabblad
+- **Reset:** Wist device binding (bij problemen)
+- **Verwijder:** Verwijdert toegang volledig
+- **Vrijwilliger koppelen/bewerk:** Naam, telefoon, email toevoegen
 
 **Wie mag dit:**
 - Organisator: alles

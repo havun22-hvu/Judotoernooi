@@ -126,9 +126,7 @@
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
                                 <span class="text-gray-900">#{{ $poule->nummer }} {{ $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse }}</span>
-                                @if($leeftijdRange || $gewichtRange)
-                                    <span class="font-normal text-gray-500 text-xs ml-1">({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})</span>
-                                @endif
+                                <span class="font-normal text-gray-500 text-xs ml-1" data-poule-ranges>@if($leeftijdRange || $gewichtRange)({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})@endif</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
@@ -556,6 +554,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const header = pouleCard.querySelector('.border-b');
         const headerTop = header?.querySelector('.flex.justify-between');
         const isKruisfinale = pouleCard.dataset.pouleIsKruisfinale === '1';
+        const isEliminatie = pouleCard.dataset.pouleIsEliminatie === '1';
 
         // Update count
         const countEl = document.querySelector(`[data-poule-count="${pouleData.id}"]`);
@@ -565,6 +564,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const wedstrijdenEl = document.querySelector(`[data-poule-wedstrijden="${pouleData.id}"]`);
         if (wedstrijdenEl) {
             wedstrijdenEl.textContent = pouleData.judokas_count < 2 ? '-' : pouleData.aantal_wedstrijden;
+        }
+
+        // Update leeftijd/gewicht ranges (only for regular poules)
+        if (!isKruisfinale && !isEliminatie) {
+            const rangeEl = pouleCard.querySelector('[data-poule-ranges]');
+            if (rangeEl) {
+                const ranges = [];
+                if (pouleData.leeftijd_range) ranges.push(pouleData.leeftijd_range);
+                if (pouleData.gewicht_range) ranges.push(pouleData.gewicht_range);
+                rangeEl.textContent = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
+            }
         }
 
         // Handle empty poule: add placeholder and delete button

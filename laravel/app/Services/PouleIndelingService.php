@@ -31,7 +31,7 @@ class PouleIndelingService
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
         $this->clubspreiding = $toernooi->clubspreiding ?? true;
-        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     }
 
@@ -42,7 +42,7 @@ class PouleIndelingService
         $this->minJudokas = 3;
         $this->maxJudokas = 6;
         $this->clubspreiding = true;
-        $this->prioriteiten = ['groepsgrootte', 'bandkleur', 'clubspreiding'];
+        $this->prioriteiten = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
         $this->dynamischeIndelingService = $dynamischeIndelingService;
     }
 
@@ -741,18 +741,23 @@ class PouleIndelingService
         }
 
         // Apply club spreading as refinement
-        // Check priority: if clubspreiding > bandkleur, allow cross-band swaps
+        // Check priorities to determine what swaps are allowed
         if ($this->clubspreiding && count($verdeling) > 1) {
-            $bandkleurIdx = array_search('bandkleur', $this->prioriteiten);
+            $gewichtIdx = array_search('gewicht', $this->prioriteiten);
+            $bandIdx = array_search('band', $this->prioriteiten);
             $clubspreidingIdx = array_search('clubspreiding', $this->prioriteiten);
 
-            // If clubspreiding has higher priority (lower index), allow any swap
-            // If bandkleur has higher priority, only swap same band
-            $onlySwapSameBand = ($bandkleurIdx !== false && $clubspreidingIdx !== false)
-                ? $bandkleurIdx < $clubspreidingIdx
+            // If gewicht has higher priority than clubspreiding, only swap similar weights
+            $maxGewichtVerschilBijSwap = ($gewichtIdx !== false && $clubspreidingIdx !== false && $gewichtIdx < $clubspreidingIdx)
+                ? ($this->toernooi?->max_kg_verschil ?? 3.0)
+                : null; // null = no weight restriction
+
+            // If band has higher priority than clubspreiding, only swap same band
+            $onlySwapSameBand = ($bandIdx !== false && $clubspreidingIdx !== false)
+                ? $bandIdx < $clubspreidingIdx
                 : true;
 
-            $verdeling = $this->pasClubspreidingToe($verdeling, $onlySwapSameBand);
+            $verdeling = $this->pasClubspreidingToe($verdeling, $onlySwapSameBand, $maxGewichtVerschilBijSwap);
         }
 
         return $verdeling;
@@ -761,8 +766,9 @@ class PouleIndelingService
     /**
      * Apply club spreading as refinement
      * @param bool $onlySwapSameBand If true, only swap judokas with same band
+     * @param float|null $maxGewichtVerschil If set, only swap judokas within this weight difference
      */
-    private function pasClubspreidingToe(array $poules, bool $onlySwapSameBand = true): array
+    private function pasClubspreidingToe(array $poules, bool $onlySwapSameBand = true, ?float $maxGewichtVerschil = null): array
     {
         $aantalPoules = count($poules);
 
@@ -795,8 +801,12 @@ class PouleIndelingService
                             // Check band compatibility
                             $bandMatch = !$onlySwapSameBand || $kandidaat->band === $judokaBand;
 
+                            // Check weight compatibility (only swap similar weights if gewicht has higher priority)
+                            $gewichtMatch = ($maxGewichtVerschil === null) ||
+                                (abs(($kandidaat->gewicht ?? 0) - ($judoka->gewicht ?? 0)) <= $maxGewichtVerschil);
+
                             // Different club, that club is not already in target pool
-                            if ($bandMatch &&
+                            if ($bandMatch && $gewichtMatch &&
                                 $kandidaat->club_id !== $clubId &&
                                 !$this->clubInPoule($poules[$p], $kandidaat->club_id, $judokaIdx)) {
 

@@ -201,20 +201,6 @@
                 </div>
             </div>
 
-            <!-- Prioriteit volgorde -->
-            <div class="border-t pt-4 mt-4">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-gray-700 font-medium">Prioriteit:</span>
-                    <div id="prioriteit-container" class="flex gap-2">
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="groepsgrootte">1. 👥 Groepsgrootte</div>
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="bandkleur">2. 🥋 Bandkleur</div>
-                        <div class="prioriteit-item bg-blue-100 border border-blue-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="clubspreiding">3. 🏠 Clubspreiding</div>
-                    </div>
-                    <span class="text-gray-400 text-xs">(sleep om te wisselen)</span>
-                </div>
-                <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='["groepsgrootte","bandkleur","clubspreiding"]'>
-            </div>
-
             <!-- Eliminatie Type (KO systeem) -->
             <div class="border-t pt-4 mt-4">
                 <h3 class="font-medium text-gray-700 mb-2">Knock-out Systeem</h3>
@@ -501,7 +487,7 @@
                 updatePrioriteitInput();
                 // Update numbers
                 const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
-                const labels = { groepsgrootte: '👥 Groepsgrootte', bandkleur: '🥋 Bandkleur', clubspreiding: '🏠 Clubspreiding' };
+                const labels = { gewicht: '🏋️ Gewicht', band: '🥋 Band', groepsgrootte: '👥 Groepsgrootte', clubspreiding: '🏠 Club' };
                 items.forEach((item, idx) => {
                     item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
                 });
@@ -662,29 +648,57 @@
             <!-- Sortering alleen tonen als gewichtsklassen UIT staan -->
             <div x-show="!gebruikGewichtsklassen" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p class="text-yellow-800 text-sm mb-2">
-                    <strong>Zonder gewichtsklassen:</strong> Judoka's worden alleen per leeftijdsgroep ingedeeld. Kies de sorteervolgorde:
+                    <strong>Zonder gewichtsklassen:</strong> Judoka's worden alleen per leeftijdsgroep ingedeeld.
                 </p>
-                <div class="flex gap-4">
-                    <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-yellow-100 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'border-yellow-500 bg-yellow-100' : 'bg-white' }}">
-                        <input type="radio" name="judoka_code_volgorde" value="gewicht_band"
-                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'gewicht_band' ? 'checked' : '' }}
-                               class="w-4 h-4 text-yellow-600">
-                        <div>
-                            <span class="font-medium text-sm">Gewicht → Band</span>
-                            <span class="block text-xs text-gray-500">Sorteer op werkelijk gewicht, dan band</span>
+
+                <!-- Prioriteit drag & drop -->
+                <div class="mb-3">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-yellow-800 text-sm font-medium">Sorteer prioriteit:</span>
+                        <button type="button"
+                                x-data="{ open: false }"
+                                @click="open = !open"
+                                class="relative text-yellow-600 hover:text-yellow-800">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-yellow-200 text-xs font-bold">i</span>
+                            <div x-show="open"
+                                 @click.away="open = false"
+                                 x-transition
+                                 class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
+                                <p class="font-medium mb-1">Sorteer volgorde judoka's</p>
+                                <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd bij het maken van poules. Sleep de items om de volgorde aan te passen.</p>
+                                <ul class="text-xs mt-2 space-y-1">
+                                    <li><strong>Gewicht:</strong> Judoka's met vergelijkbaar gewicht bij elkaar</li>
+                                    <li><strong>Band:</strong> Judoka's met zelfde niveau bij elkaar</li>
+                                    <li><strong>Groepsgrootte:</strong> Optimale poule grootte</li>
+                                    <li><strong>Club:</strong> Judoka's van zelfde club verspreiden</li>
+                                </ul>
+                            </div>
+                        </button>
+                        <div id="prioriteit-container" class="flex gap-2">
+                            @php
+                                $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+                                // Backwards compatibility: convert old keys
+                                $prioriteiten = array_map(fn($k) => $k === 'bandkleur' ? 'band' : $k, $prioriteiten);
+                                // Ensure all 4 keys exist
+                                $allKeys = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+                                foreach ($allKeys as $key) {
+                                    if (!in_array($key, $prioriteiten)) {
+                                        array_unshift($prioriteiten, $key);
+                                    }
+                                }
+                                $prioriteiten = array_values(array_unique($prioriteiten));
+                                $labels = ['gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band', 'groepsgrootte' => '👥 Groepsgrootte', 'clubspreiding' => '🏠 Club'];
+                            @endphp
+                            @foreach($prioriteiten as $idx => $key)
+                            <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="{{ $key }}">{{ $idx + 1 }}. {{ $labels[$key] ?? $key }}</div>
+                            @endforeach
                         </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-yellow-100 {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'border-yellow-500 bg-yellow-100' : 'bg-white' }}">
-                        <input type="radio" name="judoka_code_volgorde" value="band_gewicht"
-                               {{ ($toernooi->judoka_code_volgorde ?? 'gewicht_band') === 'band_gewicht' ? 'checked' : '' }}
-                               class="w-4 h-4 text-yellow-600">
-                        <div>
-                            <span class="font-medium text-sm">Band → Gewicht</span>
-                            <span class="block text-xs text-gray-500">Sorteer op band (laag→hoog), dan gewicht</span>
-                        </div>
-                    </label>
+                        <span class="text-yellow-600 text-xs">(sleep om te wisselen)</span>
+                    </div>
+                    <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
                 </div>
-                <div class="flex gap-6 mt-3 pt-3 border-t border-yellow-200">
+
+                <div class="flex gap-6 pt-3 border-t border-yellow-200">
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-yellow-800">Max kg verschil:</label>
                         <input type="number" name="max_kg_verschil" step="0.5" min="1" max="10"
@@ -1182,10 +1196,8 @@
     <!-- TAB: ORGANISATIE -->
     <div x-show="activeTab === 'organisatie'" x-cloak>
 
-    <!-- DEVICE TOEGANGEN (nieuw systeem met device binding) -->
-    @if(Auth::guard('organisator')->check() || session("toernooi_{$toernooi->id}_rol") === 'admin')
-        @include('pages.toernooi.partials.device-toegangen')
-    @endif
+    <!-- VRIJWILLIGERS (device toegangen met binding) -->
+    @include('pages.toernooi.partials.device-toegangen')
 
     <!-- SNELKOPPELINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">

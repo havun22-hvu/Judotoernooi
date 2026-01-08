@@ -62,21 +62,38 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 1. Ga naar **Toernooi** > **Judoka's** > **Importeren**
 2. Upload een CSV of Excel bestand met de volgende kolommen:
    - Naam (verplicht)
-   - Geboortejaar (verplicht)
+   - Geboortejaar
    - Geslacht (M/V)
    - Band (wit, geel, oranje, etc.)
    - Club
-   - Gewicht (optioneel)
+   - Gewicht of Gewichtsklasse
 3. Controleer de preview en klik **Importeren**
 
 Het systeem:
-- Berekent automatisch de leeftijdsklasse
+- Berekent automatisch de leeftijdsklasse (indien geboortejaar bekend)
 - Bepaalt de gewichtsklasse op basis van gewicht
+- Als alleen gewichtsklasse is opgegeven (bv. "-34"), wordt gewicht afgeleid (34 kg)
+- **Onvolledige judoka's** worden geïmporteerd en gemarkeerd
+- Filter op onvolledige judoka's via de "Onvolledig" knop in de deelnemerslijst
 
 **Let op:**
 - QR-codes worden pas aangemaakt bij "Valideer judoka's" (na einde inschrijving)
 - Weegkaarten tonen blokinfo NA "Verdeel over matten"
 - Weegkaarten tonen mat nummer pas NA "Maak weegkaarten" (voorbereiding geseald)
+
+### Judoka Codes
+
+Elke judoka krijgt een unieke code (bv. `U1234M01`) voor poule-indeling. Deze code wordt berekend op basis van:
+- Leeftijdsklasse
+- Gewichtsklasse
+- Band
+- Geslacht
+
+**Wanneer worden codes (her)berekend?**
+- Na elke **import** - automatisch
+- Bij klikken op **"Valideren"** knop
+
+**Belangrijk:** Als je toernooi-instellingen wijzigt (zoals sorteervolgorde band/gewicht), moet je opnieuw **Valideren** om de judoka codes te herberekenen!
 
 ### Coach Portal (Clubs Beheren)
 
