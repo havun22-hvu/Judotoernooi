@@ -69,7 +69,7 @@ php artisan migrate
 php artisan db:seed
 
 # Run
-php artisan serve --port=8001
+php artisan serve --port=8007
 ```
 
 ## Changelog
