@@ -170,15 +170,15 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 - Kan meerdere keren komen → idempotent maken
 - Valideer payment ID, check status, update database
 
-### Status (3 januari 2026)
+### Status (9 januari 2026)
 
 - ✅ Migration aangemaakt
 - ✅ MollieService met dual mode
 - ✅ Toernooi model uitgebreid
 - ✅ Config en .env.example
-- ⏳ Routes en Controller
-- ⏳ Views voor instellingen
-- ⏳ Woensdag: Cees' Mollie koppelen
+- ✅ Routes en Controller
+- ✅ Views: instellingen sectie (Organisatie tab)
+- ⏳ Testen met echt Mollie account (Connect mode)
 
 ---
 

@@ -16,7 +16,7 @@ php artisan key:generate
 php artisan migrate
 
 # Start server
-php artisan serve
+php artisan serve --port=8007
 ```
 
 ## Functionaliteit

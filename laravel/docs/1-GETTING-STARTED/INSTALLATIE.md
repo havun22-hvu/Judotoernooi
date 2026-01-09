@@ -28,8 +28,8 @@
 ### 1. Clone de Repository
 
 ```bash
-git clone https://github.com/judoschool-cees-veen/judo-toernooi.git
-cd judo-toernooi/laravel
+git clone https://github.com/havun22-hvu/judotoernooi.git
+cd judotoernooi/laravel
 ```
 
 ### 2. Installeer PHP Dependencies
