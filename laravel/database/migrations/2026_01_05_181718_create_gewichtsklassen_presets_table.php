@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('gewichtsklassen_presets', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('naam');
+            $table->foreignId('organisator_id')->constrained('organisators')->onDelete('cascade');
+            $table->string('naam', 100);
             $table->json('configuratie');
             $table->timestamps();
 
-            $table->unique(['user_id', 'naam']);
+            $table->unique(['organisator_id', 'naam']);
         });
     }
 
