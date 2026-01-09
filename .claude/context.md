@@ -120,15 +120,19 @@ $toernooi->getMollieStatusText()     // Status voor UI
 $toernooi->getPlatformFee()          // Toeslag ophalen
 ```
 
-### Routes (TODO)
+### Routes
 
 ```
-GET  /mollie/authorize/{toernooi}  → Start OAuth flow
-GET  /mollie/callback              → OAuth callback
-POST /mollie/disconnect/{toernooi} → Ontkoppelen
-POST /mollie/webhook               → Payment updates (CSRF excluded!)
-GET  /betaling/return              → Na betaling redirect
-GET  /betaling/simulate/{id}       → Simulatie pagina (staging)
+GET  toernooi/{toernooi}/mollie/authorize  → Start OAuth flow (mollie.authorize)
+GET  mollie/callback                       → OAuth callback (mollie.callback)
+POST toernooi/{toernooi}/mollie/disconnect → Ontkoppelen (mollie.disconnect)
+POST mollie/webhook                        → Payment updates (mollie.webhook, CSRF excluded!)
+GET  betaling/simulate                     → Simulatie pagina (betaling.simulate)
+POST betaling/simulate                     → Simulatie complete (betaling.simulate.complete)
+
+# Coach Portal betaling returns (onder /club/{token}/ of /coach/{code}/)
+GET  {token}/betaling/succes               → Na succesvolle betaling (betaling.succes)
+GET  {token}/betaling/geannuleerd          → Bij geannuleerde betaling (betaling.geannuleerd)
 ```
 
 ### Environment Variables

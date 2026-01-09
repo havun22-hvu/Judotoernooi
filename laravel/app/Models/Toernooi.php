@@ -121,6 +121,7 @@ class Toernooi extends Model
         'code_weging',
         'code_mat',
         'code_spreker',
+        'code_dojo',
         'wedstrijd_schemas',
         'pagina_content',
         'thema_kleur',

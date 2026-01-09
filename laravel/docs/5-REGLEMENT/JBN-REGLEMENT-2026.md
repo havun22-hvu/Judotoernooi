@@ -168,7 +168,16 @@ Bron: BondsVademecum hoofdstuk 4.03a (1 juli 2025)
 
 ---
 
-## TODO: Gewichtsklassen JBN 2026
+## Gewichtsklassen JBN 2026
 
-De nieuwe gewichtsklassen voor JBN 2026 (-7, -9, -11, -13, -15) zijn nog niet officieel gepubliceerd.
-Zodra beschikbaar, hier toevoegen.
+**Status:** De JBN heeft voor 2026 alleen de nieuwe **leeftijdscategorieën** gedefinieerd (-7, -9, -11, -13, -15 jaar).
+Er zijn nog **geen officiële gewichtsklassen** gepubliceerd voor deze categorieën.
+
+### Aanbevolen configuratie in JudoToernooi
+
+Bij keuze voor JBN 2026 preset:
+- **Leeftijdsklassen:** Vaste JBN 2026 categorieën (-7, -9, -11, -13, -15 jaar)
+- **Gewichtsklassen:** Dynamisch (geen vaste klassen)
+- **Max kg verschil:** 3 kg (aanbevolen)
+
+Dit zorgt voor eerlijke poules op basis van werkelijk gewicht, zonder de niet-bestaande gewichtsklassen te gebruiken.
