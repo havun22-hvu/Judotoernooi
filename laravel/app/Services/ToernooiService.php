@@ -43,6 +43,12 @@ class ToernooiService
             // Create default device toegangen
             $this->maakStandaardToegangen($toernooi);
 
+            // Link organisator to tournament as owner
+            $organisator = auth('organisator')->user();
+            if ($organisator) {
+                $organisator->toernooien()->attach($toernooi->id, ['rol' => 'eigenaar']);
+            }
+
             return $toernooi;
         });
     }
