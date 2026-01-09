@@ -181,8 +181,8 @@ $service->getApiKeyForToernooi($toernooi);
 $service->createPayment($toernooi, [
     'amount' => ['currency' => 'EUR', 'value' => '75.00'],
     'description' => 'Inschrijving WestFries Open - 5 judoka\'s',
-    'redirectUrl' => route('betaling.return'),
-    'webhookUrl' => route('betaling.webhook'),
+    'redirectUrl' => route('betaling.succes', ['token' => $club->token]),
+    'webhookUrl' => route('mollie.webhook'),
     'metadata' => ['betaling_id' => 123],
 ]);
 
@@ -216,22 +216,21 @@ $toernooi->getPlatformFee();          // 0.50
 ### Routes
 
 ```php
-// OAuth
-Route::get('/mollie/authorize/{toernooi}', [MollieController::class, 'authorize']);
-Route::get('/mollie/callback', [MollieController::class, 'callback']);
-Route::post('/mollie/disconnect/{toernooi}', [MollieController::class, 'disconnect']);
-
-// Betalingen
-Route::post('/betaling/start', [BetalingController::class, 'start']);
-Route::get('/betaling/return', [BetalingController::class, 'return']);
+// OAuth (onder toernooi prefix)
+Route::get('toernooi/{toernooi}/mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
+Route::get('mollie/callback', [MollieController::class, 'callback'])->name('mollie.callback');
+Route::post('toernooi/{toernooi}/mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
 
 // Webhook - ZONDER CSRF!
-Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
 
 // Simulatie (staging only)
-Route::get('/betaling/simulate/{payment_id}', [MollieController::class, 'simulatePage']);
-Route::post('/betaling/simulate/{payment_id}', [MollieController::class, 'simulateComplete']);
+Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
+Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
+
+// Coach Portal betaling returns (onder /club/{token}/ of /coach/{code}/)
+Route::get('{token}/betaling/succes', [CoachPortalController::class, 'betalingSucces'])->name('betaling.succes');
+Route::get('{token}/betaling/geannuleerd', [CoachPortalController::class, 'betalingGeannuleerd'])->name('betaling.geannuleerd');
 ```
 
 ---
@@ -355,7 +354,7 @@ MOLLIE_PLATFORM_FEE=0.50
 
 ### Lokaal (Simulatie)
 ```bash
-php artisan serve --port=8001
+php artisan serve --port=8007
 # Geen Mollie keys nodig
 # Betalingen worden gesimuleerd
 ```
