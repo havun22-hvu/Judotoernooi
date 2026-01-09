@@ -332,14 +332,15 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 9 januari 2026
+## Laatste Sessie: 10 januari 2026
 
 ### Wat is gedaan:
-- JBN 2025/2026 presets: Mini's t/m Pupillen nu **gemengd** (niet meer gescheiden m/v)
-- JBN regel gedocumenteerd: gescheiden pas vanaf -15 jaar
-- Default max_leeftijd_verschil: 2 → 1 jaar bij nieuwe categorie
-- Start met lege categorieën (gebruiker kiest zelf preset of handmatig)
-- Cleanup: overbodige `getJbn20XXGewichtsklassenGemengd()` methods verwijderd
+- **Bug fix:** `ToernooiService::initialiseerToernooi()` - organisator wordt nu gekoppeld aan nieuw toernooi via pivot table
+- **Getest:** Dynamische indeling met 100 en 400 judoka's - algoritme werkt correct
+  - Harde constraints (max kg/leeftijd) worden gerespecteerd
+  - 395-400/400 judoka's ingedeeld bij standaard limieten
+  - Performance: 531ms voor 400 judoka's
+- Delete toernooi functionaliteit gecontroleerd - bestaat al (alleen sitebeheerders)
 
 ### Openstaande items:
 - [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
@@ -349,8 +350,8 @@ php artisan view:cache
 - [ ] Testen: JBN preset laden → gemengde categorieën voor jeugd
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
+- [ ] Beslissen: eigenaar mag ook toernooi deleten? (nu alleen sitebeheerder)
 
 ### Branch info:
 - **Branch:** `feature/dynamische-indeling`
-- **Commits:** 4 nieuwe (1863e39, f316ae4, 3e2b6cb)
-- **Docs bijgewerkt:** JBN-REGLEMENT-2026.md (geslacht regel)
+- **Uncommitted:** ToernooiService.php (organisator koppeling fix)
