@@ -612,9 +612,13 @@
 
         <!-- CATEGORIEËN INSTELLING -->
         @php
-            $categorieType = $toernooi->categorie_type ?? 'geen_standaard';
-            if ($toernooi->gebruik_gewichtsklassen ?? false) {
-                // Backwards compatibility: als gebruik_gewichtsklassen aan staat, is het JBN
+            // Lees preset type uit gewichtsklassen JSON
+            $gewichtsklassenData = $toernooi->gewichtsklassen ?? [];
+            $categorieType = $gewichtsklassenData['_preset_type'] ?? 'geen_standaard';
+            $eigenPresetId = $gewichtsklassenData['_eigen_preset_id'] ?? null;
+
+            // Backwards compatibility
+            if ($categorieType === 'geen_standaard' && ($toernooi->gebruik_gewichtsklassen ?? false)) {
                 $categorieType = 'jbn_2026';
             }
         @endphp
@@ -836,6 +840,17 @@
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
                 const data = {};
+
+                // Sla preset type op
+                const presetRadio = document.querySelector('input[name="categorie_type"]:checked');
+                const presetDropdown = document.getElementById('eigen-presets-dropdown');
+                if (presetRadio) {
+                    data._preset_type = presetRadio.value;
+                }
+                if (presetDropdown && presetDropdown.value) {
+                    data._eigen_preset_id = presetDropdown.value;
+                }
+
                 items.forEach(item => {
                     const key = item.dataset.key;
                     const leeftijd = parseInt(item.querySelector('.leeftijd-input').value) || 99;
@@ -991,6 +1006,9 @@
             let eigenPresets = [];
 
             // Load user presets on page load (only for organisator)
+            // Opgeslagen eigen preset ID (uit gewichtsklassen JSON)
+            const opgeslagenEigenPresetId = {{ $eigenPresetId ?? 'null' }};
+
             async function loadEigenPresets() {
                 @if(Auth::guard('organisator')->check())
                 try {
@@ -1008,6 +1026,11 @@
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
+                            // Selecteer opgeslagen preset
+                            if (opgeslagenEigenPresetId) {
+                                presetsDropdown.value = opgeslagenEigenPresetId;
+                                huidigePresetId = opgeslagenEigenPresetId;
+                            }
                         }
                     }
                 } catch (e) {
@@ -1018,7 +1041,7 @@
             loadEigenPresets();
 
             // Track currently loaded preset
-            let huidigePresetId = null;
+            let huidigePresetId = opgeslagenEigenPresetId;
             let huidigePresetNaam = null;
 
             // Load selected preset
