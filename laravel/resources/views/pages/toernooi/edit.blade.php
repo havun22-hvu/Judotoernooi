@@ -1100,6 +1100,7 @@
                         label: item.querySelector('.label-input')?.value || key,
                         geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
                         max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
+                        band_tot: item.querySelector('.band-tot-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                     };
                 });
