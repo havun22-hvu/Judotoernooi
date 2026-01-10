@@ -359,75 +359,76 @@ class Toernooi extends Model
     }
 
     /**
-     * JBN 2025 regels (huidige): -8, -10, -12, -15, -18, -21, Senioren
+     * JBN 2025 regels: U8, U10, U12, U15, U18, U21, Senioren
      * Officieel volgens BondsVademecum hoofdstuk 4.03a (1 juli 2025)
-     * Gemengd tot -12 jaar, gescheiden vanaf -15 jaar
+     * Gemengd t/m U12, gescheiden vanaf U15 (Heren/Dames)
+     * VASTE gewichtsklassen
      */
     public static function getJbn2025Gewichtsklassen(): array
     {
         return [
-            'minis' => [
-                'label' => "Mini's",
+            'u8' => [
+                'label' => 'U8',
                 'max_leeftijd' => 7,
                 'geslacht' => 'gemengd',
                 'gewichten' => ['-18', '-21', '-24', '-27', '-30', '-34', '-38', '+38'],
             ],
-            'pupillen_a' => [
-                'label' => 'Pupillen A',
+            'u10' => [
+                'label' => 'U10',
                 'max_leeftijd' => 9,
                 'geslacht' => 'gemengd',
                 'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
             ],
-            'pupillen_b' => [
-                'label' => 'Pupillen B',
+            'u12' => [
+                'label' => 'U12',
                 'max_leeftijd' => 11,
                 'geslacht' => 'gemengd',
                 'gewichten' => ['-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '-55', '+55'],
             ],
-            'dames_15' => [
-                'label' => 'Dames -15',
+            'u15_d' => [
+                'label' => 'U15 Dames',
                 'max_leeftijd' => 14,
                 'geslacht' => 'V',
                 'gewichten' => ['-32', '-36', '-40', '-44', '-48', '-52', '-57', '-63', '+63'],
             ],
-            'heren_15' => [
-                'label' => 'Heren -15',
+            'u15_h' => [
+                'label' => 'U15 Heren',
                 'max_leeftijd' => 14,
                 'geslacht' => 'M',
                 'gewichten' => ['-34', '-38', '-42', '-46', '-50', '-55', '-60', '-66', '+66'],
             ],
-            'dames_18' => [
-                'label' => 'Dames -18',
+            'u18_d' => [
+                'label' => 'U18 Dames',
                 'max_leeftijd' => 17,
                 'geslacht' => 'V',
                 'gewichten' => ['-40', '-44', '-48', '-52', '-57', '-63', '-70', '+70'],
             ],
-            'heren_18' => [
-                'label' => 'Heren -18',
+            'u18_h' => [
+                'label' => 'U18 Heren',
                 'max_leeftijd' => 17,
                 'geslacht' => 'M',
                 'gewichten' => ['-46', '-50', '-55', '-60', '-66', '-73', '-81', '-90', '+90'],
             ],
-            'dames_21' => [
-                'label' => 'Dames -21',
+            'u21_d' => [
+                'label' => 'U21 Dames',
                 'max_leeftijd' => 20,
                 'geslacht' => 'V',
                 'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
             ],
-            'heren_21' => [
-                'label' => 'Heren -21',
+            'u21_h' => [
+                'label' => 'U21 Heren',
                 'max_leeftijd' => 20,
                 'geslacht' => 'M',
                 'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
             ],
-            'dames' => [
-                'label' => 'Dames Senioren',
+            'sen_d' => [
+                'label' => 'Senioren Dames',
                 'max_leeftijd' => 99,
                 'geslacht' => 'V',
                 'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
             ],
-            'heren' => [
-                'label' => 'Heren Senioren',
+            'sen_h' => [
+                'label' => 'Senioren Heren',
                 'max_leeftijd' => 99,
                 'geslacht' => 'M',
                 'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
@@ -436,82 +437,104 @@ class Toernooi extends Model
     }
 
     /**
-     * JBN 2026 regels (nieuw): -7, -9, -11, -13, -15
-     * Leeftijdsgrenzen volgens BondsVademecum 4.02 (31 jan 2025)
-     * Gewichtsklassen: voorlopig gebaseerd op JBN 2025 (officiële 2026 nog niet gepubliceerd)
-     * Gemengd tot -13 jaar, gescheiden vanaf -15 jaar
+     * JBN 2026 regels (officieel jan 2026)
+     * U7/U9: dynamisch (zelf gewichtsklassen bepalen)
+     * U11+: gescheiden M/V met vaste gewichtsklassen
      */
     public static function getJbn2026Gewichtsklassen(): array
     {
         return [
-            'minis' => [
-                'label' => "Mini's",
+            // U7 en U9: dynamisch, gemengd
+            'u7' => [
+                'label' => 'U7',
                 'max_leeftijd' => 6,
                 'geslacht' => 'gemengd',
-                'gewichten' => ['-18', '-21', '-24', '-27', '-30', '-34', '+34'],
+                'max_kg_verschil' => 3,
+                'band_scheiding' => 'oranje',
+                'gewichten' => [],
             ],
-            'pupillen_a' => [
-                'label' => 'Pupillen A',
+            'u9' => [
+                'label' => 'U9',
                 'max_leeftijd' => 8,
                 'geslacht' => 'gemengd',
-                'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '+42'],
+                'max_kg_verschil' => 3,
+                'band_scheiding' => 'oranje',
+                'gewichten' => [],
             ],
-            'pupillen_b' => [
-                'label' => 'Pupillen B',
+            // U11: gescheiden, vaste klassen
+            'u11_d' => [
+                'label' => 'U11 Meisjes',
                 'max_leeftijd' => 10,
-                'geslacht' => 'gemengd',
+                'geslacht' => 'V',
+                'gewichten' => ['-22', '-25', '-28', '-32', '-36', '-40', '-44', '+44'],
+            ],
+            'u11_h' => [
+                'label' => 'U11 Jongens',
+                'max_leeftijd' => 10,
+                'geslacht' => 'M',
+                'gewichten' => ['-21', '-24', '-27', '-30', '-34', '-38', '-42', '-50', '+50'],
+            ],
+            // U13: gescheiden, vaste klassen
+            'u13_d' => [
+                'label' => 'U13 Meisjes',
+                'max_leeftijd' => 12,
+                'geslacht' => 'V',
+                'gewichten' => ['-25', '-28', '-32', '-36', '-40', '-44', '-48', '+48'],
+            ],
+            'u13_h' => [
+                'label' => 'U13 Jongens',
+                'max_leeftijd' => 12,
+                'geslacht' => 'M',
                 'gewichten' => ['-24', '-27', '-30', '-34', '-38', '-42', '-46', '-50', '+50'],
             ],
-            'pupillen_c' => [
-                'label' => 'Pupillen C',
-                'max_leeftijd' => 12,
-                'geslacht' => 'gemengd',
-                'gewichten' => ['-27', '-30', '-34', '-38', '-42', '-46', '-50', '-55', '+55'],
-            ],
-            'dames_15' => [
-                'label' => 'Dames -15',
+            // U15: gescheiden, vaste klassen
+            'u15_d' => [
+                'label' => 'U15 Meisjes',
                 'max_leeftijd' => 14,
                 'geslacht' => 'V',
                 'gewichten' => ['-32', '-36', '-40', '-44', '-48', '-52', '-57', '-63', '+63'],
             ],
-            'heren_15' => [
-                'label' => 'Heren -15',
+            'u15_h' => [
+                'label' => 'U15 Jongens',
                 'max_leeftijd' => 14,
                 'geslacht' => 'M',
                 'gewichten' => ['-34', '-38', '-42', '-46', '-50', '-55', '-60', '-66', '+66'],
             ],
-            'dames_18' => [
-                'label' => 'Dames -18',
+            // U18: gescheiden, vaste klassen
+            'u18_d' => [
+                'label' => 'U18 Dames',
                 'max_leeftijd' => 17,
                 'geslacht' => 'V',
                 'gewichten' => ['-40', '-44', '-48', '-52', '-57', '-63', '-70', '+70'],
             ],
-            'heren_18' => [
-                'label' => 'Heren -18',
+            'u18_h' => [
+                'label' => 'U18 Heren',
                 'max_leeftijd' => 17,
                 'geslacht' => 'M',
-                'gewichten' => ['-46', '-50', '-55', '-60', '-66', '-73', '-81', '-90', '+90'],
+                'gewichten' => ['-42', '-46', '-50', '-55', '-60', '-66', '-73', '-81', '-90', '+90'],
             ],
-            'dames_21' => [
-                'label' => 'Dames -21',
+            // U21: gescheiden, vaste klassen
+            'u21_d' => [
+                'label' => 'U21 Dames',
                 'max_leeftijd' => 20,
                 'geslacht' => 'V',
                 'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
             ],
-            'heren_21' => [
-                'label' => 'Heren -21',
+            'u21_h' => [
+                'label' => 'U21 Heren',
                 'max_leeftijd' => 20,
                 'geslacht' => 'M',
-                'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],
+                'gewichten' => ['-50', '-55', '-60', '-66', '-73', '-81', '-90', '-100', '+100'],
             ],
-            'dames' => [
-                'label' => 'Dames Senioren',
+            // Senioren: gescheiden, vaste klassen
+            'sen_d' => [
+                'label' => 'Senioren Dames',
                 'max_leeftijd' => 99,
                 'geslacht' => 'V',
                 'gewichten' => ['-48', '-52', '-57', '-63', '-70', '-78', '+78'],
             ],
-            'heren' => [
-                'label' => 'Heren Senioren',
+            'sen_h' => [
+                'label' => 'Senioren Heren',
                 'max_leeftijd' => 99,
                 'geslacht' => 'M',
                 'gewichten' => ['-60', '-66', '-73', '-81', '-90', '-100', '+100'],

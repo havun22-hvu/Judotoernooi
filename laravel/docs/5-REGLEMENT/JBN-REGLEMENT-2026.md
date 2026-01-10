@@ -6,32 +6,32 @@ Ingangsdatum: 1 januari 2026
 
 ## Leeftijdscategorieën
 
-**Let op:** De categorie "-X jaar" betekent max_leeftijd = X-1
+**Notatie:** "U" = Under (jonger dan). U7 = jonger dan 7 jaar = max 6 jaar oud.
 
 | Categorie | Leeftijd | max_leeftijd in code |
 |-----------|----------|---------------------|
-| -7 jaar | 6 jaar en jonger | 6 |
-| -9 jaar | 7-8 jaar | 8 |
-| -11 jaar | 9-10 jaar | 10 |
-| -13 jaar | 11-12 jaar | 12 |
-| -15 jaar | 13-14 jaar | 14 |
-| -18 jaar | 15-17 jaar | 17 |
-| -21 jaar | 18-20 jaar | 20 |
+| U7 | 6 jaar en jonger | 6 |
+| U9 | 7-8 jaar | 8 |
+| U11 | 9-10 jaar | 10 |
+| U13 | 11-12 jaar | 12 |
+| U15 | 13-14 jaar | 14 |
+| U18 | 15-17 jaar | 17 |
+| U21 | 18-20 jaar | 20 |
 
 ### Geslacht: gemengd vs gescheiden
 
-**JBN standaard:** Jongens en meisjes zijn **gemengd** tot en met -13 jaar (Pupillen C).
-Vanaf -15 jaar worden categorieën **gescheiden** in Heren en Dames.
+**JBN standaard:** Jongens en meisjes zijn **gemengd** tot en met U13.
+Vanaf U15 worden categorieën **gescheiden** in Heren en Dames.
 
 | Categorie | Geslacht |
 |-----------|----------|
-| -7 t/m -13 jaar | Gemengd |
-| -15 jaar en ouder | Gescheiden (Heren/Dames) |
+| U7 t/m U13 | Gemengd |
+| U15 en ouder | Gescheiden (Heren/Dames) |
 
 ## Wedstrijdregels per categorie
 
 ### Start van de wedstrijd
-- **-7 en -9 jaar:** Starten altijd vanuit vaste kumikata (kenka/ai yotsu)
+- **U7 en U9:** Starten altijd vanuit vaste kumikata (kenka/ai yotsu)
   - Links of rechts toegestaan
   - Niet met gestrekte armen
   - Voeten recht tegenover elkaar, rechtop staan
@@ -40,15 +40,15 @@ Vanaf -15 jaar worden categorieën **gescheiden** in Heren en Dames.
 
 | Categorie | Regel |
 |-----------|-------|
-| -7 / -9 jaar | Hantei (beslissing scheidsrechter) |
-| -11 / -13 jaar | 1 minuut golden score, dan Hantei (meest aanvallend) |
-| -15 jaar | Regulier IJF reglement |
+| U7 / U9 | Hantei (beslissing scheidsrechter) |
+| U11 / U13 | 1 minuut golden score, dan Hantei (meest aanvallend) |
+| U15 | Regulier IJF reglement |
 
 **Let op:** Straffen bepalen niet langer de winnaar, tenzij 3e straf of directe uitsluiting.
 
 ## Verboden technieken per leeftijd
 
-### -7 / -9 / -11 / -13 jaar (NIET toegestaan):
+### U7 / U9 / U11 / U13 (NIET toegestaan):
 - Alle sutemi-waza (offerworpen) - **uitzondering:** ko-uchi-maki-komi
 - Alle worpen direct op 1 of 2 knieën
 - Alle worpen indirect op 1 of 2 knieën
@@ -60,15 +60,15 @@ Vanaf -15 jaar worden categorieën **gescheiden** in Heren en Dames.
 - Kata-sankaku grip (spanning op nek/rugwervel)
 - Reverse seoi-nage
 
-### -15 jaar (NIET toegestaan):
+### U15 (NIET toegestaan):
 - Kansetsu-waza
 - Kata-sankaku grip
 - Reverse seoi-nage
 
 ## Strafcategorieën
 
-| Cat | Beschrijving | -7/-9/-11 jaar | -13 jaar | -15 jaar |
-|-----|--------------|----------------|----------|----------|
+| Cat | Beschrijving | U7/U9/U11 | U13 | U15 |
+|-----|--------------|-----------|-----|-----|
 | A | Veiligheid niet in geding | Uitleg, geen straf | Uitleg, geen straf | Shido (IJF) |
 | B | Veiligheid in geding | 1e: waarschuwing, 2e: shido | Direct shido | Toegestaan (muv. verboden) |
 | C | Zichzelf in gevaar | Veiligheidsinterventie, EHBO beoordeling |
@@ -78,7 +78,7 @@ Vanaf -15 jaar worden categorieën **gescheiden** in Heren en Dames.
 ## Categorie A - Overtredingen (veiligheid niet in geding)
 - Buiten mat stappen
 - Grabbing
-- Vinger in mouw (niet voor -15)
+- Vinger in mouw (niet voor U15)
 - Ongeldige pakking
 - Onder arm door wegduiken
 - False attack
@@ -170,14 +170,55 @@ Bron: BondsVademecum hoofdstuk 4.03a (1 juli 2025)
 
 ## Gewichtsklassen JBN 2026
 
-**Status:** De JBN heeft voor 2026 alleen de nieuwe **leeftijdscategorieën** gedefinieerd (-7, -9, -11, -13, -15 jaar).
-Er zijn nog **geen officiële gewichtsklassen** gepubliceerd voor deze categorieën.
+**Status:** Officieel (januari 2026)
 
-### Aanbevolen configuratie in JudoToernooi
+### Overzicht
 
-Bij keuze voor JBN 2026 preset:
-- **Leeftijdsklassen:** Vaste JBN 2026 categorieën (-7, -9, -11, -13, -15 jaar)
-- **Gewichtsklassen:** Dynamisch (geen vaste klassen)
-- **Max kg verschil:** 3 kg (aanbevolen)
+| Categorie | Geslacht | Gewichtsklassen |
+|-----------|----------|-----------------|
+| **U7** | Gemengd | Dynamisch (zelf bepalen) |
+| **U9** | Gemengd | Dynamisch (zelf bepalen) |
+| **U11 Meisjes** | V | -22, -25, -28, -32, -36, -40, -44, +44 (max 53kg) |
+| **U11 Jongens** | M | -21, -24, -27, -30, -34, -38, -42, -50, +50 (max 60kg) |
+| **U13 Meisjes** | V | -25, -28, -32, -36, -40, -44, -48, +48 (max 58kg) |
+| **U13 Jongens** | M | -24, -27, -30, -34, -38, -42, -46, -50, +50 (max 60kg) |
+| **U15 Meisjes** | V | -32, -36, -40, -44, -48, -52, -57, -63, +63 |
+| **U15 Jongens** | M | -34, -38, -42, -46, -50, -55, -60, -66, +66 |
+| **U18 Dames** | V | -40, -44, -48, -52, -57, -63, -70, +70 |
+| **U18 Heren** | M | -42, -46, -50, -55, -60, -66, -73, -81, -90, +90 |
+| **U21 Dames** | V | -48, -52, -57, -63, -70, -78, +78 |
+| **U21 Heren** | M | -50, -55, -60, -66, -73, -81, -90, -100, +100 |
+| **Senioren Dames** | V | -48, -52, -57, -63, -70, -78, +78 |
+| **Senioren Heren** | M | -60, -66, -73, -81, -90, -100, +100 |
 
-Dit zorgt voor eerlijke poules op basis van werkelijk gewicht, zonder de niet-bestaande gewichtsklassen te gebruiken.
+### JBN 2026 Preset in JudoToernooi
+
+| Aspect | Waarde |
+|--------|--------|
+| **U7/U9** | Gemengd, dynamisch (max kg + band scheiding instelbaar) |
+| **U11+** | Gescheiden (M/V), vaste gewichtsklassen |
+
+### Dynamische indeling (U7/U9)
+
+Voor U7 en U9 bepaalt de organisator zelf de indeling:
+1. **Splits op band** (instelbaar): bijv. t/m oranje vs groen+
+2. **Sorteer op gewicht** binnen elke band-groep
+3. **Maak poules** met max kg verschil constraint
+
+**Voordelen:**
+- Geen overlappende gewichtsranges binnen een band-groep
+- Eerlijke wedstrijden (beginners niet tegen ervaren)
+- Eenvoudige blokindeling (lage band = blok X, hoge band = blok Y)
+
+### UI Instellingen per categorie
+
+| Veld | Type | Beschrijving |
+|------|------|--------------|
+| Max leeftijd | number | Leeftijdsgrens (bijv. 6 = "-7 jaar") |
+| Naam | text | Label (bijv. "Mini's") |
+| Geslacht | dropdown | Gemengd / Jongens / Meisjes |
+| Systeem | dropdown | Poules / Poules+Kruisfinale / Eliminatie |
+| Max kg verschil | number | Harde limiet gewichtsverschil in poule |
+| Aparte categorie t/m | dropdown | Band tot waar lage groep loopt |
+
+**Let op:** "Max leeftijd verschil" is niet nodig bij JBN 2026 - de leeftijdscategorieën zijn al vast.
