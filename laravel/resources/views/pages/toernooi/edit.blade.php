@@ -620,6 +620,11 @@
             $categorieType = $gewichtsklassenData['_preset_type'] ?? 'geen_standaard';
             $eigenPresetId = $gewichtsklassenData['_eigen_preset_id'] ?? null;
 
+            // Als er een eigen preset is opgeslagen, gebruik 'eigen' als type
+            if ($eigenPresetId) {
+                $categorieType = 'eigen';
+            }
+
             // Backwards compatibility
             if ($categorieType === 'geen_standaard' && ($toernooi->gebruik_gewichtsklassen ?? false)) {
                 $categorieType = 'jbn_2026';
@@ -659,6 +664,14 @@
                                    class="sr-only peer">
                             <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
                                 JBN 2026
+                            </span>
+                        </label>
+                        <label class="cursor-pointer" id="eigen-preset-radio-label" style="display: none;">
+                            <input type="radio" name="categorie_type" value="eigen"
+                                   x-model="categorieType"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
+                                Eigen Preset
                             </span>
                         </label>
                     </div>
@@ -1059,10 +1072,17 @@
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
-                            // Selecteer opgeslagen preset
+                            // Selecteer opgeslagen preset en toon in radio
                             if (opgeslagenEigenPresetId) {
                                 presetsDropdown.value = opgeslagenEigenPresetId;
                                 huidigePresetId = opgeslagenEigenPresetId;
+                                // Find preset name and show in radio
+                                const savedPreset = eigenPresets.find(p => p.id == opgeslagenEigenPresetId);
+                                if (savedPreset) {
+                                    huidigePresetNaam = savedPreset.naam;
+                                    // Show radio after DOM is ready
+                                    setTimeout(() => updateEigenPresetRadio(savedPreset.naam, true), 0);
+                                }
                             }
                         }
                     }
@@ -1077,12 +1097,37 @@
             let huidigePresetId = opgeslagenEigenPresetId;
             let huidigePresetNaam = null;
 
+            // DOM elements for eigen preset radio
+            const eigenPresetRadioLabel = document.getElementById('eigen-preset-radio-label');
+            const eigenPresetNaamDisplay = document.getElementById('eigen-preset-naam-display');
+            const eigenPresetRadio = document.querySelector('input[name="categorie_type"][value="eigen"]');
+
+            // Show/hide eigen preset radio button with name
+            function updateEigenPresetRadio(naam, activate = false) {
+                if (naam) {
+                    eigenPresetNaamDisplay.textContent = naam;
+                    eigenPresetRadioLabel.style.display = '';
+                    if (activate) {
+                        eigenPresetRadio.checked = true;
+                        // Also update Alpine state
+                        const alpineRoot = document.querySelector('[x-data*="categorieType"]');
+                        if (alpineRoot && alpineRoot._x_dataStack) {
+                            alpineRoot._x_dataStack[0].categorieType = 'eigen';
+                        }
+                    }
+                } else {
+                    eigenPresetRadioLabel.style.display = 'none';
+                }
+                updateJsonInput();
+            }
+
             // Load selected preset
             presetsDropdown.addEventListener('change', () => {
                 const presetId = presetsDropdown.value;
                 if (!presetId) {
                     huidigePresetId = null;
                     huidigePresetNaam = null;
+                    updateEigenPresetRadio(null);
                     return;
                 }
 
@@ -1093,7 +1138,8 @@
                     renderCategorieen(preset.configuratie);
                     huidigePresetId = preset.id;
                     huidigePresetNaam = preset.naam;
-                    // Keep selection visible in dropdown
+                    // Show and activate eigen preset radio
+                    updateEigenPresetRadio(preset.naam, true);
                 } else {
                     // User cancelled - reset to previous state
                     presetsDropdown.value = huidigePresetId || '';
@@ -1800,6 +1846,11 @@ function togglePassword(button) {
     function autoSave() {
         if (!isDirty) return;
 
+        // Ensure JSON is up-to-date before saving
+        if (typeof updateJsonInput === 'function') {
+            updateJsonInput();
+        }
+
         showStatus('Opslaan...', 'default');
 
         const formData = new FormData(form);
@@ -1843,7 +1894,11 @@ function togglePassword(button) {
     });
 
     // Reset dirty flag on form submit (prevents false warning)
-    form.addEventListener('submit', () => {
+    form.addEventListener('submit', (e) => {
+        // Ensure JSON is up-to-date before submit
+        if (typeof updateJsonInput === 'function') {
+            updateJsonInput();
+        }
         markClean();
     });
 
