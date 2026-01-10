@@ -1380,13 +1380,8 @@
                 }
             });
 
-            // Update styling on leeftijd change
+            // Update JSON on any input change in categories container
             container.addEventListener('input', (e) => {
-                if (e.target.classList.contains('leeftijd-input')) {
-                    const val = parseInt(e.target.value) || 99;
-                    e.target.classList.toggle('text-blue-600', val < 99);
-                    e.target.classList.toggle('text-gray-400', val >= 99);
-                }
                 updateJsonInput();
             });
 
@@ -1866,7 +1861,13 @@ function togglePassword(button) {
             }
         })
         .then(response => {
-            if (response.ok || response.redirected) {
+            if (!response.ok) {
+                throw new Error('Server error');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
                 showStatus('✓ Opgeslagen', 'success');
                 markClean();
                 setTimeout(() => status.classList.add('hidden'), 2000);
@@ -1879,20 +1880,19 @@ function togglePassword(button) {
         });
     }
 
-    // Listen for changes on all form elements
-    form.querySelectorAll('input, select, textarea').forEach(el => {
-        el.addEventListener('change', () => {
+    // Listen for changes on all form elements (using event delegation for dynamic elements)
+    form.addEventListener('change', (e) => {
+        if (e.target.matches('input, select, textarea')) {
             markDirty();
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, 500);
-        });
-        // For text inputs, also listen to input event with longer debounce
-        if (el.type === 'text' || el.type === 'number' || el.tagName === 'TEXTAREA') {
-            el.addEventListener('input', () => {
-                markDirty();
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(autoSave, 1500);
-            });
+        }
+    });
+    form.addEventListener('input', (e) => {
+        if (e.target.matches('input[type="text"], input[type="number"], textarea')) {
+            markDirty();
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(autoSave, 1500);
         }
     });
 
