@@ -196,6 +196,74 @@ De Weging heeft **2 totaal verschillende versies**:
 
 ---
 
+## Coachkaarten
+
+Coaches krijgen toegangskaarten voor de dojo. Het aantal is gebaseerd op het aantal judoka's van de club.
+
+### Berekening aantal coachkaarten
+
+```
+Formule: ceil(aantal_judokas / judokas_per_coach)
+
+Voorbeeld met judokas_per_coach = 5:
+┌──────────────────┬─────────┐
+│ Aantal judoka's  │ Kaarten │
+├──────────────────┼─────────┤
+│ 1-5              │ 1       │
+│ 6-10             │ 2       │
+│ 11-15            │ 3       │
+│ 16-20            │ 4       │
+└──────────────────┴─────────┘
+```
+
+**Instelling:** `judokas_per_coach` in toernooi instellingen (default: 5)
+
+### Implementatie
+
+**Model:** `app/Models/Club.php`
+```php
+public function berekenAantalCoachKaarten(Toernooi $toernooi): int
+{
+    $aantalJudokas = $this->judokas()->where('toernooi_id', $toernooi->id)->count();
+    $perCoach = $toernooi->judokas_per_coach ?? 5;
+
+    if ($aantalJudokas === 0) {
+        return 0;
+    }
+
+    return (int) ceil($aantalJudokas / $perCoach);
+}
+```
+
+### Genereren coachkaarten
+
+**Controller:** `CoachKaartController@genereer`
+
+Bij genereren:
+1. Tel judoka's per club voor dit toernooi
+2. Bereken benodigd aantal kaarten
+3. Maak ontbrekende kaarten aan
+4. Verwijder overtollige (niet-gescande) kaarten
+
+```php
+foreach ($clubs as $club) {
+    $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
+    $huidigAantal = $club->coachKaartenVoorToernooi($toernooi->id)->count();
+
+    // Create missing cards
+    for ($i = $huidigAantal; $i < $benodigdAantal; $i++) {
+        CoachKaart::create([...]);
+    }
+
+    // Remove excess cards (only unscanned ones)
+    if ($huidigAantal > $benodigdAantal) {
+        // delete excess...
+    }
+}
+```
+
+---
+
 ## Dojo Scanner Interface
 
 **Pad:** `resources/views/pages/dojo/scanner.blade.php`
