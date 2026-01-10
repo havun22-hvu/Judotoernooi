@@ -68,6 +68,56 @@ class ToernooiService
     }
 
     /**
+     * Sync blocks to match aantal_blokken setting
+     */
+    public function syncBlokken(Toernooi $toernooi): void
+    {
+        $huidigAantal = $toernooi->blokken()->count();
+        $gewenstAantal = $toernooi->aantal_blokken ?? 6;
+
+        if ($huidigAantal < $gewenstAantal) {
+            // Add missing blocks
+            for ($i = $huidigAantal + 1; $i <= $gewenstAantal; $i++) {
+                Blok::create([
+                    'toernooi_id' => $toernooi->id,
+                    'nummer' => $i,
+                ]);
+            }
+        } elseif ($huidigAantal > $gewenstAantal) {
+            // Remove excess blocks (only if they have no poules assigned)
+            $toernooi->blokken()
+                ->where('nummer', '>', $gewenstAantal)
+                ->whereDoesntHave('poules')
+                ->delete();
+        }
+    }
+
+    /**
+     * Sync mats to match aantal_matten setting
+     */
+    public function syncMatten(Toernooi $toernooi): void
+    {
+        $huidigAantal = $toernooi->matten()->count();
+        $gewenstAantal = $toernooi->aantal_matten ?? 7;
+
+        if ($huidigAantal < $gewenstAantal) {
+            // Add missing mats
+            for ($i = $huidigAantal + 1; $i <= $gewenstAantal; $i++) {
+                Mat::create([
+                    'toernooi_id' => $toernooi->id,
+                    'nummer' => $i,
+                ]);
+            }
+        } elseif ($huidigAantal > $gewenstAantal) {
+            // Remove excess mats (only if they have no poules assigned)
+            $toernooi->matten()
+                ->where('nummer', '>', $gewenstAantal)
+                ->whereDoesntHave('poules')
+                ->delete();
+        }
+    }
+
+    /**
      * Create mats for tournament
      */
     private function maakMatten(Toernooi $toernooi): void
