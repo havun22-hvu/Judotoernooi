@@ -553,6 +553,11 @@ class Toernooi extends Model
         // Return empty array if no categories configured (user starts fresh)
         $klassen = $this->gewichtsklassen ?? [];
 
+        // Filter metadata keys (start with _)
+        $klassen = array_filter($klassen, function ($key) {
+            return !str_starts_with($key, '_');
+        }, ARRAY_FILTER_USE_KEY);
+
         // Sort by max_leeftijd (youngest first, seniors last)
         uasort($klassen, function ($a, $b) {
             return ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99);
