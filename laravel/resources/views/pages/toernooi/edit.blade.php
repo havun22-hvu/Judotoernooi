@@ -741,7 +741,12 @@
                 @php
                     $geslacht = $data['geslacht'] ?? 'gemengd';
                     $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
-                    $bandTot = $data['band_tot'] ?? null;
+                    // Support both old band_tot and new band_filter
+                    $bandFilter = $data['band_filter'] ?? $data['band_tot'] ?? null;
+                    // Convert old format (wit, geel) to new format (tm_wit, tm_geel)
+                    if ($bandFilter && !str_contains($bandFilter, '_')) {
+                        $bandFilter = 'tm_' . $bandFilter;
+                    }
                 @endphp
                 <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move" data-key="{{ $key }}" draggable="true">
                     <div class="flex flex-wrap items-center gap-3 mb-2">
@@ -791,16 +796,26 @@
                             <span class="text-xs text-gray-500">kg</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">t/m band:</label>
-                            <select name="gewichtsklassen_band_tot[{{ $key }}]"
-                                    class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" {{ !$bandTot ? 'selected' : '' }}>Alle</option>
-                                <option value="wit" {{ $bandTot == 'wit' ? 'selected' : '' }}>Wit</option>
-                                <option value="geel" {{ $bandTot == 'geel' ? 'selected' : '' }}>Geel</option>
-                                <option value="oranje" {{ $bandTot == 'oranje' ? 'selected' : '' }}>Oranje</option>
-                                <option value="groen" {{ $bandTot == 'groen' ? 'selected' : '' }}>Groen</option>
-                                <option value="blauw" {{ $bandTot == 'blauw' ? 'selected' : '' }}>Blauw</option>
-                                <option value="bruin" {{ $bandTot == 'bruin' ? 'selected' : '' }}>Bruin</option>
+                            <label class="text-gray-600 text-sm">Band:</label>
+                            <select name="gewichtsklassen_band_filter[{{ $key }}]"
+                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="" {{ !$bandFilter ? 'selected' : '' }}>Alle banden</option>
+                                <optgroup label="t/m (beginners)">
+                                    <option value="tm_wit" {{ $bandFilter == 'tm_wit' ? 'selected' : '' }}>t/m wit</option>
+                                    <option value="tm_geel" {{ $bandFilter == 'tm_geel' ? 'selected' : '' }}>t/m geel</option>
+                                    <option value="tm_oranje" {{ $bandFilter == 'tm_oranje' ? 'selected' : '' }}>t/m oranje</option>
+                                    <option value="tm_groen" {{ $bandFilter == 'tm_groen' ? 'selected' : '' }}>t/m groen</option>
+                                    <option value="tm_blauw" {{ $bandFilter == 'tm_blauw' ? 'selected' : '' }}>t/m blauw</option>
+                                    <option value="tm_bruin" {{ $bandFilter == 'tm_bruin' ? 'selected' : '' }}>t/m bruin</option>
+                                </optgroup>
+                                <optgroup label="vanaf (gevorderden)">
+                                    <option value="vanaf_geel" {{ $bandFilter == 'vanaf_geel' ? 'selected' : '' }}>vanaf geel</option>
+                                    <option value="vanaf_oranje" {{ $bandFilter == 'vanaf_oranje' ? 'selected' : '' }}>vanaf oranje</option>
+                                    <option value="vanaf_groen" {{ $bandFilter == 'vanaf_groen' ? 'selected' : '' }}>vanaf groen</option>
+                                    <option value="vanaf_blauw" {{ $bandFilter == 'vanaf_blauw' ? 'selected' : '' }}>vanaf blauw</option>
+                                    <option value="vanaf_bruin" {{ $bandFilter == 'vanaf_bruin' ? 'selected' : '' }}>vanaf bruin</option>
+                                    <option value="vanaf_zwart" {{ $bandFilter == 'vanaf_zwart' ? 'selected' : '' }}>vanaf zwart</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
@@ -860,12 +875,12 @@
                     const label = item.querySelector('.label-input').value;
                     const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
                     const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
-                    const bandTot = item.querySelector('.band-tot-select')?.value || null;
+                    const bandFilter = item.querySelector('.band-filter-select')?.value || null;
                     const gewichten = item.querySelector('.gewichten-input')?.value
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g) || [];
-                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, band_tot: bandTot, gewichten };
+                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, band_filter: bandFilter, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -925,7 +940,12 @@
                     const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
                     const geslacht = item.geslacht || 'gemengd';
                     const maxKg = item.max_kg_verschil || 0;
-                    const bandTot = item.band_tot || '';
+                    // Support both old band_tot and new band_filter
+                    let bandFilter = item.band_filter || item.band_tot || '';
+                    // Convert old format to new format
+                    if (bandFilter && !bandFilter.includes('_')) {
+                        bandFilter = 'tm_' + bandFilter;
+                    }
                     const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
                     const dynamischHidden = maxKg > 0 ? '' : 'hidden';
                     div.innerHTML = `
@@ -975,16 +995,26 @@
                                 <span class="text-xs text-gray-500">kg</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">t/m band:</label>
-                                <select name="gewichtsklassen_band_tot[${key}]"
-                                        class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
-                                    <option value="" ${!bandTot ? 'selected' : ''}>Alle</option>
-                                    <option value="wit" ${bandTot === 'wit' ? 'selected' : ''}>Wit</option>
-                                    <option value="geel" ${bandTot === 'geel' ? 'selected' : ''}>Geel</option>
-                                    <option value="oranje" ${bandTot === 'oranje' ? 'selected' : ''}>Oranje</option>
-                                    <option value="groen" ${bandTot === 'groen' ? 'selected' : ''}>Groen</option>
-                                    <option value="blauw" ${bandTot === 'blauw' ? 'selected' : ''}>Blauw</option>
-                                    <option value="bruin" ${bandTot === 'bruin' ? 'selected' : ''}>Bruin</option>
+                                <label class="text-gray-600 text-sm">Band:</label>
+                                <select name="gewichtsklassen_band_filter[${key}]"
+                                        class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
+                                    <option value="" ${!bandFilter ? 'selected' : ''}>Alle banden</option>
+                                    <optgroup label="t/m (beginners)">
+                                        <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>t/m wit</option>
+                                        <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>t/m geel</option>
+                                        <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>t/m oranje</option>
+                                        <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>t/m groen</option>
+                                        <option value="tm_blauw" ${bandFilter === 'tm_blauw' ? 'selected' : ''}>t/m blauw</option>
+                                        <option value="tm_bruin" ${bandFilter === 'tm_bruin' ? 'selected' : ''}>t/m bruin</option>
+                                    </optgroup>
+                                    <optgroup label="vanaf (gevorderden)">
+                                        <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>vanaf geel</option>
+                                        <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>vanaf oranje</option>
+                                        <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>vanaf groen</option>
+                                        <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>vanaf blauw</option>
+                                        <option value="vanaf_bruin" ${bandFilter === 'vanaf_bruin' ? 'selected' : ''}>vanaf bruin</option>
+                                        <option value="vanaf_zwart" ${bandFilter === 'vanaf_zwart' ? 'selected' : ''}>vanaf zwart</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="gewichten-container flex-1 ${gewichtenHidden}">
@@ -1100,7 +1130,7 @@
                         label: item.querySelector('.label-input')?.value || key,
                         geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
                         max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
-                        band_tot: item.querySelector('.band-tot-select')?.value || '',
+                        band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                     };
                 });
@@ -1254,16 +1284,26 @@
                             <span class="text-xs text-gray-500">kg</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">t/m band:</label>
-                            <select name="gewichtsklassen_band_tot[${newKey}]"
-                                    class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" selected>Alle</option>
-                                <option value="wit">Wit</option>
-                                <option value="geel">Geel</option>
-                                <option value="oranje">Oranje</option>
-                                <option value="groen">Groen</option>
-                                <option value="blauw">Blauw</option>
-                                <option value="bruin">Bruin</option>
+                            <label class="text-gray-600 text-sm">Band:</label>
+                            <select name="gewichtsklassen_band_filter[${newKey}]"
+                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="" selected>Alle banden</option>
+                                <optgroup label="t/m (beginners)">
+                                    <option value="tm_wit">t/m wit</option>
+                                    <option value="tm_geel">t/m geel</option>
+                                    <option value="tm_oranje">t/m oranje</option>
+                                    <option value="tm_groen">t/m groen</option>
+                                    <option value="tm_blauw">t/m blauw</option>
+                                    <option value="tm_bruin">t/m bruin</option>
+                                </optgroup>
+                                <optgroup label="vanaf (gevorderden)">
+                                    <option value="vanaf_geel">vanaf geel</option>
+                                    <option value="vanaf_oranje">vanaf oranje</option>
+                                    <option value="vanaf_groen">vanaf groen</option>
+                                    <option value="vanaf_blauw">vanaf blauw</option>
+                                    <option value="vanaf_bruin">vanaf bruin</option>
+                                    <option value="vanaf_zwart">vanaf zwart</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="gewichten-container flex-1 hidden">

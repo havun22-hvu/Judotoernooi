@@ -71,8 +71,35 @@ Drie keuzes:
 | Geslacht | select | Gemengd | Gemengd / M / V |
 | Systeem | select | Poules | Poules / Poules+Kruisfinale / Eliminatie |
 | Max kg verschil | number | 3 | HARDE limiet voor gewichtsverschil |
-| t/m band | select | Alle | Beginners/gevorderden scheiding (Alle/Wit/Geel/Oranje/Groen/Blauw/Bruin) |
+| Band filter | select | Alle | Beginners/gevorderden scheiding (zie hieronder) |
 | Gewichtsklassen | text | - | Vaste klassen (alleen als max kg = 0) |
+
+**Band filter opties:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Band filter: [Alle banden ▼]                                    │
+├─────────────────────────────────────────────────────────────────┤
+│ • Alle banden        ← geen filter                              │
+│ ─────────────────────                                           │
+│ • t/m wit            ← alleen witte band                        │
+│ • t/m geel           ← wit + geel                               │
+│ • t/m oranje         ← wit + geel + oranje (= beginners)        │
+│ • t/m groen          ← wit t/m groen                            │
+│ • t/m blauw          ← wit t/m blauw                            │
+│ • t/m bruin          ← wit t/m bruin                            │
+│ ─────────────────────                                           │
+│ • vanaf geel         ← geel en hoger                            │
+│ • vanaf oranje       ← oranje en hoger                          │
+│ • vanaf groen        ← groen en hoger (= gevorderden)           │
+│ • vanaf blauw        ← blauw en hoger                           │
+│ • vanaf bruin        ← bruin en hoger                           │
+│ • vanaf zwart        ← alleen zwarte band                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Typisch gebruik OWFJ:**
+- Mini's beginners: `t/m oranje`
+- Mini's gevorderden: `vanaf groen`
 
 ### Bij "JBN 2025" (vaste gewichtsklassen)
 
