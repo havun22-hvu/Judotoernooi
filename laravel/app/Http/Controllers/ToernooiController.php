@@ -212,7 +212,8 @@ class ToernooiController extends Controller
      */
     public function organisatorDashboard(): View
     {
-        $organisator = auth('organisator')->user();
+        // Fresh load to ensure we have latest toernooien (not cached from login)
+        $organisator = auth('organisator')->user()->fresh();
 
         if ($organisator->isSitebeheerder()) {
             $toernooien = Toernooi::orderBy('datum', 'desc')->get();
