@@ -67,11 +67,18 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
 // Dashboard - redirect to organisator dashboard (toernooi selection)
 Route::get('/dashboard', fn() => redirect()->route('organisator.dashboard'))->middleware('auth:organisator')->name('dashboard');
 
-// Toernooi management
-Route::resource('toernooi', ToernooiController::class)->except(['destroy']);
-Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])
-    ->middleware('auth:organisator')
-    ->name('toernooi.destroy');
+// Toernooi management - protected routes (require organisator login)
+Route::middleware('auth:organisator')->group(function () {
+    Route::get('toernooi', [ToernooiController::class, 'index'])->name('toernooi.index');
+    Route::get('toernooi/create', [ToernooiController::class, 'create'])->name('toernooi.create');
+    Route::post('toernooi', [ToernooiController::class, 'store'])->name('toernooi.store');
+    Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])->name('toernooi.destroy');
+});
+
+// Toernooi management - public routes (accessible via role password)
+Route::get('toernooi/{toernooi}', [ToernooiController::class, 'show'])->name('toernooi.show');
+Route::get('toernooi/{toernooi}/edit', [ToernooiController::class, 'edit'])->name('toernooi.edit');
+Route::put('toernooi/{toernooi}', [ToernooiController::class, 'update'])->name('toernooi.update');
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
