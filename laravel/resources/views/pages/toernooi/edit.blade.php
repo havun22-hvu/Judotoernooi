@@ -773,8 +773,9 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
-                                   value="{{ $data['max_leeftijd'] ?? 99 }}"
-                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold {{ ($data['max_leeftijd'] ?? 99) < 99 ? 'text-blue-600' : 'text-gray-400' }}"
+                                   value="{{ ($data['max_leeftijd'] ?? 99) < 99 ? $data['max_leeftijd'] : '' }}"
+                                   placeholder="99"
+                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                    min="5" max="99">
                             <span class="text-xs text-gray-500">jaar</span>
                         </div>
@@ -950,7 +951,7 @@
                     div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
                     div.dataset.key = key;
                     div.draggable = true;
-                    const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
+                    const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
                     const geslacht = item.geslacht || 'gemengd';
                     const maxKg = item.max_kg_verschil || 0;
                     // Support both old band_tot and new band_filter
@@ -967,8 +968,9 @@
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Max leeftijd:</label>
                                 <input type="number" name="gewichtsklassen_leeftijd[${key}]"
-                                       value="${item.max_leeftijd}"
-                                       class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold ${leeftijdClass}"
+                                       value="${leeftijdValue}"
+                                       placeholder="99"
+                                       class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                        min="5" max="99">
                             </div>
                             <div class="flex items-center gap-2">
@@ -1289,8 +1291,9 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Max leeftijd:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
-                                   value="99"
-                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-gray-400"
+                                   value=""
+                                   placeholder="99"
+                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                    min="5" max="99">
                         </div>
                         <div class="flex items-center gap-2">
