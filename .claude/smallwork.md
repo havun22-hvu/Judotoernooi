@@ -173,6 +173,65 @@
 
 ---
 
+## Sessie: 11 januari 2026
+
+### Fix: Placeholder voor max leeftijd input
+- **Type:** Bug fix
+- **Wat:** Max leeftijd input gebruikte `value="99"` met grijze tekst, waardoor getypte cijfers vermengden
+- **Waarom:** Gebruiker kon niet normaal typen in het veld
+- **Oplossing:** `placeholder="99"` i.p.v. `value="99"`, getypte tekst nu blauw
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php` (3 plekken)
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Auto-redirect bij session expire
+- **Type:** Enhancement
+- **Wat:** Globale fetch interceptor die 401/419 responses afvangt en redirect naar login
+- **Waarom:** Pagina bleef zichtbaar maar AJAX calls faalden stilletjes
+- **Bestanden:** `resources/views/layouts/app.blade.php`
+- **Naar permanente docs?** ☑ Nee - technische enhancement
+
+### Fix: Autosave reliability verbeterd
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Autosave toonde "Opgeslagen" ook bij gefaalde saves (session expire, validatie errors)
+- **Oorzaak:** Check was `response.ok || response.redirected` - redirect naar login werd als success gezien
+- **Oplossing:** JSON response parsen en `success: true` checken + event delegation voor dynamische elementen
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php`
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Fix: Validatie verdeling_prioriteiten
+- **Type:** Bug fix
+- **Wat:** Validatie accepteerde `groepsgrootte,bandkleur,clubspreiding` maar form stuurde `gewicht,band,groepsgrootte,clubspreiding`
+- **Waarom:** Validatie was niet bijgewerkt na toevoegen nieuwe prioriteiten
+- **Bestanden:** `app/Http/Requests/ToernooiRequest.php:72`
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Fix: Standaard prioriteit volgorde
+- **Type:** Enhancement
+- **Wat:** Default volgorde nu: groepsgrootte, gewicht, band, clubspreiding
+- **Waarom:** Gebruiker wilde groepsgrootte als eerste prioriteit
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php:722`
+- **Naar permanente docs?** ☑ Nee - UI default
+
+### Feat: Auto-sync blokken en matten
+- **Type:** Enhancement
+- **Wat:** Blokken en matten worden nu automatisch aangemaakt/verwijderd bij wijzigen settings
+- **Waarom:** Blokken werden niet aangemaakt bij bestaande toernooien (alleen bij nieuwe)
+- **Bestanden:**
+  - `app/Services/ToernooiService.php` - syncBlokken(), syncMatten()
+  - `app/Http/Controllers/ToernooiController.php` - aangeroepen in update()
+- **Naar permanente docs?** ☑ Nee - technische enhancement
+
+### Refactor: Device toegangen los van vrijwilligers
+- **Type:** Refactor
+- **Wat:** Device toegangen bevatten geen persoonsgegevens meer (naam/telefoon/email weg)
+- **Waarom:** Organisator beheert vrijwilligerslijst zelf via WhatsApp
+- **Bestanden:**
+  - `resources/views/pages/toernooi/partials/device-toegangen.blade.php`
+  - `.claude/context.md` - docs geüpdatet
+- **Naar permanente docs?** ☑ Ja → context.md (al gedaan)
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

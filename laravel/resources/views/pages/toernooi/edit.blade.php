@@ -1842,12 +1842,7 @@ function togglePassword(button) {
     }
 
     function autoSave() {
-        if (!isDirty) {
-            console.log('AutoSave skipped - not dirty');
-            return;
-        }
-
-        console.log('AutoSave triggered');
+        if (!isDirty) return;
 
         // Ensure JSON is up-to-date before saving
         if (typeof updateJsonInput === 'function') {
@@ -1867,11 +1862,7 @@ function togglePassword(button) {
         })
         .then(response => {
             if (!response.ok) {
-                // Try to get error details
-                return response.text().then(text => {
-                    console.error('Save failed:', response.status, text);
-                    throw new Error('Server error: ' + response.status);
-                });
+                throw new Error('Server error: ' + response.status);
             }
             return response.json();
         })
@@ -1881,12 +1872,10 @@ function togglePassword(button) {
                 markClean();
                 setTimeout(() => status.classList.add('hidden'), 2000);
             } else {
-                console.error('Save response not successful:', data);
                 showStatus('✗ Fout bij opslaan', 'error');
             }
         })
-        .catch((err) => {
-            console.error('Save error:', err);
+        .catch(() => {
             showStatus('✗ Fout bij opslaan', 'error');
         });
     }
