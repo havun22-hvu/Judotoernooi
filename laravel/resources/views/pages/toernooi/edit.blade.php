@@ -654,6 +654,15 @@
                                 JBN 2026
                             </span>
                         </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="categorie_type" value="owfj_2026"
+                                   x-model="categorieType"
+                                   @change="if($event.target.checked) loadOwfj2026()"
+                                   class="sr-only peer">
+                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
+                                OWFJ 2026
+                            </span>
+                        </label>
                     </div>
                     <!-- Eigen presets -->
                     <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[120px]">
@@ -830,6 +839,7 @@
             // JBN presets (gemengd = default, gescheiden = uitzondering)
             const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
             const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
+            const owfj2026 = @json(\App\Models\Toernooi::getOwfj2026Gewichtsklassen());
 
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
@@ -872,6 +882,14 @@
             window.loadJbn2026 = function() {
                 if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
                     renderCategorieen(jbn2026);
+                } else {
+                    document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            window.loadOwfj2026 = function() {
+                if (confirm('Dit vervangt alle huidige instellingen met OWFJ 2026 (Open Westfries) regels. Doorgaan?')) {
+                    renderCategorieen(owfj2026);
                 }
             }
 
