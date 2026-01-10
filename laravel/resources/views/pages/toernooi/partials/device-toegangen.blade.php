@@ -70,16 +70,6 @@
                                 </button>
                             </div>
                         </div>
-                        {{-- Vrijwilliger gegevens --}}
-                        <div class="text-sm text-gray-600 border-t pt-2 mt-2" x-show="toegang.naam">
-                            <span class="font-medium" x-text="toegang.naam"></span>
-                            <span x-show="toegang.telefoon" class="ml-3">📞 <span x-text="toegang.telefoon"></span></span>
-                            <span x-show="toegang.email" class="ml-3">✉️ <span x-text="toegang.email"></span></span>
-                            <button type="button" @click="editToegang(toegang)" class="ml-2 text-blue-600 hover:text-blue-800 text-xs">bewerk</button>
-                        </div>
-                        <div x-show="!toegang.naam" class="text-sm text-gray-400 border-t pt-2 mt-2">
-                            <button type="button" @click="editToegang(toegang)" class="text-blue-600 hover:text-blue-800">+ Vrijwilliger koppelen</button>
-                        </div>
                     </div>
                 </template>
             </div>
@@ -113,81 +103,6 @@
         </div>
     </div>
 
-    {{-- Edit Modal --}}
-    <div x-show="showEditModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black/50" @click="closeEditModal()"></div>
-            <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                <h3 class="text-lg font-bold mb-4">Vrijwilliger koppelen</h3>
-                <form @submit.prevent="saveVrijwilliger()">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Naam</label>
-                            <input type="text" x-model="editForm.naam"
-                                   class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="Jan de Vries">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
-                            <input type="tel" x-model="editForm.telefoon"
-                                   class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="06-12345678">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" x-model="editForm.email"
-                                   class="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="naam@email.nl">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button type="button" @click="closeEditModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Annuleren</button>
-                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Opslaan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Vrijwilligers Overzicht --}}
-<div class="bg-white rounded-lg shadow p-6 mb-6" x-data="vrijwilligersOverzicht()">
-    <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Vrijwilligers Overzicht</h2>
-    <p class="text-gray-600 mb-4 text-sm">Overzicht van alle vrijwilligers met een toegekende rol.</p>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Naam</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Telefoon</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Email</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Rol</th>
-                    <th class="px-4 py-2 text-left font-semibold text-gray-700">Status</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                <template x-if="vrijwilligers.length === 0">
-                    <tr><td colspan="5" class="px-4 py-6 text-center text-gray-400 italic">Nog geen vrijwilligers gekoppeld aan toegangen</td></tr>
-                </template>
-                <template x-for="v in vrijwilligers" :key="v.id">
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 font-medium text-gray-900" x-text="v.naam"></td>
-                        <td class="px-4 py-2 text-gray-600" x-text="v.telefoon || '-'"></td>
-                        <td class="px-4 py-2 text-gray-600" x-text="v.email || '-'"></td>
-                        <td class="px-4 py-2">
-                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
-                                  :class="rolKleuren[v.rol]" x-text="v.label"></span>
-                        </td>
-                        <td class="px-4 py-2">
-                            <span class="text-xs" :class="v.is_gebonden ? 'text-green-600' : 'text-gray-400'"
-                                  x-text="v.is_gebonden ? '✓ Gebonden' : '⏳ Wacht'"></span>
-                        </td>
-                    </tr>
-                </template>
-            </tbody>
-        </table>
-    </div>
 </div>
 
 <script>
@@ -196,9 +111,6 @@ function deviceToegangen() {
         activeRol: 'mat',
         copiedId: null,
         toegangen: [],
-        showEditModal: false,
-        editingToegang: null,
-        editForm: { naam: '', telefoon: '', email: '' },
         rollen: [
             { key: 'hoofdjury', naam: 'Hoofdjury', icon: '⚖️' },
             { key: 'mat', naam: 'Mat', icon: '🥋' },
@@ -263,52 +175,6 @@ function deviceToegangen() {
             }
         },
 
-        editToegang(toegang) {
-            this.editingToegang = toegang;
-            this.editForm = {
-                naam: toegang.naam || '',
-                telefoon: toegang.telefoon || '',
-                email: toegang.email || '',
-            };
-            this.showEditModal = true;
-        },
-
-        closeEditModal() {
-            this.showEditModal = false;
-            this.editingToegang = null;
-        },
-
-        async saveVrijwilliger() {
-            if (!this.editingToegang) return;
-            try {
-                const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${this.editingToegang.id}`, {
-                    method: 'PUT',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        naam: this.editForm.naam,
-                        telefoon: this.editForm.telefoon,
-                        email: this.editForm.email,
-                        rol: this.editingToegang.rol,
-                        mat_nummer: this.editingToegang.mat_nummer,
-                    }),
-                });
-                if (response.ok) {
-                    const updated = await response.json();
-                    const idx = this.toegangen.findIndex(t => t.id === updated.id);
-                    if (idx !== -1) this.toegangen[idx] = updated;
-                    this.closeEditModal();
-                    window.dispatchEvent(new CustomEvent('toegangen-updated'));
-                }
-            } catch (e) {
-                console.error('Failed to save:', e);
-            }
-        },
-
         async resetToegang(toegang) {
             if (!confirm('Device binding resetten? Het device moet opnieuw de PIN invoeren.')) return;
             try {
@@ -369,34 +235,4 @@ function deviceToegangen() {
     };
 }
 
-function vrijwilligersOverzicht() {
-    return {
-        vrijwilligers: [],
-        rolKleuren: {
-            hoofdjury: 'bg-purple-100 text-purple-800',
-            mat: 'bg-blue-100 text-blue-800',
-            weging: 'bg-green-100 text-green-800',
-            spreker: 'bg-yellow-100 text-yellow-800',
-            dojo: 'bg-gray-100 text-gray-800',
-        },
-
-        async init() {
-            await this.loadVrijwilligers();
-            window.addEventListener('toegangen-updated', () => this.loadVrijwilligers());
-        },
-
-        async loadVrijwilligers() {
-            try {
-                const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi) }}', {
-                    credentials: 'same-origin',
-                    headers: { 'Accept': 'application/json' },
-                });
-                if (response.ok) {
-                    const all = await response.json();
-                    this.vrijwilligers = all.filter(t => t.naam);
-                }
-            } catch (e) {}
-        },
-    };
-}
 </script>
