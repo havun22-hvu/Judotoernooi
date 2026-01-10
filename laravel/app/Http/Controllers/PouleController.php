@@ -717,7 +717,17 @@ class PouleController extends Controller
         }
 
         $leeftijden = $judokas->map(fn($j) => $j->geboortejaar ? $huidigJaar - $j->geboortejaar : null)->filter();
-        $gewichten = $judokas->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)->filter();
+
+        // Gewichten: gewogen > ingeschreven > gewichtsklasse
+        $gewichten = $judokas->map(function($j) {
+            if ($j->gewicht_gewogen !== null) return $j->gewicht_gewogen;
+            if ($j->gewicht !== null) return $j->gewicht;
+            // Gewichtsklasse is bijv. "-38" of "+73" - extract getal
+            if ($j->gewichtsklasse && preg_match('/(\d+)/', $j->gewichtsklasse, $m)) {
+                return (float) $m[1];
+            }
+            return null;
+        })->filter();
 
         $leeftijdRange = '';
         $gewichtRange = '';

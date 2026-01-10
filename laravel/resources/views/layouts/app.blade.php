@@ -32,7 +32,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ route('dashboard') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
+                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi) : route('organisator.dashboard') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
                     <div class="hidden md:flex space-x-4">
                         <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="hover:text-blue-200">Judoka's</a>
@@ -48,18 +48,27 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     @if(Auth::guard('organisator')->check())
-                    {{-- Organisator ingelogd (production) --}}
-                    <span class="text-blue-200 text-sm">
-                        @if(Auth::guard('organisator')->user()->isSitebeheerder())
-                            👑 {{ Auth::guard('organisator')->user()->naam }}
-                        @else
-                            📋 {{ Auth::guard('organisator')->user()->naam }}
-                        @endif
-                    </span>
-                    <form action="{{ route('organisator.logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
-                    </form>
+                    {{-- Organisator ingelogd - dropdown menu --}}
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                            @if(Auth::guard('organisator')->user()->isSitebeheerder())
+                                👑
+                            @else
+                                📋
+                            @endif
+                            {{ Auth::guard('organisator')->user()->naam }}
+                            <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                            <a href="{{ route('toernooi.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Toernooien</a>
+                            <form action="{{ route('organisator.logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Uitloggen</button>
+                            </form>
+                        </div>
+                    </div>
                     @elseif(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
                     {{-- Toernooi rol ingelogd (local/staging) --}}
                     @php $rol = session("toernooi_{$toernooi->id}_rol"); @endphp
@@ -83,7 +92,6 @@
                     <a href="{{ route('organisator.login') }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
                     @endif
                     @endif
-                    <a href="{{ route('toernooi.index') }}" class="hover:text-blue-200">Toernooien</a>
                 </div>
             </div>
         </div>

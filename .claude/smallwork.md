@@ -133,6 +133,46 @@
 
 ---
 
+## Sessie: 10 januari 2026
+
+### Fix: Gewicht fallback naar gewichtsklasse in DynamischeIndelingService
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Algoritme gebruikte `$judoka->gewicht` direct, maar dit veld is vaak `null`
+- **Waarom:** Judoka's hebben alleen `gewichtsklasse` (bijv. "-38"), niet `gewicht` ingevuld
+- **Gevolg:** Poules hadden 30kg verschil i.p.v. max 3kg - harde constraint werd genegeerd
+- **Oplossing:** `getEffectiefGewicht()` helper toegevoegd met fallback:
+  1. `gewicht_gewogen` (na weging - meest nauwkeurig)
+  2. `gewicht` (ingeschreven)
+  3. `gewichtsklasse` (bijv. "-38" → 38.0)
+- **Bestanden:**
+  - `app/Services/DynamischeIndelingService.php` - helper + 20+ plekken bijgewerkt
+  - `app/Http/Controllers/PouleController.php` - berekenPouleRanges()
+  - `resources/views/pages/poule/index.blade.php` - range berekening + gewicht display
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md (gewicht fallback)
+
+### Fix: Gewicht weergave per judoka in poule overzicht
+- **Type:** Enhancement
+- **Wat:** Judoka's tonen nu gewicht achter naam, met gewichtsklasse als fallback (≤38kg)
+- **Waarom:** Gebruiker wilde gewicht zien per judoka
+- **Bestanden:** `resources/views/pages/poule/index.blade.php:173-187, 195, 210`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+### Fix: Navigatie - title link naar dashboard
+- **Type:** Bug fix
+- **Wat:** Klik op toernooi naam (links boven) gaat nu naar dashboard i.p.v. instellingen
+- **Waarom:** `toernooi.edit` was instellingen, moet `toernooi.show` zijn (dashboard)
+- **Bestanden:** `resources/views/layouts/app.blade.php:35`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Enhancement: Organisator dropdown menu
+- **Type:** Enhancement
+- **Wat:** Organisator naam is nu dropdown met "Toernooien" en "Uitloggen"
+- **Waarom:** Overzichtelijker, minder clutter in navbar
+- **Bestanden:** `resources/views/layouts/app.blade.php:50-71`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
