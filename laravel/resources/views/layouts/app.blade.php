@@ -204,6 +204,27 @@
     </script>
     @endif
 
+    {{-- Global fetch interceptor - redirect to login on session expire --}}
+    <script>
+        (function() {
+            const originalFetch = window.fetch;
+            window.fetch = async function(...args) {
+                const response = await originalFetch.apply(this, args);
+                // 401 = Unauthorized, 419 = Session Expired (CSRF)
+                if (response.status === 401 || response.status === 419) {
+                    window.location.href = '{{ route("organisator.login") }}';
+                    return response;
+                }
+                // Check for redirect to login page (302/303 followed by fetch)
+                if (response.redirected && response.url.includes('/organisator/login')) {
+                    window.location.href = response.url;
+                    return response;
+                }
+                return response;
+            };
+        })();
+    </script>
+
     {{-- PWA Support (includes Service Worker registration) --}}
     @include('partials.pwa-mobile', ['pwaApp' => $pwaApp ?? 'admin'])
 </body>
