@@ -719,7 +719,7 @@
                     </button>
                     <div id="prioriteit-container" class="flex gap-2">
                         @php
-                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['groepsgrootte', 'gewicht', 'band', 'clubspreiding'];
                             // Backwards compatibility: convert old keys
                             $prioriteiten = array_map(fn($k) => $k === 'bandkleur' ? 'band' : $k, $prioriteiten);
                             // Ensure all 4 keys exist
