@@ -613,7 +613,10 @@
         <!-- CATEGORIEËN INSTELLING -->
         @php
             // Lees preset type uit gewichtsklassen JSON
-            $gewichtsklassenData = $toernooi->gewichtsklassen ?? [];
+            $gewichtsklassenData = $toernooi->gewichtsklassen;
+            if (!is_array($gewichtsklassenData)) {
+                $gewichtsklassenData = [];
+            }
             $categorieType = $gewichtsklassenData['_preset_type'] ?? 'geen_standaard';
             $eigenPresetId = $gewichtsklassenData['_eigen_preset_id'] ?? null;
 
