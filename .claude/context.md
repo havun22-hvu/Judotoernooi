@@ -204,17 +204,22 @@ Route::post('/mollie/webhook', [MollieController::class, 'webhook'])
 
 ### Device Binding Systeem
 
+**Twee losse lijsten:**
+1. **Device toegangen** = URL + PIN per rol (niet gekoppeld aan persoon)
+2. **Vrijwilligerslijst** = notitie met naam + telefoon + rol (optioneel)
+
 **Flow:**
-1. Organisator maakt toegang aan (Instellingen → Organisatie)
-2. Vrijwilliger krijgt URL + PIN
-3. Eerste login: PIN invoeren → device wordt gebonden
+1. Organisator maakt toegangen aan per rol (bijv. 3x Mat, 2x Weging)
+2. Organisator appt URL + PIN naar vrijwilliger (buiten systeem)
+3. Vrijwilliger opent URL, voert PIN in → device wordt gebonden
 4. Daarna: device herkend → direct toegang
 5. Token verloren? → PIN opnieuw invoeren
 
 **Database:** `device_toegangen` tabel
 ```
-toernooi_id, naam, telefoon, email, rol, mat_nummer, code, pincode, device_token, device_info
+toernooi_id, rol, mat_nummer, code, pincode, device_token, device_info, gebonden_op, laatst_actief
 ```
+> **Let op:** Geen naam/telefoon/email - organisator beheert dit zelf via WhatsApp
 
 ### Coachkaart Device Binding
 
