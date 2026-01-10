@@ -102,6 +102,10 @@ class ToernooiController extends Controller
 
         $toernooi->update($data);
 
+        // Sync blokken and matten to match settings
+        $this->toernooiService->syncBlokken($toernooi);
+        $this->toernooiService->syncMatten($toernooi);
+
         // Recalculate judoka codes if sorting settings changed
         if (($volgordeGewijzigd || $gewichtsklassenGewijzigd) && $toernooi->judokas()->exists()) {
             $aantal = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
