@@ -73,11 +73,11 @@ Drie keuzes:
 | Max kg verschil | number | 3 | HARDE limiet voor gewichtsverschil |
 | Max leeftijd verschil | number | 1 | HARDE limiet voor leeftijdsverschil |
 
-### Bij "JBN 2025" of "JBN 2026" (vaste gewichtsklassen)
+### Bij "JBN 2025" (vaste gewichtsklassen)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Vaste gewichtsklassen volgens JBN normen                        │
+│ Vaste gewichtsklassen volgens JBN 2025 normen                   │
 │ Sortering: op BAND binnen gewichtsklasse                        │
 ├─────────────────────────────────────────────────────────────────┤
 │ Mini's (-8j):        -18, -21, -24, -27, -30, -34, +34 kg      │
@@ -89,13 +89,37 @@ Drie keuzes:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Verschil JBN vs Geen standaard:**
-| Aspect | JBN 2025/2026 | Geen standaard |
-|--------|---------------|----------------|
-| Gewichtsklassen | Vast (-18, -21, etc.) | Dynamisch (max kg verschil) |
-| Sortering | Op BAND binnen klasse | Op prioriteit (gewicht/band) |
-| Leeftijdsgroepen | Vast per JBN | Zelf invullen |
-| Geslacht | Volgens JBN | Zelf kiezen |
+### Bij "JBN 2026" (dynamische gewichten + band scheiding)
+
+> **Volledige docs:** `laravel/docs/5-REGLEMENT/JBN-REGLEMENT-2026.md`
+
+JBN 2026 heeft **geen vaste gewichtsklassen** - alleen vaste leeftijdscategorieën.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Leeftijdscategorieën: -7, -9, -11, -13, -15 jaar (vast)        │
+│ Gewichtsklassen: GEEN (dynamisch op basis van gewicht)          │
+├─────────────────────────────────────────────────────────────────┤
+│ Per categorie instelbaar:                                       │
+│ • Max kg verschil: [3] kg                                       │
+│ • Aparte categorie t/m: [Oranje ▼]                             │
+├─────────────────────────────────────────────────────────────────┤
+│ Algoritme:                                                      │
+│ 1. Splits op band (t/m oranje vs groen+)                       │
+│ 2. Sorteer op gewicht binnen band-groep                        │
+│ 3. Maak poules van 5 (of 4)                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Verschil presets:**
+| Aspect | JBN 2025 | JBN 2026 | Geen standaard |
+|--------|----------|----------|----------------|
+| Leeftijdsgroepen | Vast (oud) | Vast (nieuw: -7, -9, etc.) | Zelf invullen |
+| Gewichtsklassen | Vast (-18, -21, etc.) | **Geen** (dynamisch) | Dynamisch |
+| Band scheiding | Nee | **Ja** (instelbaar per cat.) | Nee |
+| Sortering | Op band binnen klasse | Op gewicht binnen band-groep | Op prioriteit |
+| Max leeftijd verschil | Nodig | **Niet nodig** | Nodig |
+| Geslacht | Volgens JBN | Volgens JBN | Zelf kiezen |
 
 ### Eigen Presets
 Organisator kan huidige configuratie opslaan als eigen preset:
