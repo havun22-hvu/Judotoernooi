@@ -23,6 +23,26 @@ class DynamischeIndelingService
     ];
 
     /**
+     * Get effectief gewicht: gewogen > ingeschreven > gewichtsklasse
+     * @return float The weight in kg, or 0 if no weight available
+     */
+    private function getEffectiefGewicht($judoka): float
+    {
+        // Prioriteit: gewogen gewicht > ingeschreven gewicht > gewichtsklasse
+        if ($judoka->gewicht_gewogen !== null) {
+            return (float) $judoka->gewicht_gewogen;
+        }
+        if ($judoka->gewicht !== null) {
+            return (float) $judoka->gewicht;
+        }
+        // Gewichtsklasse is bijv. "-38" of "+73" - extract getal
+        if ($judoka->gewichtsklasse && preg_match('/(\d+)/', $judoka->gewichtsklasse, $m)) {
+            return (float) $m[1];
+        }
+        return 0.0;
+    }
+
+    /**
      * Default configuratie
      */
     private array $config = [
@@ -160,7 +180,7 @@ class DynamischeIndelingService
 
         foreach ($poules as $poule) {
             $judokas = $poule['judokas'];
-            $gewichten = array_map(fn($j) => $j->gewicht, $judokas);
+            $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $judokas);
             $verschil = max($gewichten) - min($gewichten);
 
             if ($verschil <= $maxKgVerschil) {
@@ -184,17 +204,18 @@ class DynamischeIndelingService
     private function splitPouleOpGewicht(array $judokas, float $maxKgVerschil, array $origPoule): array
     {
         // Sorteer op gewicht
-        usort($judokas, fn($a, $b) => $a->gewicht <=> $b->gewicht);
+        usort($judokas, fn($a, $b) => $this->getEffectiefGewicht($a) <=> $this->getEffectiefGewicht($b));
 
         $nieuwePoules = [];
         $huidigeJudokas = [];
         $minGewicht = null;
 
         foreach ($judokas as $judoka) {
+            $judokaGewicht = $this->getEffectiefGewicht($judoka);
             if (empty($huidigeJudokas)) {
                 $huidigeJudokas[] = $judoka;
-                $minGewicht = $judoka->gewicht;
-            } elseif ($judoka->gewicht - $minGewicht <= $maxKgVerschil) {
+                $minGewicht = $judokaGewicht;
+            } elseif ($judokaGewicht - $minGewicht <= $maxKgVerschil) {
                 $huidigeJudokas[] = $judoka;
             } else {
                 // Breekpunt: maak poule van huidige judoka's
@@ -209,7 +230,7 @@ class DynamischeIndelingService
                     ];
                 }
                 $huidigeJudokas = [$judoka];
-                $minGewicht = $judoka->gewicht;
+                $minGewicht = $judokaGewicht;
             }
         }
 
@@ -226,8 +247,8 @@ class DynamischeIndelingService
         } elseif (!empty($huidigeJudokas) && !empty($nieuwePoules)) {
             // 1 judoka over: voeg toe aan laatste poule als het past
             $laatstePoule = array_pop($nieuwePoules);
-            $laatsteGewichten = array_map(fn($j) => $j->gewicht, $laatstePoule['judokas']);
-            if ($huidigeJudokas[0]->gewicht - min($laatsteGewichten) <= $maxKgVerschil) {
+            $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule['judokas']);
+            if ($this->getEffectiefGewicht($huidigeJudokas[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
                 $laatstePoule['judokas'][] = $huidigeJudokas[0];
                 $laatstePoule['gewicht_range'] = $this->berekenGewichtRange($laatstePoule['judokas']);
             }
@@ -429,7 +450,7 @@ class DynamischeIndelingService
      */
     private function pastInGroep($judoka, array $groep, float $maxKg, int $maxLeeftijd): bool
     {
-        $gewichten = array_map(fn($j) => $j->gewicht, $groep);
+        $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $groep);
         $leeftijden = array_map(fn($j) => $j->leeftijd, $groep);
 
         $minGewicht = min($gewichten);
@@ -438,7 +459,7 @@ class DynamischeIndelingService
         $maxLeeftijdInGroep = max($leeftijden);
 
         // Check gewicht: nieuwe judoka vs minimum in groep
-        $gewichtOk = ($judoka->gewicht - $minGewicht) <= $maxKg;
+        $gewichtOk = ($this->getEffectiefGewicht($judoka) - $minGewicht) <= $maxKg;
 
         // Check leeftijd: nieuwe judoka moet passen bij ALLE bestaande leeftijden
         $nieuweMin = min($minLeeftijd, $judoka->leeftijd);
@@ -511,17 +532,18 @@ class DynamischeIndelingService
             return [];
         }
 
-        // Sorteer op gewicht
-        $gesorteerd = $judokas->sortBy('gewicht')->values();
+        // Sorteer op gewicht (met fallback naar gewichtsklasse)
+        $gesorteerd = $judokas->sortBy(fn($j) => $this->getEffectiefGewicht($j))->values();
 
         $groepen = [];
         $huidigeGroep = [$gesorteerd[0]];
-        $minGewicht = $gesorteerd[0]->gewicht;
+        $minGewicht = $this->getEffectiefGewicht($gesorteerd[0]);
 
         for ($i = 1; $i < $gesorteerd->count(); $i++) {
             $judoka = $gesorteerd[$i];
+            $judokaGewicht = $this->getEffectiefGewicht($judoka);
 
-            if ($judoka->gewicht - $minGewicht <= $maxVerschil) {
+            if ($judokaGewicht - $minGewicht <= $maxVerschil) {
                 $huidigeGroep[] = $judoka;
             } else {
                 $groepen[] = [
@@ -529,7 +551,7 @@ class DynamischeIndelingService
                     'range' => $this->formatGewichtRange($huidigeGroep),
                 ];
                 $huidigeGroep = [$judoka];
-                $minGewicht = $judoka->gewicht;
+                $minGewicht = $judokaGewicht;
             }
         }
 
@@ -663,12 +685,13 @@ class DynamischeIndelingService
         $gewichtEerst = $gewichtIndex !== false && ($bandIndex === false || $gewichtIndex < $bandIndex);
 
         $gesorteerd = $judokas->sortBy(function ($judoka) use ($gewichtEerst) {
+            $gewicht = $this->getEffectiefGewicht($judoka);
             if ($gewichtEerst) {
                 // Primair op gewicht, secundair op band
-                return [$judoka->gewicht, self::BAND_VOLGORDE[$judoka->band] ?? 99];
+                return [$gewicht, self::BAND_VOLGORDE[$judoka->band] ?? 99];
             } else {
                 // Primair op band, secundair op gewicht
-                return [self::BAND_VOLGORDE[$judoka->band] ?? 99, $judoka->gewicht];
+                return [self::BAND_VOLGORDE[$judoka->band] ?? 99, $gewicht];
             }
         })->values();
 
@@ -709,7 +732,7 @@ class DynamischeIndelingService
             // Check elke poule op gewichtslimiet overschrijding
             for ($p = 0; $p < count($poules); $p++) {
                 $poule = $poules[$p];
-                $gewichten = array_map(fn($j) => $j->gewicht, $poule);
+                $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $poule);
                 $verschil = max($gewichten) - min($gewichten);
 
                 if ($verschil <= $maxKgVerschil) {
@@ -768,7 +791,7 @@ class DynamischeIndelingService
     private function heeftOverschrijdingen(array $poules, float $maxKgVerschil): bool
     {
         foreach ($poules as $poule) {
-            $gewichten = array_map(fn($j) => $j->gewicht, $poule);
+            $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $poule);
             if (max($gewichten) - min($gewichten) > $maxKgVerschil) {
                 return true;
             }
@@ -789,7 +812,7 @@ class DynamischeIndelingService
                 $alleJudokas[] = $judoka;
             }
         }
-        usort($alleJudokas, fn($a, $b) => $a->gewicht <=> $b->gewicht);
+        usort($alleJudokas, fn($a, $b) => $this->getEffectiefGewicht($a) <=> $this->getEffectiefGewicht($b));
 
         // Verdeel dynamisch: breek af waar gewichtsverschil te groot wordt
         $nieuwePoules = [];
@@ -797,10 +820,11 @@ class DynamischeIndelingService
         $minGewicht = null;
 
         foreach ($alleJudokas as $judoka) {
+            $judokaGewicht = $this->getEffectiefGewicht($judoka);
             if (empty($huidigePoule)) {
                 $huidigePoule[] = $judoka;
-                $minGewicht = $judoka->gewicht;
-            } elseif ($judoka->gewicht - $minGewicht <= $maxKgVerschil) {
+                $minGewicht = $judokaGewicht;
+            } elseif ($judokaGewicht - $minGewicht <= $maxKgVerschil) {
                 // Past binnen de limiet
                 $huidigePoule[] = $judoka;
             } else {
@@ -809,7 +833,7 @@ class DynamischeIndelingService
                     $nieuwePoules[] = $huidigePoule;
                 }
                 $huidigePoule = [$judoka];
-                $minGewicht = $judoka->gewicht;
+                $minGewicht = $judokaGewicht;
             }
         }
 
@@ -819,8 +843,8 @@ class DynamischeIndelingService
         } elseif (!empty($huidigePoule) && !empty($nieuwePoules)) {
             // 1 judoka over: voeg toe aan laatste poule als het past
             $laatstePoule = array_pop($nieuwePoules);
-            $laatsteGewichten = array_map(fn($j) => $j->gewicht, $laatstePoule);
-            if ($huidigePoule[0]->gewicht - min($laatsteGewichten) <= $maxKgVerschil) {
+            $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
+            if ($this->getEffectiefGewicht($huidigePoule[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
                 $laatstePoule[] = $huidigePoule[0];
             }
             $nieuwePoules[] = $laatstePoule;
@@ -835,10 +859,10 @@ class DynamischeIndelingService
     private function swapVerbetert(array $poule1, int $idx1, array $poule2, int $idx2, float $maxKg): bool
     {
         // Simuleer swap
-        $nieuwGewichten1 = array_map(fn($j) => $j->gewicht, $poule1);
-        $nieuwGewichten2 = array_map(fn($j) => $j->gewicht, $poule2);
-        $nieuwGewichten1[$idx1] = $poule2[$idx2]->gewicht;
-        $nieuwGewichten2[$idx2] = $poule1[$idx1]->gewicht;
+        $nieuwGewichten1 = array_map(fn($j) => $this->getEffectiefGewicht($j), $poule1);
+        $nieuwGewichten2 = array_map(fn($j) => $this->getEffectiefGewicht($j), $poule2);
+        $nieuwGewichten1[$idx1] = $this->getEffectiefGewicht($poule2[$idx2]);
+        $nieuwGewichten2[$idx2] = $this->getEffectiefGewicht($poule1[$idx1]);
 
         $nieuw1 = max($nieuwGewichten1) - min($nieuwGewichten1);
         $nieuw2 = max($nieuwGewichten2) - min($nieuwGewichten2);
@@ -1144,7 +1168,7 @@ class DynamischeIndelingService
         if (empty($judokas)) {
             return 0;
         }
-        $gewichten = array_map(fn($j) => $j->gewicht, $judokas);
+        $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $judokas);
         return round(max($gewichten) - min($gewichten), 1);
     }
 
@@ -1182,7 +1206,7 @@ class DynamischeIndelingService
         if (empty($judokas)) {
             return '';
         }
-        $gewichten = array_map(fn($j) => $j->gewicht, $judokas);
+        $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $judokas);
         $min = min($gewichten);
         $max = max($gewichten);
         return $min === $max ? "{$min}kg" : "{$min}-{$max}kg";

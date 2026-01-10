@@ -16,8 +16,8 @@ class ToernooiService
     public function initialiseerToernooi(array $data): Toernooi
     {
         return DB::transaction(function () use ($data) {
-            // Deactivate any existing active tournaments
-            Toernooi::where('is_actief', true)->update(['is_actief' => false]);
+            // Note: Multiple tournaments can now be active simultaneously
+            // is_actief is kept for backward compatibility but no longer enforces single-active
 
             $toernooi = Toernooi::create([
                 'naam' => $data['naam'],
@@ -32,6 +32,7 @@ class ToernooiService
                 'max_judokas_poule' => $data['max_judokas_poule'] ?? 6,
                 'gewicht_tolerantie' => $data['gewicht_tolerantie'] ?? 0.5,
                 'is_actief' => true,
+                'gebruik_gewichtsklassen' => false, // Default: dynamische indeling (geen vaste klassen)
             ]);
 
             // Create blocks

@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('toernooien', function (Blueprint $table) {
-            $table->boolean('gebruik_gewichtsklassen')->default(true)->after('judoka_code_volgorde');
+            $table->boolean('gebruik_gewichtsklassen')->default(false)->after('judoka_code_volgorde');
         });
     }
 

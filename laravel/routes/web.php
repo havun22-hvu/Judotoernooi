@@ -64,8 +64,8 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
     });
 });
 
-// Dashboard (legacy - redirect to organisator dashboard)
-Route::get('/dashboard', [ToernooiController::class, 'dashboard'])->name('dashboard');
+// Dashboard - redirect to organisator dashboard (toernooi selection)
+Route::get('/dashboard', fn() => redirect()->route('organisator.dashboard'))->middleware('auth:organisator')->name('dashboard');
 
 // Toernooi management
 Route::resource('toernooi', ToernooiController::class)->except(['destroy']);

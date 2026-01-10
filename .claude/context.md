@@ -332,26 +332,31 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 10 januari 2026
+## Laatste Sessie: 10 januari 2026 (avond)
 
 ### Wat is gedaan:
-- **Bug fix:** `ToernooiService::initialiseerToernooi()` - organisator wordt nu gekoppeld aan nieuw toernooi via pivot table
-- **Getest:** Dynamische indeling met 100 en 400 judoka's - algoritme werkt correct
-  - Harde constraints (max kg/leeftijd) worden gerespecteerd
-  - 395-400/400 judoka's ingedeeld bij standaard limieten
-  - Performance: 531ms voor 400 judoka's
-- Delete toernooi functionaliteit gecontroleerd - bestaat al (alleen sitebeheerders)
+- **KRITIEKE BUG FIX:** Gewicht constraint werd genegeerd (30kg verschil i.p.v. max 3kg)
+  - Oorzaak: `DynamischeIndelingService` gebruikte `$judoka->gewicht` direct, maar dit is vaak `null`
+  - Oplossing: `getEffectiefGewicht()` helper met fallback: gewogen → ingeschreven → gewichtsklasse
+  - 20+ plekken in de service bijgewerkt
+- **UI: Gewicht per judoka** in poule overzicht
+  - Toont gewogen gewicht (groen), of ingeschreven gewicht, of gewichtsklasse (≤38kg)
+  - Min-max range in poule titel gebruikt nu ook fallback
+- **Navigatie verbeterd:**
+  - Title link gaat naar toernooi dashboard (was: instellingen)
+  - Organisator naam is nu dropdown met "Toernooien" + "Uitloggen"
 
 ### Openstaande items:
+- [ ] **TESTEN:** Poules opnieuw genereren en checken dat max kg constraint nu werkt
 - [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
-- [ ] Testen: poules met gewicht prioriteit 1 → geen 20kg/26kg mix
-- [ ] Testen: versleep judoka → statistieken update
+- [ ] Testen: versleep judoka → statistieken + ranges update
 - [ ] Testen: import CSV met ontbrekend geboortejaar → "Onvolledig" filter
 - [ ] Testen: JBN preset laden → gemengde categorieën voor jeugd
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
-- [ ] Beslissen: eigenaar mag ook toernooi deleten? (nu alleen sitebeheerder)
 
-### Branch info:
+### Belangrijke context voor volgende keer:
+- **Gewicht fallback:** Veel judoka's hebben alleen `gewichtsklasse` (bijv. "-38"), niet `gewicht`
+  - `getEffectiefGewicht()` in `DynamischeIndelingService` handelt dit af
+  - Zelfde logica in `PouleController::berekenPouleRanges()` en de Blade view
 - **Branch:** `feature/dynamische-indeling`
-- **Uncommitted:** ToernooiService.php (organisator koppeling fix)

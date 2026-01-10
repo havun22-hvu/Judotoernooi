@@ -30,7 +30,7 @@
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
-              onsubmit="return confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
+              onsubmit="return {{ $poules->count() }} === 0 || confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 (her)Verdelen
@@ -101,7 +101,17 @@
                 if ($poule->judokas->count() > 0) {
                     $huidigJaar = now()->year;
                     $leeftijden = $poule->judokas->map(fn($j) => $huidigJaar - $j->geboortejaar)->filter();
-                    $gewichten = $poule->judokas->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)->filter();
+
+                    // Gewichten: gewogen > ingeschreven > gewichtsklasse
+                    $gewichten = $poule->judokas->map(function($j) {
+                        if ($j->gewicht_gewogen !== null) return $j->gewicht_gewogen;
+                        if ($j->gewicht !== null) return $j->gewicht;
+                        // Gewichtsklasse is bijv. "-38" of "+73" - extract getal
+                        if ($j->gewichtsklasse && preg_match('/(\d+)/', $j->gewichtsklasse, $m)) {
+                            return (float) $m[1];
+                        }
+                        return null;
+                    })->filter();
 
                     if ($leeftijden->count() > 0) {
                         $minL = $leeftijden->min();
@@ -171,12 +181,29 @@
                 <!-- Judoka's in poule (sortable) -->
                 <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
+                    @php
+                        // Toon gewogen gewicht als beschikbaar, anders ingeschreven gewicht, anders gewichtsklasse
+                        $isGewogen = $judoka->gewicht_gewogen !== null;
+                        if ($isGewogen) {
+                            $toonGewicht = $judoka->gewicht_gewogen . 'kg';
+                        } elseif ($judoka->gewicht) {
+                            $toonGewicht = $judoka->gewicht . 'kg';
+                        } elseif ($judoka->gewichtsklasse) {
+                            // Gewichtsklasse is bijv. "-38" of "+73"
+                            $toonGewicht = str_replace('-', '≤', $judoka->gewichtsklasse) . 'kg';
+                        } else {
+                            $toonGewicht = null;
+                        }
+                    @endphp
                     @if($isEliminatie)
                     {{-- Compacte weergave voor eliminatie: meerdere kolommen over volle breedte --}}
                     <div class="px-2 py-1.5 bg-gray-50 rounded text-sm judoka-item hover:bg-orange-50 border border-gray-200"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}">
-                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
+                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">
+                            {{ $judoka->naam }}
+                            <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j, {{ $toonGewicht ?? '-' }})</span>
+                        </div>
                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                     </div>
                     @else
@@ -190,7 +217,7 @@
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
                             <div class="text-right text-xs ml-2">
-                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht ? $judoka->gewicht . ' kg' : '-' }}</div>
+                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
                                 <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                             </div>
                         </div>

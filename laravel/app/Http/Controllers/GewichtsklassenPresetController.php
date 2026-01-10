@@ -41,8 +41,9 @@ class GewichtsklassenPresetController extends Controller
 
         return response()->json([
             'success' => true,
-            'preset' => $preset,
-            'message' => 'Preset opgeslagen',
+            'id' => $preset->id,
+            'naam' => $preset->naam,
+            'message' => $preset->wasRecentlyCreated ? 'Preset aangemaakt' : 'Preset bijgewerkt',
         ]);
     }
 

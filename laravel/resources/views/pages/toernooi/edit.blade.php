@@ -665,6 +665,14 @@
                 </div>
             </div>
 
+            <!-- Preset opslaan modal -->
+            <div id="preset-save-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-lg font-bold mb-4" id="preset-modal-title">Preset opslaan</h3>
+                    <div id="preset-modal-content"></div>
+                </div>
+            </div>
+
             <!-- Sorteer prioriteit: alleen tonen bij "Geen standaard" -->
             <div x-show="categorieType === 'geen_standaard'" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <!-- Prioriteit drag & drop -->
@@ -999,26 +1007,55 @@
             }
             loadEigenPresets();
 
+            // Track currently loaded preset
+            let huidigePresetId = null;
+            let huidigePresetNaam = null;
+
             // Load selected preset
             presetsDropdown.addEventListener('change', () => {
                 const presetId = presetsDropdown.value;
-                if (!presetId) return;
+                if (!presetId) {
+                    huidigePresetId = null;
+                    huidigePresetNaam = null;
+                    return;
+                }
 
                 const preset = eigenPresets.find(p => p.id == presetId);
                 if (!preset) return;
 
                 if (confirm(`Preset "${preset.naam}" laden? Dit vervangt alle huidige instellingen.`)) {
                     renderCategorieen(preset.configuratie);
+                    huidigePresetId = preset.id;
+                    huidigePresetNaam = preset.naam;
+                    // Keep selection visible in dropdown
+                } else {
+                    // User cancelled - reset to previous state
+                    presetsDropdown.value = huidigePresetId || '';
                 }
-                presetsDropdown.value = ''; // Reset dropdown
             });
 
-            // Save current config as preset
-            document.getElementById('btn-save-preset').addEventListener('click', async () => {
-                const naam = prompt('Naam voor deze preset:');
-                if (!naam || !naam.trim()) return;
+            // Preset modal helpers
+            const presetModal = document.getElementById('preset-save-modal');
+            const presetModalTitle = document.getElementById('preset-modal-title');
+            const presetModalContent = document.getElementById('preset-modal-content');
 
-                // Collect current configuration
+            function showPresetModal(title, content) {
+                presetModalTitle.textContent = title;
+                presetModalContent.innerHTML = content;
+                presetModal.classList.remove('hidden');
+            }
+
+            function hidePresetModal() {
+                presetModal.classList.add('hidden');
+            }
+
+            // Close modal on backdrop click
+            presetModal.addEventListener('click', (e) => {
+                if (e.target === presetModal) hidePresetModal();
+            });
+
+            // Collect current configuration
+            function collectConfiguratie() {
                 const configuratie = {};
                 container.querySelectorAll('.gewichtsklasse-item').forEach(item => {
                     const key = item.dataset.key;
@@ -1030,7 +1067,12 @@
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                     };
                 });
+                return configuratie;
+            }
 
+            // Save preset to server
+            async function savePreset(naam, overschrijven = false) {
+                const configuratie = collectConfiguratie();
                 try {
                     const response = await fetch('{{ route("organisator.presets.store") }}', {
                         method: 'POST',
@@ -1039,12 +1081,19 @@
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
-                        body: JSON.stringify({ naam: naam.trim(), configuratie })
+                        body: JSON.stringify({ naam, configuratie, overschrijven })
                     });
 
                     if (response.ok) {
-                        alert('Preset opgeslagen!');
-                        loadEigenPresets(); // Refresh dropdown
+                        const data = await response.json();
+                        hidePresetModal();
+                        alert(overschrijven ? 'Preset bijgewerkt!' : 'Preset opgeslagen!');
+                        await loadEigenPresets();
+                        if (data.id) {
+                            presetsDropdown.value = data.id;
+                            huidigePresetId = data.id;
+                            huidigePresetNaam = naam;
+                        }
                     } else {
                         const data = await response.json();
                         alert('Fout: ' + (data.message || 'Kon preset niet opslaan'));
@@ -1053,7 +1102,65 @@
                     console.error('Fout bij opslaan:', e);
                     alert('Er ging iets mis bij het opslaan');
                 }
+            }
+
+            // Save current config as preset
+            document.getElementById('btn-save-preset').addEventListener('click', () => {
+                if (huidigePresetId && huidigePresetNaam) {
+                    // Show 3-button modal
+                    showPresetModal('Preset opslaan', `
+                        <p class="mb-4 text-gray-600">Je hebt <strong>"${huidigePresetNaam}"</strong> geladen. Wat wil je doen?</p>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                                📝 "${huidigePresetNaam}" overschrijven
+                            </button>
+                            <button onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                                ➕ Nieuwe preset maken
+                            </button>
+                            <button onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                                Annuleren
+                            </button>
+                        </div>
+                    `);
+                } else {
+                    // Show new preset input directly
+                    showNewPresetInput();
+                }
             });
+
+            // Show input for new preset name
+            window.showNewPresetInput = function() {
+                showPresetModal('Nieuwe preset', `
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Naam voor preset:</label>
+                        <input type="text" id="new-preset-naam" class="w-full border rounded px-3 py-2" placeholder="Bijv. Mijn toernooi preset" autofocus>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                            💾 Opslaan
+                        </button>
+                        <button onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                            Annuleren
+                        </button>
+                    </div>
+                `);
+                setTimeout(() => document.getElementById('new-preset-naam')?.focus(), 100);
+            };
+
+            // Save new preset from input
+            window.saveNewPreset = function() {
+                const input = document.getElementById('new-preset-naam');
+                const naam = input?.value?.trim();
+                if (!naam) {
+                    alert('Vul een naam in');
+                    return;
+                }
+                savePreset(naam, false);
+            };
+
+            // Make savePreset and hidePresetModal available globally
+            window.savePreset = savePreset;
+            window.hidePresetModal = hidePresetModal;
 
             // Add category
             document.getElementById('add-categorie').addEventListener('click', () => {

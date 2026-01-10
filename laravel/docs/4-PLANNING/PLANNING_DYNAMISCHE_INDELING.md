@@ -548,6 +548,26 @@ automatisch herberekend bij opslaan van instellingen.
 - Filter knop "Onvolledig" in judoka lijst
 - Gewicht wordt afgeleid van gewichtsklasse als die wel is ingevuld (bv. "-34" → 34 kg)
 
+### Bugfix: Gewicht fallback naar gewichtsklasse (10 jan 2026) ✓
+**Probleem:** Harde gewichtsconstraint (max 3kg verschil) werd genegeerd - poules hadden 30kg verschil!
+
+**Oorzaak:** `DynamischeIndelingService` gebruikte `$judoka->gewicht` direct, maar dit veld is vaak `null`.
+Veel judoka's hebben alleen `gewichtsklasse` (bijv. "-38") ingevuld, niet `gewicht`.
+
+**Oplossing:** `getEffectiefGewicht()` helper methode met fallback prioriteit:
+1. `gewicht_gewogen` - meest nauwkeurig (na weging op wedstrijddag)
+2. `gewicht` - ingeschreven gewicht
+3. `gewichtsklasse` - extract getal uit "-38" of "+73" → 38.0 of 73.0
+
+**Gewijzigde bestanden:**
+- `app/Services/DynamischeIndelingService.php` - helper + 20+ plekken
+- `app/Http/Controllers/PouleController.php` - berekenPouleRanges()
+- `resources/views/pages/poule/index.blade.php` - range berekening + gewicht display
+
+**UI impact:**
+- Judoka's tonen nu gewicht in poule overzicht (≤38kg als fallback)
+- Min-max range in poule header werkt nu ook zonder `gewicht` veld
+
 ## Notities
 
 - Leeftijd is ALTIJD eerste filter (veiligheid!)
