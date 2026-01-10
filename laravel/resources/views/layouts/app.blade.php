@@ -208,17 +208,18 @@
     <script>
         (function() {
             const originalFetch = window.fetch;
+            const loginUrl = '{{ route("organisator.login") }}';
             window.fetch = async function(...args) {
                 const response = await originalFetch.apply(this, args);
                 // 401 = Unauthorized, 419 = Session Expired (CSRF)
                 if (response.status === 401 || response.status === 419) {
-                    window.location.href = '{{ route("organisator.login") }}';
-                    return response;
+                    window.location.href = loginUrl;
+                    throw new Error('Session expired');
                 }
                 // Check for redirect to login page (302/303 followed by fetch)
                 if (response.redirected && response.url.includes('/organisator/login')) {
                     window.location.href = response.url;
-                    return response;
+                    throw new Error('Session expired');
                 }
                 return response;
             };
