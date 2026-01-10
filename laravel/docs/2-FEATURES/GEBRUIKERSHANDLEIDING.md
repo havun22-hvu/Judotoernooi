@@ -118,6 +118,38 @@ Per club toont de tabel de Coach Portal toegang:
 - Kopieer en deel via WhatsApp, SMS, of mondeling
 - Geen nieuwe email nodig
 
+### Coachkaarten
+
+Coaches krijgen toegangskaarten voor de dojo (wedstrijdruimte). Het aantal kaarten is gebaseerd op het aantal judoka's per club.
+
+**Berekening aantal coachkaarten:**
+
+De instelling `judokas_per_coach` (default: 5) bepaalt hoeveel kaarten een club krijgt:
+
+| Aantal judoka's | Kaarten (bij 5 per coach) |
+|-----------------|---------------------------|
+| 1-5 | 1 kaart |
+| 6-10 | 2 kaarten |
+| 11-15 | 3 kaarten |
+| 16-20 | 4 kaarten |
+
+**Formule:** `ceil(aantal_judokas / judokas_per_coach)`
+
+**Coachkaart toewijzing:**
+- Kaart 1 → voor judoka's 1-5 van de club
+- Kaart 2 → voor judoka's 6-10 van de club
+- etc.
+
+**Coachkaart activatie:**
+1. Coach scant QR-code of opent link
+2. Vult naam in en maakt pasfoto
+3. Kaart wordt gekoppeld aan dit device (device binding)
+4. QR-code is alleen zichtbaar op het geactiveerde device
+
+**Instelling wijzigen:**
+- Ga naar **Toernooi** > **Bewerken** > **Coach instellingen**
+- Pas `judokas_per_coach` aan (bijv. 10 voor grotere groepen)
+
 ## Valideer Judoka's (Einde Inschrijving)
 
 Na de sluitingsdatum van de inschrijving:
