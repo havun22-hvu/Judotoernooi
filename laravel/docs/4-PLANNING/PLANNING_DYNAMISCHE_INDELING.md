@@ -68,10 +68,11 @@ Drie keuzes:
 |------|------|---------|--------------|
 | Naam | text | - | Label voor deze categorie (bijv. "Mini's", "Jeugd") |
 | Max leeftijd | number | - | Leeftijdsgrens (exclusief) |
-| Geslacht | select | Gemengd | Gemengd / Jongens / Meisjes |
+| Geslacht | select | Gemengd | Gemengd / M / V |
 | Systeem | select | Poules | Poules / Poules+Kruisfinale / Eliminatie |
 | Max kg verschil | number | 3 | HARDE limiet voor gewichtsverschil |
-| Max leeftijd verschil | number | 1 | HARDE limiet voor leeftijdsverschil |
+| t/m band | select | Alle | Beginners/gevorderden scheiding (Alle/Wit/Geel/Oranje/Groen/Blauw/Bruin) |
+| Gewichtsklassen | text | - | Vaste klassen (alleen als max kg = 0) |
 
 ### Bij "JBN 2025" (vaste gewichtsklassen)
 
@@ -97,12 +98,16 @@ JBN 2026 heeft **geen vaste gewichtsklassen** - alleen vaste leeftijdscategorie�
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Leeftijdscategorieën: -7, -9, -11, -13, -15 jaar (vast)        │
+│ Leeftijdscategorieën: U7, U9, U11, U13, U15 (vast)              │
 │ Gewichtsklassen: GEEN (dynamisch op basis van gewicht)          │
 ├─────────────────────────────────────────────────────────────────┤
 │ Per categorie instelbaar:                                       │
 │ • Max kg verschil: [3] kg                                       │
-│ • Aparte categorie t/m: [Oranje ▼]                             │
+│ • t/m band: [Oranje ▼]  ← maakt 2 groepen                      │
+├─────────────────────────────────────────────────────────────────┤
+│ Band scheiding creëert 2 groepen:                               │
+│ • Beginners: t/m geselecteerde band (bijv. wit t/m oranje)     │
+│ • Gevorderden: hoger dan geselecteerde band (bijv. groen+)     │
 ├─────────────────────────────────────────────────────────────────┤
 │ Algoritme:                                                      │
 │ 1. Splits op band (t/m oranje vs groen+)                       │

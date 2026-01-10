@@ -734,7 +734,6 @@
                 @php
                     $geslacht = $data['geslacht'] ?? 'gemengd';
                     $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
-                    $bandVan = $data['band_van'] ?? null;
                     $bandTot = $data['band_tot'] ?? null;
                 @endphp
                 <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move" data-key="{{ $key }}" draggable="true">
@@ -785,20 +784,7 @@
                             <span class="text-xs text-gray-500">kg</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Band van:</label>
-                            <select name="gewichtsklassen_band_van[{{ $key }}]"
-                                    class="band-van-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" {{ !$bandVan ? 'selected' : '' }}>Alle</option>
-                                <option value="wit" {{ $bandVan == 'wit' ? 'selected' : '' }}>Wit</option>
-                                <option value="geel" {{ $bandVan == 'geel' ? 'selected' : '' }}>Geel</option>
-                                <option value="oranje" {{ $bandVan == 'oranje' ? 'selected' : '' }}>Oranje</option>
-                                <option value="groen" {{ $bandVan == 'groen' ? 'selected' : '' }}>Groen</option>
-                                <option value="blauw" {{ $bandVan == 'blauw' ? 'selected' : '' }}>Blauw</option>
-                                <option value="bruin" {{ $bandVan == 'bruin' ? 'selected' : '' }}>Bruin</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">t/m:</label>
+                            <label class="text-gray-600 text-sm">t/m band:</label>
                             <select name="gewichtsklassen_band_tot[{{ $key }}]"
                                     class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="" {{ !$bandTot ? 'selected' : '' }}>Alle</option>
@@ -808,7 +794,6 @@
                                 <option value="groen" {{ $bandTot == 'groen' ? 'selected' : '' }}>Groen</option>
                                 <option value="blauw" {{ $bandTot == 'blauw' ? 'selected' : '' }}>Blauw</option>
                                 <option value="bruin" {{ $bandTot == 'bruin' ? 'selected' : '' }}>Bruin</option>
-                                <option value="zwart" {{ $bandTot == 'zwart' ? 'selected' : '' }}>Zwart</option>
                             </select>
                         </div>
                         <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
@@ -857,13 +842,12 @@
                     const label = item.querySelector('.label-input').value;
                     const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
                     const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
-                    const bandVan = item.querySelector('.band-van-select')?.value || null;
                     const bandTot = item.querySelector('.band-tot-select')?.value || null;
                     const gewichten = item.querySelector('.gewichten-input')?.value
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g) || [];
-                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, band_van: bandVan, band_tot: bandTot, gewichten };
+                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, band_tot: bandTot, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -923,7 +907,6 @@
                     const leeftijdClass = item.max_leeftijd < 99 ? 'text-blue-600' : 'text-gray-400';
                     const geslacht = item.geslacht || 'gemengd';
                     const maxKg = item.max_kg_verschil || 0;
-                    const bandVan = item.band_van || '';
                     const bandTot = item.band_tot || '';
                     const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
                     const dynamischHidden = maxKg > 0 ? '' : 'hidden';
@@ -974,20 +957,7 @@
                                 <span class="text-xs text-gray-500">kg</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Band van:</label>
-                                <select name="gewichtsklassen_band_van[${key}]"
-                                        class="band-van-select border rounded px-2 py-1 text-sm bg-white">
-                                    <option value="" ${!bandVan ? 'selected' : ''}>Alle</option>
-                                    <option value="wit" ${bandVan === 'wit' ? 'selected' : ''}>Wit</option>
-                                    <option value="geel" ${bandVan === 'geel' ? 'selected' : ''}>Geel</option>
-                                    <option value="oranje" ${bandVan === 'oranje' ? 'selected' : ''}>Oranje</option>
-                                    <option value="groen" ${bandVan === 'groen' ? 'selected' : ''}>Groen</option>
-                                    <option value="blauw" ${bandVan === 'blauw' ? 'selected' : ''}>Blauw</option>
-                                    <option value="bruin" ${bandVan === 'bruin' ? 'selected' : ''}>Bruin</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">t/m:</label>
+                                <label class="text-gray-600 text-sm">t/m band:</label>
                                 <select name="gewichtsklassen_band_tot[${key}]"
                                         class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
                                     <option value="" ${!bandTot ? 'selected' : ''}>Alle</option>
@@ -997,7 +967,6 @@
                                     <option value="groen" ${bandTot === 'groen' ? 'selected' : ''}>Groen</option>
                                     <option value="blauw" ${bandTot === 'blauw' ? 'selected' : ''}>Blauw</option>
                                     <option value="bruin" ${bandTot === 'bruin' ? 'selected' : ''}>Bruin</option>
-                                    <option value="zwart" ${bandTot === 'zwart' ? 'selected' : ''}>Zwart</option>
                                 </select>
                             </div>
                             <div class="gewichten-container flex-1 ${gewichtenHidden}">
@@ -1258,20 +1227,7 @@
                             <span class="text-xs text-gray-500">kg</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Band van:</label>
-                            <select name="gewichtsklassen_band_van[${newKey}]"
-                                    class="band-van-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" selected>Alle</option>
-                                <option value="wit">Wit</option>
-                                <option value="geel">Geel</option>
-                                <option value="oranje">Oranje</option>
-                                <option value="groen">Groen</option>
-                                <option value="blauw">Blauw</option>
-                                <option value="bruin">Bruin</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">t/m:</label>
+                            <label class="text-gray-600 text-sm">t/m band:</label>
                             <select name="gewichtsklassen_band_tot[${newKey}]"
                                     class="band-tot-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="" selected>Alle</option>
@@ -1281,7 +1237,6 @@
                                 <option value="groen">Groen</option>
                                 <option value="blauw">Blauw</option>
                                 <option value="bruin">Bruin</option>
-                                <option value="zwart">Zwart</option>
                             </select>
                         </div>
                         <div class="gewichten-container flex-1 hidden">
