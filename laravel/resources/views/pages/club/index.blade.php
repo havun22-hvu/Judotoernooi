@@ -83,7 +83,7 @@
                 <td class="px-4 py-3">
                     <div class="flex items-center gap-2">
                         <span class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">{{ $club->coachKaarten->count() }}</span>
-                        <form action="{{ route('club.coachkaart.add', [$toernooi, $club]) }}" method="POST" class="inline">
+                        <form action="{{ route('toernooi.club.coachkaart.add', [$toernooi, $club]) }}" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 rounded" title="Extra kaart toevoegen">+</button>
                         </form>
