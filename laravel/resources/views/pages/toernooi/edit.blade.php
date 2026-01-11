@@ -3,11 +3,14 @@
 @section('title', 'Instellingen')
 
 @section('content')
+<!-- Fixed toast voor autosave status -->
+<div id="save-status" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium hidden bg-white border"></div>
+
 <div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
             <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
-            <span id="save-status" class="text-sm text-gray-400 hidden"></span>
+            <!-- Verplaatst naar fixed toast -->
         </div>
         <div class="flex items-center gap-4">
             <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
@@ -1823,8 +1826,8 @@ function togglePassword(button) {
 
     function showStatus(text, type) {
         status.textContent = text;
-        status.classList.remove('hidden', 'text-gray-400', 'text-green-600', 'text-red-600');
-        status.classList.add(type === 'success' ? 'text-green-600' : type === 'error' ? 'text-red-600' : 'text-gray-400');
+        status.classList.remove('hidden', 'text-gray-400', 'text-green-600', 'text-red-600', 'bg-green-100', 'bg-red-100', 'bg-gray-100', 'border-green-300', 'border-red-300', 'border-gray-300');
+        if (type === 'success') { status.classList.add('text-green-600', 'bg-green-100', 'border-green-300'); } else if (type === 'error') { status.classList.add('text-red-600', 'bg-red-100', 'border-red-300'); } else { status.classList.add('text-gray-600', 'bg-gray-100', 'border-gray-300'); }
     }
 
     function markDirty() {
