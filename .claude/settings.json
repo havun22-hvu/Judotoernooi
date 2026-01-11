@@ -1,3 +1,25 @@
 {
-  "allowedTools": ["*"]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "VERPLICHT: Volg de 3-fasen workflow uit CLAUDE.md (LEZEN → PLAN → CODE). Start ALTIJD met Fase 1: lees relevante docs en citeer ze. Geen code zonder user approval."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "WORKFLOW CHECK: Heb je Fase 1 (docs citeren) en Fase 2 (plan + user approval) doorlopen voordat je code schrijft? Zo niet, stop en ga terug naar Fase 1."
+          }
+        ]
+      }
+    ]
+  }
 }
