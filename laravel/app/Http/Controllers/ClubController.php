@@ -6,6 +6,7 @@ use App\Mail\ClubUitnodigingMail;
 use App\Models\Club;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
+use App\Models\CoachKaart;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,11 +45,23 @@ class ClubController extends Controller
             'plaats' => 'nullable|string|max:255',
         ]);
 
-        Club::create($validated);
+        $club = Club::create($validated);
+
+        // Auto-create coach and coach card for new club
+        $coach = Coach::create([
+            'club_id' => $club->id,
+            'toernooi_id' => $toernooi->id,
+            'naam' => 'Coach ' . $club->naam,
+        ]);
+
+        CoachKaart::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+        ]);
 
         return redirect()
             ->route('toernooi.club.index', $toernooi)
-            ->with('success', 'Club toegevoegd');
+            ->with('success', 'Club toegevoegd met coach portal (PIN: ' . $coach->pincode . ')');
     }
 
     public function update(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
