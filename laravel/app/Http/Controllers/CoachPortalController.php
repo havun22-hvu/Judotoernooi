@@ -224,6 +224,11 @@ class CoachPortalController extends Controller
             }
         }
 
+        // Fallback: if still no gewichtsklasse but gewicht is provided, create from gewicht
+        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+            $gewichtsklasse = '-' . (int) $validated['gewicht'];
+        }
+
         // Check for duplicate
         $bestaande = Judoka::where('toernooi_id', $toernooi->id)
             ->where('naam', $validated['naam'])
@@ -302,6 +307,11 @@ class CoachPortalController extends Controller
                 $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
                 $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
             }
+        }
+
+        // Fallback: if still no gewichtsklasse but gewicht is provided, create from gewicht
+        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+            $gewichtsklasse = '-' . (int) $validated['gewicht'];
         }
 
         $judoka->update([
@@ -699,6 +709,11 @@ class CoachPortalController extends Controller
             }
         }
 
+        // Fallback: if still no gewichtsklasse but gewicht is provided, create from gewicht
+        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+            $gewichtsklasse = '-' . (int) $validated['gewicht'];
+        }
+
         $bestaande = Judoka::where('toernooi_id', $toernooi->id)
             ->where('naam', $validated['naam'])
             ->where('geboortejaar', $validated['geboortejaar'])
@@ -772,6 +787,11 @@ class CoachPortalController extends Controller
                 $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
                 $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
             }
+        }
+
+        // Fallback: if still no gewichtsklasse but gewicht is provided, create from gewicht
+        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+            $gewichtsklasse = '-' . (int) $validated['gewicht'];
         }
 
         $judoka->update([

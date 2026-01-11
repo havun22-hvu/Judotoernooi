@@ -1,23 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(test -f \"D:\\GitHub\\JudoToernooi\\Scripts\\google-sheets\\MaakBlokken_CLEANED.js\")",
-      "Bash(node update-version.js)",
-      "Bash(clasp logs --simplified)",
-      "Bash(clasp open)",
-      "Bash(node -c Config.js)",
-      "Bash(test -f \"d:\\GitHub\\JudoToernooi\\Scripts\\google-sheets\\PouleIndeling.js\")",
-      "Bash(node \"d:\\GitHub\\JudoToernooi\\Scripts\\google-sheets\\TEST_verdeling.js\")",
-      "Bash(clasp push:*)",
-      "Bash(clasp:*)",
-      "Bash(node -p:*)",
-      "Bash(TZ=Europe/Amsterdam date:*)",
-      "Bash(time:*)",
-      "Bash(powershell -Command \"Get-Date -Format ''HH:mm''\")",
-      "Bash(node -c:*)",
-      "Bash(node -e:*)"
+      "Bash",
+      "Read",
+      "Edit",
+      "Write"
     ],
-    "deny": [],
-    "ask": []
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(format C:)",
+      "Bash(git push --force origin main)",
+      "Bash(git push --force origin master)"
+    ],
+    "defaultMode": "bypassPermissions"
   }
 }
