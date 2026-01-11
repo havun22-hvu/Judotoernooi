@@ -239,6 +239,18 @@ Het systeem verdeelt judoka's in 4 stappen:
    - Geslacht (per categorie instelbaar)
    - Band/niveau (sortering binnen groep)
 
+### Poule Titels
+
+Poule titels worden automatisch samengesteld uit:
+- **Categorie naam** (uit Instellingen → Categorieën → Naam veld)
+- Geslacht (M/V, alleen bij niet-gemengde categorieën)
+- Leeftijd range (berekend uit judoka's)
+- Gewicht range (berekend uit judoka's)
+
+**Voorbeeld:** "Jeugd 9-10j 30-33kg"
+
+**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert.
+
 ### Poule Regels
 
 - **Optimaal**: 5 judoka's per poule (10 wedstrijden)

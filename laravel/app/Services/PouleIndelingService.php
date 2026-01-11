@@ -954,30 +954,35 @@ class PouleIndelingService
      */
     private function leeftijdsklasseToConfigKey(string $leeftijdsklasse): ?string
     {
-        // Map old JBN labels to config keys
+        // Map JBN labels to config keys
         $mapping = [
             "Mini's" => 'minis',
             'A-pupillen' => 'a_pupillen',
             'B-pupillen' => 'b_pupillen',
+            'C-pupillen' => 'c_pupillen',
             'Dames -15' => 'dames_15',
             'Heren -15' => 'heren_15',
             'Dames -18' => 'dames_18',
             'Heren -18' => 'heren_18',
+            'Dames -21' => 'dames_21',
+            'Heren -21' => 'heren_21',
             'Dames' => 'dames',
             'Heren' => 'heren',
-            // Also support direct config keys
-            'minis' => 'minis',
-            'a_pupillen' => 'a_pupillen',
-            'b_pupillen' => 'b_pupillen',
-            'dames_15' => 'dames_15',
-            'heren_15' => 'heren_15',
-            'dames_18' => 'dames_18',
-            'heren_18' => 'heren_18',
-            'dames' => 'dames',
-            'heren' => 'heren',
         ];
 
-        return $mapping[$leeftijdsklasse] ?? null;
+        // Try direct mapping first
+        if (isset($mapping[$leeftijdsklasse])) {
+            return $mapping[$leeftijdsklasse];
+        }
+
+        // Try as direct config key (already normalized)
+        $normalized = strtolower(preg_replace('/[\s\-]+/', '_', $leeftijdsklasse));
+        if (isset($this->gewichtsklassenConfig[$normalized])) {
+            return $normalized;
+        }
+
+        // Fallback: normalize and return (for custom categories)
+        return $normalized;
     }
 
     /**

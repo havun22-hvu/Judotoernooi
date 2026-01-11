@@ -523,19 +523,23 @@ if ($usesDynamic) {
 
 ## Poule Titels
 
-Titels zijn nu dynamisch op basis van werkelijke waarden:
+Titels worden automatisch samengesteld bij het genereren van poules.
 
-| Type | Oud formaat | Nieuw formaat |
-|------|-------------|---------------|
-| Voorronde | "A-pupillen -30 kg" | "Jeugd 9-10j 30-33kg" |
-| Eliminatie | "A-pupillen -30 kg - Eliminatie" | "Jeugd M 9-10j 30-33kg - Eliminatie" |
-| Kruisfinale | "Kruisfinale A-pupillen Jongens -30 kg" | "Kruisfinale Jeugd M -30kg (top 2)" |
+**De categorie naam uit Instellingen wordt overgenomen als basis voor de poule titel.**
+
+| Type | Voorbeeld titel |
+|------|-----------------|
+| Voorronde | "Jeugd 9-10j 30-33kg" |
+| Eliminatie | "Jeugd M 9-10j 30-33kg - Eliminatie" |
+| Kruisfinale | "Kruisfinale Jeugd M -30kg (top 2)" |
 
 **Onderdelen:**
-- Categorie label (uit instellingen: "Mini's", "Jeugd", etc.)
-- Geslacht: M/V (kort, ipv "Jongens"/"Meisjes")
+- **Categorie naam** (uit Instellingen → Categorieën → Naam veld)
+- Geslacht: M/V (alleen bij niet-gemengde categorieën)
 - Leeftijd range: berekend uit judoka's (bijv. "9-10j")
 - Gewicht range: berekend uit judoka's (bijv. "30-33kg")
+
+**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert. Bestaande poule titels worden niet automatisch bijgewerkt.
 
 ## Vereenvoudiging Instellingen (7 jan 2026)
 
