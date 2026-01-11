@@ -23,6 +23,9 @@ class ClubController extends Controller
         ->with(['coaches' => function ($query) use ($toernooi) {
             $query->where('toernooi_id', $toernooi->id);
         }])
+        ->with(['coachKaarten' => function ($query) use ($toernooi) {
+            $query->where('toernooi_id', $toernooi->id);
+        }])
         ->orderBy('naam')
         ->get();
 
@@ -268,5 +271,20 @@ class ClubController extends Controller
             ->with('new_coach_id', $coach->id)
             ->with('new_coach_pin', $newPin)
             ->with('new_coach_url', $coach->getPortalUrl());
+    }
+
+    /**
+     * Add extra coach card for a club
+     */
+    public function addCoachKaart(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    {
+        CoachKaart::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+        ]);
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', 'Extra coachkaart toegevoegd voor ' . $club->naam);
     }
 }
