@@ -198,25 +198,30 @@ De Weging heeft **2 totaal verschillende versies**:
 
 ## Coachkaarten
 
-Coaches krijgen toegangskaarten voor de dojo. Het aantal is gebaseerd op het aantal judoka's van de club.
+Coaches krijgen toegangskaarten voor de dojo. Het aantal is gebaseerd op het **grootste blok** van de club.
 
 ### Berekening aantal coachkaarten
 
 ```
-Formule: ceil(aantal_judokas / judokas_per_coach)
+Formule: ceil(max_judokas_per_blok / judokas_per_coach)
 
-Voorbeeld met judokas_per_coach = 5:
-┌──────────────────┬─────────┐
-│ Aantal judoka's  │ Kaarten │
-├──────────────────┼─────────┤
-│ 1-5              │ 1       │
-│ 6-10             │ 2       │
-│ 11-15            │ 3       │
-│ 16-20            │ 4       │
-└──────────────────┴─────────┘
+Voorbeeld: Club met 15 judoka's verdeeld over 3 blokken (8, 4, 3)
+→ Grootste blok = 8 judoka's
+→ ceil(8 / 5) = 2 coachkaarten
+
+┌────────────────────────────┬─────────┐
+│ Max judoka's in één blok   │ Kaarten │
+├────────────────────────────┼─────────┤
+│ 1-5                        │ 1       │
+│ 6-10                       │ 2       │
+│ 11-15                      │ 3       │
+│ 16-20                      │ 4       │
+└────────────────────────────┴─────────┘
 ```
 
 **Instelling:** `judokas_per_coach` in toernooi instellingen (default: 5)
+
+**Fallback:** Als blokken nog niet zijn toegewezen, wordt het totaal aantal judoka's gebruikt.
 
 ### Implementatie
 
@@ -224,14 +229,36 @@ Voorbeeld met judokas_per_coach = 5:
 ```php
 public function berekenAantalCoachKaarten(Toernooi $toernooi): int
 {
-    $aantalJudokas = $this->judokas()->where('toernooi_id', $toernooi->id)->count();
     $perCoach = $toernooi->judokas_per_coach ?? 5;
 
-    if ($aantalJudokas === 0) {
+    $judokas = $this->judokas()
+        ->where('toernooi_id', $toernooi->id)
+        ->with('poules.blok')
+        ->get();
+
+    if ($judokas->isEmpty()) {
         return 0;
     }
 
-    return (int) ceil($aantalJudokas / $perCoach);
+    // Count judokas per blok
+    $judokasPerBlok = [];
+    foreach ($judokas as $judoka) {
+        foreach ($judoka->poules as $poule) {
+            if ($poule->blok_id) {
+                $blokId = $poule->blok_id;
+                $judokasPerBlok[$blokId] = ($judokasPerBlok[$blokId] ?? 0) + 1;
+            }
+        }
+    }
+
+    // Fallback to total if no blokken assigned
+    if (empty($judokasPerBlok)) {
+        return (int) ceil($judokas->count() / $perCoach);
+    }
+
+    // Use largest block
+    $maxJudokasInBlok = max($judokasPerBlok);
+    return (int) ceil($maxJudokasInBlok / $perCoach);
 }
 ```
 
