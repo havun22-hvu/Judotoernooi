@@ -6,6 +6,8 @@ use App\Enums\Band;
 use App\Enums\Geslacht;
 use App\Enums\Leeftijdsklasse;
 use App\Models\Club;
+use App\Models\Coach;
+use App\Models\CoachKaart;
 use App\Models\Judoka;
 use App\Models\Toernooi;
 use Illuminate\Support\Facades\DB;
@@ -61,6 +63,9 @@ class ImportService
 
             // Recalculate all judoka codes after import
             $resultaat['codes_bijgewerkt'] = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
+
+            // Create coaches and coach cards for clubs without one
+            $resultaat['coaches_aangemaakt'] = $this->maakCoachesVoorClubs($toernooi);
 
             return $resultaat;
         });
@@ -352,5 +357,60 @@ class ImportService
             return (float) $matches[1];
         }
         return null;
+    }
+
+    /**
+     * Create coaches and coach cards for clubs that don't have one yet
+     */
+    private function maakCoachesVoorClubs(Toernooi $toernooi): int
+    {
+        $aangemaakt = 0;
+
+        // Get all clubs with judokas in this tournament
+        $clubIds = Judoka::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('club_id')
+            ->distinct()
+            ->pluck('club_id');
+
+        foreach ($clubIds as $clubId) {
+            $club = Club::find($clubId);
+            if (!$club) continue;
+
+            // Check if club already has a coach for this tournament
+            $bestaandeCoach = Coach::where('club_id', $clubId)
+                ->where('toernooi_id', $toernooi->id)
+                ->first();
+
+            if (!$bestaandeCoach) {
+                // Create coach
+                $coach = Coach::create([
+                    'club_id' => $clubId,
+                    'toernooi_id' => $toernooi->id,
+                    'naam' => 'Coach ' . $club->naam,
+                ]);
+
+                // Create 1 standard coach card
+                CoachKaart::create([
+                    'toernooi_id' => $toernooi->id,
+                    'club_id' => $clubId,
+                ]);
+
+                $aangemaakt++;
+            } else {
+                // Ensure at least 1 coach card exists
+                $bestaandeKaart = CoachKaart::where('club_id', $clubId)
+                    ->where('toernooi_id', $toernooi->id)
+                    ->first();
+
+                if (!$bestaandeKaart) {
+                    CoachKaart::create([
+                        'toernooi_id' => $toernooi->id,
+                        'club_id' => $clubId,
+                    ]);
+                }
+            }
+        }
+
+        return $aangemaakt;
     }
 }

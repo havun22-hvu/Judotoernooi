@@ -61,7 +61,7 @@ class Club extends Model
             ->get();
 
         if ($judokas->isEmpty()) {
-            return 0;
+            return 1; // Minimum 1 coachkaart per club
         }
 
         // Count judokas per blok
@@ -83,7 +83,7 @@ class Club extends Model
         // Use the largest block to determine number of coach cards needed
         $maxJudokasInBlok = max($judokasPerBlok);
 
-        return (int) ceil($maxJudokasInBlok / $perCoach);
+        return max(1, (int) ceil($maxJudokasInBlok / $perCoach));
     }
 
     public static function findOrCreateByName(string $naam): self
