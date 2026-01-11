@@ -52,6 +52,7 @@
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telefoon</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Judoka's</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Kaarten</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Coach Portal</th>
                 <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600">Acties</th>
             </tr>
@@ -78,6 +79,15 @@
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->telefoon ?? '-' }}</td>
                 <td class="px-4 py-3">
                     <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded">{{ $club->coachKaarten->count() }}</span>
+                        <form action="{{ route('club.coachkaart.add', [$toernooi, $club]) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 rounded" title="Extra kaart toevoegen">+</button>
+                        </form>
+                    </div>
                 </td>
                 <td class="px-4 py-3">
                     @if($coach)
@@ -134,7 +144,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                     Nog geen clubs. Voeg hieronder een club toe.
                 </td>
             </tr>
