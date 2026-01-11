@@ -120,25 +120,30 @@ Per club toont de tabel de Coach Portal toegang:
 
 ### Coachkaarten
 
-Coaches krijgen toegangskaarten voor de dojo (wedstrijdruimte). Het aantal kaarten is gebaseerd op het aantal judoka's per club.
+Coaches krijgen toegangskaarten voor de dojo (wedstrijdruimte). Het aantal kaarten is gebaseerd op het **grootste blok** van de club (niet het totaal aantal judoka's).
+
+**Waarom per blok?**
+Een coach hoeft alleen aanwezig te zijn wanneer zijn judoka's wedstrijden hebben. Als een club 15 judoka's heeft verdeeld over 3 blokken (8, 4, 3), dan zijn er maximaal 8 judoka's tegelijk actief.
 
 **Berekening aantal coachkaarten:**
 
 De instelling `judokas_per_coach` (default: 5) bepaalt hoeveel kaarten een club krijgt:
 
-| Aantal judoka's | Kaarten (bij 5 per coach) |
-|-----------------|---------------------------|
+| Max judoka's in één blok | Kaarten (bij 5 per coach) |
+|--------------------------|---------------------------|
 | 1-5 | 1 kaart |
 | 6-10 | 2 kaarten |
 | 11-15 | 3 kaarten |
 | 16-20 | 4 kaarten |
 
-**Formule:** `ceil(aantal_judokas / judokas_per_coach)`
+**Formule:** `ceil(max_judokas_per_blok / judokas_per_coach)`
 
-**Coachkaart toewijzing:**
-- Kaart 1 → voor judoka's 1-5 van de club
-- Kaart 2 → voor judoka's 6-10 van de club
-- etc.
+**Voorbeeld:**
+- Club A: 15 judoka's totaal
+- Blok 1: 8 judoka's, Blok 2: 4 judoka's, Blok 3: 3 judoka's
+- Grootste blok = 8 → `ceil(8/5) = 2` coachkaarten
+
+**Let op:** Als blokken nog niet zijn toegewezen, wordt het totaal aantal judoka's gebruikt als fallback.
 
 **Coachkaart activatie:**
 1. Coach scant QR-code of opent link
