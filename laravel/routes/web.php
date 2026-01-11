@@ -181,6 +181,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::delete('coach/{coach}', [ClubController::class, 'destroyCoach'])->name('club.coach.destroy');
         Route::post('coach/{coach}/regenerate-pin', [ClubController::class, 'regeneratePincode'])->name('club.coach.regenerate-pin');
         Route::post('club/{club}/coachkaart', [ClubController::class, 'addCoachKaart'])->name('club.coachkaart.add');
+        Route::delete('club/{club}/coachkaart', [ClubController::class, 'removeCoachKaart'])->name('club.coachkaart.remove');
 
         // Coach Kaarten (toegang dojo)
         Route::get('coach-kaarten', [CoachKaartController::class, 'index'])->name('coach-kaart.index');
