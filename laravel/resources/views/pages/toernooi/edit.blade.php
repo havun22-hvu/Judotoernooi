@@ -771,7 +771,7 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[{{ $key }}]"
                                    value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
@@ -791,7 +791,7 @@
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Systeem:</label>
+                            
                             <select name="wedstrijd_systeem[{{ $key }}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white">
                                 <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
@@ -978,7 +978,7 @@
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
                             </div>
                             <div class="flex items-center gap-2">
                                 <select name="gewichtsklassen_geslacht[${key}]"
@@ -989,7 +989,7 @@
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Systeem:</label>
+                                
                                 <select name="wedstrijd_systeem[${key}]"
                                         class="border rounded px-2 py-1 text-sm bg-white">
                                     <option value="poules">Poules</option>
@@ -1299,7 +1299,7 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${newKey}]"
                                    value="Nieuwe categorie"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
                         </div>
                         <div class="flex items-center gap-2">
                             <select name="gewichtsklassen_geslacht[${newKey}]"
@@ -1310,7 +1310,7 @@
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Systeem:</label>
+                            
                             <select name="wedstrijd_systeem[${newKey}]"
                                     class="border rounded px-2 py-1 text-sm bg-white">
                                 <option value="poules" selected>Poules</option>
