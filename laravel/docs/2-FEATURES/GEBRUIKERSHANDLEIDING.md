@@ -82,6 +82,18 @@ Het systeem:
 - Weegkaarten tonen blokinfo NA "Verdeel over matten"
 - Weegkaarten tonen mat nummer pas NA "Maak weegkaarten" (voorbereiding geseald)
 
+### Judoka Verwijderen
+
+Individuele judoka's kunnen verwijderd worden uit het overzicht:
+
+1. Ga naar **Toernooi** > **Judoka's**
+2. Klik op de **×** knop rechts in de rij
+3. Bevestig de verwijdering in de popup
+
+**Let op:**
+- Verwijderen is definitief en kan niet ongedaan worden gemaakt
+- Verwijder geen judoka's die al in poules zijn ingedeeld (verwijder ze eerst uit de poule)
+
 ### Judoka Codes
 
 Elke judoka krijgt een unieke code (bv. `U1234M01`) voor poule-indeling. Deze code wordt berekend op basis van:
