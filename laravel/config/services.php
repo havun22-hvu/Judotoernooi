@@ -59,6 +59,7 @@ return [
         // API endpoints
         'api_url' => 'https://api.mollie.com/v2',
         'oauth_url' => 'https://www.mollie.com/oauth2',
+        'oauth_token_url' => 'https://api.mollie.com/oauth2',
 
         // Default platform fee
         'default_platform_fee' => env('MOLLIE_PLATFORM_FEE', 0.50),

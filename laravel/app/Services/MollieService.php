@@ -11,11 +11,13 @@ class MollieService
 {
     private string $apiUrl;
     private string $oauthUrl;
+    private string $oauthTokenUrl;
 
     public function __construct()
     {
         $this->apiUrl = config('services.mollie.api_url');
         $this->oauthUrl = config('services.mollie.oauth_url');
+        $this->oauthTokenUrl = config('services.mollie.oauth_token_url');
     }
 
     /*
@@ -162,7 +164,7 @@ class MollieService
      */
     public function exchangeCodeForTokens(string $code): array
     {
-        $response = Http::asForm()->post($this->oauthUrl . '/tokens', [
+        $response = Http::asForm()->post($this->oauthTokenUrl . '/tokens', [
             'grant_type' => 'authorization_code',
             'client_id' => config('services.mollie.client_id'),
             'client_secret' => config('services.mollie.client_secret'),
@@ -187,7 +189,7 @@ class MollieService
     {
         $refreshToken = $this->decryptToken($toernooi->mollie_refresh_token);
 
-        $response = Http::asForm()->post($this->oauthUrl . '/tokens', [
+        $response = Http::asForm()->post($this->oauthTokenUrl . '/tokens', [
             'grant_type' => 'refresh_token',
             'client_id' => config('services.mollie.client_id'),
             'client_secret' => config('services.mollie.client_secret'),
