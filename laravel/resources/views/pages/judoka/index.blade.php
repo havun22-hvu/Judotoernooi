@@ -104,6 +104,7 @@
                 <th @click="sort('club')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Acties</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -118,6 +119,13 @@
                     <td class="px-4 py-2 text-sm" x-text="judoka.geslacht"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
+                    <td class="px-4 py-2">
+                        <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('Weet je zeker dat je ' + judoka.naam + ' wilt verwijderen?')) $el.submit()">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-lg" title="Verwijderen">×</button>
+                        </form>
+                    </td>
                 </tr>
             </template>
         </tbody>
@@ -179,7 +187,8 @@ function judokaTable() {
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 club: @json($judoka->club?->naam),
                 incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
-                url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}'
+                url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}',
+                deleteUrl: '{{ route("toernooi.judoka.destroy", [$toernooi, $judoka]) }}'
             },
             @endforeach
         ],
