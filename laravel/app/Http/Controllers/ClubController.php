@@ -287,4 +287,41 @@ class ClubController extends Controller
             ->route('toernooi.club.index', $toernooi)
             ->with('success', 'Extra coachkaart toegevoegd voor ' . $club->naam);
     }
+
+    /**
+     * Remove a coach card from a club (only if not yet activated)
+     */
+    public function removeCoachKaart(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    {
+        // Find an unactivated card to remove (no naam, no foto, no device binding)
+        $kaart = CoachKaart::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->whereNull('naam')
+            ->whereNull('foto_path')
+            ->whereNull('device_token')
+            ->first();
+
+        if (!$kaart) {
+            return redirect()
+                ->route('toernooi.club.index', $toernooi)
+                ->with('error', 'Geen ongebruikte coachkaart om te verwijderen');
+        }
+
+        // Keep at least 1 card
+        $totaal = CoachKaart::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->count();
+
+        if ($totaal <= 1) {
+            return redirect()
+                ->route('toernooi.club.index', $toernooi)
+                ->with('error', 'Minimaal 1 coachkaart vereist');
+        }
+
+        $kaart->delete();
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', 'Coachkaart verwijderd voor ' . $club->naam);
+    }
 }
