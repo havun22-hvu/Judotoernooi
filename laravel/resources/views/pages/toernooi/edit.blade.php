@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Instellingen')
 
@@ -768,22 +768,21 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[{{ $key }}]"
                                    value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
                                    value="{{ ($data['max_leeftijd'] ?? 99) < 99 ? $data['max_leeftijd'] : '' }}"
                                    placeholder="99"
-                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                    min="5" max="99">
-                            <span class="text-xs text-gray-500">jaar</span>
+                            <span class="text-xs text-gray-500">jr</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Geslacht:</label>
                             <select name="gewichtsklassen_geslacht[{{ $key }}]"
-                                    class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>Gemengd</option>
+                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
+                                <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>M&V</option>
                                 <option value="jongens" {{ $geslacht == 'jongens' ? 'selected' : '' }}>M</option>
                                 <option value="meisjes" {{ $geslacht == 'meisjes' ? 'selected' : '' }}>V</option>
                             </select>
@@ -801,14 +800,13 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
                             <input type="number" name="gewichtsklassen_max_kg[{{ $key }}]"
                                    value="{{ $maxKgVerschil }}"
-                                   class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
-                            <span class="text-xs text-gray-500">kg</span>
-                        </div>
+                            </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Band:</label>
                             <select name="gewichtsklassen_band_filter[{{ $key }}]"
@@ -966,24 +964,23 @@
                         <div class="flex flex-wrap items-center gap-3 mb-2">
                             <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                                <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
                                 <input type="number" name="gewichtsklassen_leeftijd[${key}]"
                                        value="${leeftijdValue}"
                                        placeholder="99"
-                                       class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                       class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                        min="5" max="99">
                             </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
                             </div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Geslacht:</label>
                                 <select name="gewichtsklassen_geslacht[${key}]"
-                                        class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
-                                    <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>Gemengd</option>
+                                        class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
+                                    <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
                                     <option value="jongens" ${geslacht === 'jongens' ? 'selected' : ''}>M</option>
                                     <option value="meisjes" ${geslacht === 'meisjes' ? 'selected' : ''}>V</option>
                                 </select>
@@ -1001,14 +998,13 @@
                         </div>
                         <div class="flex flex-wrap items-center gap-4">
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                                <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
                                 <input type="number" name="gewichtsklassen_max_kg[${key}]"
                                        value="${maxKg}"
-                                       class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                       class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                        min="0" max="10" step="0.5"
                                        onchange="toggleGewichtsklassen(this)">
-                                <span class="text-xs text-gray-500">kg</span>
-                            </div>
+                                </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Band:</label>
                                 <select name="gewichtsklassen_band_filter[${key}]"
@@ -1289,24 +1285,23 @@
                     <div class="flex flex-wrap items-center gap-3 mb-2">
                         <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Max leeftijd:</label>
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
                             <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
                                    value=""
                                    placeholder="99"
-                                   class="leeftijd-input w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
                                    min="5" max="99">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${newKey}]"
                                    value="Nieuwe categorie"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-28">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-36">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Geslacht:</label>
                             <select name="gewichtsklassen_geslacht[${newKey}]"
-                                    class="geslacht-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="gemengd" selected>Gemengd</option>
+                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
+                                <option value="gemengd" selected>M&V</option>
                                 <option value="jongens">M</option>
                                 <option value="meisjes">V</option>
                             </select>
@@ -1324,14 +1319,13 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Max kg verschil:</label>
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
                             <input type="number" name="gewichtsklassen_max_kg[${newKey}]"
                                    value="3"
-                                   class="max-kg-input w-16 border rounded px-2 py-1 text-center text-sm"
+                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
-                            <span class="text-xs text-gray-500">kg</span>
-                        </div>
+                            </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Band:</label>
                             <select name="gewichtsklassen_band_filter[${newKey}]"
