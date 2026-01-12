@@ -347,14 +347,17 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 12 januari 2026 (middag)
+## Laatste Sessie: 12 januari 2026 (avond)
 
 ### Wat is gedaan:
-- **Classificatie systeem gedocumenteerd:**
-  - Sectie "Classificatie Systeem" toegevoegd aan PLANNING_DYNAMISCHE_INDELING.md
-  - Presets: JBN hardcoded in PHP, eigen presets in database
-  - Harde criteria: categorie niveau + poule niveau
-  - Zachte criteria: prioriteiten (alleen bij meerdere mogelijke indelingen)
+- **Grote refactoring: Config-based classificatie**
+  - Migration: sorteer velden toegevoegd (sort_categorie, sort_gewicht, sort_band, categorie_key)
+  - `classificeerJudoka()` methode: leest criteria uit preset config
+  - `herberkenKlassen()` refactored: gebruikt nu config ipv enum
+  - `groepeerJudokas()` refactored: sorteert op nieuwe velden ipv judoka_code
+  - PouleController: dynamische volgorde uit preset config
+  - Leeftijdsklasse enum gemarkeerd als deprecated
+  - Obsolete code verwijderd (bepaalGewichtsklasseVoorLeeftijd, hardcoded arrays)
 
 ### Openstaande items:
 - [ ] **TESTEN:** Poules genereren met custom categorie namen → check titels
