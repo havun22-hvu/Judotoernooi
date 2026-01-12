@@ -229,9 +229,11 @@ class PouleController extends Controller
         // Clear variant session
         session()->forget(['poule_varianten', 'poule_stats']);
 
+        $variantNummer = $variantIdx + 1;
+
         return response()->json([
             'success' => true,
-            'message' => "Variant #{$variantIdx + 1} toegepast: {$statistieken['totaal_poules']} poules",
+            'message' => "Variant #{$variantNummer} toegepast: {$statistieken['totaal_poules']} poules",
             'statistieken' => $statistieken,
         ]);
     }
