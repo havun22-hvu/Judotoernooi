@@ -29,12 +29,19 @@ class PouleController extends Controller
         // Get config and build dynamic ordering from preset
         $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
-        // Build leeftijdsklasse volgorde from config (labels as keys)
+        // Build leeftijdsklasse volgorde from config (labels AND keys)
         $leeftijdsklasseVolgorde = [];
         $index = 0;
         foreach ($gewichtsklassenConfig as $key => $config) {
             $label = $config['label'] ?? $key;
-            $leeftijdsklasseVolgorde[$label] = $index++;
+            // Map both label and key to same index for flexible matching
+            $leeftijdsklasseVolgorde[$label] = $index;
+            $leeftijdsklasseVolgorde[$key] = $index;
+            // Also map partial matches (e.g., "U7" matches "U7 Alles")
+            if (preg_match('/^(U\d+|Mini|Pupil|Aspirant|Junior|Senior)/i', $label, $m)) {
+                $leeftijdsklasseVolgorde[$m[1]] = $index;
+            }
+            $index++;
         }
 
         // Build labels mapping (for backwards compatibility in views)
@@ -51,7 +58,8 @@ class PouleController extends Controller
 
         // Sort by: age class (youngest first), then weight class (lightest first)
         $poules = $poules->sortBy([
-            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => $this->getLeeftijdsklasseVolgorde($a->leeftijdsklasse, $leeftijdsklasseVolgorde)
+                          <=> $this->getLeeftijdsklasseVolgorde($b->leeftijdsklasse, $leeftijdsklasseVolgorde),
             fn ($a, $b) => $this->parseGewicht($a->gewichtsklasse) <=> $this->parseGewicht($b->gewichtsklasse),
             fn ($a, $b) => $a->nummer <=> $b->nummer,
         ]);
@@ -60,6 +68,32 @@ class PouleController extends Controller
         $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
 
         return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse', 'leeftijdsklasseLabels'));
+    }
+
+    /**
+     * Get sort order for a leeftijdsklasse, with fallback to numeric parsing
+     */
+    private function getLeeftijdsklasseVolgorde(string $leeftijdsklasse, array $volgorde): int
+    {
+        // Direct match
+        if (isset($volgorde[$leeftijdsklasse])) {
+            return $volgorde[$leeftijdsklasse];
+        }
+
+        // Try prefix match (e.g., "U7 Alles" -> try "U7")
+        if (preg_match('/^(U\d+|Mini|Pupil|Aspirant|Junior|Senior)/i', $leeftijdsklasse, $m)) {
+            if (isset($volgorde[$m[1]])) {
+                return $volgorde[$m[1]];
+            }
+        }
+
+        // Fallback: parse numeric value from name (U7=7, U11=11, etc)
+        if (preg_match('/U(\d+)/i', $leeftijdsklasse, $m)) {
+            return (int) $m[1];
+        }
+
+        // Ultimate fallback
+        return 99;
     }
 
     /**
