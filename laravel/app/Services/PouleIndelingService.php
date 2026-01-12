@@ -868,19 +868,21 @@ class PouleIndelingService
         $aantal = $judokas->count();
         $judokasArray = $judokas->values()->all();
 
-        // Less than minimum: single pool (can't split)
+        // Less than minimum: single pool (can't split into valid pools)
         if ($aantal <= $this->minJudokas) {
             return [$judokasArray];
         }
 
-        // If within max, check if single pool is best
-        if ($aantal <= $this->maxJudokas) {
-            return [$judokasArray];
-        }
-
         // Find best division based on preference scores
+        // Even for small groups (4-6), check if splitting is preferred
         $bestePouleGroottes = [];
         $besteScore = PHP_INT_MAX;
+
+        // Also consider 1 pool as option if within bounds
+        if ($aantal >= $this->minJudokas && $aantal <= $this->maxJudokas) {
+            $bestePouleGroottes = [$aantal];
+            $besteScore = $this->berekenVerdelingScore([$aantal]);
+        }
 
         $maxPoules = (int) floor($aantal / $this->minJudokas);
 
