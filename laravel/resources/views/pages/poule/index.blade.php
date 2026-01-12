@@ -25,6 +25,69 @@
     </div>
 </div>
 
+{{-- Varianten panel (zoals bij blokverdeling) --}}
+@php
+    $varianten = session('poule_varianten', []);
+    $pouleStats = session('poule_stats', []);
+    $toonVarianten = request()->has('kies') && !empty($varianten);
+@endphp
+<div class="bg-white rounded-lg shadow p-3 mb-6 no-print">
+    <!-- Toepassen/Annuleer knoppen rechtsboven -->
+    @if($toonVarianten)
+    <div class="flex justify-end gap-3 mb-2">
+        <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
+            ✓ Toepassen
+        </button>
+        <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+    </div>
+    @endif
+
+    <!-- Variant knoppen -->
+    <div class="flex flex-wrap gap-2 mb-2">
+        @if($toonVarianten)
+            @foreach($varianten as $idx => $variant)
+            @php
+                $score = $variant['score'] ?? 0;
+                $params = $variant['params'] ?? [];
+                $stats = $variant['stats'] ?? [];
+                // Score kleur: lager = beter
+                $scoreKleur = $score < 100 ? 'text-green-600' : ($score < 200 ? 'text-yellow-600' : 'text-red-600');
+            @endphp
+            <button type="button" onclick="toonVariant({{ $idx }})"
+                    class="variant-btn px-3 py-2 rounded border text-sm transition-all {{ $idx === 0 ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 bg-white hover:bg-gray-50' }}"
+                    data-idx="{{ $idx }}"
+                    title="Score: {{ $score }} (lager=beter)&#10;Max kg: {{ $params['max_kg_verschil'] ?? 3 }}kg&#10;Max leeftijd: {{ $params['max_leeftijd_verschil'] ?? 2 }}j&#10;Poules: {{ $variant['aantal_poules'] ?? 0 }}">
+                <span class="font-bold variant-nummer">#{{ $idx + 1 }}</span>
+                <span class="variant-score font-bold {{ $scoreKleur }}">{{ $score }}</span>
+                <span class="variant-detail text-gray-400 text-xs">({{ $params['max_kg_verschil'] ?? 3 }}kg, {{ $variant['aantal_poules'] ?? 0 }}p)</span>
+            </button>
+            @endforeach
+        @else
+            @for($i = 1; $i <= 5; $i++)
+            <button type="button" disabled
+                    class="px-3 py-2 rounded border text-sm border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed">
+                <span class="font-bold">#{{ $i }}</span>
+                <span>--</span>
+            </button>
+            @endfor
+        @endif
+    </div>
+
+    <!-- Stats onderaan -->
+    <div class="text-sm text-gray-500">
+        @if($toonVarianten && !empty($pouleStats))
+            <span class="font-medium">{{ $pouleStats['totaal_judokas'] ?? 0 }} judoka's</span>
+            <span class="text-gray-400 text-xs">({{ round(($pouleStats['tijd_ms'] ?? 0) / 1000, 1) }}s)</span>
+            <span class="text-gray-400 mx-1">→</span>
+            <span>{{ $pouleStats['geldige_varianten'] ?? 0 }} varianten</span>
+            <span class="text-gray-400 mx-1">→</span>
+            <span class="font-bold text-blue-600">top {{ $pouleStats['getoond'] ?? 0 }}</span>
+        @else
+            Varianten (klik (her)Verdelen)
+        @endif
+    </div>
+</div>
+
 <div class="flex justify-between items-center mb-6 no-print">
     <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
     <div class="flex items-center space-x-4">
@@ -284,6 +347,53 @@ const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
+const kiesVariantUrl = '{{ route('toernooi.poule.kies-variant', $toernooi) }}';
+
+// Varianten data
+@if($toonVarianten)
+const variantenData = @json($varianten);
+let huidigeVariant = 0;
+
+function toonVariant(idx) {
+    huidigeVariant = idx;
+
+    // Update button styling
+    document.querySelectorAll('.variant-btn').forEach(btn => {
+        const btnIdx = parseInt(btn.dataset.idx);
+        if (btnIdx === idx) {
+            btn.classList.remove('border-gray-200', 'bg-white');
+            btn.classList.add('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+        } else {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'ring-2', 'ring-blue-200');
+            btn.classList.add('border-gray-200', 'bg-white');
+        }
+    });
+}
+
+async function pasVariantToe() {
+    try {
+        const response = await fetch(kiesVariantUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ variant: huidigeVariant })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Reload page without ?kies parameter
+            window.location.href = '{{ route('toernooi.poule.index', $toernooi) }}';
+        } else {
+            showToast(data.message || 'Fout bij toepassen variant', true);
+        }
+    } catch (err) {
+        showToast('Netwerkfout bij toepassen variant', true);
+    }
+}
+@endif
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
