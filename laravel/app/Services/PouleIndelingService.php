@@ -643,6 +643,13 @@ class PouleIndelingService
             $maxLeeftijd = $config['max_leeftijd'] ?? 99;
             $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
 
+            // Normalize legacy values: meisjes -> V, jongens -> M
+            if ($configGeslacht === 'MEISJES') {
+                $configGeslacht = 'V';
+            } elseif ($configGeslacht === 'JONGENS') {
+                $configGeslacht = 'M';
+            }
+
             // Check leeftijd
             if ($leeftijd > $maxLeeftijd) {
                 $sortCategorie++;
