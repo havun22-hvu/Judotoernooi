@@ -2,6 +2,19 @@
 
 namespace App\Enums;
 
+/**
+ * @deprecated Since Jan 2026 - Use preset config for classification
+ *
+ * This enum contains hardcoded JBN2025 categories and weight classes.
+ * New code should use toernooi->getAlleGewichtsklassen() from the active preset.
+ *
+ * Classification is now handled by:
+ * - PouleIndelingService::classificeerJudoka() - determines category from config
+ * - judokas.categorie_key - stores the config key
+ * - judokas.sort_categorie - stores the sort order
+ *
+ * This enum is kept only for backwards compatibility during transition.
+ */
 enum Leeftijdsklasse: string
 {
     case MINIS = 'minis';
