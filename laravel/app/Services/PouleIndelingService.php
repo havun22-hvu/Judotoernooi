@@ -533,12 +533,23 @@ class PouleIndelingService
         // Default to true if null (for backwards compatibility)
         $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
 
-        // Sort by new sort fields (simpler and more efficient than judoka_code string)
-        $judokas = $toernooi->judokas()
-            ->orderBy('sort_categorie')
-            ->orderBy('sort_gewicht')
-            ->orderBy('sort_band')
-            ->get();
+        // Sort by new sort fields, respecting prioriteiten order
+        // Default order: gewicht first, then band
+        $gewichtIdx = array_search('gewicht', $this->prioriteiten);
+        $bandIdx = array_search('band', $this->prioriteiten);
+        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false && $bandIdx < $gewichtIdx);
+
+        $query = $toernooi->judokas()->orderBy('sort_categorie');
+
+        if ($bandFirst) {
+            // Band has higher priority than gewicht
+            $query->orderBy('sort_band')->orderBy('sort_gewicht');
+        } else {
+            // Gewicht has higher priority (default)
+            $query->orderBy('sort_gewicht')->orderBy('sort_band');
+        }
+
+        $judokas = $query->get();
 
         $groepen = $judokas->groupBy(function (Judoka $judoka) use ($gebruikGewichtsklassen) {
             $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
