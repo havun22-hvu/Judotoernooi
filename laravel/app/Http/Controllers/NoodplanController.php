@@ -92,6 +92,9 @@ class NoodplanController extends Controller
         $judokas = $toernooi->judokas()
             ->with(['club', 'poules.mat', 'poules.blok'])
             ->orderBy('club_id')
+            ->orderBy('sort_categorie')
+            ->orderBy('sort_gewicht')
+            ->orderBy('sort_band')
             ->orderBy('naam')
             ->get();
 
@@ -106,6 +109,9 @@ class NoodplanController extends Controller
         $judokas = $toernooi->judokas()
             ->where('club_id', $club->id)
             ->with(['club', 'poules.mat', 'poules.blok'])
+            ->orderBy('sort_categorie')
+            ->orderBy('sort_gewicht')
+            ->orderBy('sort_band')
             ->orderBy('naam')
             ->get();
 

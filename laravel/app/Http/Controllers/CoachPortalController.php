@@ -376,6 +376,9 @@ class CoachPortalController extends Controller
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
             ->with(['poules.blok'])
+            ->orderBy('sort_categorie')
+            ->orderBy('sort_gewicht')
+            ->orderBy('sort_band')
             ->orderBy('naam')
             ->get();
 
@@ -849,6 +852,9 @@ class CoachPortalController extends Controller
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
             ->with(['poules.blok'])
+            ->orderBy('sort_categorie')
+            ->orderBy('sort_gewicht')
+            ->orderBy('sort_band')
             ->orderBy('naam')
             ->get();
 
