@@ -471,6 +471,13 @@ class PouleIndelingService
             }
 
             $toernooi->update(['poules_gegenereerd_op' => now()]);
+            // STAP 4: VALIDATIE - Check of alle judoka's zijn ingedeeld
+            $nietIngedeeld = $this->vindNietIngedeeldeJudokas($toernooi);
+            if (!empty($nietIngedeeld)) {
+                $statistieken['niet_ingedeeld'] = $nietIngedeeld;
+                $statistieken['waarschuwingen'][] = count($nietIngedeeld) . ' judoka(s) niet ingedeeld - controleer categorie configuratie';
+            }
+
 
             return $statistieken;
         });
@@ -1087,5 +1094,123 @@ class PouleIndelingService
         }
 
         return $bijgewerkt;
+    }
+
+    /**
+     * Vind judoka's die niet in een poule zijn ingedeeld
+     * Dit wijst op een onvolledige categorie configuratie
+     */
+    private function vindNietIngedeeldeJudokas(Toernooi $toernooi): array
+    {
+        // Haal alle judoka IDs op die in een poule zitten
+        $ingedeeldeIds = DB::table('judoka_poule')
+            ->whereIn('poule_id', $toernooi->poules()->pluck('id'))
+            ->pluck('judoka_id')
+            ->toArray();
+
+        // Vind judoka's die niet ingedeeld zijn
+        $nietIngedeeld = $toernooi->judokas()
+            ->whereNotIn('id', $ingedeeldeIds)
+            ->get(['id', 'naam', 'leeftijdsklasse', 'gewichtsklasse', 'band', 'gewicht', 'geboortejaar'])
+            ->map(function ($judoka) use ($toernooi) {
+                $reden = $this->bepaalRedenNietIngedeeld($judoka, $toernooi);
+                return [
+                    'id' => $judoka->id,
+                    'naam' => $judoka->naam,
+                    'leeftijdsklasse' => $judoka->leeftijdsklasse,
+                    'gewichtsklasse' => $judoka->gewichtsklasse,
+                    'band' => $judoka->band,
+                    'gewicht' => $judoka->gewicht,
+                    'reden' => $reden,
+                ];
+            })
+            ->toArray();
+
+        return $nietIngedeeld;
+    }
+
+    /**
+     * Bepaal waarom een judoka niet is ingedeeld
+     */
+    private function bepaalRedenNietIngedeeld($judoka, Toernooi $toernooi): string
+    {
+        $config = $toernooi->getAlleGewichtsklassen();
+        $toernooiJaar = $toernooi->datum?->year ?? (int) date('Y');
+        $leeftijd = $toernooiJaar - $judoka->geboortejaar;
+
+        $leeftijdMatch = false;
+        $bandMatch = false;
+        $gewichtMatch = false;
+
+        foreach ($config as $key => $cat) {
+            $maxLeeftijd = $cat['max_leeftijd'] ?? 99;
+            if ($leeftijd <= $maxLeeftijd) {
+                $leeftijdMatch = true;
+
+                // Check band filter
+                $bandFilter = $cat['band_filter'] ?? '';
+                if (empty($bandFilter) || $this->bandPastInFilter($judoka->band, $bandFilter)) {
+                    $bandMatch = true;
+                }
+
+                // Check gewicht
+                $gewichten = $cat['gewichten'] ?? [];
+                if (!empty($gewichten) && $judoka->gewicht) {
+                    foreach ($gewichten as $g) {
+                        $klasse = (float) str_replace(['-', '+'], '', $g);
+                        if (str_starts_with($g, '+')) {
+                            if ($judoka->gewicht >= $klasse) {
+                                $gewichtMatch = true;
+                                break;
+                            }
+                        } else {
+                            if ($judoka->gewicht <= $klasse) {
+                                $gewichtMatch = true;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    $gewichtMatch = true;
+                }
+            }
+        }
+
+        if (!$leeftijdMatch) {
+            return "Geen categorie voor leeftijd {$leeftijd} jaar";
+        }
+        if (!$bandMatch) {
+            return "Geen categorie voor band '{$judoka->band}' bij deze leeftijd";
+        }
+        if (!$gewichtMatch) {
+            return "Geen gewichtsklasse voor {$judoka->gewicht}kg";
+        }
+
+        return "Te groot gewichtsverschil met andere judoka's in de groep";
+    }
+
+    /**
+     * Check of een band past in een filter
+     */
+    private function bandPastInFilter(?string $band, string $filter): bool
+    {
+        if (empty($filter) || empty($band)) return true;
+
+        $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
+        $bandIdx = $bandVolgorde[strtolower($band)] ?? 0;
+
+        if (str_starts_with($filter, 'tm_')) {
+            $filterBand = str_replace('tm_', '', $filter);
+            $filterIdx = $bandVolgorde[$filterBand] ?? 99;
+            return $bandIdx <= $filterIdx;
+        }
+
+        if (str_starts_with($filter, 'vanaf_')) {
+            $filterBand = str_replace('vanaf_', '', $filter);
+            $filterIdx = $bandVolgorde[$filterBand] ?? 0;
+            return $bandIdx >= $filterIdx;
+        }
+
+        return true;
     }
 }

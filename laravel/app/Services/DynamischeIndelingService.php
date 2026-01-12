@@ -668,20 +668,24 @@ class DynamischeIndelingService
      * Sortering op band: lagere banden in poule 1, hogere in poule 2 (wit bij wit, bruin bij bruin)
      * NA het splitsen: check gewichtslimiet per poule, swap indien nodig
      */
+    /**
+     * Maak poules van een groep judoka's
+     *
+     * ALGORITME (zie docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md):
+     * 1. Sorteer op basis van prioriteit (gewicht of band eerst)
+     * 2. Verdeel van boven naar beneden, nieuwe poule als max kg verschil overschreden zou worden
+     * 3. Max kg verschil is HARD constraint - wordt NOOIT overschreden
+     */
     private function maakPoules(Collection $judokas, float $maxKgVerschil = 3.0): array
     {
         if ($judokas->count() < 2) {
             return [];
         }
 
-        // Bepaal sorteervolgorde op basis van verdeling_prioriteiten
-        // Als gewicht eerst komt, sorteer op gewicht (primair) dan band
-        // Als band eerst komt, sorteer op band (primair) dan gewicht
+        // STAP 1: Sorteer op basis van prioriteit instelling
         $prioriteiten = $this->config['verdeling_prioriteiten'] ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
         $gewichtIndex = array_search('gewicht', $prioriteiten);
         $bandIndex = array_search('band', $prioriteiten);
-
-        // Gewicht heeft hogere prioriteit als het eerder in de array staat
         $gewichtEerst = $gewichtIndex !== false && ($bandIndex === false || $gewichtIndex < $bandIndex);
 
         $gesorteerd = $judokas->sortBy(function ($judoka) use ($gewichtEerst) {
@@ -693,27 +697,81 @@ class DynamischeIndelingService
                 // Primair op band, secundair op gewicht
                 return [self::BAND_VOLGORDE[$judoka->band] ?? 99, $gewicht];
             }
-        })->values();
+        })->values()->all();
 
+        // STAP 2: Verdeel van boven naar beneden met max kg verschil als HARD constraint
         $poules = [];
-        $pouleGroottes = $this->berekenPouleGroottes($gesorteerd->count());
+        $huidigePoule = [];
+        $minGewichtInPoule = null;
+        $maxGewichtInPoule = null;
 
-        $offset = 0;
-        foreach ($pouleGroottes as $grootte) {
-            $poule = $gesorteerd->slice($offset, $grootte)->values()->all();
-            if (count($poule) >= 2) {
-                $poules[] = $poule;
+        foreach ($gesorteerd as $judoka) {
+            $gewicht = $this->getEffectiefGewicht($judoka);
+
+            // Check of judoka in huidige poule past (max kg verschil)
+            $pastInPoule = true;
+            if (!empty($huidigePoule)) {
+                $nieuwMin = min($minGewichtInPoule, $gewicht);
+                $nieuwMax = max($maxGewichtInPoule, $gewicht);
+                if (($nieuwMax - $nieuwMin) > $maxKgVerschil) {
+                    $pastInPoule = false;
+                }
             }
-            $offset += $grootte;
+
+            if ($pastInPoule) {
+                // Voeg toe aan huidige poule
+                $huidigePoule[] = $judoka;
+                $minGewichtInPoule = $minGewichtInPoule === null ? $gewicht : min($minGewichtInPoule, $gewicht);
+                $maxGewichtInPoule = $maxGewichtInPoule === null ? $gewicht : max($maxGewichtInPoule, $gewicht);
+            } else {
+                // Start nieuwe poule
+                if (count($huidigePoule) >= 2) {
+                    $poules[] = $huidigePoule;
+                } elseif (count($huidigePoule) === 1 && !empty($poules)) {
+                    // 1 judoka: probeer toe te voegen aan vorige poule als het past
+                    $this->probeerToeTeVoegenAanLaatstePoule($poules, $huidigePoule[0], $maxKgVerschil);
+                }
+                $huidigePoule = [$judoka];
+                $minGewichtInPoule = $gewicht;
+                $maxGewichtInPoule = $gewicht;
+            }
         }
 
-        // Check en fix gewichtslimiet per poule
-        if (count($poules) > 1) {
-            $poules = $this->fixGewichtLimietInPoules($poules, $maxKgVerschil);
+        // Laatste poule toevoegen
+        if (count($huidigePoule) >= 2) {
+            $poules[] = $huidigePoule;
+        } elseif (count($huidigePoule) === 1 && !empty($poules)) {
+            $this->probeerToeTeVoegenAanLaatstePoule($poules, $huidigePoule[0], $maxKgVerschil);
+        }
+
+        // STAP 3: Pas clubspreiding toe indien geconfigureerd
+        if (in_array('clubspreiding', $prioriteiten) && count($poules) > 1) {
+            $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil);
         }
 
         return $poules;
     }
+
+    /**
+     * Probeer een enkele judoka toe te voegen aan de laatste poule als het past
+     */
+    private function probeerToeTeVoegenAanLaatstePoule(array &$poules, $judoka, float $maxKgVerschil): void
+    {
+        if (empty($poules)) return;
+        
+        $laatstePoule = &$poules[count($poules) - 1];
+        $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
+        $judokaGewicht = $this->getEffectiefGewicht($judoka);
+        
+        $nieuwMin = min(min($laatsteGewichten), $judokaGewicht);
+        $nieuwMax = max(max($laatsteGewichten), $judokaGewicht);
+        
+        if (($nieuwMax - $nieuwMin) <= $maxKgVerschil) {
+            $laatstePoule[] = $judoka;
+        }
+        // Anders: judoka niet ingedeeld (wordt later gerapporteerd in validatie)
+    }
+
 
     /**
      * Fix gewichtslimiet overschrijdingen door judoka's te swappen tussen poules
@@ -1210,5 +1268,75 @@ class DynamischeIndelingService
         $min = min($gewichten);
         $max = max($gewichten);
         return $min === $max ? "{$min}kg" : "{$min}-{$max}kg";
+    }
+
+    /**
+     * Pas clubspreiding toe: probeer judoka's van dezelfde club te verdelen over poules
+     * Alleen swappen als het binnen de gewichtslimiet blijft (HARD constraint)
+     */
+    private function pasClubspreidingToe(array $poules, float $maxKgVerschil): array
+    {
+        $aantalPoules = count($poules);
+        if ($aantalPoules < 2) {
+            return $poules;
+        }
+
+        // Voor elke poule, check voor club duplicaten
+        for ($p = 0; $p < $aantalPoules; $p++) {
+            $clubCount = [];
+            foreach ($poules[$p] as $idx => $judoka) {
+                $clubId = $judoka->club_id ?? 0;
+                if (!isset($clubCount[$clubId])) {
+                    $clubCount[$clubId] = [];
+                }
+                $clubCount[$clubId][] = $idx;
+            }
+
+            // Voor clubs met meerdere judoka's, probeer te swappen
+            foreach ($clubCount as $clubId => $indices) {
+                if (count($indices) <= 1) continue;
+
+                // Probeer de tweede (en verdere) judoka(s) te swappen naar andere poules
+                for ($i = 1; $i < count($indices); $i++) {
+                    $judokaIdx = $indices[$i];
+                    $judoka = $poules[$p][$judokaIdx];
+
+                    // Zoek een swap kandidaat in een andere poule
+                    for ($q = 0; $q < $aantalPoules; $q++) {
+                        if ($q === $p) continue;
+
+                        foreach ($poules[$q] as $kandidaatIdx => $kandidaat) {
+                            // Check of swap beide poules binnen gewichtslimiet houdt
+                            if ($this->swapVerbetert($poules[$p], $judokaIdx, $poules[$q], $kandidaatIdx, $maxKgVerschil) &&
+                                $kandidaat->club_id !== $clubId &&
+                                !$this->clubInPoule($poules[$p], $kandidaat->club_id, $judokaIdx)) {
+
+                                if (!$this->clubInPoule($poules[$q], $judoka->club_id, $kandidaatIdx)) {
+                                    // Swap
+                                    $poules[$p][$judokaIdx] = $kandidaat;
+                                    $poules[$q][$kandidaatIdx] = $judoka;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Check of een club al in een poule zit (exclusief bepaalde index)
+     */
+    private function clubInPoule(array $poule, ?int $clubId, int $excludeIdx): bool
+    {
+        foreach ($poule as $idx => $judoka) {
+            if ($idx !== $excludeIdx && ($judoka->club_id ?? 0) === $clubId) {
+                return true;
+            }
+        }
+        return false;
     }
 }
