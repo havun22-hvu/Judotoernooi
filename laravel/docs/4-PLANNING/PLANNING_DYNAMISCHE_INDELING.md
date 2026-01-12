@@ -38,14 +38,28 @@ Drie keuzes:
 2. **JBN 2025** - Officiële JBN 2025 regels (vaste gewichtsklassen)
 3. **JBN 2026** - Officiële JBN 2026 regels (vaste gewichtsklassen)
 
-### Bij "GEEN STANDAARD" (dynamische indeling)
+### Sorteer Prioriteit (ALTIJD zichtbaar)
+
+De sorteer prioriteit wordt altijd getoond, ongeacht de preset keuze.
+Dit bepaalt de volgorde waarin judokas over poules worden verdeeld binnen een categorie.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Sorteer prioriteit: (i)  - bij categorieën met grote aantallen │
-│ [1. Gewicht] [2. Band] [3. Groepsgrootte] [4. Club]            │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
+│ Sorteer prioriteit: (i)                                         │
+│ [1. Band] [2. Gewicht] [3. Groepsgrootte] [4. Club]            │
+│ (sleep om te wisselen)                                          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Belangrijke gedrag:**
+- **Band eerst:** Witte banden vullen eerst de poules, dan gele, etc.
+- **Gewicht eerst:** Lichtste judoka's eerst in de poules
+- Harde criteria (leeftijd, geslacht, gewichtsklasse) blijven ALTIJD gerespecteerd
+
+### Bij "GEEN STANDAARD"
+
+```
+┌─────────────────────────────────────────────────────────────────┐
 │                        (leeg)                                   │
 │                                                                 │
 │ [+ Categorie toevoegen]                                         │
@@ -219,7 +233,14 @@ Gelden **alleen** bij grote aantallen binnen een categorie, wanneer poules op me
 | `sort_band` | Band niveau (1=wit, ..., 7=zwart) | 3 (= oranje) |
 
 **Sortering:**
+
+De volgorde van `sort_gewicht` en `sort_band` is afhankelijk van `verdeling_prioriteiten`:
+
 ```sql
+-- Als 'band' voor 'gewicht' in prioriteiten:
+ORDER BY sort_categorie ASC, sort_band ASC, sort_gewicht ASC
+
+-- Als 'gewicht' voor 'band' in prioriteiten (default):
 ORDER BY sort_categorie ASC, sort_gewicht ASC, sort_band ASC
 ```
 
