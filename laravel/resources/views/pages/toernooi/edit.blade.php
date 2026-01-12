@@ -1063,14 +1063,18 @@
 
             async function loadEigenPresets() {
                 @if(Auth::guard('organisator')->check())
+                console.log('[Preset] loadEigenPresets called - organisator guard active');
                 try {
                     const response = await fetch('{{ route("organisator.presets.index") }}', {
                         credentials: 'same-origin'
                     });
+                    console.log('[Preset] Fetch response status:', response.status, response.ok);
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
+                        console.log('[Preset] Content-Type:', contentType);
                         if (contentType && contentType.includes('application/json')) {
                             eigenPresets = await response.json();
+                            console.log('[Preset] Loaded presets:', eigenPresets);
                             presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
                             eigenPresets.forEach(preset => {
                                 const option = document.createElement('option');
@@ -1093,8 +1097,10 @@
                         }
                     }
                 } catch (e) {
-                    // Silently fail - presets are optional
+                    console.error('[Preset] Error loading presets:', e);
                 }
+                @else
+                console.log('[Preset] loadEigenPresets skipped - organisator guard NOT active');
                 @endif
             }
             loadEigenPresets();
@@ -1130,6 +1136,8 @@
             // Load selected preset
             presetsDropdown.addEventListener('change', () => {
                 const presetId = presetsDropdown.value;
+                console.log('[Preset] Selected presetId:', presetId);
+                console.log('[Preset] Available eigenPresets:', eigenPresets);
                 if (!presetId) {
                     huidigePresetId = null;
                     huidigePresetNaam = null;
@@ -1138,9 +1146,14 @@
                 }
 
                 const preset = eigenPresets.find(p => p.id == presetId);
-                if (!preset) return;
+                console.log('[Preset] Found preset:', preset);
+                if (!preset) {
+                    console.error('[Preset] Preset not found in eigenPresets array!');
+                    return;
+                }
 
                 if (confirm(`Preset "${preset.naam}" laden? Dit vervangt alle huidige instellingen.`)) {
+                    console.log('[Preset] Loading configuratie:', preset.configuratie);
                     renderCategorieen(preset.configuratie);
                     huidigePresetId = preset.id;
                     huidigePresetNaam = preset.naam;
