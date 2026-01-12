@@ -165,6 +165,57 @@ id, organisator_id, naam, configuratie (JSON), timestamps
 unique: [organisator_id, naam]
 ```
 
+## Classificatie Systeem
+
+### Presets
+
+| Preset | Opslag |
+|--------|--------|
+| **JBN 2025** | Hardcoded in PHP (`Toernooi::getJbn2025Gewichtsklassen()`) |
+| **JBN 2026** | Hardcoded in PHP (`Toernooi::getJbn2026Gewichtsklassen()`) |
+| **Eigen presets** | Database (`gewichtsklassen_presets` tabel) |
+
+De code volgt de gekozen/actieve preset.
+
+### Harde Criteria (worden NOOIT overschreden)
+
+**Categorie niveau** (bepaalt in welke categorie een judoka valt):
+
+| Criterium | Voorbeeld |
+|-----------|-----------|
+| `max_leeftijd` | U11 = max 10 jaar |
+| `geslacht` | M / V / Gemengd |
+| `band_filter` | t/m oranje, vanaf groen |
+| `gewichtsklassen` | -24kg, -27kg (bij vaste klassen) |
+
+**Matching:** Categorieën worden doorlopen van jong→oud. Eerste categorie waar judoka aan alle criteria voldoet = zijn categorie.
+
+**Poule niveau** (bepaalt met wie een judoka in een poule mag):
+
+| Criterium | Voorbeeld |
+|-----------|-----------|
+| `max_kg_verschil` | Max 3 kg verschil binnen poule |
+| `max_leeftijd_verschil` | Max 1 jaar verschil binnen poule |
+
+### Zachte Criteria (prioriteiten)
+
+Gelden **alleen** bij grote aantallen binnen een categorie, wanneer poules op meerdere manieren samengesteld kunnen worden. Dan bepalen de prioriteiten de optimale verdeling:
+
+- Gewicht
+- Band
+- Groepsgrootte
+- Clubspreiding
+
+### Opslag en Weergave
+
+- **Database:** `judokas.leeftijdsklasse` bevat de config key (bijv. `u11_h`)
+- **Weergave:** Bij poule titels wordt `label` uit de preset opgehaald
+
+### Legacy
+
+De `App\Enums\Leeftijdsklasse` enum is legacy (voorheen JBN2025 hardcoded).
+Nieuwe code moet `toernooi->gewichtsklassen` (uit preset) gebruiken.
+
 ## Sorteer Prioriteit (bij dynamische indeling)
 
 Bij categorieën met grote aantallen (bijv. 30 judoka's in 8-9 jaar, 34-36 kg)

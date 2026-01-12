@@ -41,9 +41,21 @@ php artisan serve --port=8007   # http://localhost:8007
 - **Eliminatie** - Double elimination met kruisfinales
 
 ### Classificatie
-- **Leeftijdsklassen:** Mini's, Pupillen A/B/C, U15, U18, U21, Senioren
-- **Banden:** Wit → Zwart
-- **Geslacht:** Per leeftijdsgroep instelbaar (Gemengd / Jongens / Meisjes)
+
+> **Volledige docs:** `laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md`
+
+**Presets:**
+| Type | Opslag |
+|------|--------|
+| JBN 2025/2026 | Hardcoded PHP (`Toernooi::getJbn20XXGewichtsklassen()`) |
+| Eigen presets | Database (`gewichtsklassen_presets`) |
+
+**Harde criteria (NOOIT overschreden):**
+- Categorie niveau: max_leeftijd, geslacht, band_filter, gewichtsklassen
+- Poule niveau: max_kg_verschil, max_leeftijd_verschil
+
+**Zachte criteria (prioriteiten):**
+- Alleen bij meerdere mogelijke indelingen: gewicht, band, groepsgrootte, club
 
 ### Indeling Modi (per leeftijdsgroep)
 
@@ -51,8 +63,6 @@ php artisan serve --port=8007   # http://localhost:8007
 |-------|---------|-----|
 | **Vaste klassen** | max_kg_verschil = 0 | JBN gewichtsklassen |
 | **Dynamisch** | max_kg_verschil > 0 | Groepen op basis van werkelijk gewicht |
-
-> **Planning:** `laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md`
 
 ---
 
@@ -337,16 +347,14 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 12 januari 2026
+## Laatste Sessie: 12 januari 2026 (middag)
 
 ### Wat is gedaan:
-- **Delete button voor judoka's** - Acties kolom met × knop + confirm dialog
-- **Poule titels fix** - Categorie naam uit instellingen wordt nu correct overgenomen
-  - `leeftijdsklasseToConfigKey()` uitgebreid met C-pupillen, -21 categorieën
-  - Fallback via normalisatie voor custom categorieën
-- **Docs bijgewerkt:**
-  - GEBRUIKERSHANDLEIDING.md: secties "Judoka Verwijderen" en "Poule Titels"
-  - PLANNING_DYNAMISCHE_INDELING.md: sectie "Poule Titels" verduidelijkt
+- **Classificatie systeem gedocumenteerd:**
+  - Sectie "Classificatie Systeem" toegevoegd aan PLANNING_DYNAMISCHE_INDELING.md
+  - Presets: JBN hardcoded in PHP, eigen presets in database
+  - Harde criteria: categorie niveau + poule niveau
+  - Zachte criteria: prioriteiten (alleen bij meerdere mogelijke indelingen)
 
 ### Openstaande items:
 - [ ] **TESTEN:** Poules genereren met custom categorie namen → check titels
@@ -356,7 +364,6 @@ php artisan view:cache
 - [ ] Fase 4 dynamische indeling: unit tests
 
 ### Belangrijke context voor volgende keer:
+- **Classificatie:** Zie `PLANNING_DYNAMISCHE_INDELING.md` sectie "Classificatie Systeem"
 - **Poule titels:** Categorie naam komt uit `$gewichtsklassenConfig[$configKey]['label']`
-  - Mapping in `PouleIndelingService::leeftijdsklasseToConfigKey()`
-  - Fallback normaliseert automatisch (lowercase, spaties/hyphens → underscores)
 - **Gewicht fallback:** `getEffectiefGewicht()` in `DynamischeIndelingService`
