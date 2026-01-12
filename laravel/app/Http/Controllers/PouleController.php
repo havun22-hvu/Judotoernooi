@@ -24,48 +24,22 @@ class PouleController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        // Define age class order (youngest to oldest)
-        $leeftijdsklasseVolgorde = [
-            "Mini's" => 1,
-            'A-pupillen' => 2,
-            'B-pupillen' => 3,
-            'U9' => 1,
-            'U11' => 2,
-            'U13' => 3,
-            'U15' => 4,
-            'U18' => 5,
-            'U21' => 6,
-            'Senioren' => 7,
-            'Dames -15' => 4,
-            'Heren -15' => 4,
-            'Dames -18' => 5,
-            'Heren -18' => 5,
-            'Dames' => 6,
-            'Heren' => 6,
-        ];
+        // Get config and build dynamic ordering from preset
+        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
-        // Mapping JBN leeftijdsklassen naar config keys
-        $leeftijdsklasseToKey = [
-            "Mini's" => 'minis',
-            'A-pupillen' => 'a_pupillen',
-            'B-pupillen' => 'b_pupillen',
-            'Dames -15' => 'dames_15',
-            'Heren -15' => 'heren_15',
-            'Dames -18' => 'dames_18',
-            'Heren -18' => 'heren_18',
-            'Dames' => 'dames',
-            'Heren' => 'heren',
-        ];
+        // Build leeftijdsklasse volgorde from config (labels as keys)
+        $leeftijdsklasseVolgorde = [];
+        $index = 0;
+        foreach ($gewichtsklassenConfig as $key => $config) {
+            $label = $config['label'] ?? $key;
+            $leeftijdsklasseVolgorde[$label] = $index++;
+        }
 
-        // Bouw labels mapping: JBN label -> custom label uit config
-        $gewichtsklassenConfig = $toernooi->gewichtsklassen ?? [];
+        // Build labels mapping (for backwards compatibility in views)
         $leeftijdsklasseLabels = [];
-        foreach ($leeftijdsklasseToKey as $jbnLabel => $configKey) {
-            if (isset($gewichtsklassenConfig[$configKey]['label'])) {
-                $leeftijdsklasseLabels[$jbnLabel] = $gewichtsklassenConfig[$configKey]['label'];
-            } else {
-                $leeftijdsklasseLabels[$jbnLabel] = $jbnLabel; // fallback naar JBN label
-            }
+        foreach ($gewichtsklassenConfig as $key => $config) {
+            $label = $config['label'] ?? $key;
+            $leeftijdsklasseLabels[$label] = $label;
         }
 
         $poules = $toernooi->poules()

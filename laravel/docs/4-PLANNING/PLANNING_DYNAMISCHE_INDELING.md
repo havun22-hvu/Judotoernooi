@@ -206,15 +206,41 @@ Gelden **alleen** bij grote aantallen binnen een categorie, wanneer poules op me
 - Groepsgrootte
 - Clubspreiding
 
-### Opslag en Weergave
+### Opslag
 
-- **Database:** `judokas.leeftijdsklasse` bevat de config key (bijv. `u11_h`)
-- **Weergave:** Bij poule titels wordt `label` uit de preset opgehaald
+**judokas tabel:**
+
+| Veld | Inhoud | Voorbeeld |
+|------|--------|-----------|
+| `leeftijdsklasse` | Label uit preset config | "Mini's", "U11 Heren" |
+| `categorie_key` | Config key voor lookup | "minis", "u11_h" |
+| `sort_categorie` | Volgorde uit config (0, 1, 2, ...) | 0, 1, 2 |
+| `sort_gewicht` | Gewicht in grammen | 30500 (= 30.5kg) |
+| `sort_band` | Band niveau (1=wit, ..., 7=zwart) | 3 (= oranje) |
+
+**Sortering:**
+```sql
+ORDER BY sort_categorie ASC, sort_gewicht ASC, sort_band ASC
+```
+
+**Band niveaus:**
+| Band | Niveau |
+|------|--------|
+| wit | 1 |
+| geel | 2 |
+| oranje | 3 |
+| groen | 4 |
+| blauw | 5 |
+| bruin | 6 |
+| zwart | 7 |
 
 ### Legacy
 
-De `App\Enums\Leeftijdsklasse` enum is legacy (voorheen JBN2025 hardcoded).
-Nieuwe code moet `toernooi->gewichtsklassen` (uit preset) gebruiken.
+De `App\Enums\Leeftijdsklasse` enum is **deprecated**.
+- Bevat hardcoded JBN2025 categorieën
+- Wordt niet meer gebruikt voor classificatie
+- Nieuwe code moet `toernooi->gewichtsklassen` (uit preset) gebruiken
+- `judoka_code` veld is deprecated, gebruik sorteer velden
 
 ## Sorteer Prioriteit (bij dynamische indeling)
 
