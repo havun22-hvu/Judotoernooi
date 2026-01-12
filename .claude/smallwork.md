@@ -232,6 +232,29 @@
 
 ---
 
+## Sessie: 12 januari 2026
+
+### Feat: Delete button voor judoka's
+- **Type:** Feature
+- **Wat:** Delete button (×) toegevoegd aan judoka overzicht tabel
+- **Bestanden:**
+  - `resources/views/pages/judoka/index.blade.php` - Acties kolom + delete form
+  - `docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md` - sectie "Judoka Verwijderen" toegevoegd
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (regel 85-95)
+
+### Fix: Poule titels nemen categorie naam over uit instellingen
+- **Type:** Bug fix
+- **Wat:** Mapping in `leeftijdsklasseToConfigKey()` was incompleet (miste C-pupillen, -21 categorieën)
+- **Waarom:** Poule titels toonden JBN standaard namen i.p.v. custom categorie namen
+- **Oplossing:** Mapping uitgebreid + fallback via normalisatie voor custom categorieën
+- **Bestanden:**
+  - `app/Services/PouleIndelingService.php:955-986`
+  - `docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md` - sectie "Poule Titels" toegevoegd
+  - `docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md` - sectie verduidelijkt
+- **Naar permanente docs?** ☑ Ja → beide docs bijgewerkt
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

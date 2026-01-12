@@ -337,31 +337,26 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 10 januari 2026 (avond)
+## Laatste Sessie: 12 januari 2026
 
 ### Wat is gedaan:
-- **KRITIEKE BUG FIX:** Gewicht constraint werd genegeerd (30kg verschil i.p.v. max 3kg)
-  - Oorzaak: `DynamischeIndelingService` gebruikte `$judoka->gewicht` direct, maar dit is vaak `null`
-  - Oplossing: `getEffectiefGewicht()` helper met fallback: gewogen → ingeschreven → gewichtsklasse
-  - 20+ plekken in de service bijgewerkt
-- **UI: Gewicht per judoka** in poule overzicht
-  - Toont gewogen gewicht (groen), of ingeschreven gewicht, of gewichtsklasse (≤38kg)
-  - Min-max range in poule titel gebruikt nu ook fallback
-- **Navigatie verbeterd:**
-  - Title link gaat naar toernooi dashboard (was: instellingen)
-  - Organisator naam is nu dropdown met "Toernooien" + "Uitloggen"
+- **Delete button voor judoka's** - Acties kolom met × knop + confirm dialog
+- **Poule titels fix** - Categorie naam uit instellingen wordt nu correct overgenomen
+  - `leeftijdsklasseToConfigKey()` uitgebreid met C-pupillen, -21 categorieën
+  - Fallback via normalisatie voor custom categorieën
+- **Docs bijgewerkt:**
+  - GEBRUIKERSHANDLEIDING.md: secties "Judoka Verwijderen" en "Poule Titels"
+  - PLANNING_DYNAMISCHE_INDELING.md: sectie "Poule Titels" verduidelijkt
 
 ### Openstaande items:
-- [ ] **TESTEN:** Poules opnieuw genereren en checken dat max kg constraint nu werkt
+- [ ] **TESTEN:** Poules genereren met custom categorie namen → check titels
 - [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
 - [ ] Testen: versleep judoka → statistieken + ranges update
-- [ ] Testen: import CSV met ontbrekend geboortejaar → "Onvolledig" filter
-- [ ] Testen: JBN preset laden → gemengde categorieën voor jeugd
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 
 ### Belangrijke context voor volgende keer:
-- **Gewicht fallback:** Veel judoka's hebben alleen `gewichtsklasse` (bijv. "-38"), niet `gewicht`
-  - `getEffectiefGewicht()` in `DynamischeIndelingService` handelt dit af
-  - Zelfde logica in `PouleController::berekenPouleRanges()` en de Blade view
-- **Branch:** `feature/dynamische-indeling`
+- **Poule titels:** Categorie naam komt uit `$gewichtsklassenConfig[$configKey]['label']`
+  - Mapping in `PouleIndelingService::leeftijdsklasseToConfigKey()`
+  - Fallback normaliseert automatisch (lowercase, spaties/hyphens → underscores)
+- **Gewicht fallback:** `getEffectiefGewicht()` in `DynamischeIndelingService`
