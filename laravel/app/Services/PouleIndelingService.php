@@ -1028,6 +1028,7 @@ class PouleIndelingService
     /**
      * Calculate score for a division based on preference order
      * Lower score = better division
+     * Uses exponential scoring so 2x preferred size beats 1x less preferred size
      */
     private function berekenVerdelingScore(array $pouleGroottes): int
     {
@@ -1041,8 +1042,10 @@ class PouleIndelingService
                 // Size not in preference list - heavy penalty
                 $score += 1000;
             } else {
-                // Score based on position: first preference = 0, second = 10, etc.
-                $score += $positie * 10;
+                // Exponential scoring: 2^position (1, 2, 4, 8, ...)
+                // This ensures 2 pools of position 2 (score 8) beats 1 pool of position 3 (score 8)
+                // Add 1 to differentiate: 1, 3, 7, 15 (2^(n+1) - 1)
+                $score += pow(2, $positie + 1) - 1;
             }
         }
 
