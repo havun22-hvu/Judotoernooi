@@ -677,6 +677,7 @@
                         <label class="cursor-pointer" id="eigen-preset-radio-label" style="display: none;">
                             <input type="radio" name="categorie_type" value="eigen"
                                    x-model="categorieType"
+                                   @change="if($event.target.checked) loadEigenPreset()"
                                    class="sr-only peer">
                             <span class="block px-3 py-2 rounded text-sm peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
                                 Eigen Preset
@@ -929,6 +930,17 @@
                     renderCategorieen(jbn2026);
                 } else {
                     document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
+                }
+            }
+
+            // Load eigen preset when radio button is clicked
+            window.loadEigenPreset = function() {
+                const presetId = document.getElementById('eigen-presets-dropdown').value;
+                if (!presetId) return;
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                if (preset && preset.configuratie) {
+                    renderCategorieen(preset.configuratie);
                 }
             }
 
