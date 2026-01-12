@@ -952,8 +952,8 @@ class DynamischeIndelingService
             return [];
         }
 
-        // Voor kleine aantallen, speciale gevallen
-        if ($aantal <= 6) {
+        // Minimum pool size is 3, so can't split below 6
+        if ($aantal <= 3) {
             return [$aantal]; // 1 poule
         }
 
