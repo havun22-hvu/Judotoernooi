@@ -411,6 +411,7 @@
             container.addEventListener('drop', function(e) {
                 e.preventDefault();
                 updateHiddenInput();
+                if (window.triggerAutoSave) window.triggerAutoSave();
             });
 
             // Remove button
@@ -418,6 +419,7 @@
                 if (e.target.classList.contains('remove-voorkeur')) {
                     e.target.closest('.voorkeur-item').remove();
                     updateHiddenInput();
+                    if (window.triggerAutoSave) window.triggerAutoSave();
                 }
             });
 
@@ -443,6 +445,7 @@
                 `;
                 container.appendChild(item);
                 updateHiddenInput();
+                if (window.triggerAutoSave) window.triggerAutoSave();
             });
 
             // ========== PRIORITEIT VOLGORDE DRAG & DROP ==========
@@ -494,6 +497,7 @@
                 items.forEach((item, idx) => {
                     item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
                 });
+                if (window.triggerAutoSave) window.triggerAutoSave();
             });
 
             // ========== WEDSTRIJDSCHEMA DRAG & DROP ==========
@@ -532,6 +536,7 @@
                     e.preventDefault();
                     updateWedstrijdNumbers(container);
                     updateWedstrijdSchemasInput();
+                    if (window.triggerAutoSave) window.triggerAutoSave();
                 });
             });
 
@@ -1816,6 +1821,9 @@ function togglePassword(button) {
 
 <script>
 // Auto-save for toernooi settings
+// Global trigger function for drag & drop handlers
+window.triggerAutoSave = function() {};
+
 (function() {
     const form = document.getElementById('toernooi-form');
     if (!form) return;
@@ -1837,6 +1845,13 @@ function togglePassword(button) {
     function markClean() {
         isDirty = false;
     }
+
+    // Expose trigger for drag & drop handlers
+    window.triggerAutoSave = function() {
+        markDirty();
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(autoSave, 500);
+    };
 
     function autoSave() {
         if (!isDirty) return;
