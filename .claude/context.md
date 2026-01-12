@@ -347,26 +347,36 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 12 januari 2026 (avond)
+## Laatste Sessie: 13 januari 2026 (nacht)
 
 ### Wat is gedaan:
-- **Grote refactoring: Config-based classificatie**
-  - Migration: sorteer velden toegevoegd (sort_categorie, sort_gewicht, sort_band, categorie_key)
-  - `classificeerJudoka()` methode: leest criteria uit preset config
-  - `herberkenKlassen()` refactored: gebruikt nu config ipv enum
-  - `groepeerJudokas()` refactored: sorteert op nieuwe velden ipv judoka_code
-  - PouleController: dynamische volgorde uit preset config
-  - Leeftijdsklasse enum gemarkeerd als deprecated
-  - Obsolete code verwijderd (bepaalGewichtsklasseVoorLeeftijd, hardcoded arrays)
+- **Geslacht waarden gefixt**
+  - UI dropdown: `'jongens'/'meisjes'` → `'M'/'V'`
+  - Backwards compatibility in `classificeerJudoka()` voor oude waarden
+  - Preset "Alles" in database gefixed
+
+- **Poule grootte scoring gefixt**
+  - Exponentiële scoring: `2^(positie+1) - 1` ipv lineair
+  - Removed early returns voor 4-6 judokas → nu vergelijkt 1x6 vs 2x3
+  - `DynamischeIndelingService`: threshold `<= 6` → `<= 3`
+  - `PouleIndelingService`: 1-pool optie toegevoegd aan vergelijking
+
+- **Band/gewicht sortering gefixt**
+  - `groepeerJudokas()` respecteert nu `verdeling_prioriteiten`
+  - Als 'band' voor 'gewicht' in prioriteiten → band eerst sorteren
+  - Witte banden vullen eerste poules, dan gele, etc.
+
+- **UI: Sorteer prioriteit altijd zichtbaar**
+  - Was: alleen bij "Geen standaard"
+  - Nu: altijd zichtbaar, ook bij JBN presets
+  - Help tekst verbeterd
 
 ### Openstaande items:
-- [ ] **TESTEN:** Poules genereren met custom categorie namen → check titels
-- [ ] Testen: wijzig prioriteiten → check judoka codes herberekend
-- [ ] Testen: versleep judoka → statistieken + ranges update
+- [ ] Testen: prioriteiten wijzigen → check poule verdeling
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 
 ### Belangrijke context voor volgende keer:
-- **Classificatie:** Zie `PLANNING_DYNAMISCHE_INDELING.md` sectie "Classificatie Systeem"
-- **Poule titels:** Categorie naam komt uit `$gewichtsklassenConfig[$configKey]['label']`
-- **Gewicht fallback:** `getEffectiefGewicht()` in `DynamischeIndelingService`
+- **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken (niet 'jongens'/'meisjes')
+- **Poule grootte:** Score berekening is exponentieel, zie `berekenVerdelingScore()`
+- **Sortering:** Afhankelijk van `verdeling_prioriteiten` array volgorde

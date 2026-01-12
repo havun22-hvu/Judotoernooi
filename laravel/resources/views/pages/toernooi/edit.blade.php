@@ -701,8 +701,8 @@
                 </div>
             </div>
 
-            <!-- Sorteer prioriteit: alleen tonen bij "Geen standaard" -->
-            <div x-show="categorieType === 'geen_standaard'" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <!-- Sorteer prioriteit: altijd tonen, bepaalt volgorde binnen harde criteria -->
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <!-- Prioriteit drag & drop -->
                 <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-yellow-800 text-sm font-medium">Sorteer prioriteit:</span>
@@ -715,12 +715,12 @@
                              @click.away="open = false"
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
-                            <p class="font-medium mb-1">Sorteer volgorde bij grote aantallen</p>
-                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd bij het maken van poules. Sleep de items om de volgorde aan te passen.</p>
+                            <p class="font-medium mb-1">Sorteer volgorde binnen categorie</p>
+                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd en verdeeld over poules. Harde criteria (leeftijd, geslacht, gewichtsklasse) blijven altijd gerespecteerd.</p>
                             <ul class="text-xs mt-2 space-y-1">
-                                <li><strong>Gewicht:</strong> Judoka's met vergelijkbaar gewicht bij elkaar</li>
-                                <li><strong>Band:</strong> Judoka's met zelfde niveau bij elkaar (wit ≠ bruin)</li>
-                                <li><strong>Groepsgrootte:</strong> Optimale poule grootte (4-5)</li>
+                                <li><strong>Band:</strong> Witte banden vullen eerst de poules, dan geel, etc.</li>
+                                <li><strong>Gewicht:</strong> Lichtste judoka's eerst in de poules</li>
+                                <li><strong>Groepsgrootte:</strong> Optimale poule grootte (voorkeur 3-5)</li>
                                 <li><strong>Club:</strong> Judoka's van zelfde club verspreiden</li>
                             </ul>
                         </div>
