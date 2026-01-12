@@ -1103,7 +1103,7 @@ class PouleIndelingService
     private function vindNietIngedeeldeJudokas(Toernooi $toernooi): array
     {
         // Haal alle judoka IDs op die in een poule zitten
-        $ingedeeldeIds = DB::table('judoka_poule')
+        $ingedeeldeIds = DB::table('poule_judoka')
             ->whereIn('poule_id', $toernooi->poules()->pluck('id'))
             ->pluck('judoka_id')
             ->toArray();
