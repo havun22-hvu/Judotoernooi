@@ -6,6 +6,7 @@ use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
+use App\Services\DynamischeIndelingService;
 use App\Services\EliminatieService;
 use App\Services\PouleIndelingService;
 use App\Services\WedstrijdSchemaService;
@@ -19,7 +20,8 @@ class PouleController extends Controller
     public function __construct(
         private PouleIndelingService $pouleService,
         private WedstrijdSchemaService $wedstrijdService,
-        private EliminatieService $eliminatieService
+        private EliminatieService $eliminatieService,
+        private DynamischeIndelingService $dynamischeService
     ) {}
 
     public function index(Toernooi $toernooi): View
@@ -127,17 +129,49 @@ class PouleController extends Controller
         ]);
     }
 
-    public function genereer(Toernooi $toernooi): RedirectResponse
+    public function genereer(Toernooi $toernooi, Request $request): RedirectResponse
     {
+        $startTime = microtime(true);
+
         // First recalculate judoka codes (ensures correct band/weight ordering)
         $this->pouleService->herberekenJudokaCodes($toernooi);
 
+        // Get all judokas for variant generation
+        $judokas = $toernooi->judokas()
+            ->whereNotNull('geboortejaar')
+            ->get();
+
+        // Generate variants with different parameters
+        $variantenResult = $this->dynamischeService->genereerVarianten($judokas, [
+            'max_leeftijd_verschil' => $toernooi->max_leeftijd_verschil ?? 2,
+            'max_kg_verschil' => $toernooi->max_kg_verschil ?? 3.0,
+            'poule_grootte_voorkeur' => $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3],
+            'verdeling_prioriteiten' => $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'],
+        ]);
+
+        $varianten = $variantenResult['varianten'];
+        $tijdMs = $variantenResult['tijdMs'];
+        $elapsed = round((microtime(true) - $startTime) * 1000);
+
+        // Store variants in session for display
+        session([
+            'poule_varianten' => $varianten,
+            'poule_stats' => [
+                'pogingen' => count($varianten) * 5, // Approximate
+                'tijd_ms' => $elapsed,
+                'geldige_varianten' => count($varianten),
+                'getoond' => min(5, count($varianten)),
+                'totaal_judokas' => $judokas->count(),
+            ],
+        ]);
+
+        // Apply the best variant (index 0) by default
         $statistieken = $this->pouleService->genereerPouleIndeling($toernooi);
 
         $message = "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, " .
                    "{$statistieken['totaal_wedstrijden']} wedstrijden.";
 
-        $redirect = redirect()->route('toernooi.poule.index', $toernooi);
+        $redirect = redirect()->route('toernooi.poule.index', ['toernooi' => $toernooi, 'kies' => 1]);
 
         // Check for warnings about elimination participant counts
         $waarschuwingen = $statistieken['waarschuwingen'] ?? [];
@@ -167,6 +201,39 @@ class PouleController extends Controller
         }
 
         return $redirect->with('success', $message);
+    }
+
+    /**
+     * Apply a selected variant
+     */
+    public function kiesVariant(Toernooi $toernooi, Request $request): JsonResponse
+    {
+        $variantIdx = $request->input('variant', 0);
+        $varianten = session('poule_varianten', []);
+
+        if (!isset($varianten[$variantIdx])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Variant niet gevonden',
+            ], 400);
+        }
+
+        $variant = $varianten[$variantIdx];
+
+        // Regenerate pools with this variant's parameters
+        $statistieken = $this->pouleService->genereerPouleIndeling($toernooi, [
+            'max_leeftijd_verschil' => $variant['params']['max_leeftijd_verschil'] ?? 2,
+            'max_kg_verschil' => $variant['params']['max_kg_verschil'] ?? 3.0,
+        ]);
+
+        // Clear variant session
+        session()->forget(['poule_varianten', 'poule_stats']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Variant #{$variantIdx + 1} toegepast: {$statistieken['totaal_poules']} poules",
+            'statistieken' => $statistieken,
+        ]);
     }
 
     /**

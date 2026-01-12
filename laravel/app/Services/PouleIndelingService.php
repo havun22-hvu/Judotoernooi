@@ -17,6 +17,7 @@ class PouleIndelingService
     private array $prioriteiten;
     private ?Toernooi $toernooi = null;
     private array $gewichtsklassenConfig = [];
+    private array $variantOverrides = [];
     private DynamischeIndelingService $dynamischeIndelingService;
 
     /**
@@ -96,11 +97,15 @@ class PouleIndelingService
 
     /**
      * Generate pool division for a tournament
+     * @param array $overrides Optional variant-specific overrides for max_kg_verschil and max_leeftijd_verschil
      */
-    public function genereerPouleIndeling(Toernooi $toernooi): array
+    public function genereerPouleIndeling(Toernooi $toernooi, array $overrides = []): array
     {
         // Initialize settings from tournament
         $this->initializeFromToernooi($toernooi);
+
+        // Store overrides for use in dynamic grouping
+        $this->variantOverrides = $overrides;
 
         // Recalculate age/weight classes for all judokas (important after year change)
         $this->herberkenKlassen($toernooi);
@@ -245,8 +250,8 @@ class PouleIndelingService
 
                 if ($usesDynamic) {
                     // DYNAMIC GROUPING: Use DynamischeIndelingService to create weight groups
-                    $maxKg = $this->getMaxKgVerschil($leeftijdsklasse);
-                    $maxLeeftijd = $this->getMaxLeeftijdVerschil($leeftijdsklasse);
+                    $maxKg = $this->variantOverrides['max_kg_verschil'] ?? $this->getMaxKgVerschil($leeftijdsklasse);
+                    $maxLeeftijd = $this->variantOverrides['max_leeftijd_verschil'] ?? $this->getMaxLeeftijdVerschil($leeftijdsklasse);
 
                     // Bepaal groepsgrootte prioriteit (1 = hoogste, 4 = laagste)
                     $groepsgroottePrio = array_search('groepsgrootte', $this->prioriteiten);
