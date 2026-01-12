@@ -187,42 +187,39 @@ bepaalt de prioriteit hoe judoka's worden gegroepeerd:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ HOE WERKT DE DYNAMISCHE POULE INDELING?                         │
+│ POULE INDELING ALGORITME                                        │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│ STAP 1: GROEPEREN (harde constraints)                           │
-│   → Judoka's worden gegroepeerd zodat:                          │
-│     • Gewichtsverschil ≤ max kg (bijv. 3 kg)                    │
-│     • Leeftijdsverschil ≤ max jaar (bijv. 2 jaar)               │
+│ STAP 1: HARDE SELECTIE (per categorie)                          │
+│   Judoka moet voldoen aan ALLE categorie-criteria:              │
+│   • Max leeftijd (U9 = max 8 jaar, U11 = max 10 jaar)           │
+│   • Geslacht (M / V / Gemengd)                                  │
+│   • Band filter (t/m oranje, vanaf groen, etc.)                 │
+│   • Gewichtsklasse (bij vaste klassen: -34kg, -38kg)            │
+│   • Max kg verschil per poule (bij dynamisch: Δkg)              │
 │                                                                 │
-│ STAP 2: SORTEREN (configureerbaar)                              │
-│   → Op basis van verdeling_prioriteiten:                        │
-│     • Gewicht eerst → sorteer op gewicht, dan band              │
-│     • Band eerst → sorteer op band, dan gewicht                 │
+│ STAP 2: SORTEREN (binnen geselecteerde groep)                   │
+│   Op basis van prioriteit instelling:                           │
+│   • Gewicht eerst → sorteer gewicht, dan band                   │
+│   • Band eerst → sorteer band, dan gewicht                      │
 │                                                                 │
 │ STAP 3: VERDELEN IN POULES                                      │
-│   → Kies verdeling met laagste penalty:                         │
-│                                                                 │
-│   Voorbeeld met voorkeur [5,4,3,6]:                             │
-│   ┌──────────────┬─────────┐                                    │
-│   │ Poulegrootte │ Penalty │                                    │
-│   ├──────────────┼─────────┤                                    │
-│   │ 5 (1e keus)  │ 0       │                                    │
-│   │ 4 (2e keus)  │ 1       │                                    │
-│   │ 3 (3e keus)  │ 3       │                                    │
-│   │ 6 (4e keus)  │ 7       │                                    │
-│   └──────────────┴─────────┘                                    │
-│                                                                 │
-│   11 judoka's:                                                  │
-│   • [6,5] → penalty 7+0 = 7                                     │
-│   • [5,3,3] → penalty 0+3+3 = 6                                 │
-│   • [4,4,3] → penalty 1+1+3 = 5 ✅ GEKOZEN                      │
+│   Gesorteerde judoka's van boven naar beneden:                  │
+│   • Vul poule tot max kg verschil bereikt zou worden            │
+│   • Start nieuwe poule                                          │
+│   • Ideale grootte: 4-5 per poule                               │
 │                                                                 │
 │ STAP 4: VALIDATIE                                               │
-│   → Check alle poules op gewichtslimiet                         │
-│   → Fix indien nodig (split/swap)                               │
+│   • Check: zijn alle judoka's ingedeeld?                        │
+│   • Zo niet: categorie-configuratie is onvolledig               │
+│   • Toon niet-ingedeelde judoka's met reden                     │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+
+U-CATEGORIE LEEFTIJDEN:
+  U7 = max 6 jaar    U13 = max 12 jaar
+  U9 = max 8 jaar    U15 = max 14 jaar
+  U11 = max 10 jaar  U18 = max 17 jaar
 ```
 
 ### Gedetailleerde Uitleg

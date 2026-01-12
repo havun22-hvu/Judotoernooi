@@ -65,7 +65,7 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
 });
 
 // Dashboard - redirect to organisator dashboard (toernooi selection)
-Route::get('/dashboard', fn() => redirect()->route('organisator.dashboard'))->middleware('auth:organisator')->name('dashboard');
+Route::get('/dashboard', function() { return redirect('/organisator/dashboard'); })->middleware('auth:organisator');
 
 // Toernooi management - protected routes (require organisator login)
 Route::middleware('auth:organisator')->group(function () {
