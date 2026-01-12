@@ -786,8 +786,8 @@
                             <select name="gewichtsklassen_geslacht[{{ $key }}]"
                                     class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
                                 <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>M&V</option>
-                                <option value="jongens" {{ $geslacht == 'jongens' ? 'selected' : '' }}>M</option>
-                                <option value="meisjes" {{ $geslacht == 'meisjes' ? 'selected' : '' }}>V</option>
+                                <option value="M" {{ $geslacht == 'M' ? 'selected' : '' }}>M</option>
+                                <option value="V" {{ $geslacht == 'V' ? 'selected' : '' }}>V</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
@@ -984,8 +984,8 @@
                                 <select name="gewichtsklassen_geslacht[${key}]"
                                         class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
                                     <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
-                                    <option value="jongens" ${geslacht === 'jongens' ? 'selected' : ''}>M</option>
-                                    <option value="meisjes" ${geslacht === 'meisjes' ? 'selected' : ''}>V</option>
+                                    <option value="M" ${geslacht === 'M' ? 'selected' : ''}>M</option>
+                                    <option value="V" ${geslacht === 'V' ? 'selected' : ''}>V</option>
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
@@ -1305,8 +1305,8 @@
                             <select name="gewichtsklassen_geslacht[${newKey}]"
                                     class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
                                 <option value="gemengd" selected>M&V</option>
-                                <option value="jongens">M</option>
-                                <option value="meisjes">V</option>
+                                <option value="M">M</option>
+                                <option value="V">V</option>
                             </select>
                         </div>
                         <div class="flex items-center gap-2">
