@@ -188,11 +188,27 @@ class ToernooiService
 
     private function getStatistiekenPerLeeftijdsklasse(Toernooi $toernooi): array
     {
-        return $toernooi->judokas()
+        $counts = $toernooi->judokas()
             ->selectRaw('leeftijdsklasse, COUNT(*) as aantal')
             ->groupBy('leeftijdsklasse')
             ->pluck('aantal', 'leeftijdsklasse')
             ->toArray();
+
+        // Get age class order from tournament config (youngest first)
+        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+        $volgorde = [];
+        $index = 0;
+        foreach ($gewichtsklassenConfig as $key => $config) {
+            $label = $config['label'] ?? $key;
+            $volgorde[$label] = $index++;
+        }
+
+        // Sort by configured order (youngest first)
+        uksort($counts, function ($a, $b) use ($volgorde) {
+            return ($volgorde[$a] ?? 999) <=> ($volgorde[$b] ?? 999);
+        });
+
+        return $counts;
     }
 
     private function getStatistiekenPerBlok(Toernooi $toernooi): array
