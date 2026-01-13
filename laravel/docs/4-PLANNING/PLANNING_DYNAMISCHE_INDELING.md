@@ -866,9 +866,21 @@ Dit voorkomt fouten wanneer organisator vergeet geslacht in te vullen.
 ### Na kopie van andere database
 
 Als judoka's worden gekopieerd van production naar staging:
-- Judoka's behouden hun **oude classificatie**
-- **Herclassificatie moet draaien** voordat poules worden gegenereerd
-- Dit gebeurt automatisch bij "Poules genereren", of handmatig via tinker
+- Judoka's behouden hun **oude classificatie** (bijv. JBN2025 labels)
+- **Herclassificatie moet draaien** om nieuwe preset labels te krijgen
+- Dit gebeurt automatisch bij "Poules genereren", of handmatig:
+
+```bash
+# Handmatig herclassificeren (staging)
+cd /var/www/staging.judotoernooi/laravel
+php artisan tinker --execute="app(App\Services\PouleIndelingService::class)->herberkenKlassen(App\Models\Toernooi::find(5));"
+```
+
+### Dashboard categorieën
+
+Het dashboard toont **wat in `judokas.leeftijdsklasse` staat**, NIET hardcoded categorieën.
+- Als dit oude labels toont (A-pupillen, Dames -15) → herclassificatie moet draaien
+- Na herclassificatie toont het de preset labels (U11 Geel+, U15 Dames Groen+)
 
 ---
 
