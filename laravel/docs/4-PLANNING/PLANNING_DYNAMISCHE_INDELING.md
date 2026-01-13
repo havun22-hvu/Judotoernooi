@@ -813,11 +813,22 @@ class VariabeleBlokVerdelingService
 
 **Key format:** `leeftijdsklasse|gewichtsklasse` (compatibel met bestaande view)
 
+**Nieuw veld (13 jan 2026):** `categorie_key` op `poules` tabel
+- Gebruikt voor groepering bij blokverdeling
+- Voorbeelden: `m_variabel`, `v_variabel`, `beginners`, `gevorderden`
+- Maakt gemengde scenario's mogelijk (M/V apart + variabel binnen geslacht)
+
 **Algoritme:**
-1. Sorteer poules op MIN leeftijd → MIN gewicht
-2. Groepeer per leeftijdsrange
+1. Groepeer poules eerst op `categorie_key`
+2. Binnen elke categorie: sorteer op MIN leeftijd → MIN gewicht
 3. Trial & error met 20 strategieën voor optimale splits
 4. Bij leeftijdsgrens: zoek gewichtssplit binnen overlappende leeftijden
+
+**Dynamische header generatie:**
+```
+Label prefix + leeftijd range + gewicht range
+Voorbeeld: "M 8-10j · 30-40kg" of "Beginners 9-11j · 25-35kg"
+```
 
 **Detectie variabele categorieën:**
 ```php

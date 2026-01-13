@@ -22,6 +22,7 @@ class Poule extends Model
         'kruisfinale_plaatsen', // how many places qualify (1, 2, 3)
         'leeftijdsklasse',
         'gewichtsklasse',
+        'categorie_key', // For grouping in block distribution (e.g., "m_variabel", "beginners")
         'aantal_judokas',
         'aantal_wedstrijden',
         'spreker_klaar',
