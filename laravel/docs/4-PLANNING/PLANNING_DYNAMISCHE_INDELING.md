@@ -721,6 +721,112 @@ Blok 2:
 - Kruisfinales/KO niet beschikbaar bij variabel systeem
 - Later toe te voegen: alleen bij grote homogene groepen (zelfde leeftijd+gewicht)
 
+## Architectuur: Variabele Blokverdeling Service
+
+### Beslissing (13 jan 2026)
+**Nieuw bestand:** `app/Services/VariabeleBlokVerdelingService.php`
+
+### Waarom apart bestand?
+
+| Aspect | `BlokMatVerdelingService` | `VariabeleBlokVerdelingService` |
+|--------|---------------------------|----------------------------------|
+| **Groepering** | Per leeftijdsklasse label | Trial & error op gewichtssplit |
+| **Headers** | Vaste labels (Mini's, U11) | Dynamisch: min-max lft · min-max kg |
+| **Algoritme** | Categorie → blok toewijzen | Poules sorteren → splits zoeken |
+| **Kruisfinales** | Ondersteund | Niet ondersteund |
+
+### Delegatie patroon
+
+```php
+// BlokMatVerdelingService.php
+public function genereerVarianten(Toernooi $toernooi, ...): array
+{
+    // Check of er variabele categorieën zijn (lft-kg labels)
+    if ($this->heeftVariabeleCategorieen($toernooi)) {
+        return app(VariabeleBlokVerdelingService::class)
+            ->genereerVarianten($toernooi, $userVerdelingGewicht);
+    }
+
+    // Bestaande logica voor vaste categorieën
+    // ...
+}
+```
+
+### Gemengde scenario's
+
+**Voorbeeld:** M en V apart + variabel binnen geslacht
+
+1. Poule-aanmaak scheidt al op geslacht (harde constraint)
+2. Poules krijgen labels: `V lft-kg` en `M lft-kg`
+3. VariabeleBlokVerdelingService groepeert op label-prefix
+4. Binnen groep: trial & error algoritme
+
+**Voorbeeld:** Band-scheiding + variabel binnen bandgroep
+
+1. Poule-aanmaak scheidt op band (t/m oranje vs vanaf groen)
+2. Poules krijgen labels: `Beginners lft-kg` en `Gevorderden lft-kg`
+3. VariabeleBlokVerdelingService groepeert op label-prefix
+4. Binnen groep: trial & error algoritme
+
+### Interface
+
+```php
+class VariabeleBlokVerdelingService
+{
+    /**
+     * Genereer blokverdeling voor variabele categorieën
+     *
+     * @param Toernooi $toernooi
+     * @param int $userVerdelingGewicht 0-100 (gewicht voor gelijke verdeling)
+     * @return array ['varianten' => [...], 'huidige' => current state]
+     */
+    public function genereerVarianten(Toernooi $toernooi, int $userVerdelingGewicht = 50): array;
+
+    /**
+     * Groepeer poules in categorieën op basis van leeftijd/gewicht proximity
+     *
+     * @param Collection $poules Poules met lft-kg labels
+     * @return Collection Gegroepeerde poules met dynamische headers
+     */
+    public function groepeerInCategorieen(Collection $poules): Collection;
+
+    /**
+     * Zoek optimale split op leeftijdsgrens
+     *
+     * @param Collection $poules Gesorteerd op leeftijd, gewicht
+     * @param int $doelWedstrijden Gewenste wedstrijden per blok
+     * @return array ['split_index' => int, 'split_type' => 'leeftijd'|'gewicht']
+     */
+    private function zoekOptimaleSplit(Collection $poules, int $doelWedstrijden): array;
+}
+```
+
+### Implementatie stappen (13 jan 2026) ✓
+
+1. [x] Maak `VariabeleBlokVerdelingService.php`
+2. [x] Implementeer `genereerVarianten()` met trial & error
+3. [x] Implementeer `berekenCategorieGroepen()` voor dynamische headers
+4. [x] Update `BlokMatVerdelingService` met delegatie check
+5. [ ] Test met gemengde scenario's (M/V + variabel)
+
+### Technische details
+
+**Key format:** `leeftijdsklasse|gewichtsklasse` (compatibel met bestaande view)
+
+**Algoritme:**
+1. Sorteer poules op MIN leeftijd → MIN gewicht
+2. Groepeer per leeftijdsrange
+3. Trial & error met 20 strategieën voor optimale splits
+4. Bij leeftijdsgrens: zoek gewichtssplit binnen overlappende leeftijden
+
+**Detectie variabele categorieën:**
+```php
+$toernooi->poules()
+    ->where('titel', 'like', '%lft-kg%')
+    ->orWhere('titel', 'like', '% · %')
+    ->exists();
+```
+
 ## Vereenvoudiging Instellingen (7 jan 2026)
 
 ### Probleem
