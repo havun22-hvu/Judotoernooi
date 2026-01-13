@@ -69,6 +69,7 @@ class ToernooiController extends Controller
             $labels = $request->input('gewichtsklassen_label', []);
             $geslachten = $request->input('gewichtsklassen_geslacht', []);
             $maxKgVerschillen = $request->input('gewichtsklassen_max_kg', []);
+            $maxLftVerschillen = $request->input('gewichtsklassen_max_lft', []);
 
             foreach ($data['gewichtsklassen'] as $key => $value) {
                 $gewichten = array_map('trim', explode(',', $value));
@@ -78,6 +79,7 @@ class ToernooiController extends Controller
                     'max_leeftijd' => (int) ($leeftijden[$key] ?? $standaard[$key]['max_leeftijd'] ?? 99),
                     'geslacht' => $geslachten[$key] ?? 'gemengd',
                     'max_kg_verschil' => (float) ($maxKgVerschillen[$key] ?? 0),
+                    'max_leeftijd_verschil' => (int) ($maxLftVerschillen[$key] ?? 0),
                     'gewichten' => array_values($gewichten),
                 ];
             }
@@ -86,7 +88,7 @@ class ToernooiController extends Controller
         }
 
         // Remove temporary fields from data
-        unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg']);
+        unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg'], $data['gewichtsklassen_max_lft']);
 
         // Check if sorting settings changed (prioriteiten or legacy judoka_code_volgorde)
         $prioriteitenGewijzigd = isset($data['verdeling_prioriteiten'])

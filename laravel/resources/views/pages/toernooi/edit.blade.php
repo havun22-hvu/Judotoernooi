@@ -763,6 +763,7 @@
                 @php
                     $geslacht = $data['geslacht'] ?? 'gemengd';
                     $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
+                    $maxLftVerschil = $data['max_leeftijd_verschil'] ?? 0;
                     // Support both old band_tot and new band_filter
                     $bandFilter = $data['band_filter'] ?? $data['band_tot'] ?? null;
                     // Convert old format (wit, geel) to new format (tm_wit, tm_geel)
@@ -777,7 +778,8 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[{{ $key }}]"
                                    value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
+                                   title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
@@ -815,7 +817,15 @@
                                    class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
-                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
+                            <input type="number" name="gewichtsklassen_max_lft[{{ $key }}]"
+                                   value="{{ $maxLftVerschil }}"
+                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   min="0" max="5" step="1"
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                        </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Band:</label>
                             <select name="gewichtsklassen_band_filter[{{ $key }}]"
@@ -896,12 +906,13 @@
                     const label = item.querySelector('.label-input').value;
                     const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
                     const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
+                    const maxLft = parseInt(item.querySelector('.max-lft-input')?.value) || 0;
                     const bandFilter = item.querySelector('.band-filter-select')?.value || null;
                     const gewichten = item.querySelector('.gewichten-input')?.value
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g) || [];
-                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, band_filter: bandFilter, gewichten };
+                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -972,6 +983,7 @@
                     const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
                     const geslacht = item.geslacht || 'gemengd';
                     const maxKg = item.max_kg_verschil || 0;
+                    const maxLft = item.max_leeftijd_verschil || 0;
                     // Support both old band_tot and new band_filter
                     let bandFilter = item.band_filter || item.band_tot || '';
                     // Convert old format to new format
@@ -995,7 +1007,8 @@
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
+                                       title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
                             </div>
                             <div class="flex items-center gap-2">
                                 <select name="gewichtsklassen_geslacht[${key}]"
@@ -1024,7 +1037,15 @@
                                        class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                        min="0" max="10" step="0.5"
                                        onchange="toggleGewichtsklassen(this)">
-                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
+                                <input type="number" name="gewichtsklassen_max_lft[${key}]"
+                                       value="${maxLft}"
+                                       class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                       min="0" max="5" step="1"
+                                       title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                            </div>
                             <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Band:</label>
                                 <select name="gewichtsklassen_band_filter[${key}]"
@@ -1207,6 +1228,7 @@
                         label: item.querySelector('.label-input')?.value || key,
                         geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
                         max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
+                        max_leeftijd_verschil: parseInt(item.querySelector('.max-lft-input')?.value) || 0,
                         band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                     };
@@ -1328,8 +1350,9 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${newKey}]"
-                                   value="Nieuwe categorie"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                                   value="lft-kg"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
+                                   title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
                         </div>
                         <div class="flex items-center gap-2">
                             <select name="gewichtsklassen_geslacht[${newKey}]"
@@ -1354,11 +1377,19 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
                             <input type="number" name="gewichtsklassen_max_kg[${newKey}]"
-                                   value="3"
+                                   value="0"
                                    class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
-                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
+                            <input type="number" name="gewichtsklassen_max_lft[${newKey}]"
+                                   value="0"
+                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   min="0" max="5" step="1"
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                        </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Band:</label>
                             <select name="gewichtsklassen_band_filter[${newKey}]"
@@ -1409,6 +1440,9 @@
 
             // Update JSON on any input change in categories container
             container.addEventListener('input', (e) => {
+                updateJsonInput();
+            });
+            container.addEventListener('change', (e) => {
                 updateJsonInput();
             });
 

@@ -149,7 +149,7 @@ class DynamischeIndelingService
         }
 
         // FINALE VALIDATIE: check en fix alle poules die de harde limiet overschrijden
-        $poules = $this->valideerEnFixAllePoules($poules, $maxKgVerschil);
+        $poules = $this->valideerEnFixAllePoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
 
         // Herbereken totaal ingedeeld na finale fix
         $totaalIngedeeld = array_sum(array_map(fn($p) => count($p['judokas']), $poules));
@@ -173,22 +173,37 @@ class DynamischeIndelingService
 
     /**
      * Finale validatie: check alle poules en split/herverdeel waar nodig
+     * Valideert zowel gewicht als leeftijd limieten
      */
-    private function valideerEnFixAllePoules(array $poules, float $maxKgVerschil): array
+    private function valideerEnFixAllePoules(array $poules, float $maxKgVerschil, int $maxLeeftijdVerschil): array
     {
         $gefixtPoules = [];
 
         foreach ($poules as $poule) {
             $judokas = $poule['judokas'];
-            $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $judokas);
-            $verschil = max($gewichten) - min($gewichten);
 
-            if ($verschil <= $maxKgVerschil) {
+            // Check gewicht limiet
+            $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $judokas);
+            $gewichtVerschil = max($gewichten) - min($gewichten);
+
+            // Check leeftijd limiet
+            $leeftijden = array_map(fn($j) => $j->leeftijd, $judokas);
+            $leeftijdVerschil = max($leeftijden) - min($leeftijden);
+
+            if ($gewichtVerschil <= $maxKgVerschil && $leeftijdVerschil <= $maxLeeftijdVerschil) {
                 // Poule is OK
                 $gefixtPoules[] = $poule;
-            } else {
-                // Poule overschrijdt limiet - split op gewicht
+            } elseif ($gewichtVerschil > $maxKgVerschil) {
+                // Gewicht overschrijdt - split op gewicht, dan opnieuw valideren
                 $gesplitst = $this->splitPouleOpGewicht($judokas, $maxKgVerschil, $poule);
+                // Recursief valideren voor leeftijd
+                $gesplitst = $this->valideerEnFixAllePoules($gesplitst, $maxKgVerschil, $maxLeeftijdVerschil);
+                foreach ($gesplitst as $nieuwePoule) {
+                    $gefixtPoules[] = $nieuwePoule;
+                }
+            } else {
+                // Leeftijd overschrijdt - split op leeftijd
+                $gesplitst = $this->splitPouleOpLeeftijd($judokas, $maxLeeftijdVerschil, $maxKgVerschil, $poule);
                 foreach ($gesplitst as $nieuwePoule) {
                     $gefixtPoules[] = $nieuwePoule;
                 }
@@ -196,6 +211,65 @@ class DynamischeIndelingService
         }
 
         return $gefixtPoules;
+    }
+
+    /**
+     * Split een poule die te groot leeftijdsverschil heeft
+     */
+    private function splitPouleOpLeeftijd(array $judokas, int $maxLeeftijdVerschil, float $maxKgVerschil, array $origPoule): array
+    {
+        // Sorteer op leeftijd
+        usort($judokas, fn($a, $b) => $a->leeftijd <=> $b->leeftijd);
+
+        $nieuwePoules = [];
+        $huidigeJudokas = [];
+        $minLeeftijd = null;
+
+        foreach ($judokas as $judoka) {
+            if (empty($huidigeJudokas)) {
+                $huidigeJudokas[] = $judoka;
+                $minLeeftijd = $judoka->leeftijd;
+            } elseif ($judoka->leeftijd - $minLeeftijd <= $maxLeeftijdVerschil) {
+                $huidigeJudokas[] = $judoka;
+            } else {
+                // Breekpunt: maak poule van huidige judoka's
+                if (count($huidigeJudokas) >= 2) {
+                    $nieuwePoules[] = [
+                        'judokas' => $huidigeJudokas,
+                        'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                        'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                        'band_range' => $this->berekenBandRange($huidigeJudokas),
+                        'leeftijd_groep' => $this->formatLeeftijdRange($huidigeJudokas),
+                        'gewicht_groep' => $origPoule['gewicht_groep'] ?? '',
+                    ];
+                }
+                $huidigeJudokas = [$judoka];
+                $minLeeftijd = $judoka->leeftijd;
+            }
+        }
+
+        // Laatste groep
+        if (count($huidigeJudokas) >= 2) {
+            $nieuwePoules[] = [
+                'judokas' => $huidigeJudokas,
+                'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                'band_range' => $this->berekenBandRange($huidigeJudokas),
+                'leeftijd_groep' => $this->formatLeeftijdRange($huidigeJudokas),
+                'gewicht_groep' => $origPoule['gewicht_groep'] ?? '',
+            ];
+        } elseif (!empty($huidigeJudokas) && !empty($nieuwePoules)) {
+            // 1 judoka over: voeg toe aan laatste poule als het past
+            $laatstePoule = array_pop($nieuwePoules);
+            $laatsteLeeftijden = array_map(fn($j) => $j->leeftijd, $laatstePoule['judokas']);
+            if ($huidigeJudokas[0]->leeftijd - min($laatsteLeeftijden) <= $maxLeeftijdVerschil) {
+                $laatstePoule['judokas'][] = $huidigeJudokas[0];
+                $laatstePoule['leeftijd_range'] = $this->berekenLeeftijdRange($laatstePoule['judokas']);
+            }
+            $nieuwePoules[] = $laatstePoule;
+        }
+
+        return $nieuwePoules;
     }
 
     /**
