@@ -255,6 +255,50 @@
 
 ---
 
+## Sessie: 13 januari 2026 (nacht - vervolg)
+
+### Fix: Preset dropdown change event
+- **Type:** Bug fix
+- **Wat:** Dropdown was al geselecteerd bij page load, waardoor change event niet triggerde
+- **Waarom:** Gebruiker kon preset niet opnieuw laden als die al geselecteerd stond
+- **Oplossing:** Dropdown niet automatisch selecteren bij page load
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Eigen preset radio button change handler
+- **Type:** Bug fix
+- **Wat:** Radio button "Alles" (eigen preset) had geen @change handler
+- **Waarom:** Klikken op de radio laadde de preset configuratie niet
+- **Oplossing:** `@change="loadEigenPreset()"` toegevoegd + window.loadEigenPreset functie
+- **Bestanden:** `resources/views/pages/toernooi/edit.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Poule sortering leeftijdsklasse flexibeler
+- **Type:** Bug fix
+- **Wat:** Sortering vereiste exacte label match ("U7 Alles" ≠ "U7")
+- **Waarom:** U7 poules kwamen onderaan i.p.v. bovenaan
+- **Oplossing:** `getLeeftijdsklasseVolgorde()` met prefix matching + numerieke fallback
+- **Bestanden:** `app/Http/Controllers/PouleController.php`
+- **Naar permanente docs?** ☑ Nee - technische fix
+
+### Fix: Band sortering na groupBy
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** `groupBy()` bewaart sorteervolgorde niet - banden waren door elkaar
+- **Waarom:** Witte en gele banden zaten in dezelfde poules ondanks band prioriteit
+- **Oplossing:** Na groupBy de judokas binnen elke groep opnieuw sorteren op sort_band
+- **Bestanden:** `app/Services/PouleIndelingService.php:groepeerJudokas()`
+- **Naar permanente docs?** ☑ Nee - technische fix
+
+### Fix: getBandNiveau parsing voor "wit (6 kyu)" formaat
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Functie verwachtte "wit" maar database had "wit (6 kyu)" → sort_band was altijd 0
+- **Waarom:** Band sortering werkte helemaal niet
+- **Oplossing:** Extract eerste woord of zoek kleur in string
+- **Bestanden:** `app/Services/PouleIndelingService.php:getBandNiveau()`
+- **Naar permanente docs?** ☑ Nee - technische fix
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
