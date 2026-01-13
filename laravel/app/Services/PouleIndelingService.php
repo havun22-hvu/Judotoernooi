@@ -578,6 +578,21 @@ class PouleIndelingService
             }
         });
 
+        // Re-sort judokas within each group (groupBy doesn't preserve order!)
+        $groepen = $groepen->map(function ($judokasInGroep) use ($bandFirst) {
+            if ($bandFirst) {
+                return $judokasInGroep->sortBy([
+                    ['sort_band', 'asc'],
+                    ['sort_gewicht', 'asc'],
+                ]);
+            } else {
+                return $judokasInGroep->sortBy([
+                    ['sort_gewicht', 'asc'],
+                    ['sort_band', 'asc'],
+                ]);
+            }
+        });
+
         // Sort groups by sort_categorie of first judoka, then gewicht
         return $groepen->sortBy(function ($judokasInGroep, $key) {
             // Use sort fields from first judoka in group
