@@ -179,7 +179,7 @@ function judokaTable() {
                 id: {{ $judoka->id }},
                 naam: @json($judoka->naam),
                 leeftijdsklasse: @json($judoka->leeftijdsklasse),
-                leeftijdsklasseOrder: {{ $leeftijdsklasseVolgorde[$judoka->leeftijdsklasse] ?? 99 }},
+                leeftijdsklasseOrder: {{ preg_match('/U(\d+)/', $judoka->leeftijdsklasse ?? '', $m) ? (int)$m[1] : 99 }},
                 gewichtsklasse: @json($judoka->gewichtsklasse),
                 gewichtsklasseNum: {{ preg_match('/([+-]?)(\d+)/', $judoka->gewichtsklasse ?? '', $m) ? ((int)($m[2] ?? 999) + (($m[1] ?? '') === '+' ? 1000 : 0)) : 999 }},
                 geslacht: '{{ $judoka->geslacht == "M" ? "Jongen" : "Meisje" }}',

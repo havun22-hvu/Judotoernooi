@@ -20,32 +20,34 @@ class JudokaController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        // Build age class order from tournament config (youngest first)
-        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-        $leeftijdsklasseVolgorde = [];
-        $index = 0;
-        foreach ($gewichtsklassenConfig as $key => $config) {
-            $label = $config['label'] ?? $key;
-            $leeftijdsklasseVolgorde[$label] = $index++;
-        }
-
         $judokas = $toernooi->judokas()
             ->with('club')
             ->get();
 
-        // Sort by: age class (youngest first), weight class (lightest first), gender, name
+        // Sort by: age class (youngest first by U-number), weight class (lightest first), gender, name
         $judokas = $judokas->sortBy([
-            fn ($a, $b) => ($leeftijdsklasseVolgorde[$a->leeftijdsklasse] ?? 99) <=> ($leeftijdsklasseVolgorde[$b->leeftijdsklasse] ?? 99),
+            fn ($a, $b) => $this->parseLeeftijd($a->leeftijdsklasse) <=> $this->parseLeeftijd($b->leeftijdsklasse),
             fn ($a, $b) => $this->parseGewicht($a->gewichtsklasse) <=> $this->parseGewicht($b->gewichtsklasse),
             fn ($a, $b) => $a->geslacht <=> $b->geslacht,
             fn ($a, $b) => $a->naam <=> $b->naam,
         ]);
 
-        // Group by leeftijdsklasse and sort groups by config order
+        // Group by leeftijdsklasse and sort groups by U-number (youngest first)
         $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse')
-            ->sortBy(fn ($group, $klasse) => $leeftijdsklasseVolgorde[$klasse] ?? 999);
+            ->sortBy(fn ($group, $klasse) => $this->parseLeeftijd($klasse));
 
-        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'leeftijdsklasseVolgorde'));
+        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
+    }
+
+    /**
+     * Parse age class to numeric value for sorting (e.g., "U11 Jongens" -> 11)
+     */
+    private function parseLeeftijd(string $leeftijdsklasse): int
+    {
+        if (preg_match('/U(\d+)/', $leeftijdsklasse, $matches)) {
+            return (int) $matches[1];
+        }
+        return 99;
     }
 
     /**
