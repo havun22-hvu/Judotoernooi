@@ -697,12 +697,22 @@ class PouleIndelingService
         foreach ($this->gewichtsklassenConfig as $key => $config) {
             $maxLeeftijd = $config['max_leeftijd'] ?? 99;
             $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
+            $label = strtolower($config['label'] ?? '');
 
             // Normalize legacy values: meisjes -> V, jongens -> M
             if ($configGeslacht === 'MEISJES') {
                 $configGeslacht = 'V';
             } elseif ($configGeslacht === 'JONGENS') {
                 $configGeslacht = 'M';
+            }
+
+            // Auto-detect gender from label if geslacht=gemengd but label contains gender indicator
+            if ($configGeslacht === 'GEMENGD') {
+                if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
+                    $configGeslacht = 'V';
+                } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
+                    $configGeslacht = 'M';
+                }
             }
 
             // Check leeftijd
