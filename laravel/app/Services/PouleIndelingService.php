@@ -637,6 +637,7 @@ class PouleIndelingService
     /**
      * Get band niveau for sorting (1=wit/beginner, 7=zwart/expert)
      * Lower number = less experienced, should be sorted first
+     * Supports formats: "wit", "wit (6 kyu)", "6 kyu", etc.
      */
     private function getBandNiveau(string $band): int
     {
@@ -650,7 +651,27 @@ class PouleIndelingService
             'zwart' => 7,
         ];
 
-        return $mapping[strtolower(trim($band))] ?? 0;
+        $bandLower = strtolower(trim($band));
+
+        // Direct match
+        if (isset($mapping[$bandLower])) {
+            return $mapping[$bandLower];
+        }
+
+        // Extract first word (e.g., "wit (6 kyu)" -> "wit")
+        $firstWord = explode(' ', $bandLower)[0];
+        if (isset($mapping[$firstWord])) {
+            return $mapping[$firstWord];
+        }
+
+        // Check if band contains color name
+        foreach ($mapping as $color => $niveau) {
+            if (str_contains($bandLower, $color)) {
+                return $niveau;
+            }
+        }
+
+        return 0;
     }
 
     /**
