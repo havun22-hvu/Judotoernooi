@@ -1,11 +1,14 @@
 @php
-    $leeftijdVolgorde = ["Mini's", 'A-pupillen', 'B-pupillen', 'C-pupillen', 'Dames -15', 'Heren -15', 'Dames -18', 'Heren -18', 'Dames -21', 'Heren -21', 'Dames', 'Heren'];
-    $afkortingen = [
+    // $leeftijdVolgorde en $afkortingen worden doorgegeven vanuit parent view
+    // Fallback voor backwards compatibility
+    $leeftijdVolgorde = $leeftijdVolgorde ?? ["Mini's", 'A-pupillen', 'B-pupillen', 'C-pupillen', 'Dames -15', 'Heren -15', 'Dames -18', 'Heren -18', 'Dames -21', 'Heren -21', 'Dames', 'Heren'];
+    $afkortingen = $afkortingen ?? [
         "Mini's" => "Mini's", 'A-pupillen' => 'A-pup', 'B-pupillen' => 'B-pup', 'C-pupillen' => 'C-pup',
         'Dames -15' => 'D-15', 'Heren -15' => 'H-15', 'Dames -18' => 'D-18', 'Heren -18' => 'H-18',
         'Dames -21' => 'D-21', 'Heren -21' => 'H-21', 'Dames' => 'Dames', 'Heren' => 'Heren',
     ];
-    $sortValue = array_search($cat['leeftijd'], $leeftijdVolgorde) * 10000 + (int)preg_replace('/[^0-9]/', '', $cat['gewicht']) + (str_starts_with($cat['gewicht'], '+') ? 500 : 0);
+    $pos = array_search($cat['leeftijd'], $leeftijdVolgorde);
+    $sortValue = ($pos !== false ? $pos : 99) * 10000 + (int)preg_replace('/[^0-9]/', '', $cat['gewicht']) + (str_starts_with($cat['gewicht'], '+') ? 500 : 0);
 
     // In sleepvak = purple, in blok vast = green, in blok niet vast = blue
     if ($inSleepvak) {
