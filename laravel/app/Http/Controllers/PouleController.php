@@ -302,14 +302,19 @@ class PouleController extends Controller
         $vanRanges = $this->berekenPouleRanges($vanPoule, $huidigJaar);
         $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
 
+        // Update titel bij lft-kg labels (dynamische titels)
+        $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
+        $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
+
         return response()->json([
             'success' => true,
-            'message' => "{$judoka->naam} verplaatst naar {$naarPoule->titel}",
+            'message' => "{$judoka->naam} verplaatst naar {$naarPoule->fresh()->titel}",
             'van_poule' => [
                 'id' => $vanPoule->id,
                 'nummer' => $vanPoule->nummer,
                 'judokas_count' => $vanPoule->aantal_judokas,
                 'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
+                'titel' => $vanTitel,
                 ...$vanRanges,
             ],
             'naar_poule' => [
@@ -317,6 +322,7 @@ class PouleController extends Controller
                 'nummer' => $naarPoule->nummer,
                 'judokas_count' => $naarPoule->aantal_judokas,
                 'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
+                'titel' => $naarTitel,
                 ...$naarRanges,
             ],
         ]);
@@ -757,5 +763,46 @@ class PouleController extends Controller
             'leeftijd_range' => $leeftijdRange,
             'gewicht_range' => $gewichtRange,
         ];
+    }
+
+    /**
+     * Update poule titel als deze dynamisch is (lft-kg of al omgezet)
+     * Retourneert de (eventueel bijgewerkte) titel
+     *
+     * Dynamische titels worden herkend aan:
+     * 1. Bevat "lft-kg" (nog niet omgezet)
+     * 2. Bevat " · " (al omgezet naar ranges format)
+     */
+    private function updateDynamischeTitel(Poule $poule, array $ranges): string
+    {
+        $titel = $poule->titel;
+
+        // Bouw dynamische range string
+        $leeftijdRange = $ranges['leeftijd_range'] ?? '';
+        $gewichtRange = $ranges['gewicht_range'] ?? '';
+        $dynamicRange = trim(($leeftijdRange && $gewichtRange)
+            ? $leeftijdRange . ' · ' . $gewichtRange
+            : $leeftijdRange . $gewichtRange);
+
+        // Check of titel "lft-kg" bevat (nog niet omgezet)
+        if (stripos($titel, 'lft-kg') !== false) {
+            $nieuweTitel = str_ireplace('lft-kg', $dynamicRange ?: 'Onbekend', $titel);
+        }
+        // Check of titel al omgezet is (bevat " · " scheidingsteken = dynamische titel)
+        elseif (strpos($titel, ' · ') !== false) {
+            // Simpele aanpak: vervang alles na eventuele "#nummer " prefix
+            // Titel is bijv "15j · 50.0kg" of met prefix in sommige gevallen
+            $nieuweTitel = $dynamicRange;
+        } else {
+            // Geen dynamische titel
+            return $titel;
+        }
+
+        // Update database als titel is gewijzigd
+        if ($nieuweTitel !== $titel) {
+            $poule->update(['titel' => $nieuweTitel]);
+        }
+
+        return $nieuweTitel;
     }
 }

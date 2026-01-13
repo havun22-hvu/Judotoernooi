@@ -71,7 +71,7 @@ Dit bepaalt de volgorde waarin judokas over poules worden verdeeld binnen een ca
 ┌─────────────────────────────────────────────────────────────────┐
 │ ≡ Naam: [        ]  Max leeftijd: [  ] jaar                    │
 │   Geslacht: [Gemengd ▼]  Systeem: [Poules ▼]              [×]  │
-│   Max kg verschil: [3] kg   Max leeftijd verschil: [1] jaar    │
+│   Δkg: [0]   Δlft: [0]   Band: [Alle ▼]                        │
 │                                                                 │
 │ [+ Categorie toevoegen]                                         │
 └─────────────────────────────────────────────────────────────────┘
@@ -81,12 +81,24 @@ Dit bepaalt de volgorde waarin judokas over poules worden verdeeld binnen een ca
 | Veld | Type | Default | Beschrijving |
 |------|------|---------|--------------|
 | Naam | text | - | Label voor deze categorie (bijv. "Mini's", "Jeugd") |
-| Max leeftijd | number | - | Leeftijdsgrens (exclusief) |
+| Max leeftijd | number | - | Leeftijdsgrens categorie (exclusief) |
 | Geslacht | select | Gemengd | Gemengd / M / V |
 | Systeem | select | Poules | Poules / Poules+Kruisfinale / Eliminatie |
-| Max kg verschil | number | 3 | HARDE limiet voor gewichtsverschil |
+| Δkg (max kg verschil) | number | 0 | HARDE limiet gewichtsverschil in poule |
+| Δlft (max leeftijd verschil) | number | 0 | HARDE limiet leeftijdsverschil in poule (zie onder) |
 | Band filter | select | Alle | Beginners/gevorderden scheiding (zie hieronder) |
-| Gewichtsklassen | text | - | Vaste klassen (alleen als max kg = 0) |
+| Gewichtsklassen | text | - | Vaste klassen (alleen als Δkg = 0) |
+
+**Max leeftijd verschil (Δlft) uitleg:**
+| Waarde | Betekenis |
+|--------|-----------|
+| 0 | Gebruik categorie limiet (max_leeftijd bepaalt de groep) |
+| 1 | Max 1 jaar verschil binnen poule (flexibeler) |
+| 2 | Max 2 jaar verschil binnen poule |
+
+**Voorbeeld:** Categorie "Jeugd" met max_leeftijd=12 en Δlft=1:
+- Judoka's van 9, 10, 11 jaar komen in deze categorie
+- Maar in één poule mogen alleen judoka's met max 1 jaar verschil (bijv. 10+11, niet 9+11)
 
 **Band filter opties:**
 ```
@@ -628,13 +640,86 @@ Titels worden automatisch samengesteld bij het genereren van poules.
 | Eliminatie | "Jeugd M 9-10j 30-33kg - Eliminatie" |
 | Kruisfinale | "Kruisfinale Jeugd M -30kg (top 2)" |
 
+### Dynamische placeholder: `lft-kg`
+
+Bij "Geen standaard" categorieën kun je `lft-kg` als naam gebruiken. Dit wordt bij poule generatie automatisch vervangen door de actuele ranges:
+
+| Categorie naam | Poule titel wordt |
+|----------------|-------------------|
+| `lft-kg` | "8-10j 30-35kg" |
+| `Jeugd` | "Jeugd 8-10j 30-35kg" |
+| `Beginners lft-kg` | "Beginners 8-10j 30-35kg" |
+
+**Werking:**
+- `lft-kg` wordt vervangen door `{min-max leeftijd}j {min-max gewicht}kg`
+- Ranges worden berekend uit de judoka's in die specifieke poule
+- Werkt ook in combinatie met andere tekst (bijv. "Beginners lft-kg")
+
 **Onderdelen:**
 - **Categorie naam** (uit Instellingen → Categorieën → Naam veld)
 - Geslacht: M/V (alleen bij niet-gemengde categorieën)
 - Leeftijd range: berekend uit judoka's (bijv. "9-10j")
 - Gewicht range: berekend uit judoka's (bijv. "30-33kg")
 
-**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert. Bestaande poule titels worden niet automatisch bijgewerkt.
+**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert.
+
+### Live titel update bij verslepen judoka's
+
+Wanneer judoka's worden versleept tussen poules:
+
+| Label type | Weergave | Bij verslepen |
+|------------|----------|---------------|
+| `lft-kg` | `#28 9-10j · 30-35kg` | Titel wordt automatisch bijgewerkt |
+| Vaste naam | `#5 Jeugd (9-10j, 30-35kg)` | Alleen ranges tussen haakjes bijgewerkt |
+
+**Dynamische titels (lft-kg):**
+- Titel bevat " · " als scheidingsteken
+- Bij verslepen: server berekent nieuwe ranges en update DB
+- Client update titel in DOM
+
+### Automatische blokverdeling (variabel systeem)
+
+Bij "lft-kg" categorieën worden blokken automatisch ingedeeld:
+
+**Algoritme:**
+1. Bereken doel: `totaal_wedstrijden / aantal_blokken`
+2. Sorteer alle poules op: MIN leeftijd → MIN gewicht
+3. Loop door gesorteerde poules, tel wedstrijden op
+4. Bij ~doel wedstrijden: zoek optimale split
+   - Primair: leeftijdsgrens (bijv. 8-9j | 9-10j)
+   - Secundair: gewichtsgrens binnen aangrenzende leeftijden
+5. Trial & error op gewichtssplit tot optimale verdeling
+
+**Bij leeftijdsgrens (bijv. 8-9j en 9-10j overlap):**
+- Pak poules van beide aangrenzende leeftijden
+- Sorteer op gewicht
+- Probeer verschillende gewichtssplitpunten
+- Kies split waar blok ~doel wedstrijden heeft
+- Lichtere poules → blok N
+- Zwaardere poules → blok N+1
+
+**Categorie headers na berekening:**
+- Per groep poules die samen zijn ingedeeld
+- Naam = MIN-MAX leeftijd · MIN-MAX gewicht van alle poules in groep
+
+**Voorbeeld:**
+```
+Blok 1:
+├─ Categorie "8-9j · 20-30kg"          ← dynamische header
+│  ├─ Poule: 8-9j · 20-23kg (12w)
+│  ├─ Poule: 8-9j · 24-27kg (18w)
+│  └─ Poule: 8-9j · 28-30kg (15w)
+
+Blok 2:
+├─ Categorie "8-10j · 28-35kg"         ← overlap door split
+│  ├─ Poule: 8-9j · 31-35kg (10w)
+│  ├─ Poule: 9-10j · 28-30kg (20w)
+│  └─ Poule: 9-10j · 31-35kg (22w)
+```
+
+**Beperkingen:**
+- Kruisfinales/KO niet beschikbaar bij variabel systeem
+- Later toe te voegen: alleen bij grote homogene groepen (zelfde leeftijd+gewicht)
 
 ## Vereenvoudiging Instellingen (7 jan 2026)
 

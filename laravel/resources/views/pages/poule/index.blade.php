@@ -135,8 +135,27 @@
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
-                                <span class="text-gray-900">#{{ $poule->nummer }} {{ $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse }}</span>
+                                @php
+                                    $label = $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse;
+                                    $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
+                                    $showRangesSeparate = true;
+
+                                    // Als label "lft-kg" bevat, vervang door actuele ranges
+                                    if (stripos($label, 'lft-kg') !== false) {
+                                        if (strtolower($label) === 'lft-kg') {
+                                            $label = $dynamicRange ?: 'Onbekend';
+                                        } else {
+                                            $label = str_ireplace('lft-kg', $dynamicRange, $label);
+                                        }
+                                        $showRangesSeparate = false;
+                                    }
+                                @endphp
+                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }}</span>
+                                @if($showRangesSeparate)
                                 <span class="font-normal text-gray-500 text-xs ml-1" data-poule-ranges>@if($leeftijdRange || $gewichtRange)({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})@endif</span>
+                                @else
+                                <span class="font-normal text-gray-500 text-xs ml-1 hidden" data-poule-ranges></span>
+                                @endif
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
@@ -595,12 +614,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update leeftijd/gewicht ranges (only for regular poules)
         if (!isKruisfinale && !isEliminatie) {
+            const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
             const rangeEl = pouleCard.querySelector('[data-poule-ranges]');
-            if (rangeEl) {
+
+            // Check of dit een dynamische titel is (bevat · wat duidt op lft-kg format)
+            const isDynamischeTitel = pouleData.titel && pouleData.titel.includes('·');
+
+            if (isDynamischeTitel && titelEl) {
+                // Dynamische titel: update titel, verberg aparte ranges
+                titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
+                if (rangeEl) rangeEl.classList.add('hidden');
+            } else if (rangeEl) {
+                // Vaste titel: update alleen ranges tussen haakjes
                 const ranges = [];
                 if (pouleData.leeftijd_range) ranges.push(pouleData.leeftijd_range);
                 if (pouleData.gewicht_range) ranges.push(pouleData.gewicht_range);
                 rangeEl.textContent = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
+                rangeEl.classList.remove('hidden');
             }
         }
 

@@ -866,10 +866,26 @@ class PouleIndelingService
 
     /**
      * Get max leeftijd verschil for a leeftijdsklasse
+     *
+     * 0 = gebruik categorie limiet (judokas in deze categorie mogen allemaal samen)
+     * 1+ = max dit aantal jaar verschil binnen een poule
      */
     private function getMaxLeeftijdVerschil(string $leeftijdsklasse): int
     {
-        // Use tournament-level setting (same for all categories for safety)
+        // First check category-specific config
+        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
+        if ($config && isset($config['max_leeftijd_verschil'])) {
+            $value = (int) $config['max_leeftijd_verschil'];
+            if ($value === 0) {
+                // 0 = gebruik categorie limiet, bereken uit max_leeftijd
+                // Als categorie max_leeftijd=12, dan mogen 9-11 jarigen samen (3 jaar range)
+                $maxLeeftijd = $config['max_leeftijd'] ?? 99;
+                // Schat de range: typisch 2-3 jaar per categorie
+                return $maxLeeftijd < 99 ? 3 : 2;
+            }
+            return $value;
+        }
+        // Fallback to tournament-level setting
         return (int) ($this->toernooi?->max_leeftijd_verschil ?? 2);
     }
 
@@ -1157,6 +1173,22 @@ class PouleIndelingService
                     ? "{$minGewicht}kg"
                     : "{$minGewicht}-{$maxGewicht}kg";
             }
+        }
+
+        // Handle dynamic placeholder "lft-kg"
+        // If label contains "lft-kg", replace it with actual ranges
+        $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
+
+        if (strtolower($lk) === 'lft-kg') {
+            // Label is exactly "lft-kg" - use only dynamic range
+            $lk = $dynamicRange ?: 'Onbekend';
+            $leeftijdRange = ''; // Already in $lk
+            $gewichtRange = '';  // Already in $lk
+        } elseif (stripos($lk, 'lft-kg') !== false) {
+            // Label contains "lft-kg" - replace placeholder
+            $lk = str_ireplace('lft-kg', $dynamicRange, $lk);
+            $leeftijdRange = ''; // Already in $lk
+            $gewichtRange = '';  // Already in $lk
         }
 
         // Build title: "Jeugd M 9-10j 30-33kg"

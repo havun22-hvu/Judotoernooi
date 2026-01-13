@@ -83,6 +83,20 @@ class WedstrijddagController extends Controller
                         $label = $gewichtsklassenConfig[$configKey]['label'];
                     }
 
+                    // Bij lft-kg label: vervang door actuele leeftijd range
+                    if (stripos($label, 'lft-kg') !== false) {
+                        $huidigJaar = now()->year;
+                        $alleLeeftijden = $categoryPoules->flatMap(fn($p) => $p->judokas->pluck('geboortejaar'))
+                            ->filter()
+                            ->map(fn($gj) => $huidigJaar - $gj);
+                        if ($alleLeeftijden->isNotEmpty()) {
+                            $minL = $alleLeeftijden->min();
+                            $maxL = $alleLeeftijden->max();
+                            $leeftijdRange = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
+                            $label = str_ireplace('lft-kg', $leeftijdRange, $label);
+                        }
+                    }
+
                     return [
                         'key' => $key,
                         'leeftijdsklasse' => $leeftijdsklasse,
