@@ -20,25 +20,14 @@ class JudokaController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        // Define age class order (youngest to oldest)
-        $leeftijdsklasseVolgorde = [
-            "Mini's" => 1,
-            'A-pupillen' => 2,
-            'B-pupillen' => 3,
-            'U9' => 1,
-            'U11' => 2,
-            'U13' => 3,
-            'U15' => 4,
-            'U18' => 5,
-            'U21' => 6,
-            'Senioren' => 7,
-            'Dames -15' => 4,
-            'Heren -15' => 4,
-            'Dames -18' => 5,
-            'Heren -18' => 5,
-            'Dames' => 6,
-            'Heren' => 6,
-        ];
+        // Build age class order from tournament config (youngest first)
+        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+        $leeftijdsklasseVolgorde = [];
+        $index = 0;
+        foreach ($gewichtsklassenConfig as $key => $config) {
+            $label = $config['label'] ?? $key;
+            $leeftijdsklasseVolgorde[$label] = $index++;
+        }
 
         $judokas = $toernooi->judokas()
             ->with('club')
@@ -52,8 +41,9 @@ class JudokaController extends Controller
             fn ($a, $b) => $a->naam <=> $b->naam,
         ]);
 
-        // Group by leeftijdsklasse (preserving sort order)
-        $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse');
+        // Group by leeftijdsklasse and sort groups by config order
+        $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse')
+            ->sortBy(fn ($group, $klasse) => $leeftijdsklasseVolgorde[$klasse] ?? 999);
 
         return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'leeftijdsklasseVolgorde'));
     }
