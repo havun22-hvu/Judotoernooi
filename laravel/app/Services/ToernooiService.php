@@ -194,18 +194,15 @@ class ToernooiService
             ->pluck('aantal', 'leeftijdsklasse')
             ->toArray();
 
-        // Get age class order from tournament config (youngest first)
-        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-        $volgorde = [];
-        $index = 0;
-        foreach ($gewichtsklassenConfig as $key => $config) {
-            $label = $config['label'] ?? $key;
-            $volgorde[$label] = $index++;
-        }
-
-        // Sort by configured order (youngest first)
-        uksort($counts, function ($a, $b) use ($volgorde) {
-            return ($volgorde[$a] ?? 999) <=> ($volgorde[$b] ?? 999);
+        // Sort by extracting U-number from leeftijdsklasse (e.g., "U11 Jongens" -> 11)
+        // Then by gender (Meisjes before Jongens alphabetically)
+        uksort($counts, function ($a, $b) {
+            $numA = preg_match('/U(\d+)/', $a, $m) ? (int) $m[1] : 99;
+            $numB = preg_match('/U(\d+)/', $b, $m) ? (int) $m[1] : 99;
+            if ($numA !== $numB) {
+                return $numA <=> $numB;
+            }
+            return $a <=> $b; // Alphabetical within same age
         });
 
         return $counts;
