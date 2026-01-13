@@ -838,6 +838,40 @@ $toernooi->poules()
     ->exists();
 ```
 
+## Classificatie Workflow (14 jan 2026)
+
+### Hoe classificatie werkt
+
+1. **Import** - Judoka's worden geïmporteerd met originele classificatie (bijv. JBN labels)
+2. **Herclassificatie** - `PouleIndelingService::herberkenKlassen()` leest toernooi preset en classificeert opnieuw
+3. **Poule generatie** - Roept automatisch herclassificatie aan
+
+### Automatische geslacht detectie uit label (14 jan 2026)
+
+Als `geslacht=gemengd` maar het label bevat geslacht-indicatie, wordt dit automatisch afgeleid:
+
+| Label bevat | Wordt behandeld als |
+|-------------|---------------------|
+| "Dames", "Meisjes", "_d_", "_d" (suffix) | V (vrouw) |
+| "Heren", "Jongens", "_h_", "_h" (suffix) | M (man) |
+
+**Voorbeeld:**
+```
+u15_d_groen_plus: label="U15 Dames Groen+", geslacht=gemengd
+→ Code detecteert "Dames" in label → behandelt als geslacht=V
+```
+
+Dit voorkomt fouten wanneer organisator vergeet geslacht in te vullen.
+
+### Na kopie van andere database
+
+Als judoka's worden gekopieerd van production naar staging:
+- Judoka's behouden hun **oude classificatie**
+- **Herclassificatie moet draaien** voordat poules worden gegenereerd
+- Dit gebeurt automatisch bij "Poules genereren", of handmatig via tinker
+
+---
+
 ## Rode Poule Markering (14 jan 2026)
 
 ### Probleem
