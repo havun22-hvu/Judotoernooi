@@ -838,6 +838,33 @@ $toernooi->poules()
     ->exists();
 ```
 
+## Rode Poule Markering (14 jan 2026)
+
+### Probleem
+Rode markering voor problematische poules was hardcoded op `< 3 judoka's`.
+Dit hield geen rekening met de `poule_grootte_voorkeur` instelling.
+
+### Oplossing
+Rode markering nu gebaseerd op instellingen:
+- Een poule is **rood** als grootte NIET in `poule_grootte_voorkeur` staat
+- Default voorkeur: `[5, 4, 6, 3]` → poules met 1, 2, 7, 8+ judoka's zijn rood
+- Lege poules (0) zijn **blauw** (verwijderbaar)
+
+### Voorbeeld
+```
+poule_grootte_voorkeur = [5, 4, 6, 3]
+
+Poule met 2 judoka's → ROOD (2 niet in [5,4,6,3])
+Poule met 3 judoka's → BLAUW (3 in [5,4,6,3])
+Poule met 7 judoka's → ROOD (7 niet in [5,4,6,3])
+```
+
+### Implementatie
+- `poule/index.blade.php`: PHP + JavaScript aangepast
+- Melding toont nu toegestane groottes
+
+---
+
 ## Vereenvoudiging Instellingen (7 jan 2026)
 
 ### Probleem

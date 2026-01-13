@@ -3,6 +3,12 @@
 @section('title', 'Poules')
 
 @section('content')
+@php
+    // Toegestane poule groottes uit instellingen (default [5, 4, 6, 3])
+    $toegestaneGroottes = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
+    // Een poule is problematisch als grootte > 0 EN niet in toegestane groottes
+    $isProblematischeGrootte = fn($count) => $count > 0 && !in_array($count, $toegestaneGroottes);
+@endphp
 {{-- Statistieken sectie (blijft zichtbaar) --}}
 <div id="poule-statistieken" class="bg-white rounded-lg shadow p-4 mb-6 no-print">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
@@ -19,7 +25,7 @@
             <div class="text-sm text-gray-600">Judoka's</div>
         </div>
         <div>
-            <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $p->judokas_count > 0 && $p->judokas_count < 3)->count() }}</div>
+            <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count))->count() }}</div>
             <div class="text-sm text-gray-600">Problemen</div>
         </div>
     </div>
@@ -54,15 +60,15 @@
 </div>
 
 @php
-    // Alleen poules met 1 of 2 judoka's zijn problematisch (lege poules zijn ok)
-    $problematischePoules = $poules->filter(fn($p) => $p->judokas_count > 0 && $p->judokas_count < 3);
+    // Poules zijn problematisch als grootte niet in toegestane groottes staat
+    $problematischePoules = $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count));
 @endphp
 
 <div id="problematische-poules-container">
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-    <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Klik om naar de poule te gaan:</p>
+    <p class="text-red-700 text-sm mb-3">Deze poules hebben een niet-toegestane grootte (toegestaan: {{ implode(', ', $toegestaneGroottes) }}). Klik om naar de poule te gaan:</p>
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
@@ -93,7 +99,7 @@
             @php
                 $isEliminatie = $poule->type === 'eliminatie';
                 $isKruisfinale = $poule->isKruisfinale();
-                $isProbleem = $poule->judokas_count > 0 && $poule->judokas_count < 3 && !$isKruisfinale && !$isEliminatie;
+                $isProbleem = $isProblematischeGrootte($poule->judokas_count) && !$isKruisfinale && !$isEliminatie;
 
                 // Bereken leeftijd en gewicht ranges uit judoka's
                 $leeftijdRange = '';
@@ -306,6 +312,10 @@ const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $t
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
+
+// Toegestane poule groottes uit instellingen
+const toegestaneGroottes = @json($toegestaneGroottes);
+const isProblematischeGrootte = (count) => count > 0 && !toegestaneGroottes.includes(count);
 
 function openNieuwePouleModal() {
     document.getElementById('nieuwe-poule-modal').classList.remove('hidden');
@@ -665,8 +675,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove delete button
             headerTop?.querySelector('.delete-empty-btn')?.remove();
 
-            // Update problematic styling (1-2 judokas = problematic, skip kruisfinale)
-            if (pouleData.judokas_count < 3 && !isKruisfinale) {
+            // Update problematic styling (grootte niet in toegestane groottes = problematic, skip kruisfinale)
+            if (isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale) {
                 pouleCard.classList.add('border-2', 'border-red-300');
                 header?.classList.add('bg-red-100');
                 header?.classList.remove('bg-blue-100');
@@ -689,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const countEl = document.getElementById('problematische-count');
         const existingLink = document.querySelector(`[data-probleem-poule="${pouleData.id}"]`);
 
-        const isProblematic = pouleData.judokas_count > 0 && pouleData.judokas_count < 3;
+        const isProblematic = isProblematischeGrootte(pouleData.judokas_count);
 
         if (isProblematic) {
             // Update or add the link
