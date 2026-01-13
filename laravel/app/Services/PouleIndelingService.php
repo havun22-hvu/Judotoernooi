@@ -209,6 +209,7 @@ class PouleIndelingService
                         'type' => 'eliminatie',
                         'leeftijdsklasse' => $leeftijdsklasse,
                         'gewichtsklasse' => $gewichtsklasse,
+                        'categorie_key' => $configKey,
                         'aantal_judokas' => $aantalDeelnemers,
                     ]);
 
@@ -269,6 +270,9 @@ class PouleIndelingService
                     // Check if this age class uses elimination system
                     $isDynamicEliminatie = $systeem === 'eliminatie';
 
+                    // Get config key for grouping
+                    $dynamicConfigKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
+
                     // Create pools from dynamische indeling result
                     foreach ($indeling['poules'] as $pouleData) {
                         $pouleJudokas = $pouleData['judokas'];
@@ -286,6 +290,7 @@ class PouleIndelingService
                             'type' => $pouleType,
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtRange,
+                            'categorie_key' => $dynamicConfigKey,
                             'aantal_judokas' => count($pouleJudokas),
                         ]);
 
@@ -337,6 +342,7 @@ class PouleIndelingService
                 } else {
                     // STANDARD GROUPING: Split into optimal pools (existing flow)
                     $pouleVerdelingen = $this->maakOptimalePoules($judokas);
+                    $standardConfigKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
 
                     foreach ($pouleVerdelingen as $pouleJudokas) {
                         $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig);
@@ -348,6 +354,7 @@ class PouleIndelingService
                             'type' => 'voorronde',
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtsklasse,
+                            'categorie_key' => $standardConfigKey,
                             'aantal_judokas' => count($pouleJudokas),
                         ]);
 
@@ -439,6 +446,7 @@ class PouleIndelingService
                         'kruisfinale_plaatsen' => $kruisfinalesAantal,
                         'leeftijdsklasse' => $data['leeftijdsklasse'],
                         'gewichtsklasse' => $data['gewichtsklasse'],
+                        'categorie_key' => $configKey,
                         'blok_id' => $voorrondeBlokId,
                         'aantal_judokas' => $aantalJudokasKruisfinale,
                         'aantal_wedstrijden' => $this->berekenAantalWedstrijden($aantalJudokasKruisfinale),

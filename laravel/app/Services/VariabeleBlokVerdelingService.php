@@ -176,6 +176,7 @@ class VariabeleBlokVerdelingService
                     'titel' => $poule->titel,
                     'leeftijdsklasse' => $poule->leeftijdsklasse,
                     'gewichtsklasse' => $poule->gewichtsklasse,
+                    'categorie_key' => $poule->categorie_key, // For grouping (e.g., "m_variabel", "beginners")
                     'aantal_wedstrijden' => $poule->aantal_wedstrijden,
                     'blok_vast' => $poule->blok_vast,
                     'min_leeftijd' => $minLeeftijd,
@@ -438,7 +439,8 @@ class VariabeleBlokVerdelingService
 
     /**
      * Calculate category groupings for display
-     * Groups consecutive pools with same/similar age into categories with dynamic headers
+     * Groups pools by categorie_key first, then by age/weight within each category
+     * This allows mixed scenarios like M/V separate or belt-based grouping
      */
     private function berekenCategorieGroepen(Collection $poules, array $toewijzingen, $blokken): array
     {
@@ -451,51 +453,97 @@ class VariabeleBlokVerdelingService
                 continue;
             }
 
-            // Group by age range
-            $ageGroups = [];
+            // First group by categorie_key (e.g., "m_variabel", "v_variabel", "beginners")
+            $categorieGroups = [];
             foreach ($blokPoules as $poule) {
-                $ageKey = $poule['min_leeftijd'] . '-' . $poule['max_leeftijd'];
-                if (!isset($ageGroups[$ageKey])) {
-                    $ageGroups[$ageKey] = [
+                $catKey = $poule['categorie_key'] ?? 'default';
+                if (!isset($categorieGroups[$catKey])) {
+                    $categorieGroups[$catKey] = [
                         'poules' => [],
-                        'min_leeftijd' => $poule['min_leeftijd'],
-                        'max_leeftijd' => $poule['max_leeftijd'],
-                        'min_gewicht' => PHP_INT_MAX,
-                        'max_gewicht' => 0,
-                        'wedstrijden' => 0,
+                        'label_prefix' => $this->extractLabelPrefix($poule['leeftijdsklasse']),
                     ];
                 }
-                $ageGroups[$ageKey]['poules'][] = $poule;
-                $ageGroups[$ageKey]['min_gewicht'] = min($ageGroups[$ageKey]['min_gewicht'], $poule['min_gewicht']);
-                $ageGroups[$ageKey]['max_gewicht'] = max($ageGroups[$ageKey]['max_gewicht'], $poule['max_gewicht']);
-                $ageGroups[$ageKey]['wedstrijden'] += $poule['aantal_wedstrijden'];
+                $categorieGroups[$catKey]['poules'][] = $poule;
             }
 
-            // Merge adjacent age groups if they overlap
-            $mergedGroups = $this->mergeAdjacentAgeGroups(array_values($ageGroups));
+            // Within each category, group by age range
+            foreach ($categorieGroups as $catKey => $catGroup) {
+                $ageGroups = [];
+                foreach ($catGroup['poules'] as $poule) {
+                    $ageKey = $poule['min_leeftijd'] . '-' . $poule['max_leeftijd'];
+                    if (!isset($ageGroups[$ageKey])) {
+                        $ageGroups[$ageKey] = [
+                            'poules' => [],
+                            'min_leeftijd' => $poule['min_leeftijd'],
+                            'max_leeftijd' => $poule['max_leeftijd'],
+                            'min_gewicht' => PHP_INT_MAX,
+                            'max_gewicht' => 0,
+                            'wedstrijden' => 0,
+                        ];
+                    }
+                    $ageGroups[$ageKey]['poules'][] = $poule;
+                    $ageGroups[$ageKey]['min_gewicht'] = min($ageGroups[$ageKey]['min_gewicht'], $poule['min_gewicht']);
+                    $ageGroups[$ageKey]['max_gewicht'] = max($ageGroups[$ageKey]['max_gewicht'], $poule['max_gewicht']);
+                    $ageGroups[$ageKey]['wedstrijden'] += $poule['aantal_wedstrijden'];
+                }
 
-            // Generate dynamic headers
-            foreach ($mergedGroups as $group) {
-                $minL = $group['min_leeftijd'];
-                $maxL = $group['max_leeftijd'];
-                $minG = round($group['min_gewicht'], 1);
-                $maxG = round($group['max_gewicht'], 1);
+                // Merge adjacent age groups if they overlap
+                $mergedGroups = $this->mergeAdjacentAgeGroups(array_values($ageGroups));
 
-                $leeftijdStr = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
-                $gewichtStr = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+                // Generate dynamic headers with label prefix
+                $labelPrefix = $catGroup['label_prefix'];
+                foreach ($mergedGroups as $group) {
+                    $minL = $group['min_leeftijd'];
+                    $maxL = $group['max_leeftijd'];
+                    $minG = round($group['min_gewicht'], 1);
+                    $maxG = round($group['max_gewicht'], 1);
 
-                $groepen[] = [
-                    'blok_nummer' => $blok->nummer,
-                    'header' => "{$leeftijdStr} · {$gewichtStr}",
-                    'wedstrijden' => $group['wedstrijden'],
-                    'poule_count' => count($group['poules']),
-                    'leeftijd_range' => [$minL, $maxL],
-                    'gewicht_range' => [$minG, $maxG],
-                ];
+                    $leeftijdStr = $minL === $maxL ? "{$minL}j" : "{$minL}-{$maxL}j";
+                    $gewichtStr = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+
+                    // Build header: "M 8-10j · 30-40kg" or "8-10j · 30-40kg"
+                    $header = $labelPrefix
+                        ? "{$labelPrefix} {$leeftijdStr} · {$gewichtStr}"
+                        : "{$leeftijdStr} · {$gewichtStr}";
+
+                    $groepen[] = [
+                        'blok_nummer' => $blok->nummer,
+                        'categorie_key' => $catKey,
+                        'header' => $header,
+                        'wedstrijden' => $group['wedstrijden'],
+                        'poule_count' => count($group['poules']),
+                        'leeftijd_range' => [$minL, $maxL],
+                        'gewicht_range' => [$minG, $maxG],
+                    ];
+                }
             }
         }
 
         return $groepen;
+    }
+
+    /**
+     * Extract label prefix from leeftijdsklasse (e.g., "M" from "M lft-kg", "Beginners" from "Beginners lft-kg")
+     * Returns null if no prefix (leeftijdsklasse starts with number or "lft-kg")
+     */
+    private function extractLabelPrefix(string $leeftijdsklasse): ?string
+    {
+        // If starts with number or "lft-kg", no prefix
+        if (preg_match('/^[\d]/', $leeftijdsklasse) || stripos($leeftijdsklasse, 'lft-kg') === 0) {
+            return null;
+        }
+
+        // Extract text before "lft-kg" or before first digit
+        if (preg_match('/^([A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(?:lft-kg|\d)/', $leeftijdsklasse, $matches)) {
+            return trim($matches[1]);
+        }
+
+        // If contains " · ", it's already resolved - extract prefix before space+digit
+        if (preg_match('/^([A-Za-z]+)\s+\d/', $leeftijdsklasse, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
     }
 
     /**
