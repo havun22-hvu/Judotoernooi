@@ -347,36 +347,31 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 13 januari 2026 (nacht)
+## Laatste Sessie: 13 januari 2026 (nacht - deel 2)
 
 ### Wat is gedaan:
-- **Geslacht waarden gefixt**
-  - UI dropdown: `'jongens'/'meisjes'` → `'M'/'V'`
-  - Backwards compatibility in `classificeerJudoka()` voor oude waarden
-  - Preset "Alles" in database gefixed
+- **Preset loading gefixt**
+  - Eigen preset radio button had geen @change handler → toegevoegd
+  - Dropdown change event triggerde niet als al geselecteerd → niet auto-selecteren bij load
+  - Debug logging toegevoegd (console.log) voor troubleshooting
 
-- **Poule grootte scoring gefixt**
-  - Exponentiële scoring: `2^(positie+1) - 1` ipv lineair
-  - Removed early returns voor 4-6 judokas → nu vergelijkt 1x6 vs 2x3
-  - `DynamischeIndelingService`: threshold `<= 6` → `<= 3`
-  - `PouleIndelingService`: 1-pool optie toegevoegd aan vergelijking
+- **Poule sortering gefixt**
+  - Leeftijdsklasse sortering nu flexibeler (prefix match + numerieke fallback)
+  - U7 komt nu bovenaan, niet onderaan
 
-- **Band/gewicht sortering gefixt**
-  - `groepeerJudokas()` respecteert nu `verdeling_prioriteiten`
-  - Als 'band' voor 'gewicht' in prioriteiten → band eerst sorteren
-  - Witte banden vullen eerste poules, dan gele, etc.
-
-- **UI: Sorteer prioriteit altijd zichtbaar**
-  - Was: alleen bij "Geen standaard"
-  - Nu: altijd zichtbaar, ook bij JBN presets
-  - Help tekst verbeterd
+- **Band sortering EINDELIJK werkend**
+  - `groupBy()` bewaart geen volgorde → re-sort na groupBy toegevoegd
+  - `getBandNiveau()` herkende "wit (6 kyu)" niet → parsing verbeterd
+  - `sort_band` waarden waren 0 → handmatig bijgewerkt (852 judokas)
 
 ### Openstaande items:
-- [ ] Testen: prioriteiten wijzigen → check poule verdeling
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
+- [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
-- **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken (niet 'jongens'/'meisjes')
+- **Band format in database:** `"wit (6 kyu)"` - getBandNiveau() moet dit parsen
+- **groupBy() gotcha:** Laravel Collection groupBy() bewaart de volgorde NIET binnen groepen
+- **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken
 - **Poule grootte:** Score berekening is exponentieel, zie `berekenVerdelingScore()`
 - **Sortering:** Afhankelijk van `verdeling_prioriteiten` array volgorde
