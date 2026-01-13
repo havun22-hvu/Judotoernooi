@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Log;
 class BlokMatVerdelingService
 {
     /**
+     * Service for variable (lft-kg) categories
+     */
+    private ?VariabeleBlokVerdelingService $variabeleService = null;
+
+    /**
      * Preference order for placing categories relative to previous weight
      * +1 (next block), -1 (previous block), +2 (two blocks ahead) - max 3 options!
      */
@@ -38,6 +43,11 @@ class BlokMatVerdelingService
      */
     public function genereerVarianten(Toernooi $toernooi, int $userVerdelingGewicht = 50, int $userAansluitingGewicht = 50): array
     {
+        // Check for variable categories (lft-kg) and delegate
+        if ($this->heeftVariabeleCategorieen($toernooi)) {
+            return $this->getVariabeleService()->genereerVarianten($toernooi, $userVerdelingGewicht);
+        }
+
         $blokken = $toernooi->blokken->sortBy('nummer')->values();
 
         if ($blokken->isEmpty()) {
@@ -707,6 +717,8 @@ class BlokMatVerdelingService
     /**
      * Apply toewijzingen to the database
      * Updates all non-pinned categories to their assigned blocks
+     *
+     * Format: "leeftijdsklasse|gewichtsklasse" => blok_nummer
      */
     public function pasVariantToe(Toernooi $toernooi, array $toewijzingen): void
     {
@@ -961,6 +973,25 @@ class BlokMatVerdelingService
     public function verplaatsPoule(Poule $poule, Blok $nieuweBlok): void
     {
         $poule->update(['blok_id' => $nieuweBlok->id]);
+    }
+
+    /**
+     * Check if toernooi has variable categories (lft-kg)
+     */
+    private function heeftVariabeleCategorieen(Toernooi $toernooi): bool
+    {
+        return $this->getVariabeleService()->heeftVariabeleCategorieen($toernooi);
+    }
+
+    /**
+     * Get or create VariabeleBlokVerdelingService instance
+     */
+    private function getVariabeleService(): VariabeleBlokVerdelingService
+    {
+        if ($this->variabeleService === null) {
+            $this->variabeleService = app(VariabeleBlokVerdelingService::class);
+        }
+        return $this->variabeleService;
     }
 
     /**
