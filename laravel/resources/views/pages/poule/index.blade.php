@@ -317,6 +317,22 @@ const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());
 const toegestaneGroottes = @json($toegestaneGroottes);
 const isProblematischeGrootte = (count) => count > 0 && !toegestaneGroottes.includes(count);
 
+// Smooth scroll naar problematische poules met offset
+document.addEventListener('click', function(e) {
+    const link = e.target.closest('[data-probleem-poule]');
+    if (link) {
+        e.preventDefault();
+        const pouleId = link.dataset.probleemPoule;
+        const pouleEl = document.getElementById('poule-' + pouleId);
+        if (pouleEl) {
+            const headerOffset = 120; // Ruimte voor sticky header
+            const elementPosition = pouleEl.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        }
+    }
+});
+
 function openNieuwePouleModal() {
     document.getElementById('nieuwe-poule-modal').classList.remove('hidden');
     document.getElementById('leeftijdsklasse').value = '';
