@@ -38,14 +38,21 @@
 
 <p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
 
+@php
+    // Dynamisch uit toernooi config (ondersteunt eigen presets)
+    $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+    $leeftijdVolgordeZaal = [];
+    $idx = 1;
+    foreach ($gewichtsklassenConfig as $config) {
+        $label = $config['label'] ?? '';
+        if ($label && !isset($leeftijdVolgordeZaal[$label])) {
+            $leeftijdVolgordeZaal[$label] = $idx++;
+        }
+    }
+@endphp
 @foreach($overzicht as $blok)
 @php
-    // Leeftijd volgorde: mini's eerst (jongste)
-    $leeftijdVolgorde = [
-        "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
-        'Dames -15' => 4, 'Heren -15' => 5, 'Dames -18' => 6, 'Heren -18' => 7,
-        'Dames' => 8, 'Heren' => 9,
-    ];
+    $leeftijdVolgorde = $leeftijdVolgordeZaal;
 
     // Get unique categories in this blok with leeftijdsklasse and gewichtsklasse for sorting
     $blokCategories = collect($blok['matten'])
