@@ -347,22 +347,29 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 13 januari 2026 (nacht - deel 2)
+## Laatste Sessie: 14 januari 2026
 
 ### Wat is gedaan:
-- **Preset loading gefixt**
-  - Eigen preset radio button had geen @change handler → toegevoegd
-  - Dropdown change event triggerde niet als al geselecteerd → niet auto-selecteren bij load
-  - Debug logging toegevoegd (console.log) voor troubleshooting
+- **Lege poules naar wedstrijddag**
+  - Filter verwijderd die lege poules uitsloot
+  - Nu kunnen lege poules (bijv. Mini's U7 -26) getoond worden voor overpoelen
 
-- **Poule sortering gefixt**
-  - Leeftijdsklasse sortering nu flexibeler (prefix match + numerieke fallback)
-  - U7 komt nu bovenaan, niet onderaan
+- **Gewichtscategorie in poule titel**
+  - Poule titels tonen nu gewichtsklasse: "#1 Mini's U7 -23" i.p.v. "#1 Mini's U7"
 
-- **Band sortering EINDELIJK werkend**
-  - `groupBy()` bewaart geen volgorde → re-sort na groupBy toegevoegd
-  - `getBandNiveau()` herkende "wit (6 kyu)" niet → parsing verbeterd
-  - `sort_band` waarden waren 0 → handmatig bijgewerkt (852 judokas)
+- **Wachtruimte toont gewogen judoka's**
+  - Filter `aanwezigheid = 'aanwezig'` verwijderd
+  - Gewogen = automatisch aanwezig (kun niet wegen zonder er te zijn)
+  - Milou Jansen staat nu correct in wachtruimte van -26
+
+- **Info popup als tooltip**
+  - ⓘ icoon toont nu tooltip direct boven de icon
+  - Niet meer browser alert bovenaan scherm
+  - Removed overflow-hidden van poule-card zodat tooltip zichtbaar is
+
+- **Docs geüpdatet**
+  - GEBRUIKERSHANDLEIDING.md: sectie "Automatische Aanwezigheidsbepaling" toegevoegd
+  - Alle "doorgestreepte judoka's" verwijzingen vervangen door ⓘ icoon uitleg
 
 ### Openstaande items:
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
@@ -370,8 +377,16 @@ php artisan view:cache
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
+- **Aanwezigheid logica:**
+  - Gewogen (`gewicht_gewogen` is ingevuld) = aanwezig
+  - Niet gewogen na sluiting weegtijd = afwezig
+  - Wachtruimte filtert NIET meer op `aanwezigheid` veld
+
+- **Poule UI:**
+  - Afwezige/overgepoulede judoka's staan NIET meer in poule (geen doorgestreept)
+  - Info via ⓘ icoon in poule header met tooltip popup
+  - Tooltip werkt door removed overflow-hidden op poule-card
+
 - **Band format in database:** `"wit (6 kyu)"` - getBandNiveau() moet dit parsen
 - **groupBy() gotcha:** Laravel Collection groupBy() bewaart de volgorde NIET binnen groepen
 - **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken
-- **Poule grootte:** Score berekening is exponentieel, zie `berekenVerdelingScore()`
-- **Sortering:** Afhankelijk van `verdeling_prioriteiten` array volgorde
