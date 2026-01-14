@@ -597,6 +597,12 @@ document.addEventListener('DOMContentLoaded', function() {
             chosenClass: 'bg-blue-200',
             dragClass: 'shadow-lg',
             onEnd: async function(evt) {
+                console.log('🎯 Drag ended!', {
+                    judoka: evt.item.dataset.judokaId,
+                    van: evt.from.dataset.pouleId,
+                    naar: evt.to.dataset.pouleId
+                });
+
                 const judokaId = evt.item.dataset.judokaId;
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;

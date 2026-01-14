@@ -789,7 +789,7 @@ class PouleController extends Controller
         $toernooi = $poule->toernooi;
 
         // Get category config for this pool's leeftijdsklasse
-        $config = $toernooi->getPresetConfig();
+        $config = $toernooi->getAlleGewichtsklassen();
         $categorieConfig = null;
 
         // Find matching category config - try by label first, then by categorie_key
