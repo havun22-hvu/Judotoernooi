@@ -334,6 +334,31 @@ function showToast(message, isError = false) {
     setTimeout(() => toast.classList.add('translate-x-full'), 2000);
 }
 
+function updateTotaalStats() {
+    // Tel alle wedstrijden op
+    let totaalWedstrijden = 0;
+    document.querySelectorAll('[data-poule-wedstrijden]').forEach(el => {
+        const val = parseInt(el.textContent) || 0;
+        totaalWedstrijden += val;
+    });
+    document.getElementById('stat-wedstrijden').textContent = totaalWedstrijden;
+
+    // Tel alle judoka's op
+    let totaalJudokas = 0;
+    document.querySelectorAll('[data-poule-count]').forEach(el => {
+        totaalJudokas += parseInt(el.textContent) || 0;
+    });
+    document.getElementById('stat-judokas').textContent = totaalJudokas;
+
+    // Tel problematische poules (grootte niet in toegestane groottes)
+    let problematisch = 0;
+    document.querySelectorAll('[data-poule-count]').forEach(el => {
+        const count = parseInt(el.textContent) || 0;
+        if (isProblematischeGrootte(count)) problematisch++;
+    });
+    document.getElementById('stat-problematisch').textContent = problematisch;
+}
+
 async function verwijderPoule(pouleId, pouleNummer) {
     if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
 
@@ -351,6 +376,11 @@ async function verwijderPoule(pouleId, pouleNummer) {
         if (data.success) {
             showToast(data.message);
             document.getElementById('poule-' + pouleId)?.remove();
+            updateTotaalStats();
+            // Update poule count in header
+            const pouleCount = document.querySelectorAll('[id^="poule-"]').length;
+            document.getElementById('stat-poules').textContent = pouleCount;
+            document.getElementById('poule-count').textContent = pouleCount;
         } else {
             showToast(data.message || 'Fout bij verwijderen', true);
         }
@@ -583,6 +613,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Update counts
                         updatePouleStats(data.van_poule);
                         updatePouleStats(data.naar_poule);
+
+                        // Update totaal statistieken bovenaan
+                        updateTotaalStats();
 
                         // Show toast
                         showToast(data.message);
