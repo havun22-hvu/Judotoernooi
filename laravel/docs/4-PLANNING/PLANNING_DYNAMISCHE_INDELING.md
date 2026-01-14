@@ -1041,9 +1041,21 @@ Al deze plekken gebruiken hardcoded sortering/mapping die `sort_categorie` moet 
 
 ### Oplossingsrichting
 
-1. **Sortering**: Gebruik altijd `sort_categorie` uit database/preset
-2. **Afkortingen**: Voeg `afkorting` veld toe aan preset config, of genereer dynamisch
-3. **Mappings**: Haal uit `toernooi->gewichtsklassen` config
+**Alles uit de instellingen halen (toernooi->gewichtsklassen):**
+
+1. **Sortering**: Gebruik `sort_categorie` uit database (gezet bij herclassificatie)
+2. **Labels**: Uit preset config (`$config[$key]['label']`)
+3. **Volgorde**: Uit volgorde van keys in preset config
+4. **Geen afkortingen**: Gebruik volledige label uit preset
+
+**De preset config bevat alles:**
+```php
+$toernooi->gewichtsklassen = [
+    'u7' => ['label' => "Mini's U7", 'max_leeftijd' => 6, ...],
+    'u9_wit' => ['label' => "U9 Witte band", ...],
+    // volgorde van keys = sorteervolgorde
+];
+```
 
 ### Prioriteit
 
@@ -1051,7 +1063,8 @@ Al deze plekken gebruiken hardcoded sortering/mapping die `sort_categorie` moet 
 
 ### Stappen
 
-- [ ] Centrale helper: `Toernooi::getCategorieVolgorde()` die uit preset leest
-- [ ] Centrale helper: `Toernooi::getCategorieAfkorting($label)`
-- [ ] Vervang alle hardcoded arrays door helper calls
-- [ ] Test met JBN 2025, JBN 2026, en eigen presets
+- [ ] Centrale helper: `Toernooi::getCategorieVolgorde()` → leest volgorde uit preset keys
+- [ ] Vervang hardcoded sortering arrays door `sort_categorie` ORDER BY
+- [ ] Vervang hardcoded label mappings door preset config lookup
+- [ ] Verwijder afkortingen - gebruik volledige label
+- [ ] Test met JBN 2025, JBN 2026, en eigen presets (OWFJ2026)
