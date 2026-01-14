@@ -565,6 +565,35 @@ class Toernooi extends Model
         return $klassen;
     }
 
+    /**
+     * Get category order mapping from preset config.
+     * Returns array of [label => order_number] based on preset key order.
+     */
+    public function getCategorieVolgorde(): array
+    {
+        $config = $this->getAlleGewichtsklassen();
+        $volgorde = [];
+        $i = 0;
+        foreach ($config as $key => $data) {
+            $volgorde[$data['label'] ?? $key] = $i++;
+        }
+        return $volgorde;
+    }
+
+    /**
+     * Get category key by label from preset config.
+     */
+    public function getCategorieKeyByLabel(string $label): ?string
+    {
+        $config = $this->getAlleGewichtsklassen();
+        foreach ($config as $key => $data) {
+            if (($data['label'] ?? '') === $label) {
+                return $key;
+            }
+        }
+        return null;
+    }
+
     public function resetGewichtsklassenNaarStandaard(): void
     {
         $this->update(['gewichtsklassen' => self::getStandaardGewichtsklassen()]);

@@ -965,21 +965,8 @@
 
                 // Verkort leeftijdsklasse voor compacte weergave
                 kortLeeftijd(lk) {
-                    const map = {
-                        "Mini's": "Mini",
-                        "A-pupillen": "A-pup",
-                        "B-pupillen": "B-pup",
-                        "C-pupillen": "C-pup",
-                        "Dames -15": "D-15",
-                        "Heren -15": "H-15",
-                        "Dames -18": "D-18",
-                        "Heren -18": "H-18",
-                        "Dames -21": "D-21",
-                        "Heren -21": "H-21",
-                        "Dames": "Dames",
-                        "Heren": "Heren",
-                    };
-                    return map[lk] || lk;
+                    // Gebruik volledige label of maak automatisch korte versie
+                    return lk.length <= 10 ? lk : lk.substring(0, 8) + '..';
                 },
 
                 async zoekJudokas() {

@@ -477,22 +477,19 @@ class PouleIndelingService
 
     /**
      * Get the key used in wedstrijd_systeem for a leeftijdsklasse label
+     * Uses preset config instead of hardcoded mapping
      */
     private function getLeeftijdsklasseKey(string $label): string
     {
-        $mapping = [
-            "Mini's" => 'minis',
-            'A-pupillen' => 'a_pupillen',
-            'B-pupillen' => 'b_pupillen',
-            'Dames -15' => 'dames_15',
-            'Heren -15' => 'heren_15',
-            'Dames -18' => 'dames_18',
-            'Heren -18' => 'heren_18',
-            'Dames' => 'dames',
-            'Heren' => 'heren',
-        ];
+        // Search in preset config by label
+        foreach ($this->gewichtsklassenConfig as $key => $data) {
+            if (($data['label'] ?? '') === $label) {
+                return $key;
+            }
+        }
 
-        return $mapping[$label] ?? strtolower(str_replace([' ', '-', "'"], '_', $label));
+        // Fallback: normalize label to key format
+        return strtolower(str_replace([' ', '-', "'"], '_', $label));
     }
 
     /**
@@ -909,35 +906,16 @@ class PouleIndelingService
 
     /**
      * @deprecated Use sort_categorie field instead
-     * Get sort order for leeftijdsklasse (hardcoded, only for backwards compatibility)
+     * Get sort order for leeftijdsklasse from preset config
      */
     private function getLeeftijdOrder(string $leeftijd): int
     {
-        // Fallback: try to get from config first
+        // Get order from preset config (key position = order)
         $configKey = $this->leeftijdsklasseToConfigKey($leeftijd);
         $keys = array_keys($this->gewichtsklassenConfig);
         $index = array_search($configKey, $keys);
-        if ($index !== false) {
-            return $index;
-        }
 
-        // Legacy hardcoded fallback
-        $order = [
-            "Mini's" => 1,
-            'A-pupillen' => 2,
-            'B-pupillen' => 3,
-            'C-pupillen' => 4,
-            'Dames -15' => 5,
-            'Heren -15' => 6,
-            'Dames -18' => 7,
-            'Heren -18' => 8,
-            'Dames -21' => 9,
-            'Heren -21' => 10,
-            'Dames' => 11,
-            'Heren' => 12,
-        ];
-
-        return $order[$leeftijd] ?? 99;
+        return $index !== false ? $index : 99;
     }
 
     /**
@@ -1226,37 +1204,28 @@ class PouleIndelingService
 
     /**
      * Convert leeftijdsklasse label to config key
+     * Uses preset config instead of hardcoded mapping
      */
     private function leeftijdsklasseToConfigKey(string $leeftijdsklasse): ?string
     {
-        // Map JBN labels to config keys
-        $mapping = [
-            "Mini's" => 'minis',
-            'A-pupillen' => 'a_pupillen',
-            'B-pupillen' => 'b_pupillen',
-            'C-pupillen' => 'c_pupillen',
-            'Dames -15' => 'dames_15',
-            'Heren -15' => 'heren_15',
-            'Dames -18' => 'dames_18',
-            'Heren -18' => 'heren_18',
-            'Dames -21' => 'dames_21',
-            'Heren -21' => 'heren_21',
-            'Dames' => 'dames',
-            'Heren' => 'heren',
-        ];
-
-        // Try direct mapping first
-        if (isset($mapping[$leeftijdsklasse])) {
-            return $mapping[$leeftijdsklasse];
+        // Search in preset config by label
+        foreach ($this->gewichtsklassenConfig as $key => $data) {
+            if (($data['label'] ?? '') === $leeftijdsklasse) {
+                return $key;
+            }
         }
 
-        // Try as direct config key (already normalized)
-        $normalized = strtolower(preg_replace('/[\s\-]+/', '_', $leeftijdsklasse));
+        // Try as direct config key (already a key, not a label)
+        if (isset($this->gewichtsklassenConfig[$leeftijdsklasse])) {
+            return $leeftijdsklasse;
+        }
+
+        // Fallback: normalize label to key format
+        $normalized = strtolower(preg_replace('/[\s\-\']+/', '_', $leeftijdsklasse));
         if (isset($this->gewichtsklassenConfig[$normalized])) {
             return $normalized;
         }
 
-        // Fallback: normalize and return (for custom categories)
         return $normalized;
     }
 

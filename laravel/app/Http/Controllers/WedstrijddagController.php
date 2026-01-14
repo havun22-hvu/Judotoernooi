@@ -34,35 +34,19 @@ class WedstrijddagController extends Controller
         // Laad gewichtsklassen config voor custom labels
         $gewichtsklassenConfig = $toernooi->gewichtsklassen ?? [];
 
-        // Mapping van JBN leeftijdsklassen naar config keys
-        $leeftijdsklasseToKey = [
-            "Mini's" => 'minis',
-            'A-pupillen' => 'a_pupillen',
-            'B-pupillen' => 'b_pupillen',
-            'Dames -15' => 'dames_15',
-            'Heren -15' => 'heren_15',
-            'Dames -18' => 'dames_18',
-            'Heren -18' => 'heren_18',
-            'Dames' => 'dames',
-            'Heren' => 'heren',
-        ];
+        // Build label to key mapping from preset config
+        $leeftijdsklasseToKey = [];
+        foreach ($toernooi->getAlleGewichtsklassen() as $key => $data) {
+            $label = $data['label'] ?? $key;
+            $leeftijdsklasseToKey[$label] = $key;
+        }
 
         // Group by blok first, then by category within each blok
         $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
-            // Group by category and sort
-            $leeftijdVolgorde = [
-                "Mini's" => 1,
-                'A-pupillen' => 2,
-                'B-pupillen' => 3,
-                'Dames -15' => 4,
-                'Heren -15' => 5,
-                'Dames -18' => 6,
-                'Heren -18' => 7,
-                'Dames' => 8,
-                'Heren' => 9,
-            ];
+            // Get sort order from preset config
+            $leeftijdVolgorde = $gewichtsklassenConfig ? array_flip(array_map(fn($d) => $d['label'] ?? '', $gewichtsklassenConfig)) : [];
 
             $categories = $blokPoules
                 // Filter: toon poules met actieve judoka's OF kruisfinales (die nog geen judokas hebben)
@@ -350,24 +334,21 @@ class WedstrijddagController extends Controller
         $gewicht = $judoka->gewicht_gewogen;
         if (!$gewicht) return null;
 
-        // Map label to config key
-        $labelToKey = [
-            "Mini's" => 'minis',
-            'A-pupillen' => 'a_pupillen',
-            'B-pupillen' => 'b_pupillen',
-            'Dames -15' => 'dames_15',
-            'Heren -15' => 'heren_15',
-            'Dames -18' => 'dames_18',
-            'Heren -18' => 'heren_18',
-            'Dames' => 'dames',
-            'Heren' => 'heren',
-        ];
+        // Build label to key mapping from preset config
+        $toernooi = $judoka->toernooi;
+        $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+        
+        $labelToKey = [];
+        foreach ($gewichtsklassenConfig as $key => $data) {
+            $label = $data['label'] ?? $key;
+            $labelToKey[$label] = $key;
+        }
 
         $configKey = $labelToKey[$judoka->leeftijdsklasse] ?? null;
         if (!$configKey) return null;
 
-        // Get weight classes from config
-        $gewichtsklassen = config("toernooi.leeftijdsklassen.{$configKey}.gewichtsklassen", []);
+        // Get weight classes from preset config
+        $gewichtsklassen = $gewichtsklassenConfig[$configKey]['gewichtsklassen'] ?? [];
         if (empty($gewichtsklassen)) return null;
 
         // Find matching weight class (gewichtsklassen are integers: -20, -23, 29, etc.)

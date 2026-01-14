@@ -98,11 +98,8 @@ class RoleToegang extends Controller
         $toernooi = $this->getToernooiFromSession($request);
         $this->checkRole($request, 'hoofdjury');
 
-        // Define age class order (youngest to oldest)
-        $leeftijdsklasseVolgorde = [
-            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
-            'U9' => 1, 'U11' => 2, 'U13' => 3, 'U15' => 4, 'U18' => 5, 'U21' => 6, 'Senioren' => 7,
-        ];
+        // Get age class order from preset config (youngest to oldest)
+        $leeftijdsklasseVolgorde = $toernooi->getCategorieVolgorde();
 
         $poules = $toernooi->poules()
             ->with(['blok', 'mat', 'judokas.club'])
@@ -192,11 +189,8 @@ class RoleToegang extends Controller
         $toegang = $request->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
-        // Define age class order (youngest to oldest)
-        $leeftijdsklasseVolgorde = [
-            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3,
-            'U9' => 1, 'U11' => 2, 'U13' => 3, 'U15' => 4, 'U18' => 5, 'U21' => 6, 'Senioren' => 7,
-        ];
+        // Get age class order from preset config (youngest to oldest)
+        $leeftijdsklasseVolgorde = $toernooi->getCategorieVolgorde();
 
         $poules = $toernooi->poules()
             ->with(['blok', 'mat', 'judokas.club'])
