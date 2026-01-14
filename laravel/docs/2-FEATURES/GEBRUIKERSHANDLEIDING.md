@@ -458,8 +458,9 @@ Het systeem controleert automatisch:
 - **Bovengrens**: Eigen gewichtsklasse + tolerantie
 
 Bij afwijking:
-- Rode markering (doorgestreept gewicht)
-- Judoka moet overgepouled worden naar andere gewichtsklasse
+- Judoka wordt automatisch uit poule gehaald (niet meer zichtbaar in poule)
+- Info via **ⓘ icoon** in poule header (toont naam + reden)
+- Judoka verschijnt in **wachtruimte** van de nieuwe gewichtsklasse voor overpoelen
 
 ### Weging Sluiten
 
@@ -471,6 +472,21 @@ Na sluiten:
 - Geen weging meer mogelijk voor dit blok
 - Overpoelen kan beginnen
 
+### Automatische Aanwezigheidsbepaling
+
+De aanwezigheid wordt **automatisch** bepaald op basis van weging:
+
+| Situatie | Aanwezigheid |
+|----------|--------------|
+| Judoka is gewogen (`gewicht_gewogen` is ingevuld) | **Aanwezig** |
+| Judoka is niet gewogen, weegtijd nog open | Onbekend |
+| Judoka is niet gewogen, weegtijd gesloten | **Afwezig** |
+
+**Belangrijk:**
+- Gewogen = per definitie aanwezig (je kunt niet wegen zonder er te zijn)
+- Na sluiting weegtijd worden niet-gewogen judoka's automatisch als afwezig beschouwd
+- De wachtruimte toont alleen **aanwezige** judoka's die overgepouled moeten worden
+
 ## Overpoelen (Wedstrijddag Poules)
 
 Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden verplaatst.
@@ -478,14 +494,14 @@ Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden 
 ### Pagina: Wedstrijddag Poules
 
 1. Ga naar **Wedstrijddag Poules** pagina
-2. Per blok zie je alle categorieën met hun poules
-3. **Doorgestreepte judoka's** = afwezig OF buiten gewichtsklasse
-4. **Wachtruimte** (rechts) = judoka's die overgepouled moeten worden
+2. Per blok zie je alle categorieën met hun poules (inclusief lege poules voor overpoelen)
+3. **ⓘ icoon** in poule header = klik voor info over afwezige/verwijderde judoka's
+4. **Wachtruimte** (rechts) = gewogen judoka's die buiten hun gewichtsklasse vallen
 
 ### Workflow Overpoelen
 
-1. Bekijk doorgestreepte judoka's in poules
-2. Klik **−** knop om uit poule te verwijderen (afwezigen)
+1. Bekijk ⓘ icoon bij poules voor info over afwezige judoka's
+2. Afwezige judoka's zijn al automatisch uit de poule (niet getoond)
 3. Sleep judoka's uit wachtruimte naar juiste poule
 4. Let op: max 6 judoka's per poule
 5. Statistieken updaten automatisch
@@ -521,11 +537,11 @@ Per blok zie je chips voor elke categorie:
 Klik op een **witte chip** om te activeren:
 
 1. Wedstrijdschema wordt gegenereerd per poule (matten zijn al toegewezen in voorbereiding)
-2. Alleen actieve judoka's komen in schema (niet doorgestreepte!)
+2. Alleen actieve judoka's komen in schema (afwezigen worden automatisch overgeslagen)
 3. Chip wordt **groen** met ✓
 4. Categorie is nu klaar voor de mat
 
-**Let op:** Doorgestreepte judoka's (afwezig/verkeerd gewicht) worden NIET meegenomen in het wedstrijdschema!
+**Let op:** Afwezige judoka's (niet gewogen na sluiting weegtijd) en judoka's buiten gewichtsklasse worden NIET meegenomen in het wedstrijdschema!
 
 ### Poules Verplaatsen
 
