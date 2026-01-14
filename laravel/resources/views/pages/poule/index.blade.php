@@ -653,8 +653,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update titel (only for regular poules, not eliminatie/kruisfinale)
         if (!isKruisfinale && !isEliminatie) {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
-            if (titelEl && pouleData.titel) {
-                titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
+            if (titelEl) {
+                titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel || ''}`;
             }
         }
 
