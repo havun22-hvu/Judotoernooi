@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $incompleteJudokas = $judokas->filter(fn($j) => $j->is_onvolledig || !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewichtsklasse);
+    $incompleteJudokas = $judokas->filter(fn($j) => $j->is_onvolledig || !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewicht);
 @endphp
 
 <div class="flex justify-between items-center mb-4">
@@ -92,8 +92,8 @@
                 <th @click="sort('leeftijdsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Leeftijdsklasse <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('gewichtsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Gewichtsklasse <template x-if="sortKey === 'gewichtsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('geslacht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Geslacht <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
@@ -115,7 +115,7 @@
                         <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
                     </td>
                     <td class="px-4 py-2 text-sm text-gray-600" x-text="judoka.leeftijdsklasse"></td>
-                    <td class="px-4 py-2 text-sm" :class="!judoka.gewichtsklasse ? 'text-red-600' : ''" x-text="judoka.gewichtsklasse || '-'"></td>
+                    <td class="px-4 py-2 text-sm" :class="!judoka.gewicht ? 'text-red-600' : ''" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
                     <td class="px-4 py-2 text-sm" x-text="judoka.geslacht"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
@@ -179,14 +179,13 @@ function judokaTable() {
                 id: {{ $judoka->id }},
                 naam: @json($judoka->naam),
                 leeftijdsklasse: @json($judoka->leeftijdsklasse),
-                leeftijdsklasseOrder: {{ preg_match('/U(\d+)/', $judoka->leeftijdsklasse ?? '', $m) ? (int)$m[1] : 99 }},
-                gewichtsklasse: @json($judoka->gewichtsklasse),
-                gewichtsklasseNum: {{ preg_match('/([+-]?)(\d+)/', $judoka->gewichtsklasse ?? '', $m) ? ((int)($m[2] ?? 999) + (($m[1] ?? '') === '+' ? 1000 : 0)) : 999 }},
+                leeftijdsklasseOrder: {{ $judoka->sort_categorie ?? 99 }},
+                gewicht: {{ $judoka->gewicht ?? 'null' }},
                 geslacht: '{{ $judoka->geslacht == "M" ? "Jongen" : "Meisje" }}',
                 band: @json($judoka->band ? ucfirst($judoka->band) : null),
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 club: @json($judoka->club?->naam),
-                incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewichtsklasse) ? 'true' : 'false' }},
+                incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewicht) ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}',
                 deleteUrl: '{{ route("toernooi.judoka.destroy", [$toernooi, $judoka]) }}'
             },
@@ -207,7 +206,7 @@ function judokaTable() {
                 const maxDist = this.fuzzyLevel;
                 result = result.filter(j => {
                     const searchText = [
-                        j.naam, j.club, j.leeftijdsklasse, j.gewichtsklasse, j.geslacht, j.band
+                        j.naam, j.club, j.leeftijdsklasse, j.gewicht ? j.gewicht + 'kg' : '', j.geslacht, j.band
                     ].filter(Boolean).join(' ').toLowerCase();
                     return terms.every(term => fuzzyMatch(term, searchText, maxDist));
                 });
@@ -224,9 +223,9 @@ function judokaTable() {
                 if (this.sortKey === 'leeftijdsklasse') {
                     aVal = a.leeftijdsklasseOrder;
                     bVal = b.leeftijdsklasseOrder;
-                } else if (this.sortKey === 'gewichtsklasse') {
-                    aVal = a.gewichtsklasseNum;
-                    bVal = b.gewichtsklasseNum;
+                } else if (this.sortKey === 'gewicht') {
+                    aVal = a.gewicht ?? 999;
+                    bVal = b.gewicht ?? 999;
                 } else if (this.sortKey === 'band') {
                     aVal = a.bandOrder;
                     bVal = b.bandOrder;
