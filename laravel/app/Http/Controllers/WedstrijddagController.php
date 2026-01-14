@@ -347,24 +347,24 @@ class WedstrijddagController extends Controller
         $configKey = $labelToKey[$judoka->leeftijdsklasse] ?? null;
         if (!$configKey) return null;
 
-        // Get weight classes from preset config
-        $gewichtsklassen = $gewichtsklassenConfig[$configKey]['gewichtsklassen'] ?? [];
-        if (empty($gewichtsklassen)) return null;
+        // Get weight classes from preset config (key is 'gewichten', values are strings like "-20", "+29")
+        $gewichten = $gewichtsklassenConfig[$configKey]['gewichten'] ?? [];
+        if (empty($gewichten)) return null;
 
-        // Find matching weight class (gewichtsklassen are integers: -20, -23, 29, etc.)
-        foreach ($gewichtsklassen as $klasse) {
-            $isPlusKlasse = $klasse > 0;
-            $limiet = abs($klasse);
+        // Find matching weight class
+        foreach ($gewichten as $klasse) {
+            $isPlusKlasse = str_starts_with($klasse, '+');
+            $limiet = (float) str_replace(['+', '-'], '', $klasse);
 
             if ($isPlusKlasse) {
                 // +29 means minimum 29kg
                 if ($gewicht >= $limiet) {
-                    return $judoka->leeftijdsklasse . '|+' . $limiet;
+                    return $judoka->leeftijdsklasse . '|' . $klasse;
                 }
             } else {
                 // -20 means maximum 20kg
                 if ($gewicht <= $limiet) {
-                    return $judoka->leeftijdsklasse . '|-' . $limiet;
+                    return $judoka->leeftijdsklasse . '|' . $klasse;
                 }
             }
         }
