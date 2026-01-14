@@ -468,7 +468,10 @@ class PouleIndelingService
             $nietIngedeeld = $this->vindNietIngedeeldeJudokas($toernooi);
             if (!empty($nietIngedeeld)) {
                 $statistieken['niet_ingedeeld'] = $nietIngedeeld;
-                $statistieken['waarschuwingen'][] = count($nietIngedeeld) . ' judoka(s) niet ingedeeld - controleer categorie configuratie';
+                $statistieken['waarschuwingen'][] = [
+                    'type' => 'error',
+                    'bericht' => count($nietIngedeeld) . ' judoka(s) niet ingedeeld - controleer categorie configuratie',
+                ];
             }
 
 
