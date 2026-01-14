@@ -732,7 +732,8 @@ class PouleController extends Controller
      */
     private function berekenPouleRanges(Poule $poule, int $huidigJaar): array
     {
-        $judokas = $poule->judokas;
+        // Force fresh query to avoid SQLite caching issues
+        $judokas = $poule->judokas()->get();
 
         if ($judokas->isEmpty()) {
             return [

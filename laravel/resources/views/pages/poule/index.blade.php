@@ -629,6 +629,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await response.json();
 
                     if (data.success) {
+                        console.log('Drag response:', data);
                         // Update counts
                         updatePouleStats(data.van_poule);
                         updatePouleStats(data.naar_poule);
@@ -674,11 +675,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
             const rangeEl = pouleCard.querySelector('[data-poule-ranges]');
 
+            console.log('Update ranges for poule', pouleData.id, {
+                titelEl: !!titelEl,
+                rangeEl: !!rangeEl,
+                titel: pouleData.titel,
+                leeftijd_range: pouleData.leeftijd_range,
+                gewicht_range: pouleData.gewicht_range
+            });
+
             // Check of dit een dynamische titel is (bevat · wat duidt op lft-kg format)
             const isDynamischeTitel = pouleData.titel && pouleData.titel.includes('·');
 
             if (isDynamischeTitel && titelEl) {
                 // Dynamische titel: update hele titel
+                console.log('Updating dynamic title to:', `#${pouleData.nummer} ${pouleData.titel}`);
                 titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
                 if (rangeEl) rangeEl.classList.add('hidden');
             } else if (rangeEl) {
@@ -686,7 +696,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const ranges = [];
                 if (pouleData.leeftijd_range) ranges.push(pouleData.leeftijd_range);
                 if (pouleData.gewicht_range) ranges.push(pouleData.gewicht_range);
-                rangeEl.textContent = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
+                const newText = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
+                console.log('Updating ranges to:', newText);
+                rangeEl.textContent = newText;
                 rangeEl.classList.remove('hidden');
             }
         }
