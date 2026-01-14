@@ -415,6 +415,28 @@ De toernooidag begint waar de voorbereiding eindigt. Nu worden judoka's daadwerk
 
 ## Weging
 
+### Gewichtsvelden: Ingeschreven vs Gewogen
+
+Het systeem houdt **twee aparte gewichten** bij per judoka:
+
+| Veld | Wanneer | Verandert |
+|------|---------|-----------|
+| `gewicht` | Ingeschreven gewicht (voorbereiding) | NOOIT na "Maak weegkaarten" |
+| `gewicht_gewogen` | Gemeten gewicht (wedstrijddag) | Bij elke weging |
+
+**Waar wordt welk gewicht getoond?**
+
+| Pagina | Toont | Reden |
+|--------|-------|-------|
+| **Poules** (voorbereiding) | `gewicht` (ingeschreven) | Voorbereiding = plan gebaseerd op inschrijving |
+| **Blokverdeling** | `gewicht` (ingeschreven) | Idem |
+| **Zaaloverzicht** | `gewicht` (ingeschreven) | Idem |
+| **Weeglijst** | `gewicht` (ingeschreven) | Idem |
+| **Wedstrijddag Poules** | `gewicht_gewogen` of `gewicht` | Toont actueel gewogen gewicht |
+| **Wachtruimte** | `gewicht_gewogen` | Judoka's die overgepouled moeten worden |
+
+**Belangrijk:** De voorbereidingsviews veranderen NOOIT op basis van weging. Alleen de **Wedstrijddag Poules** pagina toont mutaties.
+
 ### Weging Interface (Admin/Hoofdjury)
 
 1. Ga naar **Weging** > **Weging Interface**

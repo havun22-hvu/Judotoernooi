@@ -108,9 +108,8 @@
                     $huidigJaar = now()->year;
                     $leeftijden = $poule->judokas->map(fn($j) => $huidigJaar - $j->geboortejaar)->filter();
 
-                    // Gewichten: gewogen > ingeschreven > gewichtsklasse
+                    // VOORBEREIDING: Toon altijd INGESCHREVEN gewicht voor range berekening
                     $gewichten = $poule->judokas->map(function($j) {
-                        if ($j->gewicht_gewogen !== null) return $j->gewicht_gewogen;
                         if ($j->gewicht !== null) return $j->gewicht;
                         // Gewichtsklasse is bijv. "-38" of "+73" - extract getal
                         if ($j->gewichtsklasse && preg_match('/(\d+)/', $j->gewichtsklasse, $m)) {
@@ -207,11 +206,9 @@
                 <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
-                        // Toon gewogen gewicht als beschikbaar, anders ingeschreven gewicht, anders gewichtsklasse
-                        $isGewogen = $judoka->gewicht_gewogen !== null;
-                        if ($isGewogen) {
-                            $toonGewicht = $judoka->gewicht_gewogen . 'kg';
-                        } elseif ($judoka->gewicht) {
+                        // VOORBEREIDING: Toon altijd INGESCHREVEN gewicht, niet gewogen gewicht
+                        // Gewogen gewicht is alleen relevant op Wedstrijddag Poules pagina
+                        if ($judoka->gewicht) {
                             $toonGewicht = $judoka->gewicht . 'kg';
                         } elseif ($judoka->gewichtsklasse) {
                             // Gewichtsklasse is bijv. "-38" of "+73"
@@ -219,6 +216,7 @@
                         } else {
                             $toonGewicht = null;
                         }
+                        $isGewogen = $judoka->gewicht_gewogen !== null;
                     @endphp
                     @if($isEliminatie)
                     {{-- Compacte weergave voor eliminatie: meerdere kolommen over volle breedte --}}
