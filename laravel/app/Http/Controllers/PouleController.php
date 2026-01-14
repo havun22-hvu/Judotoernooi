@@ -302,7 +302,7 @@ class PouleController extends Controller
         $vanRanges = $this->berekenPouleRanges($vanPoule, $huidigJaar);
         $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
 
-        // Update titel bij lft-kg labels (dynamische titels)
+        // Update titel bij variabele categorieën
         $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
         $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
 
@@ -766,39 +766,72 @@ class PouleController extends Controller
     }
 
     /**
-     * Update poule titel als deze dynamisch is (lft-kg of al omgezet)
+     * Update poule titel als deze dynamisch is (variabele categorie)
      * Retourneert de (eventueel bijgewerkte) titel
      *
-     * Dynamische titels worden herkend aan:
-     * 1. Bevat "lft-kg" (nog niet omgezet)
-     * 2. Bevat " · " (al omgezet naar ranges format)
+     * Variabele categorieën worden herkend aan:
+     * - max_leeftijd_verschil > 0 of max_kg_verschil > 0 in categorie config
      */
     private function updateDynamischeTitel(Poule $poule, array $ranges): string
     {
         $titel = $poule->titel;
+        $toernooi = $poule->toernooi;
 
-        // Bouw dynamische range string
-        $leeftijdRange = $ranges['leeftijd_range'] ?? '';
-        $gewichtRange = $ranges['gewicht_range'] ?? '';
-        $dynamicRange = trim(($leeftijdRange && $gewichtRange)
-            ? $leeftijdRange . ' · ' . $gewichtRange
-            : $leeftijdRange . $gewichtRange);
+        // Get category config for this pool's leeftijdsklasse
+        $config = $toernooi->getPresetConfig();
+        $categorieConfig = null;
 
-        // Check of titel "lft-kg" bevat (nog niet omgezet)
-        if (stripos($titel, 'lft-kg') !== false) {
-            $nieuweTitel = str_ireplace('lft-kg', $dynamicRange ?: 'Onbekend', $titel);
+        // Find matching category config
+        foreach ($config as $key => $data) {
+            if (($data['label'] ?? '') === $poule->leeftijdsklasse) {
+                $categorieConfig = $data;
+                break;
+            }
         }
-        // Check of titel al omgezet is (bevat " · " scheidingsteken = dynamische titel)
-        elseif (strpos($titel, ' · ') !== false) {
-            // Simpele aanpak: vervang alles na eventuele "#nummer " prefix
-            // Titel is bijv "15j · 50.0kg" of met prefix in sommige gevallen
-            $nieuweTitel = $dynamicRange;
-        } else {
-            // Geen dynamische titel
+
+        // Check if this is a variable category
+        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+
+        if ($maxLftVerschil == 0 && $maxKgVerschil == 0) {
+            // Fixed category - no title update needed
             return $titel;
         }
 
-        // Update database als titel is gewijzigd
+        // Build new title based on config
+        $parts = [];
+
+        // 1. Label (optional)
+        $toonLabel = $categorieConfig['toon_label_in_titel'] ?? true;
+        if ($toonLabel && !empty($categorieConfig['label'])) {
+            $parts[] = $categorieConfig['label'];
+        }
+
+        // 2. Gender (if not mixed)
+        $geslacht = $poule->geslacht;
+        if ($geslacht && $geslacht !== 'gemengd') {
+            $parts[] = $geslacht;
+        }
+
+        // 3. Age range (if variable)
+        if ($maxLftVerschil > 0) {
+            $leeftijdRange = $ranges['leeftijd_range'] ?? '';
+            if ($leeftijdRange) {
+                $parts[] = $leeftijdRange;
+            }
+        }
+
+        // 4. Weight range (if variable)
+        if ($maxKgVerschil > 0) {
+            $gewichtRange = $ranges['gewicht_range'] ?? '';
+            if ($gewichtRange) {
+                $parts[] = $gewichtRange;
+            }
+        }
+
+        $nieuweTitel = implode(' ', $parts) ?: $titel;
+
+        // Update database if title changed
         if ($nieuweTitel !== $titel) {
             $poule->update(['titel' => $nieuweTitel]);
         }

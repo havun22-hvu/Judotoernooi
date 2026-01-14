@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 class BlokMatVerdelingService
 {
     /**
-     * Service for variable (lft-kg) categories
+     * Service for variable categories (max_leeftijd_verschil > 0 or max_kg_verschil > 0)
      */
     private ?VariabeleBlokVerdelingService $variabeleService = null;
 
@@ -68,7 +68,7 @@ class BlokMatVerdelingService
      */
     public function genereerVarianten(Toernooi $toernooi, int $userVerdelingGewicht = 50, int $userAansluitingGewicht = 50): array
     {
-        // Check for variable categories (lft-kg) and delegate
+        // Check for variable categories and delegate
         if ($this->heeftVariabeleCategorieen($toernooi)) {
             return $this->getVariabeleService()->genereerVarianten($toernooi, $userVerdelingGewicht);
         }
@@ -1001,7 +1001,7 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Check if toernooi has variable categories (lft-kg)
+     * Check if toernooi has variable categories
      */
     private function heeftVariabeleCategorieen(Toernooi $toernooi): bool
     {
