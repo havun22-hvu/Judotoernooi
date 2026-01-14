@@ -787,12 +787,17 @@ class PouleController extends Controller
         $config = $toernooi->getPresetConfig();
         $categorieConfig = null;
 
-        // Find matching category config
+        // Find matching category config - try by label first, then by categorie_key
         foreach ($config as $key => $data) {
             if (($data['label'] ?? '') === $poule->leeftijdsklasse) {
                 $categorieConfig = $data;
                 break;
             }
+        }
+
+        // Fallback: search by categorie_key
+        if (!$categorieConfig && $poule->categorie_key) {
+            $categorieConfig = $config[$poule->categorie_key] ?? null;
         }
 
         // Check if this is a variable category
