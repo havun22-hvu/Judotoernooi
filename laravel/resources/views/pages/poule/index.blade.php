@@ -701,6 +701,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 (pouleData.gewicht_range && pouleData.titel.includes(pouleData.gewicht_range))
             );
 
+            console.log('titelBevatRanges:', titelBevatRanges, '| titel:', pouleData.titel);
+
             if (titelBevatRanges && titelEl) {
                 // Dynamische titel: update hele titel (ranges zitten al in titel)
                 console.log('Updating dynamic title to:', `#${pouleData.nummer} ${pouleData.titel}`);
