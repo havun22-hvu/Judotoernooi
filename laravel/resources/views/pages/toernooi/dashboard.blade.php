@@ -102,7 +102,7 @@
                 👥 Deelnemerslijst ({{ $statistieken['totaal_judokas'] }})
             </a>
             @if($statistieken['totaal_judokas'] > 0)
-            <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline">
+            <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full text-left bg-green-100 hover:bg-green-200 p-3 rounded">
                     🎯 Genereer Poule-indeling
