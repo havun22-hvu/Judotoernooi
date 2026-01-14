@@ -972,14 +972,15 @@
                 updateJsonInput();
             }
 
-            // Sorteer categorieën: jong→oud, lage band→hoge band, licht→zwaar
+            // Sorteer categorieën: jong→oud, gewicht licht→zwaar, band laag→hoog
             function sorteerCategorieen(data) {
                 const bandFilterVolgorde = {
                     '': 0, 'tm_wit': 1, 'tm_geel': 2, 'tm_oranje': 3, 'tm_groen': 4, 'tm_blauw': 5, 'tm_bruin': 6,
                     'vanaf_geel': 10, 'vanaf_oranje': 11, 'vanaf_groen': 12, 'vanaf_blauw': 13, 'vanaf_bruin': 14, 'vanaf_zwart': 15
                 };
 
-                return Object.entries(data).sort((a, b) => {
+                console.log('[Sorteer] Input data:', data);
+                const sorted = Object.entries(data).sort((a, b) => {
                     const [, itemA] = a;
                     const [, itemB] = b;
 
@@ -998,6 +999,8 @@
                     const bandB = bandFilterVolgorde[itemB.band_filter || ''] || 0;
                     return bandA - bandB;
                 });
+                console.log('[Sorteer] Output:', sorted.map(([k, v]) => `${k}: lft=${v.max_leeftijd}, gew=${v.gewichten?.[0]}`));
+                return sorted;
             }
 
             function renderCategorieen(data, sorteer = true) {
