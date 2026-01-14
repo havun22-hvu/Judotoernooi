@@ -194,7 +194,10 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</span>
                                 @if($verwijderdeTekstElim->isNotEmpty())
-                                <span class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100" title="{{ $verwijderdeTekstElim->join("\n") }}" onclick="alert(this.title)">ⓘ</span>
+                                <div class="relative" x-data="{ show: false }">
+                                    <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                    <div x-show="show" x-transition class="absolute bottom-full right-0 mb-1 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-pre-line z-50 min-w-[200px] shadow-lg">{{ $verwijderdeTekstElim->join("\n") }}</div>
+                                </div>
                                 @endif
                             </div>
                         </div>
@@ -299,7 +302,10 @@
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
                                         @if($verwijderdeTekst->isNotEmpty())
-                                        <span class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100" title="{{ $verwijderdeTekst->join("\n") }}" onclick="alert(this.title)">ⓘ</span>
+                                        <div class="relative" x-data="{ show: false }">
+                                            <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                            <div x-show="show" x-transition class="absolute bottom-full right-0 mb-1 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-pre-line z-50 min-w-[200px] shadow-lg">{{ $verwijderdeTekst->join("\n") }}</div>
+                                        </div>
                                         @endif
                                         @if($aantalActief === 0)
                                         <button
