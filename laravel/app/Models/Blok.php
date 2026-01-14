@@ -17,6 +17,7 @@ class Blok extends Model
         'toernooi_id',
         'nummer',
         'gewenst_wedstrijden',
+        'blok_label',
         'weging_start',
         'weging_einde',
         'starttijd',

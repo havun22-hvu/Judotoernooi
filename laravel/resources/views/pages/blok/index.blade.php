@@ -8,6 +8,9 @@
     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     $leeftijdVolgorde = array_values(array_map(fn($c) => $c['label'] ?? '', $gewichtsklassenConfig));
 
+    // Check of toernooi variabele categorieën heeft (max kg of leeftijd verschil > 0)
+    $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
+
     // Genereer afkortingen: gebruik label direct (of korte versie als >8 chars)
     $afkortingen = [];
     foreach ($gewichtsklassenConfig as $key => $config) {
@@ -85,6 +88,23 @@
         @endif
     </div>
     <div class="flex items-center gap-2">
+        @if($heeftVariabeleCategorieen)
+        {{-- Variabele categorieën: simpele verdeling op max wedstrijden --}}
+        <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi) }}" method="POST" class="inline flex items-center gap-2" id="variabele-form">
+            @csrf
+            <div class="flex items-center gap-2 text-xs bg-orange-50 px-3 py-1.5 rounded border border-orange-200">
+                <span class="text-orange-700 whitespace-nowrap">Max/blok:</span>
+                <input type="number" name="max_per_blok" id="max-per-blok"
+                       value="{{ $gemiddeldPerBlok }}"
+                       class="w-16 px-2 py-1 rounded text-gray-800 text-center text-sm border border-orange-300"
+                       min="50" max="500">
+            </div>
+            <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                Verdeel variabel
+            </button>
+        </form>
+        @else
+        {{-- Vaste categorieën: solver met balans slider --}}
         <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline flex items-center gap-2" id="bereken-form">
             @csrf
             <input type="hidden" name="balans" id="balans-input" value="{{ session('blok_balans', 50) }}">
@@ -106,6 +126,7 @@
                 </span>
             </button>
         </form>
+        @endif
         <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="Verdeel poules over matten en ga naar zaaloverzicht">
@@ -180,6 +201,9 @@
             <div class="bg-gray-800 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <span class="font-bold">Blok {{ $blok->nummer }}</span>
+                    @if($blok->blok_label)
+                    <span class="text-orange-300 text-sm font-medium">{{ $blok->blok_label }}</span>
+                    @endif
                     <div class="flex items-center gap-2 text-sm">
                         <span class="text-gray-400">Gewenst:</span>
                         <input type="number" class="gewenst-input w-16 px-2 py-1 rounded text-gray-800 text-center text-sm"
