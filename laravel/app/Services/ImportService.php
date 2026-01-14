@@ -28,7 +28,7 @@ class ImportService
     public function importeerDeelnemers(Toernooi $toernooi, array $data, array $kolomMapping = []): array
     {
         // Load preset config for classification
-        $this->gewichtsklassenConfig = $toernooi->getPresetConfig() ?? [];
+        $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
         return DB::transaction(function () use ($toernooi, $data, $kolomMapping) {
             $resultaat = [
