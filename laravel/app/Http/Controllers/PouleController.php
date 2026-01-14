@@ -296,6 +296,12 @@ class PouleController extends Controller
         $vanPoule->updateStatistieken();
         $naarPoule->updateStatistieken();
 
+        // Refresh models to get updated counts and judokas relation
+        $vanPoule->refresh();
+        $naarPoule->refresh();
+        $vanPoule->load('judokas');
+        $naarPoule->load('judokas');
+
         // Calculate ranges for both poules
         $huidigJaar = now()->year;
 
