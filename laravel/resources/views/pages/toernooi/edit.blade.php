@@ -648,15 +648,6 @@
                     <!-- Hoofdkeuze: radio buttons -->
                     <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                         <label class="cursor-pointer">
-                            <input type="radio" name="categorie_type" value="geen_standaard"
-                                   x-model="categorieType"
-                                   @change="if($event.target.checked) loadGeenStandaard()"
-                                   class="sr-only peer">
-                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-white peer-checked:shadow peer-checked:font-medium">
-                                Geen standaard
-                            </span>
-                        </label>
-                        <label class="cursor-pointer">
                             <input type="radio" name="categorie_type" value="jbn_2025"
                                    x-model="categorieType"
                                    @change="if($event.target.checked) loadJbn2025()"
