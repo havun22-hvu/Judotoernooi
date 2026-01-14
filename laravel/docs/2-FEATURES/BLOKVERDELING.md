@@ -198,6 +198,93 @@ Totaal Score = (slider_X% × Verdeling) + (slider_Y% × Aansluiting)
 
 ---
 
+## Variabele Categorieën (Dynamische Blokverdeling)
+
+Bij toernooien met **variabele categorieën** (bijv. "Jeugd t/m 14j" met Δkg=3 en Δlft=1) werkt de blokverdeling anders dan bij vaste categorieën.
+
+### Het Probleem
+
+Bij variabele indeling krijg je poules zoals:
+- 9-10j, 22-25kg
+- 10-11j, 25-28kg
+- 11-12j, 28-31kg
+- 12-13j, 32-35kg
+
+De leeftijdsranges **overlappen**: een 11-jarige kan in zowel "10-11j" als "11-12j" poules zitten (afhankelijk van gewicht).
+
+Je kunt dus NIET clean zeggen "alle 11-jarigen in blok 2" - want sommige zitten in poule "10-11j" en andere in "11-12j".
+
+### De Oplossing: Knip op Gewicht
+
+De verdeling werkt als volgt:
+
+1. **Sorteer alle poules** op: min_leeftijd → min_gewicht
+2. **Vul blok** totdat max wedstrijden bereikt is
+3. **Knip waar je bent** - dit kan midden in een leeftijdsgroep vallen
+4. **Genereer leesbare labels** per blok
+
+**Voorbeeld:** Max 133 wedstrijden per blok
+
+```
+Blok 2 (132 wedstrijden):
+├── 9-10j alle gewichten      (30 wed)
+├── 10-11j alle gewichten     (45 wed)
+├── 11-12j t/m 28kg           (57 wed)  ← knip hier!
+
+Blok 3 (128 wedstrijden):
+├── 11-12j vanaf 28kg         (35 wed)  ← zwaardere 11-12j
+├── 12-13j alle gewichten     (48 wed)
+├── 13-14j alle gewichten     (45 wed)
+```
+
+### Communicatie naar Ouders
+
+De bloklabels worden automatisch gegenereerd:
+
+```
+Blok 2: "Jeugd 9-12j t/m 28kg"    - weging 10:00-10:30
+Blok 3: "Jeugd 11-14j vanaf 28kg" - weging 11:00-11:30
+```
+
+**Let op de overlap in leeftijd!** Dit is correct:
+- 11-12j **licht** (t/m 28kg) → Blok 2
+- 11-12j **zwaar** (vanaf 28kg) → Blok 3
+
+### Voordeel: Overpoulen
+
+Als een 11-jarige te zwaar is voor zijn poule en overpouled wordt naar een zwaardere groep, zit hij automatisch al in het juiste blok (de zwaardere groep zit in het latere blok).
+
+### Algoritme Details
+
+```
+voor elke poule in gesorteerde volgorde:
+    als (actueel + poule.wedstrijden) > max_per_blok:
+        start nieuw blok
+    voeg poule toe aan huidig blok
+    actueel += poule.wedstrijden
+
+genereer label per blok:
+    min_leeftijd = MIN(poules.min_leeftijd)
+    max_leeftijd = MAX(poules.max_leeftijd)
+    min_gewicht = MIN(poules.min_gewicht)
+    max_gewicht = MAX(poules.max_gewicht)
+
+    als eerste blok met deze leeftijdsrange:
+        label = "{min_lft}-{max_lft}j t/m {max_gewicht}kg"
+    anders:
+        label = "{min_lft}-{max_lft}j vanaf {min_gewicht}kg"
+```
+
+### UI Aanpassingen
+
+Bij variabele categorieën:
+- Geen drag & drop per categorie (categorieën bestaan niet)
+- Slider voor "max wedstrijden per blok"
+- Preview van waar de knip valt
+- Automatisch gegenereerde bloklabels
+
+---
+
 ## Database
 
 ### Poules tabel
@@ -209,4 +296,5 @@ blok_vast       - boolean (true = handmatig vastgezet met 📍)
 ### Blokken tabel
 ```
 gewenst_wedstrijden - integer nullable (null = auto-berekend)
+blok_label          - string nullable (auto-gegenereerd voor variabele cat.)
 ```
