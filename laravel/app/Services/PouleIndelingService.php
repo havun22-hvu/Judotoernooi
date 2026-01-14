@@ -282,7 +282,7 @@ class PouleIndelingService
                         // Build dynamic title with weight range from pool
                         $gewichtRange = $pouleData['gewicht_groep'] ?? '';
                         $pouleType = $isDynamicEliminatie ? 'eliminatie' : 'voorronde';
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig);
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig, $dynamicConfigKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -346,7 +346,7 @@ class PouleIndelingService
                     $standardConfigKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
 
                     foreach ($pouleVerdelingen as $pouleJudokas) {
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig);
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig, $standardConfigKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -1130,16 +1130,23 @@ class PouleIndelingService
      * - "Mini's U7 28-32kg" (label on, variable weight)
      * - "9-10j 28-32kg" (label off, both variable)
      */
-    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null): string
+    private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null, ?string $categorieKey = null): string
     {
         $parts = [];
 
         // Get category config for this leeftijdsklasse
         $categorieConfig = null;
         if ($gewichtsklassenConfig) {
-            $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-            if ($configKey && isset($gewichtsklassenConfig[$configKey])) {
-                $categorieConfig = $gewichtsklassenConfig[$configKey];
+            // Try direct config key first (if provided)
+            if ($categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
+                $categorieConfig = $gewichtsklassenConfig[$categorieKey];
+            }
+            // Fallback: lookup by label
+            if (!$categorieConfig) {
+                $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
+                if ($configKey && isset($gewichtsklassenConfig[$configKey])) {
+                    $categorieConfig = $gewichtsklassenConfig[$configKey];
+                }
             }
         }
 
