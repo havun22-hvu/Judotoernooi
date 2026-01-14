@@ -634,54 +634,46 @@ if ($usesDynamic) {
 
 Titels worden automatisch samengesteld bij het genereren van poules.
 
-**De categorie naam uit Instellingen wordt overgenomen als basis voor de poule titel.**
+### Instelling per categorie
 
-| Type | Voorbeeld titel |
-|------|-----------------|
-| Voorronde | "Jeugd 9-10j 30-33kg" |
-| Eliminatie | "Jeugd M 9-10j 30-33kg - Eliminatie" |
-| Kruisfinale | "Kruisfinale Jeugd M -30kg (top 2)" |
+Per categorie in Instellingen is er 1 checkbox:
+- [ ] **Toon label in titel**
 
-### Dynamische placeholder: `lft-kg`
+### Automatische regels
 
-Bij "Geen standaard" categorieën kun je `lft-kg` als naam gebruiken. Dit wordt bij poule generatie automatisch vervangen door de actuele ranges:
+De poule titel bevat altijd:
+- **Vaste klasse** (verschil=0) → gewichtscategorie uit preset (bijv. `-26kg`)
+- **Actuele range** (verschil>0) → min-max berekend uit judoka's in poule
 
-| Categorie naam | Poule titel wordt |
-|----------------|-------------------|
-| `lft-kg` | "8-10j 30-35kg" |
-| `Jeugd` | "Jeugd 8-10j 30-35kg" |
-| `Beginners lft-kg` | "Beginners 8-10j 30-35kg" |
+| Situatie | In titel |
+|----------|----------|
+| `max_leeftijd_verschil = 0` | Geen leeftijd (zit in label) |
+| `max_leeftijd_verschil > 0` | Min-max leeftijd van poule-inhoud |
+| `max_kg_verschil = 0` | Vaste gewichtscategorie |
+| `max_kg_verschil > 0` | Min-max gewicht van poule-inhoud |
 
-**Werking:**
-- `lft-kg` wordt vervangen door `{min-max leeftijd}j {min-max gewicht}kg`
-- Ranges worden berekend uit de judoka's in die specifieke poule
-- Werkt ook in combinatie met andere tekst (bijv. "Beginners lft-kg")
+### Voorbeelden
 
-**Onderdelen:**
-- **Categorie naam** (uit Instellingen → Categorieën → Naam veld)
-- Geslacht: M/V (alleen bij niet-gemengde categorieën)
-- Leeftijd range: berekend uit judoka's (bijv. "9-10j")
-- Gewicht range: berekend uit judoka's (bijv. "30-33kg")
+| Poule titel | Label | Lft verschil | Kg verschil | Toelichting |
+|-------------|-------|--------------|-------------|-------------|
+| `#5 Mini's U7 -26kg` | aan | 0 | 0 | Vaste categorie + vaste gewichtsklasse |
+| `#5 Mini's U7 28-32kg` | aan | 0 | >0 | Vaste leeftijd, variabel gewicht |
+| `#5 Jeugd 9-10j 28-32kg` | aan | >0 | >0 | Beide variabel |
+| `#5 9-10j 28-32kg` | uit | >0 | >0 | Beide variabel, geen label |
+| `#5 -26kg` | uit | 0 | 0 | Alleen vaste gewichtsklasse (niet aangeraden) |
 
-**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert.
+**Let op:** Bij vaste categorieën (verschil=0) is het verstandig het label aan te laten staan voor context.
 
 ### Live titel update bij verslepen judoka's
 
-Wanneer judoka's worden versleept tussen poules:
-
-| Label type | Weergave | Bij verslepen |
-|------------|----------|---------------|
-| `lft-kg` | `#28 9-10j · 30-35kg` | Titel wordt automatisch bijgewerkt |
-| Vaste naam | `#5 Jeugd (9-10j, 30-35kg)` | Alleen ranges tussen haakjes bijgewerkt |
-
-**Dynamische titels (lft-kg):**
-- Titel bevat " · " als scheidingsteken
-- Bij verslepen: server berekent nieuwe ranges en update DB
+Bij variabele indeling (verschil>0) wordt de titel automatisch bijgewerkt wanneer judoka's worden versleept:
+- Server berekent nieuwe min-max ranges
+- Database wordt bijgewerkt
 - Client update titel in DOM
 
 ### Automatische blokverdeling (variabel systeem)
 
-Bij "lft-kg" categorieën worden blokken automatisch ingedeeld:
+Bij variabele categorieën (`max_leeftijd_verschil > 0` of `max_kg_verschil > 0`) worden blokken automatisch ingedeeld:
 
 **Algoritme:**
 1. Bereken doel: `totaal_wedstrijden / aantal_blokken`
@@ -743,7 +735,7 @@ Blok 2:
 // BlokMatVerdelingService.php
 public function genereerVarianten(Toernooi $toernooi, ...): array
 {
-    // Check of er variabele categorieën zijn (lft-kg labels)
+    // Check of er variabele categorieën zijn (verschil > 0)
     if ($this->heeftVariabeleCategorieen($toernooi)) {
         return app(VariabeleBlokVerdelingService::class)
             ->genereerVarianten($toernooi, $userVerdelingGewicht);
@@ -759,15 +751,15 @@ public function genereerVarianten(Toernooi $toernooi, ...): array
 **Voorbeeld:** M en V apart + variabel binnen geslacht
 
 1. Poule-aanmaak scheidt al op geslacht (harde constraint)
-2. Poules krijgen labels: `V lft-kg` en `M lft-kg`
-3. VariabeleBlokVerdelingService groepeert op label-prefix
+2. Poules krijgen titels op basis van label checkbox + actuele ranges
+3. VariabeleBlokVerdelingService groepeert op categorie
 4. Binnen groep: trial & error algoritme
 
 **Voorbeeld:** Band-scheiding + variabel binnen bandgroep
 
 1. Poule-aanmaak scheidt op band (t/m oranje vs vanaf groen)
-2. Poules krijgen labels: `Beginners lft-kg` en `Gevorderden lft-kg`
-3. VariabeleBlokVerdelingService groepeert op label-prefix
+2. Poules krijgen titels: "Beginners 9-10j 28-32kg" of "Gevorderden 9-10j 28-32kg"
+3. VariabeleBlokVerdelingService groepeert op categorie
 4. Binnen groep: trial & error algoritme
 
 ### Interface
@@ -787,7 +779,7 @@ class VariabeleBlokVerdelingService
     /**
      * Groepeer poules in categorieën op basis van leeftijd/gewicht proximity
      *
-     * @param Collection $poules Poules met lft-kg labels
+     * @param Collection $poules Poules met variabele indeling
      * @return Collection Gegroepeerde poules met dynamische headers
      */
     public function groepeerInCategorieen(Collection $poules): Collection;
@@ -828,16 +820,20 @@ class VariabeleBlokVerdelingService
 
 **Dynamische header generatie:**
 ```
-Label prefix + leeftijd range + gewicht range
-Voorbeeld: "M 8-10j · 30-40kg" of "Beginners 9-11j · 25-35kg"
+[Label?] + leeftijd range + gewicht range
+Voorbeeld: "M 8-10j 30-40kg" of "Beginners 9-11j 25-35kg"
 ```
 
 **Detectie variabele categorieën:**
 ```php
-$toernooi->poules()
-    ->where('titel', 'like', '%lft-kg%')
-    ->orWhere('titel', 'like', '% · %')
-    ->exists();
+// Check categorie config, niet de titel
+$config = $toernooi->getPresetConfig();
+foreach ($config as $categorie) {
+    if ($categorie['max_leeftijd_verschil'] > 0 || $categorie['max_kg_verschil'] > 0) {
+        return true; // Heeft variabele categorieën
+    }
+}
+return false;
 ```
 
 ## Classificatie Workflow (14 jan 2026)
@@ -1066,3 +1062,224 @@ public function getCategorieKeyByLabel(string $label): ?string
 - [ ] Vervang hardcoded label mappings door preset config lookup
 - [ ] Verwijder afkortingen - gebruik volledige label
 - [ ] Test met JBN 2025, JBN 2026, en eigen presets (OWFJ2026)
+
+---
+
+## Implementatieplan: Poule Titels Refactoring (14 jan 2026)
+
+> **Doel:** Vervang `lft-kg` placeholder systeem door checkbox-gebaseerd systeem
+
+### Samenvatting
+
+**Oud systeem:**
+- Organisator typt `lft-kg` in label veld
+- Code vervangt `lft-kg` door actuele ranges
+- Detectie via string matching in titel
+
+**Nieuw systeem:**
+- Per categorie checkbox: "Toon label in titel"
+- Ranges komen automatisch als `verschil > 0`
+- Detectie via categorie config velden
+
+### Poule titel regels
+
+| Situatie | In titel |
+|----------|----------|
+| `toon_label_in_titel = true` | Label uit config |
+| `max_leeftijd_verschil = 0` | Geen leeftijd (zit in label) |
+| `max_leeftijd_verschil > 0` | Min-max leeftijd van poule-inhoud |
+| `max_kg_verschil = 0` | Vaste gewichtscategorie uit preset |
+| `max_kg_verschil > 0` | Min-max gewicht van poule-inhoud |
+
+### Voorbeelden
+
+```
+#5 Mini's U7 -26kg        ← label aan, lft=0, kg=0 (vaste categorie)
+#5 Mini's U7 28-32kg      ← label aan, lft=0, kg>0 (variabel gewicht)
+#5 Jeugd 9-10j 28-32kg    ← label aan, lft>0, kg>0 (beide variabel)
+#5 9-10j 28-32kg          ← label uit, lft>0, kg>0 (beide variabel)
+#5 -26kg                  ← label uit, lft=0, kg=0 (niet aangeraden)
+```
+
+### Fase 1: Database & Config
+
+**1.1 Nieuw veld in categorie config:**
+```php
+// In preset config structuur
+'toon_label_in_titel' => true,  // default: true
+```
+
+**1.2 Bestanden:**
+- `app/Services/DynamischeIndelingService.php` - default waarde toevoegen
+- `app/Http/Controllers/ToernooiController.php` - opslaan/laden
+
+**1.3 Bestaande presets updaten:**
+- JBN 2025: alle categorieën `toon_label_in_titel = true`
+- JBN 2026: alle categorieën `toon_label_in_titel = true`
+- Database presets: migration om default toe te voegen
+
+### Fase 2: UI Aanpassingen
+
+**2.1 Instellingen pagina (`edit.blade.php`):**
+
+Verwijderen:
+- [ ] `lft-kg` default value in nieuwe categorie
+- [ ] Tooltip "Tip: 'lft-kg' wordt vervangen..."
+
+Toevoegen:
+- [ ] Checkbox "Toon label in titel" per categorie
+- [ ] Checkbox default aan (checked)
+
+**2.2 Nieuwe UI per categorie:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Naam: [Jeugd________]  [☑ Toon in titel]                       │
+│ Max lft: [10] jaar   Geslacht: [M&V ▼]                         │
+│ Max lft verschil: [2]   Max kg verschil: [3.0]                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**2.3 JavaScript aanpassingen:**
+- `buildDataFromForm()` - nieuw veld uitlezen
+- `addNewCategory()` - checkbox meegeven (default true)
+- `renderCategory()` - checkbox renderen
+
+### Fase 3: Titel Generatie
+
+**3.1 `PouleIndelingService::maakPouleTitel()` herschrijven:**
+
+```php
+private function maakPouleTitel(
+    string $leeftijdsklasse,
+    string $gewichtsklasse,
+    ?string $geslacht,
+    int $pouleNr,
+    array $pouleJudokas = [],
+    ?array $categorieConfig = null
+): string {
+    $parts = [];
+
+    // 1. Label (optioneel)
+    $toonLabel = $categorieConfig['toon_label_in_titel'] ?? true;
+    if ($toonLabel && !empty($categorieConfig['label'])) {
+        $parts[] = $categorieConfig['label'];
+    }
+
+    // 2. Geslacht (als niet gemengd)
+    if ($geslacht && $geslacht !== 'gemengd') {
+        $parts[] = $geslacht; // 'M' of 'V'
+    }
+
+    // 3. Leeftijd range (als variabel)
+    $maxLftVerschil = $categorieConfig['max_leeftijd_verschil'] ?? 0;
+    if ($maxLftVerschil > 0 && !empty($pouleJudokas)) {
+        $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
+        if (!empty($leeftijden)) {
+            $min = min($leeftijden);
+            $max = max($leeftijden);
+            $parts[] = $min == $max ? "{$min}j" : "{$min}-{$max}j";
+        }
+    }
+
+    // 4. Gewicht (vaste klasse OF variabele range)
+    $maxKgVerschil = $categorieConfig['max_kg_verschil'] ?? 0;
+    if ($maxKgVerschil > 0 && !empty($pouleJudokas)) {
+        // Variabel: bereken range uit judoka's
+        $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+        if (!empty($gewichten)) {
+            $min = min($gewichten);
+            $max = max($gewichten);
+            $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
+        }
+    } elseif (!empty($gewichtsklasse)) {
+        // Vast: gebruik gewichtsklasse uit preset
+        $parts[] = str_contains($gewichtsklasse, 'kg') ? $gewichtsklasse : "{$gewichtsklasse}kg";
+    }
+
+    return implode(' ', $parts) ?: 'Onbekend';
+}
+```
+
+**3.2 Verwijderen:**
+- [ ] `lft-kg` string matching logica (regels 1174-1188)
+- [ ] ` · ` separator logica
+
+### Fase 4: Detectie Variabele Categorieën
+
+**4.1 `BlokMatVerdelingService::heeftVariabeleCategorieen()`:**
+
+```php
+// OUD (verwijderen)
+$toernooi->poules()
+    ->where('titel', 'like', '%lft-kg%')
+    ->orWhere('titel', 'like', '% · %')
+    ->exists();
+
+// NIEUW
+private function heeftVariabeleCategorieen(Toernooi $toernooi): bool
+{
+    $config = $toernooi->getPresetConfig();
+    foreach ($config as $categorie) {
+        if (($categorie['max_leeftijd_verschil'] ?? 0) > 0 ||
+            ($categorie['max_kg_verschil'] ?? 0) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+**4.2 Bestanden aanpassen:**
+- `app/Services/BlokMatVerdelingService.php`
+- `app/Services/VariabeleBlokVerdelingService.php`
+
+### Fase 5: Cleanup
+
+**5.1 Verwijderen uit code:**
+- [ ] `lft-kg` string checks in `PouleIndelingService.php`
+- [ ] `lft-kg` string checks in `BlokMatVerdelingService.php`
+- [ ] `lft-kg` string checks in `VariabeleBlokVerdelingService.php`
+- [ ] `lft-kg` string checks in `PouleController.php`
+- [ ] `lft-kg` string checks in `WedstrijddagController.php`
+- [ ] ` · ` separator logica overal
+
+**5.2 Verwijderen uit views:**
+- [ ] `edit.blade.php` - lft-kg tooltip en default
+- [ ] `index.blade.php` - lft-kg string checks
+
+### Fase 6: Testen
+
+- [ ] Nieuwe categorie aanmaken met label checkbox aan
+- [ ] Nieuwe categorie aanmaken met label checkbox uit
+- [ ] Vaste categorie (verschil=0) → titel met label + gewichtsklasse
+- [ ] Variabele categorie (verschil>0) → titel met ranges
+- [ ] Bestaande poules blijven werken
+- [ ] Blokverdeling werkt met nieuwe detectie
+- [ ] Live titel update bij verslepen
+
+### Bestanden Overzicht
+
+| Bestand | Actie |
+|---------|-------|
+| `app/Services/DynamischeIndelingService.php` | Default `toon_label_in_titel` toevoegen |
+| `app/Services/PouleIndelingService.php` | `maakPouleTitel()` herschrijven, lft-kg verwijderen |
+| `app/Services/BlokMatVerdelingService.php` | Detectie aanpassen |
+| `app/Services/VariabeleBlokVerdelingService.php` | lft-kg checks verwijderen |
+| `app/Http/Controllers/PouleController.php` | lft-kg checks verwijderen |
+| `app/Http/Controllers/WedstrijddagController.php` | lft-kg checks verwijderen |
+| `resources/views/pages/toernooi/edit.blade.php` | Checkbox toevoegen, lft-kg verwijderen |
+| `resources/views/pages/poule/index.blade.php` | lft-kg checks verwijderen |
+
+### Migratie Bestaande Data
+
+Bestaande poules met `lft-kg` in titel:
+- Geen actie nodig - titels worden opnieuw gegenereerd bij "Poules genereren"
+- Of: eenmalige migration om titels te updaten
+
+### Risico's
+
+1. **Breaking change:** Bestaande poules met `lft-kg` titel
+   - Mitigatie: titels worden bij regeneratie automatisch correct
+
+2. **Backwards compatibility:** Oude presets zonder `toon_label_in_titel`
+   - Mitigatie: default `true` als veld ontbreekt
