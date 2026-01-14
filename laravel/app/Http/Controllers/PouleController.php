@@ -312,23 +312,27 @@ class PouleController extends Controller
         $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
         $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
 
+        // Get fresh instances to ensure we have the latest database values
+        $vanPouleFresh = Poule::find($vanPoule->id);
+        $naarPouleFresh = Poule::find($naarPoule->id);
+
         return response()->json([
             'success' => true,
-            'message' => "{$judoka->naam} verplaatst naar {$naarPoule->fresh()->titel}",
+            'message' => "{$judoka->naam} verplaatst naar {$naarTitel}",
             'van_poule' => [
-                'id' => $vanPoule->id,
-                'nummer' => $vanPoule->nummer,
-                'judokas_count' => $vanPoule->aantal_judokas,
-                'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
-                'titel' => $vanTitel,
+                'id' => $vanPouleFresh->id,
+                'nummer' => $vanPouleFresh->nummer,
+                'judokas_count' => $vanPouleFresh->aantal_judokas,
+                'aantal_wedstrijden' => $vanPouleFresh->aantal_wedstrijden,
+                'titel' => $vanPouleFresh->titel,
                 ...$vanRanges,
             ],
             'naar_poule' => [
-                'id' => $naarPoule->id,
-                'nummer' => $naarPoule->nummer,
-                'judokas_count' => $naarPoule->aantal_judokas,
-                'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
-                'titel' => $naarTitel,
+                'id' => $naarPouleFresh->id,
+                'nummer' => $naarPouleFresh->nummer,
+                'judokas_count' => $naarPouleFresh->aantal_judokas,
+                'aantal_wedstrijden' => $naarPouleFresh->aantal_wedstrijden,
+                'titel' => $naarPouleFresh->titel,
                 ...$naarRanges,
             ],
         ]);
