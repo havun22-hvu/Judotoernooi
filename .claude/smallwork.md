@@ -299,6 +299,53 @@
 
 ---
 
+## Sessie: 14 januari 2026
+
+### Fix: Lege poules naar wedstrijddag
+- **Type:** Bug fix
+- **Wat:** Filter verwijderd die lege poules uitsloot van wedstrijddag pagina
+- **Waarom:** Lege poules zijn nodig voor overpoelen (wachtruimte)
+- **Bestanden:** `app/Http/Controllers/WedstrijddagController.php:51-53`
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (regel 496)
+
+### Fix: Gewichtscategorie in poule titel
+- **Type:** Enhancement
+- **Wat:** Gewichtsklasse toegevoegd aan poule titel op voorbereiding pagina
+- **Waarom:** Titel toonde alleen "#1 Mini's U7", nu "#1 Mini's U7 -23"
+- **Bestanden:** `resources/views/pages/poule/index.blade.php:158`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+### Fix: Wachtruimte toont gewogen judoka's (gewogen = aanwezig)
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Filter `aanwezigheid = 'aanwezig'` verwijderd uit wachtruimte query
+- **Waarom:** Gewogen judoka's zijn per definitie aanwezig (kun niet wegen zonder er te zijn)
+- **Bestanden:** `app/Http/Controllers/WedstrijddagController.php:24-30`
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (sectie Automatische Aanwezigheidsbepaling)
+
+### Fix: Info popup als tooltip i.p.v. browser alert
+- **Type:** Enhancement
+- **Wat:** ⓘ icoon toont nu tooltip boven de icon i.p.v. browser alert
+- **Waarom:** Alert verscheen helemaal bovenaan scherm, tooltip is gebruiksvriendelijker
+- **Oplossing:** Alpine.js x-data met click toggle, removed overflow-hidden van poule-card
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php:196-200, 302-308, 291, 298`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+### Docs: Automatische aanwezigheidsbepaling gedocumenteerd
+- **Type:** Docs
+- **Wat:** Nieuwe sectie in GEBRUIKERSHANDLEIDING.md met aanwezigheidslogica
+- **Regels:** Gewogen = aanwezig, niet gewogen na sluiting weegtijd = afwezig
+- **Bestanden:** `docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md:474-487`
+- **Naar permanente docs?** ☑ Al gedaan
+
+### Docs: "Doorgestreept" verwijzingen verwijderd
+- **Type:** Docs cleanup
+- **Wat:** Alle "doorgestreepte judoka's" verwijzingen vervangen
+- **Waarom:** UI toont nu ⓘ icoon met popup, geen doorgestreepte tekst meer
+- **Bestanden:** `docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md` (5 plekken)
+- **Naar permanente docs?** ☑ Al gedaan
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
