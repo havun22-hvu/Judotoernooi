@@ -665,13 +665,13 @@
                                 JBN 2026
                             </span>
                         </label>
-                        <label class="cursor-pointer" id="eigen-preset-radio-label" style="display: none;">
+                        <label class="cursor-pointer" id="eigen-preset-radio-label">
                             <input type="radio" name="categorie_type" value="eigen"
                                    x-model="categorieType"
                                    @change="if($event.target.checked) loadEigenPreset()"
                                    class="sr-only peer">
-                            <span class="block px-3 py-2 rounded text-sm peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
-                                Eigen Preset
+                            <span class="block px-3 py-2 rounded text-sm text-gray-400 peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
+                                Eigen preset...
                             </span>
                         </label>
                     </div>
