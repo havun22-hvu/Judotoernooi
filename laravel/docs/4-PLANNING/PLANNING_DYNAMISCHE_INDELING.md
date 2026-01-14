@@ -1004,3 +1004,54 @@ Veel judoka's hebben alleen `gewichtsklasse` (bijv. "-38") ingevuld, niet `gewic
 - Band-sortering is secundair: zorgt voor eerlijke poules
 - Clubspreiding als aan/uit optie bij groepsindeling
 - Wedstrijdsysteem (poules/kruisfinale/eliminatie) blijft per leeftijdsgroep
+
+---
+
+## TODO: Hardcoded JBN Categorieën Opruimen (14 jan 2026)
+
+### Probleem
+
+Er staan op veel plekken hardcoded JBN categorieën ("Mini's", "A-pupillen", "Dames -15", etc.).
+Deze mogen **alleen** in de preset definities staan, niet verspreid door de code.
+
+### Wat MAG hardcoded blijven
+
+| Locatie | Reden |
+|---------|-------|
+| `Models/Toernooi.php:362-394` | JBN 2025 preset definitie |
+| `Enums/Leeftijdsklasse.php` | Legacy enum (deprecated, niet gebruiken) |
+
+### Wat MOET worden aangepast
+
+Al deze plekken gebruiken hardcoded sortering/mapping die `sort_categorie` moet gebruiken:
+
+| File | Regels | Wat |
+|------|--------|-----|
+| `PouleIndelingService.php` | 484-488 | Label → key mapping |
+| `PouleIndelingService.php` | 926-931 | Hardcoded sorteervolgorde |
+| `PouleIndelingService.php` | 1234-1239 | Dubbele mapping |
+| `BlokMatVerdelingService.php` | 29, 34 | `$groteLeeftijden`, `$kleineLeeftijden` arrays |
+| `RoleToegang.php` | 103, 197 | Hardcoded sortering |
+| `PubliekController.php` | 60-65, 137-138 | Hardcoded sortering |
+| `WedstrijddagController.php` | 39-43, 56-60, 355-359 | Mapping + sortering |
+| `blok/index.blade.php` | 17-18 | Afkortingen mapping |
+| `blok/_category_chip.blade.php` | 4-7 | Volgorde + afkortingen |
+| `publiek/index.blade.php` | 969-974 | Afkortingen mapping |
+| `coach/judokas.blade.php` | 549-553 | Hardcoded leeftijdsgrenzen |
+
+### Oplossingsrichting
+
+1. **Sortering**: Gebruik altijd `sort_categorie` uit database/preset
+2. **Afkortingen**: Voeg `afkorting` veld toe aan preset config, of genereer dynamisch
+3. **Mappings**: Haal uit `toernooi->gewichtsklassen` config
+
+### Prioriteit
+
+**Medium** - Werkt nu met eigen presets, maar breekt als organisator andere labels gebruikt.
+
+### Stappen
+
+- [ ] Centrale helper: `Toernooi::getCategorieVolgorde()` die uit preset leest
+- [ ] Centrale helper: `Toernooi::getCategorieAfkorting($label)`
+- [ ] Vervang alle hardcoded arrays door helper calls
+- [ ] Test met JBN 2025, JBN 2026, en eigen presets
