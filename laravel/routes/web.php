@@ -153,6 +153,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Blokken management
         Route::post('blok/genereer-verdeling', [BlokController::class, 'genereerVerdeling'])->name('blok.genereer-verdeling');
+        Route::post('blok/genereer-variabele-verdeling', [BlokController::class, 'genereerVariabeleVerdeling'])->name('blok.genereer-variabele-verdeling');
         Route::post('blok/kies-variant', [BlokController::class, 'kiesVariant'])->name('blok.kies-variant');
         Route::post('blok/verplaats-categorie', [BlokController::class, 'verplaatsCategorie'])->name('blok.verplaats-categorie');
         Route::post('blok/update-gewenst', [BlokController::class, 'updateGewenst'])->name('blok.update-gewenst');

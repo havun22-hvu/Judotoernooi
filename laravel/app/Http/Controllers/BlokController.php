@@ -8,6 +8,7 @@ use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
 use App\Services\EliminatieService;
 use App\Services\ToernooiService;
+use App\Services\VariabeleBlokVerdelingService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -18,6 +19,7 @@ class BlokController extends Controller
 {
     public function __construct(
         private BlokMatVerdelingService $verdelingService,
+        private VariabeleBlokVerdelingService $variabeleService,
         private WedstrijdSchemaService $wedstrijdService,
         private ToernooiService $toernooiService,
         private EliminatieService $eliminatieService
@@ -144,6 +146,65 @@ class BlokController extends Controller
             return redirect()
                 ->route('toernooi.blok.index', $toernooi)
                 ->with('error', 'Variant toepassen mislukt: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate block distribution for variable categories (max wedstrijden based)
+     */
+    public function genereerVariabeleVerdeling(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
+    {
+        try {
+            // Get max wedstrijden per blok from request or calculate default
+            $totaalWedstrijden = $toernooi->poules()->sum('aantal_wedstrijden');
+            $aantalBlokken = $toernooi->blokken()->count();
+            $defaultMax = $aantalBlokken > 0 ? (int) ceil($totaalWedstrijden / $aantalBlokken) : 100;
+
+            $maxPerBlok = (int) $request->input('max_per_blok', $defaultMax);
+
+            // Reset non-pinned poules
+            $toernooi->poules()->where('blok_vast', false)->update(['blok_id' => null]);
+
+            // Generate distribution
+            $result = $this->variabeleService->verdeelOpMaxWedstrijden($toernooi, $maxPerBlok);
+
+            if (empty($result['toewijzingen'])) {
+                $message = $result['message'] ?? 'Geen variabele poules gevonden';
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => $message]);
+                }
+                return redirect()
+                    ->route('toernooi.blok.index', $toernooi)
+                    ->with('info', $message);
+            }
+
+            // Apply distribution with labels
+            $this->variabeleService->pasVerdelingMetLabelsToe(
+                $toernooi,
+                $result['toewijzingen'],
+                $result['blok_labels']
+            );
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'stats' => $result['stats'],
+                    'blok_labels' => $result['blok_labels'],
+                ]);
+            }
+
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('success', "Verdeling toegepast: {$result['stats']['gebruikte_blokken']} blokken gebruikt");
+
+        } catch (\Exception $e) {
+            \Log::error('genereerVariabeleVerdeling failed', ['error' => $e->getMessage()]);
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+            }
+            return redirect()
+                ->route('toernooi.blok.index', $toernooi)
+                ->with('error', 'Verdeling mislukt: ' . $e->getMessage());
         }
     }
 
