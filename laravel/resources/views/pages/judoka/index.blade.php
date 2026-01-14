@@ -83,46 +83,46 @@
             </div>
         </div>
     </div>
-    <table class="min-w-full">
+    <table class="w-full table-fixed">
         <thead class="bg-blue-800 text-white sticky top-0 z-10">
             <tr>
-                <th @click="sort('naam')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                <th @click="sort('naam')" class="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Naam <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('leeftijdsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Leeftijdsklasse <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                <th @click="sort('leeftijdsklasse')" class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">Categorie <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                <th @click="sort('gewicht')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('geboortejaar')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                <th @click="sort('geboortejaar')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Geb.jaar <template x-if="sortKey === 'geboortejaar'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('geslacht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Geslacht <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                <th @click="sort('geslacht')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                    <span class="flex items-center gap-1">M/V <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('band')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                <th @click="sort('band')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Band <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th @click="sort('club')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
+                <th @click="sort('club')" class="w-[28%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
                     <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Acties</th>
+                <th class="w-[6%] px-4 py-3 text-left text-xs font-medium uppercase">Acties</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
             <template x-for="judoka in sortedJudokas" :key="judoka.id">
                 <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
-                    <td class="px-4 py-2">
+                    <td class="px-4 py-2 truncate">
                         <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
-                        <span x-show="judoka.incompleet" class="ml-2 text-red-600 text-xs">⚠</span>
+                        <span x-show="judoka.incompleet" class="ml-1 text-red-600 text-xs">⚠</span>
                     </td>
-                    <td class="px-4 py-2 text-sm text-gray-600" x-text="judoka.leeftijdsklasse"></td>
+                    <td class="px-4 py-2 text-sm text-gray-600 truncate" x-text="judoka.leeftijdsklasse"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.gewicht ? 'text-red-600' : ''" x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></td>
                     <td class="px-4 py-2 text-sm" :class="!judoka.geboortejaar ? 'text-red-600' : ''" x-text="judoka.geboortejaar || '-'"></td>
-                    <td class="px-4 py-2 text-sm" x-text="judoka.geslacht"></td>
-                    <td class="px-4 py-2 text-sm" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
-                    <td class="px-4 py-2 text-sm" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
+                    <td class="px-4 py-2 text-sm" x-text="judoka.geslacht === 'Jongen' ? 'M' : 'V'"></td>
+                    <td class="px-4 py-2 text-sm truncate" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
+                    <td class="px-4 py-2 text-sm truncate" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
                     <td class="px-4 py-2">
                         <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('Weet je zeker dat je ' + judoka.naam + ' wilt verwijderen?')) $el.submit()">
                             @csrf
