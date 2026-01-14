@@ -196,7 +196,7 @@
                                 @if($verwijderdeTekstElim->isNotEmpty())
                                 <div class="relative" x-data="{ show: false }">
                                     <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
-                                    <div x-show="show" x-transition class="absolute bottom-full right-0 mb-1 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-pre-line z-50 min-w-[200px] shadow-lg">{{ $verwijderdeTekstElim->join("\n") }}</div>
+                                    <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
                                 </div>
                                 @endif
                             </div>
@@ -288,14 +288,14 @@
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
-                                class="border rounded-lg overflow-hidden min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }}"
+                                class="border rounded-lg min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }}"
                                 data-poule-id="{{ $poule->id }}"
                                 data-poule-nummer="{{ $poule->nummer }}"
                                 data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}"
                                 data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}"
                                 data-actief="{{ $aantalActief }}"
                             >
-                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start">
+                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
                                     <div class="pointer-events-none flex-1">
                                         <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $category['label'] }} / {{ $poule->gewichtsklasse }}</div>
                                         <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
@@ -304,7 +304,7 @@
                                         @if($verwijderdeTekst->isNotEmpty())
                                         <div class="relative" x-data="{ show: false }">
                                             <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
-                                            <div x-show="show" x-transition class="absolute bottom-full right-0 mb-1 bg-gray-900 text-white text-xs rounded px-2 py-1 whitespace-pre-line z-50 min-w-[200px] shadow-lg">{{ $verwijderdeTekst->join("\n") }}</div>
+                                            <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekst->join("\n") }}</div>
                                         </div>
                                         @endif
                                         @if($aantalActief === 0)
