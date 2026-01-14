@@ -155,7 +155,7 @@
                                         $showRangesSeparate = false;
                                     }
                                 @endphp
-                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }}</span>
+                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }} {{ $poule->gewichtsklasse }}</span>
                                 @if($showRangesSeparate)
                                 <span class="font-normal text-gray-500 text-xs ml-1" data-poule-ranges>@if($leeftijdRange || $gewichtRange)({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})@endif</span>
                                 @else

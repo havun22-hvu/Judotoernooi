@@ -49,8 +49,7 @@ class WedstrijddagController extends Controller
             $leeftijdVolgorde = $gewichtsklassenConfig ? array_flip(array_map(fn($d) => $d['label'] ?? '', $gewichtsklassenConfig)) : [];
 
             $categories = $blokPoules
-                // Filter: toon poules met actieve judoka's OF kruisfinales (die nog geen judokas hebben)
-                ->filter(fn($poule) => $poule->type === 'kruisfinale' || $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count() > 0)
+                // Toon ALLE poules (ook lege) - lege poules zijn nodig voor overpoelen
                 ->groupBy(function ($poule) {
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
                 })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
