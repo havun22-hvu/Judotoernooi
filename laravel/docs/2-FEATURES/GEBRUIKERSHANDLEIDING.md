@@ -266,15 +266,14 @@ Poule titels worden automatisch samengesteld uit:
 
 ### Handmatige Aanpassingen
 
-1. Open een poule
-2. Klik **Verplaats Judoka**
-3. Selecteer de judoka en de doelpoule
-4. Bevestig de verplaatsing
+**Drag & drop**: Sleep judoka's direct tussen poules op de Poules pagina.
 
 **Bij verplaatsen worden automatisch bijgewerkt:**
 - Aantal judoka's en wedstrijden per poule
+- Totaal statistieken bovenaan de pagina (wedstrijden, judoka's, problemen)
 - Min-max leeftijd per poule
 - Min-max gewicht per poule
+- Poule titel (bij variabele categorie)
 
 ## Blok/Mat Verdeling
 
