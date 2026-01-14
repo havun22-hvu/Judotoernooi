@@ -143,7 +143,6 @@
                                 @php
                                     $label = $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse;
                                     $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
-                                    $showRangesSeparate = true;
 
                                     // Als label "lft-kg" bevat, vervang door actuele ranges
                                     if (stripos($label, 'lft-kg') !== false) {
@@ -152,15 +151,9 @@
                                         } else {
                                             $label = str_ireplace('lft-kg', $dynamicRange, $label);
                                         }
-                                        $showRangesSeparate = false;
                                     }
                                 @endphp
                                 <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }} {{ $poule->gewichtsklasse }}</span>
-                                @if($showRangesSeparate)
-                                <span class="font-normal text-gray-500 text-xs ml-1" data-poule-ranges>@if($leeftijdRange || $gewichtRange)({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})@endif</span>
-                                @else
-                                <span class="font-normal text-gray-500 text-xs ml-1 hidden" data-poule-ranges></span>
-                                @endif
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
@@ -597,12 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
             chosenClass: 'bg-blue-200',
             dragClass: 'shadow-lg',
             onEnd: async function(evt) {
-                console.log('🎯 Drag ended!', {
-                    judoka: evt.item.dataset.judokaId,
-                    van: evt.from.dataset.pouleId,
-                    naar: evt.to.dataset.pouleId
-                });
-
                 const judokaId = evt.item.dataset.judokaId;
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;
@@ -635,8 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await response.json();
 
                     if (data.success) {
-                        console.log('Drag response:', data);
-                        // Update counts
+                        // Update poule statistieken en titels
                         updatePouleStats(data.van_poule);
                         updatePouleStats(data.naar_poule);
 
@@ -676,47 +662,11 @@ document.addEventListener('DOMContentLoaded', function() {
             wedstrijdenEl.textContent = pouleData.judokas_count < 2 ? '-' : pouleData.aantal_wedstrijden;
         }
 
-        // Update leeftijd/gewicht ranges (only for regular poules)
+        // Update poule titel (ranges zitten in de titel zelf, bijv. "Jeugd 9-10j 28-32kg")
         if (!isKruisfinale && !isEliminatie) {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
-            let rangeEl = pouleCard.querySelector('[data-poule-ranges]');
-
-            // Debug: log HTML structure if rangeEl not found
-            if (!rangeEl) {
-                console.warn('rangeEl niet gevonden! Header HTML:', pouleCard.querySelector('.border-b')?.innerHTML);
-            }
-
-            console.log('Update ranges for poule', pouleData.id, {
-                titelEl: !!titelEl,
-                rangeEl: !!rangeEl,
-                titel: pouleData.titel,
-                leeftijd_range: pouleData.leeftijd_range,
-                gewicht_range: pouleData.gewicht_range
-            });
-
-            // Check of titel dynamische ranges bevat (bijv. "Jeugd 13j 39.2-41.1kg")
-            // Dit is het geval als de titel de leeftijd_range of gewicht_range al bevat
-            const titelBevatRanges = pouleData.titel && (
-                (pouleData.leeftijd_range && pouleData.titel.includes(pouleData.leeftijd_range)) ||
-                (pouleData.gewicht_range && pouleData.titel.includes(pouleData.gewicht_range))
-            );
-
-            console.log('titelBevatRanges:', titelBevatRanges, '| titel:', pouleData.titel);
-
-            if (titelBevatRanges && titelEl) {
-                // Dynamische titel: update hele titel (ranges zitten al in titel)
-                console.log('Updating dynamic title to:', `#${pouleData.nummer} ${pouleData.titel}`);
+            if (titelEl && pouleData.titel) {
                 titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
-                if (rangeEl) rangeEl.classList.add('hidden');
-            } else if (rangeEl) {
-                // Vaste titel: update alleen ranges tussen haakjes
-                const ranges = [];
-                if (pouleData.leeftijd_range) ranges.push(pouleData.leeftijd_range);
-                if (pouleData.gewicht_range) ranges.push(pouleData.gewicht_range);
-                const newText = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
-                console.log('Updating ranges to:', newText);
-                rangeEl.textContent = newText;
-                rangeEl.classList.remove('hidden');
             }
         }
 

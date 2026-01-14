@@ -667,9 +667,18 @@ De poule titel bevat altijd:
 ### Live titel update bij verslepen judoka's
 
 Bij variabele indeling (verschil>0) wordt de titel automatisch bijgewerkt wanneer judoka's worden versleept:
-- Server berekent nieuwe min-max ranges
-- Database wordt bijgewerkt
-- Client update titel in DOM
+- Server berekent nieuwe min-max ranges uit `berekenPouleRanges()`
+- Server update titel via `updateDynamischeTitel()`
+- Database wordt bijgewerkt (titel veld)
+- Client update titel in DOM via JavaScript `updatePouleStats()`
+
+**Belangrijk:** De ranges zitten IN de titel zelf (bijv. "Jeugd 9-10j 28-32kg"), niet als aparte tekst erachter.
+
+**Wat wordt live bijgewerkt na drag & drop:**
+- Aantal judoka's per poule
+- Aantal wedstrijden per poule
+- Poule titel (met nieuwe min-max ranges)
+- Totaal statistieken bovenaan pagina
 
 ### Automatische blokverdeling (variabel systeem)
 
