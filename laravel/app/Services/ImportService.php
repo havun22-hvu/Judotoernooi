@@ -126,7 +126,8 @@ class ImportService
             $leeftijdsklasse = $classificatie['label'];
             $categorieKey = $classificatie['configKey'];
             $sortCategorie = $classificatie['sortCategorie'];
-            $gewichtsklasse = $classificatie['gewichtsklasse'] ?? 'onbekend';
+            // gewichtsklasse is null for variable categories (max_kg_verschil > 0)
+            $gewichtsklasse = $classificatie['gewichtsklasse'];
         } elseif ($gewichtsklasseRaw) {
             // Use CSV weight class if provided
             $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
@@ -366,8 +367,13 @@ class ImportService
                 continue;
             }
 
-            // Match found! Determine gewichtsklasse
-            $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig($gewicht ?? 0, $config, $tolerantie);
+            // Match found!
+            // Only determine gewichtsklasse if NOT variable (max_kg_verschil == 0)
+            $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
+            $gewichtsklasse = null;
+            if ($maxKgVerschil == 0) {
+                $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig($gewicht ?? 0, $config, $tolerantie);
+            }
 
             return [
                 'configKey' => $key,
