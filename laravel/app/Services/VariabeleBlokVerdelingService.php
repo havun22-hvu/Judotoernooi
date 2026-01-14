@@ -23,7 +23,7 @@ class VariabeleBlokVerdelingService
     public function heeftVariabeleCategorieen(Toernooi $toernooi): bool
     {
         // Check category config for variable settings
-        $config = $toernooi->getPresetConfig();
+        $config = $toernooi->getAlleGewichtsklassen();
         if (empty($config)) {
             return false;
         }
