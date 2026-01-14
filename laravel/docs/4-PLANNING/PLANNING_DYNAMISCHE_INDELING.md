@@ -1007,59 +1007,55 @@ Veel judoka's hebben alleen `gewichtsklasse` (bijv. "-38") ingevuld, niet `gewic
 
 ---
 
-## TODO: Hardcoded JBN Categorieën Opruimen (14 jan 2026)
+## DONE: Hardcoded JBN Categorieën Opgeruimd (14 jan 2026)
 
-### Probleem
+### Probleem (OPGELOST ✓)
 
-Er staan op veel plekken hardcoded JBN categorieën ("Mini's", "A-pupillen", "Dames -15", etc.).
+Er stonden op veel plekken hardcoded JBN categorieën ("Mini's", "A-pupillen", "Dames -15", etc.).
 Deze mogen **alleen** in de preset definities staan, niet verspreid door de code.
 
-### Wat MAG hardcoded blijven
+### Wat HARDCODED mag blijven
 
 | Locatie | Reden |
 |---------|-------|
-| `Models/Toernooi.php:362-394` | JBN 2025 preset definitie |
+| `Models/Toernooi.php` | JBN preset definities (dat is de bron) |
 | `Enums/Leeftijdsklasse.php` | Legacy enum (deprecated, niet gebruiken) |
 
-### Wat MOET worden aangepast
+### Wat is aangepast (commit b3b3ef7)
 
-Al deze plekken gebruiken hardcoded sortering/mapping die `sort_categorie` moet gebruiken:
+Alle plekken gebruiken nu de preset config uit `toernooi->gewichtsklassen`:
 
-| File | Regels | Wat |
-|------|--------|-----|
-| `PouleIndelingService.php` | 484-488 | Label → key mapping |
-| `PouleIndelingService.php` | 926-931 | Hardcoded sorteervolgorde |
-| `PouleIndelingService.php` | 1234-1239 | Dubbele mapping |
-| `BlokMatVerdelingService.php` | 29, 34 | `$groteLeeftijden`, `$kleineLeeftijden` arrays |
-| `RoleToegang.php` | 103, 197 | Hardcoded sortering |
-| `PubliekController.php` | 60-65, 137-138 | Hardcoded sortering |
-| `WedstrijddagController.php` | 39-43, 56-60, 355-359 | Mapping + sortering |
-| `blok/index.blade.php` | 17-18 | Afkortingen mapping |
-| `blok/_category_chip.blade.php` | 4-7 | Volgorde + afkortingen |
-| `publiek/index.blade.php` | 969-974 | Afkortingen mapping |
-| `coach/judokas.blade.php` | 549-553 | Hardcoded leeftijdsgrenzen |
+| File | Wat aangepast |
+|------|---------------|
+| `PouleIndelingService.php` | `leeftijdsklasseToConfigKey()` zoekt nu in config |
+| `PouleIndelingService.php` | `getLeeftijdOrder()` gebruikt config key volgorde |
+| `BlokMatVerdelingService.php` | `getGroteLeeftijden()` / `getKleineLeeftijden()` nu dynamisch op basis van geslacht |
+| `RoleToegang.php` | Gebruikt `toernooi->getCategorieVolgorde()` |
+| `PubliekController.php` | Gebruikt `toernooi->getCategorieVolgorde()` |
+| `WedstrijddagController.php` | Bouwt label→key mapping dynamisch uit config |
+| `blok/index.blade.php` | Geen standaard afkortingen meer |
+| `blok/_category_chip.blade.php` | Fallback arrays verwijderd |
+| `publiek/index.blade.php` | `kortLeeftijd()` JS gebruikt nu generieke truncatie |
+| `coach/judokas.blade.php` | `bepaalLeeftijdsklasse()` JS gebruikt config met max_leeftijd |
 
-### Oplossingsrichting
+### Nieuwe helper methodes in `Toernooi.php`
 
-**Alles uit de instellingen halen (toernooi->gewichtsklassen):**
-
-1. **Sortering**: Gebruik `sort_categorie` uit database (gezet bij herclassificatie)
-2. **Labels**: Uit preset config (`$config[$key]['label']`)
-3. **Volgorde**: Uit volgorde van keys in preset config
-4. **Geen afkortingen**: Gebruik volledige label uit preset
-
-**De preset config bevat alles:**
 ```php
-$toernooi->gewichtsklassen = [
-    'u7' => ['label' => "Mini's U7", 'max_leeftijd' => 6, ...],
-    'u9_wit' => ['label' => "U9 Witte band", ...],
-    // volgorde van keys = sorteervolgorde
-];
+// Retourneert [label => volgorde_nummer] uit preset config
+public function getCategorieVolgorde(): array
+
+// Retourneert config key voor een label
+public function getCategorieKeyByLabel(string $label): ?string
 ```
 
-### Prioriteit
+### Hoe het werkt
 
-**Medium** - Werkt nu met eigen presets, maar breekt als organisator andere labels gebruikt.
+**Alle categorie-info komt uit de instellingen (preset config):**
+
+1. **Sortering**: `sort_categorie` field op judokas (gezet bij herclassificatie)
+2. **Labels**: `$config[$key]['label']` uit preset
+3. **Volgorde**: Volgorde van keys in preset config
+4. **Geen hardcoded afkortingen**: Gebruik volledige label uit preset
 
 ### Stappen
 
