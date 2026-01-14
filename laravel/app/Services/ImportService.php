@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\Band;
 use App\Enums\Geslacht;
-use App\Enums\Leeftijdsklasse;
 use App\Models\Club;
 use App\Models\Coach;
 use App\Models\CoachKaart;
@@ -16,6 +15,7 @@ use Illuminate\Support\Str;
 class ImportService
 {
     private PouleIndelingService $pouleIndelingService;
+    private array $gewichtsklassenConfig = [];
 
     public function __construct(PouleIndelingService $pouleIndelingService)
     {
@@ -27,6 +27,9 @@ class ImportService
      */
     public function importeerDeelnemers(Toernooi $toernooi, array $data, array $kolomMapping = []): array
     {
+        // Load preset config for classification
+        $this->gewichtsklassenConfig = $toernooi->getPresetConfig() ?? [];
+
         return DB::transaction(function () use ($toernooi, $data, $kolomMapping) {
             $resultaat = [
                 'geimporteerd' => 0,
@@ -107,18 +110,23 @@ class ImportService
             $club = Club::findOrCreateByName($clubNaam);
         }
 
-        // Calculate age class (only if we have birth year)
+        // Calculate age class using preset config (not hardcoded enum)
         $leeftijdsklasse = null;
-        if ($geboortejaar) {
-            $leeftijd = date('Y') - $geboortejaar;
-            $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $geslacht);
-        }
-
-        // Calculate weight class (only if we have age class and weight)
-        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+        $categorieKey = null;
+        $sortCategorie = 99;
         $gewichtsklasse = 'onbekend';
-        if ($leeftijdsklasse && $gewicht) {
-            $gewichtsklasse = $this->bepaalGewichtsklasse($gewicht, $leeftijdsklasse, $tolerantie);
+        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
+        if ($geboortejaar && !empty($this->gewichtsklassenConfig)) {
+            $leeftijd = ($toernooi->datum?->year ?? date('Y')) - $geboortejaar;
+            $bandNiveau = $this->getBandNiveau($band);
+
+            // Classify using preset config
+            $classificatie = $this->classificeerJudoka($leeftijd, $geslacht, $bandNiveau, $gewicht, $tolerantie);
+            $leeftijdsklasse = $classificatie['label'];
+            $categorieKey = $classificatie['configKey'];
+            $sortCategorie = $classificatie['sortCategorie'];
+            $gewichtsklasse = $classificatie['gewichtsklasse'] ?? 'onbekend';
         } elseif ($gewichtsklasseRaw) {
             // Use CSV weight class if provided
             $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
@@ -148,7 +156,9 @@ class ImportService
                 'geslacht' => $geslacht,
                 'band' => $band,
                 'gewicht' => $gewicht,
-                'leeftijdsklasse' => $leeftijdsklasse?->label(),
+                'leeftijdsklasse' => $leeftijdsklasse,
+                'categorie_key' => $categorieKey,
+                'sort_categorie' => $sortCategorie,
                 'gewichtsklasse' => $gewichtsklasse,
                 'is_onvolledig' => $isOnvolledig,
             ]);
@@ -164,7 +174,9 @@ class ImportService
             'geslacht' => $geslacht,
             'band' => $band,
             'gewicht' => $gewicht,
-            'leeftijdsklasse' => $leeftijdsklasse?->label(),
+            'leeftijdsklasse' => $leeftijdsklasse,
+            'categorie_key' => $categorieKey,
+            'sort_categorie' => $sortCategorie,
             'gewichtsklasse' => $gewichtsklasse,
             'is_onvolledig' => $isOnvolledig,
         ]);
@@ -306,30 +318,133 @@ class ImportService
     }
 
     /**
-     * Determine weight class based on weight, age category and tolerance
-     *
-     * Example with tolerance 0.5:
-     * - Weight 32.5 kg → fits in -32 (32.5 <= 32 + 0.5)
-     * - Weight 32.6 kg → goes to -36 (32.6 > 32 + 0.5)
+     * Classify a judoka into a category based on preset config
+     * Returns array with: configKey, label, sortCategorie, gewichtsklasse
      */
-    private function bepaalGewichtsklasse(?float $gewicht, Leeftijdsklasse $leeftijdsklasse, float $tolerantie = 0.5): string
+    private function classificeerJudoka(int $leeftijd, string $geslacht, int $bandNiveau, ?float $gewicht, float $tolerantie): array
     {
-        if (!$gewicht) {
-            return 'onbekend';
+        $geslacht = strtoupper($geslacht);
+        $sortCategorie = 0;
+
+        foreach ($this->gewichtsklassenConfig as $key => $config) {
+            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
+            $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
+            $label = strtolower($config['label'] ?? '');
+
+            // Normalize legacy values: meisjes -> V, jongens -> M
+            if ($configGeslacht === 'MEISJES') {
+                $configGeslacht = 'V';
+            } elseif ($configGeslacht === 'JONGENS') {
+                $configGeslacht = 'M';
+            }
+
+            // Auto-detect gender from label if geslacht=gemengd but label contains gender indicator
+            if ($configGeslacht === 'GEMENGD') {
+                if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
+                    $configGeslacht = 'V';
+                } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
+                    $configGeslacht = 'M';
+                }
+            }
+
+            // Check leeftijd
+            if ($leeftijd > $maxLeeftijd) {
+                $sortCategorie++;
+                continue;
+            }
+
+            // Check geslacht (gemengd matches all)
+            if ($configGeslacht !== 'GEMENGD' && $configGeslacht !== $geslacht) {
+                $sortCategorie++;
+                continue;
+            }
+
+            // Check band_filter if set
+            $bandFilter = $config['band_filter'] ?? null;
+            if ($bandFilter && !$this->voldoetAanBandFilter($bandNiveau, $bandFilter)) {
+                $sortCategorie++;
+                continue;
+            }
+
+            // Match found! Determine gewichtsklasse
+            $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig($gewicht ?? 0, $config, $tolerantie);
+
+            return [
+                'configKey' => $key,
+                'label' => $config['label'] ?? $key,
+                'sortCategorie' => $sortCategorie,
+                'gewichtsklasse' => $gewichtsklasse,
+            ];
         }
 
-        $klassen = $leeftijdsklasse->gewichtsklassen();
+        // No match found
+        return [
+            'configKey' => null,
+            'label' => 'Onbekend',
+            'sortCategorie' => 99,
+            'gewichtsklasse' => null,
+        ];
+    }
+
+    /**
+     * Check if band niveau matches the band filter
+     */
+    private function voldoetAanBandFilter(int $bandNiveau, string $filter): bool
+    {
+        if (str_starts_with($filter, 'tm_') || str_starts_with($filter, 't/m ')) {
+            $band = str_replace(['tm_', 't/m '], '', $filter);
+            $maxNiveau = $this->getBandNiveau($band);
+            return $bandNiveau <= $maxNiveau;
+        }
+
+        if (str_starts_with($filter, 'vanaf_') || str_starts_with($filter, 'vanaf ')) {
+            $band = str_replace(['vanaf_', 'vanaf '], '', $filter);
+            $minNiveau = $this->getBandNiveau($band);
+            return $bandNiveau >= $minNiveau;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get band niveau (0 = wit, 6 = zwart)
+     */
+    private function getBandNiveau(string $band): int
+    {
+        $band = strtolower(trim($band));
+        return match($band) {
+            'wit', 'white' => 0,
+            'geel', 'yellow' => 1,
+            'oranje', 'orange' => 2,
+            'groen', 'green' => 3,
+            'blauw', 'blue' => 4,
+            'bruin', 'brown' => 5,
+            'zwart', 'black' => 6,
+            default => 0,
+        };
+    }
+
+    /**
+     * Determine weight class from config
+     */
+    private function bepaalGewichtsklasseUitConfig(float $gewicht, array $config, float $tolerantie): ?string
+    {
+        if ($gewicht <= 0) {
+            return null;
+        }
+
+        $klassen = $config['gewichtsklassen'] ?? [];
+        if (empty($klassen)) {
+            return null;
+        }
 
         foreach ($klassen as $klasse) {
+            $klasse = (int) $klasse;
             if ($klasse > 0) {
-                // Plus category (minimum weight) - this is always the last one
-                // With tolerance, you can be slightly under the limit
-                // e.g., +63 with tolerance 0.5 means 62.5+ kg qualifies
+                // Plus category (minimum weight)
                 return "+{$klasse}";
             } else {
                 // Minus category (maximum weight)
-                // With tolerance, the limit is extended
-                // e.g., -32 with tolerance 0.5 means up to 32.5 kg qualifies
                 $limiet = abs($klasse);
                 if ($gewicht <= $limiet + $tolerantie) {
                     return "{$klasse}";
@@ -337,13 +452,11 @@ class ImportService
             }
         }
 
-        // If heavier than all minus categories, use the plus category
+        // Heavier than all minus categories
         $laatsteKlasse = end($klassen);
         if ($laatsteKlasse > 0) {
             return "+{$laatsteKlasse}";
         }
-
-        // Fallback: create plus category from last minus class
         return "+" . abs($laatsteKlasse);
     }
 
