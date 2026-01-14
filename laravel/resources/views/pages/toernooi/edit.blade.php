@@ -972,10 +972,39 @@
                 updateJsonInput();
             }
 
-            function renderCategorieen(data) {
+            // Sorteer categorieën: jong→oud, lage band→hoge band, licht→zwaar
+            function sorteerCategorieen(data) {
+                const bandFilterVolgorde = {
+                    '': 0, 'tm_wit': 1, 'tm_geel': 2, 'tm_oranje': 3, 'tm_groen': 4, 'tm_blauw': 5, 'tm_bruin': 6,
+                    'vanaf_geel': 10, 'vanaf_oranje': 11, 'vanaf_groen': 12, 'vanaf_blauw': 13, 'vanaf_bruin': 14, 'vanaf_zwart': 15
+                };
+
+                return Object.entries(data).sort((a, b) => {
+                    const [, itemA] = a;
+                    const [, itemB] = b;
+
+                    // 1. Leeftijd: jong → oud
+                    const leeftijdA = itemA.max_leeftijd || 99;
+                    const leeftijdB = itemB.max_leeftijd || 99;
+                    if (leeftijdA !== leeftijdB) return leeftijdA - leeftijdB;
+
+                    // 2. Gewicht: licht → zwaar (eerste gewicht uit array)
+                    const gewichtA = itemA.gewichten?.[0] ? parseFloat(itemA.gewichten[0].replace(/[^\d.]/g, '')) : 0;
+                    const gewichtB = itemB.gewichten?.[0] ? parseFloat(itemB.gewichten[0].replace(/[^\d.]/g, '')) : 0;
+                    if (gewichtA !== gewichtB) return gewichtA - gewichtB;
+
+                    // 3. Band: laag → hoog
+                    const bandA = bandFilterVolgorde[itemA.band_filter || ''] || 0;
+                    const bandB = bandFilterVolgorde[itemB.band_filter || ''] || 0;
+                    return bandA - bandB;
+                });
+            }
+
+            function renderCategorieen(data, sorteer = true) {
                 container.innerHTML = '';
                 let index = 0;
-                for (const [key, item] of Object.entries(data)) {
+                const entries = sorteer ? sorteerCategorieen(data) : Object.entries(data);
+                for (const [key, item] of entries) {
                     const div = document.createElement('div');
                     div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
                     div.dataset.key = key;

@@ -191,6 +191,35 @@ id, organisator_id, naam, configuratie (JSON), timestamps
 unique: [organisator_id, naam]
 ```
 
+**Sortering bij laden eigen preset:**
+
+Bij het laden van een eigen preset worden de categorieën automatisch gesorteerd:
+
+| Prioriteit | Criterium | Volgorde | Voorbeeld |
+|------------|-----------|----------|-----------|
+| 1 | Leeftijd | Jong → oud | `max_leeftijd` oplopend (7, 9, 11, 15, 99) |
+| 2 | Gewicht | Licht → zwaar | Eerste gewicht uit `gewichten` array |
+| 3 | Band | Laag → hoog | `band_filter` oplopend (wit, geel, oranje, ...) |
+
+**Resultaat:** Bovenaan de lichtste mini's met witte band, onderaan de zwaarste senioren met hoge band.
+
+**Band filter volgorde:**
+| Filter | Niveau |
+|--------|--------|
+| (leeg/alle) | 0 |
+| t/m wit | 1 |
+| t/m geel | 2 |
+| t/m oranje | 3 |
+| t/m groen | 4 |
+| t/m blauw | 5 |
+| t/m bruin | 6 |
+| vanaf geel | 10 |
+| vanaf oranje | 11 |
+| vanaf groen | 12 |
+| vanaf blauw | 13 |
+| vanaf bruin | 14 |
+| vanaf zwart | 15 |
+
 ## Classificatie Systeem
 
 ### Presets
