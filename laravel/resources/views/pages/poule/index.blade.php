@@ -679,7 +679,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update leeftijd/gewicht ranges (only for regular poules)
         if (!isKruisfinale && !isEliminatie) {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
-            const rangeEl = pouleCard.querySelector('[data-poule-ranges]');
+            let rangeEl = pouleCard.querySelector('[data-poule-ranges]');
+
+            // Debug: log HTML structure if rangeEl not found
+            if (!rangeEl) {
+                console.warn('rangeEl niet gevonden! Header HTML:', pouleCard.querySelector('.border-b')?.innerHTML);
+            }
 
             console.log('Update ranges for poule', pouleData.id, {
                 titelEl: !!titelEl,
@@ -689,11 +694,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 gewicht_range: pouleData.gewicht_range
             });
 
-            // Check of dit een dynamische titel is (bevat · wat duidt op lft-kg format)
-            const isDynamischeTitel = pouleData.titel && pouleData.titel.includes('·');
+            // Check of titel dynamische ranges bevat (bijv. "Jeugd 13j 39.2-41.1kg")
+            // Dit is het geval als de titel de leeftijd_range of gewicht_range al bevat
+            const titelBevatRanges = pouleData.titel && (
+                (pouleData.leeftijd_range && pouleData.titel.includes(pouleData.leeftijd_range)) ||
+                (pouleData.gewicht_range && pouleData.titel.includes(pouleData.gewicht_range))
+            );
 
-            if (isDynamischeTitel && titelEl) {
-                // Dynamische titel: update hele titel
+            if (titelBevatRanges && titelEl) {
+                // Dynamische titel: update hele titel (ranges zitten al in titel)
                 console.log('Updating dynamic title to:', `#${pouleData.nummer} ${pouleData.titel}`);
                 titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
                 if (rangeEl) rangeEl.classList.add('hidden');
