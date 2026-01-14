@@ -539,25 +539,31 @@
         }
 
         // Bepaal leeftijdsklasse op basis van geboortejaar en geslacht
-        // Let op: -15 = max 14 jaar, -12 = max 11 jaar, etc.
+        // Gebruikt de preset config (gewichtsklassenData) met max_leeftijd per categorie
         function bepaalLeeftijdsklasse(geboortejaar, geslacht) {
             if (!geboortejaar || !geslacht) return null;
 
             const huidigJaar = new Date().getFullYear();
             const leeftijd = huidigJaar - parseInt(geboortejaar);
 
-            // Mini's: t/m 7 jaar (< 8)
-            if (leeftijd <= 7) return 'minis';
-            // A-pupillen: 8-9 jaar (< 10)
-            if (leeftijd <= 9) return 'a_pupillen';
-            // B-pupillen: 10-11 jaar (< 12)
-            if (leeftijd <= 11) return 'b_pupillen';
-            // -15: 12-14 jaar (< 15)
-            if (leeftijd <= 14) return geslacht === 'V' ? 'dames_15' : 'heren_15';
-            // -18: 15-17 jaar (< 18)
-            if (leeftijd <= 17) return geslacht === 'V' ? 'dames_18' : 'heren_18';
-            // Senioren: 18+
-            return geslacht === 'V' ? 'dames' : 'heren';
+            // Loop door config categorieën en vind eerste match
+            for (const [key, config] of Object.entries(gewichtsklassenData)) {
+                const maxLeeftijd = config.max_leeftijd;
+                const catGeslacht = config.geslacht || 'gemengd';
+
+                // Check leeftijd: als max_leeftijd is ingesteld en leeftijd > max, skip
+                if (maxLeeftijd && leeftijd >= maxLeeftijd) continue;
+
+                // Check geslacht: als categorie specifiek geslacht heeft
+                if (catGeslacht === 'M' && geslacht !== 'M') continue;
+                if (catGeslacht === 'V' && geslacht !== 'V') continue;
+
+                return key;
+            }
+
+            // Fallback: laatste categorie met passend geslacht
+            const keys = Object.keys(gewichtsklassenData);
+            return keys[keys.length - 1] || null;
         }
 
         // Bepaal gewichtsklasse op basis van gewicht

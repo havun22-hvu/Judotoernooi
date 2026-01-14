@@ -23,15 +23,40 @@ class BlokMatVerdelingService
     private array $aansluitingOpties = [0, 1, -1, 2];
 
     /**
-     * Grote leeftijdsklassen in volgorde (jongste eerst)
-     * Deze bepalen de structuur van de verdeling
+     * Get "grote" leeftijdsklassen (primary structure)
+     * Based on gender: M, gemengd, or no gender = groot
      */
-    private array $groteLeeftijden = ["Mini's", 'A-pupillen', 'B-pupillen', 'Heren -15', 'Heren -18', 'Heren'];
+    private function getGroteLeeftijden(Toernooi $toernooi): array
+    {
+        $config = $toernooi->getAlleGewichtsklassen();
+        $grote = [];
+        foreach ($config as $key => $data) {
+            $geslacht = $data['geslacht'] ?? 'gemengd';
+            // M, gemengd, or no gender = grote (primary structure)
+            if ($geslacht !== 'V') {
+                $grote[] = $data['label'] ?? $key;
+            }
+        }
+        return $grote;
+    }
 
     /**
-     * Kleine leeftijdsklassen (worden als opvulling gebruikt)
+     * Get "kleine" leeftijdsklassen (used as filler)
+     * Based on gender: V = klein
      */
-    private array $kleineLeeftijden = ['Dames -15', 'Dames -18', 'Dames'];
+    private function getKleineLeeftijden(Toernooi $toernooi): array
+    {
+        $config = $toernooi->getAlleGewichtsklassen();
+        $kleine = [];
+        foreach ($config as $key => $data) {
+            $geslacht = $data['geslacht'] ?? 'gemengd';
+            // V = kleine (filler)
+            if ($geslacht === 'V') {
+                $kleine[] = $data['label'] ?? $key;
+            }
+        }
+        return $kleine;
+    }
 
     /**
      * Generate distribution variants until we have 5 acceptable ones
@@ -276,7 +301,7 @@ class BlokMatVerdelingService
         $leeftijdShuffle = $seed % 8;  // 8 shuffle opties voor leeftijden
 
         // Maak kopie van grote leeftijden en shuffle (behalve Mini's blijft eerst!)
-        $groteLeeftijdenVolgorde = $this->groteLeeftijden;
+        $groteLeeftijdenVolgorde = $this->getGroteLeeftijden($toernooi);
         if ($leeftijdShuffle >= 4) {
             // Shuffle alleen posities 1-5 (Mini's blijft op 0)
             $rest = array_slice($groteLeeftijdenVolgorde, 1);
@@ -379,7 +404,7 @@ class BlokMatVerdelingService
 
         // STAP 2: Plaats kleine leeftijdsklassen als opvulling
         // Shuffle ook de volgorde van kleine leeftijden
-        $kleineLeeftijdenVolgorde = $this->kleineLeeftijden;
+        $kleineLeeftijdenVolgorde = $this->getKleineLeeftijden($toernooi);
         if ($leeftijdShuffle >= 2 && $leeftijdShuffle < 6) {
             shuffle($kleineLeeftijdenVolgorde);
         }

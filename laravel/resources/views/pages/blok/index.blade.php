@@ -8,17 +8,12 @@
     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     $leeftijdVolgorde = array_values(array_map(fn($c) => $c['label'] ?? '', $gewichtsklassenConfig));
 
-    // Genereer afkortingen: korte versie van label (max 6 chars of eerste woord)
+    // Genereer afkortingen: gebruik label direct (of korte versie als >8 chars)
     $afkortingen = [];
     foreach ($gewichtsklassenConfig as $key => $config) {
         $label = $config['label'] ?? $key;
-        // Standaard afkortingen voor bekende JBN labels
-        $standaard = [
-            "Mini's" => "Mini's", 'A-pupillen' => 'A-pup', 'B-pupillen' => 'B-pup', 'C-pupillen' => 'C-pup',
-            'Dames -15' => 'D-15', 'Heren -15' => 'H-15', 'Dames -18' => 'D-18', 'Heren -18' => 'H-18',
-            'Dames -21' => 'D-21', 'Heren -21' => 'H-21', 'Dames' => 'Dames', 'Heren' => 'Heren',
-        ];
-        $afkortingen[$label] = $standaard[$label] ?? (strlen($label) <= 8 ? $label : substr($label, 0, 6));
+        // Gebruik label direct, of maak compacte versie voor lange labels
+        $afkortingen[$label] = strlen($label) <= 10 ? $label : substr($label, 0, 8) . '..';
     }
 
     // Check for variant selection mode

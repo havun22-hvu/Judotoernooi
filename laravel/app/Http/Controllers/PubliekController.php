@@ -55,21 +55,8 @@ class PubliekController extends Controller
                 });
         });
 
-        // Sort leeftijdsklassen
-        $leeftijdVolgorde = [
-            "Mini's" => 1,
-            'A-pupillen' => 2,
-            'B-pupillen' => 3,
-            'C-pupillen' => 4,
-            'Dames -15' => 5,
-            'Heren -15' => 6,
-            'Dames -18' => 7,
-            'Heren -18' => 8,
-            'Dames -21' => 9,
-            'Heren -21' => 10,
-            'Dames' => 11,
-            'Heren' => 12,
-        ];
+        // Sort leeftijdsklassen based on preset config
+        $leeftijdVolgorde = $toernooi->getCategorieVolgorde();
 
         $categorien = $categorien->sortBy(function ($gewichten, $leeftijd) use ($leeftijdVolgorde) {
             return $leeftijdVolgorde[$leeftijd] ?? 99;
@@ -133,11 +120,8 @@ class PubliekController extends Controller
      */
     private function getUitslagen(Toernooi $toernooi): array
     {
-        $leeftijdVolgorde = [
-            "Mini's" => 1, 'A-pupillen' => 2, 'B-pupillen' => 3, 'C-pupillen' => 4,
-            'Dames -15' => 5, 'Heren -15' => 6, 'Dames -18' => 7, 'Heren -18' => 8,
-            'Dames -21' => 9, 'Heren -21' => 10, 'Dames' => 11, 'Heren' => 12,
-        ];
+        // Get sort order from preset config
+        $leeftijdVolgorde = $toernooi->getCategorieVolgorde();
 
         $poules = $toernooi->poules()
             ->whereNotNull('afgeroepen_at')
