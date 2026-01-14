@@ -201,6 +201,13 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 
 **Presets opslaan:** Sla je configuratie op als eigen preset voor later gebruik.
 
+**Sortering bij laden eigen preset:** Categorieën worden automatisch gesorteerd:
+1. Leeftijd (jong → oud)
+2. Gewicht (licht → zwaar)
+3. Band (laag → hoog)
+
+Resultaat: bovenaan de lichtste mini's met witte band, onderaan de zwaarste senioren.
+
 ### Hoe Werkt de Dynamische Indeling?
 
 Het systeem verdeelt judoka's in 4 stappen:
