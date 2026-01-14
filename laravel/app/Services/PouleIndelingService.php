@@ -241,8 +241,9 @@ class PouleIndelingService
                 $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
                 $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
-                // Check if this category uses dynamic grouping (max_kg_verschil > 0 and no fixed weight classes)
-                $usesDynamic = !$gebruikGewichtsklassen && $this->usesDynamicGrouping($leeftijdsklasse);
+                // Check if this category uses dynamic grouping (max_kg_verschil > 0)
+                // Per-category setting overrides global gebruik_gewichtsklassen
+                $usesDynamic = $this->usesDynamicGrouping($leeftijdsklasse);
 
                 if ($usesDynamic) {
                     // DYNAMIC GROUPING: Use DynamischeIndelingService to create weight groups
