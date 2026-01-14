@@ -140,27 +140,8 @@
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
-                                @php
-                                    $label = $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse;
-                                    $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
-                                    $showRangesSeparate = true;
-
-                                    // Als label "lft-kg" bevat, vervang door actuele ranges
-                                    if (stripos($label, 'lft-kg') !== false) {
-                                        if (strtolower($label) === 'lft-kg') {
-                                            $label = $dynamicRange ?: 'Onbekend';
-                                        } else {
-                                            $label = str_ireplace('lft-kg', $dynamicRange, $label);
-                                        }
-                                        $showRangesSeparate = false;
-                                    }
-                                @endphp
-                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }} {{ $poule->gewichtsklasse }}</span>
-                                @if($showRangesSeparate)
-                                <span class="font-normal text-gray-500 text-xs ml-1" data-poule-ranges>@if($leeftijdRange || $gewichtRange)({{ $leeftijdRange }}@if($leeftijdRange && $gewichtRange), @endif{{ $gewichtRange }})@endif</span>
-                                @else
-                                <span class="font-normal text-gray-500 text-xs ml-1 hidden" data-poule-ranges></span>
-                                @endif
+                                {{-- Titel komt uit poule.titel (bevat label + ranges indien variabel) --}}
+                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->titel }}</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
@@ -636,25 +617,11 @@ document.addEventListener('DOMContentLoaded', function() {
             wedstrijdenEl.textContent = pouleData.judokas_count < 2 ? '-' : pouleData.aantal_wedstrijden;
         }
 
-        // Update leeftijd/gewicht ranges (only for regular poules)
+        // Update titel (only for regular poules, not eliminatie/kruisfinale)
         if (!isKruisfinale && !isEliminatie) {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
-            const rangeEl = pouleCard.querySelector('[data-poule-ranges]');
-
-            // Check of dit een dynamische titel is (bevat · wat duidt op lft-kg format)
-            const isDynamischeTitel = pouleData.titel && pouleData.titel.includes('·');
-
-            if (isDynamischeTitel && titelEl) {
-                // Dynamische titel: update titel, verberg aparte ranges
+            if (titelEl && pouleData.titel) {
                 titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
-                if (rangeEl) rangeEl.classList.add('hidden');
-            } else if (rangeEl) {
-                // Vaste titel: update alleen ranges tussen haakjes
-                const ranges = [];
-                if (pouleData.leeftijd_range) ranges.push(pouleData.leeftijd_range);
-                if (pouleData.gewicht_range) ranges.push(pouleData.gewicht_range);
-                rangeEl.textContent = ranges.length > 0 ? `(${ranges.join(', ')})` : '';
-                rangeEl.classList.remove('hidden');
             }
         }
 

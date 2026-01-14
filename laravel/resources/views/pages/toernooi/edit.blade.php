@@ -778,8 +778,13 @@
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[{{ $key }}]"
                                    value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
-                                   title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="checkbox" name="gewichtsklassen_toon_label[{{ $key }}]"
+                                   class="toon-label-checkbox"
+                                   {{ ($data['toon_label_in_titel'] ?? true) ? 'checked' : '' }}>
+                            <label class="text-gray-500 text-xs">in titel</label>
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
@@ -904,6 +909,7 @@
                     const key = item.dataset.key;
                     const leeftijd = parseInt(item.querySelector('.leeftijd-input').value) || 99;
                     const label = item.querySelector('.label-input').value;
+                    const toonLabel = item.querySelector('.toon-label-checkbox')?.checked ?? true;
                     const geslacht = item.querySelector('.geslacht-select')?.value || 'gemengd';
                     const maxKg = parseFloat(item.querySelector('.max-kg-input')?.value) || 0;
                     const maxLft = parseInt(item.querySelector('.max-lft-input')?.value) || 0;
@@ -912,7 +918,7 @@
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g) || [];
-                    data[key] = { label, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten };
+                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -1014,6 +1020,7 @@
                     div.draggable = true;
                     const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
                     const geslacht = item.geslacht || 'gemengd';
+                    const toonLabel = item.toon_label_in_titel ?? true;
                     const maxKg = item.max_kg_verschil || 0;
                     const maxLft = item.max_leeftijd_verschil || 0;
                     // Support both old band_tot and new band_filter
@@ -1039,8 +1046,13 @@
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
-                                       title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
+                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <input type="checkbox" name="gewichtsklassen_toon_label[${key}]"
+                                       class="toon-label-checkbox"
+                                       ${toonLabel ? 'checked' : ''}>
+                                <label class="text-gray-500 text-xs">in titel</label>
                             </div>
                             <div class="flex items-center gap-2">
                                 <select name="gewichtsklassen_geslacht[${key}]"
@@ -1382,9 +1394,15 @@
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${newKey}]"
-                                   value="lft-kg"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44"
-                                   title="Tip: 'lft-kg' wordt vervangen door actuele leeftijd-gewicht range">
+                                   value=""
+                                   placeholder="Categorie naam"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="checkbox" name="gewichtsklassen_toon_label[${newKey}]"
+                                   class="toon-label-checkbox"
+                                   checked>
+                            <label class="text-gray-500 text-xs">in titel</label>
                         </div>
                         <div class="flex items-center gap-2">
                             <select name="gewichtsklassen_geslacht[${newKey}]"

@@ -9,28 +9,34 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Service for distributing variable (lft-kg) categories over blocks
+ * Service for distributing variable categories over blocks
  *
  * Unlike BlokMatVerdelingService which works with fixed category labels,
- * this service handles dynamic categories where pools are sorted by
- * age → weight and split at optimal boundaries.
+ * this service handles dynamic categories (max_leeftijd_verschil > 0 or max_kg_verschil > 0)
+ * where pools are sorted by age → weight and split at optimal boundaries.
  */
 class VariabeleBlokVerdelingService
 {
     /**
-     * Check if toernooi has variable categories (lft-kg labels)
+     * Check if toernooi has variable categories (max_leeftijd_verschil > 0 or max_kg_verschil > 0)
      */
     public function heeftVariabeleCategorieen(Toernooi $toernooi): bool
     {
-        // Check poules for dynamic titles (contain " · " separator or "lft-kg")
-        return $toernooi->poules()
-            ->where(function ($q) {
-                $q->where('titel', 'like', '%lft-kg%')
-                    ->orWhere('titel', 'like', '% · %')
-                    ->orWhere('leeftijdsklasse', 'like', '%lft-kg%')
-                    ->orWhere('leeftijdsklasse', 'like', '%j · %');
-            })
-            ->exists();
+        // Check category config for variable settings
+        $config = $toernooi->getPresetConfig();
+        if (empty($config)) {
+            return false;
+        }
+
+        foreach ($config as $categorie) {
+            $maxLftVerschil = (int) ($categorie['max_leeftijd_verschil'] ?? 0);
+            $maxKgVerschil = (float) ($categorie['max_kg_verschil'] ?? 0);
+            if ($maxLftVerschil > 0 || $maxKgVerschil > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -523,24 +529,24 @@ class VariabeleBlokVerdelingService
     }
 
     /**
-     * Extract label prefix from leeftijdsklasse (e.g., "M" from "M lft-kg", "Beginners" from "Beginners lft-kg")
-     * Returns null if no prefix (leeftijdsklasse starts with number or "lft-kg")
+     * Extract label prefix from leeftijdsklasse (e.g., "M" from "M 9-10j", "Beginners" from "Beginners 9-10j 28-32kg")
+     * Returns null if no prefix (leeftijdsklasse starts with number)
      */
     private function extractLabelPrefix(string $leeftijdsklasse): ?string
     {
-        // If starts with number or "lft-kg", no prefix
-        if (preg_match('/^[\d]/', $leeftijdsklasse) || stripos($leeftijdsklasse, 'lft-kg') === 0) {
+        // If starts with number, no prefix
+        if (preg_match('/^[\d]/', $leeftijdsklasse)) {
             return null;
         }
 
-        // Extract text before "lft-kg" or before first digit
-        if (preg_match('/^([A-Za-z]+(?:\s+[A-Za-z]+)*)\s+(?:lft-kg|\d)/', $leeftijdsklasse, $matches)) {
+        // Extract text before first digit (age/weight range)
+        if (preg_match('/^([A-Za-z]+(?:\s+[A-Za-z]+)*)\s+\d/', $leeftijdsklasse, $matches)) {
             return trim($matches[1]);
         }
 
-        // If contains " · ", it's already resolved - extract prefix before space+digit
-        if (preg_match('/^([A-Za-z]+)\s+\d/', $leeftijdsklasse, $matches)) {
-            return trim($matches[1]);
+        // If no digit found, return the whole string as prefix
+        if (preg_match('/^[A-Za-z]+/', $leeftijdsklasse)) {
+            return trim($leeftijdsklasse);
         }
 
         return null;

@@ -1115,91 +1115,73 @@ class PouleIndelingService
 
     /**
      * Create standardized pool title
-     * Dynamic title based on actual judoka values:
-     * - "Jeugd 9-10j 30-33kg" (dynamic ranges)
-     * - "Mini's M 7-8j 24-27kg" (with gender)
+     *
+     * Title composition based on category config:
+     * - Label: optional via toon_label_in_titel checkbox
+     * - Age range: only if max_leeftijd_verschil > 0 (variable)
+     * - Weight: fixed class OR variable range based on max_kg_verschil
+     *
+     * Examples:
+     * - "Mini's U7 -26kg" (label on, fixed category)
+     * - "Mini's U7 28-32kg" (label on, variable weight)
+     * - "9-10j 28-32kg" (label off, both variable)
      */
     private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null): string
     {
-        // Get label from tournament config if available
-        $lk = $leeftijdsklasse ?: 'Onbekend';
+        $parts = [];
+
+        // Get category config for this leeftijdsklasse
+        $categorieConfig = null;
         if ($gewichtsklassenConfig) {
-            // Find matching config key based on leeftijdsklasse
             $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-            if ($configKey && isset($gewichtsklassenConfig[$configKey]['label'])) {
-                $lk = $gewichtsklassenConfig[$configKey]['label'];
+            if ($configKey && isset($gewichtsklassenConfig[$configKey])) {
+                $categorieConfig = $gewichtsklassenConfig[$configKey];
             }
         }
 
-        // Gender label (short form)
-        $geslachtLabel = match ($geslacht) {
-            'M' => 'M',
-            'V' => 'V',
-            default => null,
-        };
+        // 1. Label (optional via checkbox, default true)
+        $toonLabel = $categorieConfig['toon_label_in_titel'] ?? true;
+        $label = $categorieConfig['label'] ?? $leeftijdsklasse;
+        if ($toonLabel && !empty($label)) {
+            $parts[] = $label;
+        }
 
-        // Calculate age range from judokas
-        $leeftijdRange = '';
-        if (!empty($pouleJudokas)) {
+        // 2. Gender (if not mixed)
+        if ($geslacht && $geslacht !== 'gemengd') {
+            $parts[] = $geslacht; // 'M' or 'V'
+        }
+
+        // 3. Age range (only if variable: max_leeftijd_verschil > 0)
+        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+        if ($maxLftVerschil > 0 && !empty($pouleJudokas)) {
             $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
             if (!empty($leeftijden)) {
-                $minLeeftijd = min($leeftijden);
-                $maxLeeftijd = max($leeftijden);
-                $leeftijdRange = $minLeeftijd == $maxLeeftijd
-                    ? "{$minLeeftijd}j"
-                    : "{$minLeeftijd}-{$maxLeeftijd}j";
+                $min = min($leeftijden);
+                $max = max($leeftijden);
+                $parts[] = $min == $max ? "{$min}j" : "{$min}-{$max}j";
             }
         }
 
-        // Calculate weight range from judokas
-        $gewichtRange = '';
-        if ($gebruikGewichtsklassen && !empty($gewichtsklasse)) {
-            // With weight classes: show weight class
-            $gewichtRange = $gewichtsklasse;
-            if (!str_contains($gewichtRange, 'kg')) {
-                $gewichtRange .= 'kg';
-            }
-        } elseif (!empty($pouleJudokas)) {
-            // Without weight classes: calculate range from judokas
+        // 4. Weight (fixed class OR variable range)
+        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+        if ($maxKgVerschil > 0 && !empty($pouleJudokas)) {
+            // Variable: calculate range from judokas
             $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
             if (!empty($gewichten)) {
-                $minGewicht = min($gewichten);
-                $maxGewicht = max($gewichten);
-                $gewichtRange = $minGewicht == $maxGewicht
-                    ? "{$minGewicht}kg"
-                    : "{$minGewicht}-{$maxGewicht}kg";
+                $min = min($gewichten);
+                $max = max($gewichten);
+                $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
             }
+        } elseif (!empty($gewichtsklasse)) {
+            // Fixed: use weight class from preset
+            $gk = $gewichtsklasse;
+            if (!str_contains($gk, 'kg')) {
+                $gk .= 'kg';
+            }
+            $parts[] = $gk;
         }
 
-        // Handle dynamic placeholder "lft-kg"
-        // If label contains "lft-kg", replace it with actual ranges
-        $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
-
-        if (strtolower($lk) === 'lft-kg') {
-            // Label is exactly "lft-kg" - use only dynamic range
-            $lk = $dynamicRange ?: 'Onbekend';
-            $leeftijdRange = ''; // Already in $lk
-            $gewichtRange = '';  // Already in $lk
-        } elseif (stripos($lk, 'lft-kg') !== false) {
-            // Label contains "lft-kg" - replace placeholder
-            $lk = str_ireplace('lft-kg', $dynamicRange, $lk);
-            $leeftijdRange = ''; // Already in $lk
-            $gewichtRange = '';  // Already in $lk
-        }
-
-        // Build title: "Jeugd M 9-10j 30-33kg"
-        $parts = [$lk];
-        if ($geslachtLabel) {
-            $parts[] = $geslachtLabel;
-        }
-        if ($leeftijdRange) {
-            $parts[] = $leeftijdRange;
-        }
-        if ($gewichtRange) {
-            $parts[] = $gewichtRange;
-        }
-
-        return implode(' ', $parts);
+        return implode(' ', $parts) ?: 'Onbekend';
     }
 
     /**
