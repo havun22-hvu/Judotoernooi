@@ -782,12 +782,17 @@ class DynamischeIndelingService
         foreach ($gesorteerd as $judoka) {
             $gewicht = $this->getEffectiefGewicht($judoka);
 
-            // Check of judoka in huidige poule past (max kg verschil)
+            // Check of judoka in huidige poule past (max kg verschil EN max 5 judoka's)
             $pastInPoule = true;
             if (!empty($huidigePoule)) {
+                // Check gewichtslimiet
                 $nieuwMin = min($minGewichtInPoule, $gewicht);
                 $nieuwMax = max($maxGewichtInPoule, $gewicht);
                 if (($nieuwMax - $nieuwMin) > $maxKgVerschil) {
+                    $pastInPoule = false;
+                }
+                // Check poule grootte (max 5 judoka's is ideaal)
+                if (count($huidigePoule) >= 5) {
                     $pastInPoule = false;
                 }
             }

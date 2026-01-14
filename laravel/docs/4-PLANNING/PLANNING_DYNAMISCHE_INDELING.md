@@ -1294,3 +1294,92 @@ Bestaande poules met `lft-kg` in titel:
 
 2. **Backwards compatibility:** Oude presets zonder `toon_label_in_titel`
    - Mitigatie: default `true` als veld ontbreekt
+
+---
+
+## Implementatieplan: Betere Poule Grootte bij Variabele Categorieën (15 jan 2026)
+
+### Probleem
+
+Bij variabele categorieën (`max_kg_verschil > 0`) worden poules niet optimaal verdeeld:
+- **Huidige aanpak:** Sequentieel vullen tot gewichtslimiet bereikt (kan 7-8 judoka's worden)
+- **Gewenst:** Poules van 5 (ideaal) binnen de harde limieten
+
+### Kernprincipes
+
+1. **Ranges zijn HARD** - leeftijd en gewicht limieten worden NOOIT overschreden
+2. **Doel is 5 judoka's** - maar alleen als het binnen de limieten past
+3. **Geen magic fixes** - als indeling niet goed is, moet organisator ranges aanpassen
+
+### Algoritme
+
+```
+1. SORTEER alle judoka's:
+   - Primair: leeftijd (jong → oud)
+   - Secundair: gewicht (licht → zwaar)
+
+2. LOOP door gesorteerde lijst:
+   Voor elke judoka:
+   - Check of judoka in huidige poule past:
+     a) Leeftijdsverschil ≤ max_leeftijd_verschil
+     b) Gewichtsverschil ≤ max_kg_verschil
+     c) Poule heeft < 5 judoka's
+
+   - Als ALLE checks OK: voeg toe aan poule
+   - Anders: start nieuwe poule met deze judoka
+
+3. RESULTAAT: poules van max 5 judoka's binnen harde limieten
+```
+
+### Verschil met huidige code
+
+| Aspect | Huidige code | Nieuwe code |
+|--------|--------------|-------------|
+| Stop criterium | Alleen gewichtslimiet | Gewichtslimiet OF 5 judoka's |
+| Poule grootte | Onbeperkt (7, 8, 9...) | Max 5 |
+| Limieten | Hard | Hard (ongewijzigd) |
+
+### Voorbeeld
+
+```
+Input: 12 judoka's, max 2j leeftijd, max 3kg gewicht
+Gesorteerd: [8j/25kg, 8j/26kg, 8j/28kg, 9j/27kg, 9j/29kg, 9j/30kg,
+             10j/31kg, 10j/32kg, 10j/34kg, 11j/33kg, 11j/35kg, 11j/36kg]
+
+Poule 1: [8j/25kg, 8j/26kg, 8j/28kg, 9j/27kg, 9j/29kg] → 5 judoka's, 8-9j, 25-29kg ✓
+Poule 2: [9j/30kg, 10j/31kg, 10j/32kg, 10j/34kg] → 4 judoka's, 9-10j, 30-34kg ✓
+         (11j/33kg past niet: leeftijd 9-11 = 2j OK, maar gewicht 30-33 = 3kg OK...
+          maar poule 2 is al bij 34kg, dus 30-34=4kg zou overschrijden)
+Poule 3: [11j/33kg, 11j/35kg, 11j/36kg] → 3 judoka's, 11j, 33-36kg ✓
+
+Resultaat: [5, 4, 3] binnen alle limieten
+```
+
+### Implementatie
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `DynamischeIndelingService.php` | `maakPoules()` aanpassen: stop bij 5 judoka's |
+
+### Code Wijziging
+
+In `maakPoules()`, voeg poule grootte check toe:
+
+```php
+// BESTAAND: check gewichtslimiet
+if (($nieuwMax - $nieuwMin) > $maxKgVerschil) {
+    $pastInPoule = false;
+}
+
+// NIEUW: check ook poule grootte (max 5)
+if (count($huidigePoule) >= 5) {
+    $pastInPoule = false;
+}
+```
+
+### Wat als indeling niet goed is?
+
+Als er veel kleine poules (2-3) ontstaan:
+- **Oorzaak:** Ranges te strak voor de deelnemers
+- **Oplossing:** Organisator past `max_kg_verschil` of `max_leeftijd_verschil` aan
+- **Geen automatische fix:** Systeem overschrijdt nooit de ingestelde limieten
