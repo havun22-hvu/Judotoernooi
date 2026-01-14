@@ -950,10 +950,12 @@ Dit was verwarrend voor gebruikers.
 
 ### Drag & Drop Poule Statistieken (7 jan 2026) ✓
 Bij verslepen van judoka's tussen poules worden nu ook bijgewerkt:
-- [x] Aantal judoka's
-- [x] Aantal wedstrijden
-- [x] Min-max leeftijd
-- [x] Min-max gewicht
+- [x] Aantal judoka's per poule
+- [x] Aantal wedstrijden per poule
+- [x] Min-max leeftijd per poule
+- [x] Min-max gewicht per poule
+- [x] Totaal statistieken bovenaan pagina (wedstrijden, judoka's, problemen) ← 14 jan 2026
+- [x] Poule titel (bij variabele categorie)
 
 ### Bugfix: Clubspreiding respecteert prioriteiten (8 jan 2026) ✓
 **Probleem:** Bij clubspreiding werden judoka's met groot gewichtsverschil (20kg vs 26kg)
