@@ -415,8 +415,11 @@ class ToernooiController extends Controller
         $totaalWedstrijden = $poules->sum(fn($p) => $p->wedstrijden->count());
         $gespeeldeWedstrijden = $poules->sum(fn($p) => $p->wedstrijden->whereNotNull('winnaar_id')->count());
 
-        // Leeftijdsklassen breakdown
-        $perLeeftijdsklasse = $judokas->groupBy('leeftijdsklasse')->map(fn($g) => $g->count())->sortKeys();
+        // Leeftijdsklassen breakdown - sort by sort_categorie (young to old)
+        $perLeeftijdsklasse = $judokas
+            ->sortBy('sort_categorie')
+            ->groupBy('leeftijdsklasse')
+            ->map(fn($g) => $g->count());
 
         // Gender breakdown
         $jongens = $judokas->where('geslacht', 'M')->count();

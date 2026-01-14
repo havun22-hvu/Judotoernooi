@@ -188,24 +188,13 @@ class ToernooiService
 
     private function getStatistiekenPerLeeftijdsklasse(Toernooi $toernooi): array
     {
-        $counts = $toernooi->judokas()
-            ->selectRaw('leeftijdsklasse, COUNT(*) as aantal')
+        // Sort by sort_categorie (young to old) - respects preset order
+        return $toernooi->judokas()
+            ->selectRaw('leeftijdsklasse, MIN(sort_categorie) as sort_order, COUNT(*) as aantal')
             ->groupBy('leeftijdsklasse')
+            ->orderBy('sort_order')
             ->pluck('aantal', 'leeftijdsklasse')
             ->toArray();
-
-        // Sort by extracting U-number from leeftijdsklasse (e.g., "U11 Jongens" -> 11)
-        // Then by gender (Meisjes before Jongens alphabetically)
-        uksort($counts, function ($a, $b) {
-            $numA = preg_match('/U(\d+)/', $a, $m) ? (int) $m[1] : 99;
-            $numB = preg_match('/U(\d+)/', $b, $m) ? (int) $m[1] : 99;
-            if ($numA !== $numB) {
-                return $numA <=> $numB;
-            }
-            return $a <=> $b; // Alphabetical within same age
-        });
-
-        return $counts;
     }
 
     private function getStatistiekenPerBlok(Toernooi $toernooi): array
