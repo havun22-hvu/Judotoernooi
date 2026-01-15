@@ -779,119 +779,14 @@
                 $gewichtsklassen = $toernooi->getAlleGewichtsklassen();
             @endphp
 
-            @php
-                $wedstrijdSysteem = old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? [];
-            @endphp
+            <!-- Container wordt gevuld door JavaScript met één template voor alle categorieën -->
+            <div id="gewichtsklassen-container" class="space-y-3"></div>
 
-            <div id="gewichtsklassen-container" class="space-y-3">
-                @foreach($gewichtsklassen as $key => $data)
-                @php
-                    $geslacht = $data['geslacht'] ?? 'gemengd';
-                    $maxKgVerschil = $data['max_kg_verschil'] ?? 0;
-                    $maxLftVerschil = $data['max_leeftijd_verschil'] ?? 0;
-                    // Support both old band_tot and new band_filter
-                    $bandFilter = $data['band_filter'] ?? $data['band_tot'] ?? null;
-                    // Convert old format (wit, geel) to new format (tm_wit, tm_geel)
-                    if ($bandFilter && !str_contains($bandFilter, '_')) {
-                        $bandFilter = 'tm_' . $bandFilter;
-                    }
-                @endphp
-                <div class="gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move" data-key="{{ $key }}" draggable="true">
-                    <div class="flex flex-wrap items-center gap-3 mb-2">
-                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Naam:</label>
-                            <input type="text" name="gewichtsklassen_label[{{ $key }}]"
-                                   value="{{ $data['label'] }}"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <input type="checkbox" name="gewichtsklassen_toon_label[{{ $key }}]"
-                                   class="toon-label-checkbox"
-                                   {{ ($data['toon_label_in_titel'] ?? true) ? 'checked' : '' }}>
-                            <label class="text-gray-500 text-xs">in titel</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
-                            <input type="number" name="gewichtsklassen_leeftijd[{{ $key }}]"
-                                   value="{{ ($data['max_leeftijd'] ?? 99) < 99 ? $data['max_leeftijd'] : '' }}"
-                                   placeholder="99"
-                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
-                                   min="5" max="99">
-                            <span class="text-xs text-gray-500">jr</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select name="gewichtsklassen_geslacht[{{ $key }}]"
-                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
-                                <option value="gemengd" {{ $geslacht == 'gemengd' ? 'selected' : '' }}>M&V</option>
-                                <option value="M" {{ $geslacht == 'M' ? 'selected' : '' }}>M</option>
-                                <option value="V" {{ $geslacht == 'V' ? 'selected' : '' }}>V</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            
-                            <select name="wedstrijd_systeem[{{ $key }}]"
-                                    class="systeem-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="poules" {{ ($wedstrijdSysteem[$key] ?? 'poules') == 'poules' ? 'selected' : '' }}>Poules</option>
-                                <option value="poules_kruisfinale" {{ ($wedstrijdSysteem[$key] ?? '') == 'poules_kruisfinale' ? 'selected' : '' }}>Kruisfinale</option>
-                                <option value="eliminatie" {{ ($wedstrijdSysteem[$key] ?? '') == 'eliminatie' ? 'selected' : '' }}>Eliminatie</option>
-                            </select>
-                        </div>
-                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
-                            <input type="number" name="gewichtsklassen_max_kg[{{ $key }}]"
-                                   value="{{ $maxKgVerschil }}"
-                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                   min="0" max="10" step="0.5"
-                                   onchange="toggleGewichtsklassen(this)">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
-                            <input type="number" name="gewichtsklassen_max_lft[{{ $key }}]"
-                                   value="{{ $maxLftVerschil }}"
-                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                   min="0" max="5" step="1"
-                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Band:</label>
-                            <select name="gewichtsklassen_band_filter[{{ $key }}]"
-                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" {{ !$bandFilter ? 'selected' : '' }}>Alle banden</option>
-                                <optgroup label="t/m (beginners)">
-                                    <option value="tm_wit" {{ $bandFilter == 'tm_wit' ? 'selected' : '' }}>t/m wit</option>
-                                    <option value="tm_geel" {{ $bandFilter == 'tm_geel' ? 'selected' : '' }}>t/m geel</option>
-                                    <option value="tm_oranje" {{ $bandFilter == 'tm_oranje' ? 'selected' : '' }}>t/m oranje</option>
-                                    <option value="tm_groen" {{ $bandFilter == 'tm_groen' ? 'selected' : '' }}>t/m groen</option>
-                                    <option value="tm_blauw" {{ $bandFilter == 'tm_blauw' ? 'selected' : '' }}>t/m blauw</option>
-                                    <option value="tm_bruin" {{ $bandFilter == 'tm_bruin' ? 'selected' : '' }}>t/m bruin</option>
-                                </optgroup>
-                                <optgroup label="vanaf (gevorderden)">
-                                    <option value="vanaf_geel" {{ $bandFilter == 'vanaf_geel' ? 'selected' : '' }}>vanaf geel</option>
-                                    <option value="vanaf_oranje" {{ $bandFilter == 'vanaf_oranje' ? 'selected' : '' }}>vanaf oranje</option>
-                                    <option value="vanaf_groen" {{ $bandFilter == 'vanaf_groen' ? 'selected' : '' }}>vanaf groen</option>
-                                    <option value="vanaf_blauw" {{ $bandFilter == 'vanaf_blauw' ? 'selected' : '' }}>vanaf blauw</option>
-                                    <option value="vanaf_bruin" {{ $bandFilter == 'vanaf_bruin' ? 'selected' : '' }}>vanaf bruin</option>
-                                    <option value="vanaf_zwart" {{ $bandFilter == 'vanaf_zwart' ? 'selected' : '' }}>vanaf zwart</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="gewichten-container flex-1 {{ $maxKgVerschil > 0 ? 'hidden' : '' }}">
-                            <input type="text" name="gewichtsklassen[{{ $key }}]"
-                                   value="{{ implode(', ', $data['gewichten'] ?? []) }}"
-                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
-                                   placeholder="-20, -23, -26, +26">
-                        </div>
-                        <div class="dynamisch-label text-sm text-blue-600 italic {{ $maxKgVerschil > 0 ? '' : 'hidden' }}">
-                            Dynamische indeling
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
+            <!-- Initiële data voor JavaScript -->
+            <script>
+                window.initieleGewichtsklassen = @json($gewichtsklassen);
+                window.initieleWedstrijdSysteem = @json(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? []);
+            </script>
 
             <div class="mt-4 flex gap-2">
                 <button type="button" id="add-categorie" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
@@ -1032,126 +927,138 @@
                 return sorted;
             }
 
+            // Single template function for all categories (DRY principle)
+            function createCategorieElement(key, item) {
+                const div = document.createElement('div');
+                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
+                div.dataset.key = key;
+                div.draggable = true;
+
+                const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
+                const label = item.label || '';
+                const geslacht = item.geslacht || 'gemengd';
+                const toonLabel = item.toon_label_in_titel ?? true;
+                const maxKg = item.max_kg_verschil || 0;
+                const maxLft = item.max_leeftijd_verschil || 0;
+
+                // Support both old band_tot and new band_filter
+                let bandFilter = item.band_filter || item.band_tot || '';
+                if (bandFilter && !bandFilter.includes('_')) {
+                    bandFilter = 'tm_' + bandFilter;
+                }
+
+                const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
+                const dynamischHidden = maxKg > 0 ? '' : 'hidden';
+
+                div.innerHTML = `
+                    <div class="flex flex-wrap items-center gap-3 mb-2">
+                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Naam:</label>
+                            <input type="text" name="gewichtsklassen_label[${key}]"
+                                   value="${label}"
+                                   placeholder="Categorie naam"
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="checkbox" name="gewichtsklassen_toon_label[${key}]"
+                                   class="toon-label-checkbox"
+                                   ${toonLabel ? 'checked' : ''}>
+                            <label class="text-gray-500 text-xs">in titel</label>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
+                            <input type="number" name="gewichtsklassen_leeftijd[${key}]"
+                                   value="${leeftijdValue}"
+                                   placeholder="99"
+                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                   min="5" max="99">
+                            <span class="text-xs text-gray-500">jr</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select name="gewichtsklassen_geslacht[${key}]"
+                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
+                                <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
+                                <option value="M" ${geslacht === 'M' ? 'selected' : ''}>M</option>
+                                <option value="V" ${geslacht === 'V' ? 'selected' : ''}>V</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select name="wedstrijd_systeem[${key}]"
+                                    class="systeem-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="poules">Poules</option>
+                                <option value="poules_kruisfinale">Kruisfinale</option>
+                                <option value="eliminatie">Eliminatie</option>
+                            </select>
+                        </div>
+                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
+                            <input type="number" name="gewichtsklassen_max_kg[${key}]"
+                                   value="${maxKg}"
+                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   min="0" max="10" step="0.5"
+                                   onchange="toggleGewichtsklassen(this)">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
+                            <input type="number" name="gewichtsklassen_max_lft[${key}]"
+                                   value="${maxLft}"
+                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   min="0" max="5" step="1"
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm">Band:</label>
+                            <select name="gewichtsklassen_band_filter[${key}]"
+                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
+                                <option value="" ${!bandFilter ? 'selected' : ''}>Alle banden</option>
+                                <optgroup label="t/m (beginners)">
+                                    <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>t/m wit</option>
+                                    <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>t/m geel</option>
+                                    <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>t/m oranje</option>
+                                    <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>t/m groen</option>
+                                    <option value="tm_blauw" ${bandFilter === 'tm_blauw' ? 'selected' : ''}>t/m blauw</option>
+                                    <option value="tm_bruin" ${bandFilter === 'tm_bruin' ? 'selected' : ''}>t/m bruin</option>
+                                </optgroup>
+                                <optgroup label="vanaf (gevorderden)">
+                                    <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>vanaf geel</option>
+                                    <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>vanaf oranje</option>
+                                    <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>vanaf groen</option>
+                                    <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>vanaf blauw</option>
+                                    <option value="vanaf_bruin" ${bandFilter === 'vanaf_bruin' ? 'selected' : ''}>vanaf bruin</option>
+                                    <option value="vanaf_zwart" ${bandFilter === 'vanaf_zwart' ? 'selected' : ''}>vanaf zwart</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="gewichten-container flex-1 ${gewichtenHidden}">
+                            <input type="text" name="gewichtsklassen[${key}]"
+                                   value="${(item.gewichten || []).join(', ')}"
+                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
+                                   placeholder="-20, -23, -26, +26">
+                        </div>
+                        <div class="dynamisch-label text-sm text-blue-600 italic ${dynamischHidden}">
+                            Dynamische indeling
+                        </div>
+                    </div>
+                `;
+                return div;
+            }
+
             function renderCategorieen(data, sorteer = true) {
                 container.innerHTML = '';
-                let index = 0;
                 const entries = sorteer ? sorteerCategorieen(data) : Object.entries(data);
                 for (const [key, item] of entries) {
-                    const div = document.createElement('div');
-                    div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
-                    div.dataset.key = key;
-                    div.draggable = true;
-                    const leeftijdValue = item.max_leeftijd < 99 ? item.max_leeftijd : '';
-                    const geslacht = item.geslacht || 'gemengd';
-                    const toonLabel = item.toon_label_in_titel ?? true;
-                    const maxKg = item.max_kg_verschil || 0;
-                    const maxLft = item.max_leeftijd_verschil || 0;
-                    // Support both old band_tot and new band_filter
-                    let bandFilter = item.band_filter || item.band_tot || '';
-                    // Convert old format to new format
-                    if (bandFilter && !bandFilter.includes('_')) {
-                        bandFilter = 'tm_' + bandFilter;
-                    }
-                    const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
-                    const dynamischHidden = maxKg > 0 ? '' : 'hidden';
-                    div.innerHTML = `
-                        <div class="flex flex-wrap items-center gap-3 mb-2">
-                            <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Naam:</label>
-                                <input type="text" name="gewichtsklassen_label[${key}]"
-                                       value="${item.label}"
-                                       class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <input type="checkbox" name="gewichtsklassen_toon_label[${key}]"
-                                       class="toon-label-checkbox"
-                                       ${toonLabel ? 'checked' : ''}>
-                                <label class="text-gray-500 text-xs">in titel</label>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
-                                <input type="number" name="gewichtsklassen_leeftijd[${key}]"
-                                       value="${leeftijdValue}"
-                                       placeholder="99"
-                                       class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
-                                       min="5" max="99">
-                                <span class="text-xs text-gray-500">jr</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <select name="gewichtsklassen_geslacht[${key}]"
-                                        class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
-                                    <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
-                                    <option value="M" ${geslacht === 'M' ? 'selected' : ''}>M</option>
-                                    <option value="V" ${geslacht === 'V' ? 'selected' : ''}>V</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-2">
-
-                                <select name="wedstrijd_systeem[${key}]"
-                                        class="border rounded px-2 py-1 text-sm bg-white">
-                                    <option value="poules">Poules</option>
-                                    <option value="poules_kruisfinale">Kruisfinale</option>
-                                    <option value="eliminatie">Eliminatie</option>
-                                </select>
-                            </div>
-                            <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-4">
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
-                                <input type="number" name="gewichtsklassen_max_kg[${key}]"
-                                       value="${maxKg}"
-                                       class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                       min="0" max="10" step="0.5"
-                                       onchange="toggleGewichtsklassen(this)">
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
-                                <input type="number" name="gewichtsklassen_max_lft[${key}]"
-                                       value="${maxLft}"
-                                       class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                       min="0" max="5" step="1"
-                                       title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm">Band:</label>
-                                <select name="gewichtsklassen_band_filter[${key}]"
-                                        class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
-                                    <option value="" ${!bandFilter ? 'selected' : ''}>Alle banden</option>
-                                    <optgroup label="t/m (beginners)">
-                                        <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>t/m wit</option>
-                                        <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>t/m geel</option>
-                                        <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>t/m oranje</option>
-                                        <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>t/m groen</option>
-                                        <option value="tm_blauw" ${bandFilter === 'tm_blauw' ? 'selected' : ''}>t/m blauw</option>
-                                        <option value="tm_bruin" ${bandFilter === 'tm_bruin' ? 'selected' : ''}>t/m bruin</option>
-                                    </optgroup>
-                                    <optgroup label="vanaf (gevorderden)">
-                                        <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>vanaf geel</option>
-                                        <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>vanaf oranje</option>
-                                        <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>vanaf groen</option>
-                                        <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>vanaf blauw</option>
-                                        <option value="vanaf_bruin" ${bandFilter === 'vanaf_bruin' ? 'selected' : ''}>vanaf bruin</option>
-                                        <option value="vanaf_zwart" ${bandFilter === 'vanaf_zwart' ? 'selected' : ''}>vanaf zwart</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="gewichten-container flex-1 ${gewichtenHidden}">
-                                <input type="text" name="gewichtsklassen[${key}]"
-                                       value="${(item.gewichten || []).join(', ')}"
-                                       class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
-                                       placeholder="-20, -23, -26, +26">
-                            </div>
-                            <div class="dynamisch-label text-sm text-blue-600 italic ${dynamischHidden}">
-                                Dynamische indeling
-                            </div>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                    index++;
+                    container.appendChild(createCategorieElement(key, item));
                 }
                 updateJsonInput();
+            }
+
+            // Initial load - render saved categories
+            if (window.initieleGewichtsklassen && Object.keys(window.initieleGewichtsklassen).length > 0) {
+                renderCategorieen(window.initieleGewichtsklassen, false);
             }
 
             // Eigen presets
@@ -1384,109 +1291,21 @@
             window.savePreset = savePreset;
             window.hidePresetModal = hidePresetModal;
 
-            // Add category
+            // Add category - uses same template function as renderCategorieen (DRY)
             document.getElementById('add-categorie').addEventListener('click', () => {
-                const items = container.querySelectorAll('.gewichtsklasse-item');
                 const newKey = 'custom_' + Date.now();
-                const div = document.createElement('div');
-                div.className = 'gewichtsklasse-item border rounded-lg p-4 bg-gray-50 cursor-move';
-                div.dataset.key = newKey;
-                div.draggable = true;
-                div.innerHTML = `
-                    <div class="flex flex-wrap items-center gap-3 mb-2">
-                        <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Naam:</label>
-                            <input type="text" name="gewichtsklassen_label[${newKey}]"
-                                   value=""
-                                   placeholder="Categorie naam"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <input type="checkbox" name="gewichtsklassen_toon_label[${newKey}]"
-                                   class="toon-label-checkbox"
-                                   checked>
-                            <label class="text-gray-500 text-xs">in titel</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
-                            <input type="number" name="gewichtsklassen_leeftijd[${newKey}]"
-                                   value=""
-                                   placeholder="99"
-                                   class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
-                                   min="5" max="99">
-                            <span class="text-xs text-gray-500">jr</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select name="gewichtsklassen_geslacht[${newKey}]"
-                                    class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
-                                <option value="gemengd" selected>M&V</option>
-                                <option value="M">M</option>
-                                <option value="V">V</option>
-                            </select>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <select name="wedstrijd_systeem[${newKey}]"
-                                    class="border rounded px-2 py-1 text-sm bg-white">
-                                <option value="poules" selected>Poules</option>
-                                <option value="poules_kruisfinale">Kruisfinale</option>
-                                <option value="eliminatie">Eliminatie</option>
-                            </select>
-                        </div>
-                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-4">
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
-                            <input type="number" name="gewichtsklassen_max_kg[${newKey}]"
-                                   value="0"
-                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                   min="0" max="10" step="0.5"
-                                   onchange="toggleGewichtsklassen(this)">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
-                            <input type="number" name="gewichtsklassen_max_lft[${newKey}]"
-                                   value="0"
-                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                   min="0" max="5" step="1"
-                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Band:</label>
-                            <select name="gewichtsklassen_band_filter[${newKey}]"
-                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" selected>Alle banden</option>
-                                <optgroup label="t/m (beginners)">
-                                    <option value="tm_wit">t/m wit</option>
-                                    <option value="tm_geel">t/m geel</option>
-                                    <option value="tm_oranje">t/m oranje</option>
-                                    <option value="tm_groen">t/m groen</option>
-                                    <option value="tm_blauw">t/m blauw</option>
-                                    <option value="tm_bruin">t/m bruin</option>
-                                </optgroup>
-                                <optgroup label="vanaf (gevorderden)">
-                                    <option value="vanaf_geel">vanaf geel</option>
-                                    <option value="vanaf_oranje">vanaf oranje</option>
-                                    <option value="vanaf_groen">vanaf groen</option>
-                                    <option value="vanaf_blauw">vanaf blauw</option>
-                                    <option value="vanaf_bruin">vanaf bruin</option>
-                                    <option value="vanaf_zwart">vanaf zwart</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="gewichten-container flex-1 hidden">
-                            <input type="text" name="gewichtsklassen[${newKey}]"
-                                   value=""
-                                   class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
-                                   placeholder="-20, -23, -26, +26">
-                        </div>
-                        <div class="dynamisch-label text-sm text-blue-600 italic">
-                            Dynamische indeling
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
+                // Default values for new category (dynamic grouping enabled)
+                const newItem = {
+                    label: '',
+                    max_leeftijd: 99,
+                    geslacht: 'gemengd',
+                    max_kg_verschil: 3,
+                    max_leeftijd_verschil: 2,
+                    band_filter: '',
+                    gewichten: [],
+                    toon_label_in_titel: true
+                };
+                container.appendChild(createCategorieElement(newKey, newItem));
                 updateJsonInput();
             });
 
