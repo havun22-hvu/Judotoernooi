@@ -855,7 +855,7 @@ return false;
 
 ### Automatische geslacht detectie uit label (14 jan 2026)
 
-Als `geslacht=gemengd` maar het label bevat geslacht-indicatie, wordt dit automatisch afgeleid:
+Als `geslacht` **niet is ingevuld** (leeg/null) maar het label bevat geslacht-indicatie, wordt dit automatisch afgeleid:
 
 | Label bevat | Wordt behandeld als |
 |-------------|---------------------|
@@ -864,11 +864,24 @@ Als `geslacht=gemengd` maar het label bevat geslacht-indicatie, wordt dit automa
 
 **Voorbeeld:**
 ```
-u15_d_groen_plus: label="U15 Dames Groen+", geslacht=gemengd
+u15_d_groen_plus: label="U15 Dames Groen+", geslacht=null
 → Code detecteert "Dames" in label → behandelt als geslacht=V
 ```
 
 Dit voorkomt fouten wanneer organisator vergeet geslacht in te vullen.
+
+**BELANGRIJK (fix 15 jan 2026):** Als `geslacht` **EXPLICIET** op `'gemengd'` staat, triggert de auto-detect NIET. Dit voorkomt dat een categorie "Jeugd" met key `u21_d` per ongeluk alleen vrouwen krijgt vanwege de `_d` suffix.
+
+```php
+// Code logica (PouleIndelingService.php:710-723)
+$originalGeslacht = strtolower($config['geslacht'] ?? '');
+$isExplicitGemengd = $originalGeslacht === 'gemengd';
+
+if ($configGeslacht === 'GEMENGD' && !$isExplicitGemengd) {
+    // Auto-detect ALLEEN als geslacht niet expliciet is ingevuld
+    // ...
+}
+```
 
 ### Na kopie van andere database
 
