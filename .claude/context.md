@@ -347,45 +347,53 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 14 januari 2026
+## Laatste Sessie: 15 januari 2026
 
 ### Wat is gedaan:
-- **Lege poules naar wedstrijddag**
-  - Filter verwijderd die lege poules uitsloot
-  - Nu kunnen lege poules (bijv. Mini's U7 -26) getoond worden voor overpoelen
+- **Drag & drop 500 error gefixed**
+  - `getPresetConfig()` → `getAlleGewichtsklassen()` in PouleController en VariabeleBlokVerdelingService
 
-- **Gewichtscategorie in poule titel**
-  - Poule titels tonen nu gewichtsklasse: "#1 Mini's U7 -23" i.p.v. "#1 Mini's U7"
+- **Poule titel update na drag & drop**
+  - Obsolete `data-poule-ranges` span verwijderd
+  - Titel wordt nu direct bijgewerkt met ranges IN de titel
 
-- **Wachtruimte toont gewogen judoka's**
-  - Filter `aanwezigheid = 'aanwezig'` verwijderd
-  - Gewogen = automatisch aanwezig (kun niet wegen zonder er te zijn)
-  - Milou Jansen staat nu correct in wachtruimte van -26
+- **Max 5 judoka's per poule**
+  - Check toegevoegd in DynamischeIndelingService::maakPoules()
+  - Poules worden nu automatisch gesplitst bij 5+ judoka's
 
-- **Info popup als tooltip**
-  - ⓘ icoon toont nu tooltip direct boven de icon
-  - Niet meer browser alert bovenaan scherm
-  - Removed overflow-hidden van poule-card zodat tooltip zichtbaar is
+- **Label-first lookup in maakPouleTitel**
+  - Geprobeerd, maar leeftijd range verschijnt nog steeds niet bij genereren
 
-- **Docs geüpdatet**
-  - GEBRUIKERSHANDLEIDING.md: sectie "Automatische Aanwezigheidsbepaling" toegevoegd
-  - Alle "doorgestreepte judoka's" verwijzingen vervangen door ⓘ icoon uitleg
+### KRITIEKE BUGS (NIET OPGELOST):
+- [ ] **Leeftijd range niet in poule titel bij genereren** (wel na drag & drop)
+- [ ] **CATEGORIE CLASSIFICATIE FOUT:** 10/11-jarigen staan bij Heren (-90) i.p.v. Jeugd -14
+  - Dit is een ernstige bug in `classificeerJudoka()` of categorie config
+  - Judoka's moeten bij de JONGSTE passende categorie worden ingedeeld
 
 ### Openstaande items:
+- [ ] **URGENT:** Fix categorie classificatie - jongste categorie prioriteit
+- [ ] **URGENT:** Fix leeftijd range in poule titel bij genereren
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
+- **Classificatie probleem:**
+  - 10-jarige met gewicht -90 staat bij Heren i.p.v. Jeugd -14
+  - De classificatie kiest de VERKEERDE categorie
+  - Moet altijd de jongste passende categorie kiezen
+  - Check `PouleIndelingService::classificeerJudoka()` en `groepeerJudokas()`
+
+- **Leeftijd range probleem:**
+  - `maakPouleTitel()` vindt de categorieConfig niet correct
+  - De lookup via label werkt bij drag & drop (PouleController::updateDynamischeTitel)
+  - Maar dezelfde lookup faalt bij genereren (PouleIndelingService::maakPouleTitel)
+  - Mogelijke oorzaak: timing/volgorde van config laden
+
 - **Aanwezigheid logica:**
   - Gewogen (`gewicht_gewogen` is ingevuld) = aanwezig
   - Niet gewogen na sluiting weegtijd = afwezig
   - Wachtruimte filtert NIET meer op `aanwezigheid` veld
-
-- **Poule UI:**
-  - Afwezige/overgepoulede judoka's staan NIET meer in poule (geen doorgestreept)
-  - Info via ⓘ icoon in poule header met tooltip popup
-  - Tooltip werkt door removed overflow-hidden op poule-card
 
 - **Band format in database:** `"wit (6 kyu)"` - getBandNiveau() moet dit parsen
 - **groupBy() gotcha:** Laravel Collection groupBy() bewaart de volgorde NIET binnen groepen
