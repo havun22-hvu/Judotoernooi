@@ -33,26 +33,46 @@
 | `TOERNOOI_MAX_JUDOKAS_POULE` | Maximum judoka's per poule | 6 |
 | `TOERNOOI_GEWICHT_TOLERANTIE` | Gewichtstolerantie in kg | 0.5 |
 
-## Leeftijdsklassen
+## Leeftijdsklassen (Dynamisch)
 
-De standaard leeftijdsklassen:
+Leeftijdsklassen worden **per toernooi** geconfigureerd via Instellingen → Categorieën. Er zijn geen hardcoded categorieën meer.
 
-| Klasse | Max Leeftijd | Gewichtsklassen |
-|--------|--------------|-----------------|
-| Mini's | < 8 jaar | -20, -23, -26, -29, +29 kg |
-| A-pupillen | < 10 jaar | -24, -27, -30, -34, -38, +38 kg |
-| B-pupillen | < 12 jaar | -27, -30, -34, -38, -42, -46, -50, +50 kg |
-| Dames -15 | < 15 jaar | -36, -40, -44, -48, -52, -57, -63, +63 kg |
-| Heren -15 | < 15 jaar | -34, -38, -42, -46, -50, -55, -60, -66, +66 kg |
+### Hoe classificatie werkt
+
+1. **Toernooi config is leidend** - `Toernooi::bepaalLeeftijdsklasse()` leest uit de config
+2. **Sortering op max_leeftijd** - Categorieën sorteren van jong naar oud
+3. **Matching volgorde**: max_leeftijd → geslacht → band_filter
+
+### Voorbeeld configuratie
+
+| Label | Max Leeftijd | Geslacht | Band Filter |
+|-------|--------------|----------|-------------|
+| Mini's | 6 | Gemengd | - |
+| Jeugd | 12 | Gemengd | - |
+| Dames | 90 | V | - |
+| Heren | 90 | M | - |
+
+### Hercategorisatie
+
+Na wijzigen van categorieën: **Judoka's → Valideer judoka's** om alle judoka's opnieuw te classificeren.
+
+### Technische details
+
+- `Toernooi::bepaalLeeftijdsklasse(int $leeftijd, string $geslacht, ?string $band)` - bepaalt categorie
+- `Toernooi::getLeeftijdsklasseSortValue(string $klasse)` - sorteerwaarde voor weergave
+- Oude `Leeftijdsklasse` enum is deprecated en wordt niet meer gebruikt
 
 ## Band Combinaties
 
-Per leeftijdsklasse bepalen de band combinaties welke judoka's samen in een poule kunnen:
+Per leeftijdsklasse kan een `band_filter` worden ingesteld:
 
-- **Mini's**: Alle banden samen
-- **A-pupillen**: Witte banden apart, geel en hoger samen
-- **B-pupillen**: Wit en geel samen, oranje en hoger samen
-- **-15 jaar**: Wit t/m groen samen, blauw en bruin samen
+| Filter | Betekenis |
+|--------|-----------|
+| `tm_geel` | Wit en geel |
+| `tm_oranje` | Wit t/m oranje |
+| `vanaf_oranje` | Oranje en hoger |
+| `vanaf_groen` | Groen en hoger |
+| (leeg) | Alle banden samen |
 
 ## Cache Configuratie
 
