@@ -673,6 +673,34 @@ class BlokController extends Controller
         ]);
     }
 
+    /**
+     * Save speaker notes to tournament (persisted for next year)
+     */
+    public function saveNotities(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'notities' => 'nullable|string|max:10000',
+        ]);
+
+        $toernooi->update(['spreker_notities' => $validated['notities']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notities opgeslagen',
+        ]);
+    }
+
+    /**
+     * Get speaker notes from tournament
+     */
+    public function getNotities(Toernooi $toernooi): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'notities' => $toernooi->spreker_notities ?? '',
+        ]);
+    }
+
     public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([

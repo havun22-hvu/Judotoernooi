@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Leeftijdsklasse;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
 use App\Models\CoachKaart;
@@ -147,7 +146,9 @@ class CoachPortalController extends Controller
             ->orderBy('naam')
             ->get();
 
-        $leeftijdsklassen = Leeftijdsklasse::cases();
+        // Get category labels from toernooi config (NOT hardcoded enum)
+        $config = $toernooi->getAlleGewichtsklassen();
+        $leeftijdsklassen = collect($config)->pluck('label')->unique()->values()->all();
 
         // Calculate payment info
         $volledigeOnbetaald = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
@@ -206,21 +207,18 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => 'nullable|string|max:10',
         ]);
 
-        // Calculate age class if geboortejaar and geslacht are provided
+        // Calculate age class from toernooi config (NOT hardcoded enum)
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $band = $validated['band'] ?? null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
-            $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-            $leeftijdsklasse = $leeftijdsklasseEnum->label();
+            $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
-            // Auto-calculate gewichtsklasse from gewicht if gewicht is provided
+            // Auto-calculate gewichtsklasse from gewicht if provided
             if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
-                $alleGewichtsklassen = $toernooi->getAlleGewichtsklassen();
-                $klasseKey = $leeftijdsklasseEnum->configKey();
-                $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
-                $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
+                $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
@@ -286,21 +284,18 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => 'nullable|string|max:10',
         ]);
 
-        // Calculate age class and gewichtsklasse
+        // Calculate age class from toernooi config (NOT hardcoded enum)
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $band = $validated['band'] ?? null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
-            $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-            $leeftijdsklasse = $leeftijdsklasseEnum->label();
+            $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
-            // Auto-calculate gewichtsklasse from gewicht if gewicht changed and no explicit gewichtsklasse
+            // Auto-calculate gewichtsklasse from gewicht if provided
             if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
-                $alleGewichtsklassen = $toernooi->getAlleGewichtsklassen();
-                $klasseKey = $leeftijdsklasseEnum->configKey();
-                $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
-                $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
+                $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
@@ -624,7 +619,9 @@ class CoachPortalController extends Controller
             ->orderBy('naam')
             ->get();
 
-        $leeftijdsklassen = Leeftijdsklasse::cases();
+        // Get category labels from toernooi config (NOT hardcoded enum)
+        $config = $toernooi->getAlleGewichtsklassen();
+        $leeftijdsklassen = collect($config)->pluck('label')->unique()->values()->all();
 
         // Calculate payment info
         $volledigeOnbetaald = $judokas->filter(fn($j) => $j->isKlaarVoorBetaling());
@@ -685,20 +682,18 @@ class CoachPortalController extends Controller
         ]);
 
         // Calculate age class and gewichtsklasse
+        // Calculate age class from toernooi config (NOT hardcoded enum)
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $band = $validated['band'] ?? null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
-            $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-            $leeftijdsklasse = $leeftijdsklasseEnum->label();
+            $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
             // Auto-calculate gewichtsklasse from gewicht if provided
             if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
-                $alleGewichtsklassen = $toernooi->getAlleGewichtsklassen();
-                $klasseKey = $leeftijdsklasseEnum->configKey();
-                $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
-                $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
+                $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
@@ -761,20 +756,17 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => 'nullable|string|max:10',
         ]);
 
-        // Calculate age class and gewichtsklasse
+        // Calculate age class from toernooi config (NOT hardcoded enum)
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $band = $validated['band'] ?? null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
-            $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $validated['geslacht']);
-            $leeftijdsklasse = $leeftijdsklasseEnum->label();
+            $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $band);
 
             if (!empty($validated['gewicht']) && empty($gewichtsklasse)) {
-                $alleGewichtsklassen = $toernooi->getAlleGewichtsklassen();
-                $klasseKey = $leeftijdsklasseEnum->configKey();
-                $gewichten = $alleGewichtsklassen[$klasseKey]['gewichten'] ?? [];
-                $gewichtsklasse = Judoka::bepaalGewichtsklasse($validated['gewicht'], $gewichten);
+                $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $band);
             }
         }
 
