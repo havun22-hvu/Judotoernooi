@@ -98,7 +98,6 @@ class Toernooi extends Model
         'eliminatie_type',
         'aantal_brons',
         'gewicht_tolerantie',
-        'judoka_code_volgorde',
         'max_kg_verschil',
         'max_leeftijd_verschil',
         'gebruik_gewichtsklassen',

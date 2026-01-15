@@ -64,9 +64,6 @@ class ImportService
                 }
             }
 
-            // Recalculate all judoka codes after import
-            $resultaat['codes_bijgewerkt'] = $this->pouleIndelingService->herberekenJudokaCodes($toernooi);
-
             // Create coaches and coach cards for clubs without one
             $resultaat['coaches_aangemaakt'] = $this->maakCoachesVoorClubs($toernooi);
 

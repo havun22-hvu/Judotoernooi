@@ -105,9 +105,6 @@ class PouleIndelingService
         // Recalculate age/weight classes for all judokas (important after year change)
         $this->herberkenKlassen($toernooi);
 
-        // Recalculate judoka codes after class changes
-        $this->herberekenJudokaCodes($toernooi);
-
         return DB::transaction(function () use ($toernooi) {
             // Delete existing pools and their matches
             $pouleIds = $toernooi->poules()->pluck('id');
@@ -532,7 +529,7 @@ class PouleIndelingService
 
     /**
      * Group judokas by age class, (optionally) weight class, and gender based on config
-     * Sorted by judoka_code for correct ordering
+     * Sorted by sort fields (sort_categorie, sort_gewicht, sort_band)
      *
      * If gebruik_gewichtsklassen is OFF: group only by leeftijd (+ geslacht from config)
      * If gebruik_gewichtsklassen is ON: group by leeftijd + gewichtsklasse (+ geslacht from config)
@@ -988,7 +985,7 @@ class PouleIndelingService
             return [$judokasArray];
         }
 
-        // Distribute by slicing (preserves band order from judoka_code sorting)
+        // Distribute by slicing (preserves order from sort fields)
         $verdeling = [];
         $index = 0;
         foreach ($bestePouleGroottes as $grootte) {
@@ -1261,77 +1258,6 @@ class PouleIndelingService
     public function berekenTotaalWedstrijden(Toernooi $toernooi): int
     {
         return $toernooi->poules()->sum('aantal_wedstrijden');
-    }
-
-    /**
-     * Recalculate all judoka codes for tournament
-     * Order depends on toernooi settings:
-     * - gebruik_gewichtsklassen ON: Leeftijd → Gewichtsklasse → Band (laag→hoog)
-     * - gebruik_gewichtsklassen OFF + gewicht_band: Leeftijd → Werkelijk gewicht → Band
-     * - gebruik_gewichtsklassen OFF + band_gewicht: Leeftijd → Band → Werkelijk gewicht
-     */
-    public function herberekenJudokaCodes(Toernooi $toernooi): int
-    {
-        // Default to true if null (for backwards compatibility)
-        $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
-        $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
-
-        // Band order: low to high (wit first) - always used now
-        $bandOrderLowToHigh = "CASE band
-            WHEN 'wit' THEN 0
-            WHEN 'geel' THEN 1
-            WHEN 'oranje' THEN 2
-            WHEN 'groen' THEN 3
-            WHEN 'blauw' THEN 4
-            WHEN 'bruin' THEN 5
-            WHEN 'zwart' THEN 6
-            ELSE 7 END";
-
-        $query = $toernooi->judokas()
-            ->orderBy('leeftijdsklasse');
-
-        if ($gebruikGewichtsklassen) {
-            // Gewichtsklassen AAN: Leeftijd → Gewichtsklasse → Band (laag→hoog) → Geslacht
-            $query->orderBy('gewichtsklasse')
-                  ->orderByRaw($bandOrderLowToHigh)
-                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
-        } elseif ($volgorde === 'band_gewicht') {
-            // Gewichtsklassen UIT + band_gewicht: Leeftijd → Band → Werkelijk gewicht → Geslacht
-            $query->orderByRaw($bandOrderLowToHigh)
-                  ->orderBy('gewicht')
-                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
-        } else {
-            // Gewichtsklassen UIT + gewicht_band: Leeftijd → Werkelijk gewicht → Band → Geslacht
-            $query->orderBy('gewicht')
-                  ->orderByRaw($bandOrderLowToHigh)
-                  ->orderByRaw("CASE geslacht WHEN 'M' THEN 1 WHEN 'V' THEN 2 ELSE 3 END");
-        }
-
-        $judokas = $query->orderBy('naam')->get();
-
-        $vorigeCategorie = null;
-        $volgnummer = 0;
-        $bijgewerkt = 0;
-
-        foreach ($judokas as $judoka) {
-            // Create category key for volgnummer reset
-            $categorie = "{$judoka->leeftijdsklasse}|{$judoka->gewichtsklasse}|{$judoka->geslacht}";
-
-            if ($categorie !== $vorigeCategorie) {
-                $volgnummer = 1;
-                $vorigeCategorie = $categorie;
-            } else {
-                $volgnummer++;
-            }
-
-            $nieuweCode = $judoka->berekenJudokaCode($volgnummer);
-            if ($judoka->judoka_code !== $nieuweCode) {
-                $judoka->update(['judoka_code' => $nieuweCode]);
-                $bijgewerkt++;
-            }
-        }
-
-        return $bijgewerkt;
     }
 
     /**

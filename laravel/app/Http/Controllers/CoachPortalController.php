@@ -252,11 +252,6 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => $gewichtsklasse,
         ]);
 
-        // Generate temporary judoka code if complete
-        if ($judoka->isVolledig()) {
-            $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
-        }
-
         return redirect()->route('coach.judokas', $token)
             ->with('success', 'Judoka toegevoegd');
     }
@@ -323,11 +318,6 @@ class CoachPortalController extends Controller
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
         ]);
-
-        // Update judoka code if complete
-        if ($judoka->isVolledig() && empty($judoka->judoka_code)) {
-            $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
-        }
 
         return redirect()->route('coach.judokas', $token)
             ->with('success', 'Judoka bijgewerkt');
@@ -739,10 +729,6 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => $gewichtsklasse,
         ]);
 
-        if ($judoka->isVolledig()) {
-            $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
-        }
-
         return redirect()->route('coach.portal.judokas', $code)
             ->with('success', 'Judoka toegevoegd');
     }
@@ -806,10 +792,6 @@ class CoachPortalController extends Controller
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
         ]);
-
-        if ($judoka->isVolledig() && empty($judoka->judoka_code)) {
-            $judoka->update(['judoka_code' => $judoka->berekenJudokaCode(99)]);
-        }
 
         return redirect()->route('coach.portal.judokas', $code)
             ->with('success', 'Judoka bijgewerkt');

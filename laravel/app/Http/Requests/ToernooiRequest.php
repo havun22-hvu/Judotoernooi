@@ -65,7 +65,6 @@ class ToernooiRequest extends FormRequest
             'gewichtsklassen' => 'nullable|array',
             'gewichtsklassen.*' => 'nullable|string',
             'gebruik_gewichtsklassen' => 'nullable|boolean',
-            'judoka_code_volgorde' => 'nullable|string|in:gewicht_band,band_gewicht',
             'max_kg_verschil' => 'nullable|numeric|min:1|max:10',
             'max_leeftijd_verschil' => 'nullable|integer|min:1|max:5',
             'verdeling_prioriteiten' => 'nullable|array',

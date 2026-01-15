@@ -163,10 +163,7 @@ class PouleController extends Controller
 
     public function genereer(Toernooi $toernooi, Request $request): RedirectResponse
     {
-        // First recalculate judoka codes (ensures correct band/weight ordering)
-        $this->pouleService->herberekenJudokaCodes($toernooi);
-
-        // Generate pool division
+        // Generate pool division (herberkenKlassen() handles sort fields)
         $statistieken = $this->pouleService->genereerPouleIndeling($toernooi);
 
         $message = "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, " .

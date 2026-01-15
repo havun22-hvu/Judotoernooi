@@ -100,14 +100,6 @@ class JudokaController extends Controller
             $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
         }
 
-        // Recalculate judoka code (keep existing volgnummer if possible)
-        $bestaandeCode = $judoka->judoka_code;
-        $volgnummer = 1;
-        if ($bestaandeCode && strlen($bestaandeCode) >= 8) {
-            $volgnummer = intval(substr($bestaandeCode, -2)) ?: 1;
-        }
-        $judoka->update(['judoka_code' => $judoka->berekenJudokaCode($volgnummer)]);
-
         return redirect()
             ->route('toernooi.judoka.show', [$toernooi, $judoka])
             ->with('success', 'Judoka bijgewerkt');
@@ -303,37 +295,6 @@ class JudokaController extends Controller
             // Apply name changes
             if (!empty($wijzigingen)) {
                 $judoka->update($wijzigingen);
-                $gecorrigeerd++;
-            }
-        }
-
-        // Second pass: generate judoka codes with volgnummers per category
-        // Format: LLGGBGVV (Leeftijd-Gewicht-Band-Geslacht-Volgnummer)
-        $categorieVolgnummers = [];
-
-        // Sort judokas by name for consistent numbering
-        $judokas = $judokas->sortBy('naam');
-
-        foreach ($judokas as $judoka) {
-            if (!$judoka->leeftijdsklasse || !$judoka->gewichtsklasse) {
-                continue;
-            }
-
-            // Get base code (without volgnummer)
-            $basisCode = $judoka->berekenBasisCode();
-
-            // Track volgnummer per category
-            if (!isset($categorieVolgnummers[$basisCode])) {
-                $categorieVolgnummers[$basisCode] = 0;
-            }
-            $categorieVolgnummers[$basisCode]++;
-            $volgnummer = $categorieVolgnummers[$basisCode];
-
-            // Generate full code with volgnummer
-            $nieuweCode = $judoka->berekenJudokaCode($volgnummer);
-
-            if ($judoka->judoka_code !== $nieuweCode) {
-                $judoka->update(['judoka_code' => $nieuweCode]);
                 $gecorrigeerd++;
             }
         }

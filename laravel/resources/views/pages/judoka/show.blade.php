@@ -67,10 +67,6 @@
                         <td class="text-gray-600 py-1.5">Gewogen gewicht</td>
                         <td class="font-medium text-right py-1.5">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : '-' }}</td>
                     </tr>
-                    <tr>
-                        <td class="text-gray-600 py-1.5">Judoka Code</td>
-                        <td class="font-mono text-right py-1.5">{{ $judoka->judoka_code }}</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
