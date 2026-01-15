@@ -906,7 +906,7 @@ class DynamischeIndelingService
             $verdeling = $this->verdeelOverPoules($aantal, $aantalPoules);
             if ($verdeling === null) continue;
 
-            $score = $this->scoreVerdeling($verdeling);
+            $score = $this->scorePouleGrootteVerdeling($verdeling);
             if ($score > $besteScore) {
                 $besteScore = $score;
                 $besteVerdeling = $verdeling;
@@ -950,7 +950,7 @@ class DynamischeIndelingService
      * Bereken score voor een verdeling
      * 5 = 3 punten, 4 = 2 punten, 3 = 1 punt
      */
-    private function scoreVerdeling(array $verdeling): int
+    private function scorePouleGrootteVerdeling(array $verdeling): int
     {
         $score = 0;
         foreach ($verdeling as $grootte) {
