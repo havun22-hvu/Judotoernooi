@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\AanwezigheidsStatus;
 use App\Enums\Band;
 use App\Enums\Geslacht;
-use App\Enums\Leeftijdsklasse;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -31,7 +30,6 @@ class Judoka extends Model
         'gewicht',
         'leeftijdsklasse',
         'gewichtsklasse',
-        'judoka_code',
         'sort_categorie',
         'sort_gewicht',
         'sort_band',
@@ -173,61 +171,6 @@ class Judoka extends Model
     public function isAanwezig(): bool
     {
         return $this->aanwezigheid === AanwezigheidsStatus::AANWEZIG->value;
-    }
-
-    /**
-     * Calculate the judoka base code for pool assignment (without volgnummer)
-     * Format: LLGGBG (Leeftijd-Gewicht-Band-Geslacht) for both settings
-     * Band code logic:
-     * - gebruik_gewichtsklassen ON: always wit=0, zwart=6 (low belts first within weight class)
-     * - gebruik_gewichtsklassen OFF + band_gewicht: wit=0, zwart=6 (low belts first)
-     * - gebruik_gewichtsklassen OFF + gewicht_band: wit=6, zwart=0 (sorted by weight, band secondary)
-     */
-    public function berekenBasisCode(): string
-    {
-        $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($this->leeftijd, $this->geslacht);
-        $leeftijdCode = $leeftijdsklasse->code();
-
-        // Weight class code (2 digits)
-        $gewichtNum = abs(intval(str_replace(['-', '+', 'kg', ' '], '', $this->gewichtsklasse)));
-        $gewichtCode = str_pad($gewichtNum, 2, '0', STR_PAD_LEFT);
-
-        // Gender code
-        $geslachtCode = strtoupper($this->geslacht);
-
-        // Check toernooi settings
-        $gebruikGewichtsklassen = $this->toernooi?->gebruik_gewichtsklassen ?? true;
-        $volgorde = $this->toernooi?->judoka_code_volgorde ?? 'gewicht_band';
-        $bandEnum = $this->band_enum;
-
-        // Determine band code order
-        // If using weight classes: always low belts first (wit=0)
-        // If not using weight classes: follow judoka_code_volgorde setting
-        $bandLaagEerst = $gebruikGewichtsklassen || $volgorde === 'band_gewicht';
-
-        if ($bandLaagEerst) {
-            // Band code: wit=0, geel=1, oranje=2, groen=3, blauw=4, bruin=5, zwart=6
-            $bandCode = $bandEnum ? (6 - $bandEnum->kyu()) : 'X';
-        } else {
-            // Band code reversed: wit=6, geel=5, oranje=4, groen=3, blauw=2, bruin=1, zwart=0
-            $bandCode = $bandEnum ? $bandEnum->kyu() : 'X';
-        }
-
-        // Always: Leeftijd - Gewicht - Band - Geslacht
-        return "{$leeftijdCode}{$gewichtCode}{$bandCode}{$geslachtCode}";
-    }
-
-    /**
-     * Calculate full judoka code with volgnummer
-     * Format: LLGGBGVV (Leeftijd-Gewicht-Band-Geslacht-Volgnummer)
-     * Note: volgnummer must be provided externally per category
-     */
-    public function berekenJudokaCode(int $volgnummer = 1): string
-    {
-        $basisCode = $this->berekenBasisCode();
-        $volgnummerCode = str_pad($volgnummer, 2, '0', STR_PAD_LEFT);
-
-        return "{$basisCode}{$volgnummerCode}";
     }
 
     /**
