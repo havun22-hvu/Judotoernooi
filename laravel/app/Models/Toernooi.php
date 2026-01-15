@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\BandHelper;
 use App\Http\Controllers\RoleToegang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -772,7 +773,7 @@ class Toernooi extends Model
 
                     // Check band filter
                     $bandFilter = $cat['band_filter'] ?? '';
-                    if (!empty($bandFilter) && !$this->bandPastInFilter($band, $bandFilter)) continue;
+                    if (!empty($bandFilter) && !BandHelper::pastInFilter($band, $bandFilter)) continue;
 
                     // Categorie gevonden - judoka is gecategoriseerd
                     return false;
@@ -791,58 +792,4 @@ class Toernooi extends Model
         return $this->getNietGecategoriseerdeJudokas()->count();
     }
 
-    /**
-     * Helper: check of band past in filter.
-     */
-    private function bandPastInFilter(string $band, string $filter): bool
-    {
-        if (empty($filter) || empty($band)) return true;
-
-        $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
-
-        // Extract band kleur uit strings zoals "groen (3 kyu)" of "Bruin (1e kyu)"
-        $bandIdx = $this->getBandNiveau($band, $bandVolgorde);
-
-        if (str_starts_with($filter, 'tm_')) {
-            $filterBand = str_replace('tm_', '', $filter);
-            $filterIdx = $bandVolgorde[$filterBand] ?? 99;
-            return $bandIdx <= $filterIdx;
-        }
-
-        if (str_starts_with($filter, 'vanaf_')) {
-            $filterBand = str_replace('vanaf_', '', $filter);
-            $filterIdx = $bandVolgorde[$filterBand] ?? 0;
-            return $bandIdx >= $filterIdx;
-        }
-
-        return true;
-    }
-
-    /**
-     * Extract band niveau uit string zoals "groen (3 kyu)" of "wit".
-     */
-    private function getBandNiveau(string $band, array $bandVolgorde): int
-    {
-        $bandLower = strtolower(trim($band));
-
-        // Direct match
-        if (isset($bandVolgorde[$bandLower])) {
-            return $bandVolgorde[$bandLower];
-        }
-
-        // Extract eerste woord: "groen (3 kyu)" → "groen"
-        $eersteWoord = explode(' ', $bandLower)[0];
-        if (isset($bandVolgorde[$eersteWoord])) {
-            return $bandVolgorde[$eersteWoord];
-        }
-
-        // Zoek of band een kleur bevat
-        foreach ($bandVolgorde as $kleur => $niveau) {
-            if (str_contains($bandLower, $kleur)) {
-                return $niveau;
-            }
-        }
-
-        return 0; // Onbekend = behandel als wit
-    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\BandHelper;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
@@ -84,7 +85,7 @@ class PouleIndelingService
                     'categorie_key' => $classificatie['configKey'],
                     'sort_categorie' => $nieuweSortCategorie,
                     'sort_gewicht' => $sortGewicht,
-                    'sort_band' => $this->getBandNiveau($judoka->band ?? ''),
+                    'sort_band' => BandHelper::getSortNiveau($judoka->band ?? ''),
                     'gewichtsklasse' => $nieuweGewichtsklasse,
                 ]);
                 $bijgewerkt++;
@@ -642,46 +643,6 @@ class PouleIndelingService
     }
 
     /**
-     * Get band niveau for sorting (1=wit/beginner, 7=zwart/expert)
-     * Lower number = less experienced, should be sorted first
-     * Supports formats: "wit", "wit (6 kyu)", "6 kyu", etc.
-     */
-    private function getBandNiveau(string $band): int
-    {
-        $mapping = [
-            'wit' => 1,
-            'geel' => 2,
-            'oranje' => 3,
-            'groen' => 4,
-            'blauw' => 5,
-            'bruin' => 6,
-            'zwart' => 7,
-        ];
-
-        $bandLower = strtolower(trim($band));
-
-        // Direct match
-        if (isset($mapping[$bandLower])) {
-            return $mapping[$bandLower];
-        }
-
-        // Extract first word (e.g., "wit (6 kyu)" -> "wit")
-        $firstWord = explode(' ', $bandLower)[0];
-        if (isset($mapping[$firstWord])) {
-            return $mapping[$firstWord];
-        }
-
-        // Check if band contains color name
-        foreach ($mapping as $color => $niveau) {
-            if (str_contains($bandLower, $color)) {
-                return $niveau;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
      * Classify a judoka into a category based on preset config
      * Returns array with: configKey, label, sortCategorie, gewichtsklasse
      */
@@ -689,7 +650,7 @@ class PouleIndelingService
     {
         $leeftijd = $judoka->leeftijd ?? ($toernooi->datum?->year ?? date('Y')) - $judoka->geboortejaar;
         $geslacht = strtoupper($judoka->geslacht ?? '');
-        $bandNiveau = $this->getBandNiveau($judoka->band ?? '');
+        $bandNiveau = BandHelper::getSortNiveau($judoka->band ?? '');
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
         $sortCategorie = 0;
@@ -772,13 +733,13 @@ class PouleIndelingService
         // Parse filter: "tm_oranje", "vanaf_groen", etc.
         if (str_starts_with($filter, 'tm_') || str_starts_with($filter, 't/m ')) {
             $band = str_replace(['tm_', 't/m '], '', $filter);
-            $maxNiveau = $this->getBandNiveau($band);
+            $maxNiveau = BandHelper::getSortNiveau($band);
             return $bandNiveau <= $maxNiveau;
         }
 
         if (str_starts_with($filter, 'vanaf_') || str_starts_with($filter, 'vanaf ')) {
             $band = str_replace(['vanaf_', 'vanaf '], '', $filter);
-            $minNiveau = $this->getBandNiveau($band);
+            $minNiveau = BandHelper::getSortNiveau($band);
             return $bandNiveau >= $minNiveau;
         }
 
@@ -846,7 +807,7 @@ class PouleIndelingService
             'categorie_key' => $classificatie['configKey'],
             'sort_categorie' => $classificatie['sortCategorie'],
             'sort_gewicht' => $sortGewicht,
-            'sort_band' => $this->getBandNiveau($judoka->band ?? ''),
+            'sort_band' => BandHelper::getSortNiveau($judoka->band ?? ''),
             'gewichtsklasse' => $classificatie['gewichtsklasse'] ?? $judoka->gewichtsklasse,
         ]);
     }
@@ -1301,7 +1262,7 @@ class PouleIndelingService
 
                 // Check band filter
                 $bandFilter = $cat['band_filter'] ?? '';
-                if (empty($bandFilter) || $this->bandPastInFilter($judoka->band, $bandFilter)) {
+                if (empty($bandFilter) || BandHelper::pastInFilter($judoka->band, $bandFilter)) {
                     $bandMatch = true;
                 }
 
@@ -1339,30 +1300,5 @@ class PouleIndelingService
         }
 
         return "Te groot gewichtsverschil met andere judoka's in de groep";
-    }
-
-    /**
-     * Check of een band past in een filter
-     */
-    private function bandPastInFilter(?string $band, string $filter): bool
-    {
-        if (empty($filter) || empty($band)) return true;
-
-        $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
-        $bandIdx = $bandVolgorde[strtolower($band)] ?? 0;
-
-        if (str_starts_with($filter, 'tm_')) {
-            $filterBand = str_replace('tm_', '', $filter);
-            $filterIdx = $bandVolgorde[$filterBand] ?? 99;
-            return $bandIdx <= $filterIdx;
-        }
-
-        if (str_starts_with($filter, 'vanaf_')) {
-            $filterBand = str_replace('vanaf_', '', $filter);
-            $filterIdx = $bandVolgorde[$filterBand] ?? 0;
-            return $bandIdx >= $filterIdx;
-        }
-
-        return true;
     }
 }

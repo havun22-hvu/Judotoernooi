@@ -7,7 +7,6 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
 use App\Services\EliminatieService;
-use App\Services\ToernooiService;
 use App\Services\VariabeleBlokVerdelingService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +20,6 @@ class BlokController extends Controller
         private BlokMatVerdelingService $verdelingService,
         private VariabeleBlokVerdelingService $variabeleService,
         private WedstrijdSchemaService $wedstrijdService,
-        private ToernooiService $toernooiService,
         private EliminatieService $eliminatieService
     ) {}
 
@@ -265,9 +263,8 @@ class BlokController extends Controller
 
     public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
     {
-        $this->toernooiService->sluitWegingBlok($blok);
+        $blok->sluitWeging();
 
-        // Redirect back to weging interface
         return redirect()
             ->route('toernooi.weging.interface', $toernooi)
             ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");

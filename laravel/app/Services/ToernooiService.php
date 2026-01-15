@@ -212,12 +212,4 @@ class ToernooiService
             ])
             ->toArray();
     }
-
-    /**
-     * Close weighing for a block
-     */
-    public function sluitWegingBlok(Blok $blok): void
-    {
-        $blok->sluitWeging();
-    }
 }
