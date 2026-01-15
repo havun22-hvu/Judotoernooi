@@ -346,6 +346,42 @@
 
 ---
 
+## Sessie: 15 januari 2026
+
+### Fix: Drag & drop 500 error
+- **Type:** Bug fix
+- **Wat:** `getPresetConfig()` methode bestond niet meer, vervangen door `getAlleGewichtsklassen()`
+- **Waarom:** 500 error bij drag & drop van judoka's tussen poules
+- **Bestanden:**
+  - `app/Http/Controllers/PouleController.php`
+  - `app/Services/VariabeleBlokVerdelingService.php`
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Fix: Poule titel update na drag & drop
+- **Type:** Bug fix
+- **Wat:** Statistieken (lft/kg range) verschenen ACHTER de titel i.p.v. IN de titel
+- **Waarom:** Obsolete `data-poule-ranges` span werd nog gevuld
+- **Oplossing:** Span verwijderd, JavaScript `updatePouleStats()` vereenvoudigd
+- **Bestanden:** `resources/views/pages/poule/index.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Max 5 judoka's per poule bij dynamische indeling
+- **Type:** Enhancement
+- **Wat:** Check toegevoegd `if (count($huidigePoule) >= 5)` in maakPoules()
+- **Waarom:** Poules werden te groot, 5 is ideale grootte
+- **Bestanden:** `app/Services/DynamischeIndelingService.php:795-797`
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md
+
+### Fix: Label-first lookup in maakPouleTitel
+- **Type:** Bug fix (NIET VOLLEDIG OPGELOST)
+- **Wat:** Lookup logica aangepast naar label-first (zelfde als PouleController)
+- **Waarom:** Leeftijd range verscheen niet in poule titel bij genereren
+- **Status:** Fix toegepast maar probleem blijft bestaan
+- **Bestanden:** `app/Services/PouleIndelingService.php:1137-1152`
+- **Naar permanente docs?** ☑ Nee - nog niet werkend
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
