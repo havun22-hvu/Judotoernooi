@@ -41,20 +41,27 @@ Drie keuzes:
 ### Sorteer Prioriteit (ALTIJD zichtbaar)
 
 De sorteer prioriteit wordt altijd getoond, ongeacht de preset keuze.
-Dit bepaalt de volgorde waarin judokas over poules worden verdeeld binnen een categorie.
+Dit bepaalt de volgorde waarin judokas worden gesorteerd binnen een categorie.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ Sorteer prioriteit: (i)                                         │
-│ [1. Band] [2. Gewicht] [3. Groepsgrootte] [4. Club]            │
+│ [1. Leeftijd] [2. Gewicht] [3. Band]                           │
 │ (sleep om te wisselen)                                          │
+│                                                                 │
+│ [ ] Clubspreiding (probeer zelfde club te verdelen over poules)│
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Belangrijke gedrag:**
-- **Band eerst:** Witte banden vullen eerst de poules, dan gele, etc.
-- **Gewicht eerst:** Lichtste judoka's eerst in de poules
-- Harde criteria (leeftijd, geslacht, gewichtsklasse) blijven ALTIJD gerespecteerd
+**Sorteer criteria:**
+- **Leeftijd:** Jongste judoka's eerst
+- **Gewicht:** Lichtste judoka's eerst
+- **Band:** Lagere banden eerst (wit → zwart)
+
+**Clubspreiding:** Aparte checkbox - optimaliseert verdeling achteraf
+
+**Let op:** Groepsgrootte is GEEN sorteer criterium - dit wordt bepaald door
+`poule_grootte_voorkeur` (standaard [5, 4, 6, 3]) en is altijd actief.
 
 ### Bij "GEEN STANDAARD"
 
@@ -225,14 +232,16 @@ De code volgt de gekozen/actieve preset.
 | `max_kg_verschil` | Max 3 kg verschil binnen poule |
 | `max_leeftijd_verschil` | Max 1 jaar verschil binnen poule |
 
-### Zachte Criteria (prioriteiten)
+### Zachte Criteria
 
-Gelden **alleen** bij grote aantallen binnen een categorie, wanneer poules op meerdere manieren samengesteld kunnen worden. Dan bepalen de prioriteiten de optimale verdeling:
-
+**Sorteer prioriteiten** (bepalen volgorde judoka's):
+- Leeftijd
 - Gewicht
 - Band
-- Groepsgrootte
-- Clubspreiding
+
+**Verdeling opties** (apart ingesteld):
+- Groepsgrootte: via `poule_grootte_voorkeur` (altijd actief)
+- Clubspreiding: aan/uit checkbox
 
 ### Opslag
 
@@ -279,19 +288,22 @@ De `App\Enums\Leeftijdsklasse` enum is **deprecated**.
 
 ## Sorteer Prioriteit (bij dynamische indeling)
 
-Bij categorieën met grote aantallen (bijv. 30 judoka's in 8-9 jaar, 34-36 kg)
-bepaalt de prioriteit hoe judoka's worden gegroepeerd:
+Bij categorieën met grote aantallen bepaalt de sorteer prioriteit
+de volgorde van judoka's voordat ze over poules worden verdeeld:
 
 | Prioriteit | Betekenis |
 |------------|-----------|
-| 1. Gewicht | Eerst groeperen zodat gewichtsverschil ≤ max kg |
-| 2. Band | Lagere banden bij elkaar, hogere bij elkaar (wit ≠ bruin) |
-| 3. Groepsgrootte | Optimaliseren voor ideale poule grootte (4-5 judoka's) |
-| 4. Club | Clubspreiding (vermijd 2 van zelfde club in 1 poule) |
+| 1. Leeftijd | Jongste judoka's eerst |
+| 2. Gewicht | Lichtste judoka's eerst |
+| 3. Band | Lagere banden eerst (wit → zwart) |
+
+**Apart ingesteld:**
+- **Groepsgrootte:** Via `poule_grootte_voorkeur` (bijv. [5, 4, 6, 3])
+- **Clubspreiding:** Checkbox aan/uit
 
 **Voorbeelden:**
-- Gewicht > Band: Eerst op gewicht groeperen, dan band als secundaire factor
-- Band > Gewicht: Eerst op band groeperen (wit bij wit), dan gewicht
+- Leeftijd > Gewicht > Band: Eerst op leeftijd, dan gewicht, dan band
+- Gewicht > Leeftijd > Band: Eerst op gewicht, dan leeftijd, dan band
 
 ## Algoritme: Dynamische Indeling
 
@@ -403,18 +415,12 @@ Als max_kg_verschil = 0:
 
 ## Poulegrootte Verdeling
 
-### Twee Instellingen
+### Instellingen
 
-De organisator bepaalt **twee** dingen:
-
-1. **`poule_grootte_voorkeur`** - Volgorde van voorkeur voor poule groottes
-   - Bijv. `[5, 4, 3, 6]` = 5 beste, dan 4, dan 3, dan 6
-   - Of `[5, 4, 6, 3]` = 5 beste, dan 4, dan 6, dan 3 (default)
-
-2. **`verdeling_prioriteiten`** - Prioriteit tussen criteria
-   - Bijv. `[groepsgrootte, gewicht, band, clubspreiding]`
-   - Als groepsgrootte op 1 staat → strikt de voorkeur volgen
-   - Als groepsgrootte op 4 staat → flexibeler voor andere criteria
+**`poule_grootte_voorkeur`** - Volgorde van voorkeur voor poule groottes
+- Bijv. `[5, 4, 3, 6]` = 5 beste, dan 4, dan 3, dan 6
+- Of `[5, 4, 6, 3]` = 5 beste, dan 4, dan 6, dan 3 (default)
+- Dit is altijd actief, geen prioriteit instelling nodig
 
 ### Voorkeur Volgorde (instelbaar)
 
@@ -931,44 +937,34 @@ Poule met 7 judoka's → ROOD (7 niet in [5,4,6,3])
 
 ---
 
-## Vereenvoudiging Instellingen (7 jan 2026)
+## Vereenvoudiging Instellingen (15 jan 2026)
 
-### Probleem
-Er waren twee overlappende instellingen:
-1. `verdeling_prioriteiten` - drag & drop met groepsgrootte/bandkleur/clubspreiding
-2. `judoka_code_volgorde` - gewicht_band of band_gewicht (bij groepen)
+### Wijziging
+Groepsgrootte is **GEEN sorteer criterium** - het bepaalt alleen poule groottes.
 
-Dit was verwarrend voor gebruikers.
-
-### Oplossing
-**Verplaatsen:** drag & drop prioriteiten naar groepsindeling sectie
-
-**Nieuwe UI bij groepsindeling (zonder gewichtsklassen):**
+**Sorteer prioriteiten** (drag & drop):
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Zonder gewichtsklassen: Judoka's worden alleen per              │
-│ leeftijdsgroep ingedeeld.                                       │
-├─────────────────────────────────────────────────────────────────┤
-│ Prioriteit: (sleep om te wisselen)                              │
-│ [1. 🏋️ Gewicht] [2. 🥋 Band] [3. 👥 Groepsgrootte] [4. 🏠 Club] │
+│ Sorteer prioriteit: (sleep om te wisselen)                      │
+│ [1. 📅 Leeftijd] [2. 🏋️ Gewicht] [3. 🥋 Band]                  │
+│                                                                 │
+│ [ ] Clubspreiding (probeer zelfde club te verdelen)            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Reden:**
-- Alle indelings-instellingen op één plek
-- Verwijdert verwarring tussen twee aparte instellingen
-- Drag & drop geeft flexibiliteit
+**Aparte instellingen:**
+- `poule_grootte_voorkeur`: [5, 4, 6, 3] (altijd actief)
+- `clubspreiding`: aan/uit checkbox
 
-### Implementatie (7 jan 2026) ✓
-- [x] Verwijder `verdeling_prioriteiten` uit bovenste sectie (Poule instellingen)
-- [x] Verplaats drag & drop naar groepsindeling sectie (bij "Zonder gewichtsklassen")
-- [x] Voeg "Gewicht" toe als prioriteit item (vervangt `judoka_code_volgorde`)
-- [x] Update PouleIndelingService: lees volgorde uit `verdeling_prioriteiten`
-- [x] Verwijder `judoka_code_volgorde` radio buttons (niet meer nodig)
+### Implementatie (15 jan 2026)
+- [x] Verwijder `groepsgrootte` uit `verdeling_prioriteiten`
+- [x] Voeg `leeftijd` toe aan prioriteiten
+- [x] Maak `clubspreiding` een aparte checkbox
+- [x] Update UI: 3 drag items + 1 checkbox
+- [x] Update PouleIndelingService
 
-**Nieuwe prioriteit keys:** `gewicht`, `band`, `groepsgrootte`, `clubspreiding`
-**Oude keys (deprecated):** `bandkleur` → `band`
-**Info popup:** (i) icoon met uitleg over sorteer volgorde
+**Prioriteit keys:** `leeftijd`, `gewicht`, `band`
+**Aparte boolean:** `clubspreiding`
 
 ### Drag & Drop Poule Statistieken (7 jan 2026) ✓
 Bij verslepen van judoka's tussen poules worden nu ook bijgewerkt:

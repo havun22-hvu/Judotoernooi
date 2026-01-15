@@ -52,8 +52,8 @@ class DynamischeIndelingService
         'weight_leeftijd' => 0.4,
         'weight_gewicht' => 0.4,
         'weight_band' => 0.2,
-        'groepsgrootte_prioriteit' => 3, // 1 = hoogste prioriteit (strikt 5), 4 = laagste (flexibel)
-        'verdeling_prioriteiten' => ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'],
+        'verdeling_prioriteiten' => ['leeftijd', 'gewicht', 'band'],
+        'clubspreiding' => true,
     ];
 
     /**
@@ -756,21 +756,32 @@ class DynamischeIndelingService
             return [];
         }
 
-        // STAP 1: Sorteer op basis van prioriteit instelling
-        $prioriteiten = $this->config['verdeling_prioriteiten'] ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+        // STAP 1: Sorteer op basis van prioriteit instelling (leeftijd, gewicht, band)
+        $prioriteiten = $this->config['verdeling_prioriteiten'] ?? ['leeftijd', 'gewicht', 'band'];
+        $leeftijdIndex = array_search('leeftijd', $prioriteiten);
         $gewichtIndex = array_search('gewicht', $prioriteiten);
         $bandIndex = array_search('band', $prioriteiten);
-        $gewichtEerst = $gewichtIndex !== false && ($bandIndex === false || $gewichtIndex < $bandIndex);
 
-        $gesorteerd = $judokas->sortBy(function ($judoka) use ($gewichtEerst) {
-            $gewicht = $this->getEffectiefGewicht($judoka);
-            if ($gewichtEerst) {
-                // Primair op gewicht, secundair op band
-                return [$gewicht, self::BAND_VOLGORDE[$judoka->band] ?? 99];
-            } else {
-                // Primair op band, secundair op gewicht
-                return [self::BAND_VOLGORDE[$judoka->band] ?? 99, $gewicht];
+        // Build sort order array based on priorities
+        $sortOrder = [];
+        if ($leeftijdIndex !== false) $sortOrder[$leeftijdIndex] = 'leeftijd';
+        if ($gewichtIndex !== false) $sortOrder[$gewichtIndex] = 'gewicht';
+        if ($bandIndex !== false) $sortOrder[$bandIndex] = 'band';
+        ksort($sortOrder);
+
+        $gesorteerd = $judokas->sortBy(function ($judoka) use ($sortOrder) {
+            $values = [];
+            foreach ($sortOrder as $field) {
+                if ($field === 'leeftijd') {
+                    // Hoger geboortejaar = jonger = eerst (DESC wordt ASC door negatief)
+                    $values[] = -($judoka->geboortejaar ?? 0);
+                } elseif ($field === 'gewicht') {
+                    $values[] = $this->getEffectiefGewicht($judoka);
+                } elseif ($field === 'band') {
+                    $values[] = self::BAND_VOLGORDE[$judoka->band] ?? 99;
+                }
             }
+            return $values;
         })->values()->all();
 
         // STAP 2: Groepeer judoka's op gewichtslimiet (zonder grootte beperking)
@@ -824,8 +835,9 @@ class DynamischeIndelingService
             }
         }
 
-        // STAP 3: Pas clubspreiding toe indien geconfigureerd
-        if (in_array('clubspreiding', $prioriteiten) && count($poules) > 1) {
+        // STAP 4: Pas clubspreiding toe indien geconfigureerd
+        $clubspreiding = $this->config['clubspreiding'] ?? true;
+        if ($clubspreiding && count($poules) > 1) {
             $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil);
         }
 
@@ -1136,10 +1148,7 @@ class DynamischeIndelingService
     /**
      * Bereken optimale poule groottes
      *
-     * Als groepsgrootte prioriteit = 1: strikt 5 aanhouden, rest 4, desnoods 3/6
-     * Als groepsgrootte prioriteit = 4: flexibeler, 3-6 acceptabel
-     *
-     * Voorkeur: 5 > 4 > 6 > 3
+     * Voorkeur wordt bepaald door poule_grootte_voorkeur (standaard: 5 > 4 > 6 > 3)
      */
     private function berekenPouleGroottes(int $aantal): array
     {
@@ -1152,11 +1161,8 @@ class DynamischeIndelingService
             return [$aantal]; // 1 poule
         }
 
-        $prioriteit = $this->config['groepsgrootte_prioriteit'] ?? 3;
-
-        // Prioriteit 1 = zeer strikt (5 gewenst), 4 = flexibel
-        // Penalty multiplier: prioriteit 1 = 10x, prioriteit 4 = 1x
-        $striktheid = max(1, 5 - $prioriteit); // 4, 3, 2, 1
+        // Vaste striktheid: gebruik medium waarde (2)
+        $striktheid = 2;
 
         $besteVerdeling = null;
         $besteScore = PHP_INT_MAX;

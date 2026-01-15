@@ -493,7 +493,7 @@
                 updatePrioriteitInput();
                 // Update numbers
                 const items = prioriteitContainer.querySelectorAll('.prioriteit-item');
-                const labels = { gewicht: '🏋️ Gewicht', band: '🥋 Band', groepsgrootte: '👥 Groepsgrootte', clubspreiding: '🏠 Club' };
+                const labels = { leeftijd: '📅 Leeftijd', gewicht: '🏋️ Gewicht', band: '🥋 Band' };
                 items.forEach((item, idx) => {
                     item.textContent = `${idx + 1}. ${labels[item.dataset.key]}`;
                 });
@@ -708,29 +708,28 @@
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
                             <p class="font-medium mb-1">Sorteer volgorde binnen categorie</p>
-                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd en verdeeld over poules. Harde criteria (leeftijd, geslacht, gewichtsklasse) blijven altijd gerespecteerd.</p>
+                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd voordat ze over poules worden verdeeld.</p>
                             <ul class="text-xs mt-2 space-y-1">
-                                <li><strong>Band:</strong> Witte banden vullen eerst de poules, dan geel, etc.</li>
-                                <li><strong>Gewicht:</strong> Lichtste judoka's eerst in de poules</li>
-                                <li><strong>Groepsgrootte:</strong> Optimale poule grootte (voorkeur 3-5)</li>
-                                <li><strong>Club:</strong> Judoka's van zelfde club verspreiden</li>
+                                <li><strong>Leeftijd:</strong> Jongste judoka's eerst</li>
+                                <li><strong>Gewicht:</strong> Lichtste judoka's eerst</li>
+                                <li><strong>Band:</strong> Lagere banden eerst (wit → zwart)</li>
                             </ul>
                         </div>
                     </button>
                     <div id="prioriteit-container" class="flex gap-2">
                         @php
-                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['groepsgrootte', 'gewicht', 'band', 'clubspreiding'];
-                            // Backwards compatibility: convert old keys
-                            $prioriteiten = array_map(fn($k) => $k === 'bandkleur' ? 'band' : $k, $prioriteiten);
-                            // Ensure all 4 keys exist
-                            $allKeys = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
-                            foreach ($allKeys as $key) {
+                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
+                            // Backwards compatibility: filter old keys, keep only valid ones
+                            $validKeys = ['leeftijd', 'gewicht', 'band'];
+                            $prioriteiten = array_values(array_filter($prioriteiten, fn($k) => in_array($k, $validKeys)));
+                            // Ensure all 3 keys exist
+                            foreach ($validKeys as $key) {
                                 if (!in_array($key, $prioriteiten)) {
-                                    array_unshift($prioriteiten, $key);
+                                    $prioriteiten[] = $key;
                                 }
                             }
-                            $prioriteiten = array_values(array_unique($prioriteiten));
-                            $labels = ['gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band', 'groepsgrootte' => '👥 Groepsgrootte', 'clubspreiding' => '🏠 Club'];
+                            $prioriteiten = array_slice(array_unique($prioriteiten), 0, 3);
+                            $labels = ['leeftijd' => '📅 Leeftijd', 'gewicht' => '🏋️ Gewicht', 'band' => '🥋 Band'];
                         @endphp
                         @foreach($prioriteiten as $idx => $key)
                         <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="{{ $key }}">{{ $idx + 1 }}. {{ $labels[$key] ?? $key }}</div>
@@ -739,6 +738,15 @@
                     <span class="text-yellow-600 text-xs">(sleep om te wisselen)</span>
                 </div>
                 <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
+
+                <!-- Clubspreiding checkbox -->
+                <div class="flex items-center gap-2 mt-2">
+                    <input type="hidden" name="clubspreiding" value="0">
+                    <input type="checkbox" name="clubspreiding" id="clubspreiding" value="1"
+                           class="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                           {{ old('clubspreiding', $toernooi->clubspreiding ?? false) ? 'checked' : '' }}>
+                    <label for="clubspreiding" class="text-yellow-800 text-sm">🏠 Clubspreiding (probeer judoka's van zelfde club te verdelen over poules)</label>
+                </div>
             </div>
 
             @php
