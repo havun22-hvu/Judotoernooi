@@ -1145,7 +1145,7 @@
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
-                            // Selecteer opgeslagen preset in dropdown en toon naam in radio button
+                            // Selecteer opgeslagen preset in dropdown en activeer radio button
                             if (opgeslagenEigenPresetId) {
                                 huidigePresetId = opgeslagenEigenPresetId;
                                 // Find preset name and show in radio
@@ -1154,8 +1154,8 @@
                                     huidigePresetNaam = savedPreset.naam;
                                     // Selecteer in dropdown
                                     presetsDropdown.value = opgeslagenEigenPresetId;
-                                    // Show radio button with preset name
-                                    setTimeout(() => updateEigenPresetRadio(savedPreset.naam, false), 0);
+                                    // Show AND activate radio button with preset name
+                                    setTimeout(() => updateEigenPresetRadio(savedPreset.naam, true), 0);
                                 }
                             }
                         }
