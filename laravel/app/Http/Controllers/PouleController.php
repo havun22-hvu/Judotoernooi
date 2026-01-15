@@ -279,57 +279,44 @@ class PouleController extends Controller
         $nieuwePositie = $naarPoule->judokas()->count() + 1;
         $naarPoule->judokas()->attach($judoka->id, ['positie' => $nieuwePositie]);
 
-        // Refresh relations to get updated judoka lists
+        // Regenerate matches for both poules (need fresh judoka lists)
         $vanPoule->load('judokas');
         $naarPoule->load('judokas');
-
-        // Regenerate matches for both poules
         $vanPoule->wedstrijden()->delete();
         $naarPoule->wedstrijden()->delete();
         $this->wedstrijdService->genereerWedstrijdenVoorPoule($vanPoule);
         $this->wedstrijdService->genereerWedstrijdenVoorPoule($naarPoule);
 
-        // Update statistics after regenerating matches
+        // Update statistics and refresh to get final state
         $vanPoule->updateStatistieken();
         $naarPoule->updateStatistieken();
-
-        // Refresh models to get updated counts and judokas relation
         $vanPoule->refresh();
         $naarPoule->refresh();
-        $vanPoule->load('judokas');
-        $naarPoule->load('judokas');
 
-        // Calculate ranges for both poules
+        // Calculate ranges and update titels
         $huidigJaar = now()->year;
-
         $vanRanges = $this->berekenPouleRanges($vanPoule, $huidigJaar);
         $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
-
-        // Update titel bij variabele categorieën
         $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
         $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
-
-        // Get fresh instances to ensure we have the latest database values
-        $vanPouleFresh = Poule::find($vanPoule->id);
-        $naarPouleFresh = Poule::find($naarPoule->id);
 
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} verplaatst naar {$naarTitel}",
             'van_poule' => [
-                'id' => $vanPouleFresh->id,
-                'nummer' => $vanPouleFresh->nummer,
-                'judokas_count' => $vanPouleFresh->aantal_judokas,
-                'aantal_wedstrijden' => $vanPouleFresh->aantal_wedstrijden,
-                'titel' => $vanPouleFresh->titel,
+                'id' => $vanPoule->id,
+                'nummer' => $vanPoule->nummer,
+                'judokas_count' => $vanPoule->aantal_judokas,
+                'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
+                'titel' => $vanPoule->titel,
                 ...$vanRanges,
             ],
             'naar_poule' => [
-                'id' => $naarPouleFresh->id,
-                'nummer' => $naarPouleFresh->nummer,
-                'judokas_count' => $naarPouleFresh->aantal_judokas,
-                'aantal_wedstrijden' => $naarPouleFresh->aantal_wedstrijden,
-                'titel' => $naarPouleFresh->titel,
+                'id' => $naarPoule->id,
+                'nummer' => $naarPoule->nummer,
+                'judokas_count' => $naarPoule->aantal_judokas,
+                'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
+                'titel' => $naarPoule->titel,
                 ...$naarRanges,
             ],
         ]);

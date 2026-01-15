@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlokController;
 use App\Http\Controllers\ClubController;
 use App\Http\Controllers\CoachPortalController;
@@ -102,10 +101,15 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('afsluiten', [ToernooiController::class, 'bevestigAfsluiten'])->name('afsluiten.bevestig');
     Route::post('heropenen', [ToernooiController::class, 'heropenen'])->name('heropenen');
 
-    // Auth routes (public)
-    Route::get('login', [AuthController::class, 'loginForm'])->name('auth.login');
-    Route::post('login', [AuthController::class, 'login'])->name('auth.login.post');
-    Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
+    // Auth routes (public) - redirects naar organisator login
+    Route::get('login', fn() => redirect()->route('organisator.login'))->name('auth.login');
+    Route::post('login', fn() => redirect()->route('organisator.login')
+        ->with('info', 'Gebruik je persoonlijke toegangslink of log in als organisator.'))->name('auth.login.post');
+    Route::post('logout', function (\Illuminate\Http\Request $request, \App\Models\Toernooi $toernooi) {
+        $request->session()->forget("toernooi_{$toernooi->id}_rol");
+        $request->session()->forget("toernooi_{$toernooi->id}_mat");
+        return redirect()->route('organisator.login')->with('success', 'Je bent uitgelogd');
+    })->name('auth.logout');
 
     // Device Toegang Beheer API routes (Vrijwilligers)
     Route::middleware(CheckToernooiRol::class . ':admin')->prefix('api/device-toegang')->name('device-toegang.')->group(function () {
