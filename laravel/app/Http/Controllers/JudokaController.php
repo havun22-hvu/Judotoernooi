@@ -278,6 +278,15 @@ class JudokaController extends Controller
                 }
             }
 
+            // Recalculate leeftijdsklasse from toernooi config
+            if (!empty($judoka->geboortejaar) && !empty($judoka->geslacht)) {
+                $leeftijd = date('Y') - $judoka->geboortejaar;
+                $nieuweLeeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $judoka->geslacht, $wijzigingen['band'] ?? $judoka->band);
+                if ($nieuweLeeftijdsklasse && $nieuweLeeftijdsklasse !== $judoka->leeftijdsklasse) {
+                    $wijzigingen['leeftijdsklasse'] = $nieuweLeeftijdsklasse;
+                }
+            }
+
             // Check required fields
             $ontbreekt = [];
             if (empty($judoka->naam)) $ontbreekt[] = 'naam';

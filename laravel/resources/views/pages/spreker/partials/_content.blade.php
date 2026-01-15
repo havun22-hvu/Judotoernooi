@@ -305,17 +305,24 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Welkomstwoord / Aandachtspunten</label>
                 <textarea
                     x-model="notities"
-                    @input="saveNotities()"
                     rows="20"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                     placeholder="Typ hier je notities of gebruik de knop hieronder voor een voorbeeldtekst..."
                 ></textarea>
             </div>
-            <div class="flex justify-between items-center text-sm text-gray-500">
-                <span x-show="notitiesSaved" class="text-green-600">✓ Opgeslagen</span>
+            <div class="flex justify-between items-center">
+                <div class="flex gap-2">
+                    <button
+                        @click="saveNotities()"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                        💾 Opslaan
+                    </button>
+                    <span x-show="notitiesSaved" class="text-green-600 text-sm py-2">✓ Opgeslagen</span>
+                </div>
                 <button
                     @click="clearNotities()"
-                    class="text-red-600 hover:text-red-800"
+                    class="text-red-600 hover:text-red-800 text-sm"
                 >
                     Wis notities
                 </button>
@@ -376,7 +383,6 @@ function sprekerInterface() {
         openPoules: [],
         notities: '',
         notitiesSaved: false,
-        saveTimeout: null,
 
         async init() {
             // Laad geschiedenis uit localStorage
@@ -484,27 +490,24 @@ function sprekerInterface() {
         },
 
         async saveNotities() {
-            // Debounce: wacht 500ms na laatste invoer
-            clearTimeout(this.saveTimeout);
-            this.saveTimeout = setTimeout(async () => {
-                try {
-                    const response = await fetch('{{ route('toernooi.spreker.notities.save', $toernooi) }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({ notities: this.notities })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        this.notitiesSaved = true;
-                        setTimeout(() => this.notitiesSaved = false, 2000);
-                    }
-                } catch (err) {
-                    console.error('Fout bij opslaan notities:', err);
+            try {
+                const response = await fetch('{{ route('toernooi.spreker.notities.save', $toernooi) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ notities: this.notities })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.notitiesSaved = true;
+                    setTimeout(() => this.notitiesSaved = false, 2000);
                 }
-            }, 500);
+            } catch (err) {
+                console.error('Fout bij opslaan notities:', err);
+                alert('Fout bij opslaan');
+            }
         },
 
         async clearNotities() {
