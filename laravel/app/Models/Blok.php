@@ -121,8 +121,12 @@ class Blok extends Model
         });
     }
 
-    public function matten()
+    /**
+     * Get matten die dit blok bedienen (via poules)
+     * Geen pivot tabel nodig - matten zijn gekoppeld via poules
+     */
+    public function getMattenAttribute()
     {
-        return $this->belongsToMany(Mat::class, 'blok_mat');
+        return Mat::whereIn('id', $this->poules()->whereNotNull('mat_id')->pluck('mat_id')->unique())->get();
     }
 }
