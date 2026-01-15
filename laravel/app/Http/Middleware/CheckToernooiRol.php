@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Http\Controllers\AuthController;
 use App\Models\Toernooi;
 use Closure;
 use Illuminate\Http\Request;
@@ -33,7 +32,8 @@ class CheckToernooiRol
             return $next($request);
         }
 
-        $huidigeRol = AuthController::getRol($request, $toernooi);
+        // Session-based rol check (legacy, wordt nog gebruikt door sommige interfaces)
+        $huidigeRol = $request->session()->get("toernooi_{$toernooi->id}_rol");
 
         // Niet ingelogd
         if (!$huidigeRol) {

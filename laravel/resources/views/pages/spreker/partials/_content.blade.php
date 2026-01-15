@@ -520,10 +520,14 @@ function sprekerInterface() {
     }
 }
 
-// Auto-refresh elke 10 seconden (alleen als uitslagen tab actief is)
+// Auto-refresh elke 10 seconden (ALLEEN als uitslagen tab actief is)
 setInterval(function() {
-    const app = document.querySelector('[x-data]')?.__x?.$data;
-    if (!app || app.activeTab === 'uitslagen') {
+    // Check via data attribute welke tab actief is
+    const activeTabBtn = document.querySelector('[x-data] button.border-blue-500');
+    const isUitslagenActive = activeTabBtn && activeTabBtn.textContent.includes('Uitslagen');
+
+    // Alleen refreshen als we op de uitslagen tab zitten
+    if (isUitslagenActive) {
         location.reload();
     }
 }, 10000);
