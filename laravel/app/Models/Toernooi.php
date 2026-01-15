@@ -794,6 +794,30 @@ class Toernooi extends Model
     }
 
     /**
+     * Get sort value for a leeftijdsklasse label (youngest first).
+     * Uses max_leeftijd from config, falls back to U-number parsing.
+     */
+    public function getLeeftijdsklasseSortValue(string $leeftijdsklasse): int
+    {
+        $config = $this->getAlleGewichtsklassen();
+
+        // Find category by label in config
+        foreach ($config as $cat) {
+            $label = $cat['label'] ?? '';
+            if ($label === $leeftijdsklasse) {
+                return (int) ($cat['max_leeftijd'] ?? 99);
+            }
+        }
+
+        // Fallback: parse U-number (U11 → 11)
+        if (preg_match('/U(\d+)/', $leeftijdsklasse, $matches)) {
+            return (int) $matches[1];
+        }
+
+        return 99;
+    }
+
+    /**
      * Bepaal leeftijdsklasse label op basis van toernooi config (NIET hardcoded enum).
      * Zoekt de eerste categorie waar judoka in past qua leeftijd, geslacht en band.
      *
