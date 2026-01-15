@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Band;
 use App\Enums\Leeftijdsklasse;
 use App\Models\Judoka;
 use App\Models\Toernooi;
@@ -286,6 +287,17 @@ class JudokaController extends Controller
             $naamNieuw = Judoka::formatNaam($naamOud);
             if ($naamOud !== $naamNieuw) {
                 $wijzigingen['naam'] = $naamNieuw;
+            }
+
+            // Correct band to kyu notation (groen → Groen (3e kyu))
+            if (!empty($judoka->band)) {
+                $bandEnum = Band::fromString($judoka->band);
+                if ($bandEnum) {
+                    $bandNieuw = $bandEnum->labelMetKyu();
+                    if ($judoka->band !== $bandNieuw) {
+                        $wijzigingen['band'] = $bandNieuw;
+                    }
+                }
             }
 
             // Check required fields

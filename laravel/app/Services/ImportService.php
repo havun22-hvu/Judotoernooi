@@ -263,11 +263,12 @@ class ImportService
     private function parseBand(mixed $waarde): string
     {
         if (empty($waarde)) {
-            return 'wit';
+            return 'Wit (6e kyu)';
         }
 
         $band = Band::fromString((string)$waarde);
-        return $band ? strtolower($band->label()) : strtolower(trim((string)$waarde));
+        // Sla op met kyu notatie voor consistentie
+        return $band ? $band->labelMetKyu() : trim((string)$waarde);
     }
 
     /**
