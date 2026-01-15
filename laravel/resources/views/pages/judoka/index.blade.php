@@ -5,7 +5,31 @@
 @section('content')
 @php
     $incompleteJudokas = $judokas->filter(fn($j) => $j->is_onvolledig || !$j->club_id || !$j->band || !$j->geboortejaar || !$j->gewicht);
+    $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
 @endphp
+
+<!-- WAARSCHUWING: Niet-gecategoriseerde judoka's -->
+@if($nietGecategoriseerdAantal > 0)
+<div id="niet-gecategoriseerd-alert"
+     class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
+     x-data="{ show: true }"
+     x-show="show"
+     x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+                <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
+                <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
+            </div>
+        </div>
+        <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi#categorieen"
+           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+            Naar Instellingen
+        </a>
+    </div>
+</div>
+@endif
 
 <div class="flex justify-between items-center mb-4">
     <div>

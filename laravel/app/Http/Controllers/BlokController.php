@@ -570,8 +570,30 @@ class BlokController extends Controller
                 return $poule;
             });
 
+        // Poules per blok/mat voor "Oproepen" tab
+        $blokken = $toernooi->blokken()
+            ->with(['poules' => function ($q) {
+                $q->with(['mat', 'judokas.club'])
+                    ->whereNotNull('mat_id')
+                    ->orderBy('mat_id')
+                    ->orderBy('volgorde');
+            }])
+            ->orderBy('nummer')
+            ->get();
+
+        // Groepeer poules per blok per mat
+        $poulesPerBlok = $blokken->mapWithKeys(function ($blok) {
+            $poulesPerMat = $blok->poules->groupBy('mat_id')->map(function ($poules, $matId) {
+                return [
+                    'mat' => $poules->first()->mat,
+                    'poules' => $poules,
+                ];
+            })->sortKeys();
+            return [$blok->nummer => ['blok' => $blok, 'matten' => $poulesPerMat]];
+        });
+
         // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
-        return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen'));
+        return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok'));
     }
 
     /**
