@@ -1135,18 +1135,19 @@ class PouleIndelingService
         $parts = [];
 
         // Get category config for this leeftijdsklasse
+        // Same lookup logic as updateDynamischeTitel in PouleController
         $categorieConfig = null;
         if ($gewichtsklassenConfig) {
-            // Try direct config key first (if provided)
-            if ($categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
-                $categorieConfig = $gewichtsklassenConfig[$categorieKey];
-            }
-            // Fallback: lookup by label
-            if (!$categorieConfig) {
-                $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-                if ($configKey && isset($gewichtsklassenConfig[$configKey])) {
-                    $categorieConfig = $gewichtsklassenConfig[$configKey];
+            // Try by label first (most reliable)
+            foreach ($gewichtsklassenConfig as $key => $data) {
+                if (($data['label'] ?? '') === $leeftijdsklasse) {
+                    $categorieConfig = $data;
+                    break;
                 }
+            }
+            // Fallback: direct config key lookup
+            if (!$categorieConfig && $categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
+                $categorieConfig = $gewichtsklassenConfig[$categorieKey];
             }
         }
 
@@ -1164,6 +1165,7 @@ class PouleIndelingService
 
         // 3. Age range (only if variable: max_leeftijd_verschil > 0)
         $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+
         if ($maxLftVerschil > 0 && !empty($pouleJudokas)) {
             $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
             if (!empty($leeftijden)) {
