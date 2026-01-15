@@ -1024,14 +1024,6 @@
                         <div class="flex flex-wrap items-center gap-3 mb-2">
                             <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
                             <div class="flex items-center gap-2">
-                                <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
-                                <input type="number" name="gewichtsklassen_leeftijd[${key}]"
-                                       value="${leeftijdValue}"
-                                       placeholder="99"
-                                       class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
-                                       min="5" max="99">
-                            </div>
-                            <div class="flex items-center gap-2">
                                 <label class="text-gray-600 text-sm">Naam:</label>
                                 <input type="text" name="gewichtsklassen_label[${key}]"
                                        value="${item.label}"
@@ -1044,6 +1036,15 @@
                                 <label class="text-gray-500 text-xs">in titel</label>
                             </div>
                             <div class="flex items-center gap-2">
+                                <label class="text-gray-600 text-sm whitespace-nowrap">Max:</label>
+                                <input type="number" name="gewichtsklassen_leeftijd[${key}]"
+                                       value="${leeftijdValue}"
+                                       placeholder="99"
+                                       class="leeftijd-input w-12 border rounded px-1 py-1 text-center font-bold text-blue-600 placeholder-gray-400"
+                                       min="5" max="99">
+                                <span class="text-xs text-gray-500">jr</span>
+                            </div>
+                            <div class="flex items-center gap-2">
                                 <select name="gewichtsklassen_geslacht[${key}]"
                                         class="geslacht-select border rounded px-1 py-1 text-sm bg-white w-16">
                                     <option value="gemengd" ${geslacht === 'gemengd' ? 'selected' : ''}>M&V</option>
@@ -1052,7 +1053,7 @@
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
-                                
+
                                 <select name="wedstrijd_systeem[${key}]"
                                         class="border rounded px-2 py-1 text-sm bg-white">
                                     <option value="poules">Poules</option>
