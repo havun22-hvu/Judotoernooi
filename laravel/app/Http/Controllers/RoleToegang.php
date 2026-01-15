@@ -211,17 +211,143 @@ class RoleToegang extends Controller
 
     /**
      * Spreker interface (device-bound)
+     * Same data as BlokController::sprekerInterface but standalone PWA view
      */
     public function sprekerDeviceBound(Request $request): View
     {
         $toegang = $request->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
-        return view('pages.blok.spreker', [
-            'toernooi' => $toernooi,
-            'blokken' => $toernooi->blokken()->with('poules.mat')->get(),
-            'toegang' => $toegang,
-        ]);
+        // Klare poules (spreker_klaar gezet, nog niet afgeroepen)
+        $klarePoules = $toernooi->poules()
+            ->whereNotNull('spreker_klaar')
+            ->whereNull('afgeroepen_at')
+            ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
+            ->orderBy('spreker_klaar', 'asc')
+            ->get()
+            ->map(function ($poule) {
+                if ($poule->type === 'eliminatie') {
+                    $poule->standings = $this->getEliminatieStandings($poule);
+                    $poule->is_eliminatie = true;
+                    return $poule;
+                }
+
+                // Calculate standings for regular poule
+                $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                    $wp = 0;
+                    $jp = 0;
+                    foreach ($poule->wedstrijden as $w) {
+                        if (!$w->is_gespeeld) continue;
+                        if ($w->judoka_wit_id === $judoka->id) {
+                            $jp += $w->score_wit ?? 0;
+                            if ($w->winnaar_id === $judoka->id) $wp++;
+                        } elseif ($w->judoka_blauw_id === $judoka->id) {
+                            $jp += $w->score_blauw ?? 0;
+                            if ($w->winnaar_id === $judoka->id) $wp++;
+                        }
+                    }
+                    return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
+                });
+
+                $wedstrijden = $poule->wedstrijden;
+                $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
+                    if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
+                    if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
+                    foreach ($wedstrijden as $w) {
+                        $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
+                                || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
+                        if ($isMatch && $w->winnaar_id) {
+                            return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
+                        }
+                    }
+                    return 0;
+                })->values();
+
+                $poule->is_eliminatie = false;
+                return $poule;
+            });
+
+        // Recent afgeroepen (voor "Terug" functie)
+        $afgeroepen = $toernooi->poules()
+            ->whereNotNull('afgeroepen_at')
+            ->where('afgeroepen_at', '>=', now()->subMinutes(30))
+            ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
+            ->orderBy('afgeroepen_at', 'desc')
+            ->get()
+            ->map(function ($poule) {
+                if ($poule->type === 'eliminatie') {
+                    $poule->standings = $this->getEliminatieStandings($poule);
+                    $poule->is_eliminatie = true;
+                }
+                return $poule;
+            });
+
+        // Poules per blok/mat voor "Oproepen" tab
+        $blokken = $toernooi->blokken()
+            ->with(['poules' => function ($q) {
+                $q->with(['mat', 'judokas.club'])
+                    ->whereNotNull('mat_id')
+                    ->orderBy('mat_id')
+                    ->orderBy('volgorde');
+            }])
+            ->orderBy('nummer')
+            ->get();
+
+        $poulesPerBlok = $blokken->mapWithKeys(function ($blok) {
+            $poulesPerMat = $blok->poules->groupBy('mat_id')->map(function ($poules, $matId) {
+                return [
+                    'mat' => $poules->first()->mat,
+                    'poules' => $poules,
+                ];
+            })->sortKeys();
+            return [$blok->nummer => ['blok' => $blok, 'matten' => $poulesPerMat]];
+        });
+
+        return view('pages.spreker.interface', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok', 'toegang'));
+    }
+
+    /**
+     * Get standings for elimination bracket (for spreker interface)
+     */
+    private function getEliminatieStandings($poule): \Illuminate\Support\Collection
+    {
+        $standings = collect();
+
+        // GOUD = Finale winnaar
+        $finale = $poule->wedstrijden->first(fn($w) => $w->groep === 'A' && $w->ronde === 'finale');
+        if ($finale && $finale->is_gespeeld && $finale->winnaar_id) {
+            $goud = $finale->winnaar_id === $finale->judoka_wit_id
+                ? $poule->judokas->firstWhere('id', $finale->judoka_wit_id)
+                : $poule->judokas->firstWhere('id', $finale->judoka_blauw_id);
+            if ($goud) {
+                $standings->push(['judoka' => $goud, 'wp' => null, 'jp' => null, 'plaats' => 1]);
+            }
+
+            // ZILVER = Finale verliezer
+            $zilver = $finale->winnaar_id === $finale->judoka_wit_id
+                ? $poule->judokas->firstWhere('id', $finale->judoka_blauw_id)
+                : $poule->judokas->firstWhere('id', $finale->judoka_wit_id);
+            if ($zilver) {
+                $standings->push(['judoka' => $zilver, 'wp' => null, 'jp' => null, 'plaats' => 2]);
+            }
+        }
+
+        // BRONS = Winnaars van troostfinales
+        $bronsWedstrijden = $poule->wedstrijden->filter(fn($w) =>
+            in_array($w->ronde, ['b_halve_finale_2', 'b_brons', 'b_finale']) && $w->is_gespeeld && $w->winnaar_id
+        );
+
+        $bronsIds = $bronsWedstrijden->pluck('winnaar_id')->unique()
+            ->reject(fn($id) => $standings->contains(fn($s) => $s['judoka']->id === $id));
+
+        foreach ($bronsIds as $id) {
+            $judoka = $poule->judokas->firstWhere('id', $id);
+            if ($judoka) {
+                $standings->push(['judoka' => $judoka, 'wp' => null, 'jp' => null, 'plaats' => 3]);
+            }
+        }
+
+        return $standings;
     }
 
     /**
