@@ -1308,7 +1308,7 @@ Bij variabele categorieën (`max_kg_verschil > 0`) worden poules niet optimaal v
 ### Kernprincipes
 
 1. **Ranges zijn HARD** - leeftijd en gewicht limieten worden NOOIT overschreden
-2. **Doel is 5 judoka's** - maar alleen als het binnen de limieten past
+2. **Poule grootte prioriteit:** 5 > 4 > 3 (5 is best, 3 alleen als het niet anders kan)
 3. **Geen magic fixes** - als indeling niet goed is, moet organisator ranges aanpassen
 
 ### Algoritme
@@ -1318,26 +1318,47 @@ Bij variabele categorieën (`max_kg_verschil > 0`) worden poules niet optimaal v
    - Primair: leeftijd (jong → oud)
    - Secundair: gewicht (licht → zwaar)
 
-2. LOOP door gesorteerde lijst:
-   Voor elke judoka:
-   - Check of judoka in huidige poule past:
-     a) Leeftijdsverschil ≤ max_leeftijd_verschil
-     b) Gewichtsverschil ≤ max_kg_verschil
-     c) Poule heeft < 5 judoka's
+2. GROEPEER op harde limieten:
+   - Maak groepen waar ALLE judoka's binnen leeftijd EN gewicht limieten vallen
+   - Dit zijn de "kandidaat-poules" die nog verdeeld moeten worden
 
-   - Als ALLE checks OK: voeg toe aan poule
-   - Anders: start nieuwe poule met deze judoka
+3. OPTIMALISEER poule grootte per groep:
+   - Bereken beste verdeling volgens prioriteit [5, 4, 3]
+   - Voorbeeld: 8 judoka's → 4+4 (niet 5+3, want 4 > 3)
+   - Voorbeeld: 9 judoka's → 5+4
+   - Voorbeeld: 7 judoka's → 4+3 (niet 5+2, want 2 is te klein)
+   - Voorbeeld: 11 judoka's → 4+4+3 (niet 5+3+3)
 
-3. RESULTAAT: poules van max 5 judoka's binnen harde limieten
+4. RESULTAAT: poules van 5, 4 of 3 judoka's binnen harde limieten
 ```
+
+### Poule grootte verdeling tabel
+
+| Aantal | Beste verdeling | Waarom |
+|--------|----------------|--------|
+| 3 | 3 | Enige optie |
+| 4 | 4 | Enige optie |
+| 5 | 5 | Ideaal |
+| 6 | 3+3 | Twee gelijke poules |
+| 7 | 4+3 | 4 > 3 |
+| 8 | 4+4 | Twee gelijke poules (niet 5+3) |
+| 9 | 5+4 | 5 is prioriteit |
+| 10 | 5+5 | Twee ideale poules |
+| 11 | 4+4+3 | Voorkom 3+3 situatie (niet 5+3+3) |
+| 12 | 4+4+4 | Drie gelijke poules |
+| 13 | 5+4+4 | 5 waar mogelijk |
+| 14 | 5+5+4 | Twee ideale + één goede |
+| 15 | 5+5+5 | Drie ideale poules |
 
 ### Verschil met huidige code
 
 | Aspect | Huidige code | Nieuwe code |
 |--------|--------------|-------------|
-| Stop criterium | Alleen gewichtslimiet | Gewichtslimiet OF 5 judoka's |
-| Poule grootte | Onbeperkt (7, 8, 9...) | Max 5 |
+| Stop criterium | Bij 5 judoka's | Na optimale groepering |
+| 8 judoka's | 5+3 | 4+4 |
+| 11 judoka's | 5+3+3 | 4+4+3 |
 | Limieten | Hard | Hard (ongewijzigd) |
+| Optimalisatie | Geen (sequentieel) | Ja (beste verdeling) |
 
 ### Voorbeeld
 

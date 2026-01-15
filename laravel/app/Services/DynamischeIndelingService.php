@@ -773,54 +773,55 @@ class DynamischeIndelingService
             }
         })->values()->all();
 
-        // STAP 2: Verdeel van boven naar beneden met max kg verschil als HARD constraint
-        $poules = [];
-        $huidigePoule = [];
-        $minGewichtInPoule = null;
-        $maxGewichtInPoule = null;
+        // STAP 2: Groepeer judoka's op gewichtslimiet (zonder grootte beperking)
+        $gewichtsGroepen = [];
+        $huidigeGroep = [];
+        $minGewichtInGroep = null;
+        $maxGewichtInGroep = null;
 
         foreach ($gesorteerd as $judoka) {
             $gewicht = $this->getEffectiefGewicht($judoka);
 
-            // Check of judoka in huidige poule past (max kg verschil EN max 5 judoka's)
-            $pastInPoule = true;
-            if (!empty($huidigePoule)) {
-                // Check gewichtslimiet
-                $nieuwMin = min($minGewichtInPoule, $gewicht);
-                $nieuwMax = max($maxGewichtInPoule, $gewicht);
+            // Check of judoka in huidige groep past (alleen gewichtslimiet)
+            $pastInGroep = true;
+            if (!empty($huidigeGroep)) {
+                $nieuwMin = min($minGewichtInGroep, $gewicht);
+                $nieuwMax = max($maxGewichtInGroep, $gewicht);
                 if (($nieuwMax - $nieuwMin) > $maxKgVerschil) {
-                    $pastInPoule = false;
-                }
-                // Check poule grootte (max 5 judoka's is ideaal)
-                if (count($huidigePoule) >= 5) {
-                    $pastInPoule = false;
+                    $pastInGroep = false;
                 }
             }
 
-            if ($pastInPoule) {
-                // Voeg toe aan huidige poule
-                $huidigePoule[] = $judoka;
-                $minGewichtInPoule = $minGewichtInPoule === null ? $gewicht : min($minGewichtInPoule, $gewicht);
-                $maxGewichtInPoule = $maxGewichtInPoule === null ? $gewicht : max($maxGewichtInPoule, $gewicht);
+            if ($pastInGroep) {
+                $huidigeGroep[] = $judoka;
+                $minGewichtInGroep = $minGewichtInGroep === null ? $gewicht : min($minGewichtInGroep, $gewicht);
+                $maxGewichtInGroep = $maxGewichtInGroep === null ? $gewicht : max($maxGewichtInGroep, $gewicht);
             } else {
-                // Start nieuwe poule
-                if (count($huidigePoule) >= 2) {
-                    $poules[] = $huidigePoule;
-                } elseif (count($huidigePoule) === 1 && !empty($poules)) {
-                    // 1 judoka: probeer toe te voegen aan vorige poule als het past
-                    $this->probeerToeTeVoegenAanLaatstePoule($poules, $huidigePoule[0], $maxKgVerschil);
+                if (!empty($huidigeGroep)) {
+                    $gewichtsGroepen[] = $huidigeGroep;
                 }
-                $huidigePoule = [$judoka];
-                $minGewichtInPoule = $gewicht;
-                $maxGewichtInPoule = $gewicht;
+                $huidigeGroep = [$judoka];
+                $minGewichtInGroep = $gewicht;
+                $maxGewichtInGroep = $gewicht;
             }
         }
 
-        // Laatste poule toevoegen
-        if (count($huidigePoule) >= 2) {
-            $poules[] = $huidigePoule;
-        } elseif (count($huidigePoule) === 1 && !empty($poules)) {
-            $this->probeerToeTeVoegenAanLaatstePoule($poules, $huidigePoule[0], $maxKgVerschil);
+        if (!empty($huidigeGroep)) {
+            $gewichtsGroepen[] = $huidigeGroep;
+        }
+
+        // STAP 3: Verdeel elke gewichtsgroep in optimale poules (prioriteit: 5 > 4 > 3)
+        $poules = [];
+        foreach ($gewichtsGroepen as $groep) {
+            $groepPoules = $this->verdeelInOptimalePoules($groep);
+            foreach ($groepPoules as $poule) {
+                if (count($poule) >= 2) {
+                    $poules[] = $poule;
+                } elseif (count($poule) === 1 && !empty($poules)) {
+                    // 1 judoka: probeer toe te voegen aan vorige poule als het past
+                    $this->probeerToeTeVoegenAanLaatstePoule($poules, $poule[0], $maxKgVerschil);
+                }
+            }
         }
 
         // STAP 3: Pas clubspreiding toe indien geconfigureerd
@@ -837,18 +838,133 @@ class DynamischeIndelingService
     private function probeerToeTeVoegenAanLaatstePoule(array &$poules, $judoka, float $maxKgVerschil): void
     {
         if (empty($poules)) return;
-        
+
         $laatstePoule = &$poules[count($poules) - 1];
         $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
         $judokaGewicht = $this->getEffectiefGewicht($judoka);
-        
+
         $nieuwMin = min(min($laatsteGewichten), $judokaGewicht);
         $nieuwMax = max(max($laatsteGewichten), $judokaGewicht);
-        
+
         if (($nieuwMax - $nieuwMin) <= $maxKgVerschil) {
             $laatstePoule[] = $judoka;
         }
         // Anders: judoka niet ingedeeld (wordt later gerapporteerd in validatie)
+    }
+
+    /**
+     * Verdeel een groep judoka's in optimale poule groottes
+     * Prioriteit: 5 > 4 > 3 (5 is best, 3 alleen als het niet anders kan)
+     *
+     * Voorbeelden:
+     * - 8 judoka's → [4, 4] (niet [5, 3])
+     * - 9 judoka's → [5, 4]
+     * - 11 judoka's → [4, 4, 3] (niet [5, 3, 3])
+     */
+    private function verdeelInOptimalePoules(array $judokas): array
+    {
+        $aantal = count($judokas);
+
+        if ($aantal <= 5) {
+            return [$judokas];
+        }
+
+        // Bereken optimale verdeling
+        $verdeling = $this->berekenOptimaleVerdeling($aantal);
+
+        // Verdeel judoka's volgens de berekende verdeling
+        $poules = [];
+        $offset = 0;
+        foreach ($verdeling as $grootte) {
+            $poules[] = array_slice($judokas, $offset, $grootte);
+            $offset += $grootte;
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Bereken de optimale verdeling voor een aantal judoka's
+     * Prioriteit: 5 > 4 > 3, minimaliseer aantal poules van 3
+     *
+     * @return array Lijst van poule groottes, bijv. [5, 4] voor 9 judoka's
+     */
+    private function berekenOptimaleVerdeling(int $aantal): array
+    {
+        if ($aantal <= 5) {
+            return [$aantal];
+        }
+
+        // Probeer verschillende combinaties en kies de beste
+        // Score: hogere score = betere verdeling
+        // 5 = 3 punten, 4 = 2 punten, 3 = 1 punt, 2 of minder = -10 punten
+        $besteVerdeling = null;
+        $besteScore = -999;
+
+        // Probeer 1 t/m 5 poules
+        for ($aantalPoules = 1; $aantalPoules <= ceil($aantal / 3); $aantalPoules++) {
+            $verdeling = $this->verdeelOverPoules($aantal, $aantalPoules);
+            if ($verdeling === null) continue;
+
+            $score = $this->scoreVerdeling($verdeling);
+            if ($score > $besteScore) {
+                $besteScore = $score;
+                $besteVerdeling = $verdeling;
+            }
+        }
+
+        return $besteVerdeling ?? [$aantal];
+    }
+
+    /**
+     * Verdeel een aantal over een specifiek aantal poules
+     * Probeert zo veel mogelijk 5's, dan 4's, dan 3's
+     */
+    private function verdeelOverPoules(int $aantal, int $aantalPoules): ?array
+    {
+        if ($aantalPoules <= 0 || $aantal < $aantalPoules * 3) {
+            return null; // Niet mogelijk (minimaal 3 per poule)
+        }
+        if ($aantal > $aantalPoules * 5) {
+            return null; // Niet mogelijk (maximaal 5 per poule)
+        }
+
+        // Basis: verdeel gelijk
+        $basis = intdiv($aantal, $aantalPoules);
+        $rest = $aantal % $aantalPoules;
+
+        $verdeling = array_fill(0, $aantalPoules, $basis);
+
+        // Verdeel de rest
+        for ($i = 0; $i < $rest; $i++) {
+            $verdeling[$i]++;
+        }
+
+        // Sorteer van groot naar klein
+        rsort($verdeling);
+
+        return $verdeling;
+    }
+
+    /**
+     * Bereken score voor een verdeling
+     * 5 = 3 punten, 4 = 2 punten, 3 = 1 punt
+     */
+    private function scoreVerdeling(array $verdeling): int
+    {
+        $score = 0;
+        foreach ($verdeling as $grootte) {
+            if ($grootte === 5) {
+                $score += 3;
+            } elseif ($grootte === 4) {
+                $score += 2;
+            } elseif ($grootte === 3) {
+                $score += 1;
+            } else {
+                $score -= 10; // Penalty voor 2 of minder
+            }
+        }
+        return $score;
     }
 
 
