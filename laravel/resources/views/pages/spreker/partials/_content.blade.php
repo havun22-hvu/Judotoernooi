@@ -306,8 +306,8 @@
                 <textarea
                     x-model="notities"
                     @input="saveNotities()"
-                    rows="12"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows="20"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                     placeholder="Typ hier je notities of gebruik de knop hieronder voor een voorbeeldtekst..."
                 ></textarea>
             </div>
