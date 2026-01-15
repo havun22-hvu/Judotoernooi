@@ -232,8 +232,8 @@ class DynamischeIndelingService
             } elseif ($judoka->leeftijd - $minLeeftijd <= $maxLeeftijdVerschil) {
                 $huidigeJudokas[] = $judoka;
             } else {
-                // Breekpunt: maak poule van huidige judoka's
-                if (count($huidigeJudokas) >= 2) {
+                // Breekpunt: maak poule van huidige judoka's (ook poule van 1 = orphan)
+                if (count($huidigeJudokas) >= 1) {
                     $nieuwePoules[] = [
                         'judokas' => $huidigeJudokas,
                         'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
@@ -248,25 +248,31 @@ class DynamischeIndelingService
             }
         }
 
-        // Laatste groep
-        if (count($huidigeJudokas) >= 2) {
-            $nieuwePoules[] = [
-                'judokas' => $huidigeJudokas,
-                'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
-                'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
-                'band_range' => $this->berekenBandRange($huidigeJudokas),
-                'leeftijd_groep' => $this->formatLeeftijdRange($huidigeJudokas),
-                'gewicht_groep' => $origPoule['gewicht_groep'] ?? '',
-            ];
-        } elseif (!empty($huidigeJudokas) && !empty($nieuwePoules)) {
-            // 1 judoka over: voeg toe aan laatste poule als het past
-            $laatstePoule = array_pop($nieuwePoules);
-            $laatsteLeeftijden = array_map(fn($j) => $j->leeftijd, $laatstePoule['judokas']);
-            if ($huidigeJudokas[0]->leeftijd - min($laatsteLeeftijden) <= $maxLeeftijdVerschil) {
-                $laatstePoule['judokas'][] = $huidigeJudokas[0];
-                $laatstePoule['leeftijd_range'] = $this->berekenLeeftijdRange($laatstePoule['judokas']);
+        // Laatste groep (ook poule van 1 = orphan)
+        if (count($huidigeJudokas) >= 1) {
+            // Probeer eerst toe te voegen aan laatste poule als het past
+            $toegevoegd = false;
+            if (count($huidigeJudokas) === 1 && !empty($nieuwePoules)) {
+                $laatstePoule = &$nieuwePoules[count($nieuwePoules) - 1];
+                $laatsteLeeftijden = array_map(fn($j) => $j->leeftijd, $laatstePoule['judokas']);
+                if ($huidigeJudokas[0]->leeftijd - min($laatsteLeeftijden) <= $maxLeeftijdVerschil) {
+                    $laatstePoule['judokas'][] = $huidigeJudokas[0];
+                    $laatstePoule['leeftijd_range'] = $this->berekenLeeftijdRange($laatstePoule['judokas']);
+                    $toegevoegd = true;
+                }
             }
-            $nieuwePoules[] = $laatstePoule;
+
+            // Als niet toegevoegd: maak eigen poule (orphan)
+            if (!$toegevoegd) {
+                $nieuwePoules[] = [
+                    'judokas' => $huidigeJudokas,
+                    'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                    'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                    'band_range' => $this->berekenBandRange($huidigeJudokas),
+                    'leeftijd_groep' => $this->formatLeeftijdRange($huidigeJudokas),
+                    'gewicht_groep' => $origPoule['gewicht_groep'] ?? '',
+                ];
+            }
         }
 
         return $nieuwePoules;
@@ -292,8 +298,8 @@ class DynamischeIndelingService
             } elseif ($judokaGewicht - $minGewicht <= $maxKgVerschil) {
                 $huidigeJudokas[] = $judoka;
             } else {
-                // Breekpunt: maak poule van huidige judoka's
-                if (count($huidigeJudokas) >= 2) {
+                // Breekpunt: maak poule van huidige judoka's (ook poule van 1 = orphan)
+                if (count($huidigeJudokas) >= 1) {
                     $nieuwePoules[] = [
                         'judokas' => $huidigeJudokas,
                         'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
@@ -308,25 +314,31 @@ class DynamischeIndelingService
             }
         }
 
-        // Laatste groep
-        if (count($huidigeJudokas) >= 2) {
-            $nieuwePoules[] = [
-                'judokas' => $huidigeJudokas,
-                'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
-                'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
-                'band_range' => $this->berekenBandRange($huidigeJudokas),
-                'leeftijd_groep' => $origPoule['leeftijd_groep'] ?? '',
-                'gewicht_groep' => $this->formatGewichtRange($huidigeJudokas),
-            ];
-        } elseif (!empty($huidigeJudokas) && !empty($nieuwePoules)) {
-            // 1 judoka over: voeg toe aan laatste poule als het past
-            $laatstePoule = array_pop($nieuwePoules);
-            $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule['judokas']);
-            if ($this->getEffectiefGewicht($huidigeJudokas[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
-                $laatstePoule['judokas'][] = $huidigeJudokas[0];
-                $laatstePoule['gewicht_range'] = $this->berekenGewichtRange($laatstePoule['judokas']);
+        // Laatste groep (ook poule van 1 = orphan)
+        if (count($huidigeJudokas) >= 1) {
+            // Probeer eerst toe te voegen aan laatste poule als het past
+            $toegevoegd = false;
+            if (count($huidigeJudokas) === 1 && !empty($nieuwePoules)) {
+                $laatstePoule = &$nieuwePoules[count($nieuwePoules) - 1];
+                $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule['judokas']);
+                if ($this->getEffectiefGewicht($huidigeJudokas[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
+                    $laatstePoule['judokas'][] = $huidigeJudokas[0];
+                    $laatstePoule['gewicht_range'] = $this->berekenGewichtRange($laatstePoule['judokas']);
+                    $toegevoegd = true;
+                }
             }
-            $nieuwePoules[] = $laatstePoule;
+
+            // Als niet toegevoegd: maak eigen poule (orphan)
+            if (!$toegevoegd) {
+                $nieuwePoules[] = [
+                    'judokas' => $huidigeJudokas,
+                    'leeftijd_range' => $this->berekenLeeftijdRange($huidigeJudokas),
+                    'gewicht_range' => $this->berekenGewichtRange($huidigeJudokas),
+                    'band_range' => $this->berekenBandRange($huidigeJudokas),
+                    'leeftijd_groep' => $origPoule['leeftijd_groep'] ?? '',
+                    'gewicht_groep' => $this->formatGewichtRange($huidigeJudokas),
+                ];
+            }
         }
 
         return $nieuwePoules;
@@ -752,7 +764,11 @@ class DynamischeIndelingService
      */
     private function maakPoules(Collection $judokas, float $maxKgVerschil = 3.0): array
     {
-        if ($judokas->count() < 2) {
+        // 1 judoka = poule van 1 (orphan, maar WEL ingedeeld in categorie)
+        if ($judokas->count() === 1) {
+            return [$judokas->values()->all()];
+        }
+        if ($judokas->count() === 0) {
             return [];
         }
 
@@ -828,9 +844,13 @@ class DynamischeIndelingService
             foreach ($groepPoules as $poule) {
                 if (count($poule) >= 2) {
                     $poules[] = $poule;
-                } elseif (count($poule) === 1 && !empty($poules)) {
+                } elseif (count($poule) === 1) {
                     // 1 judoka: probeer toe te voegen aan vorige poule als het past
-                    $this->probeerToeTeVoegenAanLaatstePoule($poules, $poule[0], $maxKgVerschil);
+                    $toegevoegd = $this->probeerToeTeVoegenAanLaatstePoule($poules, $poule[0], $maxKgVerschil);
+                    if (!$toegevoegd) {
+                        // Orphan: maak eigen poule van 1 (judoka hoort WEL in deze categorie)
+                        $poules[] = $poule;
+                    }
                 }
             }
         }
@@ -846,10 +866,11 @@ class DynamischeIndelingService
 
     /**
      * Probeer een enkele judoka toe te voegen aan de laatste poule als het past
+     * @return bool True als judoka is toegevoegd, false als niet (orphan)
      */
-    private function probeerToeTeVoegenAanLaatstePoule(array &$poules, $judoka, float $maxKgVerschil): void
+    private function probeerToeTeVoegenAanLaatstePoule(array &$poules, $judoka, float $maxKgVerschil): bool
     {
-        if (empty($poules)) return;
+        if (empty($poules)) return false;
 
         $laatstePoule = &$poules[count($poules) - 1];
         $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
@@ -860,8 +881,10 @@ class DynamischeIndelingService
 
         if (($nieuwMax - $nieuwMin) <= $maxKgVerschil) {
             $laatstePoule[] = $judoka;
+            return true;
         }
-        // Anders: judoka niet ingedeeld (wordt later gerapporteerd in validatie)
+
+        return false; // Orphan - caller moet eigen poule maken
     }
 
     /**
@@ -1093,8 +1116,8 @@ class DynamischeIndelingService
                 // Past binnen de limiet
                 $huidigePoule[] = $judoka;
             } else {
-                // Breekpunt: start nieuwe poule
-                if (count($huidigePoule) >= 2) {
+                // Breekpunt: start nieuwe poule (ook poule van 1 = orphan)
+                if (count($huidigePoule) >= 1) {
                     $nieuwePoules[] = $huidigePoule;
                 }
                 $huidigePoule = [$judoka];
@@ -1102,17 +1125,23 @@ class DynamischeIndelingService
             }
         }
 
-        // Laatste poule
-        if (count($huidigePoule) >= 2) {
-            $nieuwePoules[] = $huidigePoule;
-        } elseif (!empty($huidigePoule) && !empty($nieuwePoules)) {
-            // 1 judoka over: voeg toe aan laatste poule als het past
-            $laatstePoule = array_pop($nieuwePoules);
-            $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
-            if ($this->getEffectiefGewicht($huidigePoule[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
-                $laatstePoule[] = $huidigePoule[0];
+        // Laatste poule (ook poule van 1 = orphan)
+        if (count($huidigePoule) >= 1) {
+            // Probeer eerst toe te voegen aan laatste poule als het past
+            $toegevoegd = false;
+            if (count($huidigePoule) === 1 && !empty($nieuwePoules)) {
+                $laatstePoule = &$nieuwePoules[count($nieuwePoules) - 1];
+                $laatsteGewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $laatstePoule);
+                if ($this->getEffectiefGewicht($huidigePoule[0]) - min($laatsteGewichten) <= $maxKgVerschil) {
+                    $laatstePoule[] = $huidigePoule[0];
+                    $toegevoegd = true;
+                }
             }
-            $nieuwePoules[] = $laatstePoule;
+
+            // Als niet toegevoegd: maak eigen poule (orphan)
+            if (!$toegevoegd) {
+                $nieuwePoules[] = $huidigePoule;
+            }
         }
 
         return $nieuwePoules;

@@ -202,8 +202,22 @@ Gegeven `poule_grootte_voorkeur = [5, 4, 6, 3]`:
 |------------|------------|
 | max_kg_verschil | Nee, nooit |
 | max_leeftijd_verschil | Nee, nooit |
-| Poulegrootte 3-6 | Nee, nooit |
+| Poulegrootte 3-6 | **Ja, poule van 1-2 toegestaan** |
 | Geslacht (indien apart) | Nee, nooit |
+
+### Orphan Judoka's (poule van 1)
+
+**Belangrijk:** Een judoka die geen gewichtsmatch heeft met anderen wordt
+WEL ingedeeld in de juiste categorie, maar dan in een poule van 1.
+
+Voorbeeld:
+- Fleur (11j, 24.7kg) past in categorie "Jeugd" (t/m 14 jaar)
+- Geen andere judoka binnen 3kg verschil
+- → Fleur komt in poule van 1 binnen categorie "Jeugd"
+- → Organisator kan haar handmatig verplaatsen of constraint aanpassen
+
+Dit voorkomt "niet ingedeeld" meldingen voor judoka's die WEL in een
+categorie passen maar geen gewichtsmatch hebben.
 
 ---
 
