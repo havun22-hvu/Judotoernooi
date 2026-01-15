@@ -23,7 +23,9 @@ class RoleToegang extends Controller
         $result = $this->findToernooiByCode($code);
 
         if (!$result) {
-            abort(404);
+            abort(response()->view('errors.vrijwilliger', [
+                'message' => 'Deze link is ongeldig of niet meer actief. Vraag een nieuwe link bij de jurytafel.',
+            ], 404));
         }
 
         [$toernooi, $rol] = $result;
@@ -370,7 +372,22 @@ class RoleToegang extends Controller
     private function getToernooiFromSession(Request $request): Toernooi
     {
         $toernooiId = $request->session()->get('rol_toernooi_id');
-        return Toernooi::findOrFail($toernooiId);
+
+        if (!$toernooiId) {
+            abort(response()->view('errors.vrijwilliger', [
+                'message' => 'Je sessie is verlopen. Vraag een nieuwe link bij de jurytafel.',
+            ], 403));
+        }
+
+        $toernooi = Toernooi::find($toernooiId);
+
+        if (!$toernooi) {
+            abort(response()->view('errors.vrijwilliger', [
+                'message' => 'Het toernooi kon niet worden gevonden. Vraag een nieuwe link bij de jurytafel.',
+            ], 404));
+        }
+
+        return $toernooi;
     }
 
     /**
@@ -380,7 +397,9 @@ class RoleToegang extends Controller
     {
         $rol = $request->session()->get('rol_type');
         if ($rol !== $expectedRole) {
-            abort(403, 'Geen toegang tot deze functie.');
+            abort(response()->view('errors.vrijwilliger', [
+                'message' => 'Je hebt geen toegang tot deze functie. Vraag de juiste link bij de jurytafel.',
+            ], 403));
         }
     }
 

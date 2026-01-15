@@ -19,18 +19,18 @@ class CheckDeviceBinding
         $toegangId = $request->route('toegang');
 
         if (!$toegangId) {
-            abort(404, 'Geen toegang ID gevonden');
+            return $this->vrijwilligerError('De link is ongeldig. Vraag een nieuwe link bij de jurytafel.');
         }
 
         $toegang = DeviceToegang::find($toegangId);
 
         if (!$toegang) {
-            abort(404, 'Toegang niet gevonden');
+            return $this->vrijwilligerError('Deze toegang bestaat niet meer. Vraag een nieuwe link bij de jurytafel.');
         }
 
         // Check role if specified
         if ($rol && $toegang->rol !== $rol) {
-            abort(403, 'Geen toegang tot deze interface');
+            return $this->vrijwilligerError('Je hebt geen toegang tot deze interface. Vraag de juiste link bij de jurytafel.');
         }
 
         // Check device binding
@@ -48,5 +48,15 @@ class CheckDeviceBinding
         $request->merge(['device_toegang' => $toegang]);
 
         return $next($request);
+    }
+
+    /**
+     * Show friendly error page for volunteers (not login page!)
+     */
+    private function vrijwilligerError(string $message): Response
+    {
+        return response()->view('errors.vrijwilliger', [
+            'message' => $message,
+        ], 404);
     }
 }
