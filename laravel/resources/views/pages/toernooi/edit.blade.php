@@ -43,6 +43,32 @@
         @endif
     </div>
 
+    <!-- WAARSCHUWING: Niet-gecategoriseerde judoka's -->
+    @php
+        $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
+    @endphp
+    @if($nietGecategoriseerdAantal > 0)
+    <div id="niet-gecategoriseerd-alert"
+         class="mb-6 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
+                    <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
+                </div>
+            </div>
+            <a href="{{ route('toernooi.judokas', $toernooi) }}?filter=niet_gecategoriseerd"
+               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                Bekijk lijst
+            </a>
+        </div>
+    </div>
+    @endif
+
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
     <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form">

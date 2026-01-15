@@ -33,6 +33,9 @@
         .animate-blink-10s {
             animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
         }
+        .animate-error-blink {
+            animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
