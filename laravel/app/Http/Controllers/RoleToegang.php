@@ -219,7 +219,7 @@ class RoleToegang extends Controller
 
         return view('pages.blok.spreker', [
             'toernooi' => $toernooi,
-            'blokken' => $toernooi->blokken()->with('matten')->get(),
+            'blokken' => $toernooi->blokken()->with('poules.mat')->get(),
             'toegang' => $toegang,
         ]);
     }
