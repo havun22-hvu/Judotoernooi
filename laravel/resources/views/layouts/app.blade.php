@@ -25,6 +25,14 @@
             -webkit-appearance: none;
             margin: 0;
         }
+        /* Knipperend effect voor 10 seconden */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .animate-blink-10s {
+            animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -107,8 +115,8 @@
 
     @if(session('error'))
     <div class="max-w-7xl mx-auto px-4 mt-4">
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {{ session('error') }}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-blink-10s font-bold">
+            ⚠️ {{ session('error') }}
         </div>
     </div>
     @endif
