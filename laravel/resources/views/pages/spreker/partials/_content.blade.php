@@ -308,29 +308,7 @@
                     @input="saveNotities()"
                     rows="12"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Typ hier je notities...
-
-WELKOMSTWOORD
-- Welkom bij het 7e WestFries Open Judotoernooi!
-- Namens Judoschool Cees Veen wensen wij iedereen een sportieve dag
-- Dank aan alle vrijwilligers en scheidsrechters
-
-HUISREGELS
-- Roken en vapen is verboden in het hele gebouw
-- Honden alleen buiten (behalve hulphonden)
-- Alleen judoka's en coaches op de wedstrijdvloer
-- Schoenen uit op de mat!
-
-PRAKTISCH
-- Kantine open tot 17:00
-- Toiletten bij de ingang en achter de kantine
-- EHBO-post naast de jury tafel
-- Gevonden voorwerpen bij de inschrijftafel
-
-PRIJSUITREIKING
-- Direct na de laatste wedstrijd per categorie
-- Judoka's verzamelen bij de podiummat
-- Ouders welkom om foto's te maken"
+                    placeholder="Typ hier je notities of gebruik de knop hieronder voor een voorbeeldtekst..."
                 ></textarea>
             </div>
             <div class="flex justify-between items-center text-sm text-gray-500">
@@ -344,47 +322,14 @@ PRIJSUITREIKING
             </div>
         </div>
 
-        <!-- Snelle notitie templates -->
-        <div class="mt-4 bg-white rounded-lg shadow p-4">
-            <h3 class="font-bold text-gray-700 mb-3">Snelle templates</h3>
-            <div class="flex flex-wrap gap-2">
-                <button
-                    @click="addTemplate('Welkom bij het 7e WestFries Open Judotoernooi!')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Welkom
-                </button>
-                <button
-                    @click="addTemplate('Judoka\'s van [poule], graag naar mat [nummer]')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Oproep mat
-                </button>
-                <button
-                    @click="addTemplate('Prijsuitreiking [categorie] over 5 minuten bij de podiummat')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Prijsuitreiking
-                </button>
-                <button
-                    @click="addTemplate('Roken en vapen is verboden in het hele gebouw')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Rookverbod
-                </button>
-                <button
-                    @click="addTemplate('De kantine is open tot 17:00')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Kantine
-                </button>
-                <button
-                    @click="addTemplate('Gevonden voorwerpen kunt u inleveren bij de inschrijftafel')"
-                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-                >
-                    + Gevonden
-                </button>
-            </div>
+        <!-- Voorbeeldtekst laden -->
+        <div class="mt-4">
+            <button
+                @click="laadVoorbeeldtekst()"
+                class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium"
+            >
+                📋 Laad voorbeeldtekst
+            </button>
         </div>
     </div>
 </div>
@@ -542,12 +487,33 @@ function sprekerInterface() {
             }
         },
 
-        addTemplate(text) {
-            if (this.notities) {
-                this.notities += '\n' + text;
-            } else {
-                this.notities = text;
+        laadVoorbeeldtekst() {
+            const voorbeeldtekst = `WELKOMSTWOORD
+- Welkom bij het 7e WestFries Open Judotoernooi!
+- Namens Judoschool Cees Veen wensen wij iedereen een sportieve dag
+- Dank aan alle vrijwilligers en scheidsrechters
+
+HUISREGELS
+- Roken en vapen is verboden in het hele gebouw
+- Honden alleen buiten (behalve hulphonden)
+- Alleen judoka's en coaches op de wedstrijdvloer
+- Schoenen uit op de mat!
+
+PRAKTISCH
+- Kantine open tot 17:00
+- Toiletten bij de ingang en achter de kantine
+- EHBO-post naast de jury tafel
+- Gevonden voorwerpen bij de inschrijftafel
+
+PRIJSUITREIKING
+- Direct na de laatste wedstrijd per categorie
+- Judoka's verzamelen bij de podiummat
+- Ouders welkom om foto's te maken`;
+
+            if (this.notities && !confirm('Dit vervangt je huidige notities. Doorgaan?')) {
+                return;
             }
+            this.notities = voorbeeldtekst;
             this.saveNotities();
         }
     }
