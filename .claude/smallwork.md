@@ -373,12 +373,35 @@
 - **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md
 
 ### Fix: Label-first lookup in maakPouleTitel
-- **Type:** Bug fix (NIET VOLLEDIG OPGELOST)
+- **Type:** Bug fix (OPGELOST)
 - **Wat:** Lookup logica aangepast naar label-first (zelfde als PouleController)
 - **Waarom:** Leeftijd range verscheen niet in poule titel bij genereren
-- **Status:** Fix toegepast maar probleem blijft bestaan
-- **Bestanden:** `app/Services/PouleIndelingService.php:1137-1152`
-- **Naar permanente docs?** ☑ Nee - nog niet werkend
+- **Oplossing:** Blade template gebruikte handmatige titel constructie, nu `$poule->titel` direct
+- **Bestanden:** `resources/views/pages/poule/index.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Duplicate function name scoreVerdeling
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** FatalError door twee functies met naam `scoreVerdeling()` met verschillende signatures
+- **Waarom:** Nieuwe functie voor poule grootte optimalisatie had zelfde naam als bestaande
+- **Oplossing:** Nieuwe functie hernoemd naar `scorePouleGrootteVerdeling()`
+- **Bestanden:** `app/Services/DynamischeIndelingService.php:953`
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Fix: Classificatie bug 6-jarigen in "Heren"
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Auto-detect geslacht op basis van key suffix (`_d`, `_h`) overschreef explicit `gemengd`
+- **Waarom:** 352 judoka's werden verkeerd geclassificeerd (6-jarigen als "Heren")
+- **Oplossing:** Check of `geslacht` expliciet 'gemengd' is voordat auto-detect triggert
+- **Bestanden:** `app/Services/PouleIndelingService.php:710-723`
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md (classificatie logica)
+
+### Enhancement: Poule grootte optimalisatie (5 > 4 > 3)
+- **Type:** Enhancement
+- **Wat:** Nieuw algoritme voor optimale verdeling: prioriteit 5, dan 4, dan 3
+- **Waarom:** 8 judoka's → 4+4 (niet 5+3), 11 judoka's → 4+4+3 (niet 5+5+1)
+- **Bestanden:** `app/Services/DynamischeIndelingService.php` (nieuwe functies)
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md (al gedocumenteerd)
 
 ---
 
