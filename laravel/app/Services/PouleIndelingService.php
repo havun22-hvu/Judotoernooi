@@ -707,8 +707,14 @@ class PouleIndelingService
                 $configGeslacht = 'M';
             }
 
-            // Auto-detect gender from label if geslacht=gemengd but label contains gender indicator
-            if ($configGeslacht === 'GEMENGD') {
+            // Auto-detect gender from label ONLY if geslacht is not explicitly set
+            // Important: if geslacht is explicitly 'gemengd', don't override based on key suffix
+            // The key suffix detection is only for cases where organisator forgot to set geslacht
+            $originalGeslacht = strtolower($config['geslacht'] ?? '');
+            $isExplicitGemengd = $originalGeslacht === 'gemengd';
+
+            if ($configGeslacht === 'GEMENGD' && !$isExplicitGemengd) {
+                // Only auto-detect if geslacht was empty/missing, not if explicitly set to 'gemengd'
                 if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
                     $configGeslacht = 'V';
                 } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
