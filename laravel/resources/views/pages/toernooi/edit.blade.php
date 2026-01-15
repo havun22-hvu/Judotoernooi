@@ -664,7 +664,7 @@
                 $categorieType = 'jbn_2026';
             }
         @endphp
-        <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
+        <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800">Categorieën Instelling</h2>
@@ -1855,7 +1855,19 @@ window.triggerAutoSave = function() {};
             updateJsonInput();
         }
         markClean();
+
+        // Save scroll position to restore after reload
+        sessionStorage.setItem('toernooi_edit_scroll', window.scrollY);
     });
+
+    // Restore scroll position after form submit (if success message present)
+    @if(session('success'))
+    const savedScroll = sessionStorage.getItem('toernooi_edit_scroll');
+    if (savedScroll) {
+        window.scrollTo(0, parseInt(savedScroll));
+        sessionStorage.removeItem('toernooi_edit_scroll');
+    }
+    @endif
 
     // Warn before leaving if there are unsaved changes
     window.addEventListener('beforeunload', (e) => {
