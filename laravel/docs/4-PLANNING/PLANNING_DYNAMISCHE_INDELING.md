@@ -219,6 +219,24 @@ Voorbeeld:
 Dit voorkomt "niet ingedeeld" meldingen voor judoka's die WEL in een
 categorie passen maar geen gewichtsmatch hebben.
 
+### Niet-Gecategoriseerde Judoka's (configuratie probleem)
+
+**Belangrijk:** Dit is iets ANDERS dan orphan judoka's!
+
+| Type | Oorzaak | Oplossing |
+|------|---------|-----------|
+| **Niet gecategoriseerd** | Geen categorie past (leeftijd/geslacht/band) | Config aanpassen |
+| **Orphan (poule van 1)** | Wel categorie, geen gewichtsmatch | Handmatig of max_kg aanpassen |
+
+**Melding "Niet gecategoriseerd":**
+- Locatie: **Bovenaan Instellingen pagina** (niet bij Poules!)
+- Stijl: Knipperende rode melding (10 sec)
+- Triggers:
+  1. Na opslaan instellingen (categorie config gewijzigd)
+  2. Na import/validatie judoka's
+  3. Bij laden instellingen pagina (als er niet-gecategoriseerde zijn)
+- Inhoud: Aantal + link naar lijst
+
 ---
 
 ## Poule Titels

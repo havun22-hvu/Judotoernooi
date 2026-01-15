@@ -711,4 +711,88 @@ class Toernooi extends Model
 
         return 'Via JudoToernooi platform';
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Categorisatie Check Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get judoka's die niet in een categorie passen.
+     * Dit is een CONFIGURATIE probleem (geen categorie past).
+     * Anders dan orphans (wel categorie, geen gewichtsmatch).
+     */
+    public function getNietGecategoriseerdeJudokas(): \Illuminate\Database\Eloquent\Collection
+    {
+        $config = $this->getAlleGewichtsklassen();
+        $toernooiJaar = $this->datum?->year ?? (int) date('Y');
+
+        return $this->judokas()
+            ->get()
+            ->filter(function ($judoka) use ($config, $toernooiJaar) {
+                $leeftijd = $toernooiJaar - $judoka->geboortejaar;
+                $geslacht = strtoupper($judoka->geslacht ?? '');
+                $band = strtolower($judoka->band ?? '');
+
+                // Check of judoka in een categorie past
+                foreach ($config as $key => $cat) {
+                    $maxLeeftijd = $cat['max_leeftijd'] ?? 99;
+                    $catGeslacht = strtoupper($cat['geslacht'] ?? 'gemengd');
+
+                    // Normalize geslacht
+                    if ($catGeslacht === 'MEISJES') $catGeslacht = 'V';
+                    if ($catGeslacht === 'JONGENS') $catGeslacht = 'M';
+
+                    // Check leeftijd
+                    if ($leeftijd > $maxLeeftijd) continue;
+
+                    // Check geslacht
+                    if ($catGeslacht !== 'GEMENGD' && $catGeslacht !== $geslacht) continue;
+
+                    // Check band filter
+                    $bandFilter = $cat['band_filter'] ?? '';
+                    if (!empty($bandFilter) && !$this->bandPastInFilter($band, $bandFilter)) continue;
+
+                    // Categorie gevonden - judoka is gecategoriseerd
+                    return false;
+                }
+
+                // Geen categorie gevonden
+                return true;
+            });
+    }
+
+    /**
+     * Tel aantal niet-gecategoriseerde judoka's (cached voor performance).
+     */
+    public function countNietGecategoriseerd(): int
+    {
+        return $this->getNietGecategoriseerdeJudokas()->count();
+    }
+
+    /**
+     * Helper: check of band past in filter.
+     */
+    private function bandPastInFilter(string $band, string $filter): bool
+    {
+        if (empty($filter) || empty($band)) return true;
+
+        $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
+        $bandIdx = $bandVolgorde[$band] ?? 0;
+
+        if (str_starts_with($filter, 'tm_')) {
+            $filterBand = str_replace('tm_', '', $filter);
+            $filterIdx = $bandVolgorde[$filterBand] ?? 99;
+            return $bandIdx <= $filterIdx;
+        }
+
+        if (str_starts_with($filter, 'vanaf_')) {
+            $filterBand = str_replace('vanaf_', '', $filter);
+            $filterIdx = $bandVolgorde[$filterBand] ?? 0;
+            return $bandIdx >= $filterIdx;
+        }
+
+        return true;
+    }
 }

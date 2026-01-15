@@ -146,9 +146,16 @@ class JudokaController extends Controller
         }
         $message .= ".";
 
-        return redirect()
-            ->route('toernooi.judoka.index', $toernooi)
-            ->with('success', $message);
+        // Check voor niet-gecategoriseerde judoka's na import
+        $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
+
+        $redirect = redirect()->route('toernooi.judoka.index', $toernooi)->with('success', $message);
+
+        if ($nietGecategoriseerd > 0) {
+            $redirect = $redirect->with('warning', "⚠️ {$nietGecategoriseerd} judoka('s) niet gecategoriseerd! Pas de categorie-instellingen aan.");
+        }
+
+        return $redirect;
     }
 
     /**
