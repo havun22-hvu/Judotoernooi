@@ -495,9 +495,7 @@ function sprekerInterface() {
 
 HUISREGELS
 - Roken en vapen is verboden in het hele gebouw
-- Honden alleen buiten (behalve hulphonden)
 - Alleen judoka's en coaches op de wedstrijdvloer
-- Schoenen uit op de mat!
 
 PRAKTISCH
 - Kantine open tot 17:00
