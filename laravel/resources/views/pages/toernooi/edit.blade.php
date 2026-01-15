@@ -1145,17 +1145,18 @@
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
-                            // Toon opgeslagen preset naam in radio button (maar laad niet automatisch)
+                            // Selecteer opgeslagen preset in dropdown en toon naam in radio button
                             if (opgeslagenEigenPresetId) {
                                 huidigePresetId = opgeslagenEigenPresetId;
                                 // Find preset name and show in radio
                                 const savedPreset = eigenPresets.find(p => p.id == opgeslagenEigenPresetId);
                                 if (savedPreset) {
                                     huidigePresetNaam = savedPreset.naam;
-                                    // Show radio button with preset name (user can click to load)
+                                    // Selecteer in dropdown
+                                    presetsDropdown.value = opgeslagenEigenPresetId;
+                                    // Show radio button with preset name
                                     setTimeout(() => updateEigenPresetRadio(savedPreset.naam, false), 0);
                                 }
-                                // Don't auto-select dropdown - user must explicitly choose
                             }
                         }
                     }
