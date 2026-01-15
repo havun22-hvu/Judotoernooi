@@ -310,12 +310,27 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Typ hier je notities...
 
-Voorbeeld:
-- Welkom bij het 6e WestFries Open!
-- Dank aan alle vrijwilligers
+WELKOMSTWOORD
+- Welkom bij het 7e WestFries Open Judotoernooi!
+- Namens Judoschool Cees Veen wensen wij iedereen een sportieve dag
+- Dank aan alle vrijwilligers en scheidsrechters
+
+HUISREGELS
+- Roken en vapen is verboden in het hele gebouw
+- Honden alleen buiten (behalve hulphonden)
+- Alleen judoka's en coaches op de wedstrijdvloer
+- Schoenen uit op de mat!
+
+PRAKTISCH
 - Kantine open tot 17:00
-- Prijsuitreiking per categorie direct na laatste wedstrijd
-- Sponsoren bedanken: ..."
+- Toiletten bij de ingang en achter de kantine
+- EHBO-post naast de jury tafel
+- Gevonden voorwerpen bij de inschrijftafel
+
+PRIJSUITREIKING
+- Direct na de laatste wedstrijd per categorie
+- Judoka's verzamelen bij de podiummat
+- Ouders welkom om foto's te maken"
                 ></textarea>
             </div>
             <div class="flex justify-between items-center text-sm text-gray-500">
@@ -334,7 +349,7 @@ Voorbeeld:
             <h3 class="font-bold text-gray-700 mb-3">Snelle templates</h3>
             <div class="flex flex-wrap gap-2">
                 <button
-                    @click="addTemplate('Welkom bij het toernooi!')"
+                    @click="addTemplate('Welkom bij het 7e WestFries Open Judotoernooi!')"
                     class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
                 >
                     + Welkom
@@ -346,16 +361,28 @@ Voorbeeld:
                     + Oproep mat
                 </button>
                 <button
-                    @click="addTemplate('Prijsuitreiking [categorie] over 5 minuten')"
+                    @click="addTemplate('Prijsuitreiking [categorie] over 5 minuten bij de podiummat')"
                     class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
                 >
                     + Prijsuitreiking
                 </button>
                 <button
-                    @click="addTemplate('Kantine is open / gesloten')"
+                    @click="addTemplate('Roken en vapen is verboden in het hele gebouw')"
+                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
+                >
+                    + Rookverbod
+                </button>
+                <button
+                    @click="addTemplate('De kantine is open tot 17:00')"
                     class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
                 >
                     + Kantine
+                </button>
+                <button
+                    @click="addTemplate('Gevonden voorwerpen kunt u inleveren bij de inschrijftafel')"
+                    class="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
+                >
+                    + Gevonden
                 </button>
             </div>
         </div>
