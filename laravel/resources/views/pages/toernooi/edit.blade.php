@@ -61,7 +61,7 @@
                     <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
                 </div>
             </div>
-            <a href="{{ route('toernooi.judokas', $toernooi) }}?filter=niet_gecategoriseerd"
+            <a href="{{ route('toernooi.judoka.index', $toernooi) }}?filter=niet_gecategoriseerd"
                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                 Bekijk lijst
             </a>

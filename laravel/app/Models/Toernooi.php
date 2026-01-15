@@ -722,30 +722,50 @@ class Toernooi extends Model
      * Get judoka's die niet in een categorie passen.
      * Dit is een CONFIGURATIE probleem (geen categorie past).
      * Anders dan orphans (wel categorie, geen gewichtsmatch).
+     *
+     * BELANGRIJK: Leeftijdscategorieën zijn HARDE grenzen!
+     * Een 8-jarige mag NOOIT doorvallen naar Heren alleen omdat band niet past.
      */
     public function getNietGecategoriseerdeJudokas(): \Illuminate\Database\Eloquent\Collection
     {
         $config = $this->getAlleGewichtsklassen();
         $toernooiJaar = $this->datum?->year ?? (int) date('Y');
 
+        // Sorteer config op max_leeftijd (jong → oud)
+        uasort($config, fn($a, $b) => ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99));
+
         return $this->judokas()
             ->get()
             ->filter(function ($judoka) use ($config, $toernooiJaar) {
                 $leeftijd = $toernooiJaar - $judoka->geboortejaar;
                 $geslacht = strtoupper($judoka->geslacht ?? '');
-                $band = strtolower($judoka->band ?? '');
+                $band = $judoka->band ?? '';
 
-                // Check of judoka in een categorie past
-                foreach ($config as $key => $cat) {
+                // Vind de eerste (laagste) max_leeftijd waar judoka in past
+                $eersteMatchLeeftijd = null;
+                foreach ($config as $cat) {
                     $maxLeeftijd = $cat['max_leeftijd'] ?? 99;
-                    $catGeslacht = strtoupper($cat['geslacht'] ?? 'gemengd');
+                    if ($leeftijd <= $maxLeeftijd) {
+                        $eersteMatchLeeftijd = $maxLeeftijd;
+                        break;
+                    }
+                }
 
-                    // Normalize geslacht
+                // Als geen leeftijdsmatch → niet gecategoriseerd
+                if ($eersteMatchLeeftijd === null) {
+                    return true;
+                }
+
+                // Check ALLEEN categorieën met deze max_leeftijd (niet doorvallen!)
+                foreach ($config as $cat) {
+                    $maxLeeftijd = $cat['max_leeftijd'] ?? 99;
+
+                    // Skip categorieën met andere max_leeftijd
+                    if ($maxLeeftijd !== $eersteMatchLeeftijd) continue;
+
+                    $catGeslacht = strtoupper($cat['geslacht'] ?? 'gemengd');
                     if ($catGeslacht === 'MEISJES') $catGeslacht = 'V';
                     if ($catGeslacht === 'JONGENS') $catGeslacht = 'M';
-
-                    // Check leeftijd
-                    if ($leeftijd > $maxLeeftijd) continue;
 
                     // Check geslacht
                     if ($catGeslacht !== 'GEMENGD' && $catGeslacht !== $geslacht) continue;
@@ -758,7 +778,7 @@ class Toernooi extends Model
                     return false;
                 }
 
-                // Geen categorie gevonden
+                // Geen categorie met juiste leeftijd past → NIET GECATEGORISEERD
                 return true;
             });
     }
@@ -779,7 +799,9 @@ class Toernooi extends Model
         if (empty($filter) || empty($band)) return true;
 
         $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
-        $bandIdx = $bandVolgorde[$band] ?? 0;
+
+        // Extract band kleur uit strings zoals "groen (3 kyu)" of "Bruin (1e kyu)"
+        $bandIdx = $this->getBandNiveau($band, $bandVolgorde);
 
         if (str_starts_with($filter, 'tm_')) {
             $filterBand = str_replace('tm_', '', $filter);
@@ -794,5 +816,33 @@ class Toernooi extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Extract band niveau uit string zoals "groen (3 kyu)" of "wit".
+     */
+    private function getBandNiveau(string $band, array $bandVolgorde): int
+    {
+        $bandLower = strtolower(trim($band));
+
+        // Direct match
+        if (isset($bandVolgorde[$bandLower])) {
+            return $bandVolgorde[$bandLower];
+        }
+
+        // Extract eerste woord: "groen (3 kyu)" → "groen"
+        $eersteWoord = explode(' ', $bandLower)[0];
+        if (isset($bandVolgorde[$eersteWoord])) {
+            return $bandVolgorde[$eersteWoord];
+        }
+
+        // Zoek of band een kleur bevat
+        foreach ($bandVolgorde as $kleur => $niveau) {
+            if (str_contains($bandLower, $kleur)) {
+                return $niveau;
+            }
+        }
+
+        return 0; // Onbekend = behandel als wit
     }
 }

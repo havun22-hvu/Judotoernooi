@@ -25,6 +25,22 @@ enum Band: int
         };
     }
 
+    /**
+     * Label met kyu notatie, bijv. "Groen (3e kyu)"
+     */
+    public function labelMetKyu(): string
+    {
+        return match($this) {
+            self::ZWART => 'Zwart (dan)',
+            self::BRUIN => 'Bruin (1e kyu)',
+            self::BLAUW => 'Blauw (2e kyu)',
+            self::GROEN => 'Groen (3e kyu)',
+            self::ORANJE => 'Oranje (4e kyu)',
+            self::GEEL => 'Geel (5e kyu)',
+            self::WIT => 'Wit (6e kyu)',
+        };
+    }
+
     public function kleurCode(): string
     {
         return match($this) {
@@ -42,7 +58,8 @@ enum Band: int
     {
         $band = strtolower(trim($band));
 
-        return match($band) {
+        // Direct match
+        $direct = match($band) {
             'zwart' => self::ZWART,
             'bruin' => self::BRUIN,
             'blauw' => self::BLAUW,
@@ -52,6 +69,32 @@ enum Band: int
             'wit' => self::WIT,
             default => null,
         };
+
+        if ($direct) return $direct;
+
+        // Extract eerste woord: "groen (3e kyu)" → "groen"
+        $eersteWoord = explode(' ', $band)[0];
+        $fromFirstWord = match($eersteWoord) {
+            'zwart' => self::ZWART,
+            'bruin' => self::BRUIN,
+            'blauw' => self::BLAUW,
+            'groen' => self::GROEN,
+            'oranje' => self::ORANJE,
+            'geel' => self::GEEL,
+            'wit' => self::WIT,
+            default => null,
+        };
+
+        if ($fromFirstWord) return $fromFirstWord;
+
+        // Zoek of string een kleur bevat
+        foreach (['zwart', 'bruin', 'blauw', 'groen', 'oranje', 'geel', 'wit'] as $kleur) {
+            if (str_contains($band, $kleur)) {
+                return self::fromString($kleur);
+            }
+        }
+
+        return null;
     }
 
     /**
