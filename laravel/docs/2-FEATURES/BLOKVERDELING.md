@@ -150,9 +150,9 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 ## Solver Algoritme
 
 ### Plaatsing Volgorde
-1. **Grote leeftijden eerst** (in deze volgorde):
-   - Mini's → A-pupillen → B-pupillen → Heren -15 → Heren -18 → Heren
-   - Mini's start ALTIJD in blok 1
+1. **Grote leeftijden eerst** (volgorde uit preset config):
+   - Categorieen worden geplaatst in volgorde van de preset
+   - Eerste categorie start ALTIJD in blok 1
    - Elke volgende leeftijd sluit aan waar vorige eindigde
 
 2. **Strikte aansluiting regels** per gewichtscategorie:
@@ -162,8 +162,8 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
    - 2 blokken later (+2) = 30 punten
    - Verder = 50+ punten (slecht)
 
-3. **Kleine leeftijden als opvulling**:
-   - Dames -15, Dames -18, Dames
+3. **Kleinere categorieen als opvulling**:
+   - Categorieen met minder judoka's (bijv. dames, specifieke bandgroepen)
    - Geplaatst in blokken met meeste ruimte
 
 4. **Penalty aflopende leeftijdsklasse**:

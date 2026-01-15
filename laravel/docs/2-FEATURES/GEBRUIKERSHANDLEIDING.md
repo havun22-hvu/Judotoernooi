@@ -194,10 +194,10 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 - Geslacht instelbaar per categorie (Gemengd/M/V)
 
 **Zonder vaste gewichtsklassen (dynamisch):**
-- Drag & drop prioriteiten: Gewicht, Band, Groepsgrootte, Club
+- Drag & drop sorteer prioriteiten: Leeftijd, Gewicht, Band
 - Klik (i) icoon voor uitleg over sorteer volgorde
-- Stel max kg verschil in (default 3 kg)
-- Stel max leeftijd verschil in (default 2 jaar)
+- Stel max kg verschil in per categorie
+- Stel max leeftijd verschil in per categorie
 
 **Presets opslaan:** Sla je configuratie op als eigen preset voor later gebruik.
 
@@ -208,34 +208,35 @@ Bij **Toernooi Bewerken** > **Gewichtsklassen** kun je kiezen:
 
 Resultaat: bovenaan de lichtste mini's met witte band, onderaan de zwaarste senioren.
 
-### Hoe Werkt de Dynamische Indeling?
+### Hoe Werkt de Poule Indeling?
 
 Het systeem verdeelt judoka's in 4 stappen:
 
-**Stap 1: Groeperen (veiligheid eerst)**
-- Judoka's worden gegroepeerd op basis van harde limieten
-- Max gewichtsverschil (bijv. 3 kg) - wordt NOOIT overschreden
-- Max leeftijdsverschil (bijv. 2 jaar) - wordt NOOIT overschreden
+**Stap 1: CATEGORISEREN (welke groep?)**
+- Per judoka wordt gekeken welke categorie past
+- Categorieen worden doorlopen van jong → oud
+- Eerste match waar judoka aan ALLE criteria voldoet = zijn categorie
+- **Harde criteria:** max_leeftijd, geslacht, band_filter, gewichtsklasse
 
-**Stap 2: Sorteren (op basis van prioriteit)**
-- Als "Gewicht" bovenaan staat: lichtste judoka's eerst, dan op band
-- Als "Band" bovenaan staat: witte banden eerst, dan op gewicht
+**Stap 2: GROEPEREN**
+- Alle judoka's in dezelfde categorie = 1 groep
+- Dit zijn de kandidaten voor poules binnen deze categorie
 
-**Stap 3: Verdelen in poules**
-- Het systeem kiest de beste poulegrootte-verdeling
-- Voorbeeld met voorkeur [5, 4, 3, 6] bij 11 judoka's:
+**Stap 3: SORTEREN (binnen de groep)**
+- Pas NADAT judoka in categorie is geplaatst
+- Sorteer volgens de ingestelde prioriteit (leeftijd/gewicht/band)
+- Bepaalt alleen de volgorde, niet de groepsindeling
 
-| Optie | Verdeling | Berekening | Score |
-|-------|-----------|------------|-------|
-| A | [6, 5] | 6=7 punten, 5=0 punten | 7 |
-| B | [5, 3, 3] | 5=0, 3=3, 3=3 punten | 6 |
-| C | [4, 4, 3] | 4=1, 4=1, 3=3 punten | **5** ✅ |
+**Stap 4: POULES MAKEN**
+- Gesorteerde groep verdelen in poules
+- Voorkeur: [5, 4, 6, 3] (standaard)
+- Voorbeeld: 20 judoka's → 4 poules van 5
 
-**Stap 4: Validatie**
-- Alle poules worden gecontroleerd op gewichtslimiet
-- Indien nodig worden judoka's geswapt
+**Belangrijk onderscheid:**
+- **Categoriseren** = welke groep (HARD, alle criteria moeten matchen)
+- **Sorteren** = welke volgorde binnen de groep (ZACHT, alleen volgorde)
 
-**Belangrijk:** De harde limieten (gewicht/leeftijd) worden NOOIT overschreden, ongeacht de prioriteit-instellingen.
+De harde limieten (leeftijd/gewicht/geslacht/band) worden NOOIT overschreden.
 
 ### Automatische Poule Generatie
 

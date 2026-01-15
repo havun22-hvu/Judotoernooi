@@ -39,6 +39,7 @@ docs/
 - [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info
 
 ### 4. Planning
+- [Dynamische Indeling](./4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md) - Poule indeling algoritme
 - [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md)
 - [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md)
 
@@ -81,10 +82,10 @@ Zie [CHANGELOG.md](./CHANGELOG.md) voor wijzigingsgeschiedenis.
 ```
 laravel/
 ├── app/
-│   ├── Enums/           # Band, Geslacht, Leeftijdsklasse
+│   ├── Enums/           # Band, Geslacht (Leeftijdsklasse is deprecated)
 │   ├── Http/Controllers/
 │   ├── Models/          # Toernooi, Judoka, Betaling, etc.
-│   └── Services/        # MollieService, EliminatieService, etc.
+│   └── Services/        # PouleIndelingService, MollieService, etc.
 ├── config/
 │   ├── toernooi.php     # Toernooi configuratie
 │   └── services.php     # Mollie API config
