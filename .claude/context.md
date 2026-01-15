@@ -347,48 +347,31 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 15 januari 2026
+## Laatste Sessie: 15 januari 2026 (2e sessie)
 
 ### Wat is gedaan:
-- **Drag & drop 500 error gefixed**
-  - `getPresetConfig()` → `getAlleGewichtsklassen()` in PouleController en VariabeleBlokVerdelingService
+- **KRITIEKE BUG GEFIXED: Classificatie fout**
+  - **Probleem:** 6-jarigen werden bij "Heren" ingedeeld i.p.v. "Jeugd"
+  - **Oorzaak:** Auto-detect geslacht op basis van key suffix (`_d`, `_h`) overschreef expliciet ingestelde `geslacht=gemengd`
+  - **Oplossing:** Nu wordt gecheckt of geslacht EXPLICIET op 'gemengd' is gezet voordat auto-detect activeert
+  - **Fix in:** `PouleIndelingService::classificeerJudoka()` (regel 710-723)
+  - **Commit:** `a174be1` - "fix: Don't auto-detect gender when geslacht is explicitly 'gemengd'"
+  - **352 judoka's** zijn herclassificeerd van Heren naar Jeugd
 
-- **Poule titel update na drag & drop**
-  - Obsolete `data-poule-ranges` span verwijderd
-  - Titel wordt nu direct bijgewerkt met ranges IN de titel
-
-- **Max 5 judoka's per poule**
-  - Check toegevoegd in DynamischeIndelingService::maakPoules()
-  - Poules worden nu automatisch gesplitst bij 5+ judoka's
-
-- **Label-first lookup in maakPouleTitel**
-  - Geprobeerd, maar leeftijd range verschijnt nog steeds niet bij genereren
-
-### KRITIEKE BUGS (NIET OPGELOST):
-- [ ] **Leeftijd range niet in poule titel bij genereren** (wel na drag & drop)
-- [ ] **CATEGORIE CLASSIFICATIE FOUT:** 10/11-jarigen staan bij Heren (-90) i.p.v. Jeugd -14
-  - Dit is een ernstige bug in `classificeerJudoka()` of categorie config
-  - Judoka's moeten bij de JONGSTE passende categorie worden ingedeeld
+- **Leeftijd range bug onderzocht**
+  - Na onderzoek blijken ALLE poules WEL een leeftijd range in de titel te hebben
+  - Bug is niet meer te reproduceren - mogelijk al opgelost in eerdere sessie
 
 ### Openstaande items:
-- [ ] **URGENT:** Fix categorie classificatie - jongste categorie prioriteit
-- [ ] **URGENT:** Fix leeftijd range in poule titel bij genereren
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
-- **Classificatie probleem:**
-  - 10-jarige met gewicht -90 staat bij Heren i.p.v. Jeugd -14
-  - De classificatie kiest de VERKEERDE categorie
-  - Moet altijd de jongste passende categorie kiezen
-  - Check `PouleIndelingService::classificeerJudoka()` en `groepeerJudokas()`
-
-- **Leeftijd range probleem:**
-  - `maakPouleTitel()` vindt de categorieConfig niet correct
-  - De lookup via label werkt bij drag & drop (PouleController::updateDynamischeTitel)
-  - Maar dezelfde lookup faalt bij genereren (PouleIndelingService::maakPouleTitel)
-  - Mogelijke oorzaak: timing/volgorde van config laden
+- **Classificatie werkt nu correct:**
+  - Categorieën worden gesorteerd op `max_leeftijd` (jong→oud)
+  - Eerste match wint
+  - Auto-detect geslacht alleen bij LEGE geslacht, niet bij expliciet 'gemengd'
 
 - **Aanwezigheid logica:**
   - Gewogen (`gewicht_gewogen` is ingevuld) = aanwezig
