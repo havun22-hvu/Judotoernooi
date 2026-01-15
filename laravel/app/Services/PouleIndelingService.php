@@ -30,7 +30,7 @@ class PouleIndelingService
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
         $this->clubspreiding = $toernooi->clubspreiding ?? true;
-        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     }
 
@@ -41,7 +41,7 @@ class PouleIndelingService
         $this->minJudokas = 3;
         $this->maxJudokas = 6;
         $this->clubspreiding = true;
-        $this->prioriteiten = ['gewicht', 'band', 'groepsgrootte', 'clubspreiding'];
+        $this->prioriteiten = ['leeftijd', 'gewicht', 'band'];
         $this->dynamischeIndelingService = $dynamischeIndelingService;
     }
 
@@ -247,10 +247,6 @@ class PouleIndelingService
                     $maxKg = $this->getMaxKgVerschil($leeftijdsklasse);
                     $maxLeeftijd = $this->getMaxLeeftijdVerschil($leeftijdsklasse);
 
-                    // Bepaal groepsgrootte prioriteit (1 = hoogste, 4 = laagste)
-                    $groepsgroottePrio = array_search('groepsgrootte', $this->prioriteiten);
-                    $groepsgroottePrio = $groepsgroottePrio !== false ? $groepsgroottePrio + 1 : 3;
-
                     // Haal poule grootte voorkeur uit toernooi instellingen
                     $pouleGrootteVoorkeur = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
 
@@ -259,9 +255,9 @@ class PouleIndelingService
                         $maxLeeftijd,
                         $maxKg,
                         [
-                            'groepsgrootte_prioriteit' => $groepsgroottePrio,
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
                             'verdeling_prioriteiten' => $this->prioriteiten,
+                            'clubspreiding' => $this->clubspreiding,
                         ]
                     );
 
@@ -540,19 +536,21 @@ class PouleIndelingService
         $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
 
         // Sort by new sort fields, respecting prioriteiten order
-        // Default order: gewicht first, then band
+        // prioriteiten can be: leeftijd, gewicht, band (in any order)
+        $leeftijdIdx = array_search('leeftijd', $this->prioriteiten);
         $gewichtIdx = array_search('gewicht', $this->prioriteiten);
         $bandIdx = array_search('band', $this->prioriteiten);
-        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false && $bandIdx < $gewichtIdx);
+
+        // Build sort order based on priorities (lower index = higher priority)
+        $sortFields = [];
+        if ($leeftijdIdx !== false) $sortFields[$leeftijdIdx] = ['geboortejaar', 'DESC']; // DESC = jongste eerst (hoger geboortejaar)
+        if ($gewichtIdx !== false) $sortFields[$gewichtIdx] = ['sort_gewicht', 'ASC'];
+        if ($bandIdx !== false) $sortFields[$bandIdx] = ['sort_band', 'ASC'];
+        ksort($sortFields);
 
         $query = $toernooi->judokas()->orderBy('sort_categorie');
-
-        if ($bandFirst) {
-            // Band has higher priority than gewicht
-            $query->orderBy('sort_band')->orderBy('sort_gewicht');
-        } else {
-            // Gewicht has higher priority (default)
-            $query->orderBy('sort_gewicht')->orderBy('sort_band');
+        foreach ($sortFields as [$field, $direction]) {
+            $query->orderBy($field, $direction);
         }
 
         $judokas = $query->get();
@@ -994,23 +992,10 @@ class PouleIndelingService
         }
 
         // Apply club spreading as refinement
-        // Check priorities to determine what swaps are allowed
+        // Only swap judokas with same band and within max_kg_verschil
         if ($this->clubspreiding && count($verdeling) > 1) {
-            $gewichtIdx = array_search('gewicht', $this->prioriteiten);
-            $bandIdx = array_search('band', $this->prioriteiten);
-            $clubspreidingIdx = array_search('clubspreiding', $this->prioriteiten);
-
-            // If gewicht has higher priority than clubspreiding, only swap similar weights
-            $maxGewichtVerschilBijSwap = ($gewichtIdx !== false && $clubspreidingIdx !== false && $gewichtIdx < $clubspreidingIdx)
-                ? ($this->toernooi?->max_kg_verschil ?? 3.0)
-                : null; // null = no weight restriction
-
-            // If band has higher priority than clubspreiding, only swap same band
-            $onlySwapSameBand = ($bandIdx !== false && $clubspreidingIdx !== false)
-                ? $bandIdx < $clubspreidingIdx
-                : true;
-
-            $verdeling = $this->pasClubspreidingToe($verdeling, $onlySwapSameBand, $maxGewichtVerschilBijSwap);
+            $maxGewichtVerschilBijSwap = $this->toernooi?->max_kg_verschil ?? 3.0;
+            $verdeling = $this->pasClubspreidingToe($verdeling, true, $maxGewichtVerschilBijSwap);
         }
 
         return $verdeling;
