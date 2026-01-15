@@ -296,7 +296,7 @@
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
             <p class="text-yellow-800 text-sm">
                 <span class="font-bold">📝 Spiekbriefje:</span> Maak notities voor het welkomstwoord en andere aandachtspunten.
-                Notities worden lokaal opgeslagen op dit apparaat.
+                Notities worden opgeslagen op de server en blijven bewaard voor volgend jaar.
             </p>
         </div>
 
@@ -366,7 +366,6 @@ async function zetTerug(pouleId, button) {
 
 function sprekerInterface() {
     const STORAGE_KEY = 'spreker_geschiedenis_{{ $toernooi->id }}';
-    const NOTITIES_KEY = 'spreker_notities_{{ $toernooi->id }}';
     const vandaag = new Date().toDateString();
 
     return {
@@ -377,8 +376,9 @@ function sprekerInterface() {
         openPoules: [],
         notities: '',
         notitiesSaved: false,
+        saveTimeout: null,
 
-        init() {
+        async init() {
             // Laad geschiedenis uit localStorage
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
@@ -418,10 +418,19 @@ function sprekerInterface() {
             this.geschiedenis.sort((a, b) => b.tijd.localeCompare(a.tijd));
             this.saveGeschiedenis();
 
-            // Laad notities
-            const storedNotities = localStorage.getItem(NOTITIES_KEY);
-            if (storedNotities) {
-                this.notities = storedNotities;
+            // Laad notities van server
+            await this.loadNotities();
+        },
+
+        async loadNotities() {
+            try {
+                const response = await fetch('{{ route('toernooi.spreker.notities.get', $toernooi) }}');
+                const data = await response.json();
+                if (data.success && data.notities) {
+                    this.notities = data.notities;
+                }
+            } catch (err) {
+                console.error('Fout bij laden notities:', err);
             }
         },
 
@@ -474,16 +483,34 @@ function sprekerInterface() {
             }
         },
 
-        saveNotities() {
-            localStorage.setItem(NOTITIES_KEY, this.notities);
-            this.notitiesSaved = true;
-            setTimeout(() => this.notitiesSaved = false, 2000);
+        async saveNotities() {
+            // Debounce: wacht 500ms na laatste invoer
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch('{{ route('toernooi.spreker.notities.save', $toernooi) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ notities: this.notities })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        this.notitiesSaved = true;
+                        setTimeout(() => this.notitiesSaved = false, 2000);
+                    }
+                } catch (err) {
+                    console.error('Fout bij opslaan notities:', err);
+                }
+            }, 500);
         },
 
-        clearNotities() {
+        async clearNotities() {
             if (confirm('Weet je zeker dat je alle notities wilt wissen?')) {
                 this.notities = '';
-                localStorage.removeItem(NOTITIES_KEY);
+                await this.saveNotities();
             }
         },
 

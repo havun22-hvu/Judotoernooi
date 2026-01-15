@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Band;
-use App\Enums\Leeftijdsklasse;
 use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Services\ImportService;
@@ -89,16 +88,19 @@ class JudokaController extends Controller
 
         $judoka->update($validated);
 
-        // Recalculate leeftijdsklasse
+        // Recalculate leeftijdsklasse from toernooi config (NOT hardcoded enum)
         $leeftijd = date('Y') - $judoka->geboortejaar;
-        $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
-        $judoka->update(['leeftijdsklasse' => $leeftijdsklasseEnum->label()]);
+        $nieuweLeeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $judoka->geslacht, $judoka->band);
+        if ($nieuweLeeftijdsklasse) {
+            $judoka->update(['leeftijdsklasse' => $nieuweLeeftijdsklasse]);
+        }
 
         // Auto-calculate gewichtsklasse when gewicht is provided
         if (!empty($validated['gewicht'])) {
-            $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-            $nieuweGewichtsklasse = $this->bepaalGewichtsklasse($validated['gewicht'], $leeftijdsklasseEnum, $tolerantie);
-            $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
+            $nieuweGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $judoka->geslacht, $judoka->band);
+            if ($nieuweGewichtsklasse) {
+                $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
+            }
         }
 
         return redirect()
@@ -175,21 +177,22 @@ class JudokaController extends Controller
 
         $judoka->update($validated);
 
-        // Recalculate leeftijdsklasse if geboortejaar or geslacht changed
+        // Recalculate leeftijdsklasse if geboortejaar or geslacht changed (from toernooi config)
         if (isset($validated['geboortejaar']) || isset($validated['geslacht'])) {
             $leeftijd = date('Y') - $judoka->geboortejaar;
-            $leeftijdsklasse = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
-            $judoka->update(['leeftijdsklasse' => $leeftijdsklasse->label()]);
+            $nieuweLeeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $judoka->geslacht, $judoka->band);
+            if ($nieuweLeeftijdsklasse) {
+                $judoka->update(['leeftijdsklasse' => $nieuweLeeftijdsklasse]);
+            }
         }
 
-        // Auto-calculate gewichtsklasse when gewicht is provided
-        // Weight takes precedence over manually set gewichtsklasse
+        // Auto-calculate gewichtsklasse when gewicht is provided (from toernooi config)
         if (isset($validated['gewicht']) && $validated['gewicht']) {
             $leeftijd = date('Y') - $judoka->geboortejaar;
-            $leeftijdsklasseEnum = Leeftijdsklasse::fromLeeftijdEnGeslacht($leeftijd, $judoka->geslacht);
-            $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-            $nieuweGewichtsklasse = $this->bepaalGewichtsklasse($validated['gewicht'], $leeftijdsklasseEnum, $tolerantie);
-            $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
+            $nieuweGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $judoka->geslacht, $judoka->band);
+            if ($nieuweGewichtsklasse) {
+                $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
+            }
         }
 
         return response()->json([
@@ -204,31 +207,6 @@ class JudokaController extends Controller
                 'gewicht' => $judoka->gewicht,
             ]
         ]);
-    }
-
-    /**
-     * Determine weight class based on weight, age category and tolerance
-     */
-    private function bepaalGewichtsklasse(float $gewicht, Leeftijdsklasse $leeftijdsklasse, float $tolerantie = 0.5): string
-    {
-        $klassen = $leeftijdsklasse->gewichtsklassen();
-
-        foreach ($klassen as $klasse) {
-            if ($klasse > 0) {
-                // Plus category (minimum weight) - last one
-                return "+{$klasse}";
-            } else {
-                // Minus category: limit + tolerance
-                $limiet = abs($klasse);
-                if ($gewicht <= $limiet + $tolerantie) {
-                    return "{$klasse}";
-                }
-            }
-        }
-
-        // Fallback to plus category
-        $laatsteKlasse = end($klassen);
-        return $laatsteKlasse > 0 ? "+{$laatsteKlasse}" : "+" . abs($laatsteKlasse);
     }
 
     public function zoek(Request $request, Toernooi $toernooi): JsonResponse

@@ -124,6 +124,7 @@ class Toernooi extends Model
         'code_dojo',
         'wedstrijd_schemas',
         'pagina_content',
+        'spreker_notities',
         'thema_kleur',
         'afgesloten_at',
         'herinnering_datum',
@@ -792,4 +793,111 @@ class Toernooi extends Model
         return $this->getNietGecategoriseerdeJudokas()->count();
     }
 
+    /**
+     * Bepaal leeftijdsklasse label op basis van toernooi config (NIET hardcoded enum).
+     * Zoekt de eerste categorie waar judoka in past qua leeftijd, geslacht en band.
+     *
+     * @return string|null Label van de categorie, of null als geen match
+     */
+    public function bepaalLeeftijdsklasse(int $leeftijd, string $geslacht, ?string $band = null): ?string
+    {
+        $config = $this->getAlleGewichtsklassen();
+        if (empty($config)) {
+            return null;
+        }
+
+        $geslacht = strtoupper($geslacht);
+
+        // Sorteer op max_leeftijd (jong → oud)
+        uasort($config, fn($a, $b) => ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99));
+
+        foreach ($config as $key => $cat) {
+            $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
+
+            // Leeftijd moet passen
+            if ($leeftijd > $maxLeeftijd) {
+                continue;
+            }
+
+            // Geslacht moet passen (gemengd past altijd)
+            $catGeslacht = strtoupper($cat['geslacht'] ?? 'GEMENGD');
+            if ($catGeslacht !== 'GEMENGD' && $catGeslacht !== $geslacht) {
+                continue;
+            }
+
+            // Band filter moet passen (als ingesteld)
+            $bandFilter = $cat['band_filter'] ?? '';
+            if (!empty($bandFilter) && !empty($band) && !BandHelper::pastInFilter($band, $bandFilter)) {
+                continue;
+            }
+
+            // Match gevonden
+            return $cat['label'] ?? $key;
+        }
+
+        return null; // Geen categorie past
+    }
+
+    /**
+     * Bepaal gewichtsklasse op basis van gewicht en toernooi config.
+     *
+     * @return string|null Gewichtsklasse (bijv. "-38" of "+73"), of null als geen match
+     */
+    public function bepaalGewichtsklasse(float $gewicht, int $leeftijd, string $geslacht, ?string $band = null): ?string
+    {
+        $config = $this->getAlleGewichtsklassen();
+        if (empty($config)) {
+            return null;
+        }
+
+        $geslacht = strtoupper($geslacht);
+        $tolerantie = $this->gewicht_tolerantie ?? 0.5;
+
+        // Sorteer op max_leeftijd (jong → oud)
+        uasort($config, fn($a, $b) => ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99));
+
+        foreach ($config as $key => $cat) {
+            $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
+            if ($leeftijd > $maxLeeftijd) {
+                continue;
+            }
+
+            $catGeslacht = strtoupper($cat['geslacht'] ?? 'GEMENGD');
+            if ($catGeslacht !== 'GEMENGD' && $catGeslacht !== $geslacht) {
+                continue;
+            }
+
+            $bandFilter = $cat['band_filter'] ?? '';
+            if (!empty($bandFilter) && !empty($band) && !BandHelper::pastInFilter($band, $bandFilter)) {
+                continue;
+            }
+
+            // Categorie gevonden - bepaal gewichtsklasse
+            $gewichten = $cat['gewichten'] ?? [];
+            if (empty($gewichten)) {
+                return null; // Dynamische categorie, geen vaste klassen
+            }
+
+            foreach ($gewichten as $klasse) {
+                $klasseInt = (int) preg_replace('/[^0-9-]/', '', $klasse);
+                if ($klasseInt > 0) {
+                    // Plus categorie (laatste)
+                    return "+{$klasseInt}";
+                } else {
+                    // Minus categorie
+                    $limiet = abs($klasseInt);
+                    if ($gewicht <= $limiet + $tolerantie) {
+                        return "-{$limiet}";
+                    }
+                }
+            }
+
+            // Geen gewichtsklasse past, fallback naar plus
+            $laatsteKlasse = end($gewichten);
+            $laatsteInt = abs((int) preg_replace('/[^0-9]/', '', $laatsteKlasse));
+            return "+{$laatsteInt}";
+        }
+
+        return null;
+    }
 }

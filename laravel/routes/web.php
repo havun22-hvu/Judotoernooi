@@ -277,6 +277,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('spreker', [BlokController::class, 'sprekerInterface'])->name('spreker.interface');
         Route::post('spreker/afgeroepen', [BlokController::class, 'markeerAfgeroepen'])->name('spreker.afgeroepen');
         Route::post('spreker/terug', [BlokController::class, 'zetAfgeroepenTerug'])->name('spreker.terug');
+        Route::post('spreker/notities', [BlokController::class, 'saveNotities'])->name('spreker.notities.save');
+        Route::get('spreker/notities', [BlokController::class, 'getNotities'])->name('spreker.notities.get');
     });
 
 });
