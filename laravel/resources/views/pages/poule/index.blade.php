@@ -140,20 +140,8 @@
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
-                                @php
-                                    $label = $leeftijdsklasseLabels[$poule->leeftijdsklasse] ?? $poule->leeftijdsklasse;
-                                    $dynamicRange = trim(($leeftijdRange && $gewichtRange) ? $leeftijdRange . ' · ' . $gewichtRange : $leeftijdRange . $gewichtRange);
-
-                                    // Als label "lft-kg" bevat, vervang door actuele ranges
-                                    if (stripos($label, 'lft-kg') !== false) {
-                                        if (strtolower($label) === 'lft-kg') {
-                                            $label = $dynamicRange ?: 'Onbekend';
-                                        } else {
-                                            $label = str_ireplace('lft-kg', $dynamicRange, $label);
-                                        }
-                                    }
-                                @endphp
-                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $label }} {{ $poule->gewichtsklasse }}</span>
+                                {{-- Gebruik opgeslagen titel (bevat label, leeftijd range en gewicht range) --}}
+                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->titel }}</span>
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
