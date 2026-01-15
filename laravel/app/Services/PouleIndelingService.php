@@ -541,6 +541,9 @@ class PouleIndelingService
         $gewichtIdx = array_search('gewicht', $this->prioriteiten);
         $bandIdx = array_search('band', $this->prioriteiten);
 
+        // Determine if band has higher priority than gewicht (for re-sorting within groups)
+        $bandFirst = ($bandIdx !== false && $gewichtIdx !== false) ? ($bandIdx < $gewichtIdx) : false;
+
         // Build sort order based on priorities (lower index = higher priority)
         $sortFields = [];
         if ($leeftijdIdx !== false) $sortFields[$leeftijdIdx] = ['geboortejaar', 'DESC']; // DESC = jongste eerst (hoger geboortejaar)
