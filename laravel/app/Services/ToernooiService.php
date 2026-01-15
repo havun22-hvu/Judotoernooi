@@ -188,13 +188,18 @@ class ToernooiService
 
     private function getStatistiekenPerLeeftijdsklasse(Toernooi $toernooi): array
     {
-        // Sort by sort_categorie (young to old) - respects preset order
-        return $toernooi->judokas()
-            ->selectRaw('leeftijdsklasse, MIN(sort_categorie) as sort_order, COUNT(*) as aantal')
+        $counts = $toernooi->judokas()
+            ->selectRaw('leeftijdsklasse, COUNT(*) as aantal')
             ->groupBy('leeftijdsklasse')
-            ->orderBy('sort_order')
             ->pluck('aantal', 'leeftijdsklasse')
             ->toArray();
+
+        // Sort by max_leeftijd from config (youngest first)
+        uksort($counts, fn($a, $b) =>
+            $toernooi->getLeeftijdsklasseSortValue($a) <=> $toernooi->getLeeftijdsklasseSortValue($b)
+        );
+
+        return $counts;
     }
 
     private function getStatistiekenPerBlok(Toernooi $toernooi): array
