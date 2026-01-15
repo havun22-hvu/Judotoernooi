@@ -24,30 +24,19 @@ class JudokaController extends Controller
             ->with('club')
             ->get();
 
-        // Sort by: age class (youngest first by U-number), weight class (lightest first), gender, name
+        // Sort by: age class (youngest first), weight class (lightest first), gender, name
         $judokas = $judokas->sortBy([
-            fn ($a, $b) => $this->parseLeeftijd($a->leeftijdsklasse) <=> $this->parseLeeftijd($b->leeftijdsklasse),
+            fn ($a, $b) => $toernooi->getLeeftijdsklasseSortValue($a->leeftijdsklasse ?? '') <=> $toernooi->getLeeftijdsklasseSortValue($b->leeftijdsklasse ?? ''),
             fn ($a, $b) => $this->parseGewicht($a->gewichtsklasse) <=> $this->parseGewicht($b->gewichtsklasse),
             fn ($a, $b) => $a->geslacht <=> $b->geslacht,
             fn ($a, $b) => $a->naam <=> $b->naam,
         ]);
 
-        // Group by leeftijdsklasse and sort groups by U-number (youngest first)
+        // Group by leeftijdsklasse and sort groups (youngest first using config)
         $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse')
-            ->sortBy(fn ($group, $klasse) => $this->parseLeeftijd($klasse));
+            ->sortBy(fn ($group, $klasse) => $toernooi->getLeeftijdsklasseSortValue($klasse));
 
         return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
-    }
-
-    /**
-     * Parse age class to numeric value for sorting (e.g., "U11 Jongens" -> 11)
-     */
-    private function parseLeeftijd(string $leeftijdsklasse): int
-    {
-        if (preg_match('/U(\d+)/', $leeftijdsklasse, $matches)) {
-            return (int) $matches[1];
-        }
-        return 99;
     }
 
     /**
