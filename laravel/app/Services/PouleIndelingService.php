@@ -563,26 +563,31 @@ class PouleIndelingService
             $leeftijdsklasse = $judoka->leeftijdsklasse ?: 'Onbekend';
             $categorieKey = $judoka->categorie_key ?: '';
 
-            // Get config for gender handling
+            // Get config for gender handling and dynamic grouping
             $config = $this->gewichtsklassenConfig[$categorieKey] ?? null;
             $configGeslacht = strtolower($config['geslacht'] ?? 'gemengd');
             $includeGeslacht = $configGeslacht !== 'gemengd';
 
+            // Check if this category uses dynamic grouping (max_kg_verschil > 0)
+            // If so, don't split by gewichtsklasse - let DynamischeIndelingService handle it
+            $usesDynamic = ($config['max_kg_verschil'] ?? 0) > 0;
+
             $geslacht = strtoupper($judoka->geslacht ?? '');
 
-            if ($gebruikGewichtsklassen) {
-                // Met gewichtsklassen: groepeer per leeftijd + gewichtsklasse
+            if ($usesDynamic || !$gebruikGewichtsklassen) {
+                // Dynamic grouping or no weight classes: group only by age class
+                // DynamischeIndelingService will create weight groups
+                if ($includeGeslacht) {
+                    return "{$leeftijdsklasse}||{$geslacht}";
+                }
+                return "{$leeftijdsklasse}|";
+            } else {
+                // Fixed weight classes: group by age + weight class
                 $gewichtsklasse = $judoka->gewichtsklasse ?: 'Onbekend';
                 if ($includeGeslacht) {
                     return "{$leeftijdsklasse}|{$gewichtsklasse}|{$geslacht}";
                 }
                 return "{$leeftijdsklasse}|{$gewichtsklasse}";
-            } else {
-                // Zonder gewichtsklassen: groepeer alleen per leeftijd
-                if ($includeGeslacht) {
-                    return "{$leeftijdsklasse}||{$geslacht}";
-                }
-                return "{$leeftijdsklasse}|";
             }
         });
 
