@@ -576,7 +576,7 @@ class BlokController extends Controller
                 $q->with(['mat', 'judokas.club'])
                     ->whereNotNull('mat_id')
                     ->orderBy('mat_id')
-                    ->orderBy('volgorde');
+                    ->orderBy('nummer');
             }])
             ->orderBy('nummer')
             ->get();
