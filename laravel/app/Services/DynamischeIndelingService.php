@@ -62,7 +62,13 @@ class DynamischeIndelingService
         // Stap 2: Merge kleine poules (< 4 judoka's) met buren
         $poules = $this->mergeKleinePoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
 
-        // Stap 3: Clubspreiding (optioneel)
+        // Stap 3: Globale merge - zoek kleine poules die samengevoegd kunnen worden (niet alleen buren)
+        $poules = $this->globaalMergeKleinePoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
+
+        // Stap 4: Balanceer - steel judoka's van grote poules naar kleine
+        $poules = $this->balanceerPoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
+
+        // Stap 4: Clubspreiding (optioneel)
         if ($this->config['clubspreiding'] && count($poules) > 1) {
             $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil, $maxLeeftijdVerschil);
         }
@@ -129,6 +135,125 @@ class DynamischeIndelingService
         // Laatste poule opslaan
         if (!empty($huidigePoule)) {
             $poules[] = $this->maakPouleData($huidigePoule);
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Globale merge: zoek ALLE kleine poules die samengevoegd kunnen worden (niet alleen buren).
+     */
+    private function globaalMergeKleinePoules(array $poules, float $maxKg, int $maxLeeftijd): array
+    {
+        if (count($poules) < 2) {
+            return $poules;
+        }
+
+        $gewijzigd = true;
+        $maxIteraties = 30;
+        $iteratie = 0;
+
+        while ($gewijzigd && $iteratie < $maxIteraties) {
+            $gewijzigd = false;
+            $iteratie++;
+
+            // Vind alle kleine poules
+            $kleineIndices = [];
+            foreach ($poules as $i => $p) {
+                if (count($p['judokas']) < 4) {
+                    $kleineIndices[] = $i;
+                }
+            }
+
+            // Probeer elk paar kleine poules te mergen
+            for ($a = 0; $a < count($kleineIndices); $a++) {
+                for ($b = $a + 1; $b < count($kleineIndices); $b++) {
+                    $idxA = $kleineIndices[$a];
+                    $idxB = $kleineIndices[$b];
+
+                    if ($this->kanMergen($poules[$idxA], $poules[$idxB], $maxKg, $maxLeeftijd)) {
+                        // Merge!
+                        $poules[$idxA] = $this->mergeTweePoules($poules[$idxA], $poules[$idxB]);
+                        array_splice($poules, $idxB, 1);
+                        $gewijzigd = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Balanceer poules: steel judoka's van grote poules (5+) naar kleine (< 4).
+     */
+    private function balanceerPoules(array $poules, float $maxKg, int $maxLeeftijd): array
+    {
+        if (count($poules) < 2) {
+            return $poules;
+        }
+
+        $gewijzigd = true;
+        $maxIteraties = 50;
+        $iteratie = 0;
+
+        while ($gewijzigd && $iteratie < $maxIteraties) {
+            $gewijzigd = false;
+            $iteratie++;
+
+            for ($i = 0; $i < count($poules); $i++) {
+                $kleinePoule = $poules[$i];
+                $aantalKlein = count($kleinePoule['judokas']);
+
+                // Skip als poule al groot genoeg is
+                if ($aantalKlein >= 4) {
+                    continue;
+                }
+
+                // Zoek een buurpoule met 5+ judoka's om van te stelen
+                $donors = [];
+                if ($i > 0 && count($poules[$i - 1]['judokas']) >= 5) {
+                    $donors[] = $i - 1;
+                }
+                if ($i < count($poules) - 1 && count($poules[$i + 1]['judokas']) >= 5) {
+                    $donors[] = $i + 1;
+                }
+
+                foreach ($donors as $donorIdx) {
+                    $donorPoule = $poules[$donorIdx];
+
+                    // Probeer elke judoka van donor te stelen (begin bij rand dichtst bij kleine poule)
+                    $judokasToTry = $donorPoule['judokas'];
+                    if ($donorIdx < $i) {
+                        // Donor is links, pak laatste judoka's eerst (dichtst bij kleine)
+                        $judokasToTry = array_reverse($judokasToTry, true);
+                    }
+                    // Anders: donor is rechts, eerste judoka's zijn dichtst bij
+
+                    foreach ($judokasToTry as $jIdx => $judoka) {
+                        // Simuleer steal
+                        $nieuweKlein = $kleinePoule['judokas'];
+                        $nieuweKlein[] = $judoka;
+
+                        $nieuweDonor = $donorPoule['judokas'];
+                        unset($nieuweDonor[$jIdx]);
+                        $nieuweDonor = array_values($nieuweDonor);
+
+                        // Check of beide poules nog valid zijn
+                        if ($this->pouleIsValid($nieuweKlein, $maxKg, $maxLeeftijd) &&
+                            $this->pouleIsValid($nieuweDonor, $maxKg, $maxLeeftijd) &&
+                            count($nieuweDonor) >= 4) {
+
+                            // Steal successful!
+                            $poules[$i] = $this->maakPouleData($nieuweKlein);
+                            $poules[$donorIdx] = $this->maakPouleData($nieuweDonor);
+                            $gewijzigd = true;
+                            break 2; // Herstart hele loop
+                        }
+                    }
+                }
+            }
         }
 
         return $poules;
