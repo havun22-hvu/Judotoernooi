@@ -5,24 +5,27 @@
 
 ## Kernbegrippen
 
-### Categoriseren vs Sorteren (BELANGRIJK!)
+### De 4 Stappen (BELANGRIJK!)
 
-Dit onderscheid is cruciaal voor het hele systeem:
+| Stap | Wat | Resultaat |
+|------|-----|-----------|
+| **1. Categoriseren** | Judoka → categorie (harde criteria) | Elke judoka heeft een categorie |
+| **2. Sorteren** | Alle judoka's op prioriteiten | Gesorteerde lijst (jong/licht eerst) |
+| **3. Groeperen** | Per categorie groeperen | Gesorteerde lijst PER categorie |
+| **4. Poules maken** | Verdelen in poules van 5 | Poules binnen kg/lft limieten |
 
-| Concept | Betekenis | Wanneer |
-|---------|-----------|---------|
-| **Categoriseren** | Judoka toewijzen aan een categorie | EERST - check ALLE harde criteria |
-| **Sorteren** | Volgorde bepalen binnen de groep | DAARNA - binnen 1 categorie |
+**Stap 1: Categoriseren** = Welke groep?
+- Judoka moet voldoen aan ALLE harde criteria
+- Eerste leeftijdsmatch = zijn categorie (NOOIT doorvallen!)
+- Harde criteria: max_leeftijd, geslacht, band_filter
 
-**Categoriseren** = Welke groep?
-- Judoka moet voldoen aan ALLE criteria van een categorie
-- Eerste match (van jong naar oud) = zijn categorie
-- Harde criteria: max_leeftijd, geslacht, band_filter, gewichtsklasse
+**Stap 2-3: Sorteren & Groeperen** = Welke volgorde?
+- Sorteer op prioriteiten (leeftijd/gewicht/band)
+- Groepeer per categorie → gesorteerde lijst per categorie
 
-**Sorteren** = Welke volgorde binnen de groep?
-- Pas NADAT judoka in categorie is geplaatst
-- Bepaalt alleen volgorde, niet de groep
-- Zachte criteria: prioriteit van leeftijd/gewicht/band
+**Stap 4: Poules maken** = Verdelen
+- Binnen limieten: max_kg_verschil, max_leeftijd_verschil
+- Poulegrootte voorkeur: [5, 4, 6, 3]
 
 ---
 
@@ -51,15 +54,15 @@ Dit onderscheid is cruciaal voor het hele systeem:
 │   LET OP: max_kg_verschil is NIET voor categoriseren!           │
 │   Dat is voor stap 4 (poules maken binnen de categorie).        │
 │                                                                 │
-│ STAP 2: GROEPEREN                                               │
-│   Alle judoka's in dezelfde categorie = 1 groep                 │
-│   Dit zijn de kandidaten voor poules binnen deze categorie      │
-│                                                                 │
-│ STAP 3: SORTEREN (binnen de groep)                              │
-│   Sorteer volgens verdeling_prioriteiten instelling:            │
+│ STAP 2: SORTEREN                                                │
+│   Sorteer ALLE judoka's volgens verdeling_prioriteiten:         │
 │   • Leeftijd: jong → oud                                        │
 │   • Gewicht: licht → zwaar                                      │
 │   • Band: laag → hoog (wit → zwart)                             │
+│                                                                 │
+│ STAP 3: GROEPEREN                                               │
+│   Groepeer per categorie (sortering blijft behouden)            │
+│   → Gesorteerde lijst per categorie, klaar voor poule-indeling  │
 │                                                                 │
 │ STAP 4: POULES MAKEN (greedy, direct optimaal)                  │
 │   Gesorteerde groep verdelen in poules van 5 (of 4/6/3):        │
