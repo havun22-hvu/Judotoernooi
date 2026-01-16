@@ -171,33 +171,41 @@ def fix_orphans(
     """
     Stap 2: Probeer orphans (kleine poules) toe te voegen aan andere poules.
 
-    Twee passes:
-    1. Eerst proberen in poules < max_grootte (voorkeur)
-    2. Dan orphans in poules van max_grootte (wordt 6) - beter dan orphan houden!
+    Plaatsings-attractiviteit:
+    - Poule van 3: HOOG (wordt 4 - ideaal)
+    - Poule van 4: HOOG (wordt 5 - ideaal)
+    - Poule van 5: LAAG (wordt 6 - vermijden)
+    - Poule van 6: NIET bijvullen (zou 7 worden) → split naar 3+4
+
+    Passes:
+    1. Eerst in poules van 3-4 (hoge attractiviteit)
+    2. Dan in poules van 5 (lage attractiviteit, alleen als nodig)
+    3. Als orphan bij poule van 6 past → split die poule in 3+4
     """
     max_grootte = voorkeur[0] if voorkeur else 5
-    absolute_max = max(voorkeur) if voorkeur else 6  # Hoogste toegestane grootte
+    absolute_max = max(voorkeur) if voorkeur else 6
 
-    # Pass 1: Probeer kleine poules te plaatsen in poules < max_grootte
-    poules = _fix_orphans_pass(poules, max_kg, max_lft, voorkeur, max_grootte)
+    # Pass 1: Hoge attractiviteit - poules van 3 of 4
+    poules = _fix_orphans_by_target_sizes(poules, max_kg, max_lft, voorkeur, [3, 4])
 
-    # Pass 2: Resterende orphans in poules tot absolute_max (harde bovengrens)
-    # Een poule van 6 (40 punten) is ALTIJD beter dan een orphan (100 punten)
-    # Maar nooit groter dan max(voorkeur)!
-    poules = _fix_orphans_pass(poules, max_kg, max_lft, voorkeur, absolute_max)
+    # Pass 2: Lage attractiviteit - poules van 5 (alleen als pass 1 niet lukte)
+    poules = _fix_orphans_by_target_sizes(poules, max_kg, max_lft, voorkeur, [5])
+
+    # Pass 3: Poule van 6 + orphan → split naar 3+4
+    poules = _fix_orphans_by_splitting(poules, max_kg, max_lft, voorkeur, absolute_max)
 
     return poules
 
 
-def _fix_orphans_pass(
+def _fix_orphans_by_target_sizes(
     poules: List[Poule],
     max_kg: float,
     max_lft: int,
     voorkeur: List[int],
-    size_limit: int
+    target_sizes: List[int]
 ) -> List[Poule]:
     """
-    Helper: één pass van orphan fixing met gegeven size limit.
+    Helper: plaats orphans in poules met specifieke groottes.
     """
     verbeterd = True
 
@@ -208,29 +216,23 @@ def _fix_orphans_pass(
         kleine = [p for p in poules if p.size <= 2]
 
         for kleine_poule in kleine:
-            for judoka in kleine_poule.judokas[:]:  # Copy list
-                # Zoek een poule waar deze judoka bij past
+            for judoka in kleine_poule.judokas[:]:
+                # Zoek poule met target grootte waar judoka past
                 beste_poule = None
-                beste_score_verbetering = 0
+                beste_score = float('inf')
 
                 for andere in poules:
                     if andere is kleine_poule:
                         continue
-                    if andere.size >= size_limit:
+                    if andere.size not in target_sizes:
                         continue
                     if not andere.kan_toevoegen(judoka, max_kg, max_lft):
                         continue
 
-                    # Bereken score verbetering
-                    oude_score = bereken_grootte_penalty(andere.size, voorkeur)
+                    # Kies poule met beste score na toevoegen
                     nieuwe_score = bereken_grootte_penalty(andere.size + 1, voorkeur)
-                    orphan_score = bereken_grootte_penalty(kleine_poule.size, voorkeur)
-                    orphan_nieuwe = bereken_grootte_penalty(kleine_poule.size - 1, voorkeur)
-
-                    verbetering = (oude_score + orphan_score) - (nieuwe_score + orphan_nieuwe)
-
-                    if verbetering > beste_score_verbetering:
-                        beste_score_verbetering = verbetering
+                    if nieuwe_score < beste_score:
+                        beste_score = nieuwe_score
                         beste_poule = andere
 
                 if beste_poule:
@@ -242,6 +244,104 @@ def _fix_orphans_pass(
         poules = [p for p in poules if p.size > 0]
 
     return poules
+
+
+def _fix_orphans_by_splitting(
+    poules: List[Poule],
+    max_kg: float,
+    max_lft: int,
+    voorkeur: List[int],
+    absolute_max: int
+) -> List[Poule]:
+    """
+    Helper: als orphan bij poule van absolute_max past, voeg toe en split in 3+4.
+    Poule van 6 + 1 orphan = 7 → split naar poule van 3 + poule van 4
+    """
+    verbeterd = True
+
+    while verbeterd:
+        verbeterd = False
+
+        # Vind orphans (grootte 1)
+        orphans = [p for p in poules if p.size == 1]
+
+        for orphan_poule in orphans:
+            judoka = orphan_poule.judokas[0]
+
+            # Zoek poule van absolute_max waar judoka bij past
+            for andere in poules:
+                if andere is orphan_poule:
+                    continue
+                if andere.size != absolute_max:
+                    continue
+                if not andere.kan_toevoegen(judoka, max_kg, max_lft):
+                    continue
+
+                # Voeg orphan toe → wordt absolute_max + 1 (bijv. 7)
+                alle_judokas = andere.judokas + [judoka]
+
+                # Split in 3 + 4
+                poule_3, poule_4 = _split_in_3_en_4(alle_judokas, max_kg, max_lft)
+
+                if poule_3 and poule_4:
+                    # Verwijder oude poules, voeg nieuwe toe
+                    poules.remove(andere)
+                    poules.remove(orphan_poule)
+                    poules.append(poule_3)
+                    poules.append(poule_4)
+                    verbeterd = True
+                    break
+
+            if verbeterd:
+                break
+
+    return poules
+
+
+def _split_in_3_en_4(
+    judokas: List[Judoka],
+    max_kg: float,
+    max_lft: int
+) -> Tuple[Optional[Poule], Optional[Poule]]:
+    """
+    Split 7 judoka's in een poule van 3 en een poule van 4.
+    Probeert beste verdeling te vinden die binnen limieten valt.
+    """
+    if len(judokas) != 7:
+        return None, None
+
+    # Sorteer op gewicht voor betere verdeling
+    gesorteerd = sorted(judokas, key=lambda j: (j.leeftijd, j.gewicht))
+
+    # Probeer verschillende splitsingen
+    beste_split = None
+    beste_totaal_range = float('inf')
+
+    for indices_3 in combinations(range(7), 3):
+        indices_4 = [i for i in range(7) if i not in indices_3]
+
+        groep_3 = [gesorteerd[i] for i in indices_3]
+        groep_4 = [gesorteerd[i] for i in indices_4]
+
+        poule_3 = Poule(judokas=groep_3)
+        poule_4 = Poule(judokas=groep_4)
+
+        # Check of beide binnen limieten vallen
+        if poule_3.gewicht_range > max_kg or poule_3.leeftijd_range > max_lft:
+            continue
+        if poule_4.gewicht_range > max_kg or poule_4.leeftijd_range > max_lft:
+            continue
+
+        # Bereken totale range (lager = beter)
+        totaal_range = poule_3.gewicht_range + poule_4.gewicht_range
+        if totaal_range < beste_totaal_range:
+            beste_totaal_range = totaal_range
+            beste_split = (poule_3, poule_4)
+
+    if beste_split:
+        return beste_split
+
+    return None, None
 
 
 def merge_kleine_poules(

@@ -128,8 +128,32 @@ Deze criteria bepalen hoe judoka's BINNEN een categorie in poules worden verdeel
 
 | Instelling | Waarde | Betekenis |
 |------------|--------|-----------|
-| `poule_grootte_voorkeur` | [5, 4, 6, 3] | Ideale poule groottes |
+| `poule_grootte_voorkeur` | [5, 4, 6, 3] | Poule groottes (zie onder) |
 | `clubspreiding` | aan/uit | Probeer clubs te verdelen |
+
+#### poule_grootte_voorkeur - Twee functies
+
+De lijst heeft **twee functies**:
+
+1. **Prioriteit**: volgorde bepaalt voorkeur bij maken van poules
+2. **Toegestaan**: groottes IN de lijst zijn acceptabel, NIET in lijst = problematisch
+
+| Grootte | In lijst [5,4,6,3] | Status |
+|---------|---------------------|--------|
+| 5 | Positie 1 | ✅ Ideaal (0 punten) |
+| 4 | Positie 2 | ✅ Goed (5 punten) |
+| 6 | Positie 3 | ✅ Acceptabel (40 punten) |
+| 3 | Positie 4 | ✅ Ongewenst maar OK (40 punten) |
+| 7+ | Niet in lijst | ❌ **Kan niet** (solver maakt dit nooit) |
+| 1-2 | Niet in lijst | 🔴 Orphan (100 punten) |
+
+**Harde bovengrens:** `max(poule_grootte_voorkeur)` is de absolute maximum poulegrootte.
+- Bij [5, 4, 6, 3] → max = 6, poule van 7 kan NIET
+- Bij [5, 4, 3] → max = 5, poule van 6 kan NIET
+
+**Voorbeeld prioriteit verschil:**
+- [5, 4, **3**, 6]: 6 judoka's → 2×3 (want 3 staat vóór 6)
+- [5, 4, **6**, 3]: 6 judoka's → 1×6 (want 6 staat vóór 3)
 
 ---
 
