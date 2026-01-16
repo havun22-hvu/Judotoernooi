@@ -39,7 +39,10 @@ Dit onderscheid is cruciaal voor het hele systeem:
 │   • leeftijd ≤ max_leeftijd                                     │
 │   • geslacht = M/V/Gemengd                                      │
 │   • band voldoet aan band_filter (als gezet)                    │
-│   • gewicht past in gewichtsklasse (vast) of max_kg_verschil   │
+│   • (bij vaste klassen: gewicht past in gewichtsklasse)         │
+│                                                                 │
+│   LET OP: max_kg_verschil is NIET voor categoriseren!           │
+│   Dat is voor stap 4 (poules maken binnen de categorie).        │
 │                                                                 │
 │   Categorieen worden doorlopen van jong→oud.                    │
 │   Eerste match = judoka's categorie.                            │
