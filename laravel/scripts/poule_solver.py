@@ -170,8 +170,35 @@ def fix_orphans(
 ) -> List[Poule]:
     """
     Stap 2: Probeer orphans (kleine poules) toe te voegen aan andere poules.
+
+    Twee passes:
+    1. Eerst proberen in poules < max_grootte (voorkeur)
+    2. Dan orphans in poules van max_grootte (wordt 6) - beter dan orphan houden!
     """
     max_grootte = voorkeur[0] if voorkeur else 5
+    absolute_max = max(voorkeur) if voorkeur else 6  # Hoogste toegestane grootte
+
+    # Pass 1: Probeer kleine poules te plaatsen in poules < max_grootte
+    poules = _fix_orphans_pass(poules, max_kg, max_lft, voorkeur, max_grootte)
+
+    # Pass 2: Resterende orphans in poules tot absolute_max (harde bovengrens)
+    # Een poule van 6 (40 punten) is ALTIJD beter dan een orphan (100 punten)
+    # Maar nooit groter dan max(voorkeur)!
+    poules = _fix_orphans_pass(poules, max_kg, max_lft, voorkeur, absolute_max)
+
+    return poules
+
+
+def _fix_orphans_pass(
+    poules: List[Poule],
+    max_kg: float,
+    max_lft: int,
+    voorkeur: List[int],
+    size_limit: int
+) -> List[Poule]:
+    """
+    Helper: één pass van orphan fixing met gegeven size limit.
+    """
     verbeterd = True
 
     while verbeterd:
@@ -189,7 +216,7 @@ def fix_orphans(
                 for andere in poules:
                     if andere is kleine_poule:
                         continue
-                    if andere.size >= max_grootte:
+                    if andere.size >= size_limit:
                         continue
                     if not andere.kan_toevoegen(judoka, max_kg, max_lft):
                         continue
@@ -227,6 +254,7 @@ def merge_kleine_poules(
     Stap 3: Merge kleine poules als ze samen binnen limieten vallen.
     """
     max_grootte = voorkeur[0] if voorkeur else 5
+    absolute_max = max(voorkeur) if voorkeur else 6  # Harde bovengrens
     verbeterd = True
 
     while verbeterd:
@@ -239,9 +267,9 @@ def merge_kleine_poules(
             if p1 not in poules or p2 not in poules:
                 continue
 
-            # Check of merge mogelijk is
+            # Check of merge mogelijk is (nooit groter dan absolute_max)
             combined_size = p1.size + p2.size
-            if combined_size > max_grootte + 1:  # Max 6
+            if combined_size > absolute_max:
                 continue
 
             # Check limieten

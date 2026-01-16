@@ -46,55 +46,58 @@
         </div>
     </div>
 
-    <!-- OVERLAY: Gewicht invoer (over scanner heen) -->
-    <div id="judoka-section" class="hidden fixed inset-0 z-50 bg-black/70 flex items-end justify-center p-2">
-        <div class="bg-white rounded-t-2xl w-full max-w-md p-4 pb-6 shadow-2xl max-h-[85vh] overflow-y-auto">
-            <!-- Header met sluiten knop -->
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="font-bold text-lg text-gray-800">Gewicht invoeren</h3>
-                <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-            </div>
-
-            <!-- Judoka info -->
-            <div id="judoka-info" class="border-2 rounded-lg p-3 mb-3 text-gray-800">
-            </div>
-
-            <!-- Weight input -->
-            <div class="mb-3">
-                <div class="relative">
-                    <input type="text" id="weight-input" readonly
-                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-4 text-3xl text-center font-bold"
-                           placeholder="0.0">
-                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">kg</span>
+    <!-- OVERLAY: Gewicht invoer (over HELE scherm, gecentreerd) -->
+    <div id="judoka-section" class="hidden fixed inset-0 z-50 bg-black/80" style="padding-top: env(safe-area-inset-top);">
+        <div class="h-full flex items-center justify-center p-3">
+            <div class="bg-white rounded-2xl w-full max-w-xs p-3 shadow-2xl">
+                <!-- Header met sluiten knop -->
+                <div class="flex justify-between items-center mb-2">
+                    <div id="judoka-info-compact" class="flex-1 text-gray-800 min-w-0">
+                        <!-- Filled by JS -->
+                    </div>
+                    <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-3xl leading-none ml-2 flex-shrink-0">&times;</button>
                 </div>
+
+                <!-- Weight input -->
+                <div class="mb-2">
+                    <div class="relative">
+                        <input type="text" id="weight-input" readonly
+                               class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-3xl text-center font-bold"
+                               placeholder="0.0">
+                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">kg</span>
+                    </div>
+                </div>
+
+                <!-- Numpad (3 rijen + registreer) -->
+                <div class="grid grid-cols-4 gap-1 mb-2">
+                    <button onclick="numpadInput('7')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">7</button>
+                    <button onclick="numpadInput('8')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">8</button>
+                    <button onclick="numpadInput('9')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">9</button>
+                    <button onclick="numpadInput('C')" class="bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold">C</button>
+                    <button onclick="numpadInput('4')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">4</button>
+                    <button onclick="numpadInput('5')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">5</button>
+                    <button onclick="numpadInput('6')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">6</button>
+                    <button onclick="numpadInput('.')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">.</button>
+                    <button onclick="numpadInput('1')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">1</button>
+                    <button onclick="numpadInput('2')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">2</button>
+                    <button onclick="numpadInput('3')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">3</button>
+                    <button onclick="numpadInput('0')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">0</button>
+                </div>
+
+                <!-- Register button -->
+                <button onclick="registreerGewicht()" id="register-btn"
+                        class="w-full bg-green-600 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
+                    ✓ Registreer
+                </button>
+
+                <!-- Feedback message -->
+                <div id="feedback" class="hidden mt-2 p-2 rounded-lg text-center text-sm font-medium"></div>
             </div>
-
-            <!-- Numpad (grotere knoppen) -->
-            <div class="grid grid-cols-4 gap-2 mb-3">
-                <button onclick="numpadInput('7')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">7</button>
-                <button onclick="numpadInput('8')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">8</button>
-                <button onclick="numpadInput('9')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">9</button>
-                <button onclick="numpadInput('C')" class="bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-700 rounded-lg py-4 text-2xl font-bold">C</button>
-                <button onclick="numpadInput('4')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">4</button>
-                <button onclick="numpadInput('5')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">5</button>
-                <button onclick="numpadInput('6')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">6</button>
-                <button onclick="numpadInput('.')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">.</button>
-                <button onclick="numpadInput('1')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">1</button>
-                <button onclick="numpadInput('2')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">2</button>
-                <button onclick="numpadInput('3')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">3</button>
-                <button onclick="numpadInput('0')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">0</button>
-            </div>
-
-            <!-- Register button -->
-            <button onclick="registreerGewicht()" id="register-btn"
-                    class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-5 rounded-lg text-xl">
-                ✓ Registreer
-            </button>
-
-            <!-- Feedback message -->
-            <div id="feedback" class="hidden mt-3 p-3 rounded-lg text-center font-medium"></div>
         </div>
     </div>
+
+    <!-- Hidden judoka info element for backwards compatibility -->
+    <div id="judoka-info" class="hidden"></div>
 
     <!-- BOTTOM: Stats + History (fixed at bottom) -->
     <div class="bg-white rounded-lg shadow p-2 text-gray-800">
@@ -253,19 +256,17 @@ function selectJudoka(judoka) {
     document.getElementById('judoka-section').classList.remove('hidden');
 
     const isGewogen = judoka.gewogen || judoka.gewicht_gewogen;
-    document.getElementById('judoka-info').innerHTML = `
-        <div>
-            <h2 class="text-xl font-bold">${judoka.naam}</h2>
-            <p class="text-gray-600 text-sm">${judoka.club || 'Geen club'}</p>
+
+    // Compact header info
+    document.getElementById('judoka-info-compact').innerHTML = `
+        <div class="font-bold text-lg truncate">${judoka.naam}</div>
+        <div class="text-sm text-gray-600 flex flex-wrap gap-1">
+            <span>${judoka.club || 'Geen club'}</span>
+            <span>•</span>
+            <span>${judoka.gewichtsklasse || '?'} kg</span>
+            ${isGewogen ? `<span class="text-green-600 font-medium">✓ ${judoka.gewicht_gewogen} kg</span>` : ''}
         </div>
-        <div class="flex flex-wrap gap-2 mt-2 text-sm">
-            <span class="bg-gray-100 px-2 py-1 rounded">${judoka.gewichtsklasse || '?'} kg</span>
-            <span class="bg-gray-100 px-2 py-1 rounded">${judoka.leeftijdsklasse || '?'}</span>
-            ${judoka.blok ? `<span class="bg-gray-100 px-2 py-1 rounded">Blok ${judoka.blok}</span>` : ''}
-        </div>
-        ${isGewogen ? `<div class="mt-2 text-green-700 font-medium">✓ Al gewogen: ${judoka.gewicht_gewogen} kg</div>` : ''}
     `;
-    document.getElementById('judoka-info').className = `border-2 rounded-lg p-3 mb-3 ${isGewogen ? 'border-green-500 bg-green-50' : 'border-gray-200'}`;
 
     updateWeightDisplay();
 }
