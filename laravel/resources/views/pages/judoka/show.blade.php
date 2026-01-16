@@ -86,13 +86,20 @@
     </div>
     @endif
 
-    <div class="flex justify-between">
+    <div class="flex justify-between items-center">
         <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
             &larr; Terug naar lijst
         </a>
-        <a href="{{ route('toernooi.judoka.edit', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            Bewerken
-        </a>
+        <div class="flex gap-2">
+            @if($judoka->qr_code)
+            <a href="{{ route('weegkaart.show', $judoka->qr_code) }}" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                Weegkaart
+            </a>
+            @endif
+            <a href="{{ route('toernooi.judoka.edit', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                Bewerken
+            </a>
+        </div>
     </div>
 </div>
 @endsection
