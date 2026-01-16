@@ -658,9 +658,42 @@ class PouleIndelingService
         $bandNiveau = BandHelper::getSortNiveau($judoka->band ?? '');
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
+        // STAP 1: Vind de eerste (laagste) max_leeftijd waar judoka in past
+        // Categorieën zijn gesorteerd op max_leeftijd (jong → oud)
+        $eersteMatchLeeftijd = null;
         $sortCategorie = 0;
+
+        foreach ($this->gewichtsklassenConfig as $config) {
+            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
+            if ($leeftijd <= $maxLeeftijd) {
+                $eersteMatchLeeftijd = $maxLeeftijd;
+                break;
+            }
+            $sortCategorie++;
+        }
+
+        // Geen leeftijdsmatch → niet gecategoriseerd
+        if ($eersteMatchLeeftijd === null) {
+            return [
+                'configKey' => null,
+                'label' => 'Onbekend',
+                'sortCategorie' => 99,
+                'gewichtsklasse' => null,
+            ];
+        }
+
+        // STAP 2: Check ALLEEN categorieën met deze max_leeftijd
+        // Een 6-jarige in U7 mag NOOIT doorvallen naar U11!
+        $categorieSortIndex = 0;
         foreach ($this->gewichtsklassenConfig as $key => $config) {
             $maxLeeftijd = $config['max_leeftijd'] ?? 99;
+
+            // Skip categorieën met andere max_leeftijd
+            if ($maxLeeftijd !== $eersteMatchLeeftijd) {
+                $categorieSortIndex++;
+                continue;
+            }
+
             $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
             $label = strtolower($config['label'] ?? '');
 
@@ -672,13 +705,10 @@ class PouleIndelingService
             }
 
             // Auto-detect gender from label ONLY if geslacht is not explicitly set
-            // Important: if geslacht is explicitly 'gemengd', don't override based on key suffix
-            // The key suffix detection is only for cases where organisator forgot to set geslacht
             $originalGeslacht = strtolower($config['geslacht'] ?? '');
             $isExplicitGemengd = $originalGeslacht === 'gemengd';
 
             if ($configGeslacht === 'GEMENGD' && !$isExplicitGemengd) {
-                // Only auto-detect if geslacht was empty/missing, not if explicitly set to 'gemengd'
                 if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
                     $configGeslacht = 'V';
                 } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
@@ -686,22 +716,16 @@ class PouleIndelingService
                 }
             }
 
-            // Check leeftijd
-            if ($leeftijd > $maxLeeftijd) {
-                $sortCategorie++;
-                continue;
-            }
-
             // Check geslacht (gemengd matches all)
             if ($configGeslacht !== 'GEMENGD' && $configGeslacht !== $geslacht) {
-                $sortCategorie++;
+                $categorieSortIndex++;
                 continue;
             }
 
             // Check band_filter if set
             $bandFilter = $config['band_filter'] ?? null;
             if ($bandFilter && !$this->voldoetAanBandFilter($bandNiveau, $bandFilter)) {
-                $sortCategorie++;
+                $categorieSortIndex++;
                 continue;
             }
 
@@ -715,12 +739,13 @@ class PouleIndelingService
             return [
                 'configKey' => $key,
                 'label' => $config['label'] ?? $key,
-                'sortCategorie' => $sortCategorie,
+                'sortCategorie' => $categorieSortIndex,
                 'gewichtsklasse' => $gewichtsklasse,
             ];
         }
 
-        // No match found
+        // Geen match binnen de leeftijdscategorie → NIET GECATEGORISEERD
+        // Dit gebeurt als geslacht of band_filter niet past
         return [
             'configKey' => null,
             'label' => 'Onbekend',
