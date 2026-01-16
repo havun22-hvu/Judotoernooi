@@ -91,10 +91,21 @@
     </button>
 
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
-        @foreach($klassePoules->groupBy('gewichtsklasse') as $gewichtsklasse => $gewichtPoules)
+        @php
+            // Groepeer per 5kg blok (20-24, 25-29, 30-34, etc.)
+            $poulesPerGewichtBlok = $klassePoules->groupBy(function($poule) {
+                // Haal het eerste getal uit gewichtsklasse (bijv. "30-35" -> 30, "-38" -> 38)
+                if (preg_match('/(\d+)/', $poule->gewichtsklasse, $m)) {
+                    $kg = (int) $m[1];
+                    return floor($kg / 5) * 5; // Rond af naar 5kg blokken
+                }
+                return 0;
+            })->sortKeys();
+        @endphp
+        @foreach($poulesPerGewichtBlok as $gewichtBlok => $gewichtPoules)
         <div class="mb-4 last:mb-0">
-            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtsklasse }} kg</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtBlok }}-{{ $gewichtBlok + 4 }} kg</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             @foreach($gewichtPoules as $poule)
             @php
                 $isEliminatie = $poule->type === 'eliminatie';
@@ -212,17 +223,28 @@
                     </div>
                     @else
                     {{-- Normale weergave voor poules --}}
-                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item"
+                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group"
                          data-judoka-id="{{ $judoka->id }}"
-                         data-poule-id="{{ $poule->id }}">
+                         data-poule-id="{{ $poule->id }}"
+                         data-judoka-naam="{{ $judoka->naam }}"
+                         data-judoka-leeftijd="{{ $judoka->leeftijd }}"
+                         data-judoka-gewicht="{{ $judoka->gewicht ?? '' }}">
                         <div class="flex justify-between items-start">
                             <div class="flex-1 min-w-0">
                                 <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
-                            <div class="text-right text-xs ml-2">
-                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
-                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                            <div class="flex items-start gap-2">
+                                <div class="text-right text-xs">
+                                    <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
+                                    <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                </div>
+                                <button type="button"
+                                        onclick="openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
+                                        class="zoek-match-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 p-1 -mr-1 transition-opacity"
+                                        title="Zoek match">
+                                    🔍
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -278,12 +300,36 @@
     </div>
 </div>
 
+<!-- Context menu voor judoka -->
+<div id="judoka-context-menu" class="fixed hidden bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 min-w-[160px]">
+    <button onclick="openZoekMatch()" class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2">
+        <span>🔍</span> Zoek match
+    </button>
+</div>
+
+<!-- Zoek Match Modal -->
+<div id="zoek-match-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center">
+            <h2 class="text-lg font-bold text-gray-800">
+                Match voor: <span id="zoek-match-judoka-naam"></span>
+                <span class="text-gray-500 font-normal" id="zoek-match-judoka-info"></span>
+            </h2>
+            <button onclick="closeZoekMatchModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1" id="zoek-match-results">
+            <p class="text-gray-500 text-center py-8">Laden...</p>
+        </div>
+    </div>
+</div>
+
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
+const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', [$toernooi, '__JUDOKA_ID__']) }}';
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
@@ -577,6 +623,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ghostClass: 'bg-blue-100',
             chosenClass: 'bg-blue-200',
             dragClass: 'shadow-lg',
+            filter: '.zoek-match-btn',  // Exclude button from drag
+            preventOnFilter: false,      // Allow click on filtered elements
             onEnd: async function(evt) {
                 const judokaId = evt.item.dataset.judokaId;
                 const vanPouleId = evt.from.dataset.pouleId;
@@ -802,6 +850,219 @@ function fixBlokBreedte() {
 
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(fixBlokBreedte, 100);
+});
+
+// ============================================
+// Zoek Match functionaliteit
+// ============================================
+let selectedJudokaId = null;
+let selectedJudokaElement = null;
+const contextMenu = document.getElementById('judoka-context-menu');
+
+// Right-click handler op judoka items
+document.addEventListener('contextmenu', function(e) {
+    const judokaItem = e.target.closest('.judoka-item');
+    if (!judokaItem) return;
+
+    // Check of dit een eliminatie poule is - geen zoek match voor eliminatie
+    const pouleCard = judokaItem.closest('[data-poule-id]');
+    if (pouleCard?.dataset.pouleIsEliminatie === '1') return;
+
+    e.preventDefault();
+
+    selectedJudokaId = judokaItem.dataset.judokaId;
+    selectedJudokaElement = judokaItem;
+
+    // Positioneer context menu bij cursor
+    contextMenu.style.left = e.pageX + 'px';
+    contextMenu.style.top = e.pageY + 'px';
+    contextMenu.classList.remove('hidden');
+});
+
+// Sluit context menu bij klik ergens anders
+document.addEventListener('click', function(e) {
+    if (!contextMenu.contains(e.target)) {
+        contextMenu.classList.add('hidden');
+    }
+});
+
+// Sluit context menu bij scroll
+document.addEventListener('scroll', function() {
+    contextMenu.classList.add('hidden');
+});
+
+function openZoekMatchFor(judokaId, element) {
+    selectedJudokaId = judokaId;
+    selectedJudokaElement = element;
+    openZoekMatch();
+}
+
+async function openZoekMatch() {
+    contextMenu.classList.add('hidden');
+
+    if (!selectedJudokaId) return;
+
+    const modal = document.getElementById('zoek-match-modal');
+    const resultsDiv = document.getElementById('zoek-match-results');
+    const naamSpan = document.getElementById('zoek-match-judoka-naam');
+    const infoSpan = document.getElementById('zoek-match-judoka-info');
+
+    // Haal judoka info uit data attributes
+    const naam = selectedJudokaElement?.dataset.judokaNaam || 'Judoka';
+    const leeftijd = selectedJudokaElement?.dataset.judokaLeeftijd || '';
+    const gewicht = selectedJudokaElement?.dataset.judokaGewicht || '';
+    naamSpan.textContent = naam;
+    infoSpan.textContent = leeftijd ? `(${leeftijd}j${gewicht ? ', ' + gewicht + 'kg' : ''})` : '';
+
+    modal.classList.remove('hidden');
+    resultsDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Laden...</p>';
+
+    try {
+        const url = zoekMatchUrl.replace('__JUDOKA_ID__', selectedJudokaId);
+        const response = await fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            resultsDiv.innerHTML = `<p class="text-red-500 text-center py-8">${data.message || 'Fout bij ophalen'}</p>`;
+            return;
+        }
+
+        // Update judoka info
+        infoSpan.textContent = `(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)`;
+
+        if (data.matches.length === 0) {
+            resultsDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Geen passende poules gevonden</p>';
+            return;
+        }
+
+        // Render matches
+        let html = '<div class="space-y-2">';
+
+        for (const match of data.matches) {
+            // Status kleuren
+            const statusColors = {
+                'ok': 'border-green-200 bg-green-50 hover:bg-green-100',
+                'warning': 'border-yellow-200 bg-yellow-50 hover:bg-yellow-100',
+                'error': 'border-red-200 bg-red-50 hover:bg-red-100'
+            };
+            const statusIcons = {
+                'ok': '✅',
+                'warning': '⚠️',
+                'error': '❌'
+            };
+
+            const colorClass = statusColors[match.status] || statusColors['warning'];
+            const icon = statusIcons[match.status] || '❓';
+
+            // Overschrijding tekst
+            let overschrijdingTekst = '';
+            if (match.kg_overschrijding > 0 || match.lft_overschrijding > 0) {
+                const parts = [];
+                if (match.kg_overschrijding > 0) parts.push(`+${match.kg_overschrijding}kg`);
+                if (match.lft_overschrijding > 0) parts.push(`+${match.lft_overschrijding}j`);
+                overschrijdingTekst = parts.join(', ');
+            }
+
+            // Categorie overschrijding indicator
+            const catOverschrijding = match.categorie_overschrijding;
+            const catBadge = catOverschrijding
+                ? `<span class="ml-2 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">⚠️ ${match.leeftijdsklasse}</span>`
+                : '';
+
+            html += `
+                <div class="p-3 rounded-lg border cursor-pointer transition-colors ${colorClass} ${catOverschrijding ? 'border-l-4 border-l-orange-400' : ''}"
+                     onclick="verplaatsNaarPoule(${selectedJudokaId}, ${match.poule_id})">
+                    <div class="flex justify-between items-start flex-wrap gap-1">
+                        <div class="flex items-center flex-wrap">
+                            <span class="font-medium">${icon} #${match.poule_nummer} ${match.poule_titel || ''}</span>
+                            ${catBadge}
+                            ${overschrijdingTekst ? `<span class="text-xs text-gray-500 ml-2">(${overschrijdingTekst})</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <div class="text-gray-500 text-xs mb-1">Nu:</div>
+                            <div>${match.huidige_judokas} judoka's</div>
+                            <div class="text-xs text-gray-600">${match.huidige_leeftijd} / ${match.huidige_gewicht}</div>
+                        </div>
+                        <div>
+                            <div class="text-gray-500 text-xs mb-1">Na plaatsing:</div>
+                            <div>${match.nieuwe_judokas} judoka's</div>
+                            <div class="text-xs text-gray-600">${match.nieuwe_leeftijd} / ${match.nieuwe_gewicht}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error:', error);
+        resultsDiv.innerHTML = '<p class="text-red-500 text-center py-8">Fout bij ophalen matches</p>';
+    }
+}
+
+function closeZoekMatchModal() {
+    document.getElementById('zoek-match-modal').classList.add('hidden');
+    selectedJudokaId = null;
+    selectedJudokaElement = null;
+}
+
+async function verplaatsNaarPoule(judokaId, naarPouleId) {
+    // Vind de huidige poule
+    const judokaElement = document.querySelector(`[data-judoka-id="${judokaId}"]`);
+    const vanPouleId = judokaElement?.dataset.pouleId;
+
+    if (!vanPouleId || vanPouleId === String(naarPouleId)) {
+        closeZoekMatchModal();
+        return;
+    }
+
+    try {
+        const response = await fetch(verplaatsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                judoka_id: judokaId,
+                van_poule_id: vanPouleId,
+                naar_poule_id: naarPouleId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            closeZoekMatchModal();
+            showToast(data.message);
+            // Herlaad pagina om alle wijzigingen te tonen
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast(data.message || 'Fout bij verplaatsen', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('Fout bij verplaatsen', true);
+    }
+}
+
+// Sluit modal met Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeZoekMatchModal();
+        contextMenu.classList.add('hidden');
+    }
 });
 </script>
 

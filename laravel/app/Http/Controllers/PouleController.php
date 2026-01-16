@@ -253,6 +253,150 @@ class PouleController extends Controller
     }
 
     /**
+     * Zoek mogelijke matches voor een judoka (orphan handling)
+     * Toont alleen relevante poules en ook poules uit volgende (oudere) categorie
+     */
+    public function zoekMatch(Toernooi $toernooi, Judoka $judoka): JsonResponse
+    {
+        $huidigJaar = now()->year;
+
+        // Vind huidige poule van judoka
+        $huidigePoule = $judoka->poules()->where('toernooi_id', $toernooi->id)->first();
+
+        // Haal config parameters op
+        $config = $toernooi->getAlleGewichtsklassen();
+        $categorieKey = $huidigePoule?->categorie_key;
+        $categorieConfig = $categorieKey ? ($config[$categorieKey] ?? []) : [];
+        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? $toernooi->max_kg_verschil ?? 3.0);
+        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? $toernooi->max_leeftijd_verschil ?? 2);
+
+        // Judoka gegevens
+        $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
+        $judokaLeeftijd = $judoka->geboortejaar ? $huidigJaar - $judoka->geboortejaar : 0;
+        $judokaGeslacht = $judoka->geslacht; // M of V
+
+        // Bepaal huidige leeftijdsklasse
+        $huidigeLeeftijdsklasse = $huidigePoule?->leeftijdsklasse;
+
+        // Haal ALLE poules op - we filteren later op basis van leeftijd/gewicht relevantie
+        $poulesQuery = $toernooi->poules()->with('judokas');
+        if ($huidigePoule) {
+            $poulesQuery->where('id', '!=', $huidigePoule->id);
+        }
+        $poules = $poulesQuery->get();
+
+        $matches = [];
+
+        foreach ($poules as $poule) {
+            $judokasInPoule = $poule->judokas;
+
+            if ($judokasInPoule->isEmpty()) {
+                continue;
+            }
+
+            // Check geslacht: M/V moet matchen
+            // Bepaal het geslacht van de poule op basis van de judoka's erin
+            $geslachtenInPoule = $judokasInPoule->pluck('geslacht')->unique()->filter();
+            $isGemengdePoule = $geslachtenInPoule->count() > 1;
+            $pouleGeslacht = $geslachtenInPoule->first();
+
+            // Skip als geslacht niet matcht (tenzij gemengde poule)
+            if (!$isGemengdePoule && $pouleGeslacht && $judokaGeslacht && $pouleGeslacht !== $judokaGeslacht) {
+                continue;
+            }
+
+            // Huidige statistieken
+            $huidigeGewichten = $judokasInPoule->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht ?? 0)->filter();
+            $huidigeLeeftijden = $judokasInPoule->map(fn($j) => $j->geboortejaar ? $huidigJaar - $j->geboortejaar : 0)->filter();
+
+            $huidigeMinKg = $huidigeGewichten->min();
+            $huidigeMaxKg = $huidigeGewichten->max();
+            $huidigeMinLft = $huidigeLeeftijden->min();
+            $huidigeMaxLft = $huidigeLeeftijden->max();
+
+            // Nieuwe statistieken na toevoegen judoka
+            $nieuweMinKg = min($huidigeMinKg, $judokaGewicht);
+            $nieuweMaxKg = max($huidigeMaxKg, $judokaGewicht);
+            $nieuweMinLft = min($huidigeMinLft, $judokaLeeftijd);
+            $nieuweMaxLft = max($huidigeMaxLft, $judokaLeeftijd);
+
+            $nieuweKgRange = $nieuweMaxKg - $nieuweMinKg;
+            $nieuweLftRange = $nieuweMaxLft - $nieuweMinLft;
+
+            // Bereken overschrijding
+            $kgOverschrijding = max(0, $nieuweKgRange - $maxKgVerschil);
+            $lftOverschrijding = max(0, $nieuweLftRange - $maxLftVerschil);
+
+            // Is dit een andere categorie?
+            $isCategorieOverschrijding = $huidigeLeeftijdsklasse && $poule->leeftijdsklasse !== $huidigeLeeftijdsklasse;
+
+            // Bepaal status
+            $status = 'ok';
+            if ($kgOverschrijding > 0 || $lftOverschrijding > 0) {
+                $status = ($kgOverschrijding <= 2 && $lftOverschrijding <= 1) ? 'warning' : 'error';
+            }
+
+            $matches[] = [
+                'poule_id' => $poule->id,
+                'poule_nummer' => $poule->nummer,
+                'poule_titel' => $poule->titel ?? "Poule #{$poule->nummer}",
+                'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'categorie_overschrijding' => $isCategorieOverschrijding,
+                'huidige_judokas' => $judokasInPoule->count(),
+                'huidige_leeftijd' => $huidigeMinLft == $huidigeMaxLft ? "{$huidigeMinLft}j" : "{$huidigeMinLft}-{$huidigeMaxLft}j",
+                'huidige_gewicht' => round($huidigeMinKg, 1) == round($huidigeMaxKg, 1)
+                    ? round($huidigeMinKg, 1) . "kg"
+                    : round($huidigeMinKg, 1) . "-" . round($huidigeMaxKg, 1) . "kg",
+                'nieuwe_judokas' => $judokasInPoule->count() + 1,
+                'nieuwe_leeftijd' => $nieuweMinLft == $nieuweMaxLft ? "{$nieuweMinLft}j" : "{$nieuweMinLft}-{$nieuweMaxLft}j",
+                'nieuwe_gewicht' => round($nieuweMinKg, 1) == round($nieuweMaxKg, 1)
+                    ? round($nieuweMinKg, 1) . "kg"
+                    : round($nieuweMinKg, 1) . "-" . round($nieuweMaxKg, 1) . "kg",
+                'kg_overschrijding' => round($kgOverschrijding, 1),
+                'lft_overschrijding' => $lftOverschrijding,
+                'status' => $status,
+            ];
+        }
+
+        // Split in eigen categorie en andere categorie
+        $eigenCategorie = array_filter($matches, fn($m) => !$m['categorie_overschrijding']);
+        $andereCategorie = array_filter($matches, fn($m) => $m['categorie_overschrijding']);
+
+        // Sorteer beide op status en kg overschrijding
+        $sortFn = function ($a, $b) {
+            $statusOrder = ['ok' => 0, 'warning' => 1, 'error' => 2];
+            $statusCmp = ($statusOrder[$a['status']] ?? 3) <=> ($statusOrder[$b['status']] ?? 3);
+            if ($statusCmp !== 0) return $statusCmp;
+            return $a['kg_overschrijding'] <=> $b['kg_overschrijding'];
+        };
+
+        usort($eigenCategorie, $sortFn);
+        usort($andereCategorie, $sortFn);
+
+        // Neem max 7 uit eigen categorie + max 5 uit andere categorie
+        $eigenCategorie = array_slice($eigenCategorie, 0, 7);
+        $andereCategorie = array_slice($andereCategorie, 0, 5);
+
+        // Combineer: eigen categorie eerst, dan andere
+        $matches = array_merge($eigenCategorie, $andereCategorie);
+
+        return response()->json([
+            'success' => true,
+            'judoka' => [
+                'id' => $judoka->id,
+                'naam' => $judoka->naam,
+                'gewicht' => $judokaGewicht,
+                'leeftijd' => $judokaLeeftijd,
+            ],
+            'huidige_poule_id' => $huidigePoule?->id,
+            'huidige_leeftijdsklasse' => $huidigeLeeftijdsklasse,
+            'max_kg_verschil' => $maxKgVerschil,
+            'max_lft_verschil' => $maxLftVerschil,
+            'matches' => $matches,
+        ]);
+    }
+
+    /**
      * API endpoint for drag-and-drop judoka move
      */
     public function verplaatsJudokaApi(Request $request, Toernooi $toernooi): JsonResponse
