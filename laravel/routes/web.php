@@ -135,6 +135,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         // Poules management
         Route::post('poule/genereer', [PouleController::class, 'genereer'])->name('poule.genereer');
         Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
+        Route::get('poule/zoek-match/{judoka}', [PouleController::class, 'zoekMatch'])->name('poule.zoek-match');
         Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
         Route::post('poule', [PouleController::class, 'store'])->name('poule.store');
         Route::patch('poule/{poule}/kruisfinale', [PouleController::class, 'updateKruisfinale'])->name('poule.update-kruisfinale');
