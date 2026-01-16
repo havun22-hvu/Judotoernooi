@@ -35,17 +35,21 @@ Dit onderscheid is cruciaal voor het hele systeem:
 │                                                                 │
 │ STAP 1: CATEGORISEREN                                           │
 │   Per judoka → check welke categorie past                       │
-│   Criteria (ALLEMAAL moeten matchen):                           │
-│   • leeftijd ≤ max_leeftijd                                     │
-│   • geslacht = M/V/Gemengd                                      │
-│   • band voldoet aan band_filter (als gezet)                    │
-│   • (bij vaste klassen: gewicht past in gewichtsklasse)         │
+│                                                                 │
+│   A. Vind eerste categorie waar leeftijd ≤ max_leeftijd         │
+│      (categorieën gesorteerd van jong → oud)                    │
+│                                                                 │
+│   B. Check ALLEEN categorieën met DIE max_leeftijd:             │
+│      • geslacht = M/V/Gemengd                                   │
+│      • band voldoet aan band_filter (als gezet)                 │
+│                                                                 │
+│   ⚠️ KRITIEK: Als geslacht/band niet past → NIET GECATEGORISEERD│
+│      NOOIT doorvallen naar categorie met hogere max_leeftijd!   │
+│      Een 6-jarige in U7 komt NOOIT in U9, ook niet als          │
+│      band_filter niet matcht!                                   │
 │                                                                 │
 │   LET OP: max_kg_verschil is NIET voor categoriseren!           │
 │   Dat is voor stap 4 (poules maken binnen de categorie).        │
-│                                                                 │
-│   Categorieen worden doorlopen van jong→oud.                    │
-│   Eerste match = judoka's categorie.                            │
 │                                                                 │
 │ STAP 2: GROEPEREN                                               │
 │   Alle judoka's in dezelfde categorie = 1 groep                 │
@@ -76,16 +80,38 @@ Dit onderscheid is cruciaal voor het hele systeem:
 
 ## Harde vs Zachte Criteria
 
-### Harde Criteria (categorie niveau - worden NOOIT overschreden)
+### Harde Criteria voor CATEGORISEREN (Stap 1)
+
+Deze criteria bepalen in WELKE CATEGORIE een judoka komt.
+**Een judoka die qua leeftijd past maar niet qua geslacht/band = NIET GECATEGORISEERD!**
+
+| Criterium | Voorbeeld | Toelichting |
+|-----------|-----------|-------------|
+| `max_leeftijd` | U7 = max 6 jaar | **HARDE GRENS** - 6-jarige in U7 komt NOOIT in U9 |
+| `geslacht` | M / V / Gemengd | Moet matchen binnen de leeftijdscategorie |
+| `band_filter` | t/m oranje, vanaf groen | Moet matchen binnen de leeftijdscategorie |
+
+```
+⚠️ KRITIEK: Doorvallen naar andere leeftijdscategorie is VERBODEN!
+
+   Voorbeeld:
+   - Categorieën: U7 (max 6j, band_filter: vanaf_geel), U9 (max 8j)
+   - 6-jarige met witte band
+   - Past in U7 qua leeftijd ✓
+   - Past NIET in U7 qua band ✗
+   - Resultaat: NIET GECATEGORISEERD (melding!)
+   - NOOIT naar U9 doorvallen!
+```
+
+### Harde Criteria voor POULE-INDELING (Stap 4)
+
+Deze criteria bepalen hoe judoka's BINNEN een categorie in poules worden verdeeld.
 
 | Criterium | Voorbeeld | Waar ingesteld |
 |-----------|-----------|----------------|
-| `max_leeftijd` | U11 = max 10 jaar | Per categorie |
-| `geslacht` | M / V / Gemengd | Per categorie |
-| `band_filter` | t/m oranje, vanaf groen | Per categorie (optioneel) |
 | `gewichtsklassen` | -24kg, -27kg | Per categorie (bij vast) |
 | `max_kg_verschil` | Max 3 kg in poule | Per categorie (bij variabel) |
-| `max_leeftijd_verschil` | Max 2 jaar in poule | Per categorie |
+| `max_leeftijd_verschil` | Max 2 jaar in poule | Per categorie (bij variabel) |
 
 ### Zachte Criteria (sorteer niveau)
 
@@ -177,16 +203,20 @@ Dit onderscheid is cruciaal voor het hele systeem:
 
 ### JBN Leeftijdsklassen (referentie)
 
-| Klasse | Leeftijd | Opmerking |
-|--------|----------|-----------|
-| Mini's | tot 8 jaar | 2 jaar range (7-8) |
-| Pupillen A | tot 10 jaar | 2 jaar range (9-10) |
-| Pupillen B | tot 12 jaar | 2 jaar range (11-12) |
-| U15 | tot 15 jaar | 2 jaar range (13-14) |
-| U18 | tot 18 jaar | 3 jaar range (15-17) |
-| Senioren | 18+ | |
+| Klasse | U-nummer | max_leeftijd | Leeftijden |
+|--------|----------|--------------|------------|
+| Mini's | U7/U8 | 6/7 | 5-6 / 6-7 jaar |
+| Pupillen A | U9/U10 | 8/9 | 7-8 / 8-9 jaar |
+| Pupillen B | U11/U12 | 10/11 | 9-10 / 10-11 jaar |
+| Aspiranten | U13/U14 | 12/13 | 11-12 / 12-13 jaar |
+| Cadetten | U15 | 14 | 13-14 jaar |
+| Junioren | U18 | 17 | 15-17 jaar |
+| Senioren | Sen | 99 | 18+ |
 
-**Let op:** JBN gebruikt "tot" (exclusief), niet "t/m" (inclusief).
+**Let op:**
+- U7 = **max 6 jaar** (want: Under 7)
+- `max_leeftijd` in config = hoogste leeftijd die in deze categorie past
+- JBN gebruikt 2-jaar ranges binnen elke categorie
 
 ---
 
