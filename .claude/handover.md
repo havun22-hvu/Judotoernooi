@@ -1,5 +1,40 @@
 # Handover - Laatste Sessie
 
+## Datum: 16 januari 2026
+
+### Wat is gedaan:
+
+1. **KRITIEKE BUG: Classificatie doorvallen gefixed** ✅
+   - **Probleem:** Judoka's vielen door naar verkeerde leeftijdscategorie als geslacht/band niet paste
+   - **Voorbeeld:** 6-jarige meisje met witte band → U7 heeft `band_filter: vanaf_geel` → viel door naar U11 (FOUT!)
+   - **Correct:** 6-jarige hoort ALTIJD in U7, als band niet past → "Niet gecategoriseerd"
+   - **Oorzaak:** Code gebruikte `continue` en ging door naar volgende categorie i.p.v. te stoppen
+   - **Oplossing:** Check nu ALLEEN categorieën met de eerste leeftijdsmatch
+   - **Gefixte functies:**
+     - `PouleIndelingService::classificeerJudoka()`
+     - `Toernooi::bepaalLeeftijdsklasse()`
+     - `Toernooi::bepaalGewichtsklasse()`
+
+2. **Handover gecorrigeerd** ✅
+   - Fout scenario uit vorige sessie verwijderd
+   - Correct onderscheid toegevoegd: Niet gecategoriseerd vs Orphan
+
+### Gewijzigde bestanden:
+
+```
+laravel/app/Services/PouleIndelingService.php
+  - classificeerJudoka() - check nu alleen categorieën met eerste leeftijdsmatch
+
+laravel/app/Models/Toernooi.php
+  - bepaalLeeftijdsklasse() - zelfde fix
+  - bepaalGewichtsklasse() - zelfde fix
+
+.claude/handover.md
+  - Fout scenario verwijderd, correct onderscheid toegevoegd
+```
+
+---
+
 ## Datum: 15 januari 2026
 
 ### Wat is gedaan:
@@ -34,14 +69,16 @@ De classificatie werkt correct:
 - Eerste match wint
 - Geslacht: GEMENGD matcht alles, anders exacte match
 - Band filter: `vanaf_X` of `tm_X` wordt gerespecteerd
-- Als judoka niet voldoet aan band_filter → volgende categorie
+- Als judoka in GEEN categorie past → "Niet gecategoriseerd" (melding nodig!)
 
-### Test scenario met band_filter:
+### Belangrijk onderscheid:
 
-Bij test met `u21_d` (Jeugd) met `band_filter: vanaf_geel`:
-- 6-jarige met witte band komt in `sen_d` (Dames) i.p.v. Jeugd
-- Dit is CORRECT gedrag - band_filter wordt gerespecteerd
-- Als alle judoka's in jeugd moeten → verwijder band_filter uit config
+| Concept | Niveau | Probleem |
+|---------|--------|----------|
+| **Niet gecategoriseerd** | Instellingen | Geen categorie past (leeftijd/geslacht/band) → melding |
+| **Orphan (poule van 1)** | Poules | Wel categorie, geen gewichtsmatch |
+
+Zie: `PLANNING_DYNAMISCHE_INDELING.md` regel 232-248
 
 ### Openstaande items:
 

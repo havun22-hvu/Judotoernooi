@@ -821,6 +821,9 @@ class Toernooi extends Model
      * Bepaal leeftijdsklasse label op basis van toernooi config (NIET hardcoded enum).
      * Zoekt de eerste categorie waar judoka in past qua leeftijd, geslacht en band.
      *
+     * BELANGRIJK: Een 6-jarige in U7 mag NOOIT doorvallen naar U11!
+     * Check alleen categorieën met de eerste leeftijdsmatch.
+     *
      * @return string|null Label van de categorie, of null als geen match
      */
     public function bepaalLeeftijdsklasse(int $leeftijd, string $geslacht, ?string $band = null): ?string
@@ -832,14 +835,29 @@ class Toernooi extends Model
 
         $geslacht = strtoupper($geslacht);
 
-        // Sorteer op max_leeftijd (jong → oud)
-        uasort($config, fn($a, $b) => ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99));
+        // Config is al gesorteerd op max_leeftijd (jong → oud) door getAlleGewichtsklassen()
 
+        // STAP 1: Vind de eerste (laagste) max_leeftijd waar judoka in past
+        $eersteMatchLeeftijd = null;
+        foreach ($config as $cat) {
+            $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
+            if ($leeftijd <= $maxLeeftijd) {
+                $eersteMatchLeeftijd = $maxLeeftijd;
+                break;
+            }
+        }
+
+        // Geen leeftijdsmatch → niet gecategoriseerd
+        if ($eersteMatchLeeftijd === null) {
+            return null;
+        }
+
+        // STAP 2: Check ALLEEN categorieën met deze max_leeftijd
         foreach ($config as $key => $cat) {
             $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
 
-            // Leeftijd moet passen
-            if ($leeftijd > $maxLeeftijd) {
+            // Skip categorieën met andere max_leeftijd
+            if ($maxLeeftijd !== $eersteMatchLeeftijd) {
                 continue;
             }
 
@@ -859,11 +877,14 @@ class Toernooi extends Model
             return $cat['label'] ?? $key;
         }
 
-        return null; // Geen categorie past
+        return null; // Geen categorie past binnen de leeftijdscategorie
     }
 
     /**
      * Bepaal gewichtsklasse op basis van gewicht en toernooi config.
+     *
+     * BELANGRIJK: Een 6-jarige in U7 mag NOOIT doorvallen naar U11!
+     * Check alleen categorieën met de eerste leeftijdsmatch.
      *
      * @return string|null Gewichtsklasse (bijv. "-38" of "+73"), of null als geen match
      */
@@ -877,12 +898,29 @@ class Toernooi extends Model
         $geslacht = strtoupper($geslacht);
         $tolerantie = $this->gewicht_tolerantie ?? 0.5;
 
-        // Sorteer op max_leeftijd (jong → oud)
-        uasort($config, fn($a, $b) => ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99));
+        // Config is al gesorteerd op max_leeftijd (jong → oud) door getAlleGewichtsklassen()
 
+        // STAP 1: Vind de eerste (laagste) max_leeftijd waar judoka in past
+        $eersteMatchLeeftijd = null;
+        foreach ($config as $cat) {
+            $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
+            if ($leeftijd <= $maxLeeftijd) {
+                $eersteMatchLeeftijd = $maxLeeftijd;
+                break;
+            }
+        }
+
+        // Geen leeftijdsmatch → niet gecategoriseerd
+        if ($eersteMatchLeeftijd === null) {
+            return null;
+        }
+
+        // STAP 2: Check ALLEEN categorieën met deze max_leeftijd
         foreach ($config as $key => $cat) {
             $maxLeeftijd = (int) ($cat['max_leeftijd'] ?? 99);
-            if ($leeftijd > $maxLeeftijd) {
+
+            // Skip categorieën met andere max_leeftijd
+            if ($maxLeeftijd !== $eersteMatchLeeftijd) {
                 continue;
             }
 
@@ -922,6 +960,6 @@ class Toernooi extends Model
             return "+{$laatsteInt}";
         }
 
-        return null;
+        return null; // Geen categorie past binnen de leeftijdscategorie
     }
 }
