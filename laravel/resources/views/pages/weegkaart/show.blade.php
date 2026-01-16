@@ -64,7 +64,7 @@
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Geslacht</span>
                 <span class="text-sm font-bold {{ $judoka->geslacht === 'M' ? 'text-blue-600' : 'text-pink-600' }}">
-                    {{ $judoka->geslacht === 'M' ? '♂' : '♀' }}
+{{ $judoka->geslacht }}
                 </span>
             </div>
         </div>
