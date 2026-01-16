@@ -19,6 +19,12 @@
    - Fout scenario uit vorige sessie verwijderd
    - Correct onderscheid toegevoegd: Niet gecategoriseerd vs Orphan
 
+3. **PLANNING_DYNAMISCHE_INDELING.md verbeterd** ✅
+   - "Harde Criteria" sectie gesplitst: categoriseren vs poule-indeling
+   - Expliciete waarschuwing toegevoegd: doorvallen naar andere leeftijdscategorie VERBODEN
+   - JBN tabel gecorrigeerd: U7 = max 6 jaar (niet 7)
+   - Algoritme overzicht Stap 1 verduidelijkt met A/B substappen
+
 ### Gewijzigde bestanden:
 
 ```
@@ -28,6 +34,12 @@ laravel/app/Services/PouleIndelingService.php
 laravel/app/Models/Toernooi.php
   - bepaalLeeftijdsklasse() - zelfde fix
   - bepaalGewichtsklasse() - zelfde fix
+
+laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md
+  - Harde criteria sectie gesplitst (categoriseren vs poule-indeling)
+  - Waarschuwing doorvallen toegevoegd
+  - JBN tabel gecorrigeerd
+  - Algoritme Stap 1 verduidelijkt
 
 .claude/handover.md
   - Fout scenario verwijderd, correct onderscheid toegevoegd
