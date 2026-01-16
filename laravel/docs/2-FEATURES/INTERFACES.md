@@ -102,12 +102,22 @@ Alle PWA scanner interfaces (Weging, Dojo Scanner) zijn **standalone** met ident
 
 ## PWA Apps per Rol
 
-| Interface | PWA Naam | Device | Manifest |
-|-----------|----------|--------|----------|
-| **Dojo Scanner** | Dojo Scanner | Smartphone | manifest-dojo.json |
-| **Weging** | Weging | Smartphone / Tablet | manifest-weging.json |
-| **Mat** | Mat Interface | PC / Laptop / Tablet | manifest-mat.json |
-| **Spreker** | Spreker | iPad / Tablet | manifest-spreker.json |
+| Interface | PWA Naam | Device | Verbinding | Manifest |
+|-----------|----------|--------|------------|----------|
+| **Dojo Scanner** | Dojo Scanner | Smartphone / Tablet | Mobiele data | manifest-dojo.json |
+| **Weging** | Weging | Smartphone / Tablet | Mobiele data | manifest-weging.json |
+| **Spreker** | Spreker | iPad / Tablet | Mobiele data | manifest-spreker.json |
+| **Mat** | Mat Interface | PC / Laptop / Tablet / iPad | WiFi (jurytafel) | manifest-mat.json |
+| **Hoofdjury** | - | PC / Laptop | WiFi (jurytafel) | - |
+
+### Portable gebruik (kleedkamers)
+
+Weging en Dojo draaien op **smartphones/tablets met mobiele data**:
+- Geen afhankelijkheid van sporthal WiFi
+- Werkt in kleedkamers en bij ingang
+- Alleen internetverbinding nodig (4G/5G voldoende)
+
+Spreker draait op **iPad/tablet met mobiele data** (groter scherm voor tekst lezen)
 
 ---
 
