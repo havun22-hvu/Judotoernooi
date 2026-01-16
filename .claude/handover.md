@@ -1,6 +1,50 @@
 # Handover - Laatste Sessie
 
-## Datum: 16 januari 2026
+## Datum: 16 januari 2026 (sessie 2)
+
+### Wat is gedaan:
+
+1. **Python Greedy++ Solver gemaakt** ✅
+   - **Doel:** Minder orphans, betere poule verdeling
+   - **Locatie:** `laravel/scripts/poule_solver.py`
+   - **Algoritme:** Greedy basis → Fix orphans → Merge kleine poules → Swap optimalisatie
+   - **Test:** `laravel/scripts/test_poule_solver.py` - score verbeterd van 190 → 55
+
+2. **DynamischeIndelingService.php gerefactored** ✅
+   - Roept nu Python solver aan via stdin/stdout JSON
+   - Simpele PHP fallback als Python niet beschikbaar is
+   - Oude greedy functies verwijderd (maakPoulesGreedy, mergeKleinePoules, etc.)
+   - Score functie gebruikt nu `poule_grootte_voorkeur` config correct:
+     - Index 0 = 0 punten (eerste voorkeur)
+     - Index 1 = 5 punten (tweede voorkeur)
+     - Index 2+ = 40 punten (rest)
+     - Niet in lijst = 70 punten
+     - Orphan = 100 punten
+
+3. **Clubspreiding behouden** ✅
+   - Python solver doet geen clubspreiding
+   - PHP doet clubspreiding NA Python solver resultaat
+
+### Gewijzigde bestanden:
+
+```
+laravel/scripts/poule_solver.py (NIEUW)
+  - Greedy++ algoritme met 4 stappen
+  - Input/output via JSON stdin/stdout
+
+laravel/scripts/test_poule_solver.py (NIEUW)
+  - Test suite voor Python solver
+
+laravel/app/Services/DynamischeIndelingService.php
+  - callPythonSolver() - roept Python aan
+  - findPython() - cross-platform Python detectie
+  - simpleFallback() - PHP fallback
+  - Verwijderd: maakPoulesGreedy, mergeKleinePoules, globaalMergeKleinePoules, balanceerPoules
+```
+
+---
+
+## Datum: 16 januari 2026 (sessie 1)
 
 ### Wat is gedaan:
 
@@ -24,26 +68,6 @@
    - Expliciete waarschuwing toegevoegd: doorvallen naar andere leeftijdscategorie VERBODEN
    - JBN tabel gecorrigeerd: U7 = max 6 jaar (niet 7)
    - Algoritme overzicht Stap 1 verduidelijkt met A/B substappen
-
-### Gewijzigde bestanden:
-
-```
-laravel/app/Services/PouleIndelingService.php
-  - classificeerJudoka() - check nu alleen categorieën met eerste leeftijdsmatch
-
-laravel/app/Models/Toernooi.php
-  - bepaalLeeftijdsklasse() - zelfde fix
-  - bepaalGewichtsklasse() - zelfde fix
-
-laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md
-  - Harde criteria sectie gesplitst (categoriseren vs poule-indeling)
-  - Waarschuwing doorvallen toegevoegd
-  - JBN tabel gecorrigeerd
-  - Algoritme Stap 1 verduidelijkt
-
-.claude/handover.md
-  - Fout scenario verwijderd, correct onderscheid toegevoegd
-```
 
 ---
 
