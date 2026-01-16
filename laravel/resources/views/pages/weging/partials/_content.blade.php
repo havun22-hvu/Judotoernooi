@@ -34,10 +34,9 @@
         </div>
     </div>
 
-    <!-- MIDDLE: Judoka section or empty state -->
-    <div class="flex-1 flex flex-col space-y-2 overflow-y-auto mb-2">
-        <!-- Empty state -->
-        <div id="empty-state" class="bg-white rounded-lg shadow p-3 text-gray-800">
+    <!-- MIDDLE: Instructies (alleen zichtbaar als geen judoka geselecteerd) -->
+    <div id="empty-state" class="flex-1 flex flex-col mb-2">
+        <div class="bg-white rounded-lg shadow p-3 text-gray-800">
             <h2 class="font-bold mb-1">Instructies</h2>
             <ol class="list-decimal list-inside text-sm space-y-0.5">
                 <li>Scan QR-code op weegkaart</li>
@@ -45,49 +44,56 @@
                 <li>Bevestig met groene knop</li>
             </ol>
         </div>
+    </div>
 
-        <!-- Selected judoka + numpad (hidden initially) -->
-        <div id="judoka-section" class="hidden bg-white rounded-lg shadow p-3 text-gray-800">
+    <!-- OVERLAY: Gewicht invoer (over scanner heen) -->
+    <div id="judoka-section" class="hidden fixed inset-0 z-50 bg-black/70 flex items-end justify-center p-2">
+        <div class="bg-white rounded-t-2xl w-full max-w-md p-4 pb-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+            <!-- Header met sluiten knop -->
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-lg text-gray-800">Gewicht invoeren</h3>
+                <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+
             <!-- Judoka info -->
-            <div id="judoka-info" class="border-2 rounded-lg p-3 mb-3">
+            <div id="judoka-info" class="border-2 rounded-lg p-3 mb-3 text-gray-800">
             </div>
 
             <!-- Weight input -->
             <div class="mb-3">
                 <div class="relative">
                     <input type="text" id="weight-input" readonly
-                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-2xl text-center font-bold"
+                           class="w-full border-2 border-gray-300 rounded-lg px-4 py-4 text-3xl text-center font-bold"
                            placeholder="0.0">
-                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">kg</span>
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">kg</span>
                 </div>
             </div>
 
-            <!-- Numpad -->
+            <!-- Numpad (grotere knoppen) -->
             <div class="grid grid-cols-4 gap-2 mb-3">
-                <button onclick="numpadInput('7')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">7</button>
-                <button onclick="numpadInput('8')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">8</button>
-                <button onclick="numpadInput('9')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">9</button>
-                <button onclick="numpadInput('C')" class="bg-red-100 hover:bg-red-200 text-red-700 rounded-lg py-3 text-xl font-bold">C</button>
-                <button onclick="numpadInput('4')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">4</button>
-                <button onclick="numpadInput('5')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">5</button>
-                <button onclick="numpadInput('6')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">6</button>
-                <button onclick="numpadInput('.')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">.</button>
-                <button onclick="numpadInput('1')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">1</button>
-                <button onclick="numpadInput('2')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">2</button>
-                <button onclick="numpadInput('3')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">3</button>
-                <button onclick="numpadInput('0')" class="bg-gray-100 hover:bg-gray-200 rounded-lg py-3 text-xl font-bold">0</button>
+                <button onclick="numpadInput('7')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">7</button>
+                <button onclick="numpadInput('8')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">8</button>
+                <button onclick="numpadInput('9')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">9</button>
+                <button onclick="numpadInput('C')" class="bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-700 rounded-lg py-4 text-2xl font-bold">C</button>
+                <button onclick="numpadInput('4')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">4</button>
+                <button onclick="numpadInput('5')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">5</button>
+                <button onclick="numpadInput('6')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">6</button>
+                <button onclick="numpadInput('.')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">.</button>
+                <button onclick="numpadInput('1')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">1</button>
+                <button onclick="numpadInput('2')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">2</button>
+                <button onclick="numpadInput('3')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">3</button>
+                <button onclick="numpadInput('0')" class="bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg py-4 text-2xl font-bold">0</button>
             </div>
 
             <!-- Register button -->
             <button onclick="registreerGewicht()" id="register-btn"
-                    class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-lg text-lg">
+                    class="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-5 rounded-lg text-xl">
                 ✓ Registreer
             </button>
 
             <!-- Feedback message -->
             <div id="feedback" class="hidden mt-3 p-3 rounded-lg text-center font-medium"></div>
         </div>
-
     </div>
 
     <!-- BOTTOM: Stats + History (fixed at bottom) -->
@@ -244,19 +250,15 @@ function selectJudoka(judoka) {
 
     document.getElementById('search-results').classList.add('hidden');
     document.getElementById('search-input').value = '';
-    document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('judoka-section').classList.remove('hidden');
 
     const isGewogen = judoka.gewogen || judoka.gewicht_gewogen;
     document.getElementById('judoka-info').innerHTML = `
-        <div class="flex justify-between items-start">
-            <div>
-                <h2 class="text-xl font-bold">${judoka.naam}</h2>
-                <p class="text-gray-600 text-sm">${judoka.club || 'Geen club'}</p>
-            </div>
-            <button onclick="clearSelection()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        <div>
+            <h2 class="text-xl font-bold">${judoka.naam}</h2>
+            <p class="text-gray-600 text-sm">${judoka.club || 'Geen club'}</p>
         </div>
-        <div class="flex gap-2 mt-2 text-sm">
+        <div class="flex flex-wrap gap-2 mt-2 text-sm">
             <span class="bg-gray-100 px-2 py-1 rounded">${judoka.gewichtsklasse || '?'} kg</span>
             <span class="bg-gray-100 px-2 py-1 rounded">${judoka.leeftijdsklasse || '?'}</span>
             ${judoka.blok ? `<span class="bg-gray-100 px-2 py-1 rounded">Blok ${judoka.blok}</span>` : ''}
@@ -272,7 +274,6 @@ function clearSelection() {
     selectedJudoka = null;
     weightInput = '';
     document.getElementById('judoka-section').classList.add('hidden');
-    document.getElementById('empty-state').classList.remove('hidden');
     document.getElementById('feedback').classList.add('hidden');
 }
 
