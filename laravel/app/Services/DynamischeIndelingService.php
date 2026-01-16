@@ -186,7 +186,8 @@ class DynamischeIndelingService
     }
 
     /**
-     * Balanceer poules: steel judoka's van grote poules (5+) naar kleine (< 4).
+     * Balanceer poules: steel judoka's van grote poules (6+) naar kleine (< 4).
+     * Poules van 5 worden NIET verkleind (alleen ruilen, niet stelen).
      */
     private function balanceerPoules(array $poules, float $maxKg, int $maxLeeftijd): array
     {
@@ -211,12 +212,12 @@ class DynamischeIndelingService
                     continue;
                 }
 
-                // Zoek een buurpoule met 5+ judoka's om van te stelen
+                // Zoek een buurpoule met 6+ judoka's om van te stelen (5 niet verkleinen!)
                 $donors = [];
-                if ($i > 0 && count($poules[$i - 1]['judokas']) >= 5) {
+                if ($i > 0 && count($poules[$i - 1]['judokas']) >= 6) {
                     $donors[] = $i - 1;
                 }
-                if ($i < count($poules) - 1 && count($poules[$i + 1]['judokas']) >= 5) {
+                if ($i < count($poules) - 1 && count($poules[$i + 1]['judokas']) >= 6) {
                     $donors[] = $i + 1;
                 }
 
@@ -229,7 +230,6 @@ class DynamischeIndelingService
                         // Donor is links, pak laatste judoka's eerst (dichtst bij kleine)
                         $judokasToTry = array_reverse($judokasToTry, true);
                     }
-                    // Anders: donor is rechts, eerste judoka's zijn dichtst bij
 
                     foreach ($judokasToTry as $jIdx => $judoka) {
                         // Simuleer steal
@@ -240,16 +240,16 @@ class DynamischeIndelingService
                         unset($nieuweDonor[$jIdx]);
                         $nieuweDonor = array_values($nieuweDonor);
 
-                        // Check of beide poules nog valid zijn
+                        // Check of beide poules nog valid zijn (donor blijft >= 5)
                         if ($this->pouleIsValid($nieuweKlein, $maxKg, $maxLeeftijd) &&
                             $this->pouleIsValid($nieuweDonor, $maxKg, $maxLeeftijd) &&
-                            count($nieuweDonor) >= 4) {
+                            count($nieuweDonor) >= 5) {
 
                             // Steal successful!
                             $poules[$i] = $this->maakPouleData($nieuweKlein);
                             $poules[$donorIdx] = $this->maakPouleData($nieuweDonor);
                             $gewijzigd = true;
-                            break 2; // Herstart hele loop
+                            break 2;
                         }
                     }
                 }
