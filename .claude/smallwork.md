@@ -405,6 +405,50 @@
 
 ---
 
+## Sessie: 16 januari 2026
+
+### Fix: Hardcoded Leeftijdsklasse enum verwijderd
+- **Type:** Refactor (KRITIEK)
+- **Wat:** Alle `Leeftijdsklasse::` enum calls vervangen door config-based methods
+- **Waarom:** Enum negeerde toernooi config, Mini's (max 6j) werden als Jeugd geclassificeerd
+- **Oplossing:**
+  - `Toernooi::bepaalLeeftijdsklasse()` - classificeert op basis van config
+  - `Toernooi::bepaalGewichtsklasse()` - gewichtsklasse op basis van config
+  - `Toernooi::getLeeftijdsklasseSortValue()` - sorteerwaarde voor UI
+- **Bestanden:**
+  - `app/Models/Toernooi.php` - 3 nieuwe methods
+  - `app/Http/Controllers/JudokaController.php` - enum import verwijderd
+  - `app/Http/Controllers/CoachPortalController.php` - enum import verwijderd
+- **Naar permanente docs?** ☑ Ja → CONFIGURATIE.md + PLANNING_DYNAMISCHE_INDELING.md (al gedaan)
+
+### Fix: Valideer hercategoriseert leeftijdsklasse
+- **Type:** Enhancement
+- **Wat:** `JudokaController::valideer()` hercategoriseert nu ook leeftijdsklasse
+- **Waarom:** Na wijzigen categorieën moesten judoka's handmatig bijgewerkt worden
+- **Bestanden:** `app/Http/Controllers/JudokaController.php:valideer()`
+- **Naar permanente docs?** ☑ Nee - technische enhancement
+
+### Refactor: DynamischeIndelingService herschreven
+- **Type:** Refactor (GROOT)
+- **Wat:** 1374 → ~300 regels, simpel greedy algoritme
+- **Algoritme:**
+  1. Greedy: loop door gesorteerde judoka's, maak poules van max 5
+  2. Merge buren: kleine poules (< 4) samenvoegen met aangrenzende
+  3. Globale merge: kleine poules samenvoegen met ALLE andere kleine (niet alleen buren)
+  4. Balanceer: steel van poules 6+ naar kleine (5 niet verkleinen!)
+- **Resultaat:** 335 judoka's → 71 poules, slechts 5 kleine orphans
+- **Bestanden:** `app/Services/DynamischeIndelingService.php`
+- **Naar permanente docs?** ☑ Ja → PLANNING_DYNAMISCHE_INDELING.md (al gedaan)
+
+### Fix: Groepering per leeftijdsklasse bij dynamische indeling
+- **Type:** Bug fix
+- **Wat:** Bij dynamische indeling (max_kg_verschil > 0) worden judoka's nu per leeftijdsklasse gegroepeerd, niet per gewichtsklasse
+- **Waarom:** Judoka's met 25.6kg en 26.7kg werden in aparte groepen gezet en nooit samengevoegd
+- **Bestanden:** `app/Services/PouleIndelingService.php:groepeerJudokas()`
+- **Naar permanente docs?** ☑ Nee - technische fix
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
