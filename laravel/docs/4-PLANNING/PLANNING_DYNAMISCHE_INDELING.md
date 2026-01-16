@@ -54,10 +54,17 @@ Dit onderscheid is cruciaal voor het hele systeem:
 │   • Gewicht: licht → zwaar                                      │
 │   • Band: laag → hoog (wit → zwart)                             │
 │                                                                 │
-│ STAP 4: POULES MAKEN                                            │
-│   Gesorteerde groep verdelen in poules                          │
-│   Voorkeur: [5, 4, 6, 3] (of andere instelling)                 │
-│   Voorbeeld: 20 judoka's → 4 poules van 5                       │
+│ STAP 4: POULES MAKEN (greedy, direct optimaal)                  │
+│   Gesorteerde groep verdelen in poules van 5 (of 4/6/3):        │
+│                                                                 │
+│   Voor elke judoka (gesorteerd):                                │
+│   1. Probeer toe te voegen aan huidige poule                    │
+│   2. Check: gewicht_verschil ≤ max_kg_verschil (uit config)     │
+│   3. Check: leeftijd_verschil ≤ max_leeftijd_verschil (config)  │
+│   4. Check: poule_grootte < 5 (of voorkeur)                     │
+│   5. Alle checks OK → toevoegen, anders → nieuwe poule          │
+│                                                                 │
+│   Aan einde: merge kleine poules (< 4) als binnen limieten      │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -301,6 +308,32 @@ Hoofdservice voor poule-indeling:
 Voor variabele categorieën (max_kg_verschil > 0):
 - `berekenIndeling()` - Optimale groepering
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
+
+#### Algoritme `berekenIndeling()` (simpel & effectief)
+
+```php
+// Input: judokas (gesorteerd), maxKgVerschil, maxLeeftijdVerschil (uit config!)
+// Output: array van poules (elk max 5 judoka's, binnen limieten)
+
+1. Start lege poule
+2. Voor elke judoka:
+   - Bereken nieuw gewicht_range als judoka toegevoegd wordt
+   - Bereken nieuw leeftijd_range als judoka toegevoegd wordt
+   - ALS gewicht_range ≤ maxKgVerschil
+     EN leeftijd_range ≤ maxLeeftijdVerschil
+     EN poule.count < 5:
+       → Voeg toe
+   - ANDERS:
+       → Sla huidige poule op
+       → Start nieuwe poule met deze judoka
+3. Sla laatste poule op
+4. Merge kleine poules (< 4 judoka's) met buren als binnen limieten
+```
+
+**Waarom dit werkt:**
+- Judoka's zijn al gesorteerd (stap 3), dus buren liggen dicht bij elkaar
+- Direct poules van 5 maken → geen complexe herverdeling nodig
+- Simpele code, voorspelbaar resultaat
 
 ### VariabeleBlokVerdelingService
 

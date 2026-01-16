@@ -13,7 +13,11 @@ class DeviceToegangController extends Controller
      */
     public function show(string $code)
     {
-        $toegang = DeviceToegang::where('code', $code)->firstOrFail();
+        $toegang = DeviceToegang::where('code', $code)->first();
+
+        if (!$toegang) {
+            return $this->vrijwilligerError('Deze link is niet meer actief. Vraag een nieuwe link bij de jurytafel.');
+        }
 
         // Check if already bound to this device
         $deviceToken = request()->cookie('device_token_' . $toegang->id);
@@ -34,7 +38,11 @@ class DeviceToegangController extends Controller
      */
     public function verify(Request $request, string $code)
     {
-        $toegang = DeviceToegang::where('code', $code)->firstOrFail();
+        $toegang = DeviceToegang::where('code', $code)->first();
+
+        if (!$toegang) {
+            return $this->vrijwilligerError('Deze link is niet meer actief. Vraag een nieuwe link bij de jurytafel.');
+        }
 
         $request->validate([
             'pincode' => 'required|digits:4',
@@ -122,5 +130,15 @@ class DeviceToegangController extends Controller
         }
 
         return "{$device} {$browser}";
+    }
+
+    /**
+     * Show friendly error page for volunteers (not login page!)
+     */
+    protected function vrijwilligerError(string $message)
+    {
+        return response()->view('errors.vrijwilliger', [
+            'message' => $message,
+        ], 404);
     }
 }
