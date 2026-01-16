@@ -3,14 +3,14 @@
 namespace App\Services;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
- * Simpele greedy poule-indeling service.
+ * Dynamische poule-indeling service.
  *
- * Algoritme (zie docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md):
- * 1. Judoka's zijn al gesorteerd (door PouleIndelingService)
- * 2. Loop door judoka's, voeg toe aan poule als binnen limieten
- * 3. Merge kleine poules (< 4) met buren als mogelijk
+ * Gebruikt Python Greedy++ solver voor optimale indeling.
+ * Zie: docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md
+ * Solver: scripts/poule_solver.py
  */
 class DynamischeIndelingService
 {
@@ -37,9 +37,9 @@ class DynamischeIndelingService
     }
 
     /**
-     * Bereken indeling met simpel greedy algoritme.
+     * Bereken indeling via Python Greedy++ solver.
      *
-     * @param Collection $judokas Gesorteerde judoka's (door caller)
+     * @param Collection $judokas Judoka's in deze categorie
      * @param int $maxLeeftijdVerschil Max jaren verschil in poule (uit config)
      * @param float $maxKgVerschil Max kg verschil in poule (uit config)
      * @param array $config Extra config (poule_grootte_voorkeur, clubspreiding)
@@ -56,19 +56,10 @@ class DynamischeIndelingService
             return $this->maakResultaat([], $judokas->count());
         }
 
-        // Stap 1: Maak poules met greedy algoritme
-        $poules = $this->maakPoulesGreedy($judokas, $maxKgVerschil, $maxLeeftijdVerschil);
+        // Roep Python solver aan
+        $poules = $this->callPythonSolver($judokas, $maxKgVerschil, $maxLeeftijdVerschil);
 
-        // Stap 2: Merge kleine poules (< 4 judoka's) met buren
-        $poules = $this->mergeKleinePoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
-
-        // Stap 3: Globale merge - zoek kleine poules die samengevoegd kunnen worden (niet alleen buren)
-        $poules = $this->globaalMergeKleinePoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
-
-        // Stap 4: Balanceer - steel judoka's van grote poules naar kleine
-        $poules = $this->balanceerPoules($poules, $maxKgVerschil, $maxLeeftijdVerschil);
-
-        // Stap 4: Clubspreiding (optioneel)
+        // Clubspreiding (optioneel, Python doet dit niet)
         if ($this->config['clubspreiding'] && count($poules) > 1) {
             $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil, $maxLeeftijdVerschil);
         }
@@ -77,62 +68,188 @@ class DynamischeIndelingService
     }
 
     /**
-     * Greedy algoritme: loop door gesorteerde judoka's, maak poules van max 5.
+     * Roep Python Greedy++ solver aan.
+     *
+     * @param Collection $judokas
+     * @param float $maxKg
+     * @param int $maxLeeftijd
+     * @return array Poules met judoka objecten
      */
-    private function maakPoulesGreedy(Collection $judokas, float $maxKg, int $maxLeeftijd): array
+    private function callPythonSolver(Collection $judokas, float $maxKg, int $maxLeeftijd): array
     {
-        $poules = [];
-        $huidigePoule = [];
-        $minGewicht = null;
-        $maxGewicht = null;
-        $minLeeftijd = null;
-        $maxLeeftijdInPoule = null;
-
-        $maxPouleGrootte = $this->config['poule_grootte_voorkeur'][0] ?? 5;
+        // Bouw input voor Python solver
+        $judokaMap = [];
+        $pythonInput = [
+            'max_kg_verschil' => $maxKg,
+            'max_leeftijd_verschil' => $maxLeeftijd,
+            'poule_grootte_voorkeur' => $this->config['poule_grootte_voorkeur'],
+            'judokas' => [],
+        ];
 
         foreach ($judokas as $judoka) {
+            $id = $judoka->id;
+            $judokaMap[$id] = $judoka;
+            $pythonInput['judokas'][] = [
+                'id' => $id,
+                'leeftijd' => $judoka->leeftijd ?? 0,
+                'gewicht' => $this->getEffectiefGewicht($judoka),
+                'band' => $this->bandNaarNummer($judoka->band ?? 'wit'),
+                'club_id' => $judoka->club_id ?? 0,
+            ];
+        }
+
+        // Roep Python aan
+        $scriptPath = base_path('scripts/poule_solver.py');
+        $pythonCmd = $this->findPython();
+
+        if (!$pythonCmd || !file_exists($scriptPath)) {
+            Log::warning('Python solver niet beschikbaar, fallback naar simpele indeling');
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd);
+        }
+
+        $inputJson = json_encode($pythonInput);
+
+        // Execute Python script
+        $descriptors = [
+            0 => ['pipe', 'r'],  // stdin
+            1 => ['pipe', 'w'],  // stdout
+            2 => ['pipe', 'w'],  // stderr
+        ];
+
+        $process = proc_open(
+            [$pythonCmd, $scriptPath],
+            $descriptors,
+            $pipes,
+            base_path('scripts')
+        );
+
+        if (!is_resource($process)) {
+            Log::error('Kon Python proces niet starten');
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd);
+        }
+
+        // Schrijf input en sluit stdin
+        fwrite($pipes[0], $inputJson);
+        fclose($pipes[0]);
+
+        // Lees output
+        $output = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || empty($output)) {
+            Log::error('Python solver fout', ['exitCode' => $exitCode, 'stderr' => $stderr]);
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd);
+        }
+
+        // Parse Python output
+        $result = json_decode($output, true);
+
+        if (!$result || !isset($result['success']) || !$result['success']) {
+            Log::error('Python solver gaf ongeldige output', ['output' => $output]);
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd);
+        }
+
+        // Converteer Python output naar PHP poules met judoka objecten
+        $poules = [];
+        foreach ($result['poules'] as $pythonPoule) {
+            $judokasInPoule = [];
+            foreach ($pythonPoule['judoka_ids'] as $id) {
+                if (isset($judokaMap[$id])) {
+                    $judokasInPoule[] = $judokaMap[$id];
+                }
+            }
+            if (!empty($judokasInPoule)) {
+                $poules[] = $this->maakPouleData($judokasInPoule);
+            }
+        }
+
+        return $poules;
+    }
+
+    /**
+     * Vind Python executable (python3 of python).
+     */
+    private function findPython(): ?string
+    {
+        // Windows
+        if (PHP_OS_FAMILY === 'Windows') {
+            $paths = ['python', 'python3', 'py'];
+            foreach ($paths as $cmd) {
+                exec("where $cmd 2>NUL", $output, $exitCode);
+                if ($exitCode === 0) {
+                    return $cmd;
+                }
+                $output = [];
+            }
+        }
+        // Linux/Mac
+        else {
+            $paths = ['python3', 'python'];
+            foreach ($paths as $cmd) {
+                exec("which $cmd 2>/dev/null", $output, $exitCode);
+                if ($exitCode === 0) {
+                    return $cmd;
+                }
+                $output = [];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Simpele fallback als Python niet beschikbaar is.
+     * Maakt poules van max 5 judoka's, gesorteerd op leeftijd en gewicht.
+     */
+    private function simpleFallback(Collection $judokas, float $maxKg, int $maxLeeftijd): array
+    {
+        $maxGrootte = $this->config['poule_grootte_voorkeur'][0] ?? 5;
+        $gesorteerd = $judokas->sortBy([
+            fn($a, $b) => ($a->leeftijd ?? 0) <=> ($b->leeftijd ?? 0),
+            fn($a, $b) => $this->getEffectiefGewicht($a) <=> $this->getEffectiefGewicht($b),
+        ])->values();
+
+        $poules = [];
+        $huidigePoule = [];
+        $minGewicht = $maxGewicht = $minLft = $maxLft = null;
+
+        foreach ($gesorteerd as $judoka) {
             $gewicht = $this->getEffectiefGewicht($judoka);
             $leeftijd = $judoka->leeftijd ?? 0;
 
             if (empty($huidigePoule)) {
-                // Eerste judoka in nieuwe poule
                 $huidigePoule[] = $judoka;
                 $minGewicht = $maxGewicht = $gewicht;
-                $minLeeftijd = $maxLeeftijdInPoule = $leeftijd;
+                $minLft = $maxLft = $leeftijd;
                 continue;
             }
 
-            // Bereken nieuwe ranges als we deze judoka toevoegen
-            $nieuwMinGewicht = min($minGewicht, $gewicht);
-            $nieuwMaxGewicht = max($maxGewicht, $gewicht);
-            $nieuwMinLeeftijd = min($minLeeftijd, $leeftijd);
-            $nieuwMaxLeeftijd = max($maxLeeftijdInPoule, $leeftijd);
+            $nieuwMinGew = min($minGewicht, $gewicht);
+            $nieuwMaxGew = max($maxGewicht, $gewicht);
+            $nieuwMinLft = min($minLft, $leeftijd);
+            $nieuwMaxLft = max($maxLft, $leeftijd);
 
-            $gewichtVerschil = $nieuwMaxGewicht - $nieuwMinGewicht;
-            $leeftijdVerschil = $nieuwMaxLeeftijd - $nieuwMinLeeftijd;
+            $past = ($nieuwMaxGew - $nieuwMinGew) <= $maxKg
+                && ($nieuwMaxLft - $nieuwMinLft) <= $maxLeeftijd
+                && count($huidigePoule) < $maxGrootte;
 
-            // Check: past deze judoka in de huidige poule?
-            $pastInPoule = $gewichtVerschil <= $maxKg
-                && $leeftijdVerschil <= $maxLeeftijd
-                && count($huidigePoule) < $maxPouleGrootte;
-
-            if ($pastInPoule) {
-                // Voeg toe aan huidige poule
+            if ($past) {
                 $huidigePoule[] = $judoka;
-                $minGewicht = $nieuwMinGewicht;
-                $maxGewicht = $nieuwMaxGewicht;
-                $minLeeftijd = $nieuwMinLeeftijd;
-                $maxLeeftijdInPoule = $nieuwMaxLeeftijd;
+                $minGewicht = $nieuwMinGew;
+                $maxGewicht = $nieuwMaxGew;
+                $minLft = $nieuwMinLft;
+                $maxLft = $nieuwMaxLft;
             } else {
-                // Start nieuwe poule
                 $poules[] = $this->maakPouleData($huidigePoule);
                 $huidigePoule = [$judoka];
                 $minGewicht = $maxGewicht = $gewicht;
-                $minLeeftijd = $maxLeeftijdInPoule = $leeftijd;
+                $minLft = $maxLft = $leeftijd;
             }
         }
 
-        // Laatste poule opslaan
         if (!empty($huidigePoule)) {
             $poules[] = $this->maakPouleData($huidigePoule);
         }
@@ -141,206 +258,13 @@ class DynamischeIndelingService
     }
 
     /**
-     * Globale merge: zoek ALLE kleine poules die samengevoegd kunnen worden (niet alleen buren).
+     * Converteer band naar nummer (voor Python).
      */
-    private function globaalMergeKleinePoules(array $poules, float $maxKg, int $maxLeeftijd): array
+    private function bandNaarNummer(?string $band): int
     {
-        if (count($poules) < 2) {
-            return $poules;
-        }
-
-        $gewijzigd = true;
-        $maxIteraties = 30;
-        $iteratie = 0;
-
-        while ($gewijzigd && $iteratie < $maxIteraties) {
-            $gewijzigd = false;
-            $iteratie++;
-
-            // Vind alle kleine poules
-            $kleineIndices = [];
-            foreach ($poules as $i => $p) {
-                if (count($p['judokas']) < 4) {
-                    $kleineIndices[] = $i;
-                }
-            }
-
-            // Probeer elk paar kleine poules te mergen
-            for ($a = 0; $a < count($kleineIndices); $a++) {
-                for ($b = $a + 1; $b < count($kleineIndices); $b++) {
-                    $idxA = $kleineIndices[$a];
-                    $idxB = $kleineIndices[$b];
-
-                    if ($this->kanMergen($poules[$idxA], $poules[$idxB], $maxKg, $maxLeeftijd)) {
-                        // Merge!
-                        $poules[$idxA] = $this->mergeTweePoules($poules[$idxA], $poules[$idxB]);
-                        array_splice($poules, $idxB, 1);
-                        $gewijzigd = true;
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        return $poules;
-    }
-
-    /**
-     * Balanceer poules: steel judoka's van grote poules (6+) naar kleine (< 4).
-     * Poules van 5 worden NIET verkleind (alleen ruilen, niet stelen).
-     */
-    private function balanceerPoules(array $poules, float $maxKg, int $maxLeeftijd): array
-    {
-        if (count($poules) < 2) {
-            return $poules;
-        }
-
-        $gewijzigd = true;
-        $maxIteraties = 50;
-        $iteratie = 0;
-
-        while ($gewijzigd && $iteratie < $maxIteraties) {
-            $gewijzigd = false;
-            $iteratie++;
-
-            for ($i = 0; $i < count($poules); $i++) {
-                $kleinePoule = $poules[$i];
-                $aantalKlein = count($kleinePoule['judokas']);
-
-                // Skip als poule al groot genoeg is
-                if ($aantalKlein >= 4) {
-                    continue;
-                }
-
-                // Zoek een buurpoule met 6+ judoka's om van te stelen (5 niet verkleinen!)
-                $donors = [];
-                if ($i > 0 && count($poules[$i - 1]['judokas']) >= 6) {
-                    $donors[] = $i - 1;
-                }
-                if ($i < count($poules) - 1 && count($poules[$i + 1]['judokas']) >= 6) {
-                    $donors[] = $i + 1;
-                }
-
-                foreach ($donors as $donorIdx) {
-                    $donorPoule = $poules[$donorIdx];
-
-                    // Probeer elke judoka van donor te stelen (begin bij rand dichtst bij kleine poule)
-                    $judokasToTry = $donorPoule['judokas'];
-                    if ($donorIdx < $i) {
-                        // Donor is links, pak laatste judoka's eerst (dichtst bij kleine)
-                        $judokasToTry = array_reverse($judokasToTry, true);
-                    }
-
-                    foreach ($judokasToTry as $jIdx => $judoka) {
-                        // Simuleer steal
-                        $nieuweKlein = $kleinePoule['judokas'];
-                        $nieuweKlein[] = $judoka;
-
-                        $nieuweDonor = $donorPoule['judokas'];
-                        unset($nieuweDonor[$jIdx]);
-                        $nieuweDonor = array_values($nieuweDonor);
-
-                        // Check of beide poules nog valid zijn (donor blijft >= 5)
-                        if ($this->pouleIsValid($nieuweKlein, $maxKg, $maxLeeftijd) &&
-                            $this->pouleIsValid($nieuweDonor, $maxKg, $maxLeeftijd) &&
-                            count($nieuweDonor) >= 5) {
-
-                            // Steal successful!
-                            $poules[$i] = $this->maakPouleData($nieuweKlein);
-                            $poules[$donorIdx] = $this->maakPouleData($nieuweDonor);
-                            $gewijzigd = true;
-                            break 2;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $poules;
-    }
-
-    /**
-     * Merge kleine poules (< 4 judoka's) met aangrenzende poules.
-     */
-    private function mergeKleinePoules(array $poules, float $maxKg, int $maxLeeftijd): array
-    {
-        if (count($poules) < 2) {
-            return $poules;
-        }
-
-        $gewijzigd = true;
-        $maxIteraties = 20;
-        $iteratie = 0;
-
-        while ($gewijzigd && $iteratie < $maxIteraties) {
-            $gewijzigd = false;
-            $iteratie++;
-
-            for ($i = 0; $i < count($poules); $i++) {
-                $poule = $poules[$i];
-                $aantal = count($poule['judokas']);
-
-                // Skip als poule groot genoeg is
-                if ($aantal >= 4) {
-                    continue;
-                }
-
-                // Probeer te mergen met vorige poule
-                if ($i > 0 && $this->kanMergen($poules[$i - 1], $poule, $maxKg, $maxLeeftijd)) {
-                    $poules[$i - 1] = $this->mergeTweePoules($poules[$i - 1], $poule);
-                    array_splice($poules, $i, 1);
-                    $gewijzigd = true;
-                    break;
-                }
-
-                // Probeer te mergen met volgende poule
-                if ($i < count($poules) - 1 && $this->kanMergen($poule, $poules[$i + 1], $maxKg, $maxLeeftijd)) {
-                    $poules[$i] = $this->mergeTweePoules($poule, $poules[$i + 1]);
-                    array_splice($poules, $i + 1, 1);
-                    $gewijzigd = true;
-                    break;
-                }
-            }
-        }
-
-        return $poules;
-    }
-
-    /**
-     * Check of twee poules samengevoegd kunnen worden binnen limieten.
-     */
-    private function kanMergen(array $poule1, array $poule2, float $maxKg, int $maxLeeftijd): bool
-    {
-        $gecombineerd = array_merge($poule1['judokas'], $poule2['judokas']);
-
-        // Check grootte (max 6, of hoogste voorkeur)
-        $maxGrootte = max($this->config['poule_grootte_voorkeur'] ?? [6]);
-        if (count($gecombineerd) > $maxGrootte) {
-            return false;
-        }
-
-        // Check gewicht
-        $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $gecombineerd);
-        if (max($gewichten) - min($gewichten) > $maxKg) {
-            return false;
-        }
-
-        // Check leeftijd
-        $leeftijden = array_map(fn($j) => $j->leeftijd ?? 0, $gecombineerd);
-        if (max($leeftijden) - min($leeftijden) > $maxLeeftijd) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Merge twee poules tot één.
-     */
-    private function mergeTweePoules(array $poule1, array $poule2): array
-    {
-        $gecombineerd = array_merge($poule1['judokas'], $poule2['judokas']);
-        return $this->maakPouleData($gecombineerd);
+        $mapping = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
+        $lower = strtolower(explode(' ', $band ?? 'wit')[0]);
+        return $mapping[$lower] ?? 0;
     }
 
     /**
@@ -348,7 +272,6 @@ class DynamischeIndelingService
      */
     private function pasClubspreidingToe(array $poules, float $maxKg, int $maxLeeftijd): array
     {
-        // Voor elke poule, check voor club duplicaten
         for ($p = 0; $p < count($poules); $p++) {
             $clubCount = [];
             foreach ($poules[$p]['judokas'] as $idx => $judoka) {
@@ -356,28 +279,21 @@ class DynamischeIndelingService
                 $clubCount[$clubId][] = $idx;
             }
 
-            // Voor clubs met meerdere judoka's, probeer te swappen
             foreach ($clubCount as $clubId => $indices) {
                 if (count($indices) <= 1) continue;
 
-                // Probeer tweede judoka te swappen naar andere poule
                 for ($i = 1; $i < count($indices); $i++) {
                     $judokaIdx = $indices[$i];
                     $judoka = $poules[$p]['judokas'][$judokaIdx];
 
-                    // Zoek swap kandidaat in andere poule
                     for ($q = 0; $q < count($poules); $q++) {
                         if ($q === $p) continue;
 
                         foreach ($poules[$q]['judokas'] as $kandidaatIdx => $kandidaat) {
                             if ($this->kanSwappen($poules[$p], $judokaIdx, $poules[$q], $kandidaatIdx, $maxKg, $maxLeeftijd)) {
-                                // Check dat kandidaat niet zelfde club is
                                 if (($kandidaat->club_id ?? 0) !== $clubId) {
-                                    // Swap
                                     $poules[$p]['judokas'][$judokaIdx] = $kandidaat;
                                     $poules[$q]['judokas'][$kandidaatIdx] = $judoka;
-
-                                    // Update poule data
                                     $poules[$p] = $this->maakPouleData($poules[$p]['judokas']);
                                     $poules[$q] = $this->maakPouleData($poules[$q]['judokas']);
                                     break 2;
@@ -397,13 +313,11 @@ class DynamischeIndelingService
      */
     private function kanSwappen(array $poule1, int $idx1, array $poule2, int $idx2, float $maxKg, int $maxLeeftijd): bool
     {
-        // Simuleer swap
         $nieuw1 = $poule1['judokas'];
         $nieuw2 = $poule2['judokas'];
         $nieuw1[$idx1] = $poule2['judokas'][$idx2];
         $nieuw2[$idx2] = $poule1['judokas'][$idx1];
 
-        // Check beide poules
         return $this->pouleIsValid($nieuw1, $maxKg, $maxLeeftijd)
             && $this->pouleIsValid($nieuw2, $maxKg, $maxLeeftijd);
     }
@@ -446,17 +360,11 @@ class DynamischeIndelingService
     }
 
     /**
-     * Bereken band range (verschil tussen hoogste en laagste).
+     * Bereken band range.
      */
     private function berekenBandRange(array $judokas): int
     {
-        $bandVolgorde = ['wit' => 0, 'geel' => 1, 'oranje' => 2, 'groen' => 3, 'blauw' => 4, 'bruin' => 5, 'zwart' => 6];
-
-        $niveaus = array_map(function($j) use ($bandVolgorde) {
-            $band = strtolower(explode(' ', $j->band ?? 'wit')[0]);
-            return $bandVolgorde[$band] ?? 0;
-        }, $judokas);
-
+        $niveaus = array_map(fn($j) => $this->bandNaarNummer($j->band ?? 'wit'), $judokas);
         return !empty($niveaus) ? max($niveaus) - min($niveaus) : 0;
     }
 
@@ -479,7 +387,7 @@ class DynamischeIndelingService
     }
 
     /**
-     * Bereken score (voor vergelijking varianten).
+     * Bereken score op basis van poule_grootte_voorkeur.
      */
     private function berekenScore(array $poules): float
     {
@@ -488,14 +396,20 @@ class DynamischeIndelingService
 
         foreach ($poules as $poule) {
             $grootte = count($poule['judokas']);
-            $positie = array_search($grootte, $voorkeur);
 
-            // Penalty gebaseerd op positie in voorkeur (of 10 als niet in lijst)
-            $score += $positie !== false ? $positie : 10;
-
-            // Extra penalty voor heel kleine poules
-            if ($grootte < 3) {
-                $score += 5;
+            if ($grootte <= 1) {
+                $score += 100; // Orphan
+            } elseif (in_array($grootte, $voorkeur)) {
+                $index = array_search($grootte, $voorkeur);
+                if ($index === 0) {
+                    $score += 0;  // Eerste voorkeur
+                } elseif ($index === 1) {
+                    $score += 5;  // Tweede voorkeur
+                } else {
+                    $score += 40; // Rest van voorkeurlijst
+                }
+            } else {
+                $score += 70; // Niet in voorkeurlijst
             }
         }
 
@@ -524,7 +438,6 @@ class DynamischeIndelingService
 
     /**
      * Genereer varianten (voor backwards compatibility).
-     * Retourneert alleen de standaard indeling.
      */
     public function genereerVarianten(Collection $judokas, array $config = []): array
     {
