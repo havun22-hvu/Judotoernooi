@@ -359,14 +359,16 @@
                                 data-actief="{{ $aantalActief }}"
                             >
                                 @php
-                                    // Bij variabele categorieën: toon actuele gewichtsrange, markeer als problematisch
+                                    // Bij variabele categorieën: toon actuele gewichtsrange (niet de oorspronkelijke)
                                     $pouleRange = $heeftVariabeleCategorieen ? $poule->getGewichtsRange() : null;
-                                    $pouleTitel = $heeftVariabeleCategorieen && $poule->titel
-                                        ? $poule->titel
-                                        : $category['label'] . ' / ' . $poule->gewichtsklasse;
-                                    // Override met actuele range als beschikbaar
-                                    if ($pouleRange) {
-                                        $pouleTitel = $poule->titel . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
+                                    if ($heeftVariabeleCategorieen && $pouleRange) {
+                                        // Haal leeftijdsdeel uit titel (bijv. "Jeugd 7-9j" uit "Jeugd 7-9j 21.5-24.4kg")
+                                        $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $poule->titel ?? '');
+                                        $pouleTitel = $titelZonderKg . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
+                                    } elseif ($heeftVariabeleCategorieen && $poule->titel) {
+                                        $pouleTitel = $poule->titel;
+                                    } else {
+                                        $pouleTitel = $category['label'] . ' / ' . $poule->gewichtsklasse;
                                     }
                                 @endphp
                                 <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')) }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
@@ -927,6 +929,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             const pouleCard = document.getElementById('poule-' + data.van_poule.id);
                             console.log('Updating poule card:', pouleCard, 'is_problematisch:', data.van_poule.is_problematisch);
                             if (pouleCard) {
+                                // Update titel met nieuwe gewichtsrange
+                                updatePouleTitel(pouleCard, data.van_poule);
+
                                 // Update problematische markering (gewichtsrange)
                                 if (data.van_poule.is_problematisch) {
                                     pouleCard.classList.add('border-2', 'border-orange-400');
@@ -1040,6 +1045,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Update poule titel met nieuwe gewichtsrange (variabele categorieën)
+    function updatePouleTitel(pouleCard, pouleData) {
+        if (!pouleData.gewichts_range) return;
+
+        const titelEl = pouleCard.querySelector('.poule-header .font-bold');
+        if (!titelEl) return;
+
+        // Haal leeftijdsdeel uit titel (verwijder oude kg range)
+        const titel = pouleData.titel || '';
+        const titelZonderKg = titel.replace(/\s*[\d.]+-[\d.]+kg\s*$/, '');
+
+        // Bouw nieuwe titel met actuele range
+        const minKg = pouleData.gewichts_range.min_kg.toFixed(1);
+        const maxKg = pouleData.gewichts_range.max_kg.toFixed(1);
+        const nieuweTitel = `#${pouleCard.dataset.pouleNummer} ${titelZonderKg} (${minKg}-${maxKg}kg)`;
+
+        titelEl.textContent = nieuweTitel;
+        console.log('Updated poule titel:', nieuweTitel);
+    }
 
     // Update gewichtsrange box (oranje warning bovenaan)
     function updateGewichtsrangeBox(pouleId, isProblematisch) {
