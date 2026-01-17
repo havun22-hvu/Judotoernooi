@@ -20,7 +20,7 @@
         <span class="text-2xl mr-3">⚠️</span>
         <div>
             <p class="font-bold">Wedstrijddag is gestart</p>
-            <p class="text-sm">De weging van blok 1 is gesloten. Gebruik <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="underline font-medium">Wedstrijddag Poules</a> of <a href="{{ route('toernooi.zaaloverzicht', $toernooi) }}" class="underline font-medium">Zaaloverzicht</a> voor wijzigingen.</p>
+            <p class="text-sm">De weging van blok 1 is gesloten. Gebruik <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="underline font-medium">Wedstrijddag Poules</a> of <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="underline font-medium">Zaaloverzicht</a> voor wijzigingen.</p>
         </div>
     </div>
 </div>
