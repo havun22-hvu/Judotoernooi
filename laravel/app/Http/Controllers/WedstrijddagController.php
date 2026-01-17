@@ -190,12 +190,8 @@ class WedstrijddagController extends Controller
             $oudePoule->updateStatistieken();
             $oudePoule->load('judokas'); // Refresh judokas collection
 
-            // Calculate active count for old poule
-            $actieveJudokasOud = $oudePoule->judokas->filter(function($j) use ($tolerantie) {
-                $isAfwezig = $j->aanwezigheid === 'afwezig';
-                $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-                return !$isAfwezig && !$isAfwijkend;
-            })->count();
+            // Calculate active count for old poule (only exclude absent, not deviant weight)
+            $actieveJudokasOud = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
             $oudePouleData = [
                 'id' => $oudePoule->id,
@@ -234,12 +230,8 @@ class WedstrijddagController extends Controller
         $nieuwePoule->updateStatistieken();
         $nieuwePoule->load('judokas'); // Refresh judokas collection
 
-        // Calculate active count (excluding afwezig/afwijkend gewicht)
-        $actieveJudokasNieuw = $nieuwePoule->judokas->filter(function($j) use ($tolerantie) {
-            $isAfwezig = $j->aanwezigheid === 'afwezig';
-            $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-            return !$isAfwezig && !$isAfwijkend;
-        })->count();
+        // Calculate active count (only exclude absent, not deviant weight)
+        $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
         return response()->json([
             'success' => true,

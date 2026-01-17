@@ -198,34 +198,35 @@ class Judoka extends Model
 
     /**
      * Check of judoka uit poules moet worden verwijderd
-     * Doorgestreept = afwezig OF gewogen maar buiten gewichtsklasse
+     * ALLEEN afwezig = verwijderen uit poule
+     * Afwijkend gewicht NIET verwijderen - organisator kiest wie eruit gaat
      */
     public function moetUitPouleVerwijderd(?float $tolerantie = null): bool
     {
-        // Afwezig
-        if ($this->aanwezigheid === 'afwezig') {
-            return true;
+        // Alleen afwezig = verwijderen
+        return $this->aanwezigheid === 'afwezig';
+    }
+
+    /**
+     * Check of judoka afwijkend gewicht heeft (gewogen maar buiten gewichtsklasse)
+     */
+    public function heeftAfwijkendGewicht(?float $tolerantie = null): bool
+    {
+        if ($this->gewicht_gewogen === null) {
+            return false;
         }
 
-        // Gewogen maar buiten gewichtsklasse
-        if ($this->gewicht_gewogen !== null) {
-            // Gebruik toernooi tolerantie als beschikbaar
-            $tol = $tolerantie ?? $this->toernooi?->gewicht_tolerantie ?? 0.5;
-            if (!$this->isGewichtBinnenKlasse(null, $tol)) {
-                return true;
-            }
-        }
-
-        return false;
+        $tol = $tolerantie ?? $this->toernooi?->gewicht_tolerantie ?? 0.5;
+        return !$this->isGewichtBinnenKlasse(null, $tol);
     }
 
     /**
      * Check of judoka doorgestreept moet worden weergegeven
-     * Alias voor moetUitPouleVerwijderd
+     * Alleen afwezig wordt doorgestreept (niet afwijkend gewicht)
      */
     public function isDoorgestreept(?float $tolerantie = null): bool
     {
-        return $this->moetUitPouleVerwijderd($tolerantie);
+        return $this->aanwezigheid === 'afwezig';
     }
 
     /**
