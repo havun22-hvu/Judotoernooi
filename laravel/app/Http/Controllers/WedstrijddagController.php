@@ -339,9 +339,14 @@ class WedstrijddagController extends Controller
         // Verwijder uit oude poule
         $oudePoule->judokas()->detach($judoka->id);
         $oudePoule->updateStatistieken();
+        $oudePoule->refresh();
+        $oudePoule->load('judokas');
 
         // Bereken actieve judoka's voor response
-        $actieveJudokas = $oudePoule->judokas()->get()->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+        $actieveJudokas = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+
+        // Hervalideer of poule nog problematisch is
+        $probleem = $oudePoule->isProblematischNaWeging();
 
         return response()->json([
             'success' => true,
@@ -350,6 +355,8 @@ class WedstrijddagController extends Controller
                 'id' => $oudePoule->id,
                 'aantal_judokas' => $actieveJudokas,
                 'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
+                'is_problematisch' => $probleem !== null,
+                'probleem' => $probleem,
             ],
         ]);
     }
