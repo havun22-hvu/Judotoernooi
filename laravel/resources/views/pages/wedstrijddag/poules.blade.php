@@ -7,12 +7,14 @@
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
     // Verzamel alle poules met te weinig actieve judoka's (1 of 2)
     // NEGEER kruisfinales - die hebben nog geen judokas gekoppeld
+    // BELANGRIJK: Alleen afwezigen excluderen, afwijkend gewicht telt WEL mee (organisator kiest wie eruit gaat)
     $problematischePoules = collect();
     foreach ($blokken as $blok) {
         foreach ($blok['categories'] as $category) {
             foreach ($category['poules'] as $poule) {
                 if ($poule->type === 'kruisfinale') continue;
-                $actief = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+                // Alleen afwezigen eruit filteren
+                $actief = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
                 if ($actief > 0 && $actief < 3) {
                     $problematischePoules->push([
                         'id' => $poule->id,
@@ -129,7 +131,7 @@
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
-            // BELANGRIJK: Wedstrijden herberekenen op basis van actieve judokas (niet DB waarde!)
+            // BELANGRIJK: Alleen afwezigen excluderen, afwijkend gewicht telt WEL mee
             // UITZONDERING: Kruisfinales gebruiken geplande aantallen (nog geen judokas gekoppeld)
             $blokJudokas = 0;
             $blokWedstrijden = 0;
@@ -139,7 +141,8 @@
                         $blokJudokas += $p->aantal_judokas;
                         $blokWedstrijden += $p->aantal_wedstrijden;
                     } else {
-                        $actief = $p->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+                        // Alleen afwezigen eruit filteren
+                        $actief = $p->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
                         $blokJudokas += $actief;
                         $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
                     }
@@ -174,15 +177,12 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
-                            // Calculate active judokas per category (excluding afwezig/afwijkend gewicht)
+                            // Calculate active judokas per category (excluding afwezig alleen)
+                            // BELANGRIJK: Afwijkend gewicht telt WEL mee - organisator kiest wie eruit gaat
                             $totaalActiefInCategorie = 0;
                             $aantalLegePoules = 0;
                             foreach ($category['poules'] as $p) {
-                                $actief = $p->judokas->filter(function($j) use ($tolerantie) {
-                                    $isAfwezig = $j->aanwezigheid === 'afwezig';
-                                    $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-                                    return !$isAfwezig && !$isAfwijkend;
-                                })->count();
+                                $actief = $p->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
                                 $totaalActiefInCategorie += $actief;
                                 if ($actief === 0) $aantalLegePoules++;
                             }
@@ -332,24 +332,17 @@
                             @continue
                             @endif
                             @php
-                                // Collect removed judokas for info tooltip
-                                $verwijderdeJudokas = $poule->judokas->filter(function($j) use ($tolerantie) {
-                                    $isAfwezig = $j->aanwezigheid === 'afwezig';
-                                    $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-                                    return $isAfwezig || $isAfwijkend;
-                                });
+                                // Collect afwezige judokas for info tooltip (alleen afwezigen, niet afwijkend gewicht)
+                                $afwezigeJudokas = $poule->judokas->filter(fn($j) => $j->aanwezigheid === 'afwezig');
 
-                                // Calculate active count (total minus removed)
-                                // BELANGRIJK: Wedstrijden herberekenen op basis van actieve judokas!
-                                $aantalActief = $poule->judokas->count() - $verwijderdeJudokas->count();
+                                // Calculate active count (total minus afwezigen)
+                                // BELANGRIJK: Afwijkend gewicht telt WEL mee - organisator kiest wie eruit gaat
+                                $aantalActief = $poule->judokas->count() - $afwezigeJudokas->count();
                                 $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
                                 $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
 
-                                // Format removed for tooltip
-                                $verwijderdeTekst = $verwijderdeJudokas->map(function($j) use ($tolerantie) {
-                                    $reden = $j->aanwezigheid === 'afwezig' ? 'afwezig' : 'afwijkend gewicht';
-                                    return $j->naam . ' (' . $reden . ')';
-                                });
+                                // Format afwezigen for tooltip
+                                $verwijderdeTekst = $afwezigeJudokas->map(fn($j) => $j->naam . ' (afwezig)');
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
@@ -387,29 +380,30 @@
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig';
                                         $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
-                                        $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
                                     @endphp
-                                    @if($isDoorgestreept)
+                                    @if($isAfwezig)
                                         @continue
                                     @endif
                                     <div
-                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move"
+                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move {{ $isAfwijkendGewicht ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
                                         data-judoka-id="{{ $judoka->id }}"
                                         draggable="true"
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
-                                                {{-- Status marker: green = gewogen --}}
-                                                @if($isGewogen)
+                                                {{-- Status marker: green = gewogen, orange = afwijkend gewicht --}}
+                                                @if($isAfwijkendGewicht)
+                                                    <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
+                                                @elseif($isGewogen)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
                                                 <div class="min-w-0">
-                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
+                                                    <div class="font-medium {{ $isAfwijkendGewicht ? 'text-orange-800' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
                                             <div class="text-right text-xs flex-shrink-0">
-                                                <div class="text-gray-600 font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                <div class="{{ $isAfwijkendGewicht ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
                                                 <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                                             </div>
                                         </div>
