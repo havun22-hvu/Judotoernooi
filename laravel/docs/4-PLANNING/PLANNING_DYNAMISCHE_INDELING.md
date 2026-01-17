@@ -444,43 +444,34 @@ class CategorieClassifier
 
 Hoofdservice voor poule-indeling:
 - `herberkenKlassen()` - Categoriseert judoka's opnieuw (gebruikt CategorieClassifier)
-- `genereerPoules()` - Maakt poules aan
+- `genereerPoules()` - Maakt poules aan, roept Python solver aan per categorie
+- `updateSorteerVelden()` - Update sorteervelden voor één judoka (gebruikt CategorieClassifier)
 - `maakPouleTitel()` - Genereert titel
+
+**Flow:**
+1. `CategorieClassifier` → classificeert judoka's naar categorieën
+2. `PouleIndelingService` → roept Python solver aan per categorie
+3. `poule_solver.py` → maakt poules binnen die categorie
 
 ### Python Poule Solver (scripts/poule_solver.py)
 
-**De solver doet ALLES in één run:**
+**De solver doet ALLEEN poule-verdeling binnen een categorie:**
 
-1. **Classificatie**: Judoka's toewijzen aan categorieën (zelfde logica als CategorieClassifier)
-2. **Verdeling**: Per categorie optimale poule-indeling berekenen
-3. **Return**: Alle poules met categorie info
+- **Classificatie**: Gebeurt via `CategorieClassifier` (niet in Python!)
+- **Input**: Judoka's van één categorie + constraints (max_kg, max_leeftijd)
+- **Output**: Optimale poule-indeling
 
-**Input JSON:**
+**Input JSON (per categorie):**
 
 ```json
 {
-  "categorieen": {
-    "u7": {
-      "label": "U7",
-      "max_leeftijd": 6,
-      "geslacht": "gemengd",
-      "max_kg_verschil": 3,
-      "max_leeftijd_verschil": 2,
-      "gewichten": []
-    },
-    "u11_h": {
-      "label": "U11 Jongens",
-      "max_leeftijd": 10,
-      "geslacht": "M",
-      "gewichten": ["-21", "-24", "-27", "-30"]
-    }
-  },
-  "judokas": [
-    {"id": 1, "leeftijd": 6, "gewicht": 22.5, "geslacht": "M", "band": 2, "club_id": 1},
-    {"id": 2, "leeftijd": 6, "gewicht": 23.1, "geslacht": "V", "band": 1, "club_id": 2}
-  ],
+  "max_kg_verschil": 3,
+  "max_leeftijd_verschil": 2,
   "poule_grootte_voorkeur": [5, 4, 6, 3],
-  "gewicht_tolerantie": 0.5
+  "judokas": [
+    {"id": 1, "leeftijd": 6, "gewicht": 22.5, "band": 2, "club_id": 1},
+    {"id": 2, "leeftijd": 6, "gewicht": 23.1, "band": 1, "club_id": 2}
+  ]
 }
 ```
 
