@@ -300,24 +300,8 @@ class PouleController extends Controller
         $blokken = $isWedstrijddag ? $toernooi->blokken()->orderBy('nummer')->get()->keyBy('id') : collect();
 
         $matches = [];
-        $wachtpouleOpties = []; // Blokken waar we naar wachtpoule moeten (weging open)
-
-        // Wedstrijddag: bepaal welke blokken een wachtpoule nodig hebben
-        if ($isWedstrijddag && $huidigeBlok) {
-            foreach ($blokken as $blok) {
-                // Ander blok met open weging = wachtpoule optie
-                if ($blok->id !== $huidigeBlok->id && !$blok->weging_gesloten) {
-                    $wachtpouleOpties[$blok->id] = $blok;
-                }
-            }
-        }
 
         foreach ($poules as $poule) {
-            // Skip wachtpoules in de resultaten
-            if ($poule->isWachtpoule()) {
-                continue;
-            }
-
             // Filter afwezige judoka's - alleen aanwezigen tellen mee voor ranges
             $judokasInPoule = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig');
 
@@ -331,11 +315,7 @@ class PouleController extends Controller
                 $pouleBlok = $blokken->get($poule->blok_id);
 
                 if ($pouleBlok && $huidigeBlok) {
-                    if ($pouleBlok->id !== $huidigeBlok->id && !$pouleBlok->weging_gesloten) {
-                        // Ander blok met open weging - skip individuele poules
-                        // (we tonen alleen de wachtpoule optie voor dit blok)
-                        continue;
-                    } elseif ($pouleBlok->nummer < $huidigeBlok->nummer) {
+                    if ($pouleBlok->nummer < $huidigeBlok->nummer) {
                         // Eerder blok met gesloten weging
                         $blokStatus = 'earlier_closed';
                     } elseif ($pouleBlok->nummer === $huidigeBlok->nummer) {
@@ -472,19 +452,6 @@ class PouleController extends Controller
                 'nummer' => $huidigeBlok->nummer,
                 'naam' => $huidigeBlok->naam,
             ];
-
-            // Voeg wachtpoule opties toe voor blokken met open weging
-            $wachtpouleData = [];
-            foreach ($wachtpouleOpties as $blok) {
-                $wachtpouleData[] = [
-                    'blok_id' => $blok->id,
-                    'blok_nummer' => $blok->nummer,
-                    'blok_naam' => $blok->naam,
-                    'type' => 'wachtpoule',
-                    'status' => $blok->nummer < $huidigeBlok->nummer ? 'earlier_open' : 'later_open',
-                ];
-            }
-            $response['wachtpoule_opties'] = $wachtpouleData;
         }
 
         return response()->json($response);

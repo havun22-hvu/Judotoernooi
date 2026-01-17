@@ -907,14 +907,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Initialize sortable on wachtruimte (voor drag VAN wachtruimte NAAR poule)
-    // BELANGRIJK: Bij drag van A naar B wordt A's onEnd aangeroepen, niet B's!
+    // Initialize sortable on wachtruimte (bidirectioneel: van EN naar wachtruimte)
     document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
         new Sortable(container, {
             group: {
                 name: 'wedstrijddag-poules',
                 pull: true,
-                put: false
+                put: true  // Bidirectioneel: ook NAAR wachtruimte kunnen slepen
             },
             animation: 150,
             ghostClass: 'bg-orange-200',
@@ -922,47 +921,49 @@ document.addEventListener('DOMContentLoaded', function() {
             onEnd: async function(evt) {
                 const judokaId = evt.item.dataset.judokaId;
                 const naarPouleId = evt.to.dataset.pouleId;
+                const naarWachtruimte = evt.to.classList.contains('sortable-wachtruimte');
+                const vanWachtruimte = evt.from.classList.contains('sortable-wachtruimte');
+                const vanPouleId = evt.from.dataset.pouleId;
 
-                // Update poule stats in DOM
-                if (naarPouleId) {
+                // Van wachtruimte naar poule
+                if (vanWachtruimte && naarPouleId) {
                     updatePouleFromDOM(naarPouleId);
+
+                    // Update wachtruimte count
+                    const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
+                    if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
+
+                    const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
+                        .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
+
+                    try {
+                        const response = await fetch(verplaatsUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                            body: JSON.stringify({ judoka_id: judokaId, poule_id: naarPouleId, from_poule_id: null, positions: positions })
+                        });
+                        const data = await response.json();
+                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen'); window.location.reload(); }
                 }
 
-                // Update wachtruimte count
-                const countEl = evt.from.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
-                if (countEl) {
-                    countEl.textContent = Math.max(0, parseInt(countEl.textContent) - 1);
-                }
+                // Van poule naar wachtruimte
+                if (!vanWachtruimte && naarWachtruimte && vanPouleId) {
+                    updatePouleFromDOM(vanPouleId);
 
-                // API call voor database sync
-                const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
-                    .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
+                    // Update wachtruimte count
+                    const countEl = evt.to.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
+                    if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
 
-                try {
-                    const response = await fetch(verplaatsUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            judoka_id: judokaId,
-                            poule_id: naarPouleId,
-                            from_poule_id: null,
-                            positions: positions
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (!data.success) {
-                        alert('Fout: ' + (data.error || data.message));
-                        window.location.reload();
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Fout bij verplaatsen');
-                    window.location.reload();
+                    try {
+                        const response = await fetch(naarWachtruimteUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                            body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
+                        });
+                        const data = await response.json();
+                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen naar wachtruimte'); window.location.reload(); }
                 }
             }
         });
@@ -1084,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
 const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", [$toernooi, "__JUDOKA_ID__"]) }}';
-const naarWachtpouleUrl = '{{ route("toernooi.wedstrijddag.naar-wachtpoule", $toernooi) }}';
+const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi) }}';
 
 async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     const modal = document.getElementById('zoek-match-modal');
@@ -1133,29 +1134,6 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             <span class="font-bold">${data.judoka.naam}</span>
             <span class="text-gray-500">(${data.judoka.gewicht}kg, ${data.judoka.leeftijd}j)</span>
         </div>`;
-
-        // Toon wachtpoule opties eerst (voor blokken met open weging)
-        if (data.wachtpoule_opties && data.wachtpoule_opties.length > 0) {
-            html += `<div class="mb-4">
-                <div class="text-sm font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded mb-2">
-                    Naar wachtpoule (andere blokken)
-                </div>
-                <p class="text-xs text-gray-500 mb-2">Judoka wordt geparkeerd tot weging van dat blok sluit</p>
-                <div class="space-y-2">`;
-
-            for (const wp of data.wachtpoule_opties) {
-                const statusLabel = wp.status === 'earlier_open' ? 'Eerder blok' : 'Later blok';
-                html += `<div class="border border-purple-200 rounded p-2 hover:bg-purple-50 cursor-pointer transition-colors"
-                    onclick="selecteerWachtpoule(${judokaId}, ${fromPouleId}, ${wp.blok_id})">
-                    <div class="flex justify-between items-center">
-                        <span class="font-medium text-purple-800">📦 Wachtpoule ${wp.blok_naam}</span>
-                        <span class="text-xs text-purple-600">${statusLabel} - weging open</span>
-                    </div>
-                </div>`;
-            }
-
-            html += '</div></div>';
-        }
 
         const blokColors = {
             'same': 'bg-green-100 text-green-800',
@@ -1232,36 +1210,6 @@ async function selecteerPouleWedstrijddag(judokaId, vanPouleId, naarPouleId) {
     } catch (error) {
         console.error('Error:', error);
         alert('Fout bij verplaatsen');
-    }
-}
-
-async function selecteerWachtpoule(judokaId, vanPouleId, blokId) {
-    try {
-        const response = await fetch(naarWachtpouleUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                judoka_id: judokaId,
-                blok_id: blokId,
-                from_poule_id: vanPouleId
-            })
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            // Sluit modal en refresh pagina
-            document.getElementById('zoek-match-modal').classList.add('hidden');
-            window.location.reload();
-        } else {
-            alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Fout bij verplaatsen naar wachtpoule');
     }
 }
 
