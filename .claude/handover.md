@@ -1,6 +1,63 @@
 # Handover - Laatste Sessie
 
-## Datum: 17 januari 2026
+## Datum: 17 januari 2026 (sessie 2)
+
+### Wat is gedaan:
+
+1. **CategorieClassifier class toegevoegd** ✅
+   - Dedicated class voor categorie-identificatie op basis van harde criteria
+   - Harde criteria: max_leeftijd, geslacht, band_filter, gewichtsklassen
+   - NIET voor identificatie: max_kg_verschil, max_leeftijd_verschil (poule-niveau)
+   - Locatie: `app/Services/CategorieClassifier.php`
+
+2. **Poule::getCategorieConfig() gefixt** ✅
+   - Was: zocht op label match (foutgevoelig)
+   - Nu: directe lookup op `categorie_key` via CategorieClassifier
+   - Fix voor vals-positieve gewichtsrange warnings
+
+3. **Docs bijgewerkt** ✅
+   - CategorieClassifier sectie in PLANNING_DYNAMISCHE_INDELING.md
+   - Database velden uitgebreid (poules tabel, categorie_key uitleg)
+   - "Nooit zoeken op label!" gedocumenteerd
+
+### De bug die is opgelost:
+
+**Probleem:** Poules met vaste gewichtsklassen (bijv. "21-23kg") werden oranje gemarkeerd alsof de gewichtsrange te groot was.
+
+**Oorzaak:** `getCategorieConfig()` zocht op label match. Als het label niet exact matchte → fallback naar toernooi-brede `max_kg_verschil` → poule werd als "dynamisch" gezien → gewichtsvalidatie triggerde onterecht.
+
+**Oplossing:** Lookup nu via `categorie_key` (directe array key), niet via label.
+
+### Gewijzigde bestanden:
+
+```
+laravel/app/Services/CategorieClassifier.php (NIEUW)
+  - classificeer() - judoka naar categorie
+  - getConfigVoorPoule() - config lookup op key
+  - isDynamisch() - check max_kg_verschil > 0
+
+laravel/app/Models/Poule.php
+  - getCategorieConfig() - gebruikt nu CategorieClassifier
+  - isDynamisch() - gebruikt nu CategorieClassifier
+  - getClassifier() - helper methode
+
+laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md
+  - CategorieClassifier sectie toegevoegd
+  - Database velden uitgebreid
+```
+
+### Commit:
+
+- `feat: Add CategorieClassifier for category lookup by key instead of label`
+
+### Openstaand:
+
+- [ ] PouleIndelingService refactoren om CategorieClassifier te gebruiken (optioneel, werkt al)
+- [ ] Live testen of vals-positieve warnings weg zijn
+
+---
+
+## Datum: 17 januari 2026 (sessie 1)
 
 ### Wat is gedaan:
 

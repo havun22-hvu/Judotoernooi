@@ -447,21 +447,80 @@ Hoofdservice voor poule-indeling:
 - `genereerPoules()` - Maakt poules aan
 - `maakPouleTitel()` - Genereert titel
 
-### DynamischeIndelingService
+### Python Poule Solver (scripts/poule_solver.py)
 
-Voor variabele categorieën (max_kg_verschil > 0):
-- `berekenIndeling()` - Optimale groepering
+**De solver doet ALLES in één run:**
+
+1. **Classificatie**: Judoka's toewijzen aan categorieën (zelfde logica als CategorieClassifier)
+2. **Verdeling**: Per categorie optimale poule-indeling berekenen
+3. **Return**: Alle poules met categorie info
+
+**Input JSON:**
+
+```json
+{
+  "categorieen": {
+    "u7": {
+      "label": "U7",
+      "max_leeftijd": 6,
+      "geslacht": "gemengd",
+      "max_kg_verschil": 3,
+      "max_leeftijd_verschil": 2,
+      "gewichten": []
+    },
+    "u11_h": {
+      "label": "U11 Jongens",
+      "max_leeftijd": 10,
+      "geslacht": "M",
+      "gewichten": ["-21", "-24", "-27", "-30"]
+    }
+  },
+  "judokas": [
+    {"id": 1, "leeftijd": 6, "gewicht": 22.5, "geslacht": "M", "band": 2, "club_id": 1},
+    {"id": 2, "leeftijd": 6, "gewicht": 23.1, "geslacht": "V", "band": 1, "club_id": 2}
+  ],
+  "poule_grootte_voorkeur": [5, 4, 6, 3],
+  "gewicht_tolerantie": 0.5
+}
+```
+
+**Output JSON:**
+
+```json
+{
+  "success": true,
+  "poules": [
+    {
+      "categorie_key": "u7",
+      "label": "U7",
+      "gewichtsklasse": "22-25kg",
+      "judoka_ids": [1, 2, 5, 8, 12],
+      "gewicht_range": 2.8,
+      "leeftijd_range": 1
+    }
+  ],
+  "statistieken": {
+    "totaal_judokas": 50,
+    "totaal_poules": 12,
+    "orphans": 0
+  }
+}
+```
+
+**Voordelen van gecombineerde aanpak:**
+- Eén optimalisatie-run over alle judoka's
+- Classifier en verdeling in sync
+- Python kan globaal optimaliseren (minder orphans)
+
+**Locatie:** `scripts/poule_solver.py`
+
+### DynamischeIndelingService (legacy)
+
+Roept Python solver aan voor dynamische categorieën:
+- `berekenIndeling()` - Wrapper rond Python solver
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
 
-#### Algoritme `berekenIndeling()` (simpel & effectief)
-
-```php
-// Input: judokas (gesorteerd), maxKgVerschil, maxLeeftijdVerschil (uit config!)
-// Output: array van poules (elk max 5 judoka's, binnen limieten)
-
-1. Start lege poule
-2. Voor elke judoka:
-   - Bereken nieuw gewicht_range als judoka toegevoegd wordt
+#### Algoritme Python Solver (Greedy++)
    - Bereken nieuw leeftijd_range als judoka toegevoegd wordt
    - ALS gewicht_range ≤ maxKgVerschil
      EN leeftijd_range ≤ maxLeeftijdVerschil
