@@ -69,16 +69,10 @@
             </div>
         </div>
 
-        {{-- BLOK/MAT + TIJDEN - Compact --}}
+        {{-- BLOK + TIJDEN - Compact (geen mat, die is flexibel) --}}
         @if($blok)
         <div class="px-3 py-2 bg-amber-50 border-b flex items-center justify-between">
-            {{-- Blok + Mat badges (kleiner) --}}
-            <div class="flex items-center gap-1">
-                <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
-                @if($mat)
-                <span class="bg-blue-600 text-white text-sm font-bold px-2 py-0.5 rounded">Mat {{ $mat->nummer }}</span>
-                @endif
-            </div>
+            <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
             {{-- Tijden --}}
             <div class="text-right text-xs">
                 @if($blok->weging_start && $blok->weging_einde)
