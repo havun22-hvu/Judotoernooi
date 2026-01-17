@@ -296,6 +296,26 @@ Voorbeeld: `M 9j 22kg (10w)`
 
 Dit maakt de sortering visueel controleerbaar: van jong naar oud, van licht naar zwaar.
 
+### Overzicht Panel (variabele categorieën)
+
+Bij variabele categorieën toont het rechterpanel individuele poules:
+
+```
+P1 M 8-9j 20-23kg (6w)    [1]
+P2 M 8-9j 23-26kg (10w)   [1]
+P3 M 9-10j 24-27kg (6w)   [2]
+...
+```
+
+- **P{nummer}**: Poule nummer
+- **Label**: Eerste letter (M, V, B, etc.)
+- **Leeftijd**: Volledige range (8-9j)
+- **Gewicht**: Volledige range (20-23kg)
+- **Wedstrijden**: Aantal wedstrijden
+- **Blok**: Toegewezen bloknummer
+
+Panel is breder (w-72) om alle info te tonen. Gesorteerd op min leeftijd, dan min gewicht.
+
 ---
 
 ## Database
