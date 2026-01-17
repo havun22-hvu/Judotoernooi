@@ -41,8 +41,8 @@
                         <span class="text-gray-600" x-text="stats.blok{{ $blok->nummer }}?.totaal || 0"></span>
                     </div>
                     @if($blok->weging_einde && !$blok->weging_gesloten)
-                    <div x-data="countdown('{{ $blok->weging_einde->toISOString() }}')" x-init="start()"
-                         class="text-xs font-mono" :class="expired ? 'text-red-600' : (warning ? 'text-yellow-600' : 'text-blue-600')"
+                    <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
+                         class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
                          x-text="display"></div>
                     @elseif($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">Gesloten</div>
@@ -72,7 +72,7 @@
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Leeftijd</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewicht</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opgegeven</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewogen</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijd</th>
@@ -84,7 +84,7 @@
                         <td class="px-4 py-3 font-medium" x-text="judoka.naam"></td>
                         <td class="px-4 py-3 text-gray-600" x-text="judoka.club || '-'"></td>
                         <td class="px-4 py-3" x-text="judoka.leeftijdsklasse || '-'"></td>
-                        <td class="px-4 py-3" x-text="judoka.gewichtsklasse + ' kg'"></td>
+                        <td class="px-4 py-3" x-text="(judoka.gewicht || judoka.gewichtsklasse || '-') + ' kg'"></td>
                         <td class="px-4 py-3" x-text="judoka.blok ? 'Blok ' + judoka.blok : '-'"></td>
                         <td class="px-4 py-3">
                             <span x-show="judoka.gewogen" class="font-bold" x-text="judoka.gewicht_gewogen + ' kg'"></span>
@@ -104,32 +104,57 @@
 </div>
 
 <script>
-// Countdown timer
-function countdown(eindtijd) {
+// Countdown timer - toont alleen na starttijd, met alert bij einde
+function countdown(starttijd, eindtijd, blokNummer) {
     return {
+        start_time: starttijd ? new Date(starttijd) : null,
         end: new Date(eindtijd),
+        blok: blokNummer,
         display: '',
         expired: false,
         warning: false,
+        alerted: false,
         interval: null,
         start() {
             this.update();
             this.interval = setInterval(() => this.update(), 1000);
         },
         update() {
-            const diff = this.end - new Date();
+            const now = new Date();
+            // Toon niets als weging nog niet begonnen is
+            if (this.start_time && now < this.start_time) {
+                this.display = '';
+                return;
+            }
+            const diff = this.end - now;
             if (diff <= 0) {
                 this.expired = true;
                 this.display = 'Voorbij!';
+                if (!this.alerted) {
+                    this.alerted = true;
+                    toonWeegtijdAlert(this.blok);
+                }
                 clearInterval(this.interval);
                 return;
             }
             this.warning = diff <= 5 * 60 * 1000;
             const m = Math.floor(diff / 60000);
             const s = Math.floor((diff % 60000) / 1000);
-            this.display = `${m}:${String(s).padStart(2, '0')}`;
+            this.display = m + ':' + String(s).padStart(2, '0');
         }
     }
+}
+
+let weegtijdAlertGetoond = {};
+function toonWeegtijdAlert(blokNummer) {
+    if (weegtijdAlertGetoond[blokNummer]) return;
+    weegtijdAlertGetoond[blokNummer] = true;
+    // Browser notificatie (als toegestaan)
+    if (Notification.permission === 'granted') {
+        new Notification('Weegtijd voorbij!', { body: 'Blok ' + blokNummer + ' weegtijd is verstreken', icon: '/icon-192x192.png' });
+    }
+    // Alert popup
+    alert('⏰ Weegtijd Blok ' + blokNummer + ' is voorbij!');
 }
 
 function weeglijst() {

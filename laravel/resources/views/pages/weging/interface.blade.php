@@ -33,9 +33,9 @@
             <!-- Countdown voor actief blok -->
             @php $actieveBlok = $toernooi->blokken->where('weging_gesloten', false)->first(); @endphp
             @if($actieveBlok && $actieveBlok->weging_einde)
-            <div x-data="countdown('{{ $actieveBlok->weging_einde->toISOString() }}')" x-init="start()" class="text-right">
+            <div x-data="countdown('{{ $actieveBlok->weging_start?->toISOString() }}', '{{ $actieveBlok->weging_einde->toISOString() }}', {{ $actieveBlok->nummer }})" x-init="start()" class="text-right">
                 <div class="text-[10px] text-blue-300">Blok {{ $actieveBlok->nummer }}</div>
-                <div class="text-sm font-mono font-bold" :class="expired ? 'text-red-400' : 'text-white'" x-text="display"></div>
+                <div class="text-sm font-mono font-bold" :class="expired ? 'text-red-400 animate-pulse' : (warning ? 'text-yellow-400' : 'text-white')" x-text="display"></div>
             </div>
             @endif
             <div class="text-xl font-mono" id="clock"></div>
@@ -53,5 +53,81 @@
     </main>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'weging'])
+
+<!-- Weegtijd voorbij alert -->
+<div id="weegtijd-alert" class="hidden fixed inset-0 bg-red-900/95 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-6 max-w-sm text-center animate-pulse">
+        <div class="text-6xl mb-4">⏰</div>
+        <h2 class="text-2xl font-bold text-red-600 mb-2">Weegtijd voorbij!</h2>
+        <p class="text-gray-600 mb-4">De weegtijd voor <span id="alert-blok" class="font-bold">Blok X</span> is verstreken.</p>
+        <button onclick="sluitWeegtijdAlert()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
+            Begrepen
+        </button>
+    </div>
+</div>
+
+<script>
+// Countdown timer met melding bij einde
+function countdown(starttijd, eindtijd, blokNummer) {
+    return {
+        start_time: starttijd ? new Date(starttijd) : null,
+        end: new Date(eindtijd),
+        blok: blokNummer,
+        display: '',
+        expired: false,
+        warning: false,
+        alerted: false,
+        interval: null,
+        start() {
+            this.update();
+            this.interval = setInterval(() => this.update(), 1000);
+        },
+        update() {
+            const now = new Date();
+            // Toon niets als weging nog niet begonnen is
+            if (this.start_time && now < this.start_time) {
+                this.display = '';
+                return;
+            }
+            const diff = this.end - now;
+            if (diff <= 0) {
+                this.expired = true;
+                this.display = 'Voorbij!';
+                if (!this.alerted) {
+                    this.alerted = true;
+                    toonWeegtijdAlert(this.blok);
+                }
+                clearInterval(this.interval);
+                return;
+            }
+            this.warning = diff <= 5 * 60 * 1000;
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            this.display = m + ':' + String(s).padStart(2, '0');
+        }
+    }
+}
+
+function toonWeegtijdAlert(blokNummer) {
+    document.getElementById('alert-blok').textContent = 'Blok ' + blokNummer;
+    document.getElementById('weegtijd-alert').classList.remove('hidden');
+    // Vibratie
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+    // Geluid (beep)
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 800;
+        osc.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => osc.stop(), 500);
+    } catch(e) {}
+}
+
+function sluitWeegtijdAlert() {
+    document.getElementById('weegtijd-alert').classList.add('hidden');
+}
+</script>
 </body>
 </html>
