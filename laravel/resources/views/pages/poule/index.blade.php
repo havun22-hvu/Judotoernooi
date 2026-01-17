@@ -8,20 +8,19 @@
     $toegestaneGroottes = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
     // Een poule is problematisch als grootte > 0 EN niet in toegestane groottes
     $isProblematischeGrootte = fn($count) => $count > 0 && !in_array($count, $toegestaneGroottes);
-    // Check of wedstrijddag is begonnen (blok 1 weging gesloten)
-    $blok1 = $toernooi->blokken()->where('nummer', 1)->first();
-    $wedstrijddagBegonnen = $blok1 && $blok1->weging_gesloten;
+    // Check of inschrijving gesloten is (weegkaarten hebben dan al bloknummers)
+    $inschrijvingGesloten = !$toernooi->isInschrijvingOpen();
 @endphp
 
-{{-- Knipperende popup als wedstrijddag al begonnen is --}}
-@if($wedstrijddagBegonnen)
-<div id="wedstrijddag-popup" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center no-print">
+{{-- Knipperende popup als inschrijving gesloten is --}}
+@if($inschrijvingGesloten)
+<div id="inschrijving-popup" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center no-print">
     <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md mx-4 animate-pulse-warning">
         <div class="text-center">
             <span class="text-6xl">⚠️</span>
-            <h2 class="text-2xl font-bold text-orange-600 mt-4">Wedstrijddag is gestart!</h2>
-            <p class="text-gray-600 mt-3">De weging van blok 1 is gesloten. Wijzigingen hier kunnen problemen veroorzaken.</p>
-            <p class="text-gray-700 font-medium mt-4">Gebruik in plaats daarvan:</p>
+            <h2 class="text-2xl font-bold text-orange-600 mt-4">Inschrijving is gesloten!</h2>
+            <p class="text-gray-600 mt-3">De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.</p>
+            <p class="text-gray-700 font-medium mt-4">Gebruik op de wedstrijddag:</p>
             <div class="flex flex-col gap-2 mt-3">
                 <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
                     Wedstrijddag Poules
@@ -30,7 +29,7 @@
                     Zaaloverzicht
                 </a>
             </div>
-            <button onclick="sluitWedstrijddagPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
+            <button onclick="sluitInschrijvingPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
                 Ik begrijp het, toch doorgaan
             </button>
         </div>
@@ -44,26 +43,26 @@
     .animate-pulse-warning { animation: pulse-warning 1s ease-in-out infinite; }
 </style>
 <script>
-    let wedstrijddagPopupGetoond = false;
-    function toonWedstrijddagPopup() {
-        if (wedstrijddagPopupGetoond) return;
-        const popup = document.getElementById('wedstrijddag-popup');
+    let inschrijvingPopupGetoond = false;
+    function toonInschrijvingPopup() {
+        if (inschrijvingPopupGetoond) return;
+        const popup = document.getElementById('inschrijving-popup');
         popup.classList.remove('hidden');
         popup.classList.add('flex');
     }
-    function sluitWedstrijddagPopup() {
-        wedstrijddagPopupGetoond = true;
-        const popup = document.getElementById('wedstrijddag-popup');
+    function sluitInschrijvingPopup() {
+        inschrijvingPopupGetoond = true;
+        const popup = document.getElementById('inschrijving-popup');
         popup.classList.add('hidden');
         popup.classList.remove('flex');
     }
     // Trigger bij drag start, klik op actie knoppen, etc.
     document.addEventListener('DOMContentLoaded', function() {
         // Bij drag start
-        document.addEventListener('dragstart', toonWedstrijddagPopup);
+        document.addEventListener('dragstart', toonInschrijvingPopup);
         // Bij klik op actie knoppen (verplaats, verwijder, etc.)
         document.querySelectorAll('[onclick*="verplaats"], [onclick*="verwijder"], [onclick*="nieuw"], .sortable-poule').forEach(el => {
-            el.addEventListener('mousedown', toonWedstrijddagPopup);
+            el.addEventListener('mousedown', toonInschrijvingPopup);
         });
     });
 </script>
