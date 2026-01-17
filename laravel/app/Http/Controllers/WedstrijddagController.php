@@ -121,6 +121,7 @@ class WedstrijddagController extends Controller
                 'id' => $blok->id,
                 'nummer' => $blok->nummer,
                 'naam' => $blok->naam,
+                'weging_gesloten' => $blok->weging_gesloten,
                 'categories' => $categories,
             ];
         });
@@ -237,13 +238,34 @@ class WedstrijddagController extends Controller
         // Calculate active count (only exclude absent, not deviant weight)
         $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
+        // Check gewichtsrange probleem voor beide poules (variabele categorieën)
+        $maxKgVerschil = $toernooi->max_kg_verschil ?? 0;
+
+        // Nieuwe poule gewichtsrange check
+        $nieuweGewichtsRange = $nieuwePoule->getGewichtsRange();
+        $nieuweRangeVerschil = ($nieuweGewichtsRange['max_kg'] ?? 0) - ($nieuweGewichtsRange['min_kg'] ?? 0);
+        $nieuweIsProblematisch = $maxKgVerschil > 0 && $nieuweRangeVerschil > $maxKgVerschil;
+
+        // Oude poule gewichtsrange check (indien van toepassing)
+        if ($oudePouleData && isset($oudePoule)) {
+            $oudeGewichtsRange = $oudePoule->getGewichtsRange();
+            $oudeRangeVerschil = ($oudeGewichtsRange['max_kg'] ?? 0) - ($oudeGewichtsRange['min_kg'] ?? 0);
+            $oudeIsProblematisch = $maxKgVerschil > 0 && $oudeRangeVerschil > $maxKgVerschil;
+            $oudePouleData['gewichts_range'] = $oudeGewichtsRange;
+            $oudePouleData['is_gewicht_problematisch'] = $oudeIsProblematisch;
+            $oudePouleData['titel'] = $oudePoule->titel;
+        }
+
         return response()->json([
             'success' => true,
             'van_poule' => $oudePouleData,
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
+                'titel' => $nieuwePoule->titel,
                 'aantal_judokas' => $actieveJudokasNieuw,
                 'aantal_wedstrijden' => $nieuwePoule->berekenAantalWedstrijden($actieveJudokasNieuw),
+                'gewichts_range' => $nieuweGewichtsRange,
+                'is_gewicht_problematisch' => $nieuweIsProblematisch,
             ],
         ]);
     }
