@@ -463,13 +463,15 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
   - Blok naam (bijv. "Blok 1")
   - Starttijd wedstrijden
   - Weegtijden (start - einde)
-  - **Mat nummer** (alleen na "Maak weegkaarten")
+  - **Mat nummer** (zodra toegewezen)
 - **QR code**: Voor scannen bij weging
 - **Download/Delen**: Knoppen voor opslaan en delen
 
 ### Vereisten
 1. Judoka moet in poule zitten → blok wordt getoond
-2. Poule moet mat hebben + `weegkaarten_gemaakt_op` gezet → mat wordt getoond
+2. Poule moet mat hebben → mat wordt getoond
+
+**Belangrijk:** Weegkaarten zijn dynamisch en tonen altijd actuele info.
 
 ---
 
