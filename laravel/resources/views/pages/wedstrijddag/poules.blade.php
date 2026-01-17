@@ -7,18 +7,32 @@
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
     // Check of toernooi variabele categorieën heeft
     $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
-    // Verzamel alle poules met te weinig actieve judoka's (1 of 2)
+    // Verzamel alle poules met te weinig (< 3) of te veel (>= 6) actieve judoka's
     // NEGEER kruisfinales - die hebben nog geen judokas gekoppeld
-    // BELANGRIJK: Alleen afwezigen excluderen, afwijkend gewicht telt WEL mee (organisator kiest wie eruit gaat)
-    $problematischePoules = collect();
+    // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+    $teWeinigjudokas = collect();
+    $teVeelJudokas = collect();
     foreach ($blokken as $blok) {
+        $blokWegingGesloten = $blok['weging_gesloten'] ?? false;
         foreach ($blok['categories'] as $category) {
             foreach ($category['poules'] as $poule) {
                 if ($poule->type === 'kruisfinale') continue;
-                // Alleen afwezigen eruit filteren
-                $actief = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                $actief = $poule->judokas->filter(fn($j) =>
+                    $j->aanwezigheid !== 'afwezig' &&
+                    !($blokWegingGesloten && $j->gewicht_gewogen === null)
+                )->count();
                 if ($actief > 0 && $actief < 3) {
-                    $problematischePoules->push([
+                    $teWeinigjudokas->push([
+                        'id' => $poule->id,
+                        'nummer' => $poule->nummer,
+                        'label' => $category['label'],
+                        'gewichtsklasse' => $poule->gewichtsklasse,
+                        'actief' => $actief,
+                    ]);
+                }
+                if ($actief >= 6) {
+                    $teVeelJudokas->push([
                         'id' => $poule->id,
                         'nummer' => $poule->nummer,
                         'label' => $category['label'],
@@ -44,21 +58,33 @@
     <!-- Verificatie resultaat -->
     <div id="verificatie-resultaat" class="hidden"></div>
 
-    <!-- Problematische poules (gecombineerd: te weinig judoka's + gewichtsrange) -->
+    <!-- Problematische poules (gecombineerd: te weinig/te veel judoka's + gewichtsrange) -->
     @php
-        $totaalProblemen = $problematischePoules->count() + $problematischeGewichtsPoules->count();
+        $totaalProblemen = $teWeinigjudokas->count() + $teVeelJudokas->count() + $problematischeGewichtsPoules->count();
     @endphp
     <div id="problematische-poules-container" class="{{ $totaalProblemen > 0 ? '' : 'hidden' }}" style="width: fit-content;">
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
         <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $totaalProblemen }}</span>)</h3>
 
         {{-- Te weinig judoka's --}}
-        @if($problematischePoules->count() > 0)
-        <p class="text-red-700 text-sm mb-2">Te weinig judoka's (< 3):</p>
+        @if($teWeinigjudokas->count() > 0)
+        <p class="text-red-700 text-sm mb-2">Te weinig judoka's (&lt; 3):</p>
         <div id="problematische-links" class="flex flex-wrap gap-2 mb-3">
-            @foreach($problematischePoules as $p)
+            @foreach($teWeinigjudokas as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                 #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
+            </a>
+            @endforeach
+        </div>
+        @endif
+
+        {{-- Te veel judoka's --}}
+        @if($teVeelJudokas->count() > 0)
+        <p class="text-purple-700 text-sm mb-2">Te veel judoka's (&ge; 6) - splitsen:</p>
+        <div id="teveel-links" class="flex flex-wrap gap-2 mb-3">
+            @foreach($teVeelJudokas as $p)
+            <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-teveel-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 cursor-pointer transition-colors">
+                #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-teveel-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
         </div>
@@ -125,6 +151,13 @@
     </div>
     </div>
 
+    {{-- Legenda --}}
+    <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 flex items-center gap-6 text-sm">
+        <span class="font-medium text-gray-600">Legenda:</span>
+        <span class="flex items-center gap-1"><span class="text-green-500">●</span> Gewogen</span>
+        <span class="flex items-center gap-1"><span class="text-orange-500">⚠</span> Afwijkend gewicht</span>
+    </div>
+
     <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
     <div class="bg-white rounded-lg shadow w-full blok-item" x-data="{
@@ -135,8 +168,9 @@
         {{-- Blok header (inklapbaar) --}}
         @php
             // Tel totaal actieve judoka's en wedstrijden in dit blok
-            // BELANGRIJK: Alleen afwezigen excluderen, afwijkend gewicht telt WEL mee
+            // BELANGRIJK: Na weging sluiting zijn niet-gewogen judoka's ook afwezig
             // UITZONDERING: Kruisfinales gebruiken geplande aantallen (nog geen judokas gekoppeld)
+            $wegingGesloten = $blok['weging_gesloten'] ?? false;
             $blokJudokas = 0;
             $blokWedstrijden = 0;
             foreach ($blok['categories'] as $cat) {
@@ -145,8 +179,11 @@
                         $blokJudokas += $p->aantal_judokas;
                         $blokWedstrijden += $p->aantal_wedstrijden;
                     } else {
-                        // Alleen afwezigen eruit filteren
-                        $actief = $p->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                        $actief = $p->judokas->filter(fn($j) =>
+                            $j->aanwezigheid !== 'afwezig' &&
+                            !($wegingGesloten && $j->gewicht_gewogen === null)
+                        )->count();
                         $blokJudokas += $actief;
                         $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
                     }
@@ -181,12 +218,15 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
-                            // Calculate active judokas per category (excluding afwezig alleen)
-                            // BELANGRIJK: Afwijkend gewicht telt WEL mee - organisator kiest wie eruit gaat
+                            // Calculate active judokas per category
+                            // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
                             $totaalActiefInCategorie = 0;
                             $aantalLegePoules = 0;
                             foreach ($category['poules'] as $p) {
-                                $actief = $p->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+                                $actief = $p->judokas->filter(fn($j) =>
+                                    $j->aanwezigheid !== 'afwezig' &&
+                                    !($wegingGesloten && $j->gewicht_gewogen === null)
+                                )->count();
                                 $totaalActiefInCategorie += $actief;
                                 if ($actief === 0) $aantalLegePoules++;
                             }
@@ -242,8 +282,9 @@
                     @php
                         // $elimPoule is already set in header for the dropdown
                         // Collect removed judokas for info tooltip
-                        $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie) {
-                            $isAfwezig = $j->aanwezigheid === 'afwezig';
+                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                        $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten) {
+                            $isAfwezig = $j->aanwezigheid === 'afwezig' || ($wegingGesloten && $j->gewicht_gewogen === null);
                             $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
                             return $isAfwezig || $isAfwijkend;
                         });
@@ -252,9 +293,10 @@
                         $aantalActiefElim = $elimPoule->judokas->count() - $verwijderdeElim->count();
 
                         // Format removed for tooltip
-                        $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie) {
-                            $reden = $j->aanwezigheid === 'afwezig' ? 'afwezig' : 'afwijkend gewicht';
-                            return $j->naam . ' (' . $reden . ')';
+                        $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie, $wegingGesloten) {
+                            if ($j->aanwezigheid === 'afwezig') return $j->naam . ' (afwezig)';
+                            if ($wegingGesloten && $j->gewicht_gewogen === null) return $j->naam . ' (afwezig)';
+                            return $j->naam . ' (afwijkend gewicht)';
                         });
                     @endphp
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
@@ -274,7 +316,8 @@
                             @foreach($elimPoule->judokas as $judoka)
                             @php
                                 $isGewogen = $judoka->gewicht_gewogen !== null;
-                                $isAfwezig = $judoka->aanwezigheid === 'afwezig';
+                                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                                $isAfwezig = $judoka->aanwezigheid === 'afwezig' || ($wegingGesloten && !$isGewogen);
                             @endphp
                             @if($isAfwezig)
                                 @continue
@@ -334,11 +377,14 @@
                             @continue
                             @endif
                             @php
-                                // Collect afwezige judokas for info tooltip (alleen afwezigen, niet afwijkend gewicht)
-                                $afwezigeJudokas = $poule->judokas->filter(fn($j) => $j->aanwezigheid === 'afwezig');
+                                // Collect afwezige judokas for info tooltip
+                                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                                $afwezigeJudokas = $poule->judokas->filter(fn($j) =>
+                                    $j->aanwezigheid === 'afwezig' ||
+                                    ($wegingGesloten && $j->gewicht_gewogen === null)
+                                );
 
                                 // Calculate active count (total minus afwezigen)
-                                // BELANGRIJK: Afwijkend gewicht telt WEL mee - organisator kiest wie eruit gaat
                                 $aantalActief = $poule->judokas->count() - $afwezigeJudokas->count();
                                 $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
                                 $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
@@ -346,8 +392,13 @@
                                 // Check gewichtsrange probleem (dynamische categorie)
                                 $heeftGewichtsprobleem = $problematischeGewichtsPoules->has($poule->id);
 
-                                // Format afwezigen for tooltip
-                                $verwijderdeTekst = $afwezigeJudokas->map(fn($j) => $j->naam . ' (afwezig)');
+                                // Format afwezigen for tooltip (met reden)
+                                $verwijderdeTekst = $afwezigeJudokas->map(function($j) use ($wegingGesloten) {
+                                    if ($j->aanwezigheid === 'afwezig') {
+                                        return $j->naam . ' (afwezig)';
+                                    }
+                                    return $j->naam . ' (afwezig)';
+                                });
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
@@ -396,7 +447,8 @@
                                     @foreach($poule->judokas as $judoka)
                                     @php
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
-                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig';
+                                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig' || ($wegingGesloten && !$isGewogen);
                                         // Bij variabele categorieën: geen individuele markering (poule-niveau markering is voldoende)
                                         // Bij vaste categorieën: wel markeren als buiten gewichtsklasse
                                         $isAfwijkendGewicht = !$heeftVariabeleCategorieen && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
@@ -883,10 +935,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
         updateCategoryStatus(categoryKey);
 
-        // Update problematische poules lijst bovenaan
+        // Update problematische poules lijsten bovenaan
         updateProblematischePoules(
             { id: pouleId, aantal_judokas: aantalJudokas },
             isProblematisch
+        );
+        updateTeVeelJudokas(
+            { id: pouleId, aantal_judokas: aantalJudokas },
+            aantalJudokas >= 6
         );
     }
 
@@ -922,7 +978,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         const data = await response.json();
                         console.log('naarWachtruimte response:', data);
-                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+                        if (!data.success) {
+                            console.error('Server error:', data);
+                            alert('Fout: ' + (data.error || data.message));
+                            return; // Niet herladen zodat we kunnen debuggen
+                        }
 
                         // Update poule markering op basis van hervalidatie
                         if (data.van_poule) {
@@ -933,20 +993,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                 updatePouleTitel(pouleCard, data.van_poule);
 
                                 // Update problematische markering (gewichtsrange)
+                                const pouleHeader = pouleCard.querySelector('.poule-header');
                                 if (data.van_poule.is_problematisch) {
                                     pouleCard.classList.add('border-2', 'border-orange-400');
+                                    if (pouleHeader) {
+                                        pouleHeader.classList.remove('bg-blue-700');
+                                        pouleHeader.classList.add('bg-orange-600');
+                                        // Update subtitle kleur
+                                        const subtitle = pouleHeader.querySelector('.poule-stats');
+                                        if (subtitle) {
+                                            subtitle.classList.remove('text-blue-200');
+                                            subtitle.classList.add('text-orange-200');
+                                        }
+                                    }
                                 } else {
                                     // Verwijder alle probleem styling
                                     pouleCard.classList.remove('border-2', 'border-orange-400', 'border-red-300');
-                                    console.log('Removed orange/red border from poule', data.van_poule.id);
+                                    if (pouleHeader) {
+                                        pouleHeader.classList.remove('bg-orange-600', 'bg-red-600');
+                                        pouleHeader.classList.add('bg-blue-700');
+                                        // Update subtitle kleur
+                                        const subtitle = pouleHeader.querySelector('.poule-stats');
+                                        if (subtitle) {
+                                            subtitle.classList.remove('text-orange-200', 'text-red-200');
+                                            subtitle.classList.add('text-blue-200');
+                                        }
+                                    }
+                                    console.log('Removed orange/red styling from poule', data.van_poule.id);
                                 }
                             }
                             // Update gewichtsrange box bovenaan
                             updateGewichtsrangeBox(data.van_poule.id, data.van_poule.is_problematisch);
-                            // Update problematische poules (< 3 judokas)
+                            // Update problematische poules (< 3 of >= 6 judokas)
                             updateProblematischePoules(data.van_poule, data.van_poule.aantal_judokas > 0 && data.van_poule.aantal_judokas < 3);
+                            updateTeVeelJudokas(data.van_poule, data.van_poule.aantal_judokas >= 6);
                         }
-                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen naar wachtruimte'); window.location.reload(); }
+                    } catch (error) {
+                        console.error('Fetch error naar wachtruimte:', error);
+                        alert('Fout bij verplaatsen naar wachtruimte: ' + error.message);
+                    }
                     return;
                 }
 
@@ -974,6 +1059,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!data.success) {
                         alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
                         window.location.reload();
+                    } else {
+                        // Update gewichtsrange en problematische poules voor beide poules
+                        if (data.van_poule) {
+                            const vanPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.van_poule.id}"]`);
+                            if (vanPouleCard) {
+                                updatePouleTitel(vanPouleCard, data.van_poule);
+                                updatePouleGewichtsStyling(vanPouleCard, data.van_poule.is_gewicht_problematisch);
+                            }
+                            updateGewichtsrangeBox(data.van_poule.id, data.van_poule.is_gewicht_problematisch);
+                            updateProblematischePoules(data.van_poule, data.van_poule.aantal_judokas > 0 && data.van_poule.aantal_judokas < 3);
+                            updateTeVeelJudokas(data.van_poule, data.van_poule.aantal_judokas >= 6);
+                        }
+                        if (data.naar_poule) {
+                            const naarPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.naar_poule.id}"]`);
+                            if (naarPouleCard) {
+                                updatePouleTitel(naarPouleCard, data.naar_poule);
+                                updatePouleGewichtsStyling(naarPouleCard, data.naar_poule.is_gewicht_problematisch);
+                            }
+                            updateGewichtsrangeBox(data.naar_poule.id, data.naar_poule.is_gewicht_problematisch);
+                            updateProblematischePoules(data.naar_poule, data.naar_poule.aantal_judokas > 0 && data.naar_poule.aantal_judokas < 3);
+                            updateTeVeelJudokas(data.naar_poule, data.naar_poule.aantal_judokas >= 6);
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -983,6 +1090,43 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Update poule styling voor gewichtsprobleem (oranje header)
+    function updatePouleGewichtsStyling(pouleCard, isGewichtProblematisch) {
+        const pouleHeader = pouleCard.querySelector('.poule-header');
+        const aantalActief = parseInt(pouleCard.dataset.actief || pouleCard.querySelector('.poule-actief')?.textContent || 0);
+        const isProblematisch = aantalActief > 0 && aantalActief < 3;
+        const isLeeg = aantalActief === 0;
+
+        // Reset border styling
+        pouleCard.classList.remove('border-2', 'border-orange-400', 'border-red-300');
+
+        if (isProblematisch) {
+            pouleCard.classList.add('border-2', 'border-red-300');
+        } else if (isGewichtProblematisch) {
+            pouleCard.classList.add('border-2', 'border-orange-400');
+        }
+
+        // Update header kleur (alleen als niet al rood door < 3 judokas)
+        if (pouleHeader && !isProblematisch && !isLeeg) {
+            const subtitle = pouleHeader.querySelector('.poule-stats');
+            if (isGewichtProblematisch) {
+                pouleHeader.classList.remove('bg-blue-700');
+                pouleHeader.classList.add('bg-orange-600');
+                if (subtitle) {
+                    subtitle.classList.remove('text-blue-200');
+                    subtitle.classList.add('text-orange-200');
+                }
+            } else {
+                pouleHeader.classList.remove('bg-orange-600');
+                pouleHeader.classList.add('bg-blue-700');
+                if (subtitle) {
+                    subtitle.classList.remove('text-orange-200');
+                    subtitle.classList.add('text-blue-200');
+                }
+            }
+        }
+    }
 
     // Initialize sortable on wachtruimte (bidirectioneel: van EN naar wachtruimte)
     document.querySelectorAll('.sortable-wachtruimte').forEach(container => {
@@ -1020,28 +1164,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             body: JSON.stringify({ judoka_id: judokaId, poule_id: naarPouleId, from_poule_id: null, positions: positions })
                         });
                         const data = await response.json();
-                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+                        if (!data.success) {
+                            alert('Fout: ' + (data.error || data.message));
+                            window.location.reload();
+                        } else if (data.naar_poule) {
+                            // Update gewichtsrange en problematische poules
+                            const naarPouleCard = document.querySelector(`.poule-card[data-poule-id="${data.naar_poule.id}"]`);
+                            if (naarPouleCard) {
+                                updatePouleTitel(naarPouleCard, data.naar_poule);
+                                updatePouleGewichtsStyling(naarPouleCard, data.naar_poule.is_gewicht_problematisch);
+                            }
+                            updateGewichtsrangeBox(data.naar_poule.id, data.naar_poule.is_gewicht_problematisch);
+                            updateProblematischePoules(data.naar_poule, data.naar_poule.aantal_judokas > 0 && data.naar_poule.aantal_judokas < 3);
+                            updateTeVeelJudokas(data.naar_poule, data.naar_poule.aantal_judokas >= 6);
+                        }
                     } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen'); window.location.reload(); }
                 }
-
-                // Van poule naar wachtruimte
-                if (!vanWachtruimte && naarWachtruimte && vanPouleId) {
-                    updatePouleFromDOM(vanPouleId);
-
-                    // Update wachtruimte count
-                    const countEl = evt.to.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
-                    if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
-
-                    try {
-                        const response = await fetch(naarWachtruimteUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                            body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
-                        });
-                        const data = await response.json();
-                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
-                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen naar wachtruimte'); window.location.reload(); }
-                }
+                // Note: "van poule naar wachtruimte" wordt afgehandeld door sortable-poule handler (onEnd triggert op FROM container)
             }
         });
     });
@@ -1055,12 +1194,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Haal leeftijdsdeel uit titel (verwijder oude kg range)
         const titel = pouleData.titel || '';
-        const titelZonderKg = titel.replace(/\s*[\d.]+-[\d.]+kg\s*$/, '');
+        const titelZonderKg = titel.replace(/\s*\([\d.]+-[\d.]+kg\)\s*$/, '').replace(/\s*[\d.]+-[\d.]+kg\s*$/, '');
 
-        // Bouw nieuwe titel met actuele range
-        const minKg = pouleData.gewichts_range.min_kg.toFixed(1);
-        const maxKg = pouleData.gewichts_range.max_kg.toFixed(1);
-        const nieuweTitel = `#${pouleCard.dataset.pouleNummer} ${titelZonderKg} (${minKg}-${maxKg}kg)`;
+        // Bouw nieuwe titel met actuele range (null-safe)
+        const minKg = pouleData.gewichts_range.min_kg;
+        const maxKg = pouleData.gewichts_range.max_kg;
+
+        let nieuweTitel = `#${pouleCard.dataset.pouleNummer} ${titelZonderKg}`;
+        if (minKg !== null && maxKg !== null) {
+            nieuweTitel += ` (${parseFloat(minKg).toFixed(1)}-${parseFloat(maxKg).toFixed(1)}kg)`;
+        }
 
         titelEl.textContent = nieuweTitel;
         console.log('Updated poule titel:', nieuweTitel);
@@ -1154,6 +1297,78 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (remaining === 0 && container) {
                         container.innerHTML = '';
                     }
+                }
+            }
+        }
+    }
+
+    // Update "te veel judoka's" lijst (>= 6)
+    function updateTeVeelJudokas(pouleData, isTeVeel) {
+        const container = document.getElementById('problematische-poules-container');
+        const linksContainer = document.getElementById('teveel-links');
+        const countEl = document.getElementById('problematische-count');
+        const pouleId = String(pouleData.id);
+        const existingLink = document.querySelector(`[data-teveel-poule="${pouleId}"]`);
+        const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleId}"]`);
+
+        if (isTeVeel) {
+            if (existingLink) {
+                // Update count in existing link
+                const linkCount = existingLink.querySelector(`[data-teveel-count="${pouleData.id}"]`);
+                if (linkCount) linkCount.textContent = pouleData.aantal_judokas;
+            } else {
+                // Add new link - maak container als die niet bestaat
+                let targetContainer = linksContainer;
+                if (!targetContainer) {
+                    // Maak "te veel" sectie aan
+                    const problemSection = container.querySelector('.bg-red-50');
+                    if (problemSection) {
+                        const newSection = document.createElement('div');
+                        newSection.innerHTML = `
+                            <p class="text-purple-700 text-sm mb-2">Te veel judoka's (&ge; 6) - splitsen:</p>
+                            <div id="teveel-links" class="flex flex-wrap gap-2 mb-3"></div>
+                        `;
+                        // Voeg toe na "te weinig" sectie of aan begin
+                        const teWeinigSection = problemSection.querySelector('#problematische-links');
+                        if (teWeinigSection) {
+                            teWeinigSection.parentNode.insertBefore(newSection.firstElementChild, teWeinigSection.nextSibling);
+                            teWeinigSection.parentNode.insertBefore(newSection.lastElementChild, teWeinigSection.nextSibling.nextSibling);
+                        } else {
+                            const heading = problemSection.querySelector('h3');
+                            if (heading) heading.insertAdjacentElement('afterend', newSection);
+                        }
+                        targetContainer = document.getElementById('teveel-links');
+                    }
+                }
+
+                if (targetContainer) {
+                    const nummer = pouleCard?.dataset.pouleNummer || '';
+                    const leeftijd = pouleCard?.dataset.pouleLeeftijdsklasse || '';
+                    const gewicht = pouleCard?.dataset.pouleGewichtsklasse || '';
+
+                    const newLink = document.createElement('a');
+                    newLink.href = `#poule-${pouleData.id}`;
+                    newLink.onclick = (e) => scrollToPoule(e, pouleData.id);
+                    newLink.dataset.teveelPoule = pouleData.id;
+                    newLink.className = 'inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 cursor-pointer transition-colors';
+                    newLink.innerHTML = `#${nummer} ${leeftijd} ${gewicht} (<span data-teveel-count="${pouleData.id}">${pouleData.aantal_judokas}</span>)`;
+                    targetContainer.appendChild(newLink);
+
+                    if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+                    container.classList.remove('hidden');
+                }
+            }
+        } else {
+            // Niet meer te veel - verwijder uit lijst
+            if (existingLink) {
+                existingLink.remove();
+                if (countEl) countEl.textContent = Math.max(0, parseInt(countEl.textContent || 0) - 1);
+
+                // Verwijder sectie als leeg
+                const updatedContainer = document.getElementById('teveel-links');
+                if (updatedContainer && updatedContainer.children.length === 0) {
+                    updatedContainer.previousElementSibling?.remove(); // Label
+                    updatedContainer.remove();
                 }
             }
         }
@@ -1253,7 +1468,7 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
 
         let html = `<div class="mb-3 pb-2 border-b">
             <span class="font-bold">${data.judoka.naam}</span>
-            <span class="text-gray-500">(${data.judoka.gewicht}kg, ${data.judoka.leeftijd}j)</span>
+            <span class="text-gray-500">(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)</span>
         </div>`;
 
         const blokColors = {
