@@ -255,13 +255,24 @@ class PouleController extends Controller
     /**
      * Zoek mogelijke matches voor een judoka (orphan handling)
      * Toont alleen relevante poules en ook poules uit volgende (oudere) categorie
+     *
+     * Query params:
+     * - wedstrijddag=1: Filter op blok beschikbaarheid (weging status)
+     * - from_poule_id: Huidige poule ID (voor wedstrijddag mode)
      */
-    public function zoekMatch(Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function zoekMatch(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $huidigJaar = now()->year;
+        $isWedstrijddag = $request->boolean('wedstrijddag', false);
+        $fromPouleId = $request->input('from_poule_id');
 
         // Vind huidige poule van judoka
-        $huidigePoule = $judoka->poules()->where('toernooi_id', $toernooi->id)->first();
+        $huidigePoule = $fromPouleId
+            ? Poule::find($fromPouleId)
+            : $judoka->poules()->where('toernooi_id', $toernooi->id)->first();
+
+        // Bepaal huidige blok voor wedstrijddag filtering
+        $huidigeBlok = $huidigePoule?->blok;
 
         // Haal config parameters op
         $config = $toernooi->getAlleGewichtsklassen();
@@ -279,11 +290,14 @@ class PouleController extends Controller
         $huidigeLeeftijdsklasse = $huidigePoule?->leeftijdsklasse;
 
         // Haal ALLE poules op - we filteren later op basis van leeftijd/gewicht relevantie
-        $poulesQuery = $toernooi->poules()->with('judokas');
+        $poulesQuery = $toernooi->poules()->with(['judokas', 'blok']);
         if ($huidigePoule) {
             $poulesQuery->where('id', '!=', $huidigePoule->id);
         }
         $poules = $poulesQuery->get();
+
+        // Laad alle blokken voor wedstrijddag filtering
+        $blokken = $isWedstrijddag ? $toernooi->blokken()->orderBy('nummer')->get()->keyBy('id') : collect();
 
         $matches = [];
 
@@ -292,6 +306,26 @@ class PouleController extends Controller
 
             if ($judokasInPoule->isEmpty()) {
                 continue;
+            }
+
+            // Wedstrijddag: check blok beschikbaarheid
+            $blokStatus = null;
+            if ($isWedstrijddag && $poule->blok_id) {
+                $pouleBlok = $blokken->get($poule->blok_id);
+
+                if ($pouleBlok && $huidigeBlok) {
+                    if ($pouleBlok->nummer < $huidigeBlok->nummer) {
+                        // Eerder blok: alleen als weging nog open is
+                        if ($pouleBlok->weging_gesloten) {
+                            continue; // Skip - judoka kan niet meer wegen
+                        }
+                        $blokStatus = 'earlier_open';
+                    } elseif ($pouleBlok->nummer === $huidigeBlok->nummer) {
+                        $blokStatus = 'same';
+                    } else {
+                        $blokStatus = 'later';
+                    }
+                }
             }
 
             // Check geslacht: M/V moet matchen
@@ -336,7 +370,7 @@ class PouleController extends Controller
                 $status = ($kgOverschrijding <= 2 && $lftOverschrijding <= 1) ? 'warning' : 'error';
             }
 
-            $matches[] = [
+            $match = [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
                 'poule_titel' => $poule->titel ?? "Poule #{$poule->nummer}",
@@ -356,14 +390,31 @@ class PouleController extends Controller
                 'lft_overschrijding' => $lftOverschrijding,
                 'status' => $status,
             ];
+
+            // Voeg blok info toe voor wedstrijddag
+            if ($isWedstrijddag && $poule->blok) {
+                $match['blok_nummer'] = $poule->blok->nummer;
+                $match['blok_naam'] = $poule->blok->naam;
+                $match['blok_status'] = $blokStatus; // same, later, earlier_open
+            }
+
+            $matches[] = $match;
         }
 
         // Split in eigen categorie en andere categorie
         $eigenCategorie = array_filter($matches, fn($m) => !$m['categorie_overschrijding']);
         $andereCategorie = array_filter($matches, fn($m) => $m['categorie_overschrijding']);
 
-        // Sorteer beide op status en kg overschrijding
-        $sortFn = function ($a, $b) {
+        // Sorteer op status en kg overschrijding
+        // Voor wedstrijddag: ook op blok (same > later > earlier_open)
+        $sortFn = function ($a, $b) use ($isWedstrijddag) {
+            // Wedstrijddag: sorteer eerst op blok status
+            if ($isWedstrijddag) {
+                $blokOrder = ['same' => 0, 'later' => 1, 'earlier_open' => 2];
+                $blokCmp = ($blokOrder[$a['blok_status'] ?? ''] ?? 3) <=> ($blokOrder[$b['blok_status'] ?? ''] ?? 3);
+                if ($blokCmp !== 0) return $blokCmp;
+            }
+
             $statusOrder = ['ok' => 0, 'warning' => 1, 'error' => 2];
             $statusCmp = ($statusOrder[$a['status']] ?? 3) <=> ($statusOrder[$b['status']] ?? 3);
             if ($statusCmp !== 0) return $statusCmp;
@@ -380,7 +431,7 @@ class PouleController extends Controller
         // Combineer: eigen categorie eerst, dan andere
         $matches = array_merge($eigenCategorie, $andereCategorie);
 
-        return response()->json([
+        $response = [
             'success' => true,
             'judoka' => [
                 'id' => $judoka->id,
@@ -393,7 +444,18 @@ class PouleController extends Controller
             'max_kg_verschil' => $maxKgVerschil,
             'max_lft_verschil' => $maxLftVerschil,
             'matches' => $matches,
-        ]);
+        ];
+
+        // Voeg wedstrijddag info toe
+        if ($isWedstrijddag && $huidigeBlok) {
+            $response['wedstrijddag'] = true;
+            $response['huidige_blok'] = [
+                'nummer' => $huidigeBlok->nummer,
+                'naam' => $huidigeBlok->naam,
+            ];
+        }
+
+        return response()->json($response);
     }
 
     /**

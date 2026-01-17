@@ -111,7 +111,21 @@ class WedstrijddagController extends Controller
             ->map(fn() => true)
             ->toArray();
 
-        return view('pages.wedstrijddag.poules', compact('toernooi', 'blokken', 'sentToZaaloverzicht'));
+        // Detecteer problematische poules na weging (gewichtsrange > max_kg_verschil)
+        // Dit is alleen relevant voor dynamische categorieën waar weging gesloten is
+        $problematischeGewichtsPoules = collect();
+        foreach ($toernooi->blokken()->where('weging_gesloten', true)->get() as $blok) {
+            foreach ($blok->getProblematischePoules() as $poule) {
+                $problematischeGewichtsPoules->put($poule->id, $poule->probleem);
+            }
+        }
+
+        return view('pages.wedstrijddag.poules', compact(
+            'toernooi',
+            'blokken',
+            'sentToZaaloverzicht',
+            'problematischeGewichtsPoules'
+        ));
     }
 
     public function verplaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
@@ -126,15 +140,34 @@ class WedstrijddagController extends Controller
         ]);
 
         $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $nieuwePoule = Poule::findOrFail($validated['poule_id']);
+        $nieuwePoule = Poule::with('blok')->findOrFail($validated['poule_id']);
         $oudePouleData = null;
+
+        // Validatie: bij verplaatsen naar eerder blok, check of weging nog open is
+        if (!empty($validated['from_poule_id'])) {
+            $oudePoule = Poule::with('blok')->findOrFail($validated['from_poule_id']);
+
+            if ($oudePoule->blok && $nieuwePoule->blok) {
+                if ($nieuwePoule->blok->nummer < $oudePoule->blok->nummer) {
+                    // Verplaatsen naar eerder blok - check weging status
+                    if ($nieuwePoule->blok->weging_gesloten) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => "Kan niet verplaatsen naar {$nieuwePoule->blok->naam}: weging is al gesloten"
+                        ], 422);
+                    }
+                }
+            }
+        }
 
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
         // Remove from old poule(s)
         if (!empty($validated['from_poule_id'])) {
-            // From specific poule (drag within poules)
-            $oudePoule = Poule::findOrFail($validated['from_poule_id']);
+            // Gebruik de eerder geladen oudePoule (met blok) of laad opnieuw
+            if (!isset($oudePoule)) {
+                $oudePoule = Poule::findOrFail($validated['from_poule_id']);
+            }
             $oudePoule->judokas()->detach($judoka->id);
             $oudePoule->updateStatistieken();
             $oudePoule->load('judokas'); // Refresh judokas collection
