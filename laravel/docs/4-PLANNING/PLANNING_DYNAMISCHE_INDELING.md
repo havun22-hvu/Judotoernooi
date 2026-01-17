@@ -334,11 +334,38 @@ Titels worden automatisch samengesteld:
 
 | Veld | Inhoud | Voorbeeld |
 |------|--------|-----------|
-| `leeftijdsklasse` | Label uit config | "Mini's", "U11 Heren" |
-| `categorie_key` | Config key | "minis", "u11_h" |
+| `leeftijdsklasse` | Label uit config (weergave) | "Mini's", "U11 Heren" |
+| `categorie_key` | Config array key (lookup) | "minis", "u11_h" |
 | `sort_categorie` | Volgorde (0, 1, 2...) | 0, 1, 2 |
 | `sort_gewicht` | Gewicht in grammen | 30500 (= 30.5kg) |
 | `sort_band` | Band niveau (1-7) | 3 (= oranje) |
+
+### poules tabel
+
+| Veld | Inhoud | Voorbeeld |
+|------|--------|-----------|
+| `leeftijdsklasse` | Label (weergave) | "U7", "U11 Jongens" |
+| `gewichtsklasse` | Klasse of range | "-24" of "24-27kg" |
+| `categorie_key` | Config array key (lookup) | "u7", "u11_h" |
+
+### categorie_key uitleg
+
+De `categorie_key` is de directe link naar de gewichtsklassen config:
+
+```php
+// Config in toernooien.gewichtsklassen
+'u7' => ['label' => 'U7', 'max_leeftijd' => 6, ...],
+'u11_h' => ['label' => 'U11 Jongens', 'max_leeftijd' => 10, ...],
+
+// Lookup via CategorieClassifier
+$config = $classifier->getConfigVoorPoule($poule);
+// Gebruikt $poule->categorie_key om juiste config te vinden
+```
+
+**Belangrijk:**
+- `leeftijdsklasse` = label, alleen voor weergave
+- `categorie_key` = array key, voor config lookup
+- Nooit zoeken op label! Labels kunnen wijzigen.
 
 ### Band Niveaus
 
@@ -356,10 +383,67 @@ Titels worden automatisch samengesteld:
 
 ## Services
 
+### CategorieClassifier
+
+Dedicated class voor categorie-herkenning op basis van harde criteria.
+
+**Waarom een aparte class?**
+- Classificatielogica op één plek (niet verspreid over services)
+- Makkelijk te testen (unit tests)
+- Duidelijke verantwoordelijkheid
+
+**Harde criteria voor categorie-identificatie:**
+
+| Criterium | Niveau | Voorbeeld |
+|-----------|--------|-----------|
+| `max_leeftijd` | Categorie | U7 = max 6 jaar |
+| `geslacht` | Categorie | M / V / gemengd |
+| `band_filter` | Categorie | tm_oranje, vanaf_groen |
+| `gewichtsklassen` | Categorie (bij vast) | [-21, -24, -27, ...] |
+
+**NIET voor categorie-identificatie (poule-niveau):**
+
+| Criterium | Niveau | Gebruik |
+|-----------|--------|---------|
+| `max_kg_verschil` | Poule | Verdeling binnen categorie |
+| `max_leeftijd_verschil` | Poule | Verdeling binnen categorie |
+
+**Interface:**
+
+```php
+class CategorieClassifier
+{
+    public function __construct(array $gewichtsklassenConfig);
+
+    // Classificeer judoka naar categorie
+    public function classificeer(Judoka $judoka): ?CategorieResultaat;
+
+    // Haal config op voor een poule (op basis van opgeslagen categorie_key)
+    public function getConfigVoorPoule(Poule $poule): ?array;
+
+    // Check of categorie dynamisch is (max_kg_verschil > 0)
+    public function isDynamisch(string $categorieKey): bool;
+}
+```
+
+**CategorieResultaat:**
+
+```php
+[
+    'key' => 'u7',                    // Config array key
+    'label' => 'U7',                  // Weergavenaam
+    'sortCategorie' => 0,             // Sorteervolgorde
+    'gewichtsklasse' => '-24',        // Bij vast, anders null
+    'isDynamisch' => true,            // max_kg_verschil > 0
+]
+```
+
+**Locatie:** `app/Services/CategorieClassifier.php`
+
 ### PouleIndelingService
 
 Hoofdservice voor poule-indeling:
-- `herberkenKlassen()` - Categoriseert judoka's opnieuw
+- `herberkenKlassen()` - Categoriseert judoka's opnieuw (gebruikt CategorieClassifier)
 - `genereerPoules()` - Maakt poules aan
 - `maakPouleTitel()` - Genereert titel
 
