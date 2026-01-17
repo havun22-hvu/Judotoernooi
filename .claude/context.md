@@ -359,11 +359,16 @@ php artisan view:cache
   - **Commit:** `16f4372` - "refactor: Replace greedy algorithm with sliding window"
 
 - **Bug fix: 1 poule per keer maken**
-  - **Probleem:** Noa (16.1kg) stond in poule 2 i.p.v. poule 1
-  - **Oorzaak:** Solver maakte alle poules in gewichtsrange tegelijk, checkte niet of jongste leeftijd "op" was
-  - **Fix:** Na elke poule checken of jongste leeftijd "op" is → zo ja, nieuwe leeftijdsgroep
-  - **Commit:** `d70ad3e` - "fix: Make 1 poule at a time in sliding window algorithm"
-  - **Docs:** `PLANNING_DYNAMISCHE_INDELING.md` bijgewerkt
+  - **Probleem:** Solver maakte alle poules in gewichtsrange tegelijk
+  - **Fix:** Na elke poule checken of jongste leeftijd "op" is
+  - **Commit:** `d70ad3e`
+
+- **Bug fix: Gebruik ingeschreven gewicht voor voorbereiding**
+  - **Probleem:** Noa (16.1kg ingeschreven) stond verkeerd omdat solver gewicht_gewogen (19.3kg) gebruikte
+  - **Oorzaak:** `getEffectiefGewicht()` gaf voorrang aan `gewicht_gewogen`
+  - **Fix:** Voorbereiding gebruikt nu alleen `gewicht` (ingeschreven)
+  - **Commit:** `a851a74`
+  - **Docs:** Zie GEBRUIKERSHANDLEIDING.md "Gewicht Gebruik" tabel
 
 ### Openstaande items:
 - [ ] Lokaal testen met echte data
