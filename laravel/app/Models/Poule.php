@@ -46,6 +46,11 @@ class Poule extends Model
         return $this->type === 'voorronde' || $this->type === null;
     }
 
+    public function isWachtpoule(): bool
+    {
+        return $this->type === 'wachtpoule';
+    }
+
     /**
      * Get the voorrondepoules that feed into this kruisfinale
      */

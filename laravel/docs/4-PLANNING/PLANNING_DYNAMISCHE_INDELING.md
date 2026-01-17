@@ -773,12 +773,15 @@ Response:
 │                                                                     │
 │ OPLOSSING: Verplaats lichtste OF zwaarste judoka via Zoek Match     │
 │                                                                     │
-│ DOELPOULES: Alle blokken waar weging nog OPEN is                    │
-│             + zelfde blok                                           │
-│             + alle volgende blokken                                 │
+│ DOELPOULES:                                                         │
+│   • Zelfde blok → direct in poule plaatsen                          │
+│   • Ander blok (weging open) → naar WACHTPOULE van dat blok         │
+│   • Ander blok (weging gesloten) → pas dan in echte poule           │
+│                                                                     │
+│ WACHTPOULE: Parkeerplaats tot gewichten van doelblok bekend zijn    │
+│             Judoka hoeft NIET opnieuw te wegen (gewicht al bekend)  │
 │                                                                     │
 │ NA VERPLAATSEN: Weegkaart + publieke pagina's updaten automatisch   │
-│                 (alles is live uit database)                        │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -819,23 +822,32 @@ Response:
 └────────┬─────────┘
          ▼
 ┌──────────────────┐
-│ Filter poules:   │
+│ Filter opties:   │
 │ • Zelfde blok    │
-│ • Volgende blok  │
-│ • Vorige blokken │
-│   (weging open!) │
+│ • Andere blokken │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐     Zelfde      ┌──────────────────┐
+│ Org kiest doel   │────────────────►│ Direct in poule  │
+│                  │                 │ plaatsen         │
+└────────┬─────────┘                 └──────────────────┘
+         │ Ander blok
+         ▼
+┌──────────────────┐
+│ Naar WACHTPOULE  │
+│ van doelblok     │
+│ (paarse kleur)   │
 └────────┬─────────┘
          ▼
 ┌──────────────────┐
-│ Org kiest doel-  │
-│ poule → verplaats│
+│ Wacht tot weging │
+│ doelblok sluit   │
 └────────┬─────────┘
          ▼
 ┌──────────────────┐
-│ Data update:     │
-│ • Weegkaart      │
-│ • Publieke pages │
-│ (automatisch)    │
+│ Org plaatst in   │
+│ echte poule      │
+│ (gewichten known)│
 └──────────────────┘
 ```
 
@@ -875,14 +887,49 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 
 **Blok beperkingen voor doelpoule:**
 
-| Blok situatie | Beschikbaar? | Reden |
-|---------------|--------------|-------|
-| **Zelfde blok** | ✅ Ja (voorkeur) | Ideaal, zelfde tijdslot |
-| **Volgende blokken** | ✅ Ja | Acceptabel, later op de dag |
-| **Eerdere blokken, weging open** | ✅ Ja | Judoka kan nog wegen in dat blok |
-| **Eerdere blokken, weging gesloten** | ❌ Nee | Judoka kan niet meer wegen |
+| Blok situatie | Actie | Reden |
+|---------------|-------|-------|
+| **Zelfde blok** | Direct in poule | Gewichten al bekend |
+| **Ander blok (weging open)** | Naar wachtpoule | Gewichten nog niet bekend |
+| **Ander blok (weging gesloten)** | Direct in poule | Gewichten al bekend |
 
-**Check:** Per blok `weging_gesloten` bekijken. Blok 1, 2, 3... kunnen allemaal beschikbaar zijn zolang weging daar nog open is.
+### Wachtpoule Concept
+
+**Probleem:** Bij verplaatsen naar ander blok (weging nog open) kennen we de gewichten van dat blok nog niet. We kunnen dus niet bepalen welke poule geschikt is.
+
+**Oplossing:** Wachtpoule per blok
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ WACHTPOULE                                                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ WAT:    Tijdelijke parkeerplaats voor judoka's uit ander blok    │
+│                                                                   │
+│ WANNEER: Judoka verplaatst van blok X naar blok Y                │
+│          én weging blok Y nog niet gesloten                       │
+│                                                                   │
+│ WAAROM:  Gewichten blok Y nog niet bekend                         │
+│          → kunnen geen goede poule-match maken                    │
+│                                                                   │
+│ OPMERKING: Judoka hoeft NIET opnieuw te wegen!                   │
+│            gewicht_gewogen is al bekend uit origineel blok        │
+│                                                                   │
+│ FLOW:    1. Blok 2 weging sluit → probleem gedetecteerd          │
+│          2. Judoka naar wachtpoule Blok 3                         │
+│          3. Blok 3 weging sluit → gewichten bekend                │
+│          4. Org plaatst judoka in geschikte poule                 │
+│                                                                   │
+│ KLEUR:   Paars (onderscheid van normale poules/wachtruimte)      │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Technisch:**
+- Wachtpoule is een speciale Poule met `type = 'wachtpoule'`
+- Eén wachtpoule per blok (automatisch aangemaakt indien nodig)
+- Toont in UI met paarse achtergrond
+- Na sluiten weging: toon "Te plaatsen" indicator
 
 ### UI: Problematische Poules na Weging
 
@@ -952,26 +999,33 @@ Als geen geschikte match:
 
 ### Implementatie Stappen
 
-1. **Detectie problematische poules**
+1. **Detectie problematische poules** ✅
    - Na `sluitWeging()`: check alle poules in blok
    - Bereken range op basis van gewogen gewichten
    - Markeer poules waar range > max_kg_verschil
 
-2. **UI aanpassing Wedstrijddag Poules**
+2. **UI aanpassing Wedstrijddag Poules** ✅
    - Toon problematische poules met waarschuwing
    - Zoek Match knop bij lichtste/zwaarste judoka
    - Blok status indicator
 
-3. **Zoek Match uitbreiden**
+3. **Zoek Match uitbreiden** ✅
    - Parameter: `wedstrijddag=true` voor extra blok-filtering
    - Groepeer resultaten per blok
    - Check blok status (gestart/weging open/gesloten)
 
-4. **Validatie bij verplaatsen**
-   - Check of doelblok nog beschikbaar is (weging niet gesloten)
-   - Waarschuwing als naar ander blok
+4. **Validatie bij verplaatsen** ✅
+   - Check of doelblok beschikbaar is
+   - Blokkeer verplaatsen naar eerder blok met gesloten weging
 
-5. **Data updates na verplaatsen**
+5. **Wachtpoule per blok** 🚧 TODO
+   - Nieuwe poule type: `type = 'wachtpoule'`
+   - Automatisch aanmaken bij verplaatsen naar ander blok (weging open)
+   - Paarse kleur in UI
+   - Na sluiten weging: toon "Te plaatsen" lijst
+   - Zoek Match vanuit wachtpoule
+
+6. **Data updates na verplaatsen** ✅
    - **Weegkaarten:** Dynamisch, blok/mat info update automatisch
    - **Publieke pagina's:** Deelnemer zoeken, poule overzichten, etc. tonen actuele data
    - **QR-code:** Blijft zelfde (gebaseerd op judoka ID, niet poule)
