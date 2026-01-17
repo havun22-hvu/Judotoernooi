@@ -347,37 +347,35 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 15 januari 2026 (2e sessie)
+## Laatste Sessie: 17 januari 2026
 
 ### Wat is gedaan:
-- **KRITIEKE BUG GEFIXED: Classificatie fout**
-  - **Probleem:** 6-jarigen werden bij "Heren" ingedeeld i.p.v. "Jeugd"
-  - **Oorzaak:** Auto-detect geslacht op basis van key suffix (`_d`, `_h`) overschreef expliciet ingestelde `geslacht=gemengd`
-  - **Oplossing:** Nu wordt gecheckt of geslacht EXPLICIET op 'gemengd' is gezet voordat auto-detect activeert
-  - **Fix in:** `PouleIndelingService::classificeerJudoka()` (regel 710-723)
-  - **Commit:** `a174be1` - "fix: Don't auto-detect gender when geslacht is explicitly 'gemengd'"
-  - **352 judoka's** zijn herclassificeerd van Heren naar Jeugd
-
-- **Leeftijd range bug onderzocht**
-  - Na onderzoek blijken ALLE poules WEL een leeftijd range in de titel te hebben
-  - Bug is niet meer te reproduceren - mogelijk al opgelost in eerdere sessie
+- **Python Solver herschreven: Sliding Window algoritme**
+  - **Oud:** Greedy++ (sorteer alles op leeftijd→gewicht→band, loop door lijst)
+  - **Nieuw:** Sliding Window met 3 niveaus:
+    1. Leeftijdsgroep (jongste + max_lft_verschil)
+    2. Gewichtsrange (lichtste + max_kg_verschil)
+    3. Band sortering (laagste eerst: wit→zwart)
+  - **Overblijvers** gaan mee naar volgende leeftijdsgroep (indien binnen range)
+  - **Orphan** ontstaat alleen als judoka nergens bij past EN niet mee kan naar volgende groep
+  - **Commit:** `16f4372` - "refactor: Replace greedy algorithm with sliding window"
+  - **Docs:** `PLANNING_DYNAMISCHE_INDELING.md` bijgewerkt
 
 ### Openstaande items:
+- [ ] Lokaal testen met echte data
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
-- **Classificatie werkt nu correct:**
-  - Categorieën worden gesorteerd op `max_leeftijd` (jong→oud)
-  - Eerste match wint
-  - Auto-detect geslacht alleen bij LEGE geslacht, niet bij expliciet 'gemengd'
+- **Python Solver (scripts/poule_solver.py):**
+  - Input: JSON met judoka's van 1 categorie + config
+  - Output: JSON met poules
+  - Sliding window: leeftijd → gewicht → band
 
-- **Aanwezigheid logica:**
-  - Gewogen (`gewicht_gewogen` is ingevuld) = aanwezig
-  - Niet gewogen na sluiting weegtijd = afwezig
-  - Wachtruimte filtert NIET meer op `aanwezigheid` veld
+- **CategorieClassifier (app/Services/CategorieClassifier.php):**
+  - Classificeert judoka's in categorieën op basis van harde criteria
+  - Lookup via categorie_key, niet op label
 
-- **Band format in database:** `"wit (6 kyu)"` - getBandNiveau() moet dit parsen
-- **groupBy() gotcha:** Laravel Collection groupBy() bewaart de volgorde NIET binnen groepen
+- **Band format in database:** `"wit (6 kyu)"` - BandHelper::getSortNiveau() parst dit
 - **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken
