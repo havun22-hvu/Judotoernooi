@@ -283,6 +283,19 @@ Bij variabele categorieën:
 - Preview van waar de knip valt
 - Automatisch gegenereerde bloklabels
 
+### Chip Weergave (variabele categorieën)
+
+Format: `{label 1 letter} {min_lft}j {min_kg}kg ({wedstrijden}w)`
+
+Voorbeeld: `M 9j 22kg (10w)`
+
+- **Label**: Eerste letter van leeftijdsklasse prefix (M, V, B voor Beginners, etc.)
+- **Min leeftijd**: Jongste judoka in de poule
+- **Min gewicht**: Lichtste judoka in de poule
+- **Wedstrijden**: Aantal wedstrijden in de poule
+
+Dit maakt de sortering visueel controleerbaar: van jong naar oud, van licht naar zwaar.
+
 ---
 
 ## Database
