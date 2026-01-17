@@ -362,7 +362,7 @@ class WedstrijddagController extends Controller
     }
 
     /**
-     * Verwijder judoka definitief uit poule (voor doorgestreepte judoka's)
+     * Verwijder judoka definitief uit poule (voor afwezige/verplaatste judoka's)
      */
     public function verwijderUitPoule(Request $request, Toernooi $toernooi): JsonResponse
     {

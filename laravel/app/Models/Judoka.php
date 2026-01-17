@@ -221,16 +221,7 @@ class Judoka extends Model
     }
 
     /**
-     * Check of judoka doorgestreept moet worden weergegeven
-     * Alleen afwezig wordt doorgestreept (niet afwijkend gewicht)
-     */
-    public function isDoorgestreept(?float $tolerantie = null): bool
-    {
-        return $this->aanwezigheid === 'afwezig';
-    }
-
-    /**
-     * Verwijder judoka uit alle poules als doorgestreept en update statistieken
+     * Verwijder judoka uit alle poules als afwezig en update statistieken
      * Aanroepen bij elke mutatie (weging, aanwezigheid)
      */
     public function verwijderUitPoulesIndienNodig(): void

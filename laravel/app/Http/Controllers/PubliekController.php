@@ -256,7 +256,6 @@ class PubliekController extends Controller
                             'gewicht' => $j->gewicht,
                             'is_favoriet' => in_array($j->id, $judokaIds),
                             'is_afwezig' => $j->aanwezigheid === 'afwezig',
-                            'is_doorgestreept' => $j->moetUitPouleVerwijderd($tolerantie),
                             'is_aan_de_beurt' => in_array($j->id, $huidigeJudokaIds),
                             'is_volgende' => in_array($j->id, $volgendeJudokaIds),
                             'positie' => $j->pivot->positie ?? null,
