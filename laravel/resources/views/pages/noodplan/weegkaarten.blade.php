@@ -78,6 +78,9 @@
             <span>{{ $toernooi->naam }}</span>
             <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
         </div>
+        <div class="text-[9px] text-gray-400 text-right mt-1">
+            Aangemaakt: {{ now()->format('d-m-Y H:i') }}
+        </div>
     </div>
     @endforeach
 </div>
