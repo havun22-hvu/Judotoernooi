@@ -19,6 +19,7 @@ class PouleIndelingService
     private ?Toernooi $toernooi = null;
     private array $gewichtsklassenConfig = [];
     private DynamischeIndelingService $dynamischeIndelingService;
+    private ?CategorieClassifier $classifier = null;
 
     /**
      * Initialize with tournament-specific settings
@@ -33,6 +34,10 @@ class PouleIndelingService
         $this->clubspreiding = $toernooi->clubspreiding ?? true;
         $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+        $this->classifier = new CategorieClassifier(
+            $this->gewichtsklassenConfig,
+            $toernooi->gewicht_tolerantie ?? 0.5
+        );
     }
 
     public function __construct(DynamischeIndelingService $dynamischeIndelingService)
@@ -55,8 +60,12 @@ class PouleIndelingService
     {
         $bijgewerkt = 0;
 
-        // Ensure config is loaded
+        // Ensure config and classifier are loaded
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+        $this->classifier = new CategorieClassifier(
+            $this->gewichtsklassenConfig,
+            $toernooi->gewicht_tolerantie ?? 0.5
+        );
 
         foreach ($toernooi->judokas as $judoka) {
             // Store old values for comparison
@@ -64,8 +73,8 @@ class PouleIndelingService
             $oudeGewichtsklasse = $judoka->gewichtsklasse;
             $oudeSortCategorie = $judoka->sort_categorie;
 
-            // Classify using preset config
-            $classificatie = $this->classificeerJudoka($judoka, $toernooi);
+            // Classify using CategorieClassifier
+            $classificatie = $this->classifier->classificeer($judoka, $toernooi->datum?->year);
 
             // Calculate sort_gewicht (weight in grams for precision)
             $gewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
@@ -82,7 +91,7 @@ class PouleIndelingService
 
                 $judoka->update([
                     'leeftijdsklasse' => $nieuweLeeftijdsklasse,
-                    'categorie_key' => $classificatie['configKey'],
+                    'categorie_key' => $classificatie['key'],
                     'sort_categorie' => $nieuweSortCategorie,
                     'sort_gewicht' => $sortGewicht,
                     'sort_band' => BandHelper::getSortNiveau($judoka->band ?? ''),
@@ -648,185 +657,22 @@ class PouleIndelingService
     }
 
     /**
-     * Classify a judoka into a category based on preset config
-     * Returns array with: configKey, label, sortCategorie, gewichtsklasse
-     */
-    private function classificeerJudoka(Judoka $judoka, Toernooi $toernooi): array
-    {
-        $leeftijd = $judoka->leeftijd ?? ($toernooi->datum?->year ?? date('Y')) - $judoka->geboortejaar;
-        $geslacht = strtoupper($judoka->geslacht ?? '');
-        $bandNiveau = BandHelper::getSortNiveau($judoka->band ?? '');
-        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-
-        // STAP 1: Vind de eerste (laagste) max_leeftijd waar judoka in past
-        // Categorieën zijn gesorteerd op max_leeftijd (jong → oud)
-        $eersteMatchLeeftijd = null;
-        $sortCategorie = 0;
-
-        foreach ($this->gewichtsklassenConfig as $config) {
-            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
-            if ($leeftijd <= $maxLeeftijd) {
-                $eersteMatchLeeftijd = $maxLeeftijd;
-                break;
-            }
-            $sortCategorie++;
-        }
-
-        // Geen leeftijdsmatch → niet gecategoriseerd
-        if ($eersteMatchLeeftijd === null) {
-            return [
-                'configKey' => null,
-                'label' => 'Onbekend',
-                'sortCategorie' => 99,
-                'gewichtsklasse' => null,
-            ];
-        }
-
-        // STAP 2: Check ALLEEN categorieën met deze max_leeftijd
-        // Een 6-jarige in U7 mag NOOIT doorvallen naar U11!
-        $categorieSortIndex = 0;
-        foreach ($this->gewichtsklassenConfig as $key => $config) {
-            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
-
-            // Skip categorieën met andere max_leeftijd
-            if ($maxLeeftijd !== $eersteMatchLeeftijd) {
-                $categorieSortIndex++;
-                continue;
-            }
-
-            $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
-            $label = strtolower($config['label'] ?? '');
-
-            // Normalize legacy values: meisjes -> V, jongens -> M
-            if ($configGeslacht === 'MEISJES') {
-                $configGeslacht = 'V';
-            } elseif ($configGeslacht === 'JONGENS') {
-                $configGeslacht = 'M';
-            }
-
-            // Auto-detect gender from label ONLY if geslacht is not explicitly set
-            $originalGeslacht = strtolower($config['geslacht'] ?? '');
-            $isExplicitGemengd = $originalGeslacht === 'gemengd';
-
-            if ($configGeslacht === 'GEMENGD' && !$isExplicitGemengd) {
-                if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
-                    $configGeslacht = 'V';
-                } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
-                    $configGeslacht = 'M';
-                }
-            }
-
-            // Check geslacht (gemengd matches all)
-            if ($configGeslacht !== 'GEMENGD' && $configGeslacht !== $geslacht) {
-                $categorieSortIndex++;
-                continue;
-            }
-
-            // Check band_filter if set
-            $bandFilter = $config['band_filter'] ?? null;
-            if ($bandFilter && !$this->voldoetAanBandFilter($bandNiveau, $bandFilter)) {
-                $categorieSortIndex++;
-                continue;
-            }
-
-            // Match found! Determine gewichtsklasse
-            $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig(
-                $judoka->gewicht ?? 0,
-                $config,
-                $tolerantie
-            );
-
-            return [
-                'configKey' => $key,
-                'label' => $config['label'] ?? $key,
-                'sortCategorie' => $categorieSortIndex,
-                'gewichtsklasse' => $gewichtsklasse,
-            ];
-        }
-
-        // Geen match binnen de leeftijdscategorie → NIET GECATEGORISEERD
-        // Dit gebeurt als geslacht of band_filter niet past
-        return [
-            'configKey' => null,
-            'label' => 'Onbekend',
-            'sortCategorie' => 99,
-            'gewichtsklasse' => null,
-        ];
-    }
-
-    /**
-     * Check if band niveau matches the band filter
-     * Filter format: "tm_oranje" (t/m oranje) or "vanaf_groen" (vanaf groen)
-     */
-    private function voldoetAanBandFilter(int $bandNiveau, string $filter): bool
-    {
-        // Parse filter: "tm_oranje", "vanaf_groen", etc.
-        if (str_starts_with($filter, 'tm_') || str_starts_with($filter, 't/m ')) {
-            $band = str_replace(['tm_', 't/m '], '', $filter);
-            $maxNiveau = BandHelper::getSortNiveau($band);
-            return $bandNiveau <= $maxNiveau;
-        }
-
-        if (str_starts_with($filter, 'vanaf_') || str_starts_with($filter, 'vanaf ')) {
-            $band = str_replace(['vanaf_', 'vanaf '], '', $filter);
-            $minNiveau = BandHelper::getSortNiveau($band);
-            return $bandNiveau >= $minNiveau;
-        }
-
-        // Unknown filter format, allow all
-        return true;
-    }
-
-    /**
-     * Determine gewichtsklasse from config
-     * Returns null for dynamic categories (max_kg_verschil > 0)
-     */
-    private function bepaalGewichtsklasseUitConfig(float $gewicht, array $config, float $tolerantie = 0.5): ?string
-    {
-        // Dynamic category - no fixed weight classes
-        $maxKg = $config['max_kg_verschil'] ?? 0;
-        if ($maxKg > 0) {
-            return null;
-        }
-
-        // Fixed weight classes
-        $gewichten = $config['gewichten'] ?? [];
-        if (empty($gewichten)) {
-            return null;
-        }
-
-        foreach ($gewichten as $klasse) {
-            // Parse klasse: "-30" = max 30kg, "+30" = min 30kg
-            $klasseStr = (string) $klasse;
-
-            if (str_starts_with($klasseStr, '+')) {
-                // Plus category (minimum weight) - always last, catch-all
-                return $klasseStr;
-            }
-
-            // Minus category (maximum weight)
-            $maxGewicht = abs((float) $klasseStr);
-            if ($gewicht <= $maxGewicht + $tolerantie) {
-                return $klasseStr;
-            }
-        }
-
-        // Fallback to highest (+ category if exists)
-        $laatste = end($gewichten);
-        return (string) $laatste;
-    }
-
-    /**
      * Update sort fields for a judoka based on classification
      */
     public function updateSorteerVelden(Judoka $judoka, Toernooi $toernooi): void
     {
-        // Ensure config is loaded
+        // Ensure config and classifier are loaded
         if (empty($this->gewichtsklassenConfig)) {
             $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
         }
+        if (!$this->classifier) {
+            $this->classifier = new CategorieClassifier(
+                $this->gewichtsklassenConfig,
+                $toernooi->gewicht_tolerantie ?? 0.5
+            );
+        }
 
-        $classificatie = $this->classificeerJudoka($judoka, $toernooi);
+        $classificatie = $this->classifier->classificeer($judoka, $toernooi->datum?->year);
 
         // Calculate sort_gewicht (weight in grams for precision)
         $gewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
@@ -834,7 +680,7 @@ class PouleIndelingService
 
         $judoka->update([
             'leeftijdsklasse' => $classificatie['label'],
-            'categorie_key' => $classificatie['configKey'],
+            'categorie_key' => $classificatie['key'],
             'sort_categorie' => $classificatie['sortCategorie'],
             'sort_gewicht' => $sortGewicht,
             'sort_band' => BandHelper::getSortNiveau($judoka->band ?? ''),
