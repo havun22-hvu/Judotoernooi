@@ -341,12 +341,15 @@
                                 $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
                                 $isProblematisch = $aantalActief > 0 && $aantalActief < 3;
 
+                                // Check gewichtsrange probleem (dynamische categorie)
+                                $heeftGewichtsprobleem = $problematischeGewichtsPoules->has($poule->id);
+
                                 // Format afwezigen for tooltip
                                 $verwijderdeTekst = $afwezigeJudokas->map(fn($j) => $j->naam . ' (afwezig)');
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
-                                class="border rounded-lg min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }}"
+                                class="border rounded-lg min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }} {{ $heeftGewichtsprobleem && !$isProblematisch ? 'border-2 border-orange-400' : '' }}"
                                 data-poule-id="{{ $poule->id }}"
                                 data-poule-nummer="{{ $poule->nummer }}"
                                 data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}"
@@ -901,17 +904,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
                         });
                         const data = await response.json();
+                        console.log('naarWachtruimte response:', data);
                         if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
 
                         // Update poule markering op basis van hervalidatie
                         if (data.van_poule) {
                             const pouleCard = document.getElementById('poule-' + data.van_poule.id);
+                            console.log('Updating poule card:', pouleCard, 'is_problematisch:', data.van_poule.is_problematisch);
                             if (pouleCard) {
                                 // Update problematische markering (gewichtsrange)
                                 if (data.van_poule.is_problematisch) {
                                     pouleCard.classList.add('border-2', 'border-orange-400');
                                 } else {
+                                    // Verwijder alle probleem styling
                                     pouleCard.classList.remove('border-2', 'border-orange-400', 'border-red-300');
+                                    console.log('Removed orange/red border from poule', data.van_poule.id);
                                 }
                             }
                             // Update gewichtsrange box bovenaan
