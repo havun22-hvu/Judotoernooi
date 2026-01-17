@@ -124,20 +124,18 @@ def sliding_window(
 
     1. Leeftijdsgroep (jongste + max_lft_verschil)
     2. Gewichtsrange (lichtste + max_kg_verschil)
-    3. Sorteer op band, maak poule(s)
-    4. Herhaal
+    3. Sorteer op band, maak 1 poule (max 5)
+    4. Check of jongste leeftijd "op" is → zo ja, nieuwe leeftijdsgroep
+    5. Herhaal
     """
     if not judokas:
         return []
 
     poules = []
     geplaatst: Set[int] = set()  # IDs van geplaatste judoka's
-    overblijvers: List[Judoka] = []  # Overblijvers die mee kunnen naar volgende lft-groep
 
-    # Bepaal ideale en max poulegrootte
+    # Bepaal ideale poulegrootte
     ideale_grootte = voorkeur[0] if voorkeur else 5
-    max_grootte = max(voorkeur) if voorkeur else 6
-    min_grootte = min(voorkeur) if voorkeur else 3
 
     # Sorteer alle judoka's op leeftijd
     alle_judokas = sorted(judokas, key=lambda j: j.leeftijd)
@@ -145,11 +143,6 @@ def sliding_window(
     while True:
         # Bepaal beschikbare judoka's (niet geplaatst)
         beschikbaar = [j for j in alle_judokas if j.id not in geplaatst]
-
-        # Voeg overblijvers toe (uit vorige leeftijdsgroep)
-        for over in overblijvers:
-            if over.id not in geplaatst and over not in beschikbaar:
-                beschikbaar.append(over)
 
         if not beschikbaar:
             break
@@ -164,24 +157,23 @@ def sliding_window(
         if not lft_groep:
             break
 
-        # Verwerk deze leeftijdsgroep
-        nieuwe_overblijvers = verwerk_leeftijdsgroep(
-            lft_groep, max_kg, voorkeur, ideale_grootte, max_grootte, min_grootte,
-            poules, geplaatst
+        # STAP 2: Maak 1 poule binnen deze leeftijdsgroep
+        poule_gemaakt = maak_een_poule(
+            lft_groep, max_kg, ideale_grootte, poules, geplaatst
         )
 
-        # Bepaal overblijvers voor volgende leeftijdsgroep
-        # Alleen judoka's van de jongste leeftijd die niet geplaatst zijn
-        # kunnen NIET mee naar volgende groep (want buiten range)
-        overblijvers = []
-        for j in lft_groep:
-            if j.id not in geplaatst:
-                # Check of deze judoka mee kan naar volgende leeftijdsgroep
-                # Volgende groep start met leeftijd > jongste_leeftijd
-                # Dus alleen judoka's die passen bij (jongste+1, jongste+1+max_lft)
-                if j.leeftijd > jongste_leeftijd:
-                    overblijvers.append(j)
-                # Judoka's van jongste_leeftijd kunnen niet mee → blijven orphan
+        if not poule_gemaakt:
+            # Geen poule gemaakt (te weinig judoka's of geen match)
+            # Markeer jongste als orphan en ga door
+            jongste_niet_geplaatst = [j for j in lft_groep if j.id not in geplaatst and j.leeftijd == jongste_leeftijd]
+            if jongste_niet_geplaatst:
+                # Maak orphan poule
+                orphan = jongste_niet_geplaatst[0]
+                poules.append(Poule(judokas=[orphan]))
+                geplaatst.add(orphan.id)
+            else:
+                # Geen jongste meer, break om infinite loop te voorkomen
+                break
 
     # Na-verwerking: probeer kleine poules te mergen
     poules = merge_kleine_poules(poules, max_kg, max_lft, voorkeur)
@@ -189,52 +181,58 @@ def sliding_window(
     return poules
 
 
-def verwerk_leeftijdsgroep(
+def maak_een_poule(
     lft_groep: List[Judoka],
     max_kg: float,
-    voorkeur: List[int],
     ideale_grootte: int,
-    max_grootte: int,
-    min_grootte: int,
     poules: List[Poule],
     geplaatst: Set[int]
-) -> List[Judoka]:
+) -> bool:
     """
-    Verwerk één leeftijdsgroep: maak poules op basis van gewichtsranges.
+    Maak 1 poule binnen de leeftijdsgroep.
 
-    Returns: overblijvers die niet geplaatst konden worden
+    1. Sorteer op gewicht
+    2. Bepaal gewichtsrange (lichtste + max_kg)
+    3. Sorteer op band binnen gewichtsrange
+    4. Pak max ideale_grootte judoka's
+    5. Markeer als geplaatst
+
+    Returns: True als poule gemaakt, False als niet mogelijk
     """
-    # Sorteer op gewicht
-    gesorteerd = sorted(lft_groep, key=lambda j: j.gewicht)
+    # Filter op niet-geplaatste judoka's, sorteer op gewicht
+    beschikbaar = sorted([j for j in lft_groep if j.id not in geplaatst], key=lambda j: j.gewicht)
 
-    while True:
-        # Filter op niet-geplaatste judoka's
-        beschikbaar = [j for j in gesorteerd if j.id not in geplaatst]
+    if not beschikbaar:
+        return False
 
-        if not beschikbaar:
-            break
+    # Bepaal gewichtsrange
+    lichtste_gewicht = beschikbaar[0].gewicht
+    max_gewicht = lichtste_gewicht + max_kg
 
-        # STAP 2: Bepaal gewichtsrange
-        lichtste_gewicht = beschikbaar[0].gewicht
-        max_gewicht_range = lichtste_gewicht + max_kg
+    # Judoka's in deze gewichtsrange
+    in_range = [j for j in beschikbaar if j.gewicht <= max_gewicht]
 
-        # Judoka's in deze gewichtsrange
-        gew_groep = [j for j in beschikbaar if j.gewicht <= max_gewicht_range]
+    if not in_range:
+        return False
 
-        if not gew_groep:
-            break
+    # Sorteer op band (laagste eerst)
+    in_range_sorted = sorted(in_range, key=lambda j: j.band)
 
-        # STAP 3: Sorteer op band (laagste eerst) en maak poule(s)
-        gew_groep_sorted = sorted(gew_groep, key=lambda j: j.band)
+    # Pak max ideale_grootte judoka's
+    poule_judokas = in_range_sorted[:ideale_grootte]
 
-        # Maak poules van deze groep
-        maak_poules_van_groep(
-            gew_groep_sorted, voorkeur, ideale_grootte, max_grootte,
-            poules, geplaatst
-        )
+    if not poule_judokas:
+        return False
 
-    # Return overblijvers
-    return [j for j in gesorteerd if j.id not in geplaatst]
+    # Maak poule
+    poule = Poule(judokas=list(poule_judokas))
+    poules.append(poule)
+
+    # Markeer als geplaatst
+    for j in poule_judokas:
+        geplaatst.add(j.id)
+
+    return True
 
 
 def maak_poules_van_groep(
