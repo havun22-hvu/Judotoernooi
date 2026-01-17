@@ -28,8 +28,7 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 5. Blokverdeling → poules krijgen blok toegewezen
 6. **"Verdeel over matten"** → automatische verdeling (organisator kan nog schuiven)
 7. **Zaaloverzicht** → controleer verdeling, pas aan indien nodig
-8. **"Maak weegkaarten"** → voorbereiding geseald, weegkaarten tonen blok + mat
-9. **Resultaat:** Weeglijst, weegkaarten (blok+mat), coachkaarten klaar
+8. **Resultaat:** Weeglijst, weegkaarten (blok+mat), coachkaarten klaar (dynamisch, altijd actueel)
 
 ### Fase 2: Toernooidag
 1. Weging (gewicht registreren per judoka)
@@ -41,8 +40,8 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 7. Poule klaar → spreker voor prijsuitreiking
 
 **Belangrijk:**
-- Matten worden automatisch verdeeld, maar organisator kan schuiven vóór "Maak weegkaarten"
-- Weegkaarten tonen pas mat nummer NA "Maak weegkaarten" (voorbereiding geseald)
+- Matten worden automatisch verdeeld, maar organisator kan altijd schuiven in Zaaloverzicht
+- Weegkaarten zijn dynamisch en tonen altijd actuele blok + mat info
 - Wedstrijdschema's worden PAS gegenereerd bij activatie op toernooidag (chip klikken)
 
 ## Voorbereiding
@@ -79,8 +78,7 @@ Het systeem:
 
 **Let op:**
 - QR-codes worden pas aangemaakt bij "Valideer judoka's" (na einde inschrijving)
-- Weegkaarten tonen blokinfo NA "Verdeel over matten"
-- Weegkaarten tonen mat nummer pas NA "Maak weegkaarten" (voorbereiding geseald)
+- Weegkaarten zijn dynamisch en tonen altijd actuele blok + mat info (zodra toegewezen)
 
 ### Judoka Verwijderen
 
@@ -348,51 +346,23 @@ Na "Verdeel over matten" gaat de organisator naar het **Zaaloverzicht**:
 3. **Balanceren** - Check dat elke mat ongeveer evenveel wedstrijden heeft
 4. **Controleren** - Bekijk de verdeling voor elk blok
 
-**Let op:** Na "Verdeel over matten" zijn poules al toegewezen aan matten. De organisator kan nog schuiven vóór "Maak weegkaarten".
+**Let op:** Poules kunnen altijd verplaatst worden naar andere matten via drag & drop in Zaaloverzicht.
 
-### Voorbereiding Afronden ("Maak weegkaarten")
+### Weegkaarten
 
-Wanneer alle poules op de juiste matten staan:
-
-1. Klik **"Maak weegkaarten"** knop in het Zaaloverzicht
-2. Systeem genereert weegkaarten en coachkaarten met definitieve info
-3. **Voorbereiding is nu "geseald"** - geen wijzigingen meer mogelijk
-4. Knop verdwijnt na uitvoering
-
-**Weegkaart toont (na "Maak weegkaarten"):**
+Weegkaarten zijn **dynamisch** en tonen altijd de actuele stand:
 - Naam en club
 - QR-code (voor scanner bij weging)
-- **Blok nummer** + weegtijden
-- **Mat nummer** (definitief!)
+- **Blok nummer** + weegtijden (zodra toegewezen)
+- **Mat nummer** (zodra toegewezen)
 - Gewichtsklasse, geboortejaar, band, geslacht
 
 **Vereisten voor weegkaarten:**
 1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
 2. Blokverdeling gedaan → blokken toegewezen
-3. "Verdeel over matten" gedaan → matten toegewezen (automatisch, kan aangepast)
-4. "Maak weegkaarten" geklikt → voorbereiding geseald, mat info op weegkaart
+3. "Verdeel over matten" gedaan → matten toegewezen
 
-### Noodknop: Heropen Voorbereiding
-
-**Let op:** Dit is een NOOD-situatie! Alleen gebruiken als het echt noodzakelijk is.
-
-Na "Maak weegkaarten" zijn judoka's, poules en blokken read-only. Als er toch wijzigingen nodig zijn:
-
-1. Ga naar **Instellingen** → **Organisatie**
-2. Klik **"Heropen voorbereiding"** (onderaan, met waarschuwing)
-3. Bevestig met wachtwoord
-4. Voorbereiding is weer bewerkbaar
-
-**Gevolgen van heropenen:**
-- Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!
-- Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden
-- Na wijzigingen: opnieuw "Maak weegkaarten" klikken
-- Oude geprinte weegkaarten zijn dan ONGELDIG
-
-**Wanneer gebruiken:**
-- Judoka verkeerd ingedeeld ontdekt na printen
-- Blok/mat wijziging absoluut noodzakelijk
-- NOOIT voor kleine cosmetische wijzigingen
+**Belangrijk:** Weegkaarten worden NIET als bestanden opgeslagen. Ze worden live gegenereerd bij openen. Wijzigingen in blok/mat zijn direct zichtbaar.
 
 ### Zaaloverzicht
 
@@ -401,10 +371,7 @@ Het Zaaloverzicht toont per blok en mat:
 - Aantal wedstrijden per mat
 - Status van de weging
 
-**UI na "Maak weegkaarten":**
-- Kleine groene indicator naast titel: "✓ Voorbereiding afgerond (datum)"
-- Geen grote banners of herhaalde meldingen (te storend)
-- Status ook zichtbaar op Dashboard
+Sleep poules naar andere matten om te verplaatsen.
 
 ## Toernooidag
 
@@ -428,7 +395,7 @@ Het systeem houdt **twee aparte gewichten** bij per judoka:
 
 | Veld | Wanneer | Verandert |
 |------|---------|-----------|
-| `gewicht` | Ingeschreven gewicht (voorbereiding) | NOOIT na "Maak weegkaarten" |
+| `gewicht` | Ingeschreven gewicht (voorbereiding) | Alleen bij import/handmatige wijziging |
 | `gewicht_gewogen` | Gemeten gewicht (wedstrijddag) | Bij elke weging |
 
 **Waar wordt welk gewicht getoond?**
