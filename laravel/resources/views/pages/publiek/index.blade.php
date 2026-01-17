@@ -698,8 +698,7 @@
                                                  'bg-yellow-100 border-l-4 border-yellow-400': judoka.id === activeFavoriet && judoka.is_volgende && !judoka.is_aan_de_beurt,
                                                  'bg-green-50 border-l-4 border-green-300': judoka.id === activeFavoriet && !judoka.is_volgende && !judoka.is_aan_de_beurt,
                                                  'bg-green-50': judoka.is_aan_de_beurt && judoka.id !== activeFavoriet,
-                                                 'bg-yellow-50': judoka.is_volgende && !judoka.is_aan_de_beurt && judoka.id !== activeFavoriet,
-                                                 'opacity-50 line-through': judoka.is_doorgestreept
+                                                 'bg-yellow-50': judoka.is_volgende && !judoka.is_aan_de_beurt && judoka.id !== activeFavoriet
                                              }">
                                             <div class="flex items-center gap-2">
                                                 <span class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"

@@ -275,10 +275,8 @@
                             @php
                                 $isGewogen = $judoka->gewicht_gewogen !== null;
                                 $isAfwezig = $judoka->aanwezigheid === 'afwezig';
-                                $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
-                                $isDoorgestreept = $isAfwezig || $isAfwijkendGewicht;
                             @endphp
-                            @if($isDoorgestreept)
+                            @if($isAfwezig)
                                 @continue
                             @endif
                             <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
