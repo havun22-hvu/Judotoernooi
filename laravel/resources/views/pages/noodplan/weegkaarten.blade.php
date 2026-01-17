@@ -25,9 +25,6 @@
         @php $blok = $poule->blok; @endphp
         <div class="mb-2 p-2 bg-blue-50 rounded text-center">
             <span class="font-bold text-blue-800">Blok {{ $blok?->nummer ?? '?' }}</span>
-            @if($poule->mat)
-            <span class="text-blue-600 ml-2">| Mat {{ $poule->mat->nummer }}</span>
-            @endif
         </div>
         @if($blok)
         <div class="text-xs text-center mb-2">
