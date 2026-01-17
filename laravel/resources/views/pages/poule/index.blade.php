@@ -307,10 +307,10 @@
     </button>
 </div>
 
-<!-- Zoek Match Modal -->
-<div id="zoek-match-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center">
+<!-- Zoek Match Modal (draggable) -->
+<div id="zoek-match-modal" class="fixed inset-0 bg-black bg-opacity-30 hidden z-50 pointer-events-none">
+    <div id="zoek-match-modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col absolute pointer-events-auto" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div id="zoek-match-modal-header" class="p-4 border-b flex justify-between items-center cursor-move select-none bg-gray-50 rounded-t-lg">
             <h2 class="text-lg font-bold text-gray-800">
                 Match voor: <span id="zoek-match-judoka-naam"></span>
                 <span class="text-gray-500 font-normal" id="zoek-match-judoka-info"></span>
@@ -1012,9 +1012,47 @@ async function openZoekMatch() {
 
 function closeZoekMatchModal() {
     document.getElementById('zoek-match-modal').classList.add('hidden');
+    // Reset positie naar midden
+    const content = document.getElementById('zoek-match-modal-content');
+    content.style.top = '50%';
+    content.style.left = '50%';
+    content.style.transform = 'translate(-50%, -50%)';
     selectedJudokaId = null;
     selectedJudokaElement = null;
 }
+
+// Draggable modal
+(function() {
+    const modal = document.getElementById('zoek-match-modal-content');
+    const header = document.getElementById('zoek-match-modal-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    header.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        const rect = modal.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        modal.style.transform = 'none';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        let newX = e.clientX - offsetX;
+        let newY = e.clientY - offsetY;
+        // Keep within viewport
+        newX = Math.max(0, Math.min(newX, window.innerWidth - modal.offsetWidth));
+        newY = Math.max(0, Math.min(newY, window.innerHeight - modal.offsetHeight));
+        modal.style.left = newX + 'px';
+        modal.style.top = newY + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+    });
+})();
 
 async function verplaatsNaarPoule(judokaId, naarPouleId) {
     // Vind de huidige poule
