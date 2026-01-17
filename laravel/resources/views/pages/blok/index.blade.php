@@ -120,7 +120,15 @@
         @endif
     </div>
     <div class="flex items-center gap-2">
-        @if(!$heeftVariabeleCategorieen)
+        @if($heeftVariabeleCategorieen)
+        {{-- Variabele categorieën: simpele verdeling --}}
+        <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi) }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
+                Verdeel variabel
+            </button>
+        </form>
+        @else
         {{-- Vaste categorieën: solver met balans slider --}}
         <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline flex items-center gap-2" id="bereken-form">
             @csrf
