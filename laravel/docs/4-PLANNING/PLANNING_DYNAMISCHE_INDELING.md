@@ -1,7 +1,7 @@
 # Planning: Dynamische Poule Indeling
 
 > **Status:** Fase 1-2 voltooid, Fase 3-4 gepland
-> **Laatst bijgewerkt:** 15 jan 2026
+> **Laatst bijgewerkt:** 17 jan 2026
 
 ## Kernbegrippen
 
@@ -958,6 +958,34 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 - Eén wachtpoule per blok (automatisch aangemaakt indien nodig)
 - Toont in UI met paarse achtergrond
 - Na sluiten weging: toon "Te plaatsen" indicator
+
+### Judoka's met Afwijkend Gewicht
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ BELANGRIJK: AFWIJKEND GEWICHT ≠ AUTOMATISCH VERBERGEN            │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ Afwezig:           Wordt verborgen uit poule (geen deelname)     │
+│                                                                   │
+│ Afwijkend gewicht: BLIJFT ZICHTBAAR in poule!                    │
+│                    Reden: Organisator kiest WIE eruit gaat       │
+│                                                                   │
+│ Weergave:          Oranje achtergrond + ⚠ icoon                  │
+│                    Gewicht bold in oranje kleur                  │
+│                                                                   │
+│ Waarom?            Bij poule met te grote range moet org kiezen: │
+│                    - Lichtste verplaatsen?                       │
+│                    - Zwaarste verplaatsen?                       │
+│                    - Of allebei naar andere poules?              │
+│                                                                   │
+│ Telling:           Afwijkend gewicht telt WEL mee voor:          │
+│                    - Poule grootte                               │
+│                    - Aantal wedstrijden                          │
+│                    - "Problematische poule" check (< 3 judoka's) │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
 
 ### UI: Problematische Poules na Weging
 
