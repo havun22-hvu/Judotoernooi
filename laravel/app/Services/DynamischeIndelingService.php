@@ -19,16 +19,20 @@ class DynamischeIndelingService
     ];
 
     /**
-     * Get effectief gewicht: gewogen > ingeschreven > gewichtsklasse
+     * Get effectief gewicht voor poule-indeling.
+     *
+     * VOORBEREIDING: Gebruik ingeschreven gewicht (gewicht)
+     * WEDSTRIJDDAG: Gebruik gewogen gewicht (gewicht_gewogen) - handled by PouleIndelingService
+     *
+     * Zie: docs/2-FEATURES/GEBRUIKERSHANDLEIDING.md - "Gewicht Gebruik"
      */
     private function getEffectiefGewicht($judoka): float
     {
-        if ($judoka->gewicht_gewogen !== null) {
-            return (float) $judoka->gewicht_gewogen;
-        }
+        // Voorbereiding = ingeschreven gewicht
         if ($judoka->gewicht !== null) {
             return (float) $judoka->gewicht;
         }
+        // Fallback: gewichtsklasse
         if ($judoka->gewichtsklasse && preg_match('/(\d+)/', $judoka->gewichtsklasse, $m)) {
             return (float) $m[1];
         }
