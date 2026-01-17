@@ -20,6 +20,202 @@ class DynamischeIndelingService
     ];
 
     /**
+     * Bereken indeling voor ALLE judoka's in één keer (solve_all mode).
+     *
+     * Python doet classificatie + verdeling.
+     *
+     * @param Collection $judokas Alle judoka's van het toernooi
+     * @param array $categorieen Categorie config (uit toernooi->gewichtsklassen)
+     * @param array $config Extra config (poule_grootte_voorkeur, gewicht_tolerantie)
+     * @return array Met 'poules' (per categorie), 'classificatie', 'statistieken'
+     */
+    public function berekenIndelingAll(
+        Collection $judokas,
+        array $categorieen,
+        array $config = []
+    ): array {
+        $this->config = array_merge($this->config, $config);
+
+        if ($judokas->isEmpty() || empty($categorieen)) {
+            return [
+                'success' => false,
+                'poules' => [],
+                'classificatie' => [],
+                'statistieken' => ['totaal_judokas' => 0, 'totaal_poules' => 0],
+            ];
+        }
+
+        // Bouw judoka map voor later
+        $judokaMap = [];
+        foreach ($judokas as $judoka) {
+            $judokaMap[$judoka->id] = $judoka;
+        }
+
+        // Roep Python solver aan met solve_all mode
+        $result = $this->callPythonSolverAll($judokas, $categorieen);
+
+        if (!$result['success']) {
+            Log::warning('Python solve_all failed', ['error' => $result['error'] ?? 'unknown']);
+            return $result;
+        }
+
+        // Verrijk poule data met judoka objecten
+        foreach ($result['poules'] as &$pouleData) {
+            $pouleData['judokas'] = [];
+            foreach ($pouleData['judoka_ids'] as $id) {
+                if (isset($judokaMap[$id])) {
+                    $pouleData['judokas'][] = $judokaMap[$id];
+                }
+            }
+        }
+
+        // Clubspreiding per categorie (optioneel)
+        if ($this->config['clubspreiding']) {
+            $result['poules'] = $this->pasClubspreidingToePerCategorie($result['poules'], $categorieen);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Roep Python solver aan in solve_all mode (classificatie + verdeling).
+     */
+    private function callPythonSolverAll(Collection $judokas, array $categorieen): array
+    {
+        $pythonInput = [
+            'categorieen' => $categorieen,
+            'judokas' => [],
+            'poule_grootte_voorkeur' => $this->config['poule_grootte_voorkeur'],
+            'gewicht_tolerantie' => $this->config['gewicht_tolerantie'] ?? 0.5,
+        ];
+
+        foreach ($judokas as $judoka) {
+            $pythonInput['judokas'][] = [
+                'id' => $judoka->id,
+                'leeftijd' => $judoka->leeftijd ?? 0,
+                'gewicht' => $this->getEffectiefGewicht($judoka),
+                'geslacht' => $judoka->geslacht ?? '',
+                'band' => $this->bandNaarNummer($judoka->band ?? 'wit'),
+                'club_id' => $judoka->club_id ?? 0,
+            ];
+        }
+
+        // Roep Python aan
+        $scriptPath = base_path('scripts/poule_solver.py');
+        $pythonCmd = $this->findPython();
+
+        if (!$pythonCmd || !file_exists($scriptPath)) {
+            Log::warning('Python solver niet beschikbaar voor solve_all');
+            return ['success' => false, 'error' => 'Python solver niet beschikbaar'];
+        }
+
+        $inputJson = json_encode($pythonInput);
+
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = proc_open(
+            [$pythonCmd, $scriptPath],
+            $descriptors,
+            $pipes,
+            base_path('scripts')
+        );
+
+        if (!is_resource($process)) {
+            Log::error('Kon Python proces niet starten voor solve_all');
+            return ['success' => false, 'error' => 'Kon Python niet starten'];
+        }
+
+        fwrite($pipes[0], $inputJson);
+        fclose($pipes[0]);
+
+        $output = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || empty($output)) {
+            Log::error('Python solve_all fout', ['exitCode' => $exitCode, 'stderr' => $stderr]);
+            return ['success' => false, 'error' => $stderr ?: 'Python script failed'];
+        }
+
+        $result = json_decode($output, true);
+
+        if (!$result || !isset($result['success'])) {
+            Log::error('Python solve_all gaf ongeldige output', ['output' => $output]);
+            return ['success' => false, 'error' => 'Invalid JSON output'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Pas clubspreiding toe per categorie.
+     */
+    private function pasClubspreidingToePerCategorie(array $poules, array $categorieen): array
+    {
+        // Groepeer poules per categorie
+        $perCategorie = [];
+        foreach ($poules as $idx => $poule) {
+            $key = $poule['categorie_key'];
+            if (!isset($perCategorie[$key])) {
+                $perCategorie[$key] = [];
+            }
+            $perCategorie[$key][$idx] = $poule;
+        }
+
+        // Pas clubspreiding toe per groep
+        foreach ($perCategorie as $catKey => $catPoules) {
+            if (count($catPoules) <= 1) continue;
+
+            $config = $categorieen[$catKey] ?? [];
+            $maxKg = $config['max_kg_verschil'] ?? 3;
+            $maxLft = $config['max_leeftijd_verschil'] ?? 2;
+
+            // Alleen voor dynamische categorieën
+            if ($maxKg <= 0) continue;
+
+            // Converteer naar oud formaat voor pasClubspreidingToe
+            $oldFormat = [];
+            foreach ($catPoules as $idx => $p) {
+                $oldFormat[$idx] = [
+                    'judokas' => $p['judokas'],
+                    'original_idx' => $idx,
+                ];
+            }
+
+            $swapped = $this->pasClubspreidingToe(array_values($oldFormat), $maxKg, $maxLft);
+
+            // Update originele poules met geswapte judokas
+            $i = 0;
+            foreach ($catPoules as $idx => $p) {
+                $poules[$idx]['judokas'] = $swapped[$i]['judokas'];
+                $poules[$idx]['judoka_ids'] = array_map(fn($j) => $j->id, $swapped[$i]['judokas']);
+
+                // Herbereken ranges
+                if (!empty($swapped[$i]['judokas'])) {
+                    $gewichten = array_map(fn($j) => $this->getEffectiefGewicht($j), $swapped[$i]['judokas']);
+                    $leeftijden = array_map(fn($j) => $j->leeftijd ?? 0, $swapped[$i]['judokas']);
+                    $poules[$idx]['gewicht_range'] = round(max($gewichten) - min($gewichten), 1);
+                    $poules[$idx]['leeftijd_range'] = max($leeftijden) - min($leeftijden);
+
+                    $minKg = min($gewichten);
+                    $maxKg = max($gewichten);
+                    $poules[$idx]['gewichtsklasse'] = $minKg == $maxKg ? "{$minKg}kg" : "{$minKg}-{$maxKg}kg";
+                }
+                $i++;
+            }
+        }
+
+        return $poules;
+    }
+
+    /**
      * Get effectief gewicht: gewogen > ingeschreven > gewichtsklasse
      */
     private function getEffectiefGewicht($judoka): float
@@ -59,10 +255,11 @@ class DynamischeIndelingService
         // Roep Python solver aan
         $poules = $this->callPythonSolver($judokas, $maxKgVerschil, $maxLeeftijdVerschil);
 
-        // Clubspreiding (optioneel, Python doet dit niet)
-        if ($this->config['clubspreiding'] && count($poules) > 1) {
-            $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil, $maxLeeftijdVerschil);
-        }
+        // Clubspreiding uitgeschakeld - verpest de gewichts-ranges
+        // TODO: clubspreiding moet in Python gebeuren met constraint checks
+        // if ($this->config['clubspreiding'] && count($poules) > 1) {
+        //     $poules = $this->pasClubspreidingToe($poules, $maxKgVerschil, $maxLeeftijdVerschil);
+        // }
 
         return $this->maakResultaat($poules, $judokas->count());
     }
