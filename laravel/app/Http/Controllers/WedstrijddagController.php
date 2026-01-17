@@ -348,15 +348,20 @@ class WedstrijddagController extends Controller
         // Hervalideer of poule nog problematisch is
         $probleem = $oudePoule->isProblematischNaWeging();
 
+        // Bereken nieuwe gewichtsrange voor titel update
+        $gewichtsRange = $oudePoule->getGewichtsRange();
+
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} verplaatst naar wachtruimte",
             'van_poule' => [
                 'id' => $oudePoule->id,
+                'titel' => $oudePoule->titel,
                 'aantal_judokas' => $actieveJudokas,
                 'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
                 'is_problematisch' => $probleem !== null,
                 'probleem' => $probleem,
+                'gewichts_range' => $gewichtsRange,
             ],
         ]);
     }
