@@ -8,6 +8,26 @@
     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     $leeftijdVolgorde = array_values(array_map(fn($c) => $c['label'] ?? '', $gewichtsklassenConfig));
 
+    // Check of wedstrijddag is begonnen (blok 1 weging gesloten)
+    $blok1 = $toernooi->blokken()->where('nummer', 1)->first();
+    $wedstrijddagBegonnen = $blok1 && $blok1->weging_gesloten;
+@endphp
+
+{{-- Waarschuwing als wedstrijddag al begonnen is --}}
+@if($wedstrijddagBegonnen)
+<div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-6 no-print" role="alert">
+    <div class="flex items-center">
+        <span class="text-2xl mr-3">⚠️</span>
+        <div>
+            <p class="font-bold">Wedstrijddag is gestart</p>
+            <p class="text-sm">De weging van blok 1 is gesloten. Gebruik <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="underline font-medium">Wedstrijddag Poules</a> of <a href="{{ route('toernooi.zaaloverzicht', $toernooi) }}" class="underline font-medium">Zaaloverzicht</a> voor wijzigingen.</p>
+        </div>
+    </div>
+</div>
+@endif
+
+@php
+
     // Check of toernooi variabele categorieën heeft (max kg of leeftijd verschil > 0)
     $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
 
