@@ -298,17 +298,109 @@ def score_indeling(poules: List[Poule], voorkeur: List[int]) -> int:
 # Greedy++ Algoritme
 # =============================================================================
 
+def identificeer_uitschieters(judokas: List[Judoka], max_kg: float) -> Tuple[List[Judoka], List[Judoka]]:
+    """
+    Scheid uitschieters van de bulk.
+    Uitschieter = judoka die niet binnen max_kg van de mediaan ligt,
+    OF judoka met grote gap naar de rest.
+    """
+    if len(judokas) < 4:
+        return judokas, []  # Te weinig voor uitschieters
+
+    gesorteerd = sorted(judokas, key=lambda j: j.gewicht)
+    gewichten = [j.gewicht for j in gesorteerd]
+
+    # Bereken mediaan
+    n = len(gewichten)
+    mediaan = (gewichten[n//2] + gewichten[(n-1)//2]) / 2
+
+    # Vind de "bulk" - judoka's binnen redelijke afstand van mediaan
+    # Gebruik 1.5x max_kg als threshold
+    threshold = max_kg * 1.5
+
+    bulk = []
+    uitschieters = []
+
+    for j in gesorteerd:
+        if abs(j.gewicht - mediaan) <= threshold:
+            bulk.append(j)
+        else:
+            uitschieters.append(j)
+
+    # Extra check: kijk naar gaps aan de uiteinden
+    if bulk and not uitschieters:
+        # Check gap aan onderkant
+        if len(gesorteerd) >= 2:
+            gap_onder = gesorteerd[1].gewicht - gesorteerd[0].gewicht
+            if gap_onder > max_kg * 0.7:  # Grote gap = uitschieter
+                uitschieters.append(gesorteerd[0])
+                bulk = [j for j in bulk if j.id != gesorteerd[0].id]
+
+        # Check gap aan bovenkant
+        if len(gesorteerd) >= 2:
+            gap_boven = gesorteerd[-1].gewicht - gesorteerd[-2].gewicht
+            if gap_boven > max_kg * 0.7:
+                uitschieters.append(gesorteerd[-1])
+                bulk = [j for j in bulk if j.id != gesorteerd[-1].id]
+
+    return bulk, uitschieters
+
+
+def voeg_uitschieters_toe(poules: List[Poule], uitschieters: List[Judoka], max_kg: float, max_lft: int) -> List[Poule]:
+    """
+    Voeg uitschieters toe aan de best passende poule.
+    Sorteer uitschieters op gewicht en voeg ze één voor één toe.
+    """
+    # Sorteer uitschieters: lichtste eerst bij lichtste poule, etc.
+    uitschieters_sorted = sorted(uitschieters, key=lambda j: j.gewicht)
+
+    for uitschieter in uitschieters_sorted:
+        beste_poule = None
+        beste_range_na = float('inf')
+
+        for poule in poules:
+            if not poule.judokas:
+                continue
+
+            # Bereken wat de nieuwe range zou zijn
+            nieuwe_min = min(poule.min_gewicht, uitschieter.gewicht)
+            nieuwe_max = max(poule.max_gewicht, uitschieter.gewicht)
+            nieuwe_range = nieuwe_max - nieuwe_min
+
+            # Check leeftijd
+            nieuwe_min_lft = min(poule.min_leeftijd, uitschieter.leeftijd)
+            nieuwe_max_lft = max(poule.max_leeftijd, uitschieter.leeftijd)
+            if nieuwe_max_lft - nieuwe_min_lft > max_lft:
+                continue
+
+            # Prefereer poule waar uitschieter het beste past (kleinste resulterende range)
+            if nieuwe_range < beste_range_na:
+                beste_range_na = nieuwe_range
+                beste_poule = poule
+
+        # Voeg ALLEEN toe als het binnen de criteria past - geen overschrijding!
+        if beste_poule and beste_range_na <= max_kg:
+            beste_poule.voeg_toe(uitschieter)
+        else:
+            # Uitschieter past nergens - wordt orphan (beter dan criteria overschrijden!)
+            nieuwe_poule = Poule(judokas=[uitschieter])
+            poules.append(nieuwe_poule)
+
+    return poules
+
+
 def maak_poules_greedy(
     judokas: List[Judoka],
     max_kg: float,
     max_lft: int,
     max_grootte: int = 5
 ) -> List[Poule]:
-    """Stap 1: Basis greedy algoritme."""
+    """Stap 1: Simpel greedy algoritme - sorteer op leeftijd/gewicht/band, maak poules."""
     if not judokas:
         return []
 
-    gesorteerd = sorted(judokas, key=lambda j: (j.leeftijd, j.gewicht))
+    # Sorteer op leeftijd (primair), dan gewicht, dan band
+    gesorteerd = sorted(judokas, key=lambda j: (j.leeftijd, j.gewicht, j.band))
     poules = []
     huidige = Poule()
 
@@ -344,6 +436,8 @@ def fix_orphans(
     poules = _fix_orphans_by_target_sizes(poules, max_kg, max_lft, voorkeur, [5])
     # Pass 3: Split poules van 6+1
     poules = _fix_orphans_by_splitting(poules, max_kg, max_lft, voorkeur, absolute_max)
+    # Pass 4: Merge kleine poules door judoka's te stelen
+    poules = _fix_orphans_by_stealing(poules, max_kg, max_lft, voorkeur)
 
     return poules
 
@@ -467,6 +561,75 @@ def _split_in_3_en_4(
     return beste_split if beste_split else (None, None)
 
 
+def _fix_orphans_by_stealing(
+    poules: List[Poule],
+    max_kg: float,
+    max_lft: int,
+    voorkeur: List[int]
+) -> List[Poule]:
+    """
+    Pass 4: Probeer kleine poules groter te maken door judoka's te 'stelen' van andere poules.
+
+    Als we 2 kleine poules hebben die niet samen kunnen (te grote range), probeer dan
+    een judoka uit een grotere poule te stelen die wel bij de kleine poule past.
+    """
+    min_grootte = 3  # Minimum gewenste grootte
+    max_iteraties = 20
+    iteratie = 0
+
+    while iteratie < max_iteraties:
+        iteratie += 1
+        verbeterd = False
+
+        # Vind kleine poules (size < 3)
+        kleine = [p for p in poules if p.size < min_grootte]
+        if not kleine:
+            break
+
+        for kleine_poule in kleine:
+            # Probeer een judoka te stelen van een grotere poule
+            for andere in poules:
+                if andere is kleine_poule:
+                    continue
+                # Alleen stelen van poules die het kunnen missen (size > 3)
+                if andere.size <= min_grootte:
+                    continue
+
+                # Zoek een judoka in andere die bij kleine_poule past
+                for judoka in andere.judokas[:]:
+                    # Check of judoka bij kleine_poule kan
+                    if kleine_poule.kan_toevoegen(judoka, max_kg, max_lft):
+                        # Check of andere nog valid is na verwijdering
+                        temp_andere = [j for j in andere.judokas if j.id != judoka.id]
+                        if len(temp_andere) < min_grootte:
+                            continue  # Zou andere te klein maken
+
+                        # Check of temp_andere nog binnen constraints blijft
+                        if temp_andere:
+                            gew = [j.gewicht for j in temp_andere]
+                            lft = [j.leeftijd for j in temp_andere]
+                            if max(gew) - min(gew) > max_kg or max(lft) - min(lft) > max_lft:
+                                continue
+
+                        # Steel de judoka!
+                        andere.verwijder(judoka)
+                        kleine_poule.voeg_toe(judoka)
+                        verbeterd = True
+                        break
+
+                if verbeterd:
+                    break
+            if verbeterd:
+                break
+
+        if not verbeterd:
+            break
+
+    # Verwijder lege poules
+    poules = [p for p in poules if p.size > 0]
+    return poules
+
+
 def merge_kleine_poules(
     poules: List[Poule],
     max_kg: float,
@@ -561,6 +724,137 @@ def probeer_swaps(
     return poules
 
 
+def optimaliseer_gewichtsranges(
+    poules: List[Poule],
+    max_kg: float,
+    max_lft: int
+) -> List[Poule]:
+    """
+    Stap 5: Optimaliseer gewichtsranges door judoka's te ruilen tussen poules.
+    Zoekt naar poules waar de range te groot is en probeert te swappen.
+    """
+    max_iteraties = 50
+    iteratie = 0
+
+    while iteratie < max_iteraties:
+        iteratie += 1
+        verbeterd = False
+
+        # Vind poules met te grote range (> 80% van max_kg)
+        problematische = [(i, p) for i, p in enumerate(poules)
+                          if p.gewicht_range > max_kg * 0.8 and p.size >= 2]
+
+        if not problematische:
+            break
+
+        for idx, probl_poule in problematische:
+            # Vind de zwaarste en lichtste judoka
+            judokas_sorted = sorted(probl_poule.judokas, key=lambda j: j.gewicht)
+            lichtste = judokas_sorted[0]
+            zwaarste = judokas_sorted[-1]
+
+            # Probeer zwaarste te ruilen met lichtere uit andere poule
+            for andere_idx, andere in enumerate(poules):
+                if andere_idx == idx or andere.size < 2:
+                    continue
+
+                andere_sorted = sorted(andere.judokas, key=lambda j: j.gewicht)
+
+                # Probeer zwaarste → andere, lichtere kandidaat ← terug
+                for kandidaat in andere_sorted:
+                    # Kandidaat moet lichter zijn dan zwaarste
+                    if kandidaat.gewicht >= zwaarste.gewicht:
+                        continue
+
+                    # Simuleer swap
+                    # 1. Verwijder zwaarste uit probl, voeg kandidaat toe
+                    temp_probl = [j for j in probl_poule.judokas if j.id != zwaarste.id]
+                    temp_probl.append(kandidaat)
+
+                    # 2. Verwijder kandidaat uit andere, voeg zwaarste toe
+                    temp_andere = [j for j in andere.judokas if j.id != kandidaat.id]
+                    temp_andere.append(zwaarste)
+
+                    # Check of beide binnen limieten blijven
+                    probl_gew = [j.gewicht for j in temp_probl]
+                    probl_lft = [j.leeftijd for j in temp_probl]
+                    andere_gew = [j.gewicht for j in temp_andere]
+                    andere_lft = [j.leeftijd for j in temp_andere]
+
+                    probl_ok = (max(probl_gew) - min(probl_gew) <= max_kg and
+                                max(probl_lft) - min(probl_lft) <= max_lft)
+                    andere_ok = (max(andere_gew) - min(andere_gew) <= max_kg and
+                                 max(andere_lft) - min(andere_lft) <= max_lft)
+
+                    if probl_ok and andere_ok:
+                        # Swap verbetert de situatie?
+                        oude_range = probl_poule.gewicht_range
+                        nieuwe_range = max(probl_gew) - min(probl_gew)
+
+                        if nieuwe_range < oude_range:
+                            # Voer swap uit
+                            probl_poule.verwijder(zwaarste)
+                            probl_poule.voeg_toe(kandidaat)
+                            andere.verwijder(kandidaat)
+                            andere.voeg_toe(zwaarste)
+                            verbeterd = True
+                            break
+
+                if verbeterd:
+                    break
+
+            # Probeer ook lichtste te ruilen met zwaardere
+            if not verbeterd:
+                for andere_idx, andere in enumerate(poules):
+                    if andere_idx == idx or andere.size < 2:
+                        continue
+
+                    andere_sorted = sorted(andere.judokas, key=lambda j: j.gewicht, reverse=True)
+
+                    for kandidaat in andere_sorted:
+                        if kandidaat.gewicht <= lichtste.gewicht:
+                            continue
+
+                        # Simuleer swap
+                        temp_probl = [j for j in probl_poule.judokas if j.id != lichtste.id]
+                        temp_probl.append(kandidaat)
+                        temp_andere = [j for j in andere.judokas if j.id != kandidaat.id]
+                        temp_andere.append(lichtste)
+
+                        probl_gew = [j.gewicht for j in temp_probl]
+                        probl_lft = [j.leeftijd for j in temp_probl]
+                        andere_gew = [j.gewicht for j in temp_andere]
+                        andere_lft = [j.leeftijd for j in temp_andere]
+
+                        probl_ok = (max(probl_gew) - min(probl_gew) <= max_kg and
+                                    max(probl_lft) - min(probl_lft) <= max_lft)
+                        andere_ok = (max(andere_gew) - min(andere_gew) <= max_kg and
+                                     max(andere_lft) - min(andere_lft) <= max_lft)
+
+                        if probl_ok and andere_ok:
+                            oude_range = probl_poule.gewicht_range
+                            nieuwe_range = max(probl_gew) - min(probl_gew)
+
+                            if nieuwe_range < oude_range:
+                                probl_poule.verwijder(lichtste)
+                                probl_poule.voeg_toe(kandidaat)
+                                andere.verwijder(kandidaat)
+                                andere.voeg_toe(lichtste)
+                                verbeterd = True
+                                break
+
+                    if verbeterd:
+                        break
+
+            if verbeterd:
+                break
+
+        if not verbeterd:
+            break
+
+    return poules
+
+
 def greedy_plus_plus(
     judokas: List[Judoka],
     max_kg: float,
@@ -573,6 +867,8 @@ def greedy_plus_plus(
     poules = fix_orphans(poules, max_kg, max_lft, voorkeur)
     poules = merge_kleine_poules(poules, max_kg, max_lft, voorkeur)
     poules = probeer_swaps(poules, max_kg, max_lft, voorkeur)
+    # Stap 5: Optimaliseer gewichtsranges door slimme swaps
+    poules = optimaliseer_gewichtsranges(poules, max_kg, max_lft)
     return poules
 
 
