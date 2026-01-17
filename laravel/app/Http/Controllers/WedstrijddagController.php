@@ -50,7 +50,24 @@ class WedstrijddagController extends Controller
             $leeftijdVolgorde = $gewichtsklassenConfig ? array_flip(array_map(fn($d) => $d['label'] ?? '', $gewichtsklassenConfig)) : [];
 
             $categories = $blokPoules
-                // Toon ALLE poules (ook lege) - lege poules zijn nodig voor overpoelen
+                // Filter lege poules bij variabel gewicht (die gebruiken wachtpoules)
+                // Bij vaste categorieën: lege poules WEL tonen (wachtruimte nodig)
+                ->filter(function ($poule) use ($gewichtsklassenConfig, $leeftijdsklasseToKey, $tolerantie) {
+                    // Altijd tonen als poule judoka's heeft
+                    $actief = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
+                    if ($actief > 0) return true;
+
+                    // Check of dit een dynamische categorie is
+                    $configKey = $leeftijdsklasseToKey[$poule->leeftijdsklasse] ?? null;
+                    $maxKgVerschil = 0;
+                    if ($configKey && isset($gewichtsklassenConfig[$configKey]['max_kg_verschil'])) {
+                        $maxKgVerschil = $gewichtsklassenConfig[$configKey]['max_kg_verschil'];
+                    }
+
+                    // Dynamisch (max_kg_verschil > 0): lege poules NIET tonen
+                    // Vast (max_kg_verschil = 0): lege poules WEL tonen (wachtruimte)
+                    return $maxKgVerschil == 0;
+                })
                 ->groupBy(function ($poule) {
                     return $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
                 })->map(function ($categoryPoules, $key) use ($leeftijdVolgorde, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
