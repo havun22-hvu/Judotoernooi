@@ -13,17 +13,60 @@
     $wedstrijddagBegonnen = $blok1 && $blok1->weging_gesloten;
 @endphp
 
-{{-- Waarschuwing als wedstrijddag al begonnen is --}}
+{{-- Knipperende popup als wedstrijddag al begonnen is --}}
 @if($wedstrijddagBegonnen)
-<div class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 mb-6 no-print" role="alert">
-    <div class="flex items-center">
-        <span class="text-2xl mr-3">⚠️</span>
-        <div>
-            <p class="font-bold">Wedstrijddag is gestart</p>
-            <p class="text-sm">De weging van blok 1 is gesloten. Gebruik <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="underline font-medium">Wedstrijddag Poules</a> of <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="underline font-medium">Zaaloverzicht</a> voor wijzigingen.</p>
+<div id="wedstrijddag-popup" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center no-print">
+    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md mx-4 animate-pulse-warning">
+        <div class="text-center">
+            <span class="text-6xl">⚠️</span>
+            <h2 class="text-2xl font-bold text-orange-600 mt-4">Wedstrijddag is gestart!</h2>
+            <p class="text-gray-600 mt-3">De weging van blok 1 is gesloten. Wijzigingen hier kunnen problemen veroorzaken.</p>
+            <p class="text-gray-700 font-medium mt-4">Gebruik in plaats daarvan:</p>
+            <div class="flex flex-col gap-2 mt-3">
+                <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                    Wedstrijddag Poules
+                </a>
+                <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                    Zaaloverzicht
+                </a>
+            </div>
+            <button onclick="sluitWedstrijddagPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
+                Ik begrijp het, toch doorgaan
+            </button>
         </div>
     </div>
 </div>
+<style>
+    @keyframes pulse-warning {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+        50% { transform: scale(1.02); box-shadow: 0 0 30px 10px rgba(234, 88, 12, 0.4); }
+    }
+    .animate-pulse-warning { animation: pulse-warning 1s ease-in-out infinite; }
+</style>
+<script>
+    let wedstrijddagPopupGetoond = false;
+    function toonWedstrijddagPopup() {
+        if (wedstrijddagPopupGetoond) return;
+        const popup = document.getElementById('wedstrijddag-popup');
+        popup.classList.remove('hidden');
+        popup.classList.add('flex');
+    }
+    function sluitWedstrijddagPopup() {
+        wedstrijddagPopupGetoond = true;
+        const popup = document.getElementById('wedstrijddag-popup');
+        popup.classList.add('hidden');
+        popup.classList.remove('flex');
+    }
+    // Trigger bij drag start, klik op actie knoppen, etc.
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bij drag start
+        document.addEventListener('dragstart', toonWedstrijddagPopup);
+        // Bij klik op actie knoppen
+        document.querySelectorAll('[onclick], [draggable="true"], .chip').forEach(el => {
+            el.addEventListener('mousedown', toonWedstrijddagPopup);
+        });
+    });
+</script>
 @endif
 
 @php
