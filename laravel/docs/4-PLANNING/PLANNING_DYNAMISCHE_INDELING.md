@@ -893,6 +893,26 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 | **Ander blok (weging open)** | Naar wachtpoule | Gewichten nog niet bekend |
 | **Ander blok (weging gesloten)** | Direct in poule | Gewichten al bekend |
 
+### Verschil Lege Poules: Vast vs Dynamisch
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ LEGE POULES OP WEDSTRIJDDAG                                       │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ VASTE CATEGORIEËN (max_kg_verschil = 0):                         │
+│   • Lege poules WEL tonen op wedstrijddag                        │
+│   • Reden: Wachtruimte per gewichtsklasse nodig                  │
+│   • Voorbeeld: -36kg poule leeg → judoka uit -32kg kan erheen    │
+│                                                                   │
+│ DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0):                    │
+│   • Lege poules NIET tonen op wedstrijddag                       │
+│   • Reden: We gebruiken wachtpoules per blok                     │
+│   • Geen vaste gewichtsklassen = geen wachtruimtes nodig         │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
 ### Wachtpoule Concept
 
 **Probleem:** Bij verplaatsen naar ander blok (weging nog open) kennen we de gewichten van dat blok nog niet. We kunnen dus niet bepalen welke poule geschikt is.
