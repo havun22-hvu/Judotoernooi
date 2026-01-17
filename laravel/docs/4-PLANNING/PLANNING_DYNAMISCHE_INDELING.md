@@ -910,6 +910,14 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 │   • Reden: We gebruiken wachtpoules per blok                     │
 │   • Geen vaste gewichtsklassen = geen wachtruimtes nodig         │
 │                                                                   │
+├──────────────────────────────────────────────────────────────────┤
+│ ⚠️  BELANGRIJK: LEGE POULES NOOIT OP MAT ZETTEN!                 │
+│                                                                   │
+│ Geldt voor BEIDE systemen (vast én dynamisch):                   │
+│   • Lege poule = geen wedstrijden = niet op mat                  │
+│   • Bij "naar zaaloverzicht": lege poules overslaan              │
+│   • Mat interface toont alleen poules met judoka's               │
+│                                                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
