@@ -22,13 +22,17 @@ class WedstrijddagController extends Controller
             ->with(['judokas.club', 'judokas.toernooi', 'blok', 'mat'])
             ->get();
 
-        // Find judokas that need to be re-pooled (weighed but outside weight class)
-        // Gewogen = automatisch aanwezig (je kunt niet wegen zonder er te zijn)
+        // Wachtruimte: judoka's die gewogen zijn maar nog GEEN poule hebben
+        // (niet afwezig, afwijkend gewicht blijft nu in poule - org kiest wie eruit gaat)
         $judokasNaarWachtruimte = Judoka::where('toernooi_id', $toernooi->id)
             ->whereNotNull('gewicht_gewogen')
+            ->where(function ($q) {
+                $q->whereNull('aanwezigheid')
+                  ->orWhere('aanwezigheid', '!=', 'afwezig');
+            })
+            ->whereDoesntHave('poules') // Geen poule = naar wachtruimte
             ->with('club')
-            ->get()
-            ->filter(fn($judoka) => !$judoka->isGewichtBinnenKlasse());
+            ->get();
 
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
