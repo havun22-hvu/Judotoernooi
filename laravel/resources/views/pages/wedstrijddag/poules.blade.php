@@ -60,11 +60,11 @@
     </div>
 
     <!-- Problematische poules door gewichtsrange (dynamisch overpoulen) -->
-    @if($problematischeGewichtsPoules->count() > 0)
+    <div id="gewichtsrange-problemen-container" class="{{ $problematischeGewichtsPoules->count() > 0 ? '' : 'hidden' }}">
     <div class="bg-orange-50 border border-orange-300 rounded-lg p-4">
-        <h3 class="font-bold text-orange-800 mb-2">Gewichtsrange overschreden ({{ $problematischeGewichtsPoules->count() }} poules)</h3>
+        <h3 class="font-bold text-orange-800 mb-2">Gewichtsrange overschreden (<span id="gewichtsrange-count">{{ $problematischeGewichtsPoules->count() }}</span> poules)</h3>
         <p class="text-orange-700 text-sm mb-3">Deze poules hebben een te grote gewichtsspreiding na weging. Verplaats de lichtste of zwaarste judoka:</p>
-        <div class="space-y-3">
+        <div id="gewichtsrange-items" class="space-y-3">
             @foreach($problematischeGewichtsPoules as $pouleId => $probleem)
             @php
                 $pouleInfo = null;
@@ -80,7 +80,7 @@
                 }
             @endphp
             @if($pouleInfo)
-            <div class="bg-white border border-orange-200 rounded-lg p-3">
+            <div id="gewichtsrange-poule-{{ $pouleId }}" class="bg-white border border-orange-200 rounded-lg p-3" data-gewichtsrange-poule="{{ $pouleId }}">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <a href="#poule-{{ $pouleId }}" onclick="scrollToPoule(event, {{ $pouleId }})" class="font-bold text-orange-800 hover:underline cursor-pointer">
@@ -119,7 +119,7 @@
             @endforeach
         </div>
     </div>
-    @endif
+    </div>
 
     <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
@@ -888,6 +888,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         const data = await response.json();
                         if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+
+                        // Update poule markering op basis van hervalidatie
+                        if (data.van_poule) {
+                            const pouleCard = document.getElementById('poule-' + data.van_poule.id);
+                            if (pouleCard) {
+                                // Update problematische markering (gewichtsrange)
+                                if (data.van_poule.is_problematisch) {
+                                    pouleCard.classList.add('border-2', 'border-orange-400');
+                                } else {
+                                    pouleCard.classList.remove('border-2', 'border-orange-400', 'border-red-300');
+                                }
+                            }
+                            // Update gewichtsrange box bovenaan
+                            updateGewichtsrangeBox(data.van_poule.id, data.van_poule.is_problematisch);
+                            // Update problematische poules (< 3 judokas)
+                            updateProblematischePoules(data.van_poule, data.van_poule.aantal_judokas > 0 && data.van_poule.aantal_judokas < 3);
+                        }
                     } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen naar wachtruimte'); window.location.reload(); }
                     return;
                 }
@@ -987,6 +1004,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Update gewichtsrange box (oranje warning bovenaan)
+    function updateGewichtsrangeBox(pouleId, isProblematisch) {
+        const container = document.getElementById('gewichtsrange-problemen-container');
+        const itemsContainer = document.getElementById('gewichtsrange-items');
+        const countEl = document.getElementById('gewichtsrange-count');
+        const pouleItem = document.getElementById('gewichtsrange-poule-' + pouleId);
+
+        if (!isProblematisch && pouleItem) {
+            // Poule is niet meer problematisch - verwijder uit lijst
+            pouleItem.remove();
+
+            // Update count
+            const remaining = itemsContainer ? itemsContainer.querySelectorAll('[data-gewichtsrange-poule]').length : 0;
+            if (countEl) countEl.textContent = remaining;
+
+            // Verberg hele container als leeg
+            if (remaining === 0 && container) {
+                container.classList.add('hidden');
+            }
+        }
+        // Note: als poule WEL problematisch wordt, doen we een page reload (zeldzaam scenario)
+    }
 
     function updateProblematischePoules(pouleData, isProblematisch) {
         const container = document.getElementById('problematische-poules-container');
