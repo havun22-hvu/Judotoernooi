@@ -529,17 +529,19 @@ STAP 2: GEWICHTSRANGE (sliding window)
 - Bepaal lichtste gewicht (bijv. 23kg)
 - Maak range: lichtste t/m lichtste + max_kg_verschil (bijv. 23-26kg)
 
-STAP 3: POULE MAKEN
+STAP 3: POULE MAKEN (1 poule per keer!)
 ────────────────────────────────────────
 - Sorteer judoka's in gewichtsrange op band (laagste eerst: wit→geel→oranje...)
-- Maak poule(s) volgens poule_grootte_voorkeur
+- Maak 1 poule van max ideale_grootte (eerste voorkeur, meestal 5)
 - Geplaatste judoka's zijn "OP"
+- NIET alle judoka's in range verdelen, maar 1 poule maken en dan checken!
 
-STAP 4: HERHAAL
+STAP 4: HERHAAL (BELANGRIJK!)
 ────────────────────────────────────────
-- Overblijvers? → Nieuwe gewichtsrange vanaf lichtste overblijver (stap 2)
-- Jongste leeftijd "op"? → Nieuwe leeftijdsgroep (stap 1)
-- Overblijvers uit vorige lft-groep gaan mee naar volgende (indien binnen range)
+- NA elke poule: check of jongste leeftijd "op" is
+- Jongste "op"? → Terug naar stap 1 (nieuwe leeftijdsgroep)
+- Jongste niet "op"? → Terug naar stap 2 (nieuwe gewichtsrange)
+- Nieuwe gewichtsrange = lichtste OVERBLIJVER + max_kg_verschil
 
 ORPHAN ONTSTAAT ALLEEN ALS:
 ────────────────────────────────────────

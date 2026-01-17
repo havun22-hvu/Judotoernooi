@@ -356,9 +356,13 @@ php artisan view:cache
     1. Leeftijdsgroep (jongste + max_lft_verschil)
     2. Gewichtsrange (lichtste + max_kg_verschil)
     3. Band sortering (laagste eerst: wit→zwart)
-  - **Overblijvers** gaan mee naar volgende leeftijdsgroep (indien binnen range)
-  - **Orphan** ontstaat alleen als judoka nergens bij past EN niet mee kan naar volgende groep
   - **Commit:** `16f4372` - "refactor: Replace greedy algorithm with sliding window"
+
+- **Bug fix: 1 poule per keer maken**
+  - **Probleem:** Noa (16.1kg) stond in poule 2 i.p.v. poule 1
+  - **Oorzaak:** Solver maakte alle poules in gewichtsrange tegelijk, checkte niet of jongste leeftijd "op" was
+  - **Fix:** Na elke poule checken of jongste leeftijd "op" is → zo ja, nieuwe leeftijdsgroep
+  - **Commit:** `d70ad3e` - "fix: Make 1 poule at a time in sliding window algorithm"
   - **Docs:** `PLANNING_DYNAMISCHE_INDELING.md` bijgewerkt
 
 ### Openstaande items:
