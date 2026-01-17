@@ -449,6 +449,58 @@
 
 ---
 
+## Sessie: 17 januari 2026
+
+### Feat: Revalidatie na verplaatsen judoka naar wachtruimte
+- **Type:** Enhancement
+- **Wat:** Na drag naar wachtruimte wordt poule opnieuw gevalideerd op gewichtsrange
+- **Waarom:** Oranje marking bleef staan ook als poule nu OK was
+- **Bestanden:**
+  - `app/Http/Controllers/WedstrijddagController.php` - `isProblematischNaWeging()` response
+  - `resources/views/pages/wedstrijddag/poules.blade.php` - JS update + console.log
+- **Naar permanente docs?** ☑ Nee - technische enhancement
+
+### Feat: Vergrootglas zoek-match icoon bij judoka's
+- **Type:** Enhancement
+- **Wat:** 🔍 knop bij elke judoka om geschikte poules te zoeken
+- **Waarom:** Organisator kon niet snel zien waar judoka naartoe kon
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+### Fix: Oranje border bij initiële render voor gewichtsproblemen
+- **Type:** Bug fix
+- **Wat:** Check `$problematischeGewichtsPoules->has($poule->id)` toegevoegd aan PHP render
+- **Waarom:** Oranje border werd alleen via JS gezet, niet bij page load
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
+- **Naar permanente docs?** ☑ Nee - technische fix
+
+### BUG (OPENSTAAND): Vals-positieve gewichtsrange markering
+- **Type:** Bug (NIET OPGELOST)
+- **Wat:** Poules worden oranje gemarkeerd terwijl gewichtsrange OK is
+- **Voorbeelden:**
+  - Poule #9 Jeugd 26.5-28.8kg: range 27.3-31.8 = 4.5kg (1 judoka buiten klasse)
+  - Poule #5 Jeugd 21-23kg: range 21.5-23.4 = 1.9kg (zou OK moeten zijn!)
+- **Mogelijke oorzaken:**
+  1. `isDynamisch()` retourneert true voor vaste gewichtsklassen
+  2. `max_kg_verschil` staat verkeerd geconfigureerd
+  3. `isProblematischNaWeging()` checkt verkeerde data
+- **Bestanden:** `app/Models/Poule.php` - `isProblematischNaWeging()`, `isDynamisch()`
+- **Naar permanente docs?** ☐ Moet eerst opgelost worden
+
+### BUG (OPENSTAAND): Poule header kleur blijft oranje na fix
+- **Type:** Bug (NIET OPGELOST)
+- **Wat:** Header is oranje/rood i.p.v. blauw bij poules met >= 3 judoka's
+- **Verwacht:** bg-blue-700 (blauw) bij >= 3 actieve judoka's
+- **Realiteit:** Headers zijn oranje/bruin kleur
+- **Mogelijke oorzaken:**
+  1. CSS override ergens
+  2. Cached oude versie
+  3. Styling die ik niet heb gevonden
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
+- **Naar permanente docs?** ☐ Moet eerst opgelost worden
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
