@@ -20,6 +20,31 @@
         $textClass = 'text-blue-600';
         $subClass = 'text-blue-400';
     }
+
+    // Check of dit een variabele categorie is (leeftijdsklasse bevat range zoals "9-10j")
+    $isVariabel = preg_match('/\d+-\d+j/', $cat['leeftijd']);
+
+    if ($isVariabel) {
+        // Variabele categorie: toon "M 9j 22kg (10w)" format
+        // Extract label prefix (M, V, Beginners, etc.) - eerste letter
+        $labelPrefix = '';
+        if (preg_match('/^([A-Za-z]+)/', $cat['leeftijd'], $m)) {
+            $labelPrefix = strtoupper(substr($m[1], 0, 1));
+        }
+        // Extract min leeftijd uit "9-10j" of "M 9-10j"
+        preg_match('/(\d+)-\d+j/', $cat['leeftijd'], $lftMatch);
+        $minLeeftijd = $lftMatch[1] ?? '';
+        // Extract min gewicht uit "22-25kg" of "22-25"
+        preg_match('/(\d+(?:\.\d+)?)-/', $cat['gewicht'], $kgMatch);
+        $minGewicht = $kgMatch[1] ?? preg_replace('/[^\d.]/', '', $cat['gewicht']);
+
+        $chipLabel = trim($labelPrefix . ' ' . $minLeeftijd . 'j');
+        $chipGewicht = round((float)$minGewicht) . 'kg';
+    } else {
+        // Vaste categorie: bestaande weergave
+        $chipLabel = $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'];
+        $chipGewicht = $cat['gewicht'];
+    }
 @endphp
 <div class="category-chip px-2 py-1 text-sm rounded cursor-move {{ $chipClass }} shadow-sm hover:shadow transition-all inline-flex items-center gap-1"
      draggable="true"
@@ -27,9 +52,10 @@
      data-leeftijd="{{ $cat['leeftijd'] }}"
      data-wedstrijden="{{ $cat['wedstrijden'] }}"
      data-vast="{{ $cat['vast'] ? '1' : '0' }}"
-     data-sort="{{ $sortValue }}">
-    <span class="font-semibold">{{ $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'] }}</span>
-    <span class="{{ $textClass }}">{{ $cat['gewicht'] }}</span>
+     data-sort="{{ $sortValue }}"
+     title="{{ $cat['leeftijd'] }} {{ $cat['gewicht'] }}">
+    <span class="font-semibold">{{ $chipLabel }}</span>
+    <span class="{{ $textClass }}">{{ $chipGewicht }}</span>
     <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }}w)</span>
     @if(!$inSleepvak)
         @if($cat['vast'])
