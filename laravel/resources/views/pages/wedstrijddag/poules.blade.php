@@ -402,9 +402,16 @@
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
-                                            <div class="text-right text-xs flex-shrink-0">
-                                                <div class="{{ $isAfwijkendGewicht ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
-                                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                <div class="text-right text-xs">
+                                                    <div class="{{ $isAfwijkendGewicht ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                    <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                                </div>
+                                                <button
+                                                    onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
+                                                    class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                    title="Zoek geschikte poule"
+                                                >🔍</button>
                                             </div>
                                         </div>
                                     </div>
@@ -434,9 +441,16 @@
                                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                             </div>
                                         </div>
-                                        <div class="text-right text-xs ml-2 flex-shrink-0">
-                                            <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
-                                            <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                        <div class="flex items-center gap-1 flex-shrink-0">
+                                            <div class="text-right text-xs">
+                                                <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
+                                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
+                                            </div>
+                                            <button
+                                                onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
+                                                class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                title="Zoek geschikte poule"
+                                            >🔍</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1156,7 +1170,8 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     content.innerHTML = '';
 
     try {
-        const url = zoekMatchUrl.replace('__JUDOKA_ID__', judokaId) + '?wedstrijddag=1&from_poule_id=' + fromPouleId;
+        let url = zoekMatchUrl.replace('__JUDOKA_ID__', judokaId) + '?wedstrijddag=1';
+        if (fromPouleId) url += '&from_poule_id=' + fromPouleId;
         const response = await fetch(url, {
             headers: { 'Accept': 'application/json' }
         });
