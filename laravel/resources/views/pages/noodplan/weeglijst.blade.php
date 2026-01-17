@@ -15,7 +15,8 @@
                 <th class="px-2 py-2 text-left">Club</th>
                 <th class="px-2 py-2 text-center w-20">Leeftijd</th>
                 <th class="px-2 py-2 text-center w-16">Gew.kl.</th>
-                <th class="px-2 py-2 text-center w-20">Gewicht</th>
+                <th class="px-2 py-2 text-center w-20">Opgegeven</th>
+                <th class="px-2 py-2 text-center w-20">Gewogen</th>
             </tr>
         </thead>
         <tbody>
@@ -26,8 +27,13 @@
                 <td class="px-2 py-1 text-gray-600 text-xs">{{ $judoka->club?->naam ?? '-' }}</td>
                 <td class="px-2 py-1 text-center text-xs">{{ $judoka->leeftijdsklasse ?? '-' }}</td>
                 <td class="px-2 py-1 text-center text-xs">{{ $judoka->gewichtsklasse ?? '-' }}</td>
+                <td class="px-2 py-1 text-center text-xs">{{ $judoka->gewicht_opgegeven ? number_format($judoka->gewicht_opgegeven, 1) : '-' }}</td>
                 <td class="px-2 py-1 text-center border-l">
-                    <span class="inline-block w-16 border-b border-gray-400">&nbsp;</span>
+                    @if($judoka->gewicht_gewogen)
+                        <span class="font-bold">{{ number_format($judoka->gewicht_gewogen, 1) }}</span>
+                    @else
+                        <span class="inline-block w-16 border-b border-gray-400">&nbsp;</span>
+                    @endif
                 </td>
             </tr>
             @endforeach
