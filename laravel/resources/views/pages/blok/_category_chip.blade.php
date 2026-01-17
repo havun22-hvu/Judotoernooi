@@ -21,25 +21,27 @@
         $subClass = 'text-blue-400';
     }
 
-    // Check of dit een variabele categorie is (leeftijdsklasse bevat range zoals "9-10j")
-    $isVariabel = preg_match('/\d+-\d+j/', $cat['leeftijd']);
+    // Check of dit een variabele categorie is
+    // Variabel = titel bevat leeftijdsrange (bijv. "Mini's 7-8j 20-23kg")
+    $titel = $cat['titel'] ?? '';
+    $isVariabel = preg_match('/\d+-?\d*j/', $titel) && preg_match('/[\d.]+-[\d.]+kg/', $titel);
 
     if ($isVariabel) {
-        // Variabele categorie: toon "M 9j 22kg (10w)" format
-        // Extract label prefix (M, V, Beginners, etc.) - eerste letter
+        // Variabele categorie: toon "M 7j 20kg (10w)" format uit titel
+        // Extract label prefix (Mini's → M, A-pupillen → A, Jeugd → J)
         $labelPrefix = '';
-        if (preg_match('/^([A-Za-z]+)/', $cat['leeftijd'], $m)) {
-            $labelPrefix = strtoupper(substr($m[1], 0, 1));
+        if (preg_match('/^([A-Za-z])/', $titel, $m)) {
+            $labelPrefix = strtoupper($m[1]);
         }
-        // Extract min leeftijd uit "9-10j" of "M 9-10j"
-        preg_match('/(\d+)-\d+j/', $cat['leeftijd'], $lftMatch);
+        // Extract min leeftijd uit "7-8j" of "7j"
+        preg_match('/(\d+)-?\d*j/', $titel, $lftMatch);
         $minLeeftijd = $lftMatch[1] ?? '';
-        // Extract min gewicht uit "22-25kg" of "22-25"
-        preg_match('/(\d+(?:\.\d+)?)-/', $cat['gewicht'], $kgMatch);
-        $minGewicht = $kgMatch[1] ?? preg_replace('/[^\d.]/', '', $cat['gewicht']);
+        // Extract min gewicht uit "20.0-23.5kg"
+        preg_match('/([\d.]+)-[\d.]+kg/', $titel, $kgMatch);
+        $minGewicht = $kgMatch[1] ?? '';
 
         $chipLabel = trim($labelPrefix . ' ' . $minLeeftijd . 'j');
-        $chipGewicht = round((float)$minGewicht) . 'kg';
+        $chipGewicht = $minGewicht ? round((float)$minGewicht) . 'kg' : '';
     } else {
         // Vaste categorie: bestaande weergave
         $chipLabel = $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'];
@@ -53,7 +55,7 @@
      data-wedstrijden="{{ $cat['wedstrijden'] }}"
      data-vast="{{ $cat['vast'] ? '1' : '0' }}"
      data-sort="{{ $sortValue }}"
-     title="{{ $cat['leeftijd'] }} {{ $cat['gewicht'] }}">
+     title="{{ $cat['titel'] ?? ($cat['leeftijd'] . ' ' . $cat['gewicht']) }}">
     <span class="font-semibold">{{ $chipLabel }}</span>
     <span class="{{ $textClass }}">{{ $chipGewicht }}</span>
     <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }}w)</span>

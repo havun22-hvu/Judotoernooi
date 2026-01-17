@@ -23,36 +23,65 @@
     $varianten = session('blok_varianten', []);
     $toonVarianten = request()->has('kies') && !empty($varianten);
 
-    // Get all categories with their block assignment from database
-    // reorder() removes default orderBy('nummer') which conflicts with GROUP BY in MySQL
-    $alleCatsRaw = $toernooi->poules()
-        ->reorder()
-        ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
-        ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
-        ->selectRaw('MAX(blok_vast) as is_vast')
-        ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
-        ->with('blok:id,nummer')
-        ->orderBy('leeftijdsklasse')
-        ->orderBy('gewichtsklasse')
-        ->get();
+    if ($heeftVariabeleCategorieen) {
+        // VARIABELE CATEGORIEËN: elke poule apart (niet groeperen)
+        $alleCats = $toernooi->poules()
+            ->with('blok:id,nummer')
+            ->where('type', '!=', 'kruisfinale')
+            ->get()
+            ->map(function($p) {
+                // Extract min leeftijd en gewicht uit titel voor sortering
+                preg_match('/(\d+)-?\d*j/', $p->titel ?? '', $lftMatch);
+                preg_match('/([\d.]+)-[\d.]+kg/', $p->titel ?? '', $kgMatch);
+                $minLft = (int)($lftMatch[1] ?? 99);
+                $minKg = (float)($kgMatch[1] ?? 999);
 
-    // Group per category (database state)
-    $alleCats = $alleCatsRaw
-        ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
-        ->map(fn($g) => [
-            'leeftijd' => $g->first()->leeftijdsklasse,
-            'gewicht' => $g->first()->gewichtsklasse,
-            'wedstrijden' => $g->sum('wedstrijden'),
-            'blok' => $g->first()->blok->nummer ?? null,
-            'vast' => (bool) $g->first()->is_vast,
-        ])
-        ->filter(fn($c) => $c['wedstrijden'] > 0)
-        ->sortBy(function($v) use ($leeftijdVolgorde) {
-            $leeftijdPos = ($pos = array_search($v['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
-            $gewicht = (int)preg_replace('/[^0-9]/', '', $v['gewicht']);
-            $plusBonus = str_starts_with($v['gewicht'], '+') ? 500 : 0;
-            return $leeftijdPos + $gewicht + $plusBonus;
-        });
+                return [
+                    'leeftijd' => $p->leeftijdsklasse,
+                    'gewicht' => $p->gewichtsklasse,
+                    'titel' => $p->titel,
+                    'nummer' => $p->nummer,
+                    'wedstrijden' => $p->aantal_wedstrijden,
+                    'blok' => $p->blok->nummer ?? null,
+                    'vast' => (bool) $p->blok_vast,
+                    'min_lft' => $minLft,
+                    'min_kg' => $minKg,
+                ];
+            })
+            ->filter(fn($c) => $c['wedstrijden'] > 0)
+            ->sortBy([['min_lft', 'asc'], ['min_kg', 'asc']])
+            ->values();
+    } else {
+        // VASTE CATEGORIEËN: groeperen per leeftijdsklasse|gewichtsklasse
+        $alleCatsRaw = $toernooi->poules()
+            ->reorder()
+            ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
+            ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
+            ->selectRaw('MAX(blok_vast) as is_vast')
+            ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
+            ->with('blok:id,nummer')
+            ->orderBy('leeftijdsklasse')
+            ->orderBy('gewichtsklasse')
+            ->get();
+
+        $alleCats = $alleCatsRaw
+            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->map(fn($g) => [
+                'leeftijd' => $g->first()->leeftijdsklasse,
+                'gewicht' => $g->first()->gewichtsklasse,
+                'titel' => null,
+                'wedstrijden' => $g->sum('wedstrijden'),
+                'blok' => $g->first()->blok->nummer ?? null,
+                'vast' => (bool) $g->first()->is_vast,
+            ])
+            ->filter(fn($c) => $c['wedstrijden'] > 0)
+            ->sortBy(function($v) use ($leeftijdVolgorde) {
+                $leeftijdPos = ($pos = array_search($v['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
+                $gewicht = (int)preg_replace('/[^0-9]/', '', $v['gewicht']);
+                $plusBonus = str_starts_with($v['gewicht'], '+') ? 500 : 0;
+                return $leeftijdPos + $gewicht + $plusBonus;
+            });
+    }
 
     // If showing variants, apply variant 0 to display (but not to DB yet)
     if ($toonVarianten && isset($varianten[0]['toewijzingen'])) {
@@ -77,43 +106,8 @@
     $catsPerLeeftijd = $alleCats->groupBy('leeftijd');
     $nietVerdeeldPerLeeftijd = $nietVerdeeldCats->groupBy('leeftijd');
 
-    // Voor variabele categorieën: haal individuele poules op voor Overzicht panel
-    $overzichtPoules = collect();
-    if ($heeftVariabeleCategorieen) {
-        $overzichtPoules = $toernooi->poules()
-            ->with('blok:id,nummer')
-            ->where('type', '!=', 'kruisfinale')
-            ->get()
-            ->map(function($p) {
-                // Extract min values voor sortering
-                preg_match('/(\d+)-\d+j/', $p->leeftijdsklasse, $lftMatch);
-                preg_match('/(\d+(?:\.\d+)?)-/', $p->gewichtsklasse, $kgMatch);
-                $minLft = (int)($lftMatch[1] ?? 0);
-                $minKg = (float)($kgMatch[1] ?? preg_replace('/[^\d.]/', '', $p->gewichtsklasse));
-
-                // Extract label prefix (M, V, etc.)
-                $labelPrefix = '';
-                if (preg_match('/^([A-Za-z]+)/', $p->leeftijdsklasse, $m)) {
-                    $labelPrefix = strtoupper(substr($m[1], 0, 1));
-                }
-
-                return [
-                    'nummer' => $p->nummer,
-                    'label' => $labelPrefix,
-                    'leeftijd' => $p->leeftijdsklasse,
-                    'gewicht' => $p->gewichtsklasse,
-                    'wedstrijden' => $p->aantal_wedstrijden,
-                    'blok' => $p->blok->nummer ?? null,
-                    'vast' => (bool) $p->blok_vast,
-                    'key' => $p->leeftijdsklasse . '|' . $p->gewichtsklasse,
-                    'min_lft' => $minLft,
-                    'min_kg' => $minKg,
-                ];
-            })
-            ->filter(fn($p) => $p['wedstrijden'] > 0)
-            ->sortBy([['min_lft', 'asc'], ['min_kg', 'asc']])
-            ->values();
-    }
+    // Voor variabele categorieën: overzicht gebruikt $alleCats (al opgehaald hierboven)
+    $overzichtPoules = $heeftVariabeleCategorieen ? $alleCats : collect();
 @endphp
 
 <!-- Header -->
@@ -341,24 +335,22 @@
             </div>
             <div class="p-2 max-h-[calc(100vh-200px)] overflow-y-auto text-xs" id="overzicht-panel">
                 @if($heeftVariabeleCategorieen)
-                    {{-- Variabele categorieën: toon individuele poules met volledige info --}}
+                    {{-- Variabele categorieën: toon individuele poules met titel --}}
                     @foreach($overzichtPoules as $poule)
                     <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
-                        <div class="flex-1 min-w-0">
+                        <div class="flex-1 min-w-0 truncate">
                             <span class="font-bold text-gray-600">P{{ $poule['nummer'] }}</span>
-                            @if($poule['label'])<span class="text-gray-500 ml-1">{{ $poule['label'] }}</span>@endif
-                            <span class="text-gray-700 ml-1">{{ $poule['leeftijd'] }}</span>
-                            <span class="text-gray-500">{{ $poule['gewicht'] }}</span>
+                            <span class="text-gray-700 ml-1">{{ $poule['titel'] }}</span>
                             <span class="text-gray-400">({{ $poule['wedstrijden'] }}w)</span>
                         </div>
                         @if($poule['blok'])
                             @if($poule['vast'])
-                            <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['key'] }}">●{{ $poule['blok'] }}</span>
+                            <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">●{{ $poule['blok'] }}</span>
                             @else
-                            <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['key'] }}">{{ $poule['blok'] }}</span>
+                            <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">{{ $poule['blok'] }}</span>
                             @endif
                         @else
-                        <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="{{ $poule['key'] }}">-</span>
+                        <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">-</span>
                         @endif
                     </div>
                     @endforeach
