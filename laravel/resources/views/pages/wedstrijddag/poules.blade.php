@@ -5,6 +5,8 @@
 @section('content')
 @php
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+    // Check of toernooi variabele categorieën heeft
+    $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
     // Verzamel alle poules met te weinig actieve judoka's (1 of 2)
     // NEGEER kruisfinales - die hebben nog geen judokas gekoppeld
     // BELANGRIJK: Alleen afwezigen excluderen, afwijkend gewicht telt WEL mee (organisator kiest wie eruit gaat)
@@ -356,10 +358,21 @@
                                 data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}"
                                 data-actief="{{ $aantalActief }}"
                             >
-                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : 'bg-blue-700') }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
+                                @php
+                                    // Bij variabele categorieën: toon actuele gewichtsrange, markeer als problematisch
+                                    $pouleRange = $heeftVariabeleCategorieen ? $poule->getGewichtsRange() : null;
+                                    $pouleTitel = $heeftVariabeleCategorieen && $poule->titel
+                                        ? $poule->titel
+                                        : $category['label'] . ' / ' . $poule->gewichtsklasse;
+                                    // Override met actuele range als beschikbaar
+                                    if ($pouleRange) {
+                                        $pouleTitel = $poule->titel . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
+                                    }
+                                @endphp
+                                <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')) }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
                                     <div class="pointer-events-none flex-1">
-                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $category['label'] }} / {{ $poule->gewichtsklasse }}</div>
-                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : 'text-blue-200') }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+                                        <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $pouleTitel }}</div>
+                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')) }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
                                         @if($verwijderdeTekst->isNotEmpty())
@@ -382,7 +395,9 @@
                                     @php
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig';
-                                        $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                        // Bij variabele categorieën: geen individuele markering (poule-niveau markering is voldoende)
+                                        // Bij vaste categorieën: wel markeren als buiten gewichtsklasse
+                                        $isAfwijkendGewicht = !$heeftVariabeleCategorieen && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
                                     @endphp
                                     @if($isAfwezig)
                                         @continue
