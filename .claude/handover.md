@@ -1,5 +1,92 @@
 # Handover - Laatste Sessie
 
+## Datum: 17 januari 2026
+
+### Wat is gedaan:
+
+1. **Vergrootglas zoek-match icoon** ✅
+   - 🔍 knop bij elke judoka in poules EN wachtruimte
+   - Klikt naar Zoek Match popup met geschikte poules
+
+2. **Revalidatie na drag naar wachtruimte** ✅
+   - `naarWachtruimte()` endpoint retourneert nu `is_problematisch`
+   - JS update probeert border te verwijderen als poule OK is
+
+3. **Oranje border bij initiële render** ✅
+   - Check `$problematischeGewichtsPoules->has($poule->id)` in PHP render
+   - Voorheen werd border alleen via JS gezet
+
+4. **Console.log debugging** ✅
+   - Toegevoegd voor troubleshooting gewichtsrange issues
+
+### OPENSTAANDE BUGS (KRITIEK):
+
+#### 1. Vals-positieve gewichtsrange markering
+**Probleem:** Poules worden oranje gemarkeerd terwijl gewichtsrange OK is!
+
+**Voorbeelden:**
+- **Poule #5 Jeugd 21-23kg**: range 21.5-23.4 = **1.9kg** → zou NIET oranje moeten zijn!
+- **Poule #9 Jeugd 26.5-28.8kg**: range 27.3-31.8 = 4.5kg (1 judoka buiten klasse)
+
+**Mogelijke oorzaken:**
+1. `Poule::isDynamisch()` retourneert true voor VASTE gewichtsklassen
+2. `max_kg_verschil` staat verkeerd in config
+3. `$problematischeGewichtsPoules` collectie bevat verkeerde poules
+
+**Te onderzoeken bestanden:**
+```
+app/Models/Poule.php:
+  - isDynamisch() regel 214-218
+  - getCategorieConfig() regel 223-239
+  - isProblematischNaWeging() regel 275-314
+
+app/Http/Controllers/WedstrijddagController.php:
+  - Hoe wordt $problematischeGewichtsPoules opgebouwd?
+```
+
+#### 2. Header kleur verkeerd (oranje i.p.v. blauw)
+**Probleem:** Headers zijn oranje/bruin bij poules met >= 3 judoka's
+
+**Verwacht:** `bg-blue-700` (blauw) bij >= 3 actieve judoka's
+**Realiteit:** Headers lijken oranje/bruin
+
+**Te checken:** Browser cache (Ctrl+F5), CSS overrides
+
+#### 3. Update na drag werkt niet altijd
+**Debug stappen:**
+1. Open browser console (F12)
+2. Sleep judoka naar wachtruimte
+3. Check output: `naarWachtruimte response: { van_poule: { is_problematisch: ... } }`
+
+### Hypothese:
+
+Het probleem zit waarschijnlijk in hoe categorieën als "dynamisch" worden geïdentificeerd. `isDynamisch()` checkt `max_kg_verschil > 0`, maar als ALLE categorieën dit hebben (ook vaste zoals 21-23kg), worden ze allemaal gevalideerd.
+
+**Oplossing:** Onderscheid maken tussen:
+- Dynamische categorie: variabel gewicht, max_kg_verschil constraint
+- Vaste gewichtsklasse: gewicht al bepaald door klasse (21-23kg), geen extra validatie nodig
+
+### Gewijzigde bestanden:
+
+```
+app/Http/Controllers/WedstrijddagController.php
+  - naarWachtruimte() - is_problematisch response
+
+resources/views/pages/wedstrijddag/poules.blade.php
+  - 🔍 zoek-match knoppen
+  - $heeftGewichtsprobleem bij initiële render
+  - updateGewichtsrangeBox() JS functie
+  - Console.log debugging
+```
+
+### Commits vandaag:
+
+- `feat: Revalidate poule after dragging judoka to wachtruimte`
+- `feat: Add search icon to find suitable poule for each judoka`
+- `fix: Add orange border styling at initial render for weight range problems`
+
+---
+
 ## Datum: 16 januari 2026 (sessie 2)
 
 ### Wat is gedaan:
