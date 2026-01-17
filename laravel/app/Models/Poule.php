@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CategorieClassifier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -213,29 +214,43 @@ class Poule extends Model
      */
     public function isDynamisch(): bool
     {
-        $categorieConfig = $this->getCategorieConfig();
-        return ($categorieConfig['max_kg_verschil'] ?? 0) > 0;
+        if (!$this->categorie_key) {
+            return false;
+        }
+
+        $classifier = $this->getClassifier();
+        return $classifier->isDynamisch($this->categorie_key);
     }
 
     /**
-     * Get de categorie config voor deze poule
+     * Get de categorie config voor deze poule.
+     * Uses CategorieClassifier with direct key lookup (never searches on label).
      */
     public function getCategorieConfig(): array
     {
-        $gewichtsklassen = $this->toernooi?->gewichtsklassen ?? [];
+        $classifier = $this->getClassifier();
+        $config = $classifier->getConfigVoorPoule($this);
 
-        // Zoek categorie op basis van leeftijdsklasse label
-        foreach ($gewichtsklassen as $key => $config) {
-            if (($config['label'] ?? $key) === $this->leeftijdsklasse) {
-                return $config;
-            }
+        if ($config) {
+            return $config;
         }
 
-        // Fallback naar toernooi-brede instellingen
+        // Fallback: no config found = treat as fixed (no weight range validation)
         return [
-            'max_kg_verschil' => $this->toernooi?->max_kg_verschil ?? 0,
-            'max_leeftijd_verschil' => $this->toernooi?->max_leeftijd_verschil ?? 0,
+            'max_kg_verschil' => 0,
+            'max_leeftijd_verschil' => 0,
         ];
+    }
+
+    /**
+     * Get CategorieClassifier instance for this poule's toernooi.
+     */
+    private function getClassifier(): CategorieClassifier
+    {
+        $gewichtsklassen = $this->toernooi?->gewichtsklassen ?? [];
+        $tolerantie = $this->toernooi?->gewicht_tolerantie ?? 0.5;
+
+        return new CategorieClassifier($gewichtsklassen, $tolerantie);
     }
 
     /**
