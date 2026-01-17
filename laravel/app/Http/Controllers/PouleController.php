@@ -318,7 +318,8 @@ class PouleController extends Controller
                 continue;
             }
 
-            $judokasInPoule = $poule->judokas;
+            // Filter afwezige judoka's - alleen aanwezigen tellen mee voor ranges
+            $judokasInPoule = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig');
 
             if ($judokasInPoule->isEmpty()) {
                 continue;
@@ -954,7 +955,8 @@ class PouleController extends Controller
     private function berekenPouleRanges(Poule $poule, int $huidigJaar): array
     {
         // Force fresh query to avoid SQLite caching issues
-        $judokas = $poule->judokas()->get();
+        // Filter afwezige judoka's - alleen aanwezigen tellen mee voor ranges
+        $judokas = $poule->judokas()->get()->filter(fn($j) => $j->aanwezigheid !== 'afwezig');
 
         if ($judokas->isEmpty()) {
             return [
