@@ -753,6 +753,232 @@ Response:
 
 ---
 
+## Wedstrijddag: Dynamisch Overpoulen
+
+### TL;DR
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ DYNAMISCH OVERPOULEN - SAMENVATTING                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│ WANNEER: Na sluiten weging van een blok                             │
+│                                                                     │
+│ PROBLEEM: Poule gewichtsrange > max_kg_verschil (uit config)        │
+│           Voorbeeld: poule 27-32kg = 5kg range, max = 3kg → ❌      │
+│                                                                     │
+│ DETECTIE: Voor elke poule in blok:                                  │
+│           range = max(gewogen) - min(gewogen)                       │
+│           if range > max_kg_verschil → problematisch                │
+│                                                                     │
+│ OPLOSSING: Verplaats lichtste OF zwaarste judoka via Zoek Match     │
+│                                                                     │
+│ DOELPOULES: Alle blokken waar weging nog OPEN is                    │
+│             + zelfde blok                                           │
+│             + alle volgende blokken                                 │
+│                                                                     │
+│ NA VERPLAATSEN: Weegkaart + publieke pagina's updaten automatisch   │
+│                 (alles is live uit database)                        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Flow Diagram
+
+```
+┌──────────────────┐
+│ Weging gesloten  │
+│ voor blok X      │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Check alle poules│
+│ in blok X        │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐     Nee      ┌──────────────────┐
+│ range > max_kg?  │─────────────►│ Klaar, geen      │
+│                  │              │ actie nodig      │
+└────────┬─────────┘              └──────────────────┘
+         │ Ja
+         ▼
+┌──────────────────┐
+│ Markeer poule    │
+│ als problematisch│
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Toon lichtste +  │
+│ zwaarste judoka  │
+│ met Zoek Match   │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Org kiest judoka │
+│ → Zoek Match     │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Filter poules:   │
+│ • Zelfde blok    │
+│ • Volgende blok  │
+│ • Vorige blokken │
+│   (weging open!) │
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Org kiest doel-  │
+│ poule → verplaats│
+└────────┬─────────┘
+         ▼
+┌──────────────────┐
+│ Data update:     │
+│ • Weegkaart      │
+│ • Publieke pages │
+│ (automatisch)    │
+└──────────────────┘
+```
+
+### Het Probleem
+
+Bij **vaste categorieën** werkt overpoulen zo:
+- Judoka te zwaar → uit poule → naar wachtruimte van juiste gewichtsklasse
+- Wachtruimte bestaat per vaste categorie (-36kg, -40kg, etc.)
+
+Bij **dynamische poules** is dit anders:
+- Geen vaste gewichtsklassen = geen wachtruimtes
+- Poules zijn gevormd op basis van werkelijke gewichten
+- Na weging kunnen gewichten afwijken → poule range kan te groot worden
+
+### Detectie: Wanneer is overpoulen nodig?
+
+**Na sluiten weging** per blok:
+
+1. **Herbereken min-max kg** per poule op basis van **gewogen gewichten**
+2. **Check:** `(max_kg - min_kg) > max_kg_verschil` uit categorie config?
+3. **Indien ja:** poule is problematisch → moet opgelost worden
+
+**Voorbeeld:**
+```
+Poule #42 vóór weging:  28, 29, 30, 31 kg → range 3kg ✅ (max=3)
+Poule #42 na weging:    27, 29, 30, 32 kg → range 5kg ❌ (max=3)
+→ Probleem: 27kg of 32kg moet verplaatst worden
+```
+
+**Belangrijk:** Het gaat om de POULE range, niet om individuele judoka's!
+- Als iedereen 1kg zwaarder is → range blijft gelijk → geen probleem
+- Alleen als de spreiding te groot wordt → actie nodig
+
+### Oplossing: Zoek Match voor Wedstrijddag
+
+Hergebruik het Zoek Match systeem met extra beperkingen:
+
+**Blok beperkingen voor doelpoule:**
+
+| Blok situatie | Beschikbaar? | Reden |
+|---------------|--------------|-------|
+| **Zelfde blok** | ✅ Ja (voorkeur) | Ideaal, zelfde tijdslot |
+| **Volgende blokken** | ✅ Ja | Acceptabel, later op de dag |
+| **Eerdere blokken, weging open** | ✅ Ja | Judoka kan nog wegen in dat blok |
+| **Eerdere blokken, weging gesloten** | ❌ Nee | Judoka kan niet meer wegen |
+
+**Check:** Per blok `weging_gesloten` bekijken. Blok 1, 2, 3... kunnen allemaal beschikbaar zijn zolang weging daar nog open is.
+
+### UI: Problematische Poules na Weging
+
+Op **Wedstrijddag Poules** pagina:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ ⚠️ Poule #42 Jeugd 9-10j                         Range: 5kg ❌  │
+│    Huidige judoka's: 27-32kg (max toegestaan: 3kg)              │
+│                                                                  │
+│    [Toon details ▼]                                             │
+│                                                                  │
+│    27kg - Piet Jansen      [🔍 Zoek match] ← lichtste           │
+│    29kg - Jan de Vries                                          │
+│    30kg - Kees Bakker                                           │
+│    32kg - Tom Smit         [🔍 Zoek match] ← zwaarste           │
+│                                                                  │
+│    💡 Verplaats de lichtste of zwaarste om range te verkleinen  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+**Weergave:**
+- Markeer poules waar range > max_kg_verschil
+- Toon huidige range en max toegestaan
+- Highlight lichtste EN zwaarste judoka (organisator kiest)
+- Zoek Match knop alleen bij lichtste en zwaarste
+
+### Zoek Match Popup (Wedstrijddag variant)
+
+Extra informatie t.o.v. voorbereiding:
+- Blok van doelpoule tonen
+- Beschikbaarheid indicator (blok status)
+- Sortering: zelfde blok eerst, dan volgend, dan vorig
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ Match voor: Piet Jansen (27kg, 9j)                          [X] │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│ 🟢 BLOK 2 (huidig blok)                                         │
+│ ─────────────────────────────────────────────────────────────── │
+│ ✅ Poule #38 Jeugd                                              │
+│    Nu:  4 judoka's | 9-10j | 26-28kg                            │
+│    Na:  5 judoka's | 9-10j | 26-28kg                            │
+│                                                                  │
+│ 🔵 BLOK 3 (volgend blok)                                        │
+│ ─────────────────────────────────────────────────────────────── │
+│ ⚠️ Poule #55 Jeugd                                   +1kg over  │
+│    Nu:  3 judoka's | 8-9j | 24-26kg                             │
+│    Na:  4 judoka's | 8-9j | 24-27kg                             │
+│                                                                  │
+│ 🟡 BLOK 1 (vorig blok - weging nog open)                        │
+│ ─────────────────────────────────────────────────────────────── │
+│ ✅ Poule #12 Jeugd                                              │
+│    Nu:  4 judoka's | 9j | 26-29kg                               │
+│    Na:  5 judoka's | 9j | 26-29kg                               │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Nieuwe Poule Maken
+
+Als geen geschikte match:
+- Organisator kan nieuwe poule aanmaken
+- Nieuwe poule komt in zelfde blok (of kies blok)
+- **Let op:** Lege poules niet op mat zetten!
+
+### Implementatie Stappen
+
+1. **Detectie problematische poules**
+   - Na `sluitWeging()`: check alle poules in blok
+   - Bereken range op basis van gewogen gewichten
+   - Markeer poules waar range > max_kg_verschil
+
+2. **UI aanpassing Wedstrijddag Poules**
+   - Toon problematische poules met waarschuwing
+   - Zoek Match knop bij lichtste/zwaarste judoka
+   - Blok status indicator
+
+3. **Zoek Match uitbreiden**
+   - Parameter: `wedstrijddag=true` voor extra blok-filtering
+   - Groepeer resultaten per blok
+   - Check blok status (gestart/weging open/gesloten)
+
+4. **Validatie bij verplaatsen**
+   - Check of doelblok nog beschikbaar is (weging niet gesloten)
+   - Waarschuwing als naar ander blok
+
+5. **Data updates na verplaatsen**
+   - **Weegkaarten:** Dynamisch, blok/mat info update automatisch
+   - **Publieke pagina's:** Deelnemer zoeken, poule overzichten, etc. tonen actuele data
+   - **QR-code:** Blijft zelfde (gebaseerd op judoka ID, niet poule)
+   - Alle views lezen live uit database → geen cache invalidatie nodig
+
+---
+
 ## Legacy
 
 De `App\Enums\Leeftijdsklasse` enum is **deprecated**:

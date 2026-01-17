@@ -209,6 +209,111 @@ class Poule extends Model
     }
 
     /**
+     * Check of poule een dynamische categorie is (max_kg_verschil > 0)
+     */
+    public function isDynamisch(): bool
+    {
+        $categorieConfig = $this->getCategorieConfig();
+        return ($categorieConfig['max_kg_verschil'] ?? 0) > 0;
+    }
+
+    /**
+     * Get de categorie config voor deze poule
+     */
+    public function getCategorieConfig(): array
+    {
+        $gewichtsklassen = $this->toernooi?->gewichtsklassen ?? [];
+
+        // Zoek categorie op basis van leeftijdsklasse label
+        foreach ($gewichtsklassen as $key => $config) {
+            if (($config['label'] ?? $key) === $this->leeftijdsklasse) {
+                return $config;
+            }
+        }
+
+        // Fallback naar toernooi-brede instellingen
+        return [
+            'max_kg_verschil' => $this->toernooi?->max_kg_verschil ?? 0,
+            'max_leeftijd_verschil' => $this->toernooi?->max_leeftijd_verschil ?? 0,
+        ];
+    }
+
+    /**
+     * Bereken de gewichtsrange van actieve judoka's in de poule
+     * Retourneert [min_kg, max_kg, range] of null als geen gewogen judoka's
+     */
+    public function getGewichtsRange(): ?array
+    {
+        $gewichten = $this->judokas()
+            ->whereNotNull('gewicht_gewogen')
+            ->where(function ($q) {
+                $q->whereNull('aanwezigheid')
+                  ->orWhere('aanwezigheid', '!=', 'afwezig');
+            })
+            ->pluck('gewicht_gewogen')
+            ->filter()
+            ->values();
+
+        if ($gewichten->isEmpty()) {
+            return null;
+        }
+
+        $min = $gewichten->min();
+        $max = $gewichten->max();
+
+        return [
+            'min_kg' => $min,
+            'max_kg' => $max,
+            'range' => $max - $min,
+        ];
+    }
+
+    /**
+     * Check of poule problematisch is na weging (range > max_kg_verschil)
+     * Retourneert null als niet problematisch, anders array met details
+     */
+    public function isProblematischNaWeging(): ?array
+    {
+        // Alleen voor dynamische categorieën
+        if (!$this->isDynamisch()) {
+            return null;
+        }
+
+        $range = $this->getGewichtsRange();
+        if (!$range) {
+            return null;
+        }
+
+        $config = $this->getCategorieConfig();
+        $maxKgVerschil = $config['max_kg_verschil'] ?? 3;
+
+        if ($range['range'] <= $maxKgVerschil) {
+            return null;
+        }
+
+        // Vind lichtste en zwaarste judoka
+        $judokas = $this->judokas()
+            ->whereNotNull('gewicht_gewogen')
+            ->where(function ($q) {
+                $q->whereNull('aanwezigheid')
+                  ->orWhere('aanwezigheid', '!=', 'afwezig');
+            })
+            ->orderBy('gewicht_gewogen')
+            ->get();
+
+        return [
+            'range' => $range['range'],
+            'max_toegestaan' => $maxKgVerschil,
+            'overschrijding' => $range['range'] - $maxKgVerschil,
+            'min_kg' => $range['min_kg'],
+            'max_kg' => $range['max_kg'],
+            'lichtste' => $judokas->first(),
+            'zwaarste' => $judokas->last(),
+            'judokas' => $judokas,
+        ];
+    }
+
+    /**
      * Generate match schedule for this poule
      * Returns optimal match order to minimize consecutive matches for same judoka
      * Each judoka gets rest between their matches

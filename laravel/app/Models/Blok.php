@@ -129,4 +129,27 @@ class Blok extends Model
     {
         return Mat::whereIn('id', $this->poules()->whereNotNull('mat_id')->pluck('mat_id')->unique())->get();
     }
+
+    /**
+     * Get poules met gewichtsrange probleem na weging
+     * Alleen relevant voor dynamische categorieën waar range > max_kg_verschil
+     */
+    public function getProblematischePoules(): \Illuminate\Support\Collection
+    {
+        if (!$this->weging_gesloten) {
+            return collect();
+        }
+
+        return $this->poules()
+            ->with(['judokas', 'toernooi'])
+            ->get()
+            ->filter(function ($poule) {
+                return $poule->isProblematischNaWeging() !== null;
+            })
+            ->map(function ($poule) {
+                $probleem = $poule->isProblematischNaWeging();
+                $poule->probleem = $probleem;
+                return $poule;
+            });
+    }
 }

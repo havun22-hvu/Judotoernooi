@@ -25,6 +25,9 @@
             }
         }
     }
+
+    // Problematische poules door gewichtsrange (dynamisch overpoulen)
+    $problematischeGewichtsPoules = $problematischeGewichtsPoules ?? collect();
 @endphp
 <div x-data="wedstrijddagPoules()" class="space-y-6">
     <div class="flex justify-between items-center">
@@ -37,7 +40,7 @@
     <!-- Verificatie resultaat -->
     <div id="verificatie-resultaat" class="hidden"></div>
 
-    <!-- Problematische poules -->
+    <!-- Problematische poules (te weinig judoka's) -->
     <div id="problematische-poules-container" style="width: fit-content;">
     @if($problematischePoules->count() > 0)
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
@@ -53,6 +56,68 @@
     </div>
     @endif
     </div>
+
+    <!-- Problematische poules door gewichtsrange (dynamisch overpoulen) -->
+    @if($problematischeGewichtsPoules->count() > 0)
+    <div class="bg-orange-50 border border-orange-300 rounded-lg p-4">
+        <h3 class="font-bold text-orange-800 mb-2">Gewichtsrange overschreden ({{ $problematischeGewichtsPoules->count() }} poules)</h3>
+        <p class="text-orange-700 text-sm mb-3">Deze poules hebben een te grote gewichtsspreiding na weging. Verplaats de lichtste of zwaarste judoka:</p>
+        <div class="space-y-3">
+            @foreach($problematischeGewichtsPoules as $pouleId => $probleem)
+            @php
+                $pouleInfo = null;
+                foreach ($blokken as $blok) {
+                    foreach ($blok['categories'] as $cat) {
+                        foreach ($cat['poules'] as $p) {
+                            if ($p->id == $pouleId) {
+                                $pouleInfo = $p;
+                                break 3;
+                            }
+                        }
+                    }
+                }
+            @endphp
+            @if($pouleInfo)
+            <div class="bg-white border border-orange-200 rounded-lg p-3">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <a href="#poule-{{ $pouleId }}" onclick="scrollToPoule(event, {{ $pouleId }})" class="font-bold text-orange-800 hover:underline cursor-pointer">
+                            #{{ $pouleInfo->nummer }} {{ $pouleInfo->leeftijdsklasse }} {{ $pouleInfo->gewichtsklasse }}
+                        </a>
+                        <span class="text-orange-600 text-sm ml-2">Range: {{ number_format($probleem['range'], 1) }}kg (max: {{ number_format($probleem['max_toegestaan'], 1) }}kg)</span>
+                    </div>
+                    <span class="text-red-600 font-bold">+{{ number_format($probleem['overschrijding'], 1) }}kg over</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    @if($probleem['lichtste'])
+                    <div class="flex items-center justify-between bg-blue-50 rounded px-2 py-1">
+                        <span>
+                            <span class="text-blue-600 font-medium">{{ number_format($probleem['min_kg'], 1) }}kg</span>
+                            - {{ $probleem['lichtste']->naam }}
+                        </span>
+                        <button onclick="openZoekMatchWedstrijddag({{ $probleem['lichtste']->id }}, {{ $pouleId }})" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-0.5 bg-blue-100 rounded">
+                            Zoek match
+                        </button>
+                    </div>
+                    @endif
+                    @if($probleem['zwaarste'] && $probleem['zwaarste']->id !== $probleem['lichtste']?->id)
+                    <div class="flex items-center justify-between bg-red-50 rounded px-2 py-1">
+                        <span>
+                            <span class="text-red-600 font-medium">{{ number_format($probleem['max_kg'], 1) }}kg</span>
+                            - {{ $probleem['zwaarste']->naam }}
+                        </span>
+                        <button onclick="openZoekMatchWedstrijddag({{ $probleem['zwaarste']->id }}, {{ $pouleId }})" class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-0.5 bg-red-100 rounded">
+                            Zoek match
+                        </button>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     <div id="blokken-container" class="space-y-6">
     @forelse($blokken as $blok)
@@ -1022,7 +1087,159 @@ function fixBlokBreedte() {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(fixBlokBreedte, 200);
 });
+
+// Zoek Match voor wedstrijddag (dynamisch overpoulen)
+const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", [$toernooi, "__JUDOKA_ID__"]) }}';
+
+async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
+    const modal = document.getElementById('zoek-match-modal');
+    const content = document.getElementById('zoek-match-content');
+    const loading = document.getElementById('zoek-match-loading');
+
+    modal.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    content.innerHTML = '';
+
+    try {
+        const url = zoekMatchUrl.replace('__JUDOKA_ID__', judokaId) + '?wedstrijddag=1&from_poule_id=' + fromPouleId;
+        const response = await fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const data = await response.json();
+
+        loading.classList.add('hidden');
+
+        if (!data.success || !data.matches.length) {
+            content.innerHTML = '<p class="text-gray-500 text-center py-4">Geen geschikte poules gevonden</p>';
+            return;
+        }
+
+        // Groepeer per blok
+        const blokGroepen = {};
+        data.matches.forEach(match => {
+            const blokKey = match.blok_nummer || 0;
+            if (!blokGroepen[blokKey]) {
+                blokGroepen[blokKey] = {
+                    naam: match.blok_naam || 'Onbekend',
+                    status: match.blok_status,
+                    matches: []
+                };
+            }
+            blokGroepen[blokKey].matches.push(match);
+        });
+
+        // Sorteer blokken: same, later, earlier_open
+        const blokOrder = { 'same': 0, 'later': 1, 'earlier_open': 2 };
+        const sortedBlokken = Object.entries(blokGroepen).sort((a, b) => {
+            return (blokOrder[a[1].status] ?? 3) - (blokOrder[b[1].status] ?? 3);
+        });
+
+        let html = `<div class="mb-3 pb-2 border-b">
+            <span class="font-bold">${data.judoka.naam}</span>
+            <span class="text-gray-500">(${data.judoka.gewicht}kg, ${data.judoka.leeftijd}j)</span>
+        </div>`;
+
+        const blokColors = {
+            'same': 'bg-green-100 text-green-800',
+            'later': 'bg-blue-100 text-blue-800',
+            'earlier_open': 'bg-yellow-100 text-yellow-800'
+        };
+        const blokLabels = {
+            'same': 'Huidig blok',
+            'later': 'Volgend blok',
+            'earlier_open': 'Eerder blok (weging open)'
+        };
+
+        for (const [blokNummer, blok] of sortedBlokken) {
+            const color = blokColors[blok.status] || 'bg-gray-100 text-gray-800';
+            const label = blokLabels[blok.status] || blok.naam;
+
+            html += `<div class="mb-4">
+                <div class="text-sm font-medium ${color} px-2 py-1 rounded mb-2">${blok.naam} - ${label}</div>
+                <div class="space-y-2">`;
+
+            for (const match of blok.matches) {
+                const statusIcon = match.status === 'ok' ? '✅' : match.status === 'warning' ? '⚠️' : '❌';
+                const overschrijding = match.kg_overschrijding > 0 ? `<span class="text-orange-600 text-sm ml-2">+${match.kg_overschrijding}kg</span>` : '';
+
+                html += `<div class="border rounded p-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onclick="selecteerPouleWedstrijddag(${judokaId}, ${fromPouleId}, ${match.poule_id})">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="font-medium">${statusIcon} #${match.poule_nummer} ${match.leeftijdsklasse}</span>
+                            ${match.categorie_overschrijding ? '<span class="text-orange-500 text-xs ml-1">(andere categorie)</span>' : ''}
+                            ${overschrijding}
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                        <div>Nu: ${match.huidige_judokas} judoka's | ${match.huidige_leeftijd} | ${match.huidige_gewicht}</div>
+                        <div>Na: ${match.nieuwe_judokas} judoka's | ${match.nieuwe_leeftijd} | ${match.nieuwe_gewicht}</div>
+                    </div>
+                </div>`;
+            }
+
+            html += '</div></div>';
+        }
+
+        content.innerHTML = html;
+    } catch (error) {
+        console.error('Error:', error);
+        loading.classList.add('hidden');
+        content.innerHTML = '<p class="text-red-500 text-center py-4">Fout bij laden</p>';
+    }
+}
+
+async function selecteerPouleWedstrijddag(judokaId, vanPouleId, naarPouleId) {
+    try {
+        const response = await fetch(verplaatsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                judoka_id: judokaId,
+                poule_id: naarPouleId,
+                from_poule_id: vanPouleId
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Sluit modal en refresh pagina
+            document.getElementById('zoek-match-modal').classList.add('hidden');
+            window.location.reload();
+        } else {
+            alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij verplaatsen');
+    }
+}
+
+function closeZoekMatchModal() {
+    document.getElementById('zoek-match-modal').classList.add('hidden');
+}
 </script>
+
+<!-- Zoek Match Modal -->
+<div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target === this) closeZoekMatchModal()">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden">
+        <div class="flex justify-between items-center px-4 py-3 border-b">
+            <h3 class="font-bold text-lg">Zoek match (wedstrijddag)</h3>
+            <button onclick="closeZoekMatchModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+        </div>
+        <div class="p-4 overflow-y-auto max-h-[60vh]">
+            <div id="zoek-match-loading" class="text-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="text-gray-500 mt-2">Laden...</p>
+            </div>
+            <div id="zoek-match-content"></div>
+        </div>
+    </div>
+</div>
 
 <style>
 .sortable-ghost {
