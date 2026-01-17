@@ -337,11 +337,25 @@
                         </div>
                     </div>
                     @else
-                    {{-- Normale poules --}}
+                    {{-- Normale poules - groepeer op gewichtsklasse voor aparte rijen --}}
+                    @php
+                        // Groepeer poules op gewicht (uit titel of gewichtsklasse)
+                        $poulesPerGewicht = $category['poules']->groupBy(function($poule) use ($heeftVariabeleCategorieen) {
+                            if ($heeftVariabeleCategorieen && $poule->titel) {
+                                // Haal gewichtsbereik uit titel (bijv. "21.5-24.4kg" uit "Jeugd 7-9j 21.5-24.4kg")
+                                if (preg_match('/([\d.]+)-([\d.]+)kg/', $poule->titel, $m)) {
+                                    return $m[1] . '-' . $m[2] . 'kg';
+                                }
+                            }
+                            return $poule->gewichtsklasse ?: 'default';
+                        })->sortKeys();
+                    @endphp
                     <div class="flex gap-4">
                         {{-- Existing poules --}}
-                        <div class="flex flex-wrap gap-4 flex-1">
-                            @foreach($category['poules'] as $poule)
+                        <div class="flex-1 space-y-3">
+                            @foreach($poulesPerGewicht as $gewichtKey => $poulesInGewicht)
+                            <div class="flex flex-wrap gap-4">
+                            @foreach($poulesInGewicht as $poule)
                             @if($poule->type === 'kruisfinale')
                             {{-- KRUISFINALE: aparte weergave --}}
                             @php
@@ -489,6 +503,8 @@
                                     </div>
                                     @endforeach
                                 </div>
+                            </div>
+                            @endforeach
                             </div>
                             @endforeach
                         </div>
