@@ -856,7 +856,7 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     }
 
-    // Initialize sortable on all poule containers (voor drag TUSSEN poules)
+    // Initialize sortable on all poule containers (voor drag TUSSEN poules EN naar wachtruimte)
     document.querySelectorAll('.sortable-poule').forEach(container => {
         new Sortable(container, {
             group: 'wedstrijddag-poules',
@@ -868,12 +868,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 const judokaId = evt.item.dataset.judokaId;
                 const vanPouleId = evt.from.dataset.pouleId;
                 const naarPouleId = evt.to.dataset.pouleId;
+                const naarWachtruimte = evt.to.classList.contains('sortable-wachtruimte');
 
                 // Direct DOM update
                 if (vanPouleId) updatePouleFromDOM(vanPouleId);
                 if (naarPouleId) updatePouleFromDOM(naarPouleId);
 
-                // API call voor database sync (op achtergrond)
+                // Van poule naar wachtruimte
+                if (naarWachtruimte && vanPouleId) {
+                    // Update wachtruimte count
+                    const countEl = evt.to.closest('.wachtruimte-container')?.querySelector('.wachtruimte-count');
+                    if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+
+                    try {
+                        const response = await fetch(naarWachtruimteUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                            body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
+                        });
+                        const data = await response.json();
+                        if (!data.success) { alert('Fout: ' + (data.error || data.message)); window.location.reload(); }
+                    } catch (error) { console.error('Error:', error); alert('Fout bij verplaatsen naar wachtruimte'); window.location.reload(); }
+                    return;
+                }
+
+                // Van poule naar poule
                 const positions = Array.from(evt.to.querySelectorAll('.judoka-item'))
                     .map((el, idx) => ({ id: parseInt(el.dataset.judokaId), positie: idx + 1 }));
 
