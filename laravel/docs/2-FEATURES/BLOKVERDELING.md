@@ -316,6 +316,20 @@ P3 M 9-10j 24-27kg (6w)   [2]
 
 Panel is breder (w-72) om alle info te tonen. Gesorteerd op min leeftijd, dan min gewicht.
 
+### Wedstrijddag: Gewichtsmutaties (variabele categorieën)
+
+Bij variabele categorieën is de logica anders dan bij vaste categorieën:
+
+**Vaste categorieën:**
+- Judoka buiten gewichtsklasse → individuele oranje markering
+- Moet naar andere gewichtsklasse verplaatst worden
+
+**Variabele categorieën:**
+- **Geen** individuele markering (gewicht mag binnen poule range variëren)
+- Poule header wordt **oranje** als max_kg_verschil overschreden
+- Poule titel toont actuele range: `Mini's 7-8j (18.5-22.3kg)`
+- Alleen problematische poules vereisen actie (verplaats lichtste of zwaarste)
+
 ---
 
 ## Database
