@@ -511,23 +511,73 @@ Roept Python solver aan voor dynamische categorieën:
 - `berekenIndeling()` - Wrapper rond Python solver
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
 
-#### Algoritme Python Solver (Greedy++)
-   - Bereken nieuw leeftijd_range als judoka toegevoegd wordt
-   - ALS gewicht_range ≤ maxKgVerschil
-     EN leeftijd_range ≤ maxLeeftijdVerschil
-     EN poule.count < 5:
-       → Voeg toe
-   - ANDERS:
-       → Sla huidige poule op
-       → Start nieuwe poule met deze judoka
-3. Sla laatste poule op
-4. Merge kleine poules (< 4 judoka's) met buren als binnen limieten
+#### Algoritme Python Solver (Sliding Window)
+
+```
+INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, poule_grootte_voorkeur)
+OUTPUT: Poules binnen constraints
+
+STAP 1: LEEFTIJDSGROEP (sliding window)
+────────────────────────────────────────
+- Bepaal jongste leeftijd in categorie (bijv. 5 jaar)
+- Maak groep: jongste t/m jongste + max_lft_verschil (bijv. 5-6 jarigen)
+- Overblijvers uit vorige groep gaan MEE (zolang binnen lft range)
+
+STAP 2: GEWICHTSRANGE (sliding window)
+────────────────────────────────────────
+- Sorteer leeftijdsgroep op gewicht
+- Bepaal lichtste gewicht (bijv. 23kg)
+- Maak range: lichtste t/m lichtste + max_kg_verschil (bijv. 23-26kg)
+
+STAP 3: POULE MAKEN
+────────────────────────────────────────
+- Sorteer judoka's in gewichtsrange op band (laagste eerst: wit→geel→oranje...)
+- Maak poule(s) volgens poule_grootte_voorkeur
+- Geplaatste judoka's zijn "OP"
+
+STAP 4: HERHAAL
+────────────────────────────────────────
+- Overblijvers? → Nieuwe gewichtsrange vanaf lichtste overblijver (stap 2)
+- Jongste leeftijd "op"? → Nieuwe leeftijdsgroep (stap 1)
+- Overblijvers uit vorige lft-groep gaan mee naar volgende (indien binnen range)
+
+ORPHAN ONTSTAAT ALLEEN ALS:
+────────────────────────────────────────
+- Geen match in huidige leeftijdsgroep
+- EN kan niet mee naar volgende leeftijdsgroep (buiten max_lft_verschil)
+
+⛔ NOOIT: gewichtsrange in poule overschrijden (max_kg_verschil is hard)
 ```
 
-**Waarom dit werkt:**
-- Judoka's zijn al gesorteerd (stap 3), dus buren liggen dicht bij elkaar
-- Direct poules van 5 maken → geen complexe herverdeling nodig
-- Simpele code, voorspelbaar resultaat
+**Voorbeeld:**
+
+```
+Categorie "Jeugd", max_lft=1, max_kg=3
+
+Judoka's: [5j/23kg, 5j/24kg, 5j/25kg, 5j/28kg, 6j/24kg, 6j/26kg, 7j/25kg]
+
+Groep 5-6j, sorteer op gewicht:
+  [5j/23kg, 5j/24kg, 6j/24kg, 5j/25kg, 6j/26kg, 5j/28kg]
+
+Range 23-26kg, sorteer op band:
+  → Poule 1: [5j/23kg, 5j/24kg, 6j/24kg, 5j/25kg, 6j/26kg]
+
+Overblijvers: [5j/28kg]
+Range 28-31kg: alleen 5j/28kg → te weinig
+
+5-jarigen op → Nieuwe groep 6-7j
+  Overblijver 5j/28kg kan NIET mee (5j niet in 6-7 range)
+  → 5j/28kg = orphan
+
+Groep 6-7j: [7j/25kg]
+  → Poule 2 of merge poging
+```
+
+**Waarom dit beter werkt:**
+- Judoka's van vergelijkbare leeftijd EN gewicht komen samen
+- Band-sortering zorgt dat beginners bij beginners komen
+- Sliding window voorkomt harde grenzen
+- Overblijvers krijgen kans in volgende groep
 
 ### VariabeleBlokVerdelingService
 
