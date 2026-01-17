@@ -44,28 +44,29 @@
     <!-- Verificatie resultaat -->
     <div id="verificatie-resultaat" class="hidden"></div>
 
-    <!-- Problematische poules (te weinig judoka's) -->
-    <div id="problematische-poules-container" style="width: fit-content;">
-    @if($problematischePoules->count() > 0)
+    <!-- Problematische poules (gecombineerd: te weinig judoka's + gewichtsrange) -->
+    @php
+        $totaalProblemen = $problematischePoules->count() + $problematischeGewichtsPoules->count();
+    @endphp
+    <div id="problematische-poules-container" class="{{ $totaalProblemen > 0 ? '' : 'hidden' }}" style="width: fit-content;">
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
-        <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-        <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 actieve judoka's:</p>
-        <div id="problematische-links" class="flex flex-wrap gap-2">
+        <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $totaalProblemen }}</span>)</h3>
+
+        {{-- Te weinig judoka's --}}
+        @if($problematischePoules->count() > 0)
+        <p class="text-red-700 text-sm mb-2">Te weinig judoka's (< 3):</p>
+        <div id="problematische-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($problematischePoules as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                 #{{ $p['nummer'] }} {{ $p['label'] }} {{ $p['gewichtsklasse'] }} (<span data-probleem-count="{{ $p['id'] }}">{{ $p['actief'] }}</span>)
             </a>
             @endforeach
         </div>
-    </div>
-    @endif
-    </div>
+        @endif
 
-    <!-- Problematische poules door gewichtsrange (dynamisch overpoulen) -->
-    <div id="gewichtsrange-problemen-container" class="{{ $problematischeGewichtsPoules->count() > 0 ? '' : 'hidden' }}">
-    <div class="bg-orange-50 border border-orange-300 rounded-lg p-4">
-        <h3 class="font-bold text-orange-800 mb-2">Gewichtsrange overschreden (<span id="gewichtsrange-count">{{ $problematischeGewichtsPoules->count() }}</span> poules)</h3>
-        <p class="text-orange-700 text-sm mb-3">Deze poules hebben een te grote gewichtsspreiding na weging. Verplaats de lichtste of zwaarste judoka:</p>
+        {{-- Gewichtsrange overschreden --}}
+        @if($problematischeGewichtsPoules->count() > 0)
+        <p class="text-orange-700 text-sm mb-2">Gewichtsrange overschreden:</p>
         <div id="gewichtsrange-items" class="space-y-3">
             @foreach($problematischeGewichtsPoules as $pouleId => $probleem)
             @php
@@ -86,7 +87,7 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <a href="#poule-{{ $pouleId }}" onclick="scrollToPoule(event, {{ $pouleId }})" class="font-bold text-orange-800 hover:underline cursor-pointer">
-                            #{{ $pouleInfo->nummer }} {{ $pouleInfo->leeftijdsklasse }} {{ $pouleInfo->gewichtsklasse }}
+                            #{{ $pouleInfo->nummer }} {{ $pouleInfo->titel ?? ($pouleInfo->leeftijdsklasse . ' ' . $pouleInfo->gewichtsklasse) }}
                         </a>
                         <span class="text-orange-600 text-sm ml-2">Range: {{ number_format($probleem['range'], 1) }}kg (max: {{ number_format($probleem['max_toegestaan'], 1) }}kg)</span>
                     </div>
@@ -120,6 +121,7 @@
             @endif
             @endforeach
         </div>
+        @endif
     </div>
     </div>
 
