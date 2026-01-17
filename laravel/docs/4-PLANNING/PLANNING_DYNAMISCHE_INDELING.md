@@ -921,68 +921,67 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Wachtpoule Concept
-
-**Probleem:** Bij verplaatsen naar ander blok (weging nog open) kennen we de gewichten van dat blok nog niet. We kunnen dus niet bepalen welke poule geschikt is.
-
-**Oplossing:** Wachtpoule per blok
+### Wachtruimte (per categorie)
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ WACHTPOULE                                                        │
+│ WACHTRUIMTE                                                       │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ WAT:    Tijdelijke parkeerplaats voor judoka's uit ander blok    │
+│ WAT:    Tijdelijke parkeerplaats per categorie (rechts van       │
+│         poules in UI)                                             │
 │                                                                   │
-│ WANNEER: Judoka verplaatst van blok X naar blok Y                │
-│          én weging blok Y nog niet gesloten                       │
+│ INHOUD: Judoka's die:                                             │
+│         - Gewogen zijn                                            │
+│         - Nog geen poule hebben OF uit poule gesleept zijn       │
+│         - NIET afwezig zijn                                       │
 │                                                                   │
-│ WAAROM:  Gewichten blok Y nog niet bekend                         │
-│          → kunnen geen goede poule-match maken                    │
+│ GEBRUIK:                                                          │
+│   1. Organisator sleept judoka UIT poule NAAR wachtruimte        │
+│      (om poule gewichtsrange kloppend te maken)                  │
+│   2. Organisator sleept judoka UIT wachtruimte NAAR poule        │
+│      OF gebruikt "Zoek Match" om geschikte poule te vinden       │
 │                                                                   │
-│ OPMERKING: Judoka hoeft NIET opnieuw te wegen!                   │
-│            gewicht_gewogen is al bekend uit origineel blok        │
+│ AFWEZIGEN: Alleen zichtbaar in info tooltip (i) van poule        │
+│            NIET in wachtruimte                                    │
 │                                                                   │
-│ FLOW:    1. Blok 2 weging sluit → probleem gedetecteerd          │
-│          2. Judoka naar wachtpoule Blok 3                         │
-│          3. Blok 3 weging sluit → gewichten bekend                │
-│          4. Org plaatst judoka in geschikte poule                 │
-│                                                                   │
-│ KLEUR:   Paars (onderscheid van normale poules/wachtruimte)      │
+│ KLEUR:   Oranje (border + achtergrond)                           │
 │                                                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-**Technisch:**
-- Wachtpoule is een speciale Poule met `type = 'wachtpoule'`
-- Eén wachtpoule per blok (automatisch aangemaakt indien nodig)
-- Toont in UI met paarse achtergrond
-- Na sluiten weging: toon "Te plaatsen" indicator
+**Drag & Drop:**
+- Van poule → wachtruimte: judoka wordt uit poule gehaald
+- Van wachtruimte → poule: judoka wordt in poule geplaatst
+- Bidirectioneel slepen mogelijk
 
 ### Judoka's met Afwijkend Gewicht
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ BELANGRIJK: AFWIJKEND GEWICHT ≠ AUTOMATISCH VERBERGEN            │
+│ BELANGRIJK: AFWIJKEND GEWICHT ≠ AUTOMATISCH VERWIJDEREN          │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                   │
-│ Afwezig:           Wordt verborgen uit poule (geen deelname)     │
+│ Afwezig:           - Automatisch uit poule verwijderd            │
+│                    - Alleen zichtbaar in info tooltip (i)        │
+│                    - NIET in wachtruimte                          │
 │                                                                   │
-│ Afwijkend gewicht: BLIJFT ZICHTBAAR in poule!                    │
-│                    Reden: Organisator kiest WIE eruit gaat       │
+│ Afwijkend gewicht: - BLIJFT in poule staan                       │
+│                    - Oranje markering (achtergrond + ⚠ icoon)    │
+│                    - Organisator SLEEPT handmatig naar           │
+│                      wachtruimte indien gewenst                   │
 │                                                                   │
-│ Weergave:          Oranje achtergrond + ⚠ icoon                  │
-│                    Gewicht bold in oranje kleur                  │
-│                                                                   │
-│ Waarom?            Bij poule met te grote range moet org kiezen: │
-│                    - Lichtste verplaatsen?                       │
-│                    - Zwaarste verplaatsen?                       │
-│                    - Of allebei naar andere poules?              │
+│ Flow bij te grote range:                                          │
+│   1. Poule wordt rood gemarkeerd (range > max_kg_verschil)       │
+│   2. Org ziet lichtste (blauw) en zwaarste (rood) judoka         │
+│   3. Org sleept gewenste judoka naar wachtruimte                 │
+│   4. Org sleept vanuit wachtruimte naar andere poule             │
+│      OF gebruikt "Zoek Match" knop                               │
 │                                                                   │
 │ Telling:           Afwijkend gewicht telt WEL mee voor:          │
 │                    - Poule grootte                               │
 │                    - Aantal wedstrijden                          │
-│                    - "Problematische poule" check (< 3 judoka's) │
+│                    - Min/max gewicht range berekening            │
 │                                                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -1074,12 +1073,11 @@ Als geen geschikte match:
    - Check of doelblok beschikbaar is
    - Blokkeer verplaatsen naar eerder blok met gesloten weging
 
-5. **Wachtpoule per blok** 🚧 TODO
-   - Nieuwe poule type: `type = 'wachtpoule'`
-   - Automatisch aanmaken bij verplaatsen naar ander blok (weging open)
-   - Paarse kleur in UI
-   - Na sluiten weging: toon "Te plaatsen" lijst
-   - Zoek Match vanuit wachtpoule
+5. **Wachtruimte bidirectioneel** 🚧 TODO
+   - Drag van poule → wachtruimte (judoka uit poule halen)
+   - Drag van wachtruimte → poule (judoka in poule plaatsen)
+   - Zoek Match vanuit wachtruimte
+   - Afwezigen alleen in info tooltip (i), niet in wachtruimte
 
 6. **Data updates na verplaatsen** ✅
    - **Weegkaarten:** Dynamisch, blok/mat info update automatisch

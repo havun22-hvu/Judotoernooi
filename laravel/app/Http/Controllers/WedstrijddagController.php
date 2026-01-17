@@ -323,48 +323,33 @@ class WedstrijddagController extends Controller
     }
 
     /**
-     * Verplaats judoka naar wachtpoule van een ander blok
-     * Wordt gebruikt wanneer doelblok nog open weging heeft
+     * Verplaats judoka naar wachtruimte (uit poule halen)
+     * Judoka kan later naar andere poule gesleept worden of via Zoek Match
      */
-    public function naarWachtpoule(Request $request, Toernooi $toernooi): JsonResponse
+    public function naarWachtruimte(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
-            'blok_id' => 'required|exists:blokken,id',
             'from_poule_id' => 'required|exists:poules,id',
         ]);
 
         $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $doelBlok = Blok::findOrFail($validated['blok_id']);
         $oudePoule = Poule::findOrFail($validated['from_poule_id']);
-
-        // Validatie: doelblok mag geen gesloten weging hebben
-        if ($doelBlok->weging_gesloten) {
-            return response()->json([
-                'success' => false,
-                'error' => "Weging van {$doelBlok->naam} is al gesloten. Kies een specifieke poule."
-            ], 422);
-        }
-
-        // Haal of maak de wachtpoule voor dit blok
-        $wachtpoule = $doelBlok->getOfMaakWachtpoule();
 
         // Verwijder uit oude poule
         $oudePoule->judokas()->detach($judoka->id);
         $oudePoule->updateStatistieken();
 
-        // Voeg toe aan wachtpoule
-        $nieuwePositie = $wachtpoule->judokas()->count() + 1;
-        $wachtpoule->judokas()->attach($judoka->id, ['positie' => $nieuwePositie]);
-        $wachtpoule->updateStatistieken();
+        // Bereken actieve judoka's voor response
+        $actieveJudokas = $oudePoule->judokas()->get()->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
         return response()->json([
             'success' => true,
-            'message' => "{$judoka->naam} verplaatst naar wachtpoule {$doelBlok->naam}",
-            'wachtpoule' => [
-                'id' => $wachtpoule->id,
-                'titel' => $wachtpoule->titel,
-                'blok_naam' => $doelBlok->naam,
+            'message' => "{$judoka->naam} verplaatst naar wachtruimte",
+            'van_poule' => [
+                'id' => $oudePoule->id,
+                'aantal_judokas' => $actieveJudokas,
+                'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
             ],
         ]);
     }
