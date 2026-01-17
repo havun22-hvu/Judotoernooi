@@ -152,4 +152,55 @@ class Blok extends Model
                 return $poule;
             });
     }
+
+    /**
+     * Get of maak de wachtpoule voor dit blok
+     * Wachtpoule is een tijdelijke parkeerplaats voor judoka's uit andere blokken
+     */
+    public function getOfMaakWachtpoule(): Poule
+    {
+        // Check of wachtpoule al bestaat
+        $wachtpoule = $this->poules()->where('type', 'wachtpoule')->first();
+
+        if ($wachtpoule) {
+            return $wachtpoule;
+        }
+
+        // Maak nieuwe wachtpoule aan
+        $maxNummer = Poule::where('toernooi_id', $this->toernooi_id)->max('nummer') ?? 0;
+
+        return Poule::create([
+            'toernooi_id' => $this->toernooi_id,
+            'blok_id' => $this->id,
+            'mat_id' => null, // Wachtpoule heeft geen mat
+            'nummer' => $maxNummer + 1,
+            'titel' => "Wachtpoule {$this->naam}",
+            'type' => 'wachtpoule',
+            'leeftijdsklasse' => 'Wachtpoule',
+            'gewichtsklasse' => $this->naam,
+            'aantal_judokas' => 0,
+            'aantal_wedstrijden' => 0,
+        ]);
+    }
+
+    /**
+     * Get de wachtpoule voor dit blok (zonder aan te maken)
+     */
+    public function getWachtpoule(): ?Poule
+    {
+        return $this->poules()->where('type', 'wachtpoule')->first();
+    }
+
+    /**
+     * Check of dit blok judoka's in de wachtpoule heeft die geplaatst moeten worden
+     */
+    public function heeftTePlaatsenJudokas(): bool
+    {
+        if (!$this->weging_gesloten) {
+            return false;
+        }
+
+        $wachtpoule = $this->getWachtpoule();
+        return $wachtpoule && $wachtpoule->judokas()->count() > 0;
+    }
 }

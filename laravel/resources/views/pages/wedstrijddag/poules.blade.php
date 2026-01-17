@@ -1090,6 +1090,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
 const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", [$toernooi, "__JUDOKA_ID__"]) }}';
+const naarWachtpouleUrl = '{{ route("toernooi.wedstrijddag.naar-wachtpoule", $toernooi) }}';
 
 async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     const modal = document.getElementById('zoek-match-modal');
@@ -1139,15 +1140,36 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             <span class="text-gray-500">(${data.judoka.gewicht}kg, ${data.judoka.leeftijd}j)</span>
         </div>`;
 
+        // Toon wachtpoule opties eerst (voor blokken met open weging)
+        if (data.wachtpoule_opties && data.wachtpoule_opties.length > 0) {
+            html += `<div class="mb-4">
+                <div class="text-sm font-medium bg-purple-100 text-purple-800 px-2 py-1 rounded mb-2">
+                    Naar wachtpoule (andere blokken)
+                </div>
+                <p class="text-xs text-gray-500 mb-2">Judoka wordt geparkeerd tot weging van dat blok sluit</p>
+                <div class="space-y-2">`;
+
+            for (const wp of data.wachtpoule_opties) {
+                const statusLabel = wp.status === 'earlier_open' ? 'Eerder blok' : 'Later blok';
+                html += `<div class="border border-purple-200 rounded p-2 hover:bg-purple-50 cursor-pointer transition-colors"
+                    onclick="selecteerWachtpoule(${judokaId}, ${fromPouleId}, ${wp.blok_id})">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium text-purple-800">📦 Wachtpoule ${wp.blok_naam}</span>
+                        <span class="text-xs text-purple-600">${statusLabel} - weging open</span>
+                    </div>
+                </div>`;
+            }
+
+            html += '</div></div>';
+        }
+
         const blokColors = {
             'same': 'bg-green-100 text-green-800',
-            'later': 'bg-blue-100 text-blue-800',
-            'earlier_open': 'bg-yellow-100 text-yellow-800'
+            'earlier_closed': 'bg-yellow-100 text-yellow-800'
         };
         const blokLabels = {
             'same': 'Huidig blok',
-            'later': 'Volgend blok',
-            'earlier_open': 'Eerder blok (weging open)'
+            'earlier_closed': 'Eerder blok (weging gesloten)'
         };
 
         for (const [blokNummer, blok] of sortedBlokken) {
@@ -1216,6 +1238,36 @@ async function selecteerPouleWedstrijddag(judokaId, vanPouleId, naarPouleId) {
     } catch (error) {
         console.error('Error:', error);
         alert('Fout bij verplaatsen');
+    }
+}
+
+async function selecteerWachtpoule(judokaId, vanPouleId, blokId) {
+    try {
+        const response = await fetch(naarWachtpouleUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                judoka_id: judokaId,
+                blok_id: blokId,
+                from_poule_id: vanPouleId
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            // Sluit modal en refresh pagina
+            document.getElementById('zoek-match-modal').classList.add('hidden');
+            window.location.reload();
+        } else {
+            alert('Fout: ' + (data.error || data.message || 'Onbekende fout'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij verplaatsen naar wachtpoule');
     }
 }
 
