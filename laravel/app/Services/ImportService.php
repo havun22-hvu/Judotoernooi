@@ -23,6 +23,106 @@ class ImportService
     }
 
     /**
+     * Analyse CSV data and detect column mapping
+     * Returns detected mapping + warnings + preview data
+     */
+    public function analyseerCsvData(array $header, array $data): array
+    {
+        $verwachteVelden = [
+            'naam' => ['naam', 'name', 'volledige naam', 'judoka', 'deelnemer'],
+            'club' => ['club', 'vereniging', 'sportclub', 'judoclub'],
+            'geboortejaar' => ['geboortejaar', 'jaar', 'geb.jaar', 'birth year', 'geb'],
+            'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
+            'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
+            'band' => ['band', 'gordel', 'belt', 'kyu', 'graad'],
+            'gewichtsklasse' => ['gewichtsklasse', 'klasse', 'categorie', 'weight class'],
+        ];
+
+        $detectie = [];
+        $headerLower = array_map('strtolower', $header);
+
+        foreach ($verwachteVelden as $veld => $zoektermen) {
+            $gevonden = null;
+            $gevondenIndex = null;
+
+            foreach ($zoektermen as $zoekterm) {
+                foreach ($headerLower as $index => $kolomNaam) {
+                    if (str_contains($kolomNaam, $zoekterm)) {
+                        $gevonden = $header[$index];
+                        $gevondenIndex = $index;
+                        break 2;
+                    }
+                }
+            }
+
+            $detectie[$veld] = [
+                'csv_kolom' => $gevonden,
+                'csv_index' => $gevondenIndex,
+                'waarschuwing' => null,
+            ];
+
+            // Validate detected column with actual data
+            if ($gevondenIndex !== null && count($data) > 0) {
+                $waarschuwing = $this->valideerKolomData($veld, $data, $gevondenIndex);
+                if ($waarschuwing) {
+                    $detectie[$veld]['waarschuwing'] = $waarschuwing;
+                }
+            }
+        }
+
+        return [
+            'header' => $header,
+            'detectie' => $detectie,
+            'preview_data' => array_slice($data, 0, 5),
+            'totaal_rijen' => count($data),
+        ];
+    }
+
+    /**
+     * Validate if column data matches expected field type
+     */
+    private function valideerKolomData(string $veld, array $data, int $kolomIndex): ?string
+    {
+        $samples = array_slice($data, 0, 10);
+        $values = array_column($samples, $kolomIndex);
+        $values = array_filter($values, fn($v) => $v !== null && $v !== '');
+
+        if (empty($values)) {
+            return 'Kolom bevat geen data';
+        }
+
+        switch ($veld) {
+            case 'geboortejaar':
+                foreach ($values as $val) {
+                    if (!is_numeric($val) || (int)$val < 1950 || (int)$val > date('Y')) {
+                        return "Verwacht jaren (1950-" . date('Y') . "), gevonden: " . $val;
+                    }
+                }
+                break;
+
+            case 'geslacht':
+                foreach ($values as $val) {
+                    $val = strtoupper(trim($val));
+                    if (!in_array($val, ['M', 'V', 'J', 'JONGEN', 'MEISJE', 'MAN', 'VROUW'])) {
+                        return "Verwacht M/V, gevonden: " . $val;
+                    }
+                }
+                break;
+
+            case 'gewicht':
+                foreach ($values as $val) {
+                    $num = str_replace(',', '.', $val);
+                    if (!is_numeric($num) || (float)$num < 10 || (float)$num > 200) {
+                        return "Verwacht gewicht (10-200), gevonden: " . $val;
+                    }
+                }
+                break;
+        }
+
+        return null;
+    }
+
+    /**
      * Import participants from array data (CSV/Excel)
      */
     public function importeerDeelnemers(Toernooi $toernooi, array $data, array $kolomMapping = []): array

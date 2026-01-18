@@ -54,6 +54,14 @@
 
     @include('partials.pwa-mobile', ['pwaApp' => 'weging'])
 
+    {{-- Chat Widget --}}
+    @include('partials.chat-widget', [
+        'chatType' => 'weging',
+        'chatId' => null,
+        'toernooiId' => $toernooi->id,
+        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+    ])
+
 <!-- Weegtijd voorbij alert -->
 <div id="weegtijd-alert" class="hidden fixed inset-0 bg-red-900/95 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-6 max-w-sm text-center animate-pulse">

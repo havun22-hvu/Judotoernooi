@@ -1432,6 +1432,96 @@
         </div>
     </div>
 
+    <!-- CHAT SERVER (Reverb) -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Chat Server</h2>
+        <p class="text-gray-600 mb-4">
+            Realtime chat tussen hoofdjury en vrijwilligers (matten, weging, spreker, dojo).
+        </p>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full" :class="running ? 'bg-green-500' : 'bg-red-500'"></span>
+                <span class="font-medium" x-text="running ? 'Actief' : 'Gestopt'"></span>
+            </div>
+
+            <template x-if="!local">
+                <div class="flex gap-2">
+                    <button type="button" @click="start()" :disabled="running || loading"
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <span x-show="!loading">Start</span>
+                        <span x-show="loading">...</span>
+                    </button>
+                    <button type="button" @click="stop()" :disabled="!running || loading"
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                        <span x-show="!loading">Stop</span>
+                        <span x-show="loading">...</span>
+                    </button>
+                </div>
+            </template>
+
+            <template x-if="local">
+                <span class="text-sm text-gray-500">(Alleen beschikbaar op production server)</span>
+            </template>
+        </div>
+
+        <p class="text-sm text-gray-500 mt-3" x-show="message" x-text="message"></p>
+    </div>
+
+    <script>
+    function reverbStatus() {
+        return {
+            running: false,
+            loading: false,
+            local: false,
+            message: '',
+            init() {
+                this.checkStatus();
+            },
+            async checkStatus() {
+                try {
+                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi) }}');
+                    const data = await res.json();
+                    this.running = data.running;
+                    this.local = data.local || false;
+                } catch (e) {
+                    this.message = 'Kon status niet ophalen';
+                }
+            },
+            async start() {
+                this.loading = true;
+                try {
+                    const res = await fetch('{{ route("toernooi.reverb.start", $toernooi) }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    });
+                    const data = await res.json();
+                    this.message = data.message;
+                    await this.checkStatus();
+                } catch (e) {
+                    this.message = 'Fout bij starten';
+                }
+                this.loading = false;
+            },
+            async stop() {
+                this.loading = true;
+                try {
+                    const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi) }}', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                    });
+                    const data = await res.json();
+                    this.message = data.message;
+                    await this.checkStatus();
+                } catch (e) {
+                    this.message = 'Fout bij stoppen';
+                }
+                this.loading = false;
+            }
+        }
+    }
+    </script>
+
     <!-- ONLINE BETALINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Online Betalingen</h2>
