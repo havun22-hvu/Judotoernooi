@@ -30,7 +30,7 @@ class ImportService
     {
         $verwachteVelden = [
             'naam' => ['naam', 'name', 'volledige naam', 'judoka', 'deelnemer'],
-            'club' => ['club', 'vereniging', 'sportclub', 'judoclub'],
+            'club' => ['club', 'vereniging', 'sportclub', 'judoclub', 'judoschool', 'school', 'dojo'],
             'geboortejaar' => ['geboortejaar', 'jaar', 'geb.jaar', 'birth year', 'geb'],
             'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
             'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
