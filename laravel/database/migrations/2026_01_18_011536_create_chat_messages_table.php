@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('chat_messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('toernooi_id')->constrained()->onDelete('cascade');
+            $table->foreignId('toernooi_id')->constrained('toernooien')->onDelete('cascade');
 
             // Afzender: hoofdjury, mat, weging, spreker, dojo
             $table->string('van_type', 20);
