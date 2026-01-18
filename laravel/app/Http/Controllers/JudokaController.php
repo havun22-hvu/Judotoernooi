@@ -317,6 +317,20 @@ class JudokaController extends Controller
                 if ($nieuweLeeftijdsklasse && $nieuweLeeftijdsklasse !== $judoka->leeftijdsklasse) {
                     $wijzigingen['leeftijdsklasse'] = $nieuweLeeftijdsklasse;
                 }
+
+                // Recalculate gewichtsklasse from toernooi config (only for fixed weight classes)
+                if (!empty($judoka->gewicht) && $judoka->gewicht > 0) {
+                    $nieuweGewichtsklasse = $toernooi->bepaalGewichtsklasse(
+                        $judoka->gewicht,
+                        $leeftijd,
+                        $judoka->geslacht,
+                        $wijzigingen['band'] ?? $judoka->band
+                    );
+                    // Update if changed (null means dynamic category - keep existing or set null)
+                    if ($nieuweGewichtsklasse !== $judoka->gewichtsklasse) {
+                        $wijzigingen['gewichtsklasse'] = $nieuweGewichtsklasse;
+                    }
+                }
             }
 
             // Check required fields

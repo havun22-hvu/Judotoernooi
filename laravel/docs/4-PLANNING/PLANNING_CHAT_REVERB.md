@@ -1,6 +1,6 @@
 # Planning: Chat functionaliteit met Laravel Reverb
 
-## Status: Gepland (nog niet gestart)
+## Status: In ontwikkeling (basis gebouwd, debugging op staging)
 
 ## Overzicht
 
@@ -24,13 +24,25 @@ dojo.{toernooi_id}             - Dojo scanner
 
 ## Communicatie flow
 
-- PWA's kunnen alleen naar hoofdjury sturen
-- Hoofdjury kan kiezen:
-  - Alle matten (broadcast)
+### Standaard (vrije chat)
+- **Iedereen kan naar iedereen sturen** - PWA's en hoofdjury hebben dezelfde opties:
+  - Iedereen (broadcast)
+  - Alle matten
   - Specifieke mat (mat 1, mat 2, etc.)
   - Weging
   - Spreker
-- PWA's kunnen NIET direct met elkaar communiceren
+  - Dojo
+  - Hoofdjury
+
+### Beperkte modus (toggle door hoofdjury)
+- Hoofdjury kan "vrije chat" uitschakelen via toggle in Instellingen
+- Bij uitschakelen: **PWA's kunnen alleen naar hoofdjury sturen**
+- Hoofdjury behoudt alle opties
+- Nuttig bij misbruik door vrijwilligers
+
+### Toernooi instelling
+- `chat_vrij` (boolean) - default: true
+- Opgeslagen in `toernooien.instellingen` JSON veld
 
 ## UI Componenten
 
@@ -42,6 +54,7 @@ dojo.{toernooi_id}             - Dojo scanner
 ### Hoofdjury extra
 - Dropdown om ontvanger te selecteren (alle matten, mat X, weging, spreker)
 - Overzicht van alle gesprekken
+- **Toggle "Vrije chat"** - schakel onderling chatten voor PWA's in/uit
 
 ## Server requirements
 
