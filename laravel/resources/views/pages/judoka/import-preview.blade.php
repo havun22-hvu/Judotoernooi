@@ -118,7 +118,7 @@
                             @foreach($analyse['header'] as $index => $kolom)
                                 <th class="px-2 py-1 text-left border mapped-to-cell" data-col="{{ $index }}">
                                     <span class="text-xs text-gray-500 block">App veld:</span>
-                                    <span class="mapped-to text-green-600 font-medium">-</span>
+                                    <span class="mapped-to text-gray-400">-</span>
                                 </th>
                             @endforeach
                         </tr>
@@ -150,33 +150,54 @@
 </div>
 
 <style>
+/* Sleep knoppen - professioneel, neutraal */
 .kolom-chip {
     user-select: none;
     transition: all 0.15s;
+    background: #1f2937 !important;
+    border: none;
+    color: white !important;
+    font-weight: 500;
+    font-size: 0.8rem;
 }
 .kolom-chip:hover {
-    transform: scale(1.02);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    background: #374151 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.kolom-chip .drag-handle {
+    opacity: 0.5;
 }
 .kolom-chip.dragging {
     opacity: 0.5;
 }
 .kolom-chip.unclaimed {
-    background-color: #6b7280 !important;
+    background: #9ca3af !important;
 }
 .drop-zone {
     min-height: 40px;
     transition: all 0.15s;
 }
 .drop-zone.drag-over {
-    background-color: #dbeafe;
-    outline: 2px dashed #3b82f6;
+    background-color: #f3f4f6;
+    outline: 2px dashed #6b7280;
 }
-.preview-header.highlighted, .preview-cell.highlighted, .mapped-to-cell.highlighted {
-    background-color: #dcfce7;
+
+/* Preview tabel - professioneel */
+.preview-header.highlighted {
+    background-color: #f0fdf4;
+}
+.mapped-to-cell.highlighted {
+    background-color: #f0fdf4;
+}
+.mapped-to-cell.highlighted .mapped-to {
+    color: #166534;
+    font-weight: 600;
 }
 .mapped-to-cell.unused {
-    background-color: #f3f4f6;
+    background-color: #fef2f2;
+}
+.mapped-to-cell.unused .mapped-to {
+    color: #991b1b;
 }
 </style>
 
@@ -431,8 +452,6 @@ function updatePreviewHighlights() {
     });
     document.querySelectorAll('.mapped-to').forEach(el => {
         el.textContent = '-';
-        el.classList.remove('text-green-600', 'text-gray-400');
-        el.classList.add('text-gray-400');
     });
 
     // Build reverse lookup: kolomIndex -> veld
@@ -444,24 +463,20 @@ function updatePreviewHighlights() {
     // Update each column
     for (let i = 0; i < header.length; i++) {
         const veld = kolomNaarVeld[i];
+        const headerCell = document.querySelector(`.preview-header[data-col="${i}"]`);
         const mappedToCell = document.querySelector(`.mapped-to-cell[data-col="${i}"]`);
         const mappedToLabel = mappedToCell?.querySelector('.mapped-to');
 
         if (veld) {
             // Column is mapped
-            document.querySelectorAll(`[data-col="${i}"]`).forEach(el => {
-                el.classList.add('highlighted');
-            });
+            headerCell?.classList.add('highlighted');
+            mappedToCell?.classList.add('highlighted');
             if (mappedToLabel) {
                 mappedToLabel.textContent = veldLabels[veld];
-                mappedToLabel.classList.remove('text-gray-400');
-                mappedToLabel.classList.add('text-green-600');
             }
         } else {
             // Column is unused
-            if (mappedToCell) {
-                mappedToCell.classList.add('unused');
-            }
+            mappedToCell?.classList.add('unused');
             if (mappedToLabel) {
                 mappedToLabel.textContent = 'Ongebruikt';
             }

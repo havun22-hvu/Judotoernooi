@@ -7,7 +7,7 @@
 --}}
 @php
     $toernooiId = $toernooi->id ?? null;
-    $aantalMatten = $toernooi->matten->count();
+    $aantalMatten = $toernooi->matten()->count() ?? $toernooi->aantal_matten ?? 4;
 @endphp
 
 {{-- Chat Icon Button (fixed position) --}}
