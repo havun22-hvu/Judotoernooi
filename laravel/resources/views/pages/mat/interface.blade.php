@@ -36,5 +36,13 @@
     </main>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'mat'])
+
+    {{-- Chat Widget --}}
+    @include('partials.chat-widget', [
+        'chatType' => 'mat',
+        'chatId' => $matNummer ?? null,
+        'toernooiId' => $toernooi->id,
+        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+    ])
 </body>
 </html>

@@ -299,5 +299,13 @@
     </script>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'dojo'])
+
+    {{-- Chat Widget --}}
+    @include('partials.chat-widget', [
+        'chatType' => 'dojo',
+        'chatId' => null,
+        'toernooiId' => $toernooi->id,
+        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+    ])
 </body>
 </html>

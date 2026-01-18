@@ -33,5 +33,13 @@
     </main>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'spreker'])
+
+    {{-- Chat Widget --}}
+    @include('partials.chat-widget', [
+        'chatType' => 'spreker',
+        'chatId' => null,
+        'toernooiId' => $toernooi->id,
+        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+    ])
 </body>
 </html>

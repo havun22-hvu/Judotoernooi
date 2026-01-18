@@ -111,22 +111,65 @@ class JudokaController extends Controller
         return view('pages.judoka.import', compact('toernooi'));
     }
 
-    public function import(Request $request, Toernooi $toernooi): RedirectResponse
+    /**
+     * Step 1: Upload file and show preview with column detection
+     */
+    public function import(Request $request, Toernooi $toernooi): View
     {
         $request->validate([
-            'bestand' => 'required|file|mimes:csv,xlsx,xls',
+            'bestand' => 'required|file|mimes:csv,txt,xlsx,xls',
         ]);
 
         $file = $request->file('bestand');
         $data = Excel::toArray(null, $file)[0];
 
-        // Skip header row
+        // Split header and data
         $header = array_shift($data);
+
+        // Analyse columns
+        $analyse = $this->importService->analyseerCsvData($header, $data);
+
+        // Store in session for step 2
+        session(['import_data' => $data, 'import_header' => $header]);
+
+        return view('pages.judoka.import-preview', [
+            'toernooi' => $toernooi,
+            'analyse' => $analyse,
+        ]);
+    }
+
+    /**
+     * Step 2: Confirm import with (adjusted) column mapping
+     */
+    public function importConfirm(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $mapping = $request->input('mapping', []);
+
+        // Get data from session
+        $data = session('import_data');
+        $header = session('import_header');
+
+        if (!$data || !$header) {
+            return redirect()
+                ->route('toernooi.judoka.import', $toernooi)
+                ->with('error', 'Geen import data gevonden. Upload opnieuw.');
+        }
+
+        // Build column mapping: field name => header column name
+        $kolomMapping = [];
+        foreach ($mapping as $veld => $kolomIndex) {
+            if ($kolomIndex !== null && $kolomIndex !== '' && isset($header[$kolomIndex])) {
+                $kolomMapping[$veld] = $header[$kolomIndex];
+            }
+        }
 
         // Convert to associative array
         $rows = array_map(fn($row) => array_combine($header, $row), $data);
 
-        $resultaat = $this->importService->importeerDeelnemers($toernooi, $rows);
+        $resultaat = $this->importService->importeerDeelnemers($toernooi, $rows, $kolomMapping);
+
+        // Clear session data
+        session()->forget(['import_data', 'import_header']);
 
         $message = "Import voltooid: {$resultaat['geimporteerd']} geïmporteerd";
         if ($resultaat['overgeslagen'] > 0) {
@@ -138,7 +181,7 @@ class JudokaController extends Controller
         }
         $message .= ".";
 
-        // Check voor niet-gecategoriseerde judoka's na import
+        // Check for uncategorized judokas
         $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
 
         $redirect = redirect()->route('toernooi.judoka.index', $toernooi)->with('success', $message);

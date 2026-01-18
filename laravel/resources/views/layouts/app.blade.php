@@ -239,5 +239,10 @@
 
     {{-- PWA Support (includes Service Worker registration) --}}
     @include('partials.pwa-mobile', ['pwaApp' => $pwaApp ?? 'admin'])
+
+    {{-- Hoofdjury Chat Widget (alleen voor admins/jury met toernooi context) --}}
+    @if(isset($toernooi) && (Auth::guard('organisator')->check() || in_array(session("toernooi_{$toernooi->id}_rol"), ['admin', 'jury'])))
+        @include('partials.chat-widget-hoofdjury', ['toernooi' => $toernooi])
+    @endif
 </body>
 </html>

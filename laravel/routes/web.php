@@ -20,6 +20,8 @@ use App\Http\Controllers\MollieController;
 use App\Http\Controllers\DeviceToegangController;
 use App\Http\Controllers\DeviceToegangBeheerController;
 use App\Http\Controllers\GewichtsklassenPresetController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ReverbController;
 use App\Http\Middleware\CheckToernooiRol;
 use Illuminate\Support\Facades\Route;
 
@@ -128,6 +130,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('judoka/zoek', [JudokaController::class, 'zoek'])->name('judoka.zoek');
         Route::get('judoka/import', [JudokaController::class, 'importForm'])->name('judoka.import');
         Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
+        Route::post('judoka/import/confirm', [JudokaController::class, 'importConfirm'])->name('judoka.import.confirm');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
         Route::patch('judoka/{judoka}/update-api', [JudokaController::class, 'updateApi'])->name('judoka.update-api');
         Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
@@ -200,6 +203,13 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Resultaten overzicht (organisator)
         Route::get('resultaten', [PubliekController::class, 'organisatorResultaten'])->name('resultaten.index');
+
+        // Reverb (chat server) beheer
+        Route::prefix('reverb')->name('reverb.')->group(function () {
+            Route::get('status', [ReverbController::class, 'status'])->name('status');
+            Route::post('start', [ReverbController::class, 'start'])->name('start');
+            Route::post('stop', [ReverbController::class, 'stop'])->name('stop');
+        });
     });
 
     // Noodplan routes (admin + jury/hoofdjury + organisator)
@@ -231,6 +241,14 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     // Jury + Admin routes
     Route::middleware(CheckToernooiRol::class . ':jury')->group(function () {
         Route::get('poule/{poule}/wedstrijdschema', [PouleController::class, 'wedstrijdschema'])->name('poule.wedstrijdschema');
+    });
+
+    // Chat API routes (all authenticated roles)
+    Route::prefix('api/chat')->name('chat.')->group(function () {
+        Route::get('/', [ChatController::class, 'index'])->name('index');
+        Route::post('/', [ChatController::class, 'store'])->name('store');
+        Route::post('/read', [ChatController::class, 'markAsRead'])->name('read');
+        Route::get('/unread', [ChatController::class, 'unreadCount'])->name('unread');
     });
 
     // Weging routes (weging + admin)
