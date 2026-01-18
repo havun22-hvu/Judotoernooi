@@ -58,17 +58,36 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 
 ### Deelnemers Importeren
 
+**Stap 1: Bestand uploaden**
 1. Ga naar **Toernooi** > **Judoka's** > **Importeren**
-2. Upload een CSV of Excel bestand met de volgende kolommen:
-   - Naam (verplicht)
-   - Geboortejaar
-   - Geslacht (M/V)
-   - Band (wit, geel, oranje, etc.)
-   - Club
-   - Gewicht of Gewichtsklasse
-3. Controleer de preview en klik **Importeren**
+2. Upload een CSV of Excel bestand (ondersteund: .csv, .xlsx, .xls)
 
-Het systeem:
+**Stap 2: Kolom toewijzing (drag-and-drop)**
+
+Na upload verschijnt een preview scherm met twee panelen:
+
+| Links: Database velden | Rechts: CSV kolommen uit bestand |
+|------------------------|----------------------------------|
+| Naam * | **Naam** → Saar Peters, Noah... |
+| Club | **Club** → Sportclub X, Judo Y... |
+| Geboortejaar * | **Geboortejaar** → 2015, 2016... |
+| Geslacht (M/V) * | **Geslacht** → M, V, M... |
+| Gewicht (kg) | **Gewicht** → 32.5, 28.0... |
+| Band | **Band** → Wit, Geel... |
+| Gewichtsklasse | |
+
+**Hoe het werkt:**
+- Het systeem detecteert automatisch kolommen op basis van de kolomnaam
+- Elke CSV kolom toont **voorbeelddata** zodat je kunt controleren of de inhoud klopt
+- **Sleep** een CSV kolom naar het juiste database veld als de automatische detectie fout is
+- Klik **✕** om een koppeling te verwijderen en opnieuw te slepen
+- De preview tabel onderaan toont welke kolommen gekoppeld zijn (groen gemarkeerd)
+
+**Stap 3: Importeren**
+- Controleer of alle verplichte velden (*) gekoppeld zijn
+- Klik **Importeren** om de data te verwerken
+
+**Het systeem:**
 - Berekent automatisch de leeftijdsklasse (indien geboortejaar bekend)
 - Bepaalt de gewichtsklasse op basis van gewicht
 - Als alleen gewichtsklasse is opgegeven (bv. "-34"), wordt gewicht afgeleid (34 kg)
