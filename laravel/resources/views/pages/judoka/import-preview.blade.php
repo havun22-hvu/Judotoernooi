@@ -3,32 +3,65 @@
 @section('title', 'Import Preview')
 
 @section('content')
-<div class="max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-4">Import Preview</h1>
+@php
+    $veldInfo = [
+        'naam' => ['label' => 'Naam', 'verplicht' => true, 'uitleg' => 'Volledige naam judoka'],
+        'club' => ['label' => 'Club', 'verplicht' => false, 'uitleg' => 'Vereniging/sportclub'],
+        'geboortejaar' => ['label' => 'Geboortejaar', 'verplicht' => true, 'uitleg' => 'Bijv. 2015'],
+        'geslacht' => ['label' => 'Geslacht', 'verplicht' => true, 'uitleg' => 'M of V'],
+        'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
+        'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
+        'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'],
+    ];
+    $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
+    $gekoppeldeKolommen = collect($analyse['detectie'])->filter(fn($d) => $d['csv_index'] !== null)->count();
+@endphp
 
-    @php
-        $veldInfo = [
-            'naam' => ['label' => 'Naam', 'verplicht' => true, 'uitleg' => 'Volledige naam judoka'],
-            'club' => ['label' => 'Club', 'verplicht' => false, 'uitleg' => 'Vereniging/sportclub'],
-            'geboortejaar' => ['label' => 'Geboortejaar', 'verplicht' => true, 'uitleg' => 'Bijv. 2015'],
-            'geslacht' => ['label' => 'Geslacht', 'verplicht' => true, 'uitleg' => 'M of V'],
-            'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
-            'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
-            'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'],
-        ];
-        $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
-    @endphp
+{{-- Statistieken balk --}}
+<div class="bg-white rounded-lg shadow p-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div>
+            <div class="text-2xl font-bold text-blue-600">{{ $analyse['totaal_rijen'] }}</div>
+            <div class="text-sm text-gray-600">Judoka's</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold text-green-600">{{ count($analyse['header']) }}</div>
+            <div class="text-sm text-gray-600">CSV Kolommen</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold text-purple-600">{{ $gekoppeldeKolommen }}</div>
+            <div class="text-sm text-gray-600">Gekoppeld</div>
+        </div>
+        <div>
+            <div class="text-2xl font-bold {{ $heeftWaarschuwingen ? 'text-orange-600' : 'text-green-600' }}">
+                {{ $heeftWaarschuwingen ? 'Check nodig' : 'OK' }}
+            </div>
+            <div class="text-sm text-gray-600">Status</div>
+        </div>
+    </div>
+</div>
 
-    {{-- Status --}}
-    @if($heeftWaarschuwingen)
-        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
-            <p class="text-yellow-800 font-bold">Er zijn problemen gevonden. Sleep de kolom-knoppen om te corrigeren.</p>
-        </div>
-    @else
-        <div class="bg-green-100 border-l-4 border-green-500 p-4 mb-6">
-            <p class="text-green-700">Alle kolommen automatisch herkend. Controleer of het klopt.</p>
-        </div>
-    @endif
+{{-- Header met titel en actie --}}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800">Import Preview</h1>
+        <p class="text-gray-600">Controleer de kolom toewijzing voordat je importeert</p>
+    </div>
+    <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+        ← Ander bestand
+    </a>
+</div>
+
+{{-- Status melding --}}
+@if($heeftWaarschuwingen)
+    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 rounded">
+        <p class="text-yellow-800 font-medium">Er zijn problemen gevonden. Sleep de kolom-knoppen om te corrigeren.</p>
+    </div>
+@else
+    <div class="bg-green-100 border-l-4 border-green-500 p-4 mb-6 rounded">
+        <p class="text-green-700 font-medium">Alle kolommen automatisch herkend. Controleer of het klopt.</p>
+    </div>
+@endif
 
     <form action="{{ route('toernooi.judoka.import.confirm', $toernooi) }}" method="POST" id="import-form">
         @csrf
@@ -138,16 +171,12 @@
         </div>
 
         {{-- Buttons --}}
-        <div class="flex justify-between items-center">
-            <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-gray-600 hover:text-gray-800">
-                ← Ander bestand uploaden
-            </a>
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded text-lg">
+        <div class="bg-white rounded-lg shadow p-4 flex justify-end">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                 Importeer {{ $analyse['totaal_rijen'] }} judoka's
             </button>
         </div>
     </form>
-</div>
 
 <style>
 /* Sleep knoppen - professioneel, neutraal */
