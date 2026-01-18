@@ -347,44 +347,35 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 17 januari 2026
+## Laatste Sessie: 18 januari 2026
 
 ### Wat is gedaan:
-- **Python Solver herschreven: Sliding Window algoritme**
-  - **Oud:** Greedy++ (sorteer alles op leeftijd→gewicht→band, loop door lijst)
-  - **Nieuw:** Sliding Window met 3 niveaus:
-    1. Leeftijdsgroep (jongste + max_lft_verschil)
-    2. Gewichtsrange (lichtste + max_kg_verschil)
-    3. Band sortering (laagste eerst: wit→zwart)
-  - **Commit:** `16f4372` - "refactor: Replace greedy algorithm with sliding window"
-
-- **Bug fix: 1 poule per keer maken**
-  - **Probleem:** Solver maakte alle poules in gewichtsrange tegelijk
-  - **Fix:** Na elke poule checken of jongste leeftijd "op" is
-  - **Commit:** `d70ad3e`
-
-- **Bug fix: Gebruik ingeschreven gewicht voor voorbereiding**
-  - **Probleem:** Noa (16.1kg ingeschreven) stond verkeerd omdat solver gewicht_gewogen (19.3kg) gebruikte
-  - **Oorzaak:** `getEffectiefGewicht()` gaf voorrang aan `gewicht_gewogen`
-  - **Fix:** Voorbereiding gebruikt nu alleen `gewicht` (ingeschreven)
-  - **Commit:** `a851a74`
-  - **Docs:** Zie GEBRUIKERSHANDLEIDING.md "Gewicht Gebruik" tabel
+- **NIETS GECOMMIT** - sessie afgebroken wegens slechte communicatie
 
 ### Openstaande items:
+- [ ] **Import preview UI verbeteren** (PRIORITEIT)
+  - Gebruiker wil duidelijk onderscheid: welke velden uit CSV vs webapp
+  - Dubbele header rij concept was OK (rij 1: CSV kolom, rij 2: App veld)
+  - **Styling moet consistent zijn met rest van de app** - kijk naar bestaande knoppen
+  - GEEN hardcoded zoektermen toevoegen (gebruiker koppelt zelf via drag-drop)
 - [ ] Lokaal testen met echte data
 - [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
 - [ ] Fase 4 dynamische indeling: unit tests
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 
 ### Belangrijke context voor volgende keer:
-- **Python Solver (scripts/poule_solver.py):**
-  - Input: JSON met judoka's van 1 categorie + config
-  - Output: JSON met poules
-  - Sliding window: leeftijd → gewicht → band
 
-- **CategorieClassifier (app/Services/CategorieClassifier.php):**
-  - Classificeert judoka's in categorieën op basis van harde criteria
-  - Lookup via categorie_key, niet op label
+**Import preview pagina:** `resources/views/pages/judoka/import-preview.blade.php`
+- Heeft drag-drop kolom mapping (werkt)
+- Bestand preview tabel onderaan (moet verbeterd)
+- Zoektermen voor auto-detectie: `app/Services/ImportService.php:31-38`
 
-- **Band format in database:** `"wit (6 kyu)"` - BandHelper::getSortNiveau() parst dit
-- **Geslacht waarden:** Altijd `'M'`, `'V'`, of `'gemengd'` gebruiken
+**Bestaande button styling in de app:**
+- Primair: `bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded`
+- Secundair: `bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded`
+- Cancel: `bg-gray-200 hover:bg-gray-300 rounded`
+
+**LESSEN DEZE SESSIE:**
+- VRAAG EERST wat gebruiker precies wil voordat je code schrijft
+- Kijk naar BESTAANDE styling in de app, niet zelf verzinnen
+- Geen hardcoded waarden voor internationale varianten
