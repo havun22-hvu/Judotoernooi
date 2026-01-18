@@ -537,7 +537,7 @@ class ImportService
             return null;
         }
 
-        $klassen = $config['gewichtsklassen'] ?? [];
+        $klassen = $config['gewichten'] ?? [];
         if (empty($klassen)) {
             return null;
         }

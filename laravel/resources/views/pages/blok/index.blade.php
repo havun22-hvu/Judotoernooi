@@ -111,7 +111,10 @@
                 ];
             })
             ->filter(fn($c) => $c['wedstrijden'] > 0)
-            ->sortBy([['min_lft', 'asc'], ['min_kg', 'asc']])
+            ->sortBy(function($c) use ($leeftijdVolgorde) {
+                $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 100000 : 9900000;
+                return $leeftijdPos + ($c['min_lft'] * 1000) + $c['min_kg'];
+            })
             ->values();
     } else {
         // VASTE CATEGORIEËN: groeperen per leeftijdsklasse|gewichtsklasse

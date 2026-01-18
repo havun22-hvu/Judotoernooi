@@ -241,6 +241,7 @@
     @include('partials.pwa-mobile', ['pwaApp' => $pwaApp ?? 'admin'])
 
     {{-- Hoofdjury Chat Widget --}}
+    <!-- DEBUG: toernooi={{ isset($toernooi) ? $toernooi->id : 'NOT_SET' }} -->
     @if(isset($toernooi))
         @include('partials.chat-widget-hoofdjury', ['toernooi' => $toernooi])
     @endif
