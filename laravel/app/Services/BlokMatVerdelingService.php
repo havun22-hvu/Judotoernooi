@@ -129,6 +129,7 @@ class BlokMatVerdelingService
             }
 
             $variant = $this->simuleerVerdeling(
+                $toernooi,
                 $perLeeftijd,
                 $blokken,
                 $baseCapaciteit,
@@ -273,6 +274,7 @@ class BlokMatVerdelingService
      * 5. Variatie door: startposities, aansluitingkeuzes variëren
      */
     private function simuleerVerdeling(
+        Toernooi $toernooi,
         array $perLeeftijd,
         $blokken,
         array $baseCapaciteit,
@@ -458,7 +460,7 @@ class BlokMatVerdelingService
 
         // STAP 3: Plaats eventuele overige leeftijden (niet in grote of kleine lijst)
         foreach ($perLeeftijd as $leeftijd => $gewichten) {
-            if (in_array($leeftijd, $this->groteLeeftijden) || in_array($leeftijd, $this->kleineLeeftijden)) {
+            if (in_array($leeftijd, $groteLeeftijdenVolgorde) || in_array($leeftijd, $kleineLeeftijdenVolgorde)) {
                 continue;
             }
 

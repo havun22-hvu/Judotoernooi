@@ -317,6 +317,14 @@ cd /var/www/staging.judotoernooi/laravel
 git pull origin master
 composer install --no-dev
 php artisan migrate
+
+# ALTIJD caches clearen VOOR opnieuw opbouwen (voorkomt sessie/login problemen!)
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Daarna opnieuw cachen
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -333,10 +341,20 @@ cd /var/www/judotoernooi/laravel
 git pull origin master
 composer install --no-dev
 php artisan migrate
+
+# ALTIJD caches clearen VOOR opnieuw opbouwen (voorkomt sessie/login problemen!)
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Daarna opnieuw cachen
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+> **Let op:** Zonder cache:clear kunnen gebruikers in een redirect loop komen bij login door corrupte sessies!
 
 ---
 

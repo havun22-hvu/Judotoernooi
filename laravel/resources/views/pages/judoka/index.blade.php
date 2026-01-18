@@ -85,7 +85,7 @@
             <div class="relative flex-1">
                 <input type="text"
                        x-model="zoekterm"
-                       placeholder="Filter op naam, club, gewicht, band..."
+                       placeholder="Filter: naam, club, -45kg, 20-30kg, +55kg..."
                        class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
                 <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -229,16 +229,61 @@ function judokaTable() {
                 result = result.filter(j => j.incompleet);
             }
 
-            // Filter on search term
+            // Filter on search term (with weight filter support)
             if (this.zoekterm) {
                 const terms = this.zoekterm.toLowerCase().split(/\s+/).filter(t => t.length > 0);
                 const maxDist = this.fuzzyLevel;
-                result = result.filter(j => {
-                    const searchText = [
-                        j.naam, j.club, j.leeftijdsklasse, j.gewicht ? j.gewicht + 'kg' : '', j.geboortejaar, j.geslacht, j.band
-                    ].filter(Boolean).join(' ').toLowerCase();
-                    return terms.every(term => fuzzyMatch(term, searchText, maxDist));
+
+                // Check for weight filter patterns and separate them
+                const gewichtFilters = [];
+                const tekstTerms = [];
+
+                terms.forEach(term => {
+                    // Pattern: -45, +55, 20-30
+                    if (/^[+-]?\d+(\.\d+)?$/.test(term) || /^\d+(\.\d+)?-\d+(\.\d+)?$/.test(term)) {
+                        gewichtFilters.push(term);
+                    } else {
+                        tekstTerms.push(term);
+                    }
                 });
+
+                // Apply weight filters
+                gewichtFilters.forEach(filter => {
+                    let minGewicht = null;
+                    let maxGewicht = null;
+
+                    if (filter.startsWith('-')) {
+                        // -45 = onder 45 kg
+                        maxGewicht = parseFloat(filter.substring(1));
+                    } else if (filter.startsWith('+')) {
+                        // +55 = boven 55 kg
+                        minGewicht = parseFloat(filter.substring(1));
+                    } else if (filter.includes('-')) {
+                        // 20-30 = tussen 20 en 30 kg
+                        const parts = filter.split('-');
+                        minGewicht = parseFloat(parts[0]);
+                        maxGewicht = parseFloat(parts[1]);
+                    }
+
+                    if (minGewicht !== null || maxGewicht !== null) {
+                        result = result.filter(j => {
+                            if (!j.gewicht) return false;
+                            if (minGewicht !== null && j.gewicht < minGewicht) return false;
+                            if (maxGewicht !== null && j.gewicht > maxGewicht) return false;
+                            return true;
+                        });
+                    }
+                });
+
+                // Apply text search on remaining terms
+                if (tekstTerms.length > 0) {
+                    result = result.filter(j => {
+                        const searchText = [
+                            j.naam, j.club, j.leeftijdsklasse, j.gewicht ? j.gewicht + 'kg' : '', j.geboortejaar, j.geslacht, j.band
+                        ].filter(Boolean).join(' ').toLowerCase();
+                        return tekstTerms.every(term => fuzzyMatch(term, searchText, maxDist));
+                    });
+                }
             }
 
             return result;
