@@ -4,83 +4,102 @@
 
 @section('content')
 <div class="max-w-6xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Import Preview</h1>
-    <p class="text-gray-600 mb-6">Sleep de CSV kolommen naar het juiste database veld.</p>
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">Import Preview</h1>
 
     @php
         $veldInfo = [
-            'naam' => ['label' => 'Naam', 'verplicht' => true],
-            'club' => ['label' => 'Club', 'verplicht' => false],
-            'geboortejaar' => ['label' => 'Geboortejaar', 'verplicht' => true],
-            'geslacht' => ['label' => 'Geslacht (M/V)', 'verplicht' => true],
-            'gewicht' => ['label' => 'Gewicht (kg)', 'verplicht' => false],
-            'band' => ['label' => 'Band', 'verplicht' => false],
-            'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false],
+            'naam' => ['label' => 'Naam', 'verplicht' => true, 'uitleg' => 'Volledige naam judoka'],
+            'club' => ['label' => 'Club', 'verplicht' => false, 'uitleg' => 'Vereniging/sportclub'],
+            'geboortejaar' => ['label' => 'Geboortejaar', 'verplicht' => true, 'uitleg' => 'Bijv. 2015'],
+            'geslacht' => ['label' => 'Geslacht', 'verplicht' => true, 'uitleg' => 'M of V'],
+            'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
+            'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
+            'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'],
         ];
+        $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
     @endphp
+
+    {{-- Status --}}
+    @if($heeftWaarschuwingen)
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6">
+            <p class="text-yellow-800 font-bold">Er zijn problemen gevonden. Sleep de kolom-knoppen om te corrigeren.</p>
+        </div>
+    @else
+        <div class="bg-green-100 border-l-4 border-green-500 p-4 mb-6">
+            <p class="text-green-700">Alle kolommen automatisch herkend. Controleer of het klopt.</p>
+        </div>
+    @endif
 
     <form action="{{ route('toernooi.judoka.import.confirm', $toernooi) }}" method="POST" id="import-form">
         @csrf
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {{-- Links: Database velden (drop zones) --}}
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">Database velden</h2>
-                <p class="text-sm text-gray-500 mb-4">Sleep CSV kolommen hierheen</p>
+        {{-- Kolom Mapping Tabel --}}
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold mb-2">Kolom Toewijzing</h2>
+            <p class="text-gray-600 mb-4">Sleep een kolom-knop naar een andere rij om te verwisselen.</p>
 
-                <div class="space-y-3">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-3 py-2 text-left border w-40">App veld</th>
+                        <th class="px-3 py-2 text-left border w-48">CSV kolom</th>
+                        <th class="px-3 py-2 text-left border">Voorbeeld data</th>
+                        <th class="px-3 py-2 text-left border w-48">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
                     @foreach($veldInfo as $veld => $info)
-                        <div class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-3 min-h-[60px] transition-all"
-                             data-veld="{{ $veld }}">
-                            <div class="flex items-center justify-between">
-                                <span class="font-medium text-gray-700">
-                                    {{ $info['label'] }}
-                                    @if($info['verplicht'])<span class="text-red-500">*</span>@endif
-                                </span>
-                                <span class="dropped-info text-sm text-gray-400"></span>
-                            </div>
-                            <input type="hidden" name="mapping[{{ $veld }}]" value="" class="mapping-input">
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            {{-- Rechts: CSV kolommen (draggables) --}}
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4 text-gray-700">CSV kolommen uit je bestand</h2>
-                <p class="text-sm text-gray-500 mb-4">{{ $analyse['totaal_rijen'] }} rijen gevonden</p>
-
-                <div class="space-y-2" id="csv-kolommen">
-                    @foreach($analyse['header'] as $index => $kolom)
                         @php
-                            $voorbeeldWaarden = [];
-                            foreach (array_slice($analyse['preview_data'], 0, 3) as $row) {
-                                $val = $row[$index] ?? '';
-                                if ($val !== '') $voorbeeldWaarden[] = $val;
-                            }
+                            $detectie = $analyse['detectie'][$veld] ?? ['csv_index' => null, 'waarschuwing' => null];
                         @endphp
-                        <div class="csv-kolom draggable cursor-move bg-blue-50 border border-blue-200 rounded-lg p-3 hover:bg-blue-100 transition-all"
-                             draggable="true"
-                             data-kolom-index="{{ $index }}"
-                             data-kolom-naam="{{ $kolom }}">
-                            <div class="flex items-start gap-3">
-                                <span class="text-blue-400 mt-1">⠿</span>
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-bold text-blue-800">{{ $kolom }}</div>
-                                    <div class="text-sm text-gray-600 truncate font-mono">
-                                        {{ implode(', ', $voorbeeldWaarden) ?: '-' }}
+                        <tr class="mapping-row {{ $detectie['waarschuwing'] ? 'bg-yellow-50' : '' }}" data-veld="{{ $veld }}">
+                            <td class="px-3 py-2 border">
+                                <strong>{{ $info['label'] }}</strong>
+                                @if($info['verplicht'])<span class="text-red-500">*</span>@endif
+                                <br>
+                                <span class="text-xs text-gray-500">{{ $info['uitleg'] }}</span>
+                            </td>
+                            <td class="px-3 py-2 border drop-zone">
+                                @if($detectie['csv_index'] !== null)
+                                    <div class="kolom-chip cursor-move bg-blue-500 text-white px-3 py-1 rounded inline-flex items-center gap-2"
+                                         draggable="true"
+                                         data-index="{{ $detectie['csv_index'] }}">
+                                        <span class="drag-handle">⠿</span>
+                                        <span class="kolom-naam">{{ $analyse['header'][$detectie['csv_index']] }}</span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
+                                @endif
+                                <input type="hidden" name="mapping[{{ $veld }}]" value="{{ $detectie['csv_index'] }}" class="mapping-input">
+                            </td>
+                            <td class="px-3 py-2 border font-mono text-xs">
+                                <span class="voorbeeld-data">-</span>
+                            </td>
+                            <td class="px-3 py-2 border status-cell">
+                                @if($detectie['waarschuwing'])
+                                    <span class="text-yellow-600 font-bold text-xs">{{ $detectie['waarschuwing'] }}</span>
+                                @elseif($detectie['csv_index'] !== null)
+                                    <span class="text-green-600">OK</span>
+                                @else
+                                    <span class="text-gray-400">Niet gekoppeld</span>
+                                @endif
+                            </td>
+                        </tr>
                     @endforeach
+                </tbody>
+            </table>
+
+            {{-- Niet-gekoppelde kolommen --}}
+            <div class="mt-4 pt-4 border-t">
+                <p class="text-sm text-gray-600 mb-2">Niet-gekoppelde CSV kolommen (sleep naar een veld hierboven):</p>
+                <div id="unclaimed-chips" class="flex flex-wrap gap-2">
+                    {{-- Wordt gevuld door JS --}}
                 </div>
             </div>
         </div>
 
         {{-- Preview tabel --}}
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-lg font-bold mb-4">Bestand Preview</h2>
+            <h2 class="text-lg font-bold mb-2">Bestand Preview</h2>
+            <p class="text-gray-600 mb-4">Eerste 5 regels van je bestand ({{ $analyse['totaal_rijen'] }} rijen totaal)</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border" id="preview-table">
                     <thead class="bg-gray-100">
@@ -88,7 +107,7 @@
                             <th class="px-2 py-1 border text-left">#</th>
                             @foreach($analyse['header'] as $index => $kolom)
                                 <th class="px-2 py-1 text-left border preview-header" data-col="{{ $index }}">
-                                    <span class="kolom-naam">{{ $kolom }}</span>
+                                    {{ $kolom }}
                                     <div class="mapped-to text-xs font-normal text-green-600"></div>
                                 </th>
                             @endforeach
@@ -121,119 +140,275 @@
 </div>
 
 <style>
-.drop-zone.drag-over {
-    border-color: #3b82f6;
-    background-color: #eff6ff;
+.kolom-chip {
+    user-select: none;
+    transition: all 0.15s;
 }
-.drop-zone.has-item {
-    border-style: solid;
-    border-color: #10b981;
-    background-color: #ecfdf5;
+.kolom-chip:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-.draggable.dragging {
+.kolom-chip.dragging {
     opacity: 0.5;
 }
-.csv-kolom.placed {
-    opacity: 0.4;
-    cursor: default;
+.kolom-chip.unclaimed {
+    background-color: #6b7280 !important;
 }
-.preview-header.highlighted {
-    background-color: #dcfce7;
+.drop-zone {
+    min-height: 40px;
+    transition: all 0.15s;
 }
-.preview-cell.highlighted {
+.drop-zone.drag-over {
+    background-color: #dbeafe;
+    outline: 2px dashed #3b82f6;
+}
+.preview-header.highlighted, .preview-cell.highlighted {
     background-color: #dcfce7;
 }
 </style>
 
 <script>
-const detectie = @json($analyse['detectie']);
+const previewData = @json($analyse['preview_data']);
 const header = @json($analyse['header']);
+const veldLabels = @json(collect($veldInfo)->mapWithKeys(fn($v, $k) => [$k => $v['label']]));
+const initDetectie = @json($analyse['detectie']);
 
-// Track welke kolom waar geplaatst is
-const plaatsingen = {}; // veld -> kolomIndex
-const kolomPlaatsingen = {}; // kolomIndex -> veld
+// Track welke kolom waar staat: kolomIndex -> veld (of null)
+const kolomMapping = {};
 
-// Init: plaats automatisch gedetecteerde kolommen
+// Init
 document.addEventListener('DOMContentLoaded', function() {
-    for (const [veld, info] of Object.entries(detectie)) {
+    // Zet initiële mapping
+    for (const [veld, info] of Object.entries(initDetectie)) {
         if (info.csv_index !== null) {
-            plaatsKolom(veld, info.csv_index);
+            kolomMapping[info.csv_index] = veld;
         }
     }
+
+    updateUnclaimedChips();
+    updateAlleVoorbeelden();
+    setupDragDrop();
 });
 
-function plaatsKolom(veld, kolomIndex) {
-    const dropZone = document.querySelector(`.drop-zone[data-veld="${veld}"]`);
-    const csvKolom = document.querySelector(`.csv-kolom[data-kolom-index="${kolomIndex}"]`);
+function createChip(kolomIndex, isUnclaimed = false) {
+    const chip = document.createElement('div');
+    chip.className = `kolom-chip cursor-move ${isUnclaimed ? 'bg-gray-500' : 'bg-blue-500'} text-white px-3 py-1 rounded inline-flex items-center gap-2`;
+    chip.draggable = true;
+    chip.dataset.index = kolomIndex;
+    chip.innerHTML = `<span class="drag-handle">⠿</span><span class="kolom-naam">${header[kolomIndex]}</span>`;
+    return chip;
+}
 
-    if (!dropZone || !csvKolom) return;
+function updateUnclaimedChips() {
+    const container = document.getElementById('unclaimed-chips');
+    container.innerHTML = '';
 
-    // Verwijder eventuele oude plaatsing van dit veld
-    if (plaatsingen[veld] !== undefined) {
-        const oudeKolom = document.querySelector(`.csv-kolom[data-kolom-index="${plaatsingen[veld]}"]`);
-        if (oudeKolom) {
-            oudeKolom.classList.remove('placed');
-            oudeKolom.setAttribute('draggable', 'true');
+    for (let i = 0; i < header.length; i++) {
+        if (kolomMapping[i] === undefined) {
+            const chip = createChip(i, true);
+            container.appendChild(chip);
+            setupChipDrag(chip);
         }
-        delete kolomPlaatsingen[plaatsingen[veld]];
     }
+}
 
-    // Verwijder eventuele oude plaatsing van deze kolom
-    if (kolomPlaatsingen[kolomIndex] !== undefined) {
-        const oudeZone = document.querySelector(`.drop-zone[data-veld="${kolomPlaatsingen[kolomIndex]}"]`);
-        if (oudeZone) {
-            oudeZone.classList.remove('has-item');
-            oudeZone.querySelector('.dropped-info').innerHTML = '';
-            oudeZone.querySelector('.mapping-input').value = '';
+function setupDragDrop() {
+    // Setup bestaande chips
+    document.querySelectorAll('.kolom-chip').forEach(setupChipDrag);
+
+    // Setup drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+
+            const droppedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+            const targetVeld = this.closest('tr').dataset.veld;
+
+            // Welke chip zit hier al?
+            const bestaandeChip = this.querySelector('.kolom-chip');
+            const bestaandeIndex = bestaandeChip ? parseInt(bestaandeChip.dataset.index) : null;
+
+            // Waar komt de gedropte chip vandaan?
+            const bronVeld = kolomMapping[droppedIndex];
+
+            // Swap logica
+            if (bestaandeIndex !== null && bronVeld) {
+                // Beide hebben een chip -> swap
+                kolomMapping[droppedIndex] = targetVeld;
+                kolomMapping[bestaandeIndex] = bronVeld;
+
+                // Verplaats chips visueel
+                const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
+                const gedropteChip = bronZone.querySelector('.kolom-chip');
+
+                bronZone.insertBefore(bestaandeChip, bronZone.querySelector('input'));
+                this.insertBefore(gedropteChip, this.querySelector('input'));
+            } else if (bestaandeIndex !== null && !bronVeld) {
+                // Drop van unclaimed naar bezette zone -> verplaats bestaande naar unclaimed
+                delete kolomMapping[bestaandeIndex];
+                kolomMapping[droppedIndex] = targetVeld;
+
+                // Verwijder bestaande chip
+                bestaandeChip.remove();
+
+                // Maak nieuwe chip van gedropte
+                const newChip = createChip(droppedIndex);
+                this.insertBefore(newChip, this.querySelector('input'));
+                setupChipDrag(newChip);
+
+                updateUnclaimedChips();
+            } else if (!bronVeld) {
+                // Drop van unclaimed naar lege zone
+                kolomMapping[droppedIndex] = targetVeld;
+
+                const newChip = createChip(droppedIndex);
+                this.insertBefore(newChip, this.querySelector('input'));
+                setupChipDrag(newChip);
+
+                updateUnclaimedChips();
+            } else {
+                // Drop van andere zone naar lege zone
+                kolomMapping[droppedIndex] = targetVeld;
+
+                const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
+                const gedropteChip = bronZone.querySelector('.kolom-chip');
+                this.insertBefore(gedropteChip, this.querySelector('input'));
+            }
+
+            updateAlleInputs();
+            updateAlleVoorbeelden();
+        });
+    });
+
+    // Drop zone voor unclaimed
+    const unclaimedContainer = document.getElementById('unclaimed-chips');
+    unclaimedContainer.addEventListener('dragover', function(e) {
+        e.preventDefault();
+    });
+    unclaimedContainer.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const droppedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const bronVeld = kolomMapping[droppedIndex];
+
+        if (bronVeld) {
+            delete kolomMapping[droppedIndex];
+            const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
+            const chip = bronZone.querySelector('.kolom-chip');
+            if (chip) chip.remove();
+
+            updateUnclaimedChips();
+            updateAlleInputs();
+            updateAlleVoorbeelden();
         }
-        delete plaatsingen[kolomPlaatsingen[kolomIndex]];
-    }
+    });
+}
 
-    // Plaats kolom in drop zone
-    plaatsingen[veld] = kolomIndex;
-    kolomPlaatsingen[kolomIndex] = veld;
+function setupChipDrag(chip) {
+    chip.addEventListener('dragstart', function(e) {
+        this.classList.add('dragging');
+        e.dataTransfer.setData('text/plain', this.dataset.index);
+        e.dataTransfer.effectAllowed = 'move';
+    });
 
-    // Update UI
-    const kolomNaam = csvKolom.dataset.kolomNaam;
-    const voorbeeldData = csvKolom.querySelector('.font-mono').textContent;
+    chip.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+    });
+}
 
-    dropZone.classList.add('has-item');
-    dropZone.querySelector('.dropped-info').innerHTML = `
-        <div class="flex items-center gap-2">
-            <span class="font-bold text-green-700">${kolomNaam}</span>
-            <button type="button" class="text-red-500 hover:text-red-700" onclick="verwijderPlaatsing('${veld}')">✕</button>
-        </div>
-        <div class="text-xs text-gray-500 font-mono">${voorbeeldData}</div>
-    `;
-    dropZone.querySelector('.mapping-input').value = kolomIndex;
+function updateAlleInputs() {
+    document.querySelectorAll('.mapping-row').forEach(row => {
+        const veld = row.dataset.veld;
+        const input = row.querySelector('.mapping-input');
 
-    csvKolom.classList.add('placed');
-    csvKolom.setAttribute('draggable', 'false');
+        // Vind welke kolom bij dit veld hoort
+        let kolomIndex = null;
+        for (const [idx, v] of Object.entries(kolomMapping)) {
+            if (v === veld) {
+                kolomIndex = idx;
+                break;
+            }
+        }
+        input.value = kolomIndex ?? '';
+    });
+}
 
-    // Update preview tabel
+function updateAlleVoorbeelden() {
+    document.querySelectorAll('.mapping-row').forEach(row => {
+        const veld = row.dataset.veld;
+        const voorbeeldCell = row.querySelector('.voorbeeld-data');
+        const statusCell = row.querySelector('.status-cell');
+
+        // Vind welke kolom bij dit veld hoort
+        let kolomIndex = null;
+        for (const [idx, v] of Object.entries(kolomMapping)) {
+            if (v === veld) {
+                kolomIndex = parseInt(idx);
+                break;
+            }
+        }
+
+        if (kolomIndex === null) {
+            voorbeeldCell.textContent = '-';
+            statusCell.innerHTML = '<span class="text-gray-400">Niet gekoppeld</span>';
+            row.classList.remove('bg-yellow-50');
+        } else {
+            // Haal voorbeeld data
+            const waarden = [];
+            for (let i = 0; i < Math.min(3, previewData.length); i++) {
+                const val = previewData[i][kolomIndex];
+                if (val !== null && val !== '') waarden.push(val);
+            }
+            voorbeeldCell.textContent = waarden.length > 0 ? waarden.join(', ') : '-';
+
+            // Valideer
+            const waarschuwing = valideerData(veld, waarden);
+            if (waarschuwing) {
+                statusCell.innerHTML = `<span class="text-yellow-600 font-bold text-xs">${waarschuwing}</span>`;
+                row.classList.add('bg-yellow-50');
+            } else {
+                statusCell.innerHTML = '<span class="text-green-600">OK</span>';
+                row.classList.remove('bg-yellow-50');
+            }
+        }
+    });
+
     updatePreviewHighlights();
 }
 
-function verwijderPlaatsing(veld) {
-    const dropZone = document.querySelector(`.drop-zone[data-veld="${veld}"]`);
-    const kolomIndex = plaatsingen[veld];
+function valideerData(veld, waarden) {
+    if (waarden.length === 0) return 'Geen data';
 
-    if (kolomIndex !== undefined) {
-        const csvKolom = document.querySelector(`.csv-kolom[data-kolom-index="${kolomIndex}"]`);
-        if (csvKolom) {
-            csvKolom.classList.remove('placed');
-            csvKolom.setAttribute('draggable', 'true');
+    for (const val of waarden) {
+        if (veld === 'geboortejaar') {
+            const num = parseInt(val);
+            if (isNaN(num) || num < 1950 || num > 2026) {
+                return `Verwacht jaar, gevonden: ${val}`;
+            }
         }
-        delete kolomPlaatsingen[kolomIndex];
+        if (veld === 'geslacht') {
+            const v = String(val).toUpperCase().trim();
+            if (!['M', 'V', 'J', 'JONGEN', 'MEISJE', 'MAN', 'VROUW'].includes(v)) {
+                return `Verwacht M/V, gevonden: ${val}`;
+            }
+        }
+        if (veld === 'gewicht') {
+            const num = parseFloat(String(val).replace(',', '.'));
+            if (isNaN(num) || num < 10 || num > 200) {
+                return `Verwacht gewicht, gevonden: ${val}`;
+            }
+        }
     }
-
-    delete plaatsingen[veld];
-
-    dropZone.classList.remove('has-item');
-    dropZone.querySelector('.dropped-info').innerHTML = '';
-    dropZone.querySelector('.mapping-input').value = '';
-
-    updatePreviewHighlights();
+    return null;
 }
 
 function updatePreviewHighlights() {
@@ -246,58 +421,15 @@ function updatePreviewHighlights() {
     });
 
     // Highlight gemapte kolommen
-    for (const [veld, kolomIndex] of Object.entries(plaatsingen)) {
+    for (const [kolomIndex, veld] of Object.entries(kolomMapping)) {
         document.querySelectorAll(`[data-col="${kolomIndex}"]`).forEach(el => {
             el.classList.add('highlighted');
         });
-        const headerLabel = document.querySelector(`.preview-header[data-col="${kolomIndex}"] .mapped-to`);
-        if (headerLabel) {
-            headerLabel.textContent = '→ ' + veld;
+        const label = document.querySelector(`.preview-header[data-col="${kolomIndex}"] .mapped-to`);
+        if (label) {
+            label.textContent = '→ ' + veldLabels[veld];
         }
     }
 }
-
-// Drag and drop
-let draggedElement = null;
-
-document.querySelectorAll('.draggable').forEach(el => {
-    el.addEventListener('dragstart', function(e) {
-        if (this.classList.contains('placed')) {
-            e.preventDefault();
-            return;
-        }
-        draggedElement = this;
-        this.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-    });
-
-    el.addEventListener('dragend', function() {
-        this.classList.remove('dragging');
-        draggedElement = null;
-    });
-});
-
-document.querySelectorAll('.drop-zone').forEach(zone => {
-    zone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        this.classList.add('drag-over');
-    });
-
-    zone.addEventListener('dragleave', function() {
-        this.classList.remove('drag-over');
-    });
-
-    zone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('drag-over');
-
-        if (draggedElement) {
-            const veld = this.dataset.veld;
-            const kolomIndex = parseInt(draggedElement.dataset.kolomIndex);
-            plaatsKolom(veld, kolomIndex);
-        }
-    });
-});
 </script>
 @endsection

@@ -12,11 +12,11 @@ class ReverbController extends Controller
      */
     public function status(): JsonResponse
     {
-        // Only on production server
-        if (!app()->environment('production')) {
+        // Only on production/staging server
+        if (app()->environment('local')) {
             return response()->json([
                 'running' => false,
-                'message' => 'Reverb alleen beschikbaar op production',
+                'message' => 'Reverb alleen beschikbaar op server',
                 'local' => true,
             ]);
         }
@@ -37,10 +37,10 @@ class ReverbController extends Controller
      */
     public function start(): JsonResponse
     {
-        if (!app()->environment('production')) {
+        if (app()->environment('local')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Reverb alleen beschikbaar op production server',
+                'message' => 'Reverb alleen beschikbaar op server',
                 'local' => true,
             ]);
         }
@@ -66,10 +66,10 @@ class ReverbController extends Controller
      */
     public function stop(): JsonResponse
     {
-        if (!app()->environment('production')) {
+        if (app()->environment('local')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Reverb alleen beschikbaar op production server',
+                'message' => 'Reverb alleen beschikbaar op server',
                 'local' => true,
             ]);
         }
