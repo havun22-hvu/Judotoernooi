@@ -18,8 +18,17 @@ class OrganisatorAuthController extends Controller
      */
     public function showLogin(): View|RedirectResponse
     {
+        // Check if logged in, but also verify the user actually exists
+        // This prevents redirect loops when session is corrupt
         if (Auth::guard('organisator')->check()) {
-            return redirect()->route('organisator.dashboard');
+            $user = Auth::guard('organisator')->user();
+            if ($user && $user->exists) {
+                return redirect()->route('organisator.dashboard');
+            }
+            // Corrupt session - log out and show login
+            Auth::guard('organisator')->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
         }
 
         // On local/staging, show PIN login option for superadmin
