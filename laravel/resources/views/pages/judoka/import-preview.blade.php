@@ -102,13 +102,23 @@
             <p class="text-gray-600 mb-4">Eerste 5 regels van je bestand ({{ $analyse['totaal_rijen'] }} rijen totaal)</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border" id="preview-table">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-2 py-1 border text-left">#</th>
+                    <thead>
+                        {{-- Rij 1: CSV kolom namen (uit bestand) --}}
+                        <tr class="bg-gray-200">
+                            <th class="px-2 py-1 border text-left text-xs text-gray-500" rowspan="2">#</th>
                             @foreach($analyse['header'] as $index => $kolom)
                                 <th class="px-2 py-1 text-left border preview-header" data-col="{{ $index }}">
+                                    <span class="text-xs text-gray-500 block">CSV kolom:</span>
                                     {{ $kolom }}
-                                    <div class="mapped-to text-xs font-normal text-green-600"></div>
+                                </th>
+                            @endforeach
+                        </tr>
+                        {{-- Rij 2: Webapp velden (waar het naartoe gaat) --}}
+                        <tr class="bg-gray-100">
+                            @foreach($analyse['header'] as $index => $kolom)
+                                <th class="px-2 py-1 text-left border mapped-to-cell" data-col="{{ $index }}">
+                                    <span class="text-xs text-gray-500 block">App veld:</span>
+                                    <span class="mapped-to text-green-600 font-medium">-</span>
                                 </th>
                             @endforeach
                         </tr>
@@ -162,8 +172,11 @@
     background-color: #dbeafe;
     outline: 2px dashed #3b82f6;
 }
-.preview-header.highlighted, .preview-cell.highlighted {
+.preview-header.highlighted, .preview-cell.highlighted, .mapped-to-cell.highlighted {
     background-color: #dcfce7;
+}
+.mapped-to-cell.unused {
+    background-color: #f3f4f6;
 }
 </style>
 
@@ -412,22 +425,46 @@ function valideerData(veld, waarden) {
 }
 
 function updatePreviewHighlights() {
-    // Reset
-    document.querySelectorAll('.preview-header, .preview-cell').forEach(el => {
-        el.classList.remove('highlighted');
+    // Reset all
+    document.querySelectorAll('.preview-header, .preview-cell, .mapped-to-cell').forEach(el => {
+        el.classList.remove('highlighted', 'unused');
     });
     document.querySelectorAll('.mapped-to').forEach(el => {
-        el.textContent = '';
+        el.textContent = '-';
+        el.classList.remove('text-green-600', 'text-gray-400');
+        el.classList.add('text-gray-400');
     });
 
-    // Highlight gemapte kolommen
+    // Build reverse lookup: kolomIndex -> veld
+    const kolomNaarVeld = {};
     for (const [kolomIndex, veld] of Object.entries(kolomMapping)) {
-        document.querySelectorAll(`[data-col="${kolomIndex}"]`).forEach(el => {
-            el.classList.add('highlighted');
-        });
-        const label = document.querySelector(`.preview-header[data-col="${kolomIndex}"] .mapped-to`);
-        if (label) {
-            label.textContent = '→ ' + veldLabels[veld];
+        kolomNaarVeld[kolomIndex] = veld;
+    }
+
+    // Update each column
+    for (let i = 0; i < header.length; i++) {
+        const veld = kolomNaarVeld[i];
+        const mappedToCell = document.querySelector(`.mapped-to-cell[data-col="${i}"]`);
+        const mappedToLabel = mappedToCell?.querySelector('.mapped-to');
+
+        if (veld) {
+            // Column is mapped
+            document.querySelectorAll(`[data-col="${i}"]`).forEach(el => {
+                el.classList.add('highlighted');
+            });
+            if (mappedToLabel) {
+                mappedToLabel.textContent = veldLabels[veld];
+                mappedToLabel.classList.remove('text-gray-400');
+                mappedToLabel.classList.add('text-green-600');
+            }
+        } else {
+            // Column is unused
+            if (mappedToCell) {
+                mappedToCell.classList.add('unused');
+            }
+            if (mappedToLabel) {
+                mappedToLabel.textContent = 'Ongebruikt';
+            }
         }
     }
 }
