@@ -205,10 +205,7 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
                             @if($isEliminatie)
-                                @php
-                                    $aantalBrons = $toernooi->aantal_brons ?? 2;
-                                @endphp
-                                #{{ $poule->nummer }} ⚔️ {{ $poule->gewichtsklasse }} kg - Eliminatie ({{ $aantalBrons }}x brons)
+                                #{{ $poule->nummer }} ⚔️ {{ $poule->gewichtsklasse }} kg - Eliminatie
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
