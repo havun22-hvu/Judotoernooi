@@ -1,10 +1,17 @@
 @php
     // $leeftijdVolgorde en $afkortingen worden doorgegeven vanuit parent view
-    // Fallback: gebruik lege arrays (parent view moet deze altijd meegeven)
     $leeftijdVolgorde = $leeftijdVolgorde ?? [];
     $afkortingen = $afkortingen ?? [];
     $pos = array_search($cat['leeftijd'], $leeftijdVolgorde);
-    $sortValue = ($pos !== false ? $pos : 99) * 10000 + (int)preg_replace('/[^0-9]/', '', $cat['gewicht']) + (str_starts_with($cat['gewicht'], '+') ? 500 : 0);
+
+    // is_poule = true voor individuele poules (variabele categorieën)
+    // is_poule = false voor gegroepeerde categorieën (vaste gewichtsklassen)
+    $isPoule = $cat['is_poule'] ?? false;
+
+    // Sort value voor correcte volgorde
+    $sortValue = ($pos !== false ? $pos : 99) * 100000
+        + ($cat['min_lft'] ?? 99) * 1000
+        + ($cat['min_kg'] ?? 999);
 
     // In sleepvak = purple, in blok vast = green, in blok niet vast = blue
     if ($inSleepvak) {
@@ -21,37 +28,36 @@
         $subClass = 'text-blue-400';
     }
 
-    // Check of dit een variabele categorie is
-    // Variabel = titel bevat leeftijdsrange (bijv. "Mini's 7-8j 20-23kg")
     $titel = $cat['titel'] ?? '';
-    $isVariabel = preg_match('/\d+-?\d*j/', $titel) && preg_match('/[\d.]+-[\d.]+kg/', $titel);
 
-    if ($isVariabel) {
-        // Variabele categorie: toon "M 7j 20kg (10w)" format uit titel
-        // Extract label prefix (Mini's → M, A-pupillen → A, Jeugd → J)
+    if ($isPoule) {
+        // Individuele poule: toon "P{nr} {label} {lft}j {kg}kg (Xw)"
+        // Extract label prefix (Mini's → M, Jeugd → J)
         $labelPrefix = '';
-        if (preg_match('/^([A-Za-z])/', $titel, $m)) {
+        if (preg_match('/^([A-Za-z])/', $cat['leeftijd'], $m)) {
             $labelPrefix = strtoupper($m[1]);
         }
-        // Extract min leeftijd uit "7-8j" of "7j"
-        preg_match('/(\d+)-?\d*j/', $titel, $lftMatch);
-        $minLeeftijd = $lftMatch[1] ?? '';
-        // Extract min gewicht uit "20.0-23.5kg"
-        preg_match('/([\d.]+)-[\d.]+kg/', $titel, $kgMatch);
-        $minGewicht = $kgMatch[1] ?? '';
+        // Extract leeftijd uit titel "Jeugd 7-9j -30kg" → "7-9j"
+        preg_match('/(\d+-?\d*j)/', $titel, $lftMatch);
+        $leeftijdStr = $lftMatch[1] ?? '';
 
-        $chipLabel = trim($labelPrefix . ' ' . $minLeeftijd . 'j');
-        $chipGewicht = $minGewicht ? round((float)$minGewicht) . 'kg' : '';
+        $chipLabel = 'P' . ($cat['nummer'] ?? '?') . ' ' . $labelPrefix;
+        $chipGewicht = $leeftijdStr . ' ' . $cat['gewicht'];
+
+        // Key voor poules: gebruik poule_id als beschikbaar, anders leeftijd|gewicht|nummer
+        $dataKey = $cat['poule_id'] ? 'poule_' . $cat['poule_id'] : $cat['leeftijd'] . '|' . $cat['gewicht'] . '|' . $cat['nummer'];
     } else {
         // Vaste categorie: bestaande weergave
         $chipLabel = $afkortingen[$cat['leeftijd']] ?? $cat['leeftijd'];
         $chipGewicht = $cat['gewicht'];
+        $dataKey = $cat['leeftijd'] . '|' . $cat['gewicht'];
     }
 @endphp
 <div class="category-chip px-2 py-1 text-sm rounded cursor-move {{ $chipClass }} shadow-sm hover:shadow transition-all inline-flex items-center gap-1"
      draggable="true"
-     data-key="{{ $cat['leeftijd'] }}|{{ $cat['gewicht'] }}"
+     data-key="{{ $dataKey }}"
      data-leeftijd="{{ $cat['leeftijd'] }}"
+     data-is-poule="{{ $isPoule ? '1' : '0' }}"
      data-wedstrijden="{{ $cat['wedstrijden'] }}"
      data-vast="{{ $cat['vast'] ? '1' : '0' }}"
      data-sort="{{ $sortValue }}"
