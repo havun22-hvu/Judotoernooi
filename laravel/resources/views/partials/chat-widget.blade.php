@@ -396,27 +396,17 @@
     }
 
     function initEcho() {
-        // Reverb config
-        const reverbConfig = {
-            key: '{{ config("reverb.apps.0.key", "oixj1bggwjv8qhj3jlpb") }}',
-            wsHost: '{{ config("reverb.apps.0.options.host", "judotournament.org") }}',
-            wsPort: {{ config('reverb.apps.0.options.port', 443) }},
-            wssPort: {{ config('reverb.apps.0.options.port', 443) }},
-            forceTLS: {{ config('reverb.apps.0.options.scheme', 'https') === 'https' ? 'true' : 'false' }},
+        // Reverb config - use env values directly
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+        const pusher = new Pusher('{{ env("REVERB_APP_KEY", "oixj1bggwjv8qhj3jlpb") }}', {
+            wsHost: isProduction ? window.location.hostname : '127.0.0.1',
+            wsPort: isProduction ? 443 : 8080,
+            wssPort: isProduction ? 443 : 8080,
+            forceTLS: isProduction,
             enabledTransports: ['ws', 'wss'],
             disableStats: true,
             cluster: 'mt1'
-        };
-
-        // Create Pusher connection (Reverb is Pusher-compatible)
-        const pusher = new Pusher(reverbConfig.key, {
-            wsHost: reverbConfig.wsHost,
-            wsPort: reverbConfig.wsPort,
-            wssPort: reverbConfig.wssPort,
-            forceTLS: reverbConfig.forceTLS,
-            enabledTransports: reverbConfig.enabledTransports,
-            disableStats: reverbConfig.disableStats,
-            cluster: reverbConfig.cluster
         });
 
         // Build channel name based on type
@@ -431,14 +421,14 @@
         // Also subscribe to broadcast channels
         const broadcastChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.iedereen`);
 
-        // Listen for new messages
-        channel.bind('App\\Events\\NewChatMessage', handleNewMessage);
-        broadcastChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+        // Listen for new messages (event broadcasts as 'chat.message')
+        channel.bind('chat.message', handleNewMessage);
+        broadcastChannel.bind('chat.message', handleNewMessage);
 
         // If we're a mat, also listen to alle_matten
         if (chatConfig.type === 'mat') {
             const mattenChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.alle_matten`);
-            mattenChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+            mattenChannel.bind('chat.message', handleNewMessage);
         }
 
         console.log('Chat WebSocket connected to:', channelName);

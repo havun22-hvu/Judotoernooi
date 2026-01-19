@@ -23,6 +23,7 @@ class NewChatMessage implements ShouldBroadcast
 
     /**
      * Get the channels the event should broadcast on.
+     * Using public channels for simplicity (no auth needed for toernooi chat)
      *
      * @return array<int, Channel>
      */
@@ -34,34 +35,34 @@ class NewChatMessage implements ShouldBroadcast
         // Determine which channels to broadcast to based on recipient
         switch ($this->message->naar_type) {
             case 'hoofdjury':
-                $channels[] = new PrivateChannel("chat.hoofdjury.{$toernooiId}");
+                $channels[] = new Channel("chat.{$toernooiId}.hoofdjury");
                 break;
 
             case 'mat':
                 // Specific mat
-                $channels[] = new PrivateChannel("chat.mat.{$toernooiId}.{$this->message->naar_id}");
+                $channels[] = new Channel("chat.{$toernooiId}.mat.{$this->message->naar_id}");
                 break;
 
             case 'alle_matten':
-                // Broadcast to all mats - they subscribe to their own channel + alle_matten
-                $channels[] = new PrivateChannel("chat.alle_matten.{$toernooiId}");
+                // Broadcast to all mats channel
+                $channels[] = new Channel("chat.{$toernooiId}.alle_matten");
                 break;
 
             case 'weging':
-                $channels[] = new PrivateChannel("chat.weging.{$toernooiId}");
+                $channels[] = new Channel("chat.{$toernooiId}.weging");
                 break;
 
             case 'spreker':
-                $channels[] = new PrivateChannel("chat.spreker.{$toernooiId}");
+                $channels[] = new Channel("chat.{$toernooiId}.spreker");
                 break;
 
             case 'dojo':
-                $channels[] = new PrivateChannel("chat.dojo.{$toernooiId}");
+                $channels[] = new Channel("chat.{$toernooiId}.dojo");
                 break;
 
             case 'iedereen':
-                // Broadcast channel for all
-                $channels[] = new PrivateChannel("chat.toernooi.{$toernooiId}");
+                // Broadcast channel for everyone
+                $channels[] = new Channel("chat.{$toernooiId}.iedereen");
                 break;
         }
 

@@ -479,35 +479,26 @@
     }
 
     function initEcho() {
-        const reverbConfig = {
-            key: '{{ config("reverb.apps.0.key", "oixj1bggwjv8qhj3jlpb") }}',
-            wsHost: '{{ config("reverb.apps.0.options.host", "judotournament.org") }}',
-            wsPort: {{ config('reverb.apps.0.options.port', 443) }},
-            wssPort: {{ config('reverb.apps.0.options.port', 443) }},
-            forceTLS: {{ config('reverb.apps.0.options.scheme', 'https') === 'https' ? 'true' : 'false' }},
+        const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+        const pusher = new Pusher('{{ env("REVERB_APP_KEY", "oixj1bggwjv8qhj3jlpb") }}', {
+            wsHost: isProduction ? window.location.hostname : '127.0.0.1',
+            wsPort: isProduction ? 443 : 8080,
+            wssPort: isProduction ? 443 : 8080,
+            forceTLS: isProduction,
             enabledTransports: ['ws', 'wss'],
             disableStats: true,
             cluster: 'mt1'
-        };
-
-        const pusher = new Pusher(reverbConfig.key, {
-            wsHost: reverbConfig.wsHost,
-            wsPort: reverbConfig.wsPort,
-            wssPort: reverbConfig.wssPort,
-            forceTLS: reverbConfig.forceTLS,
-            enabledTransports: reverbConfig.enabledTransports,
-            disableStats: reverbConfig.disableStats,
-            cluster: reverbConfig.cluster
         });
 
         // Hoofdjury listens to its own channel
         const channelName = `chat.${chatConfig.toernooiId}.hoofdjury`;
         const channel = pusher.subscribe(channelName);
-        channel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+        channel.bind('chat.message', handleNewMessage);
 
         // Also listen to broadcast channel
         const broadcastChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.iedereen`);
-        broadcastChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+        broadcastChannel.bind('chat.message', handleNewMessage);
 
         console.log('Hoofdjury Chat WebSocket connected to:', channelName);
     }
