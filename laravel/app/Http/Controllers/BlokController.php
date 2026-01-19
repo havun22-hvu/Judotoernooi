@@ -149,7 +149,7 @@ class BlokController extends Controller
 
     /**
      * Generate block distribution for variable categories (max wedstrijden based)
-     * For mixed tournaments (vast + variabel) uses BlokMatVerdelingService's two-phase algorithm
+     * Uses simple algorithm: sort by age/weight, distribute evenly with connection
      */
     public function genereerVariabeleVerdeling(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
@@ -157,58 +157,18 @@ class BlokController extends Controller
             // Reset non-pinned poules
             $toernooi->poules()->where('blok_vast', false)->update(['blok_id' => null]);
 
-            // Check if this is a mixed tournament (both fixed and variable categories)
-            // Use BlokMatVerdelingService for mixed tournaments to handle two-phase algorithm
-            $isGemengd = $this->verdelingService->isGemengdToernooi($toernooi);
-
-            if ($isGemengd) {
-                // Gemengd toernooi: use two-phase algorithm (fixed first, then variable)
-                $balans = (int) $request->input('balans', session('blok_balans', 50));
-                $verdelingGewicht = 100 - $balans;
-                $aansluitingGewicht = $balans;
-
-                $result = $this->verdelingService->genereerVarianten($toernooi, $verdelingGewicht, $aansluitingGewicht);
-
-                if (empty($result['varianten'])) {
-                    $message = $result['error'] ?? $result['message'] ?? 'Geen verdeling mogelijk';
-                    if ($request->wantsJson()) {
-                        return response()->json(['success' => false, 'message' => $message]);
-                    }
-                    return redirect()
-                        ->route('toernooi.blok.index', $toernooi)
-                        ->with('info', $message);
-                }
-
-                // Apply best variant
-                if (!empty($result['varianten'][0]['toewijzingen'])) {
-                    $this->verdelingService->pasVariantToe($toernooi, $result['varianten'][0]['toewijzingen']);
-                }
-
-                $stats = $result['stats'] ?? [];
-                $message = "Gemengde verdeling toegepast: " .
-                    ($stats['gebruikte_blokken'] ?? '?') . " blokken, " .
-                    ($stats['vaste_wedstrijden'] ?? 0) . " vaste + " .
-                    ($stats['variabele_wedstrijden'] ?? 0) . " variabele wedstrijden";
-
-                if ($request->wantsJson()) {
-                    return response()->json(['success' => true, 'stats' => $stats, 'gemengd' => true]);
-                }
-                return redirect()
-                    ->route('toernooi.blok.index', $toernooi)
-                    ->with('success', $message);
-            }
-
-            // Pure variabel toernooi: use existing max-wedstrijden algorithm
+            // Calculate target wedstrijden per blok
             $totaalWedstrijden = $toernooi->poules()->sum('aantal_wedstrijden');
             $aantalBlokken = $toernooi->blokken()->count();
             $defaultMax = $aantalBlokken > 0 ? (int) ceil($totaalWedstrijden / $aantalBlokken) : 100;
 
             $maxPerBlok = (int) $request->input('max_per_blok', $defaultMax);
 
+            // Use simple variabele service for ALL tournaments
             $result = $this->variabeleService->verdeelOpMaxWedstrijden($toernooi, $maxPerBlok);
 
             if (empty($result['toewijzingen'])) {
-                $message = $result['message'] ?? 'Geen variabele poules gevonden';
+                $message = $result['message'] ?? 'Geen poules gevonden';
                 if ($request->wantsJson()) {
                     return response()->json(['success' => false, 'message' => $message]);
                 }
@@ -217,7 +177,7 @@ class BlokController extends Controller
                     ->with('info', $message);
             }
 
-            // Apply distribution with labels
+            // Apply distribution
             $this->variabeleService->pasVerdelingMetLabelsToe(
                 $toernooi,
                 $result['toewijzingen'],
@@ -237,7 +197,7 @@ class BlokController extends Controller
                 ->with('success', "Verdeling toegepast: {$result['stats']['gebruikte_blokken']} blokken gebruikt");
 
         } catch (\Exception $e) {
-            \Log::error('genereerVariabeleVerdeling failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            \Log::error('genereerVariabeleVerdeling failed', ['error' => $e->getMessage()]);
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
             }
