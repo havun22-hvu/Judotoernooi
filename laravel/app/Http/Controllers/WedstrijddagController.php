@@ -504,13 +504,17 @@ class WedstrijddagController extends Controller
         $nieuwePoules = [];
         $judokaIndex = 0;
 
+        // Get highest existing poule nummer to avoid UNIQUE constraint conflicts
+        $maxNummer = $toernooi->poules()->max('nummer') ?? 0;
+
         for ($i = 0; $i < $aantalPoules; $i++) {
+            $nieuweNummer = $maxNummer + $i + 1;
             $poule = Poule::create([
                 'toernooi_id' => $toernooi->id,
                 'blok_id' => $elimPoule->blok_id,
                 'leeftijdsklasse' => $elimPoule->leeftijdsklasse,
                 'gewichtsklasse' => $elimPoule->gewichtsklasse,
-                'nummer' => $i + 1,
+                'nummer' => $nieuweNummer,
                 'titel' => $elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse . ' Poule ' . ($i + 1),
                 'type' => 'voorronde',
                 'aantal_judokas' => $pouleGroottes[$i],
