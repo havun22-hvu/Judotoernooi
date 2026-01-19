@@ -87,6 +87,11 @@ class ToernooiController extends Controller
             $data['gewichtsklassen'] = $gewichtsklassen;
         }
 
+        // Process wedstrijd_systeem from form
+        if ($request->has('wedstrijd_systeem')) {
+            $data['wedstrijd_systeem'] = $request->input('wedstrijd_systeem');
+        }
+
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg'], $data['gewichtsklassen_max_lft']);
 
