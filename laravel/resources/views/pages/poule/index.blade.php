@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
                         // VOORBEREIDING: Toon altijd INGESCHREVEN gewicht, niet gewogen gewicht
@@ -268,20 +268,7 @@
                         }
                         $isGewogen = $judoka->gewicht_gewogen !== null;
                     @endphp
-                    @if($isEliminatie)
-                    {{-- Compacte weergave voor eliminatie: meerdere kolommen over volle breedte --}}
-                    <div class="px-2 py-1.5 bg-gray-50 rounded text-sm judoka-item hover:bg-orange-50 border border-gray-200"
-                         data-judoka-id="{{ $judoka->id }}"
-                         data-poule-id="{{ $poule->id }}">
-                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">
-                            {{ $judoka->naam }}
-                            <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j, {{ $toonGewicht ?? '-' }})</span>
-                        </div>
-                        <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
-                    </div>
-                    @else
-                    {{-- Normale weergave voor poules --}}
-                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group"
+                    <div class="px-3 py-2 hover:bg-{{ $isEliminatie ? 'orange' : 'blue' }}-50 cursor-move text-sm judoka-item group"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}"
                          data-judoka-naam="{{ $judoka->naam }}"
@@ -306,11 +293,10 @@
                             </div>
                         </div>
                     </div>
-                    @endif
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-full' : '' }}">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">Leeg</div>
                     @endif
                 </div>
             </div>
