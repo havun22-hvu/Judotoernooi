@@ -161,8 +161,13 @@
             })->sortKeys();
         @endphp
         @foreach($poulesPerGewichtBlok as $gewichtBlok => $gewichtPoules)
+        @php
+            // Verzamel unieke gewichtsklassen in dit blok
+            $uniqueGewichten = $gewichtPoules->pluck('gewichtsklasse')->unique()->sort()->values();
+            $gewichtHeader = $uniqueGewichten->map(fn($g) => $g . ' kg')->implode(', ');
+        @endphp
         <div class="mb-4 last:mb-0">
-            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtBlok }}-{{ $gewichtBlok + 4 }} kg</h3>
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ $gewichtHeader }}</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             @foreach($gewichtPoules as $poule)
             @php
