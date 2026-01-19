@@ -83,7 +83,7 @@
             <div class="text-sm text-gray-600">Judoka's</div>
         </div>
         <div>
-            <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count))->count() }}</div>
+            <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count) && $p->type !== 'eliminatie' && $p->type !== 'kruisfinale')->count() }}</div>
             <div class="text-sm text-gray-600">Problemen</div>
         </div>
     </div>
@@ -118,8 +118,8 @@
 </div>
 
 @php
-    // Poules zijn problematisch als grootte niet in toegestane groottes staat
-    $problematischePoules = $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count));
+    // Poules zijn problematisch als grootte niet in toegestane groottes staat (excl. eliminatie/kruisfinale)
+    $problematischePoules = $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count) && $p->type !== 'eliminatie' && $p->type !== 'kruisfinale');
 @endphp
 
 <div id="problematische-poules-container">
@@ -795,20 +795,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Remove delete button
             headerTop?.querySelector('.delete-empty-btn')?.remove();
 
-            // Update problematic styling (grootte niet in toegestane groottes = problematic, skip kruisfinale)
-            if (isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale) {
+            // Update problematic styling (grootte niet in toegestane groottes = problematic, skip kruisfinale/eliminatie)
+            if (isProblematischeGrootte(pouleData.judokas_count) && !isKruisfinale && !isEliminatie) {
                 pouleCard.classList.add('border-2', 'border-red-300');
                 header?.classList.add('bg-red-100');
                 header?.classList.remove('bg-blue-100');
-            } else if (!isKruisfinale) {
+            } else if (!isKruisfinale && !isEliminatie) {
                 pouleCard.classList.remove('border-2', 'border-red-300');
                 header?.classList.remove('bg-red-100');
                 header?.classList.add('bg-blue-100');
             }
         }
 
-        // Update problematic poules section at the top
-        if (!isKruisfinale) {
+        // Update problematic poules section at the top (skip kruisfinale/eliminatie)
+        if (!isKruisfinale && !isEliminatie) {
             updateProblematischePoules(pouleData);
         }
     }
