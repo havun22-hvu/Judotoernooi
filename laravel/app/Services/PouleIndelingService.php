@@ -166,12 +166,16 @@ class PouleIndelingService
                 $gewichtsklasse = $delen[1] ?? 'Onbekend';
                 $geslacht = $delen[2] ?? null;
 
-                // Check if this is an elimination weight class
+                // Check if this is an elimination category
                 $klasseKey = $this->getLeeftijdsklasseKey($leeftijdsklasse);
                 $systeem = $wedstrijdSysteem[$klasseKey] ?? 'poules';
-                $isEliminatie = $systeem === 'eliminatie' &&
-                    isset($eliminatieGewichtsklassen[$klasseKey]) &&
-                    in_array($gewichtsklasse, $eliminatieGewichtsklassen[$klasseKey]);
+
+                // Eliminatie alleen bij VASTE categorieën (max_kg=0 en max_lft=0)
+                $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
+                $categorieConfig = $gewichtsklassenConfig[$klasseKey] ?? [];
+                $isVasteCategorie = (($categorieConfig['max_kg_verschil'] ?? 0) == 0)
+                                 && (($categorieConfig['max_leeftijd_verschil'] ?? 0) == 0);
+                $isEliminatie = $systeem === 'eliminatie' && $isVasteCategorie;
 
                 // For elimination: create one group with all judokas (no pool splitting)
                 if ($isEliminatie) {

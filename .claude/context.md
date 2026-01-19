@@ -365,37 +365,46 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 19 januari 2026
+## Laatste Sessie: 19 januari 2026 (middag)
 
 ### Wat is gedaan:
-- **Blokverdeling gefixt** - variabele poules worden nu correct verdeeld
-  - `VariabeleBlokVerdelingService`: vastgezette poules tellen mee in capaciteit
-  - Unieke `poule_{id}` keys i.p.v. `leeftijd|gewicht` (90 poules → 20 keys was het probleem)
-  - BlokController vereenvoudigd - gebruikt altijd VariabeleBlokVerdelingService
-- **Complexe "gemengde" logica verwijderd** - te ingewikkeld, simpele aanpak werkt beter
+- **gewichtsklasse kolom te kort** - migration gemaakt om van 10 naar 50 chars uit te breiden
+  - Error: "17.9-18.5kg" (12 chars) paste niet in kolom van 10 chars
+  - Fix: `2026_01_19_162817_extend_gewichtsklasse_column_length.php`
+
+- **Mollie ontkoppelen werkte niet** - APP_URL was verkeerd op production
+  - `.env` had `APP_URL=https://staging.judotournament.org` i.p.v. `https://judotournament.org`
+  - Form action ging naar staging → cross-origin fail
+
+- **Mollie koppelen** - opent nu in nieuw venster (`target="_blank"`)
+
+- **wedstrijd_systeem werd niet opgeslagen** (Poules/Kruisfinale/Eliminatie dropdown)
+  - **Oorzaak:** JavaScript `updateJsonInput()` verzamelde NIET het `wedstrijd_systeem` veld
+  - Alle andere velden (label, leeftijd, geslacht, etc.) werden wel meegenomen
+  - **Fix:**
+    1. `updateJsonInput()` → voeg `wedstrijd_systeem` toe aan JSON
+    2. `collectConfiguratie()` (presets) → voeg `wedstrijd_systeem` toe
+    3. Controller → extract `wedstrijd_systeem` uit JSON en sla apart op
+
+- **CheckToernooiRol middleware** - `route('dashboard')` bestond niet, vervangen door `route('home')`
 
 ### Openstaande items:
 - [ ] **Import preview UI verbeteren** (PRIORITEIT)
-  - Gebruiker wil duidelijk onderscheid: welke velden uit CSV vs webapp
-  - Dubbele header rij concept was OK (rij 1: CSV kolom, rij 2: App veld)
-  - **Styling moet consistent zijn met rest van de app** - kijk naar bestaande knoppen
-- [ ] Lokaal testen met echte data
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
 - [ ] Openstaande bugs van 17 jan: vals-positieve gewichtsrange markering
 
-### Belangrijke context voor volgende keer:
+### LESSEN (KRITIEK):
+1. **Bij "veld wordt niet opgeslagen"** → EERST checken hoe form data wordt verzameld (JavaScript), niet direct backend debuggen
+2. **Direct deployen naar staging** als gebruiker daar test - niet lokaal fixen en vergeten te deployen
+3. **APP_URL in .env** moet kloppen per omgeving - verschil veroorzaakt cross-origin problemen
 
-**Blokverdeling werkt nu:**
-- `VariabeleBlokVerdelingService::verdeelOpMaxWedstrijden()` is de main method
-- Elke poule krijgt unieke key `poule_{id}`
-- Vastgezette wedstrijden worden meegeteld bij capaciteit per blok
-- Test: 841 wedstrijden → 6 blokken elk ~135-158 wedstrijden
+### Eliminatie Systeem - Regels:
+- **Eliminatie alleen bij VASTE categorieën**: `max_kg_verschil = 0` EN `max_leeftijd_verschil = 0`
+- Bij variabele categorieën (dynamische gewichten): GEEN eliminatie mogelijk
+- `eliminatie_gewichtsklassen` veld is DEPRECATED - niet gebruiken
+- **Dropdown in poule titel**: om achteraf eliminatie → poules te wijzigen (bij te weinig judoka's)
 
-**Import preview pagina:** `resources/views/pages/judoka/import-preview.blade.php`
-- Heeft drag-drop kolom mapping (werkt)
-- Bestand preview tabel onderaan (moet verbeterd)
-
-**LESSEN:**
-- Simpel > complex - de "gemengde verdeling" met twee fases was overkill
-- Test zelf met `php test_verdeling.php` voordat je pusht
-- Unieke keys zijn cruciaal bij arrays met duplicaten
+### Belangrijke bestanden:
+- `resources/views/pages/toernooi/edit.blade.php` → `updateJsonInput()` functie (regel ~840)
+- `app/Http/Controllers/ToernooiController.php` → `update()` method
+- Presets: `collectConfiguratie()` functie in edit.blade.php
