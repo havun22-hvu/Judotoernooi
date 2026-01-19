@@ -273,6 +273,14 @@
         emptyState.classList.add('hidden');
         container.querySelectorAll('.chat-msg').forEach(el => el.remove());
 
+        // Auto-select last incoming message sender as recipient if none selected
+        if (!selectedRecipient.type) {
+            const lastIncoming = [...chatMessages].reverse().find(m => !m.is_eigen);
+            if (lastIncoming) {
+                setRecipient(lastIncoming.van_type, lastIncoming.van_id);
+            }
+        }
+
         chatMessages.forEach(msg => {
             const div = document.createElement('div');
             div.className = 'chat-msg';
@@ -280,9 +288,13 @@
             const isOwn = msg.is_eigen;
             const time = new Date(msg.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 
+            // Click on incoming message to reply to that sender
+            const clickHandler = !isOwn ? `onclick="setRecipient('${msg.van_type}', ${msg.van_id || 'null'})"` : '';
+            const cursorClass = !isOwn ? 'cursor-pointer hover:ring-2 hover:ring-blue-300' : '';
+
             div.innerHTML = `
                 <div class="flex ${isOwn ? 'justify-end' : 'justify-start'}">
-                    <div class="${isOwn ? 'bg-blue-600 text-white' : 'bg-white border'} rounded-lg px-4 py-2 max-w-[80%] shadow-sm">
+                    <div ${clickHandler} class="${isOwn ? 'bg-blue-600 text-white' : 'bg-white border'} rounded-lg px-4 py-2 max-w-[80%] shadow-sm ${cursorClass}" ${!isOwn ? 'title="Klik om te antwoorden"' : ''}>
                         ${!isOwn ? `<p class="text-xs font-bold text-blue-600 mb-1">${escapeHtml(msg.van_naam)}</p>` : `<p class="text-xs text-blue-200 mb-1">Naar: ${escapeHtml(msg.naar_naam)}</p>`}
                         <p class="${isOwn ? 'text-white' : 'text-gray-800'}">${escapeHtml(msg.bericht)}</p>
                         <p class="text-xs ${isOwn ? 'text-blue-200' : 'text-gray-400'} mt-1">${time}</p>
