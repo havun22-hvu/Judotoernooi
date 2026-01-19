@@ -34,6 +34,9 @@ use Illuminate\Support\Facades\Route;
 // Homepage
 Route::get('/', fn() => view('pages.home'))->name('home');
 
+// Help pagina
+Route::get('/help', fn() => view('pages.help'))->name('help');
+
 /*
 |--------------------------------------------------------------------------
 | Organisator Authentication
