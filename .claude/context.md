@@ -365,7 +365,38 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 19 januari 2026 (middag)
+## Laatste Sessie: 19 januari 2026 (avond)
+
+### Wat is gedaan:
+- **Kruisfinales check** - alleen bij vaste categorieën (max_kg=0 EN max_lft=0)
+  - Bestand: `PouleIndelingService.php:413-420`
+
+- **Eliminatie niet als probleem-poule** - uitgesloten van "Problematische poules" sectie
+  - Bestand: `resources/views/pages/poule/index.blade.php`
+  - Filter: `$p->type !== 'eliminatie' && $p->type !== 'kruisfinale'`
+
+- **Eliminatie wedstrijden formule** - was complex, nu simpel:
+  - 2 brons: `2N - 5`
+  - 1 brons: `2N - 4`
+  - Leest `aantal_brons` uit toernooi instellingen
+  - Bestand: `Poule.php:149-158` (`berekenEliminatieWedstrijden`)
+
+- **Eliminatie poule layout**:
+  - 5 kolommen grid
+  - Zelfde judoka-chip als normale poules:
+    ```
+    Naam (lft)       x.y kg
+    judoschool       band
+    ```
+  - Bestand: `resources/views/pages/poule/index.blade.php:256-290`
+
+### LES (KRITIEK):
+- **EERST VRAGEN, DAN IMPLEMENTEREN** - 30 min verspild door niet te luisteren
+- Bij UI wijzigingen: vraag exact wat de gebruiker wil zien, bevestig, dan pas coderen
+
+---
+
+## Sessie: 19 januari 2026 (middag)
 
 ### Wat is gedaan:
 - **gewichtsklasse kolom te kort** - migration gemaakt om van 10 naar 50 chars uit te breiden
