@@ -378,8 +378,10 @@
         // Load messages on init
         loadMessages();
 
-        // Setup WebSocket connection
+        // Setup WebSocket connection (only when Reverb is configured)
+        @if(config('broadcasting.default') === 'reverb')
         setupWebSocket();
+        @endif
     });
 
     // Setup WebSocket with Laravel Echo
