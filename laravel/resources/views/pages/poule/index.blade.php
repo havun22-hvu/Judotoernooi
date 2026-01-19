@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="{{ $isEliminatie ? 'grid grid-cols-5 gap-1 p-2' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
                         if ($judoka->gewicht) {
@@ -265,7 +265,7 @@
                         }
                         $isGewogen = $judoka->gewicht_gewogen !== null;
                     @endphp
-                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group"
+                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group {{ $isEliminatie ? 'border border-gray-200 rounded' : '' }}"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}"
                          data-judoka-naam="{{ $judoka->naam }}"
@@ -276,24 +276,16 @@
                                 <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
-                            <div class="flex items-start gap-2">
-                                <div class="text-right text-xs">
-                                    <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
-                                    <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
-                                </div>
-                                <button type="button"
-                                        onclick="openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
-                                        class="zoek-match-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 p-1 -mr-1 transition-opacity"
-                                        title="Zoek match">
-                                    🔍
-                                </button>
+                            <div class="text-right text-xs">
+                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
+                                <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                             </div>
                         </div>
                     </div>
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-5' : '' }}">Leeg</div>
                     @endif
                 </div>
             </div>
