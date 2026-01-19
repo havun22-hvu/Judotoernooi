@@ -61,9 +61,12 @@
     <div class="bg-white rounded-lg shadow p-4 mb-8" x-show="!searchQuery">
         <h3 class="font-bold text-gray-700 mb-3">Ga naar hoofdstuk</h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <a href="#inschrijving" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Inschrijving</a>
             <a href="#judokas" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Judoka's</a>
             <a href="#poules" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Poules</a>
             <a href="#blokken" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Blokken</a>
+            <a href="#weegkaarten" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Weegkaarten</a>
+            <a href="#coachkaarten" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Coachkaarten</a>
             <a href="#weging" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Weging</a>
             <a href="#wedstrijddag" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Wedstrijddag</a>
             <a href="#matten" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Matten</a>
@@ -74,6 +77,27 @@
 
     {{-- Hoofdstukken --}}
     <div class="space-y-6">
+
+        {{-- Inschrijving --}}
+        <section id="inschrijving" class="help-section bg-white rounded-lg shadow p-6" data-keywords="inschrijving aanmelden betalen mollie club coach">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">📝</span> Inschrijving
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">Online inschrijving</h4>
+                <p>Coaches kunnen hun judoka's online inschrijven via een unieke link per toernooi.</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Betaling</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Betaling via Mollie (iDEAL, creditcard, etc.)</li>
+                    <li>Inschrijving pas definitief na betaling</li>
+                    <li>Automatische bevestigingsmail naar coach</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Inschrijving sluiten</h4>
+                <p>Stel een deadline in waarna geen nieuwe inschrijvingen meer mogelijk zijn.</p>
+            </div>
+        </section>
 
         {{-- Judoka's --}}
         <section id="judokas" class="help-section bg-white rounded-lg shadow p-6" data-keywords="judoka import csv uploaden deelnemers">
@@ -113,7 +137,7 @@
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Poule grootte</h4>
-                <p>Ideaal: 3-5 judoka's per poule. Het systeem splitst automatisch grotere groepen.</p>
+                <p>Ideaal: 5 judoka's per poule (= 10 wedstrijden). Het systeem splitst automatisch grotere groepen.</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Handmatig aanpassen</h4>
                 <ul class="list-disc list-inside space-y-1">
@@ -145,6 +169,47 @@
 
                 <h4 class="font-semibold text-gray-800 mt-4">Gepinde poules</h4>
                 <p>Pin een poule aan een specifieke mat als dezelfde judoka's in meerdere poules zitten.</p>
+            </div>
+        </section>
+
+        {{-- Weegkaarten --}}
+        <section id="weegkaarten" class="help-section bg-white rounded-lg shadow p-6" data-keywords="weegkaart printen afdrukken startnummer">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">🏷️</span> Weegkaarten
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">Wat zijn weegkaarten?</h4>
+                <p>Kaartjes met startnummer en naam die judoka's krijgen na het wegen. Hiermee kunnen ze zich melden bij de mat.</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Printen</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Print per club of voor alle judoka's</li>
+                    <li>Geoptimaliseerd voor A4 (meerdere kaarten per vel)</li>
+                    <li>Bevat: startnummer, naam, club, gewichtsklasse</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Uitdelen</h4>
+                <p>Geef de weegkaart aan de judoka na het wegen. De judoka houdt deze bij zich tijdens het toernooi.</p>
+            </div>
+        </section>
+
+        {{-- Coachkaarten --}}
+        <section id="coachkaarten" class="help-section bg-white rounded-lg shadow p-6" data-keywords="coachkaart coach begeleider toegang">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">👔</span> Coachkaarten
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">Wat zijn coachkaarten?</h4>
+                <p>Toegangskaarten voor coaches en begeleiders om bij de matten te mogen staan.</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Printen</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Print per club</li>
+                    <li>Bevat: clubnaam, coach naam, aantal judoka's</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Uitdelen</h4>
+                <p>Geef bij de ingang/weging aan elke club het juiste aantal coachkaarten.</p>
             </div>
         </section>
 
@@ -210,7 +275,12 @@
                     <li><strong>Ippon (I)</strong> - 10 punten, wedstrijd voorbij</li>
                     <li><strong>Waza-ari (W)</strong> - 7 punten</li>
                     <li><strong>Yuko (Y)</strong> - 5 punten</li>
-                    <li><strong>Koka (K)</strong> - 3 punten</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Wedstrijdschema kleuren</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><span class="text-green-600 font-bold">Groen</span> - Huidige wedstrijd (nu op de mat)</li>
+                    <li><span class="text-yellow-600 font-bold">Geel</span> - Volgende wedstrijd (judoka's klaarzetten)</li>
                 </ul>
             </div>
         </section>

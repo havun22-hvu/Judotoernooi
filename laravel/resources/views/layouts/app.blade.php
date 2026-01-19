@@ -74,7 +74,7 @@
                         </button>
                         <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             <a href="{{ route('toernooi.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Toernooien</a>
-                            <a href="{{ route('help') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding</a>
+                            <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding ↗</a>
                             <hr class="my-1">
                             <form action="{{ route('organisator.logout') }}" method="POST">
                                 @csrf
