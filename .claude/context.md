@@ -390,6 +390,12 @@ php artisan view:cache
     ```
   - Bestand: `resources/views/pages/poule/index.blade.php:256-290`
 
+- **Wedstrijdsysteem dropdown op alle poule types**:
+  - Poule (voorronde): → Eliminatie, → Kruisfinale
+  - Eliminatie: → Poules, → Kruisfinale (bestond al)
+  - Kruisfinale: → Poules, → Eliminatie
+  - Bestand: `resources/views/pages/poule/index.blade.php`
+
 ### LES (KRITIEK):
 - **EERST VRAGEN, DAN IMPLEMENTEREN** - 30 min verspild door niet te luisteren
 - Bij UI wijzigingen: vraag exact wat de gebruiker wil zien, bevestig, dan pas coderen

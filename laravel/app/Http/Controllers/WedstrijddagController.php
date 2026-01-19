@@ -651,4 +651,80 @@ class WedstrijddagController extends Controller
             }
         }
     }
+
+    /**
+     * Wijzig poule type (poule ↔ eliminatie ↔ kruisfinale)
+     */
+    public function wijzigPouleType(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'type' => 'required|in:voorronde,poules,eliminatie,kruisfinale,poules_kruisfinale',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+        $nieuwType = $validated['type'];
+        $oudType = $poule->type;
+
+        // Map 'poules' to 'voorronde' (same thing)
+        if ($nieuwType === 'poules') {
+            $nieuwType = 'voorronde';
+        }
+
+        // poules_kruisfinale: maak kruisfinale aan voor deze categorie
+        if ($nieuwType === 'poules_kruisfinale') {
+            // Check of er al een kruisfinale bestaat
+            $bestaandeKruisfinale = Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('type', 'kruisfinale')
+                ->first();
+
+            if ($bestaandeKruisfinale) {
+                return response()->json(['success' => false, 'message' => 'Er bestaat al een kruisfinale voor deze categorie'], 400);
+            }
+
+            // Maak kruisfinale aan
+            $kruisfinale = Poule::create([
+                'toernooi_id' => $toernooi->id,
+                'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'gewichtsklasse' => $poule->gewichtsklasse,
+                'titel' => 'Kruisfinale ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse,
+                'type' => 'kruisfinale',
+                'kruisfinale_plaatsen' => 2,
+                'categorie_key' => $poule->categorie_key,
+                'blok_id' => $poule->blok_id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kruisfinale aangemaakt',
+            ]);
+        }
+
+        if ($oudType === $nieuwType) {
+            return response()->json(['success' => false, 'message' => 'Type is al ' . $nieuwType], 400);
+        }
+
+        // Update type
+        $poule->type = $nieuwType;
+
+        // Update titel
+        $basisTitel = $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse;
+        if ($nieuwType === 'eliminatie') {
+            $poule->titel = $basisTitel . ' - Eliminatie';
+        } elseif ($nieuwType === 'kruisfinale') {
+            $poule->titel = 'Kruisfinale ' . $basisTitel;
+            $poule->kruisfinale_plaatsen = 2; // Default
+        } else {
+            $poule->titel = $basisTitel . ' Poule';
+        }
+
+        $poule->save();
+        $poule->updateStatistieken();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Gewijzigd naar ' . $nieuwType,
+        ]);
+    }
 }

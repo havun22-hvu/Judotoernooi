@@ -276,6 +276,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('wedstrijddag/nieuwe-poule', [WedstrijddagController::class, 'nieuwePoule'])->name('wedstrijddag.nieuwe-poule');
         Route::post('wedstrijddag/verwijder-uit-poule', [WedstrijddagController::class, 'verwijderUitPoule'])->name('wedstrijddag.verwijder-uit-poule');
         Route::post('wedstrijddag/zet-om-naar-poules', [WedstrijddagController::class, 'zetOmNaarPoules'])->name('wedstrijddag.zetOmNaarPoules');
+        Route::post('wedstrijddag/wijzig-poule-type', [WedstrijddagController::class, 'wijzigPouleType'])->name('wedstrijddag.wijzigPouleType');
         Route::post('wedstrijddag/naar-wachtruimte', [WedstrijddagController::class, 'naarWachtruimte'])->name('wedstrijddag.naar-wachtruimte');
     });
 
