@@ -683,9 +683,13 @@ class WedstrijddagController extends Controller
                 return response()->json(['success' => false, 'message' => 'Er bestaat al een kruisfinale voor deze categorie'], 400);
             }
 
+            // Bepaal volgende nummer
+            $maxNummer = Poule::where('toernooi_id', $toernooi->id)->max('nummer') ?? 0;
+
             // Maak kruisfinale aan
             $kruisfinale = Poule::create([
                 'toernooi_id' => $toernooi->id,
+                'nummer' => $maxNummer + 1,
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'titel' => 'Kruisfinale ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse,
