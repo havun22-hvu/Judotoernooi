@@ -463,7 +463,9 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         loadMessages();
+        @if(config('broadcasting.default') === 'reverb')
         setupWebSocket();
+        @endif
     });
 
     // Setup WebSocket with Laravel Echo
