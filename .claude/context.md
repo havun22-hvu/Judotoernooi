@@ -365,35 +365,37 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 18 januari 2026
+## Laatste Sessie: 19 januari 2026
 
 ### Wat is gedaan:
-- **NIETS GECOMMIT** - sessie afgebroken wegens slechte communicatie
+- **Blokverdeling gefixt** - variabele poules worden nu correct verdeeld
+  - `VariabeleBlokVerdelingService`: vastgezette poules tellen mee in capaciteit
+  - Unieke `poule_{id}` keys i.p.v. `leeftijd|gewicht` (90 poules → 20 keys was het probleem)
+  - BlokController vereenvoudigd - gebruikt altijd VariabeleBlokVerdelingService
+- **Complexe "gemengde" logica verwijderd** - te ingewikkeld, simpele aanpak werkt beter
 
 ### Openstaande items:
 - [ ] **Import preview UI verbeteren** (PRIORITEIT)
   - Gebruiker wil duidelijk onderscheid: welke velden uit CSV vs webapp
   - Dubbele header rij concept was OK (rij 1: CSV kolom, rij 2: App veld)
   - **Styling moet consistent zijn met rest van de app** - kijk naar bestaande knoppen
-  - GEEN hardcoded zoektermen toevoegen (gebruiker koppelt zelf via drag-drop)
 - [ ] Lokaal testen met echte data
-- [ ] Fase 3 dynamische indeling: varianten UI in poule-overzicht
-- [ ] Fase 4 dynamische indeling: unit tests
 - [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
+- [ ] Openstaande bugs van 17 jan: vals-positieve gewichtsrange markering
 
 ### Belangrijke context voor volgende keer:
+
+**Blokverdeling werkt nu:**
+- `VariabeleBlokVerdelingService::verdeelOpMaxWedstrijden()` is de main method
+- Elke poule krijgt unieke key `poule_{id}`
+- Vastgezette wedstrijden worden meegeteld bij capaciteit per blok
+- Test: 841 wedstrijden → 6 blokken elk ~135-158 wedstrijden
 
 **Import preview pagina:** `resources/views/pages/judoka/import-preview.blade.php`
 - Heeft drag-drop kolom mapping (werkt)
 - Bestand preview tabel onderaan (moet verbeterd)
-- Zoektermen voor auto-detectie: `app/Services/ImportService.php:31-38`
 
-**Bestaande button styling in de app:**
-- Primair: `bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded`
-- Secundair: `bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded`
-- Cancel: `bg-gray-200 hover:bg-gray-300 rounded`
-
-**LESSEN DEZE SESSIE:**
-- VRAAG EERST wat gebruiker precies wil voordat je code schrijft
-- Kijk naar BESTAANDE styling in de app, niet zelf verzinnen
-- Geen hardcoded waarden voor internationale varianten
+**LESSEN:**
+- Simpel > complex - de "gemengde verdeling" met twee fases was overkill
+- Test zelf met `php test_verdeling.php` voordat je pusht
+- Unieke keys zijn cruciaal bij arrays met duplicaten
