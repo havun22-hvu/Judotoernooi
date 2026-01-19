@@ -375,13 +375,75 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        // Check unread count on load
-        checkUnreadCount();
+        // Load messages on init
+        loadMessages();
 
-        // Poll for unread count every 30 seconds (fallback if WebSocket fails)
-        setInterval(checkUnreadCount, 30000);
+        // Setup WebSocket connection
+        setupWebSocket();
     });
 
-    // Expose for WebSocket integration
+    // Setup WebSocket with Laravel Echo
+    function setupWebSocket() {
+        // Load Pusher and Echo from CDN if not already loaded
+        if (typeof Pusher === 'undefined') {
+            const pusherScript = document.createElement('script');
+            pusherScript.src = 'https://js.pusher.com/8.2.0/pusher.min.js';
+            pusherScript.onload = initEcho;
+            document.head.appendChild(pusherScript);
+        } else {
+            initEcho();
+        }
+    }
+
+    function initEcho() {
+        // Reverb config
+        const reverbConfig = {
+            key: '{{ config("reverb.apps.0.key", "oixj1bggwjv8qhj3jlpb") }}',
+            wsHost: '{{ config("reverb.apps.0.options.host", "judotournament.org") }}',
+            wsPort: {{ config('reverb.apps.0.options.port', 443) }},
+            wssPort: {{ config('reverb.apps.0.options.port', 443) }},
+            forceTLS: {{ config('reverb.apps.0.options.scheme', 'https') === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true,
+            cluster: 'mt1'
+        };
+
+        // Create Pusher connection (Reverb is Pusher-compatible)
+        const pusher = new Pusher(reverbConfig.key, {
+            wsHost: reverbConfig.wsHost,
+            wsPort: reverbConfig.wsPort,
+            wssPort: reverbConfig.wssPort,
+            forceTLS: reverbConfig.forceTLS,
+            enabledTransports: reverbConfig.enabledTransports,
+            disableStats: reverbConfig.disableStats,
+            cluster: reverbConfig.cluster
+        });
+
+        // Build channel name based on type
+        let channelName = `chat.${chatConfig.toernooiId}.${chatConfig.type}`;
+        if (chatConfig.id) {
+            channelName += `.${chatConfig.id}`;
+        }
+
+        // Subscribe to channel
+        const channel = pusher.subscribe(channelName);
+
+        // Also subscribe to broadcast channels
+        const broadcastChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.iedereen`);
+
+        // Listen for new messages
+        channel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+        broadcastChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+
+        // If we're a mat, also listen to alle_matten
+        if (chatConfig.type === 'mat') {
+            const mattenChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.alle_matten`);
+            mattenChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+        }
+
+        console.log('Chat WebSocket connected to:', channelName);
+    }
+
+    // Expose for external integration
     window.chatHandleNewMessage = handleNewMessage;
 </script>

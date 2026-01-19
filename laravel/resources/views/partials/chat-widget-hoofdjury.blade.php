@@ -462,9 +462,55 @@
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        checkUnreadCount();
-        setInterval(checkUnreadCount, 30000);
+        loadMessages();
+        setupWebSocket();
     });
+
+    // Setup WebSocket with Laravel Echo
+    function setupWebSocket() {
+        if (typeof Pusher === 'undefined') {
+            const pusherScript = document.createElement('script');
+            pusherScript.src = 'https://js.pusher.com/8.2.0/pusher.min.js';
+            pusherScript.onload = initEcho;
+            document.head.appendChild(pusherScript);
+        } else {
+            initEcho();
+        }
+    }
+
+    function initEcho() {
+        const reverbConfig = {
+            key: '{{ config("reverb.apps.0.key", "oixj1bggwjv8qhj3jlpb") }}',
+            wsHost: '{{ config("reverb.apps.0.options.host", "judotournament.org") }}',
+            wsPort: {{ config('reverb.apps.0.options.port', 443) }},
+            wssPort: {{ config('reverb.apps.0.options.port', 443) }},
+            forceTLS: {{ config('reverb.apps.0.options.scheme', 'https') === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            disableStats: true,
+            cluster: 'mt1'
+        };
+
+        const pusher = new Pusher(reverbConfig.key, {
+            wsHost: reverbConfig.wsHost,
+            wsPort: reverbConfig.wsPort,
+            wssPort: reverbConfig.wssPort,
+            forceTLS: reverbConfig.forceTLS,
+            enabledTransports: reverbConfig.enabledTransports,
+            disableStats: reverbConfig.disableStats,
+            cluster: reverbConfig.cluster
+        });
+
+        // Hoofdjury listens to its own channel
+        const channelName = `chat.${chatConfig.toernooiId}.hoofdjury`;
+        const channel = pusher.subscribe(channelName);
+        channel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+
+        // Also listen to broadcast channel
+        const broadcastChannel = pusher.subscribe(`chat.${chatConfig.toernooiId}.iedereen`);
+        broadcastChannel.bind('App\\Events\\NewChatMessage', handleNewMessage);
+
+        console.log('Hoofdjury Chat WebSocket connected to:', channelName);
+    }
 
     window.chatHandleNewMessage = handleNewMessage;
 </script>
