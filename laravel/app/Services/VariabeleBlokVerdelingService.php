@@ -640,13 +640,22 @@ class VariabeleBlokVerdelingService
             return ['toewijzingen' => [], 'blok_labels' => [], 'message' => 'Geen variabele poules gevonden'];
         }
 
+        // Tel vastgezette wedstrijden per blok (deze tellen mee in capaciteit!)
+        $vastPerBlok = [];
+        foreach ($blokken as $blok) {
+            $vastPerBlok[$blok->id] = $toernooi->poules()
+                ->where('blok_id', $blok->id)
+                ->where('blok_vast', true)
+                ->sum('aantal_wedstrijden');
+        }
+
         // Sorteer op min_leeftijd, dan min_gewicht
         $gesorteerdePoules = $this->sorteerPoules($poules);
 
         $toewijzingen = [];
         $blokPoules = []; // blok_nummer => [poules]
         $huidigBlokIndex = 0;
-        $wedstrijdenInBlok = 0;
+        $wedstrijdenInBlok = $vastPerBlok[$blokken[0]->id] ?? 0; // Start met vastgezette
 
         foreach ($gesorteerdePoules as $poule) {
             $blok = $blokken[$huidigBlokIndex];
@@ -659,7 +668,8 @@ class VariabeleBlokVerdelingService
                 // Start nieuw blok
                 $huidigBlokIndex++;
                 $blok = $blokken[$huidigBlokIndex];
-                $wedstrijdenInBlok = 0;
+                // Nieuw blok begint met eventuele vastgezette wedstrijden
+                $wedstrijdenInBlok = $vastPerBlok[$blok->id] ?? 0;
             }
 
             // Wijs poule toe aan huidig blok
