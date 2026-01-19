@@ -1,6 +1,6 @@
-# Planning: Chat functionaliteit met Laravel Reverb
+# Chat functionaliteit met Laravel Reverb
 
-## Status: In ontwikkeling (basis gebouwd, debugging op staging)
+## Status: Werkend op staging en production
 
 ## Overzicht
 
@@ -11,15 +11,18 @@ Realtime chat tussen hoofdjury en PWA's (mat, weging, spreker, dojo) via Laravel
 - **Laravel Reverb** - Officieel Laravel WebSocket server (gratis, self-hosted)
 - **Geen polling** - Direct push via WebSockets
 - **Kanaal-gebaseerd** - Elk device krijgt eigen kanaal
+- **ShouldBroadcastNow** - Directe broadcast zonder queue
 
 ## Kanalen structuur
 
 ```
-hoofdjury.{toernooi_id}        - Hoofdjury luistert hier (ontvangt van alle PWA's)
-mat.{toernooi_id}.{mat_id}     - Per mat
-weging.{toernooi_id}           - Alle weging stations
-spreker.{toernooi_id}          - Spreker
-dojo.{toernooi_id}             - Dojo scanner
+chat.{toernooi_id}.hoofdjury       - Hoofdjury
+chat.{toernooi_id}.mat.{mat_id}    - Per mat
+chat.{toernooi_id}.weging          - Weging
+chat.{toernooi_id}.spreker         - Spreker
+chat.{toernooi_id}.dojo            - Dojo scanner
+chat.{toernooi_id}.alle_matten     - Broadcast naar alle matten
+chat.{toernooi_id}.iedereen        - Broadcast naar iedereen
 ```
 
 ## Communicatie flow
@@ -40,10 +43,6 @@ dojo.{toernooi_id}             - Dojo scanner
 - Hoofdjury behoudt alle opties
 - Nuttig bij misbruik door vrijwilligers
 
-### Toernooi instelling
-- `chat_vrij` (boolean) - default: true
-- Opgeslagen in `toernooien.instellingen` JSON veld
-
 ## UI Componenten
 
 ### Alle PWA's + Hoofdjury
@@ -52,41 +51,131 @@ dojo.{toernooi_id}             - Dojo scanner
 3. **Chatvenster** - Opent bij klik op icoontje, toont berichtengeschiedenis
 
 ### Hoofdjury extra
-- Dropdown om ontvanger te selecteren (alle matten, mat X, weging, spreker)
-- Overzicht van alle gesprekken
-- **Toggle "Vrije chat"** - schakel onderling chatten voor PWA's in/uit
+- Buttons om ontvanger te selecteren (alle matten, mat X, weging, spreker)
+- Klik op inkomend bericht om direct te antwoorden aan die afzender
 
-## Server requirements
+---
 
-- Reverb proces draaiend houden (supervisor/systemd)
-- Poort 8080 open in firewall
-- SSL voor wss:// op productie
+## Server Setup (voor beheerder)
 
-## Installatie stappen
+### Reverb starten/herstarten
 
-1. `composer require laravel/reverb` (handmatig, na overleg)
-2. `php artisan reverb:install`
-3. Config in `.env`
-4. Supervisor config voor `php artisan reverb:start`
-5. Nginx proxy voor wss://
+```bash
+# Via supervisor (aanbevolen)
+supervisorctl restart reverb
+supervisorctl status reverb
+
+# Handmatig (voor debugging)
+cd /var/www/judotoernooi/laravel
+php artisan reverb:start --host=0.0.0.0 --port=8080
+```
+
+### Supervisor configuratie
+
+Bestand: `/etc/supervisor/conf.d/reverb.conf`
+
+```ini
+[program:reverb]
+process_name=%(program_name)s
+command=php /var/www/judotoernooi/laravel/artisan reverb:start --host=0.0.0.0 --port=8080
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/www/judotoernooi/laravel/storage/logs/reverb.log
+```
+
+Na wijzigen:
+```bash
+supervisorctl reread
+supervisorctl update
+```
+
+### Nginx configuratie
+
+WebSocket proxy in `/etc/nginx/sites-available/judotoernooi`:
+
+```nginx
+# WebSocket proxy for Reverb
+location /app {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 60s;
+    proxy_send_timeout 60s;
+}
+
+location /apps {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+### .env instellingen
+
+```env
+BROADCAST_CONNECTION=reverb
+REVERB_APP_ID=judotoernooi
+REVERB_APP_KEY=oixj1bggwjv8qhj3jlpb
+REVERB_APP_SECRET=<secret>
+REVERB_HOST="0.0.0.0"
+REVERB_PORT=8080
+REVERB_SCHEME=http
+```
+
+### Troubleshooting
+
+**Chat werkt niet / berichten komen niet aan:**
+1. Check of Reverb draait: `supervisorctl status reverb`
+2. Check logs: `tail -f /var/www/judotoernooi/laravel/storage/logs/reverb.log`
+3. Check of poort 8080 luistert: `netstat -tlnp | grep 8080`
+4. Herstart Reverb: `supervisorctl restart reverb`
+
+**WebSocket connection errors in browser:**
+1. Check nginx config voor `/app` location
+2. `nginx -t && systemctl reload nginx`
+
+**Meerdere Reverb processen:**
+```bash
+pkill -9 -f 'reverb:start'
+supervisorctl start reverb
+```
+
+---
 
 ## Database
 
-Berichten worden opgeslagen voor geschiedenis:
+Berichten worden opgeslagen in `chat_messages`:
 
-```
-chat_messages
-- id
-- toernooi_id
-- van_type (hoofdjury, mat, weging, spreker, dojo)
-- van_id (mat nummer, etc.)
-- naar_type
-- naar_id
-- bericht
-- gelezen_op
-- created_at
-```
+| Kolom | Type | Beschrijving |
+|-------|------|--------------|
+| id | bigint | Primary key |
+| toernooi_id | bigint | FK naar toernooien |
+| van_type | string | hoofdjury, mat, weging, spreker, dojo |
+| van_id | int | Mat nummer (alleen bij mat) |
+| naar_type | string | hoofdjury, mat, weging, spreker, dojo, alle_matten, iedereen |
+| naar_id | int | Mat nummer (alleen bij mat) |
+| bericht | text | Inhoud van het bericht |
+| gelezen_op | datetime | Wanneer gelezen |
+| created_at | datetime | Verzonden op |
 
-## Prioriteit
+## Key files
 
-Laag - Nice to have, niet essentieel voor eerste toernooi.
+- `app/Events/NewChatMessage.php` - Broadcast event
+- `app/Http/Controllers/ChatController.php` - API endpoints
+- `app/Models/ChatMessage.php` - Model met scopes
+- `resources/views/partials/chat-widget.blade.php` - PWA widget
+- `resources/views/partials/chat-widget-hoofdjury.blade.php` - Hoofdjury widget
