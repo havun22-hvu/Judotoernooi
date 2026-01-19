@@ -398,11 +398,23 @@ php artisan view:cache
 2. **Direct deployen naar staging** als gebruiker daar test - niet lokaal fixen en vergeten te deployen
 3. **APP_URL in .env** moet kloppen per omgeving - verschil veroorzaakt cross-origin problemen
 
-### Eliminatie Systeem - Regels:
-- **Eliminatie alleen bij VASTE categorieën**: `max_kg_verschil = 0` EN `max_leeftijd_verschil = 0`
-- Bij variabele categorieën (dynamische gewichten): GEEN eliminatie mogelijk
+### Categorieën: Vast vs Variabel
+
+**VASTE categorieën** (`max_kg_verschil = 0` EN `max_leeftijd_verschil = 0`):
+- ✅ Poules mogelijk
+- ✅ Kruisfinales mogelijk
+- ✅ Eliminatie mogelijk
+- Blokverdeling: hele gewichtscategorie als 1 chip
+
+**VARIABELE categorieën** (`max_kg_verschil > 0` OF `max_leeftijd_verschil > 0`):
+- ✅ Alleen poules mogelijk
+- ❌ Geen kruisfinales
+- ❌ Geen eliminatie
+- Blokverdeling: elke poule apart als chip (verdeling op aansluiting + gelijke blokken)
+
+**UI:**
+- Dropdown in poule titel om achteraf eliminatie → poules te wijzigen (bij te weinig judoka's)
 - `eliminatie_gewichtsklassen` veld is DEPRECATED - niet gebruiken
-- **Dropdown in poule titel**: om achteraf eliminatie → poules te wijzigen (bij te weinig judoka's)
 
 ### Belangrijke bestanden:
 - `resources/views/pages/toernooi/edit.blade.php` → `updateJsonInput()` functie (regel ~840)
