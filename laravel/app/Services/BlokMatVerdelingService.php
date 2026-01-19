@@ -1374,7 +1374,10 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Find best block for a variable pool (prioritize filling gaps)
+     * Find best block for a variable pool (prioritize even distribution)
+     *
+     * Strategy: fill the block with MOST remaining space first
+     * This ensures even distribution across all blocks
      */
     private function vindBesteBlokVoorVariabelePoule(
         int $wedstrijden,
@@ -1383,7 +1386,7 @@ class BlokMatVerdelingService
         int $numBlokken
     ): int {
         $besteIndex = 0;
-        $besteScore = PHP_INT_MAX;
+        $meesteRuimte = -PHP_INT_MAX;
 
         foreach ($blokken as $index => $blok) {
             $cap = $capaciteit[$blok->id];
@@ -1396,13 +1399,10 @@ class BlokMatVerdelingService
                 continue;
             }
 
-            // Score: prefer blocks that need filling (most room)
-            // Also prefer earlier blocks (lower index) for young/light first
-            $vulgraad = $nieuweActueel / $gewenst;
-            $score = ($vulgraad * 50) + ($index * 5);
-
-            if ($score < $besteScore) {
-                $besteScore = $score;
+            // Simply pick block with most remaining space
+            // This ensures even distribution: empty blocks get filled first
+            if ($ruimte > $meesteRuimte) {
+                $meesteRuimte = $ruimte;
                 $besteIndex = $index;
             }
         }
