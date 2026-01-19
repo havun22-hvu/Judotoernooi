@@ -56,12 +56,25 @@ class ToernooiController extends Controller
 
     public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
-        \Log::info('=== UPDATE CALLED ===', ['toernooi' => $toernooi->id, 'all_input' => $request->all()]);
         $data = $request->validated();
 
         // Process gewichtsklassen from JSON input (includes leeftijdsgrenzen)
         if ($request->has('gewichtsklassen_json') && $request->input('gewichtsklassen_json')) {
-            $data['gewichtsklassen'] = json_decode($request->input('gewichtsklassen_json'), true) ?? [];
+            $jsonData = json_decode($request->input('gewichtsklassen_json'), true) ?? [];
+
+            // Extract wedstrijd_systeem from each category and build separate array
+            $wedstrijdSysteem = [];
+            foreach ($jsonData as $key => $categorie) {
+                if (is_array($categorie) && isset($categorie['wedstrijd_systeem'])) {
+                    $wedstrijdSysteem[$key] = $categorie['wedstrijd_systeem'];
+                    unset($jsonData[$key]['wedstrijd_systeem']); // Remove from gewichtsklassen
+                }
+            }
+            if (!empty($wedstrijdSysteem)) {
+                $data['wedstrijd_systeem'] = $wedstrijdSysteem;
+            }
+
+            $data['gewichtsklassen'] = $jsonData;
         } elseif (isset($data['gewichtsklassen'])) {
             // Fallback: process from individual form fields
             $gewichtsklassen = [];
@@ -88,12 +101,10 @@ class ToernooiController extends Controller
             $data['gewichtsklassen'] = $gewichtsklassen;
         }
 
-        // Process wedstrijd_systeem from form
-        \Log::info('wedstrijd_systeem input', ['has' => $request->has('wedstrijd_systeem'), 'value' => $request->input('wedstrijd_systeem')]);
-        if ($request->has('wedstrijd_systeem')) {
+        // Process wedstrijd_systeem from form (fallback if not in JSON)
+        if (!isset($data['wedstrijd_systeem']) && $request->has('wedstrijd_systeem')) {
             $data['wedstrijd_systeem'] = $request->input('wedstrijd_systeem');
         }
-        \Log::info('data before update', ['wedstrijd_systeem' => $data['wedstrijd_systeem'] ?? 'NOT SET']);
 
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg'], $data['gewichtsklassen_max_lft']);
