@@ -268,7 +268,7 @@
                         }
                         $isGewogen = $judoka->gewicht_gewogen !== null;
                     @endphp
-                    <div class="px-3 py-2 hover:bg-{{ $isEliminatie ? 'orange' : 'blue' }}-50 cursor-move text-sm judoka-item group"
+                    <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}"
                          data-judoka-naam="{{ $judoka->naam }}"
