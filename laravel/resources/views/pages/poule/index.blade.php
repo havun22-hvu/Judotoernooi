@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="{{ $isEliminatie ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
                         // VOORBEREIDING: Toon altijd INGESCHREVEN gewicht, niet gewogen gewicht
