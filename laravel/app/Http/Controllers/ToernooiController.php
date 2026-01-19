@@ -56,6 +56,7 @@ class ToernooiController extends Controller
 
     public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
+        \Log::info('=== UPDATE CALLED ===', ['toernooi' => $toernooi->id, 'all_input' => $request->all()]);
         $data = $request->validated();
 
         // Process gewichtsklassen from JSON input (includes leeftijdsgrenzen)
