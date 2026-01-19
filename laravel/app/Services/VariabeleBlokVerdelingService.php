@@ -146,8 +146,9 @@ class VariabeleBlokVerdelingService
 
     /**
      * Get all variable pools with calculated age/weight ranges
+     * Public so BlokMatVerdelingService can use it for mixed tournaments
      */
-    private function getVariabelePoules(Toernooi $toernooi): Collection
+    public function getVariabelePoules(Toernooi $toernooi): Collection
     {
         $huidigJaar = now()->year;
 

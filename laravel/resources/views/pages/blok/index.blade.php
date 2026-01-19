@@ -70,14 +70,28 @@
 
 @php
 
-    // Check of toernooi variabele categorieën heeft (max kg of leeftijd verschil > 0)
-    $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
+    // Bepaal per categorie of het VAST is (v.lft=0 EN v.kg=0) of VARIABEL
+    $vasteLeeftijdsklassen = [];
+    $variabeleLeeftijdsklassen = [];
+    foreach ($gewichtsklassenConfig as $key => $catConfig) {
+        $label = $catConfig['label'] ?? $key;
+        $maxKg = (float) ($catConfig['max_kg_verschil'] ?? 0);
+        $maxLft = (int) ($catConfig['max_leeftijd_verschil'] ?? 0);
+
+        if ($maxKg == 0 && $maxLft == 0) {
+            $vasteLeeftijdsklassen[$label] = true;
+        } else {
+            $variabeleLeeftijdsklassen[$label] = true;
+        }
+    }
+
+    $heeftVariabeleCategorieen = !empty($variabeleLeeftijdsklassen);
+    $heeftVasteCategorieen = !empty($vasteLeeftijdsklassen);
 
     // Genereer afkortingen: gebruik label direct (of korte versie als >8 chars)
     $afkortingen = [];
     foreach ($gewichtsklassenConfig as $key => $config) {
         $label = $config['label'] ?? $key;
-        // Gebruik label direct, of maak compacte versie voor lange labels
         $afkortingen[$label] = strlen($label) <= 10 ? $label : substr($label, 0, 8) . '..';
     }
 
@@ -85,16 +99,21 @@
     $varianten = session('blok_varianten', []);
     $toonVarianten = request()->has('kies') && !empty($varianten);
 
+    // Haal alle poules op
+    $allePoules = $toernooi->poules()
+        ->with('blok:id,nummer')
+        ->where('type', '!=', 'kruisfinale')
+        ->get();
+
+    // VARIABELE CATEGORIEËN: elke poule apart
+    $variabeleCats = collect();
     if ($heeftVariabeleCategorieen) {
-        // VARIABELE CATEGORIEËN: elke poule apart (niet groeperen)
-        $alleCats = $toernooi->poules()
-            ->with('blok:id,nummer')
-            ->where('type', '!=', 'kruisfinale')
-            ->get()
+        $variabeleCats = $allePoules
+            ->filter(fn($p) => isset($variabeleLeeftijdsklassen[$p->leeftijdsklasse]))
             ->map(function($p) {
                 // Extract min leeftijd en gewicht uit titel voor sortering
                 preg_match('/(\d+)-?\d*j/', $p->titel ?? '', $lftMatch);
-                preg_match('/([\d.]+)-[\d.]+kg/', $p->titel ?? '', $kgMatch);
+                preg_match('/([\d.]+)/', $p->gewichtsklasse ?? '', $kgMatch);
                 $minLft = (int)($lftMatch[1] ?? 99);
                 $minKg = (float)($kgMatch[1] ?? 999);
 
@@ -103,50 +122,58 @@
                     'gewicht' => $p->gewichtsklasse,
                     'titel' => $p->titel,
                     'nummer' => $p->nummer,
+                    'poule_id' => $p->id,
                     'wedstrijden' => $p->aantal_wedstrijden,
                     'blok' => $p->blok->nummer ?? null,
                     'vast' => (bool) $p->blok_vast,
                     'min_lft' => $minLft,
                     'min_kg' => $minKg,
+                    'is_poule' => true,
                 ];
             })
-            ->filter(fn($c) => $c['wedstrijden'] > 0)
-            ->sortBy(function($c) use ($leeftijdVolgorde) {
-                $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 100000 : 9900000;
-                return $leeftijdPos + ($c['min_lft'] * 1000) + $c['min_kg'];
-            })
-            ->values();
-    } else {
-        // VASTE CATEGORIEËN: groeperen per leeftijdsklasse|gewichtsklasse
-        $alleCatsRaw = $toernooi->poules()
-            ->reorder()
-            ->select('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
-            ->selectRaw('SUM(aantal_wedstrijden) as wedstrijden')
-            ->selectRaw('MAX(blok_vast) as is_vast')
-            ->groupBy('leeftijdsklasse', 'gewichtsklasse', 'blok_id', 'blok_vast')
-            ->with('blok:id,nummer')
-            ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
-            ->get();
-
-        $alleCats = $alleCatsRaw
-            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
-            ->map(fn($g) => [
-                'leeftijd' => $g->first()->leeftijdsklasse,
-                'gewicht' => $g->first()->gewichtsklasse,
-                'titel' => null,
-                'wedstrijden' => $g->sum('wedstrijden'),
-                'blok' => $g->first()->blok->nummer ?? null,
-                'vast' => (bool) $g->first()->is_vast,
-            ])
-            ->filter(fn($c) => $c['wedstrijden'] > 0)
-            ->sortBy(function($v) use ($leeftijdVolgorde) {
-                $leeftijdPos = ($pos = array_search($v['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
-                $gewicht = (int)preg_replace('/[^0-9]/', '', $v['gewicht']);
-                $plusBonus = str_starts_with($v['gewicht'], '+') ? 500 : 0;
-                return $leeftijdPos + $gewicht + $plusBonus;
-            });
+            ->filter(fn($c) => $c['wedstrijden'] > 0);
     }
+
+    // VASTE CATEGORIEËN: groeperen per leeftijdsklasse|gewichtsklasse
+    $vasteCats = collect();
+    if ($heeftVasteCategorieen) {
+        $vastePoules = $allePoules->filter(fn($p) => isset($vasteLeeftijdsklassen[$p->leeftijdsklasse]));
+
+        $vasteCats = $vastePoules
+            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->map(function($g) {
+                $first = $g->first();
+                preg_match('/([\d.]+)/', $first->gewichtsklasse ?? '', $kgMatch);
+                $minKg = (float)($kgMatch[1] ?? 999);
+
+                return [
+                    'leeftijd' => $first->leeftijdsklasse,
+                    'gewicht' => $first->gewichtsklasse,
+                    'titel' => null,
+                    'nummer' => null,
+                    'poule_id' => null,
+                    'wedstrijden' => $g->sum('aantal_wedstrijden'),
+                    'blok' => $first->blok->nummer ?? null,
+                    'vast' => (bool) $g->max('blok_vast'),
+                    'min_lft' => 99,
+                    'min_kg' => $minKg,
+                    'is_poule' => false,
+                ];
+            })
+            ->filter(fn($c) => $c['wedstrijden'] > 0);
+    }
+
+    // Combineer en sorteer: jong → oud, licht → zwaar
+    $alleCats = $vasteCats->merge($variabeleCats)
+        ->sortBy(function($c) use ($leeftijdVolgorde) {
+            $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 100000 : 9900000;
+            // Gebruik min_lft voor variabele, 99 voor vaste (die sorteren op gewicht)
+            $lftSort = ($c['min_lft'] ?? 99) * 1000;
+            // Gebruik min_kg voor sortering
+            $kgSort = $c['min_kg'] ?? 999;
+            return $leeftijdPos + $lftSort + $kgSort;
+        })
+        ->values();
 
     // If showing variants, apply variant 0 to display (but not to DB yet)
     if ($toonVarianten && isset($varianten[0]['toewijzingen'])) {

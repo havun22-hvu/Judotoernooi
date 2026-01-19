@@ -587,6 +587,77 @@ Voor blokverdeling bij variabele categorieën:
 - `genereerVarianten()` - Trial & error splits
 - `groepeerInCategorieen()` - Dynamische headers
 
+### Gemengde Blokverdeling (NIEUW)
+
+Bij toernooien met ZOWEL vaste ALS variabele categorieën werkt `BlokMatVerdelingService` in twee fasen.
+
+**Detectie:**
+```php
+// In BlokMatVerdelingService
+private function isGemengdToernooi(Toernooi $toernooi): bool
+{
+    $config = $toernooi->getAlleGewichtsklassen();
+    $heeftVast = false;
+    $heeftVariabel = false;
+
+    foreach ($config as $cat) {
+        if (($cat['max_kg_verschil'] ?? 0) == 0) {
+            $heeftVast = true;
+        } else {
+            $heeftVariabel = true;
+        }
+    }
+
+    return $heeftVast && $heeftVariabel;
+}
+```
+
+**Twee-Fasen Algoritme:**
+
+```
+genereerGemengdeVerdeling():
+
+FASE 1: VASTE CATEGORIEËN
+─────────────────────────
+1. Filter categorieën waar max_kg_verschil = 0
+2. Groepeer per leeftijdsklasse
+3. Sorteer: jong → oud, dan licht → zwaar
+4. Verdeel met bestaande aansluiting-logica (+1, -1, +2)
+5. Update capaciteit per blok
+
+FASE 2: VARIABELE POULES
+─────────────────────────
+1. Filter poules waar max_kg_verschil > 0
+2. Sorteer op min_leeftijd → min_gewicht
+3. Voor elk blok: vul resterende ruimte
+4. Variabele poules passen flexibel in gaten
+```
+
+**Key methods:**
+
+```php
+// BlokMatVerdelingService
+public function genereerGemengdeVerdeling(Toernooi $toernooi): array
+{
+    // Splits categorieën
+    [$vaste, $variabele] = $this->splitsCategorieenOpType($toernooi);
+
+    // Fase 1: Vaste eerst (ruggengraat)
+    $capaciteit = $this->verdeelVasteCategorieen($vaste, $blokken);
+
+    // Fase 2: Variabele als opvulling
+    $this->vulMetVariabelePoules($variabele, $blokken, $capaciteit);
+
+    return $this->berekenScores(...);
+}
+```
+
+**Voordelen:**
+- Grote groepen (vaste cat.) krijgen gegarandeerd plek
+- Aansluiting gewichtsklassen blijft behouden
+- Variabele poules vullen gaten flexibel
+- Dag loopt logisch: jong → oud, licht → zwaar
+
 ---
 
 ## Implementatie Status
@@ -603,6 +674,7 @@ Voor blokverdeling bij variabele categorieën:
 
 ### Gepland
 
+- [ ] **Gemengde Blokverdeling** - Vast + variabel in één toernooi (twee-fasen algoritme)
 - [ ] **Python Poule Solver (Fase 3)** - zie hieronder
 - [ ] UI varianten weergave (Fase 4)
 - [ ] Unit tests (Fase 5)
