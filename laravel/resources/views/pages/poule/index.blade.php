@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="{{ $isEliminatie ? 'grid grid-cols-5 gap-2 p-3' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="divide-y divide-gray-100 min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
                         if ($judoka->gewicht) {
@@ -265,15 +265,6 @@
                         }
                         $isGewogen = $judoka->gewicht_gewogen !== null;
                     @endphp
-                    @if($isEliminatie)
-                    <div class="px-2 py-1.5 bg-gray-50 rounded text-sm judoka-item border border-gray-200"
-                         data-judoka-id="{{ $judoka->id }}"
-                         data-poule-id="{{ $poule->id }}">
-                        <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
-                        <div class="text-xs text-gray-500">{{ $judoka->leeftijd }}j, {{ $toonGewicht ?? '-' }}</div>
-                        <div class="text-xs text-gray-400 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
-                    </div>
-                    @else
                     <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group"
                          data-judoka-id="{{ $judoka->id }}"
                          data-poule-id="{{ $poule->id }}"
@@ -299,11 +290,10 @@
                             </div>
                         </div>
                     </div>
-                    @endif
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-full' : '' }}">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">Leeg</div>
                     @endif
                 </div>
             </div>
