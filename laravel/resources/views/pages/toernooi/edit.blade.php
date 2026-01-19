@@ -947,6 +947,9 @@
                     bandFilter = 'tm_' + bandFilter;
                 }
 
+                // Get wedstrijd systeem from initieleWedstrijdSysteem
+                const systeem = window.initieleWedstrijdSysteem?.[key] || 'poules';
+
                 const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
                 const dynamischHidden = maxKg > 0 ? '' : 'hidden';
 
@@ -986,9 +989,9 @@
                         <div class="flex items-center gap-2">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="poules">Poules</option>
-                                <option value="poules_kruisfinale">Kruisfinale</option>
-                                <option value="eliminatie">Eliminatie</option>
+                                <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
+                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''}>Kruisfinale</option>
+                                <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
                             </select>
                         </div>
                         <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
