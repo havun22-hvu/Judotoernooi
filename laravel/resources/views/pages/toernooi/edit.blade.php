@@ -838,7 +838,8 @@
                         .split(',')
                         .map(g => g.trim())
                         .filter(g => g) || [];
-                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten };
+                    const systeem = item.querySelector('.systeem-select')?.value || 'poules';
+                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -1197,6 +1198,7 @@
                         max_leeftijd_verschil: parseInt(item.querySelector('.max-lft-input')?.value) || 0,
                         band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
+                        wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',
                     };
                 });
                 return configuratie;
