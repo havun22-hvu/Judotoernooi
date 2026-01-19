@@ -173,8 +173,8 @@ class VariabeleBlokVerdelingService
                 $minGewicht = $gewichten->min() ?? 0;
                 $maxGewicht = $gewichten->max() ?? 0;
 
-                // Key format: leeftijdsklasse|gewichtsklasse (compatible with BlokMatVerdelingService)
-                $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+                // Key format: poule_{id} for unique identification
+                $key = 'poule_' . $poule->id;
 
                 return [
                     'id' => $poule->id,
@@ -588,24 +588,29 @@ class VariabeleBlokVerdelingService
 
     /**
      * Apply a variant to the database
-     * Keys are in format: leeftijdsklasse|gewichtsklasse
+     * Keys can be: poule_{id} (individual) or leeftijdsklasse|gewichtsklasse (category)
      */
     public function pasVariantToe(Toernooi $toernooi, array $toewijzingen): void
     {
         DB::transaction(function () use ($toernooi, $toewijzingen) {
             foreach ($toewijzingen as $key => $blokNummer) {
-                // Parse key: "leeftijdsklasse|gewichtsklasse"
-                $parts = explode('|', $key);
-                if (count($parts) !== 2) {
-                    continue;
-                }
-
-                [$leeftijd, $gewicht] = $parts;
-
                 $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+                if (!$blok) continue;
 
-                if ($blok) {
-                    // Update all poules for this category (except pinned ones)
+                // Check key format: poule_{id} or leeftijdsklasse|gewichtsklasse
+                if (str_starts_with($key, 'poule_')) {
+                    // Individual poule by ID
+                    $pouleId = (int) substr($key, 6);
+                    Poule::where('id', $pouleId)
+                        ->where('toernooi_id', $toernooi->id)
+                        ->where('blok_vast', false)
+                        ->update(['blok_id' => $blok->id]);
+                } else {
+                    // Category format: leeftijdsklasse|gewichtsklasse
+                    $parts = explode('|', $key);
+                    if (count($parts) !== 2) continue;
+
+                    [$leeftijd, $gewicht] = $parts;
                     Poule::where('toernooi_id', $toernooi->id)
                         ->where('leeftijdsklasse', $leeftijd)
                         ->where('gewichtsklasse', $gewicht)
