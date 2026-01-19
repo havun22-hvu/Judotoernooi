@@ -23,7 +23,7 @@ class CheckToernooiRol
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Toernooi niet gevonden'], 404);
             }
-            return redirect()->route('dashboard');
+            return redirect()->route('home');
         }
 
         // Check of organisator ingelogd is via auth guard
