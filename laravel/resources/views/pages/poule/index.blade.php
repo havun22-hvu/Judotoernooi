@@ -205,13 +205,7 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
                             @if($isEliminatie)
-                                @php
-                                    $aantalBrons = $toernooi->aantal_brons ?? 2;
-                                    $j = $poule->judokas_count;
-                                    // Formule: 2j-5 (dubbel brons) of 2j-4 (enkel brons)
-                                    $aantalWedstrijden = $j >= 4 ? (2 * $j - ($aantalBrons == 2 ? 5 : 4)) : max(0, $j - 1);
-                                @endphp
-                                #{{ $poule->nummer }} ⚔️ {{ $poule->gewichtsklasse }} kg - Eliminatie ({{ $j }} j., {{ $aantalWedstrijden }} wed.)
+                                #{{ $poule->nummer }} ⚔️ {{ $poule->gewichtsklasse }} kg - Eliminatie
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
