@@ -88,9 +88,11 @@ class ToernooiController extends Controller
         }
 
         // Process wedstrijd_systeem from form
+        \Log::info('wedstrijd_systeem input', ['has' => $request->has('wedstrijd_systeem'), 'value' => $request->input('wedstrijd_systeem')]);
         if ($request->has('wedstrijd_systeem')) {
             $data['wedstrijd_systeem'] = $request->input('wedstrijd_systeem');
         }
+        \Log::info('data before update', ['wedstrijd_systeem' => $data['wedstrijd_systeem'] ?? 'NOT SET']);
 
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg'], $data['gewichtsklassen_max_lft']);
