@@ -67,6 +67,17 @@
             </div>
             @endif
 
+            {{-- Pincode input --}}
+            <div>
+                <label for="pincode" class="block text-gray-700 font-medium mb-1">Pincode (4 cijfers)</label>
+                <p class="text-gray-500 text-sm mb-2">Deze pincode heb je ontvangen van je club.</p>
+                <input type="text" name="pincode" id="pincode" required
+                       inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+                       value="{{ old('pincode') }}"
+                       placeholder="0000"
+                       class="w-full border rounded-lg px-4 py-3 text-2xl text-center tracking-widest font-mono focus:ring-2 focus:ring-purple-500 focus:border-purple-500 @error('pincode') border-red-500 @enderror">
+            </div>
+
             {{-- Name input --}}
             <div>
                 <label for="naam" class="block text-gray-700 font-medium mb-1">Jouw naam</label>
@@ -142,12 +153,15 @@
         function updateSubmitButton() {
             const foto = document.getElementById('foto');
             const naam = document.getElementById('naam');
+            const pincode = document.getElementById('pincode');
             const submitBtn = document.getElementById('submit-btn');
 
-            submitBtn.disabled = !(foto.files.length > 0 && naam.value.trim().length > 0);
+            const pincodeValid = pincode.value.length === 4 && /^\d{4}$/.test(pincode.value);
+            submitBtn.disabled = !(foto.files.length > 0 && naam.value.trim().length > 0 && pincodeValid);
         }
 
         document.getElementById('naam').addEventListener('input', updateSubmitButton);
+        document.getElementById('pincode').addEventListener('input', updateSubmitButton);
     </script>
 </body>
 </html>
