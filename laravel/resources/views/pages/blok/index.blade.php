@@ -410,7 +410,7 @@
     </div>
 
     <!-- Rechts: Overzicht -->
-    <div class="{{ $heeftVariabeleCategorieen ? 'w-72' : 'w-48' }} flex-shrink-0">
+    <div class="w-80 flex-shrink-0">
         <div class="bg-white rounded-lg shadow sticky top-4">
             <div class="bg-gray-700 text-white px-3 py-2 rounded-t-lg flex justify-between items-center text-sm">
                 <span class="font-bold">Overzicht</span>
@@ -428,22 +428,27 @@
                         <div class="font-bold text-gray-700 border-b border-gray-200 pb-0.5 mb-1">{{ $afkortingen[$leeftijd] ?? $leeftijd }}</div>
                         {{-- Alle poules uniform weergeven --}}
                         @foreach($leeftijdCats as $cat)
+                        @php
+                            $dataKey = 'poule_' . $cat['poule_id'];
+                            $titelKort = str_replace('eliminatie', 'elim.', $cat['titel'] ?? '');
+                        @endphp
                         <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
-                            <div class="flex-1 min-w-0 truncate">
+                            <div class="flex-1 min-w-0">
                                 <span class="font-bold text-gray-600">#{{ $cat['nummer'] }}</span>
-                                <span class="text-gray-700 ml-1">{{ $cat['titel'] }}</span>
-                                <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span>
+                                <span class="text-gray-700 ml-1">{{ $titelKort }}</span>
                             </div>
-                            @php $dataKey = 'poule_' . $cat['poule_id']; @endphp
-                            @if($cat['blok'])
-                                @if($cat['vast'])
-                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">●{{ $cat['blok'] }}</span>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span>
+                                @if($cat['blok'])
+                                    @if($cat['vast'])
+                                    <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $dataKey }}">●{{ $cat['blok'] }}</span>
+                                    @else
+                                    <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $dataKey }}">{{ $cat['blok'] }}</span>
+                                    @endif
                                 @else
-                                <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">{{ $cat['blok'] }}</span>
+                                <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge" data-key="{{ $dataKey }}">-</span>
                                 @endif
-                            @else
-                            <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="{{ $dataKey }}">-</span>
-                            @endif
+                            </div>
                         </div>
                         @endforeach
                     </div>
