@@ -464,3 +464,23 @@ php artisan view:cache
 - `resources/views/pages/toernooi/edit.blade.php` → `updateJsonInput()` functie (regel ~840)
 - `app/Http/Controllers/ToernooiController.php` → `update()` method
 - Presets: `collectConfiguratie()` functie in edit.blade.php
+
+---
+
+## Laatste Sessie: 20 januari 2026
+
+### Wat is gedaan:
+- Wedstrijdsysteem dropdown toegevoegd aan ALLE poule types (voorronde/eliminatie/kruisfinale)
+- Lege kruisfinales kunnen nu verwijderd worden met (-) knop
+- Gewichtsklasse headers boven poule groepen verwijderd (te verwarrend)
+- "P1" → "#1" in blokoverzicht voor consistentie
+- Coachkaarten: huidig/benodigd weergave + "Genereer Coachkaarten" knop op club pagina
+
+### Openstaande bugs (uit vorige sessies):
+- [ ] Vals-positieve gewichtsrange markering (oranje bij OK poules)
+- [ ] Poule header kleur blijft oranje na fix
+
+### Belangrijke context:
+- Coachkaarten berekening: `Club::berekenAantalCoachKaarten()` in model
+- Wedstrijdsysteem wijzigen: `WedstrijddagController::wijzigPouleType()`
+- UI Conventie: altijd `#` prefix voor poule nummers, `W` voor wedstrijden

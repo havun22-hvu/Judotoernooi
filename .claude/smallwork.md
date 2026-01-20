@@ -501,6 +501,54 @@
 
 ---
 
+## Sessie: 20 januari 2026
+
+### Feat: Wedstrijdsysteem dropdown voor alle poule types
+- **Type:** Feature
+- **Wat:** Dropdown "Omzetten" toegevoegd aan alle poule types (voorronde, eliminatie, kruisfinale)
+- **Waarom:** Organisator wilde ook van poule naar eliminatie kunnen, niet alleen andersom
+- **Opties:**
+  - Poule → Eliminatie, Poules + kruisfinale
+  - Eliminatie → Alleen poules, Poules + kruisfinale
+  - Kruisfinale → Alleen poules, Eliminatie
+- **Bestanden:**
+  - `resources/views/pages/poule/index.blade.php` - dropdown HTML + JS
+  - `app/Http/Controllers/WedstrijddagController.php` - `wijzigPouleType()` methode
+  - `routes/web.php` - nieuwe route
+- **Naar permanente docs?** ☑ Nee - UI feature
+
+### Fix: Lege kruisfinales verwijderbaar
+- **Type:** Bug fix
+- **Wat:** (-) knop nu ook zichtbaar voor lege kruisfinales
+- **Waarom:** Na omzetten naar eliminatie kon kruisfinale niet verwijderd worden
+- **Bestanden:** `resources/views/pages/poule/index.blade.php:247`
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+### Fix: Gewichtsklasse headers verwijderd
+- **Type:** Simplify
+- **Wat:** Headers "50-54 kg" boven poule groepen verwijderd
+- **Waarom:** Poule titels zijn duidelijk genoeg, headers waren verwarrend
+- **Bestanden:** `resources/views/pages/poule/index.blade.php`
+- **Naar permanente docs?** ☑ Nee - UI simplification
+
+### Fix: P → # voor poule nummers in blokken
+- **Type:** Consistency fix
+- **Wat:** "P1" gewijzigd naar "#1" in blokoverzicht
+- **Waarom:** Consistentie met poule pagina (overal # prefix)
+- **Bestanden:** `resources/views/pages/blok/index.blade.php:427`
+- **Naar permanente docs?** ☑ Ja → context.md (UI Conventies tabel)
+
+### Feat: Coachkaarten berekening + genereer knop
+- **Type:** Feature
+- **Wat:** Club pagina toont nu huidig/benodigd aantal coachkaarten + "Genereer Coachkaarten" knop
+- **Berekening:** drukste blok per club ÷ judokas_per_coach (afgerond naar boven)
+- **Bestanden:**
+  - `app/Http/Controllers/ClubController.php` - benodigdeKaarten berekening
+  - `resources/views/pages/club/index.blade.php` - huidig/benodigd display + knop
+- **Naar permanente docs?** ☑ Nee - UI feature (logica bestond al in Club model)
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
