@@ -1601,12 +1601,12 @@ function closeZoekMatchModal() {
 }
 </script>
 
-<!-- Zoek Match Modal -->
-<div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onclick="if(event.target === this) closeZoekMatchModal()">
-    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden">
-        <div class="flex justify-between items-center px-4 py-3 border-b">
-            <h3 class="font-bold text-lg">Zoek match (wedstrijddag)</h3>
-            <button onclick="closeZoekMatchModal()" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+<!-- Zoek Match Modal (draggable) -->
+<div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50" onclick="if(event.target === this) closeZoekMatchModal()">
+    <div id="zoek-match-dialog" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="flex justify-between items-center px-4 py-3 border-b bg-blue-700 text-white rounded-t-lg cursor-move" id="zoek-match-header">
+            <h3 class="font-bold text-lg select-none">Zoek match (wedstrijddag)</h3>
+            <button onclick="closeZoekMatchModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
         </div>
         <div class="p-4 overflow-y-auto max-h-[60vh]">
             <div id="zoek-match-loading" class="text-center py-4">
@@ -1617,6 +1617,38 @@ function closeZoekMatchModal() {
         </div>
     </div>
 </div>
+
+<script>
+// Make Zoek Match modal draggable
+(function() {
+    const dialog = document.getElementById('zoek-match-dialog');
+    const header = document.getElementById('zoek-match-header');
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    header.addEventListener('mousedown', function(e) {
+        if (e.target.tagName === 'BUTTON') return;
+        isDragging = true;
+        const rect = dialog.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        dialog.style.transform = 'none';
+        dialog.style.left = rect.left + 'px';
+        dialog.style.top = rect.top + 'px';
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        dialog.style.left = (e.clientX - offsetX) + 'px';
+        dialog.style.top = (e.clientY - offsetY) + 'px';
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+    });
+})();
+</script>
 
 <style>
 .sortable-ghost {
