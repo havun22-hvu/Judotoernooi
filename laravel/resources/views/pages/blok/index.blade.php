@@ -424,7 +424,7 @@
                     @foreach($overzichtPoules as $poule)
                     <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
                         <div class="flex-1 min-w-0 truncate">
-                            <span class="font-bold text-gray-600">P{{ $poule['nummer'] }}</span>
+                            <span class="font-bold text-gray-600">#{{ $poule['nummer'] }}</span>
                             <span class="text-gray-700 ml-1">{{ $poule['titel'] }}</span>
                             <span class="text-gray-400">({{ $poule['wedstrijden'] }}w)</span>
                         </div>
