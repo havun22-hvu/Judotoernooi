@@ -172,6 +172,7 @@
                 // Bereken leeftijd en gewicht ranges uit judoka's
                 $leeftijdRange = '';
                 $gewichtRange = '';
+                $gewichtVerschil = 0;
                 if ($poule->judokas->count() > 0) {
                     $huidigJaar = now()->year;
                     $leeftijden = $poule->judokas->map(fn($j) => $huidigJaar - $j->geboortejaar)->filter();
@@ -195,10 +196,12 @@
                         $minG = $gewichten->min();
                         $maxG = $gewichten->max();
                         $gewichtRange = $minG === $maxG ? "{$minG}kg" : "{$minG}-{$maxG}kg";
+                        $gewichtVerschil = $maxG - $minG;
                     }
                 }
+                $heeftGewichtWaarschuwing = isset($gewichtVerschil) && $gewichtVerschil > 4 && !$isKruisfinale && !$isEliminatie;
             @endphp
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftGewichtWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $isEliminatie ? 'bg-orange-100' : ($isKruisfinale ? 'bg-purple-100' : ($isProbleem ? 'bg-red-100' : 'bg-blue-100')) }}">
                     <div class="flex justify-between items-center">
@@ -210,6 +213,9 @@
                             @else
                                 {{-- Gebruik opgeslagen titel (bevat label, leeftijd range en gewicht range) --}}
                                 <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->titel }}</span>
+                                @if($heeftGewichtWaarschuwing)
+                                <span class="ml-1 text-orange-600" title="Gewichtsverschil te groot: {{ round($gewichtVerschil, 1) }}kg (max 4kg)">⚠️</span>
+                                @endif
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
