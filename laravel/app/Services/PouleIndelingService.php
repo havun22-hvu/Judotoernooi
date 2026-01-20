@@ -1013,18 +1013,23 @@ class PouleIndelingService
             }
         }
 
-        // 4. Weight (fixed class OR variable range)
-        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
-        if ($maxKgVerschil > 0 && !empty($pouleJudokas)) {
-            // Variable: calculate range from judokas
+        // 4. Weight: always calculate range from judokas if available
+        if (!empty($pouleJudokas)) {
             $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
             if (!empty($gewichten)) {
                 $min = min($gewichten);
                 $max = max($gewichten);
                 $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
+            } elseif (!empty($gewichtsklasse)) {
+                // Fallback to weight class if no weights available
+                $gk = $gewichtsklasse;
+                if (!str_contains($gk, 'kg')) {
+                    $gk .= 'kg';
+                }
+                $parts[] = $gk;
             }
         } elseif (!empty($gewichtsklasse)) {
-            // Fixed: use weight class from preset
+            // No judokas: use weight class from preset
             $gk = $gewichtsklasse;
             if (!str_contains($gk, 'kg')) {
                 $gk .= 'kg';
