@@ -997,12 +997,6 @@ class PouleController extends Controller
 
         // Check if this is a variable category
         $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
-        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
-
-        if ($maxLftVerschil == 0 && $maxKgVerschil == 0) {
-            // Fixed category - no title update needed
-            return $titel;
-        }
 
         // Build new title based on config
         $parts = [];
@@ -1019,7 +1013,7 @@ class PouleController extends Controller
             $parts[] = $geslacht;
         }
 
-        // 3. Age range (if variable)
+        // 3. Age range (if variable leeftijd)
         if ($maxLftVerschil > 0) {
             $leeftijdRange = $ranges['leeftijd_range'] ?? '';
             if ($leeftijdRange) {
@@ -1027,12 +1021,10 @@ class PouleController extends Controller
             }
         }
 
-        // 4. Weight range (if variable)
-        if ($maxKgVerschil > 0) {
-            $gewichtRange = $ranges['gewicht_range'] ?? '';
-            if ($gewichtRange) {
-                $parts[] = $gewichtRange;
-            }
+        // 4. Weight range - always show actual range from judokas
+        $gewichtRange = $ranges['gewicht_range'] ?? '';
+        if ($gewichtRange) {
+            $parts[] = $gewichtRange;
         }
 
         $nieuweTitel = implode(' ', $parts) ?: $titel;
