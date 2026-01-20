@@ -169,7 +169,14 @@ class Poule extends Model
 
         $aantalJudokas = $this->judokas()->count();
 
-        $this->aantal_judokas = $aantalJudokas;
+        // Voor kruisfinale/eliminatie zonder fysieke judokas: behoud bestaand aantal
+        // (berekend uit kruisfinale_plaatsen × aantal voorronde poules)
+        if ($aantalJudokas === 0 && $this->aantal_judokas > 0 && in_array($this->type, ['kruisfinale', 'eliminatie'])) {
+            $aantalJudokas = $this->aantal_judokas;
+        } else {
+            $this->aantal_judokas = $aantalJudokas;
+        }
+
         $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($aantalJudokas);
         $this->save();
     }
