@@ -430,7 +430,7 @@
                         @foreach($leeftijdCats as $cat)
                         @php
                             $dataKey = 'poule_' . $cat['poule_id'];
-                            $titelKort = str_replace('eliminatie', 'elim.', $cat['titel'] ?? '');
+                            $titelKort = str_replace([' - Eliminatie', ' - eliminatie', 'Eliminatie', 'eliminatie'], [' - El.', ' - El.', 'El.', 'El.'], $cat['titel'] ?? '');
                         @endphp
                         <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
                             <div class="flex-1 min-w-0">
