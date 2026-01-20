@@ -737,14 +737,7 @@ class BlokController extends Controller
             'vast' => 'nullable|boolean',
         ]);
 
-        // Parse key: "leeftijdsklasse|gewichtsklasse"
-        $parts = explode('|', $validated['key']);
-        if (count($parts) !== 2) {
-            return response()->json(['success' => false, 'error' => 'Invalid key'], 400);
-        }
-
-        $leeftijdsklasse = $parts[0];
-        $gewichtsklasse = $parts[1];
+        $key = $validated['key'];
         $blokNummer = $validated['blok'];
 
         // Blok 0 = niet verdeeld (null), also unpin
@@ -760,11 +753,29 @@ class BlokController extends Controller
             }
         }
 
-        // Update alle poules met deze categorie
-        $updated = $toernooi->poules()
-            ->where('leeftijdsklasse', $leeftijdsklasse)
-            ->where('gewichtsklasse', $gewichtsklasse)
-            ->update(['blok_id' => $blokId, 'blok_vast' => $blokVast]);
+        // Check key format: "poule_123" (single poule) or "leeftijd|gewicht" (category)
+        if (str_starts_with($key, 'poule_')) {
+            // Single poule by ID
+            $pouleId = (int) substr($key, 6);
+            $updated = $toernooi->poules()
+                ->where('id', $pouleId)
+                ->update(['blok_id' => $blokId, 'blok_vast' => $blokVast]);
+        } else {
+            // Category: "leeftijdsklasse|gewichtsklasse"
+            $parts = explode('|', $key);
+            if (count($parts) !== 2) {
+                return response()->json(['success' => false, 'error' => 'Invalid key'], 400);
+            }
+
+            $leeftijdsklasse = $parts[0];
+            $gewichtsklasse = $parts[1];
+
+            // Update alle poules met deze categorie
+            $updated = $toernooi->poules()
+                ->where('leeftijdsklasse', $leeftijdsklasse)
+                ->where('gewichtsklasse', $gewichtsklasse)
+                ->update(['blok_id' => $blokId, 'blok_vast' => $blokVast]);
+        }
 
         return response()->json(['success' => true, 'updated' => $updated, 'vast' => $blokVast]);
     }
