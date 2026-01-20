@@ -219,7 +219,8 @@
                             @endif
                         </div>
                         <div class="flex items-center gap-2">
-                            {{-- Wedstrijdsysteem dropdown voor alle poule types --}}
+                            {{-- Omzetten dropdown alleen voor eliminatie en kruisfinale --}}
+                            @if($isEliminatie || $isKruisfinale)
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
                                     Omzetten ▾
@@ -232,23 +233,17 @@
                                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
                                         Poules + kruisfinale
                                     </button>
-                                    @elseif($isKruisfinale)
+                                    @else
                                     <button onclick="zetOmNaar({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
                                         Alleen poules
                                     </button>
                                     <button onclick="zetOmNaar({{ $poule->id }}, 'eliminatie')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
                                         Eliminatie
                                     </button>
-                                    @else
-                                    <button onclick="zetOmNaar({{ $poule->id }}, 'eliminatie')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
-                                        Eliminatie
-                                    </button>
-                                    <button onclick="zetOmNaar({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
-                                        Poules + kruisfinale
-                                    </button>
                                     @endif
                                 </div>
                             </div>
+                            @endif
                             @if($poule->judokas_count === 0)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                             @endif
