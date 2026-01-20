@@ -16,9 +16,35 @@
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
         {{-- Header --}}
         <div class="bg-purple-700 text-white px-4 py-4 text-center">
-            <h1 class="text-xl font-bold">Coach Kaart Activeren</h1>
+            <h1 class="text-xl font-bold">
+                @if($isOvername)
+                    Coach Kaart Overnemen
+                @else
+                    Coach Kaart Activeren
+                @endif
+            </h1>
             <p class="text-purple-200 text-sm mt-1">{{ $coachKaart->toernooi->naam }}</p>
         </div>
+
+        {{-- Takeover info --}}
+        @if($isOvername)
+        <div class="px-4 py-4 bg-amber-50 border-b border-amber-200">
+            <div class="flex items-center gap-3">
+                @if($coachKaart->foto)
+                <img src="{{ $coachKaart->getFotoUrl() }}" alt="Huidige coach"
+                     class="w-16 h-16 object-cover rounded-lg border-2 border-amber-300">
+                @endif
+                <div>
+                    <p class="text-amber-800 font-medium">Huidige coach:</p>
+                    <p class="text-amber-900 font-bold">{{ $coachKaart->naam }}</p>
+                    <p class="text-amber-600 text-sm">Actief sinds {{ $coachKaart->geactiveerd_op?->format('H:i') }}</p>
+                </div>
+            </div>
+            <p class="text-amber-700 text-sm mt-3">
+                Door deze kaart over te nemen wordt de toegang van {{ $coachKaart->naam }} beëindigd.
+            </p>
+        </div>
+        @endif
 
         {{-- Club info --}}
         <div class="px-4 py-3 bg-purple-50 border-b">
@@ -77,8 +103,12 @@
 
             {{-- Submit --}}
             <button type="submit" id="submit-btn" disabled
-                    class="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg text-lg transition-colors">
-                Activeer Coach Kaart
+                    class="w-full {{ $isOvername ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700' }} disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg text-lg transition-colors">
+                @if($isOvername)
+                    Neem Coach Kaart Over
+                @else
+                    Activeer Coach Kaart
+                @endif
             </button>
         </form>
 

@@ -59,6 +59,30 @@
                 <span class="bg-purple-600 text-white font-black px-3 py-1 rounded">COACH</span>
             </div>
 
+            {{-- Transfer history --}}
+            @if($wisselingen->count() > 1)
+            <div class="bg-gray-50 rounded-lg px-4 py-3 mt-2">
+                <p class="text-gray-500 text-xs uppercase font-medium mb-2">Wisselgeschiedenis</p>
+                <div class="space-y-1">
+                    @foreach($wisselingen as $wisseling)
+                    <div class="flex items-center gap-2 text-sm {{ $wisseling->isHuidigeCoach() ? 'text-purple-700 font-medium' : 'text-gray-500' }}">
+                        <span class="w-12 text-xs">{{ $wisseling->geactiveerd_op->format('H:i') }}</span>
+                        @if($wisseling->foto)
+                        <img src="{{ $wisseling->getFotoUrl() }}" alt="{{ $wisseling->naam }}"
+                             class="w-6 h-6 rounded-full object-cover border {{ $wisseling->isHuidigeCoach() ? 'border-purple-400' : 'border-gray-300' }}">
+                        @else
+                        <div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">?</div>
+                        @endif
+                        <span>{{ $wisseling->naam }}</span>
+                        @if($wisseling->isHuidigeCoach())
+                        <span class="text-xs bg-purple-200 text-purple-700 px-1.5 py-0.5 rounded">huidig</span>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <div class="text-center text-xs text-gray-400 pt-1">
                 {{ $coachKaart->toernooi->naam }} • {{ $coachKaart->qr_code }}
             </div>
