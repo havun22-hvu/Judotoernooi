@@ -93,8 +93,13 @@
                 <p class="text-gray-500 text-sm">Sinds {{ $coachKaart->geactiveerd_op?->format('H:i') }}</p>
             </div>
 
-            <p class="text-xs text-gray-500 mt-4">
-                Jouw toegang is beëindigd.
+            <a href="{{ route('coach-kaart.activeer', $coachKaart->qr_code) }}"
+               class="mt-4 inline-block bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg">
+                Deze kaart overnemen
+            </a>
+
+            <p class="text-xs text-gray-500 mt-3">
+                Je hebt de pincode nodig om over te nemen.
             </p>
         </div>
         @endif
