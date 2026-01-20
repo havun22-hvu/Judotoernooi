@@ -45,15 +45,18 @@
                 <div class="flex items-center space-x-8">
                     <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi) : route('organisator.dashboard') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
+                    @php
+                        $currentRoute = Route::currentRouteName();
+                    @endphp
                     <div class="hidden md:flex space-x-4">
-                        <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="hover:text-blue-200">Judoka's</a>
-                        <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="hover:text-blue-200">Poules</a>
-                        <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="hover:text-blue-200">Blokken</a>
-                        <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="hover:text-blue-200">Weging</a>
-                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="hover:text-blue-200">Wedstrijddag</a>
-                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="hover:text-blue-200">Zaaloverzicht</a>
-                        <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="hover:text-blue-200">Matten</a>
-                        <a href="{{ route('toernooi.spreker.interface', $toernooi) }}" class="hover:text-blue-200">Spreker</a>
+                        <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Judoka's</a>
+                        <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Poules</a>
+                        <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.index' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Blokken</a>
+                        <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.weging') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Weging</a>
+                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.wedstrijddag') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Wedstrijddag</a>
+                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.zaaloverzicht' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Zaaloverzicht</a>
+                        <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.mat') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Matten</a>
+                        <a href="{{ route('toernooi.spreker.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.spreker') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Spreker</a>
                     </div>
                     @endif
                 </div>
