@@ -311,6 +311,20 @@ class PouleIndelingService
                         // Calculate matches
                         $poule->updateStatistieken();
 
+                        // Check gewichtsverschil binnen poule (max 4kg)
+                        $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                        if (count($gewichten) >= 2) {
+                            $verschil = max($gewichten) - min($gewichten);
+                            if ($verschil > 4) {
+                                $statistieken['waarschuwingen'][] = [
+                                    'type' => 'warning',
+                                    'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtRange}",
+                                    'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max 4kg)",
+                                    'poule_nummer' => $pouleNummer,
+                                ];
+                            }
+                        }
+
                         $statistieken['totaal_poules']++;
                         $statistieken['totaal_wedstrijden'] += $poule->aantal_wedstrijden;
 
@@ -374,6 +388,20 @@ class PouleIndelingService
 
                         // Calculate matches
                         $poule->updateStatistieken();
+
+                        // Check gewichtsverschil binnen poule (max 4kg)
+                        $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                        if (count($gewichten) >= 2) {
+                            $verschil = max($gewichten) - min($gewichten);
+                            if ($verschil > 4) {
+                                $statistieken['waarschuwingen'][] = [
+                                    'type' => 'warning',
+                                    'categorie' => "#{$pouleNummer} {$leeftijdsklasse} {$gewichtsklasse}",
+                                    'bericht' => "Gewichtsverschil te groot: " . round($verschil, 1) . "kg (max 4kg)",
+                                    'poule_nummer' => $pouleNummer,
+                                ];
+                            }
+                        }
 
                         $statistieken['totaal_poules']++;
                         $statistieken['totaal_wedstrijden'] += $poule->aantal_wedstrijden;
