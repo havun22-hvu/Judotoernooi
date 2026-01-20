@@ -243,7 +243,7 @@
                                     @endif
                                 </div>
                             </div>
-                            @if($poule->judokas_count === 0 && !$isEliminatie)
+                            @if($poule->judokas_count === 0)
                             <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
                             @endif
                         </div>
