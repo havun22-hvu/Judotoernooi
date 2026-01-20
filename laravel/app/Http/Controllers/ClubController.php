@@ -26,6 +26,9 @@ class ClubController extends Controller
         ->with(['coachKaarten' => function ($query) use ($toernooi) {
             $query->where('toernooi_id', $toernooi->id);
         }])
+        ->with(['judokas' => function ($query) use ($toernooi) {
+            $query->where('toernooi_id', $toernooi->id)->with('poules');
+        }])
         ->orderBy('naam')
         ->get();
 
@@ -34,7 +37,24 @@ class ClubController extends Controller
             ->get()
             ->keyBy('club_id');
 
-        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen'));
+        // Bereken benodigd aantal coachkaarten per club (drukste blok / judokas_per_coach)
+        $judokasPerCoach = $toernooi->judokas_per_coach ?: 5;
+        $benodigdeKaarten = [];
+
+        foreach ($clubs as $club) {
+            $blokCount = [];
+            foreach ($club->judokas as $judoka) {
+                foreach ($judoka->poules as $poule) {
+                    if ($poule->blok_id) {
+                        $blokCount[$poule->blok_id] = ($blokCount[$poule->blok_id] ?? 0) + 1;
+                    }
+                }
+            }
+            $druksteBlok = !empty($blokCount) ? max($blokCount) : 0;
+            $benodigdeKaarten[$club->id] = $druksteBlok > 0 ? (int) ceil($druksteBlok / $judokasPerCoach) : 0;
+        }
+
+        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten'));
     }
 
     public function store(Request $request, Toernooi $toernooi): RedirectResponse
