@@ -30,6 +30,27 @@ class CoachPortalController extends Controller
         return $request->session()->get("coach_ingelogd_{$uitnodiging->id}") === true;
     }
 
+    private function parseTelefoon(?string $telefoon): ?string
+    {
+        if (empty($telefoon)) {
+            return null;
+        }
+
+        // Remove all non-numeric characters except +
+        $telefoon = preg_replace('/[^0-9+]/', '', $telefoon);
+
+        // Convert 06 to +316
+        if (str_starts_with($telefoon, '06')) {
+            $telefoon = '+31' . substr($telefoon, 1);
+        }
+        // Convert 0031 to +31
+        elseif (str_starts_with($telefoon, '0031')) {
+            $telefoon = '+31' . substr($telefoon, 4);
+        }
+
+        return $telefoon ?: null;
+    }
+
     public function index(Request $request, string $token): View|RedirectResponse
     {
         $uitnodiging = $this->getUitnodiging($token);
@@ -205,6 +226,7 @@ class CoachPortalController extends Controller
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
+            'telefoon' => 'nullable|string|max:20',
         ]);
 
         // Calculate age class from toernooi config (NOT hardcoded enum)
@@ -248,6 +270,7 @@ class CoachPortalController extends Controller
             'gewicht' => $validated['gewicht'] ?? null,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
+            'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
 
         return redirect()->route('coach.judokas', $token)
@@ -282,6 +305,7 @@ class CoachPortalController extends Controller
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
+            'telefoon' => 'nullable|string|max:20',
         ]);
 
         // Calculate age class from toernooi config (NOT hardcoded enum)
@@ -312,6 +336,7 @@ class CoachPortalController extends Controller
             'gewicht' => $validated['gewicht'] ?? null,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
+            'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
 
         return redirect()->route('coach.judokas', $token)
@@ -679,6 +704,7 @@ class CoachPortalController extends Controller
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
+            'telefoon' => 'nullable|string|max:20',
         ]);
 
         // Calculate age class and gewichtsklasse
@@ -722,6 +748,7 @@ class CoachPortalController extends Controller
             'gewicht' => $validated['gewicht'] ?? null,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
+            'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
 
         return redirect()->route('coach.portal.judokas', $code)
@@ -754,6 +781,7 @@ class CoachPortalController extends Controller
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
+            'telefoon' => 'nullable|string|max:20',
         ]);
 
         // Calculate age class from toernooi config (NOT hardcoded enum)
@@ -783,6 +811,7 @@ class CoachPortalController extends Controller
             'gewicht' => $validated['gewicht'] ?? null,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
+            'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
 
         return redirect()->route('coach.portal.judokas', $code)

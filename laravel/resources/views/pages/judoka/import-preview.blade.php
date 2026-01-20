@@ -12,6 +12,7 @@
         'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
         'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
         'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'],
+        'telefoon' => ['label' => 'Telefoon', 'verplicht' => false, 'uitleg' => 'Mobiel nummer voor WhatsApp'],
     ];
     $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
     $gekoppeldeKolommen = collect($analyse['detectie'])->filter(fn($d) => $d['csv_index'] !== null)->count();
