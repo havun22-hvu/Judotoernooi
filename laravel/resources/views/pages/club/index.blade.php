@@ -81,13 +81,17 @@
                     <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }}</span>
                 </td>
                 <td class="px-4 py-3">
+                    @php
+                        $huidig = $club->coachKaarten->count();
+                        $benodigd = $benodigdeKaarten[$club->id] ?? 0;
+                    @endphp
                     <div class="flex items-center gap-1">
                         <form action="{{ route('toernooi.club.coachkaart.remove', [$toernooi, $club]) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="px-1.5 py-0.5 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded" title="Kaart verwijderen">-</button>
                         </form>
-                        <span class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded min-w-[24px] text-center">{{ $club->coachKaarten->count() }}</span>
+                        <span class="px-2 py-1 text-xs {{ $huidig < $benodigd ? 'bg-red-100 text-red-700' : 'bg-purple-100 text-purple-700' }} rounded min-w-[24px] text-center" title="Huidig / Benodigd">{{ $huidig }}/{{ $benodigd }}</span>
                         <form action="{{ route('toernooi.club.coachkaart.add', [$toernooi, $club]) }}" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="px-1.5 py-0.5 text-xs bg-green-100 text-green-700 hover:bg-green-200 rounded" title="Extra kaart toevoegen">+</button>
