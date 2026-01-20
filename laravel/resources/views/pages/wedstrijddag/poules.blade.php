@@ -382,10 +382,41 @@
                                             <option value="{{ $i }}" {{ ($poule->kruisfinale_plaatsen ?? 2) == $i ? 'selected' : '' }}>Top {{ $i }}</option>
                                             @endfor
                                         </select>
+                                        <button
+                                            onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                            class="w-5 h-5 flex items-center justify-center bg-purple-800 hover:bg-purple-900 text-white rounded-full text-xs font-bold"
+                                            title="Verwijder kruisfinale"
+                                        >×</button>
                                     </div>
                                 </div>
                                 <div class="p-3 text-sm text-gray-600 kruisfinale-info">
                                     {{ $aantalVoorrondes }} poules × top {{ $poule->kruisfinale_plaatsen ?? 2 }} = {{ $poule->aantal_judokas }} judoka's door
+                                </div>
+                            </div>
+                            @continue
+                            @endif
+                            @if($poule->type === 'eliminatie' && $poule->judokas->count() === 0 && $poule->aantal_judokas > 0)
+                            {{-- ELIMINATIE FINALE: geen fysieke judokas maar wel berekend aantal --}}
+                            <div
+                                id="poule-{{ $poule->id }}"
+                                class="border-2 border-orange-400 rounded-lg overflow-hidden min-w-[200px] bg-white"
+                                data-poule-id="{{ $poule->id }}"
+                                data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}"
+                                data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}"
+                            >
+                                <div class="bg-orange-600 text-white px-3 py-2 flex justify-between items-center">
+                                    <div>
+                                        <div class="font-bold text-sm">⚔️ Eliminatie Finale</div>
+                                        <div class="text-xs text-orange-200">{{ $poule->aantal_judokas }} judoka's | {{ $poule->aantal_wedstrijden }} wedstrijden</div>
+                                    </div>
+                                    <button
+                                        onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
+                                        class="w-5 h-5 flex items-center justify-center bg-orange-800 hover:bg-orange-900 text-white rounded-full text-xs font-bold"
+                                        title="Verwijder eliminatie finale"
+                                    >×</button>
+                                </div>
+                                <div class="p-3 text-sm text-gray-600">
+                                    Winnaars uit voorronde poules
                                 </div>
                             </div>
                             @continue
