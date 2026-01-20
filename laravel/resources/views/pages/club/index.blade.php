@@ -10,16 +10,25 @@
         <h1 class="text-3xl font-bold text-gray-800">Clubs</h1>
         <p class="text-gray-600 mt-1">Voeg clubs toe en stuur ze een inschrijflink</p>
     </div>
-    <form action="{{ route('toernooi.club.verstuur-alle', $toernooi) }}" method="POST" class="inline"
-          onsubmit="return confirm('Alle clubs met email uitnodigen?')">
-        @csrf
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            Alle Uitnodigen
-        </button>
-    </form>
+    <div class="flex gap-2">
+        <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi) }}" method="POST" class="inline"
+              onsubmit="return confirm('Coachkaarten genereren voor alle clubs?')">
+            @csrf
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+                🎫 Genereer Coachkaarten
+            </button>
+        </form>
+        <form action="{{ route('toernooi.club.verstuur-alle', $toernooi) }}" method="POST" class="inline"
+              onsubmit="return confirm('Alle clubs met email uitnodigen?')">
+            @csrf
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Alle Uitnodigen
+            </button>
+        </form>
+    </div>
 </div>
 
 @if($toernooi->inschrijving_deadline)
