@@ -453,6 +453,13 @@ php artisan view:cache
 - Dropdown in poule titel om achteraf eliminatie → poules te wijzigen (bij te weinig judoka's)
 - `eliminatie_gewichtsklassen` veld is DEPRECATED - niet gebruiken
 
+### UI Conventies
+
+| Element | Notatie | Voorbeeld |
+|---------|---------|-----------|
+| Poule nummer | `#` prefix | #1, #42, #80 |
+| Wedstrijd nummer | `W` prefix | W1, W2 |
+
 ### Belangrijke bestanden:
 - `resources/views/pages/toernooi/edit.blade.php` → `updateJsonInput()` functie (regel ~840)
 - `app/Http/Controllers/ToernooiController.php` → `update()` method
