@@ -104,6 +104,10 @@
                                     <span class="text-orange-600">Nog niet geactiveerd</span>
                                     @endif
                                 </p>
+                                <p class="text-sm font-mono mt-1">
+                                    <span class="text-gray-500">PIN:</span>
+                                    <span class="font-bold text-purple-700 tracking-wider">{{ $kaart->pincode }}</span>
+                                </p>
                             </div>
                         </div>
 
@@ -115,7 +119,7 @@
                             @endif
 
                             <button
-                                @click="navigator.clipboard.writeText('{{ $kaart->getShowUrl() }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                @click="navigator.clipboard.writeText('Coach kaart {{ $club->naam }}\nLink: {{ $kaart->getShowUrl() }}\nPIN: {{ $kaart->pincode }}'); copied = true; setTimeout(() => copied = false, 2000)"
                                 class="px-3 py-1.5 rounded text-sm"
                                 :class="copied ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'"
                             >
