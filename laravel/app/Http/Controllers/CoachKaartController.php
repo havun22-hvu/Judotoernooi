@@ -181,7 +181,7 @@ class CoachKaartController extends Controller
     public function genereer(Request $request, Toernooi $toernooi): RedirectResponse
     {
         $clubs = Club::withCount(['judokas' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
-            ->having('judokas_count', '>', 0)
+            ->whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
             ->get();
 
         $aangemaakt = 0;
@@ -221,7 +221,7 @@ class CoachKaartController extends Controller
     {
         $clubs = Club::withCount(['judokas' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
             ->with(['coachKaarten' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
-            ->having('judokas_count', '>', 0)
+            ->whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
             ->orderBy('naam')
             ->get();
 
