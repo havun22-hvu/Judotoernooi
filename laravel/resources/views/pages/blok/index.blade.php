@@ -134,33 +134,31 @@
             ->filter(fn($c) => $c['wedstrijden'] > 0);
     }
 
-    // VASTE CATEGORIEËN: groeperen per leeftijdsklasse|gewichtsklasse
+    // VASTE CATEGORIEËN: individuele poules (net als variabele)
     $vasteCats = collect();
     if ($heeftVasteCategorieen) {
         $vastePoules = $allePoules->filter(fn($p) => isset($vasteLeeftijdsklassen[$p->leeftijdsklasse]));
 
         $vasteCats = $vastePoules
-            ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
-            ->map(function($g) {
-                $first = $g->first();
-                preg_match('/([\d.]+)/', $first->gewichtsklasse ?? '', $kgMatch);
+            ->filter(fn($p) => $p->aantal_wedstrijden > 0)
+            ->map(function($p) {
+                preg_match('/([\d.]+)/', $p->gewichtsklasse ?? '', $kgMatch);
                 $minKg = (float)($kgMatch[1] ?? 999);
 
                 return [
-                    'leeftijd' => $first->leeftijdsklasse,
-                    'gewicht' => $first->gewichtsklasse,
-                    'titel' => null,
-                    'nummer' => null,
-                    'poule_id' => null,
-                    'wedstrijden' => $g->sum('aantal_wedstrijden'),
-                    'blok' => $first->blok->nummer ?? null,
-                    'vast' => (bool) $g->max('blok_vast'),
+                    'leeftijd' => $p->leeftijdsklasse,
+                    'gewicht' => $p->gewichtsklasse,
+                    'titel' => $p->titel,
+                    'nummer' => $p->nummer,
+                    'poule_id' => $p->id,
+                    'wedstrijden' => $p->aantal_wedstrijden,
+                    'blok' => $p->blok->nummer ?? null,
+                    'vast' => (bool) $p->blok_vast,
                     'min_lft' => 99,
                     'min_kg' => $minKg,
-                    'is_poule' => false,
+                    'is_poule' => true,
                 ];
-            })
-            ->filter(fn($c) => $c['wedstrijden'] > 0);
+            });
     }
 
     // Combineer en sorteer: jong → oud, licht → zwaar
@@ -422,46 +420,29 @@
                 {{-- Alle categorieën gesorteerd op leeftijdVolgorde --}}
                 @foreach($leeftijdVolgorde as $leeftijd)
                     @php
-                        $leeftijdCats = $alleCats->filter(fn($c) => $c['leeftijd'] === $leeftijd);
-                        $variabeleCats = $leeftijdCats->filter(fn($c) => $c['is_poule']);
-                        $vasteCats = $leeftijdCats->filter(fn($c) => !$c['is_poule']);
+                        $leeftijdCats = $alleCats->filter(fn($c) => $c['leeftijd'] === $leeftijd)
+                            ->sortBy(fn($c) => ($c['min_lft'] ?? 99) * 1000 + ($c['min_kg'] ?? 999));
                     @endphp
                     @if($leeftijdCats->isNotEmpty())
                     <div class="mb-2">
                         <div class="font-bold text-gray-700 border-b border-gray-200 pb-0.5 mb-1">{{ $afkortingen[$leeftijd] ?? $leeftijd }}</div>
-                        {{-- Variabele: individuele poules --}}
-                        @foreach($variabeleCats->sortBy(fn($c) => ($c['min_lft'] ?? 99) * 1000 + ($c['min_kg'] ?? 999)) as $poule)
+                        {{-- Alle poules uniform weergeven --}}
+                        @foreach($leeftijdCats as $cat)
                         <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
                             <div class="flex-1 min-w-0 truncate">
-                                <span class="font-bold text-gray-600">#{{ $poule['nummer'] }}</span>
-                                <span class="text-gray-700 ml-1">{{ $poule['titel'] }}</span>
-                                <span class="text-gray-400">({{ $poule['wedstrijden'] }}w)</span>
+                                <span class="font-bold text-gray-600">#{{ $cat['nummer'] }}</span>
+                                <span class="text-gray-700 ml-1">{{ $cat['titel'] }}</span>
+                                <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span>
                             </div>
-                            @php $dataKey = 'poule_' . $poule['poule_id']; @endphp
-                            @if($poule['blok'])
-                                @if($poule['vast'])
-                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">●{{ $poule['blok'] }}</span>
+                            @php $dataKey = 'poule_' . $cat['poule_id']; @endphp
+                            @if($cat['blok'])
+                                @if($cat['vast'])
+                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">●{{ $cat['blok'] }}</span>
                                 @else
-                                <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">{{ $poule['blok'] }}</span>
+                                <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $dataKey }}">{{ $cat['blok'] }}</span>
                                 @endif
                             @else
                             <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="{{ $dataKey }}">-</span>
-                            @endif
-                        </div>
-                        @endforeach
-                        {{-- Vast: per gewichtsklasse --}}
-                        @foreach($vasteCats->sortBy(fn($c) => (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0)) as $cat)
-                        <div class="flex justify-between items-center py-0.5 hover:bg-gray-50">
-                            <span>{{ $cat['gewicht'] }} <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span></span>
-                            @php $dataKey = $cat['leeftijd'] . '|' . $cat['gewicht']; @endphp
-                            @if($cat['blok'])
-                                @if($cat['vast'])
-                                <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $dataKey }}">●{{ $cat['blok'] }}</span>
-                                @else
-                                <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge" data-key="{{ $dataKey }}">{{ $cat['blok'] }}</span>
-                                @endif
-                            @else
-                            <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge" data-key="{{ $dataKey }}">-</span>
                             @endif
                         </div>
                         @endforeach
