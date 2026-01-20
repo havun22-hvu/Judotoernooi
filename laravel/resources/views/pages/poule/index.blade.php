@@ -118,19 +118,41 @@
 </div>
 
 @php
-    // Poules zijn problematisch als grootte niet in toegestane groottes staat (excl. eliminatie/kruisfinale)
-    $problematischePoules = $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count) && $p->type !== 'eliminatie' && $p->type !== 'kruisfinale');
+    // Helper om gewichtsverschil te berekenen
+    $berekenGewichtVerschil = function($poule) {
+        $gewichten = $poule->judokas->map(fn($j) => $j->gewicht)->filter()->values();
+        if ($gewichten->count() < 2) return 0;
+        return $gewichten->max() - $gewichten->min();
+    };
+
+    // Poules zijn problematisch als:
+    // 1. Grootte niet in toegestane groottes staat, OF
+    // 2. Gewichtsverschil > 4kg
+    // (excl. eliminatie/kruisfinale)
+    $problematischePoules = $poules->filter(function($p) use ($isProblematischeGrootte, $berekenGewichtVerschil) {
+        if ($p->type === 'eliminatie' || $p->type === 'kruisfinale') return false;
+        $heeftGrootteProbleem = $isProblematischeGrootte($p->judokas_count);
+        $heeftGewichtProbleem = $berekenGewichtVerschil($p) > 4;
+        return $heeftGrootteProbleem || $heeftGewichtProbleem;
+    });
 @endphp
 
 <div id="problematische-poules-container">
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-    <p class="text-red-700 text-sm mb-3">Deze poules hebben een niet-toegestane grootte (toegestaan: {{ implode(', ', $toegestaneGroottes) }}). Klik om naar de poule te gaan:</p>
+    <p class="text-red-700 text-sm mb-3">Poules met verkeerde grootte of te groot gewichtsverschil (>4kg). Klik om naar de poule te gaan:</p>
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
-        <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
-            #{{ $p->nummer }} {{ $leeftijdsklasseLabels[$p->leeftijdsklasse] ?? $p->leeftijdsklasse }} / {{ $p->gewichtsklasse }} kg (<span data-probleem-count="{{ $p->id }}">{{ $p->judokas_count }}</span>)
+        @php
+            $gVerschil = $berekenGewichtVerschil($p);
+            $isGrootte = $isProblematischeGrootte($p->judokas_count);
+            $isGewicht = $gVerschil > 4;
+            $chipClass = $isGewicht ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
+            $probleem = $isGewicht ? round($gVerschil, 1) . 'kg verschil' : $p->judokas_count . ' judoka\'s';
+        @endphp
+        <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 {{ $chipClass }} rounded-full text-sm cursor-pointer transition-colors">
+            #{{ $p->nummer }} {{ $p->titel }} ({{ $probleem }})
         </a>
         @endforeach
     </div>
