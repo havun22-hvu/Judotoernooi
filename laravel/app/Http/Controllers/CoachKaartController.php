@@ -89,7 +89,15 @@ class CoachKaartController extends Controller
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'foto' => 'required|image|max:5120', // Max 5MB
+            'pincode' => 'required|string|size:4',
         ]);
+
+        // Verify pincode
+        if ($validated['pincode'] !== $coachKaart->pincode) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['pincode' => 'Onjuiste pincode']);
+        }
 
         // Store the photo
         $path = $request->file('foto')->store('coach-fotos', 'public');

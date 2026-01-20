@@ -18,6 +18,7 @@ class CoachKaart extends Model
         'naam',
         'foto',
         'qr_code',
+        'pincode',
         'activatie_token',
         'is_geactiveerd',
         'geactiveerd_op',
@@ -42,7 +43,15 @@ class CoachKaart extends Model
             if (empty($kaart->qr_code)) {
                 $kaart->qr_code = self::generateQrCode();
             }
+            if (empty($kaart->pincode)) {
+                $kaart->pincode = self::generatePincode();
+            }
         });
+    }
+
+    public static function generatePincode(): string
+    {
+        return str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
     }
 
     public static function generateQrCode(): string
