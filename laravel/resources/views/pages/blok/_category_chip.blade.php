@@ -41,7 +41,7 @@
         preg_match('/(\d+-?\d*j)/', $titel, $lftMatch);
         $leeftijdStr = $lftMatch[1] ?? '';
 
-        $chipLabel = 'P' . ($cat['nummer'] ?? '?') . ' ' . $labelPrefix;
+        $chipLabel = '#' . ($cat['nummer'] ?? '?') . ' ' . $labelPrefix;
         $chipGewicht = $leeftijdStr . ' ' . $cat['gewicht'];
 
         // Key voor poules: gebruik poule_id als beschikbaar, anders leeftijd|gewicht|nummer
