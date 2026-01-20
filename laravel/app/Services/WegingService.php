@@ -60,7 +60,12 @@ class WegingService
                 'opmerking' => $opmerking,
             ]);
 
-            // Verwijder uit poules als gewicht buiten klasse (naar wachtruimte)
+            // Bij vaste gewichtsklassen en overpoulen: verplaats naar wachtruimte
+            if (!$binnenKlasse && $this->heeftVasteGewichtsklassen($judoka->toernooi)) {
+                $this->verplaatsOverpoulerNaarWachtruimte($judoka);
+            }
+
+            // Verwijder uit poules als afwezig
             $judoka->verwijderUitPoulesIndienNodig();
 
             return [
@@ -71,6 +76,77 @@ class WegingService
                 'opmerking' => $opmerking,
             ];
         });
+    }
+
+    /**
+     * Check of toernooi vaste gewichtsklassen gebruikt (niet variabel)
+     */
+    private function heeftVasteGewichtsklassen(Toernooi $toernooi): bool
+    {
+        // Vaste gewichtsklassen = max_kg_verschil is 0 of null
+        return ($toernooi->max_kg_verschil ?? 0) == 0;
+    }
+
+    /**
+     * Verplaats overpouler naar wachtruimte (bij vaste gewichtsklassen)
+     * - Onthoud de oude poule
+     * - Verwijder uit poule
+     * - Update gewichtsklasse naar de juiste nieuwe klasse
+     */
+    private function verplaatsOverpoulerNaarWachtruimte(Judoka $judoka): void
+    {
+        // Vind de voorronde poule waar de judoka in zit
+        $oudePoule = $judoka->poules()->where('type', 'voorronde')->first();
+
+        if (!$oudePoule) {
+            return;
+        }
+
+        // Sla de oude poule op voor de (i) popup
+        $judoka->update([
+            'overpouled_van_poule_id' => $oudePoule->id,
+        ]);
+
+        // Verwijder uit de poule (gaat naar wachtruimte)
+        $oudePoule->judokas()->detach($judoka->id);
+        $oudePoule->updateStatistieken();
+
+        // Bepaal nieuwe gewichtsklasse op basis van gewogen gewicht
+        $nieuweKlasse = $this->bepaalNieuweGewichtsklasse($judoka);
+        if ($nieuweKlasse) {
+            $judoka->update(['gewichtsklasse' => $nieuweKlasse]);
+        }
+    }
+
+    /**
+     * Bepaal nieuwe gewichtsklasse op basis van gewogen gewicht
+     */
+    private function bepaalNieuweGewichtsklasse(Judoka $judoka): ?string
+    {
+        $gewicht = $judoka->gewicht_gewogen;
+        if (!$gewicht) return null;
+
+        // Standaard gewichtsklassen (sorteer van licht naar zwaar)
+        $klassen = ['-30', '-34', '-38', '-42', '-45', '-48', '-52', '-57', '-63', '-70', '-78', '+78'];
+
+        foreach ($klassen as $klasse) {
+            $isPlusKlasse = str_starts_with($klasse, '+');
+            $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
+
+            if ($isPlusKlasse) {
+                // +78 = boven 78kg
+                if ($gewicht >= $limiet) {
+                    return $klasse;
+                }
+            } else {
+                // -30 = onder 30kg
+                if ($gewicht <= $limiet) {
+                    return $klasse;
+                }
+            }
+        }
+
+        return '+78'; // Fallback voor heel zwaar
     }
 
     /**

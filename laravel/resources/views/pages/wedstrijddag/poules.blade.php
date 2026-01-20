@@ -429,6 +429,9 @@
                                     ($wegingGesloten && $j->gewicht_gewogen === null)
                                 );
 
+                                // Collect overpoulers (judokas die uit DEZE poule overpouled zijn)
+                                $overpoulers = \App\Models\Judoka::where('overpouled_van_poule_id', $poule->id)->get();
+
                                 // Calculate active count (total minus afwezigen)
                                 $aantalActief = $poule->judokas->count() - $afwezigeJudokas->count();
                                 $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
@@ -437,13 +440,14 @@
                                 // Check gewichtsrange probleem (dynamische categorie)
                                 $heeftGewichtsprobleem = $problematischeGewichtsPoules->has($poule->id);
 
-                                // Format afwezigen for tooltip (met reden)
-                                $verwijderdeTekst = $afwezigeJudokas->map(function($j) use ($wegingGesloten) {
-                                    if ($j->aanwezigheid === 'afwezig') {
-                                        return $j->naam . ' (afwezig)';
-                                    }
-                                    return $j->naam . ' (afwezig)';
-                                });
+                                // Format afwezigen + overpoulers for tooltip
+                                $verwijderdeTekst = collect();
+                                foreach ($afwezigeJudokas as $j) {
+                                    $verwijderdeTekst->push($j->naam . ' (afwezig)');
+                                }
+                                foreach ($overpoulers as $j) {
+                                    $verwijderdeTekst->push($j->naam . ' (→ ' . $j->gewichtsklasse . ')');
+                                }
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"

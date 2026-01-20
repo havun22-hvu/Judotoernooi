@@ -43,6 +43,7 @@ class Judoka extends Model
         'betaald_op',
         'is_onvolledig',
         'telefoon',
+        'overpouled_van_poule_id',
     ];
 
     protected $casts = [
@@ -132,6 +133,14 @@ class Judoka extends Model
         return $this->belongsToMany(Poule::class, 'poule_judoka')
             ->withPivot(['positie', 'punten', 'gewonnen', 'verloren', 'gelijk', 'eindpositie'])
             ->withTimestamps();
+    }
+
+    /**
+     * Poule waar judoka uit overpouled is (bij vaste gewichtsklassen)
+     */
+    public function overpouledVanPoule(): BelongsTo
+    {
+        return $this->belongsTo(Poule::class, 'overpouled_van_poule_id');
     }
 
     public function wegingen(): HasMany
