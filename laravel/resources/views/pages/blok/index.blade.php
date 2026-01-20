@@ -421,7 +421,7 @@
             <div class="p-2 max-h-[calc(100vh-200px)] overflow-y-auto text-xs" id="overzicht-panel">
                 @if($heeftVariabeleCategorieen)
                     {{-- Variabele categorieën: toon individuele poules met titel --}}
-                    @foreach($overzichtPoules as $poule)
+                    @foreach($overzichtPoules->filter(fn($p) => $p['is_poule']) as $poule)
                     <div class="flex justify-between items-center py-0.5 hover:bg-gray-50 border-b border-gray-100">
                         <div class="flex-1 min-w-0 truncate">
                             <span class="font-bold text-gray-600">#{{ $poule['nummer'] }}</span>
@@ -430,22 +430,26 @@
                         </div>
                         @if($poule['blok'])
                             @if($poule['vast'])
-                            <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">●{{ $poule['blok'] }}</span>
+                            <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="poule_{{ $poule['poule_id'] }}">●{{ $poule['blok'] }}</span>
                             @else
-                            <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">{{ $poule['blok'] }}</span>
+                            <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold blok-badge ml-1" data-key="poule_{{ $poule['poule_id'] }}">{{ $poule['blok'] }}</span>
                             @endif
                         @else
-                        <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="{{ $poule['leeftijd'] }}|{{ $poule['gewicht'] }}">-</span>
+                        <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded blok-badge ml-1" data-key="poule_{{ $poule['poule_id'] }}">-</span>
                         @endif
                     </div>
                     @endforeach
-                @else
-                    {{-- Vaste categorieën: bestaande gegroepeerde weergave --}}
+                @endif
+                @if($heeftVasteCategorieen)
+                    {{-- Vaste categorieën: gegroepeerde weergave --}}
+                    @php
+                        $vasteCatsPerLeeftijd = $alleCats->filter(fn($c) => !$c['is_poule'])->groupBy('leeftijd');
+                    @endphp
                     @foreach($leeftijdVolgorde as $leeftijd)
-                        @if($catsPerLeeftijd->has($leeftijd))
+                        @if($vasteCatsPerLeeftijd->has($leeftijd))
                         <div class="mb-2">
                             <div class="font-bold text-gray-700 border-b border-gray-200 pb-0.5 mb-1">{{ $afkortingen[$leeftijd] ?? $leeftijd }}</div>
-                            @foreach($catsPerLeeftijd[$leeftijd]->sortBy(fn($c) => (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0)) as $cat)
+                            @foreach($vasteCatsPerLeeftijd[$leeftijd]->sortBy(fn($c) => (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0)) as $cat)
                             <div class="flex justify-between items-center py-0.5 hover:bg-gray-50">
                                 <span>{{ $cat['gewicht'] }} <span class="text-gray-400">({{ $cat['wedstrijden'] }}w)</span></span>
                                 @if($cat['blok'])
