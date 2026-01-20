@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CoachKaart extends Model
@@ -62,6 +64,16 @@ class CoachKaart extends Model
         return $this->belongsTo(Club::class);
     }
 
+    public function wisselingen(): HasMany
+    {
+        return $this->hasMany(CoachKaartWisseling::class)->orderBy('geactiveerd_op', 'desc');
+    }
+
+    public function huidigeWisseling(): ?CoachKaartWisseling
+    {
+        return $this->wisselingen()->whereNull('overgedragen_op')->first();
+    }
+
     public function markeerGescand(): void
     {
         $this->update([
@@ -118,6 +130,65 @@ class CoachKaart extends Model
             'device_token' => null,
             'device_info' => null,
             'gebonden_op' => null,
+        ]);
+    }
+
+    /**
+     * Transfer the coach card to a new coach.
+     * Marks current coach as transferred and creates new wisseling record.
+     */
+    public function overdragen(string $naam, string $foto, string $deviceToken, string $deviceInfo): void
+    {
+        // Mark current wisseling as transferred
+        $huidige = $this->huidigeWisseling();
+        if ($huidige) {
+            $huidige->update(['overgedragen_op' => now()]);
+        }
+
+        // Create new wisseling record
+        $this->wisselingen()->create([
+            'naam' => $naam,
+            'foto' => $foto,
+            'device_info' => $deviceInfo,
+            'geactiveerd_op' => now(),
+            'overgedragen_op' => null,
+        ]);
+
+        // Update the coach card itself
+        $this->update([
+            'naam' => $naam,
+            'foto' => $foto,
+            'is_geactiveerd' => true,
+            'geactiveerd_op' => now(),
+            'device_token' => $deviceToken,
+            'device_info' => $deviceInfo,
+            'gebonden_op' => now(),
+        ]);
+    }
+
+    /**
+     * First-time activation of the coach card.
+     */
+    public function activeer(string $naam, string $foto, string $deviceToken, string $deviceInfo): void
+    {
+        // Create first wisseling record
+        $this->wisselingen()->create([
+            'naam' => $naam,
+            'foto' => $foto,
+            'device_info' => $deviceInfo,
+            'geactiveerd_op' => now(),
+            'overgedragen_op' => null,
+        ]);
+
+        // Update the coach card
+        $this->update([
+            'naam' => $naam,
+            'foto' => $foto,
+            'is_geactiveerd' => true,
+            'geactiveerd_op' => now(),
+            'device_token' => $deviceToken,
+            'device_info' => $deviceInfo,
+            'gebonden_op' => now(),
         ]);
     }
 

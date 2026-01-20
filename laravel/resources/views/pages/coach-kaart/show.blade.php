@@ -77,13 +77,24 @@
         @else
         <div class="p-6 bg-red-50 text-center">
             <div class="text-red-600 text-4xl mb-3">🔒</div>
-            <h3 class="font-bold text-red-800 mb-2">Verkeerd apparaat</h3>
+            <h3 class="font-bold text-red-800 mb-2">Kaart overgedragen</h3>
             <p class="text-red-600 text-sm mb-4">
-                Deze coach kaart is geactiveerd op een ander apparaat.
-                De QR-code is alleen zichtbaar op het originele apparaat.
+                Deze coach kaart is nu actief op een ander apparaat.
             </p>
-            <p class="text-xs text-gray-500">
-                Geactiveerd op: {{ $coachKaart->device_info ?? 'Onbekend' }}
+
+            {{-- Show current coach info --}}
+            <div class="bg-white rounded-lg p-4 mt-4 border border-red-200">
+                <p class="text-gray-500 text-xs uppercase mb-2">Huidige coach</p>
+                @if($coachKaart->foto)
+                <img src="{{ $coachKaart->getFotoUrl() }}" alt="{{ $coachKaart->naam }}"
+                     class="w-20 h-20 object-cover rounded-lg mx-auto border-2 border-gray-200 mb-2">
+                @endif
+                <p class="font-bold text-gray-900">{{ $coachKaart->naam }}</p>
+                <p class="text-gray-500 text-sm">Sinds {{ $coachKaart->geactiveerd_op?->format('H:i') }}</p>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-4">
+                Jouw toegang is beëindigd.
             </p>
         </div>
         @endif

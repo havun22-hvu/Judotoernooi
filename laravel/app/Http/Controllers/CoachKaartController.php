@@ -54,24 +54,31 @@ class CoachKaartController extends Controller
     }
 
     /**
-     * Show activation form
+     * Show activation form (or takeover form if already activated on another device)
      */
-    public function activeer(string $qrCode): View|RedirectResponse
+    public function activeer(Request $request, string $qrCode): View|RedirectResponse
     {
         $coachKaart = CoachKaart::where('qr_code', $qrCode)
             ->with(['club', 'toernooi'])
             ->firstOrFail();
 
-        // Already activated? Go to card
-        if ($coachKaart->is_geactiveerd) {
+        // Check if this is the correct device
+        $deviceToken = $request->cookie('coach_kaart_' . $coachKaart->id);
+        $isCorrectDevice = $coachKaart->isDeviceGebonden() && $deviceToken === $coachKaart->device_token;
+
+        // Already activated on THIS device? Go to card
+        if ($coachKaart->is_geactiveerd && $isCorrectDevice) {
             return redirect()->route('coach-kaart.show', $qrCode);
         }
 
-        return view('pages.coach-kaart.activeer', compact('coachKaart'));
+        // Determine if this is a takeover (already activated on different device)
+        $isOvername = $coachKaart->is_geactiveerd && !$isCorrectDevice;
+
+        return view('pages.coach-kaart.activeer', compact('coachKaart', 'isOvername'));
     }
 
     /**
-     * Process activation - save name, photo and bind device
+     * Process activation or takeover - save name, photo and bind device
      */
     public function activeerOpslaan(Request $request, string $qrCode): RedirectResponse
     {
@@ -87,19 +94,22 @@ class CoachKaartController extends Controller
         // Store the photo
         $path = $request->file('foto')->store('coach-fotos', 'public');
 
-        // Generate device token and bind
+        // Generate device token
         $deviceToken = CoachKaart::generateDeviceToken();
         $deviceInfo = $this->getDeviceInfo($request->userAgent());
 
-        $coachKaart->update([
-            'naam' => $validated['naam'],
-            'foto' => $path,
-            'is_geactiveerd' => true,
-            'geactiveerd_op' => now(),
-            'device_token' => $deviceToken,
-            'device_info' => $deviceInfo,
-            'gebonden_op' => now(),
-        ]);
+        // Check if this is a takeover or first activation
+        $isOvername = $coachKaart->is_geactiveerd;
+
+        if ($isOvername) {
+            // Takeover: use overdragen() which logs the transfer
+            $coachKaart->overdragen($validated['naam'], $path, $deviceToken, $deviceInfo);
+            $message = 'Coach kaart overgenomen!';
+        } else {
+            // First activation
+            $coachKaart->activeer($validated['naam'], $path, $deviceToken, $deviceInfo);
+            $message = 'Coach kaart geactiveerd!';
+        }
 
         // Set cookie (1 year expiry)
         $cookie = Cookie::make(
@@ -113,7 +123,7 @@ class CoachKaartController extends Controller
         );
 
         return redirect()->route('coach-kaart.show', $qrCode)
-            ->with('success', 'Coach kaart geactiveerd!')
+            ->with('success', $message)
             ->withCookie($cookie);
     }
 
@@ -160,7 +170,7 @@ class CoachKaartController extends Controller
     public function scan(string $qrCode): View
     {
         $coachKaart = CoachKaart::where('qr_code', $qrCode)
-            ->with(['club', 'toernooi'])
+            ->with(['club', 'toernooi', 'wisselingen'])
             ->firstOrFail();
 
         // Check if card is valid (activated with photo)
@@ -172,7 +182,10 @@ class CoachKaartController extends Controller
             $coachKaart->markeerGescand();
         }
 
-        return view('pages.coach-kaart.scan-result', compact('coachKaart', 'wasAlreadyScanned', 'isGeldig'));
+        // Get transfer history for display
+        $wisselingen = $coachKaart->wisselingen;
+
+        return view('pages.coach-kaart.scan-result', compact('coachKaart', 'wasAlreadyScanned', 'isGeldig', 'wisselingen'));
     }
 
     /**
