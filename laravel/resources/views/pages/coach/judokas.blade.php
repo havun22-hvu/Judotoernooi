@@ -184,6 +184,12 @@
                             <span x-show="isElim" class="ml-1 text-orange-600 font-medium">(Eliminatie)</span>
                         </p>
                     </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Telefoon</label>
+                        <input type="tel" name="telefoon"
+                               class="w-full border rounded px-3 py-2" placeholder="06-12345678">
+                        <p class="text-xs text-gray-500 mt-1">Voor WhatsApp contact</p>
+                    </div>
                 </div>
                 <p class="text-xs text-gray-500 mt-2">* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.</p>
                 <div class="mt-4">
@@ -383,6 +389,9 @@
                                 @if($judoka->gewichtsklasse)
                                 ({{ $judoka->gewichtsklasse }} kg)
                                 @endif
+                                @if($judoka->telefoon)
+                                | <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800" title="WhatsApp {{ $judoka->telefoon }}">WhatsApp</a>
+                                @endif
                             </p>
                             @if($judoka->leeftijdsklasse)
                             <p class="text-xs text-gray-500 mt-1">
@@ -423,7 +432,7 @@
                         <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.update', [$code, $judoka]) : route('coach.judoka.update', [$uitnodiging->token, $judoka]) }}" method="POST">
                             @csrf
                             @method('PUT')
-                            <div class="grid grid-cols-2 md:grid-cols-6 gap-2">
+                            <div class="grid grid-cols-2 md:grid-cols-7 gap-2">
                                 <input type="text" name="naam" value="{{ $judoka->naam }}" required
                                        class="border rounded px-2 py-1" placeholder="Naam">
                                 <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()"
@@ -447,6 +456,8 @@
                                         <option :value="gw" x-text="gw + ' kg'"></option>
                                     </template>
                                 </select>
+                                <input type="tel" name="telefoon" value="{{ $judoka->telefoon }}"
+                                       class="border rounded px-2 py-1" placeholder="Telefoon">
                             </div>
                             <p x-show="leeftijdsklasse" class="text-xs mt-1">
                                 <span class="text-blue-600" x-text="'Leeftijdsklasse: ' + leeftijdsklasse"></span>
