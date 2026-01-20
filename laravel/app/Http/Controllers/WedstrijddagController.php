@@ -710,6 +710,7 @@ class WedstrijddagController extends Controller
         }
 
         // Bij kruisfinale → eliminatie: bereken aantal judokas uit kruisfinale_plaatsen × aantal voorronde poules
+        $skipUpdateStatistieken = false;
         if ($oudType === 'kruisfinale' && $nieuwType === 'eliminatie') {
             $aantalVoorrondePoules = Poule::where('toernooi_id', $toernooi->id)
                 ->where('leeftijdsklasse', $poule->leeftijdsklasse)
@@ -719,6 +720,8 @@ class WedstrijddagController extends Controller
 
             $kruisfinalePlaatsen = $poule->kruisfinale_plaatsen ?? 2;
             $poule->aantal_judokas = $aantalVoorrondePoules * $kruisfinalePlaatsen;
+            $poule->aantal_wedstrijden = $poule->berekenAantalWedstrijden($poule->aantal_judokas);
+            $skipUpdateStatistieken = true;
         }
 
         // Update type
@@ -736,7 +739,10 @@ class WedstrijddagController extends Controller
         }
 
         $poule->save();
-        $poule->updateStatistieken();
+
+        if (!$skipUpdateStatistieken) {
+            $poule->updateStatistieken();
+        }
 
         return response()->json([
             'success' => true,
