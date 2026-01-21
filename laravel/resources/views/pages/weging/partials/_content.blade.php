@@ -68,20 +68,20 @@
                     </div>
                 </div>
 
-                <!-- Numpad (3 rijen + registreer) -->
-                <div id="numpad-grid" class="grid grid-cols-4 gap-1 mb-2">
-                    <button type="button" data-key="7" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">7</button>
-                    <button type="button" data-key="8" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">8</button>
-                    <button type="button" data-key="9" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">9</button>
-                    <button type="button" data-key="C" class="numpad-btn bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold touch-manipulation">C</button>
-                    <button type="button" data-key="4" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">4</button>
-                    <button type="button" data-key="5" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">5</button>
-                    <button type="button" data-key="6" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">6</button>
-                    <button type="button" data-key="." class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">.</button>
-                    <button type="button" data-key="1" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">1</button>
-                    <button type="button" data-key="2" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">2</button>
-                    <button type="button" data-key="3" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">3</button>
-                    <button type="button" data-key="0" class="numpad-btn bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">0</button>
+                <!-- Numpad -->
+                <div class="grid grid-cols-4 gap-1 mb-2">
+                    <button type="button" onclick="np('7')" class="bg-gray-200 rounded py-3 text-2xl font-bold">7</button>
+                    <button type="button" onclick="np('8')" class="bg-gray-200 rounded py-3 text-2xl font-bold">8</button>
+                    <button type="button" onclick="np('9')" class="bg-gray-200 rounded py-3 text-2xl font-bold">9</button>
+                    <button type="button" onclick="np('C')" class="bg-red-200 text-red-700 rounded py-3 text-2xl font-bold">C</button>
+                    <button type="button" onclick="np('4')" class="bg-gray-200 rounded py-3 text-2xl font-bold">4</button>
+                    <button type="button" onclick="np('5')" class="bg-gray-200 rounded py-3 text-2xl font-bold">5</button>
+                    <button type="button" onclick="np('6')" class="bg-gray-200 rounded py-3 text-2xl font-bold">6</button>
+                    <button type="button" onclick="np('.')" class="bg-gray-200 rounded py-3 text-2xl font-bold">.</button>
+                    <button type="button" onclick="np('1')" class="bg-gray-200 rounded py-3 text-2xl font-bold">1</button>
+                    <button type="button" onclick="np('2')" class="bg-gray-200 rounded py-3 text-2xl font-bold">2</button>
+                    <button type="button" onclick="np('3')" class="bg-gray-200 rounded py-3 text-2xl font-bold">3</button>
+                    <button type="button" onclick="np('0')" class="bg-gray-200 rounded py-3 text-2xl font-bold">0</button>
                 </div>
 
                 <!-- Register button -->
@@ -278,60 +278,13 @@ function clearSelection() {
     document.getElementById('feedback').classList.add('hidden');
 }
 
-// Numpad - event delegation with touch/click handling
-let lastNumpadTime = 0;
-let touchHandled = false;
-
-function numpadInput(key) {
-    const now = Date.now();
-    if (now - lastNumpadTime < 150) return; // Debounce 150ms
-    lastNumpadTime = now;
-
-    console.log('[Numpad] Input:', key); // Debug log
-
-    if (key === 'C') {
-        weightInput = '';
-    } else if (key === '.') {
-        if (!weightInput.includes('.')) weightInput += key;
-    } else {
-        if (weightInput.length < 5) weightInput += key;
-    }
+// Numpad - simpel
+function np(k) {
+    if (k === 'C') weightInput = '';
+    else if (k === '.' && !weightInput.includes('.')) weightInput += k;
+    else if (k !== '.' && weightInput.length < 5) weightInput += k;
     updateWeightDisplay();
 }
-
-// Initialize numpad with event delegation (runs immediately)
-(function initNumpad() {
-    const grid = document.getElementById('numpad-grid');
-    if (!grid) {
-        // Retry if DOM not ready
-        setTimeout(initNumpad, 50);
-        return;
-    }
-
-    console.log('[Numpad] Initializing event listeners v1.1.4');
-
-    // Handle touch events (fires first on mobile)
-    grid.addEventListener('touchstart', function(e) {
-        const btn = e.target.closest('.numpad-btn');
-        if (btn && btn.dataset.key) {
-            e.preventDefault(); // Prevent click from also firing
-            touchHandled = true;
-            numpadInput(btn.dataset.key);
-        }
-    }, { passive: false });
-
-    // Handle click events (for desktop and fallback)
-    grid.addEventListener('click', function(e) {
-        if (touchHandled) {
-            touchHandled = false;
-            return; // Skip click if touch already handled
-        }
-        const btn = e.target.closest('.numpad-btn');
-        if (btn && btn.dataset.key) {
-            numpadInput(btn.dataset.key);
-        }
-    });
-})();
 
 function updateWeightDisplay() {
     const input = document.getElementById('weight-input');
