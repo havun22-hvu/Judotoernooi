@@ -69,19 +69,19 @@
                 </div>
 
                 <!-- Numpad (3 rijen + registreer) -->
-                <div class="grid grid-cols-4 gap-1 mb-2" id="numpad-grid">
-                    <button type="button" data-key="7" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">7</button>
-                    <button type="button" data-key="8" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">8</button>
-                    <button type="button" data-key="9" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">9</button>
-                    <button type="button" data-key="C" class="numpad-key bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold">C</button>
-                    <button type="button" data-key="4" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">4</button>
-                    <button type="button" data-key="5" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">5</button>
-                    <button type="button" data-key="6" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">6</button>
-                    <button type="button" data-key="." class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">.</button>
-                    <button type="button" data-key="1" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">1</button>
-                    <button type="button" data-key="2" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">2</button>
-                    <button type="button" data-key="3" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">3</button>
-                    <button type="button" data-key="0" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">0</button>
+                <div class="grid grid-cols-4 gap-1 mb-2">
+                    <button type="button" ontouchstart="numpadInput('7')" onclick="numpadInput('7')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">7</button>
+                    <button type="button" ontouchstart="numpadInput('8')" onclick="numpadInput('8')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">8</button>
+                    <button type="button" ontouchstart="numpadInput('9')" onclick="numpadInput('9')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">9</button>
+                    <button type="button" ontouchstart="numpadInput('C')" onclick="numpadInput('C')" class="bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold touch-manipulation">C</button>
+                    <button type="button" ontouchstart="numpadInput('4')" onclick="numpadInput('4')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">4</button>
+                    <button type="button" ontouchstart="numpadInput('5')" onclick="numpadInput('5')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">5</button>
+                    <button type="button" ontouchstart="numpadInput('6')" onclick="numpadInput('6')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">6</button>
+                    <button type="button" ontouchstart="numpadInput('.')" onclick="numpadInput('.')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">.</button>
+                    <button type="button" ontouchstart="numpadInput('1')" onclick="numpadInput('1')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">1</button>
+                    <button type="button" ontouchstart="numpadInput('2')" onclick="numpadInput('2')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">2</button>
+                    <button type="button" ontouchstart="numpadInput('3')" onclick="numpadInput('3')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">3</button>
+                    <button type="button" ontouchstart="numpadInput('0')" onclick="numpadInput('0')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold touch-manipulation">0</button>
                 </div>
 
                 <!-- Register button -->
@@ -278,8 +278,13 @@ function clearSelection() {
     document.getElementById('feedback').classList.add('hidden');
 }
 
-// Numpad - use event delegation for better mobile support
+// Numpad - debounce to prevent double input from touch+click
+let lastNumpadTime = 0;
 function numpadInput(key) {
+    const now = Date.now();
+    if (now - lastNumpadTime < 100) return; // Debounce 100ms
+    lastNumpadTime = now;
+
     if (key === 'C') {
         weightInput = '';
     } else if (key === '.') {
@@ -289,29 +294,6 @@ function numpadInput(key) {
     }
     updateWeightDisplay();
 }
-
-// Initialize numpad with event delegation (works better on mobile)
-document.addEventListener('DOMContentLoaded', function() {
-    const numpadGrid = document.getElementById('numpad-grid');
-    if (numpadGrid) {
-        numpadGrid.addEventListener('click', function(e) {
-            const btn = e.target.closest('.numpad-key');
-            if (btn) {
-                const key = btn.dataset.key;
-                if (key) numpadInput(key);
-            }
-        });
-        // Also handle touch events explicitly
-        numpadGrid.addEventListener('touchend', function(e) {
-            const btn = e.target.closest('.numpad-key');
-            if (btn) {
-                e.preventDefault();
-                const key = btn.dataset.key;
-                if (key) numpadInput(key);
-            }
-        });
-    }
-});
 
 function updateWeightDisplay() {
     const input = document.getElementById('weight-input');
