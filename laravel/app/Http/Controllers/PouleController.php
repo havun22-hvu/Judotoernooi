@@ -363,10 +363,59 @@ class PouleController extends Controller
             // Is dit een andere categorie?
             $isCategorieOverschrijding = $huidigeLeeftijdsklasse && $poule->leeftijdsklasse !== $huidigeLeeftijdsklasse;
 
-            // Bepaal status
-            $status = 'ok';
-            if ($kgOverschrijding > 0 || $lftOverschrijding > 0) {
-                $status = ($kgOverschrijding <= 2 && $lftOverschrijding <= 1) ? 'warning' : 'error';
+            // ============================================================
+            // BEPAAL STATUS - TWEE VERSCHILLENDE SYSTEMEN
+            // ============================================================
+            $isVasteKlassen = $maxKgVerschil == 0;
+
+            if ($isVasteKlassen) {
+                // --------------------------------------------------------
+                // VASTE GEWICHTSKLASSEN (bijv. Jeugd -27 kg)
+                // Judoka past in EXACT 1 categorie: leeftijdsklasse + gewichtsklasse
+                // --------------------------------------------------------
+                $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+
+                // Stap 1: Bepaal de juiste gewichtsklasse voor dit gewicht
+                $beschikbareKlassen = Judoka::where('leeftijdsklasse', $judoka->leeftijdsklasse)
+                    ->where('toernooi_id', $toernooi->id)
+                    ->whereNotNull('gewichtsklasse')
+                    ->distinct()
+                    ->pluck('gewichtsklasse')
+                    ->toArray();
+
+                usort($beschikbareKlassen, fn($a, $b) =>
+                    floatval(preg_replace('/[^0-9.]/', '', $a)) - floatval(preg_replace('/[^0-9.]/', '', $b))
+                );
+
+                $juisteGewichtsklasse = null;
+                foreach ($beschikbareKlassen as $klasse) {
+                    $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
+                    if (str_starts_with($klasse, '+') || $judokaGewicht <= $limiet + $tolerantie) {
+                        $juisteGewichtsklasse = $klasse;
+                        break;
+                    }
+                }
+
+                // Stap 2: Check of poule exact matcht
+                $leeftijdsklasseKlopt = $poule->leeftijdsklasse === $judoka->leeftijdsklasse;
+                $gewichtsklasseKlopt = $poule->gewichtsklasse === $juisteGewichtsklasse;
+
+                if ($leeftijdsklasseKlopt && $gewichtsklasseKlopt) {
+                    $status = 'ok';
+                    $kgOverschrijding = 0;
+                } else {
+                    $status = 'error';
+                }
+
+            } else {
+                // --------------------------------------------------------
+                // VARIABELE GEWICHTEN (max_kg_verschil > 0)
+                // Check of gewicht/leeftijd spreiding binnen limieten blijft
+                // --------------------------------------------------------
+                $status = 'ok';
+                if ($kgOverschrijding > 0 || $lftOverschrijding > 0) {
+                    $status = ($kgOverschrijding <= 2 && $lftOverschrijding <= 1) ? 'warning' : 'error';
+                }
             }
 
             $match = [
@@ -374,6 +423,7 @@ class PouleController extends Controller
                 'poule_nummer' => $poule->nummer,
                 'poule_titel' => $poule->titel ?? "Poule #{$poule->nummer}",
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'gewichtsklasse' => $poule->gewichtsklasse,
                 'categorie_overschrijding' => $isCategorieOverschrijding,
                 'huidige_judokas' => $judokasInPoule->count(),
                 'huidige_leeftijd' => $huidigeMinLft == $huidigeMaxLft ? "{$huidigeMinLft}j" : "{$huidigeMinLft}-{$huidigeMaxLft}j",
