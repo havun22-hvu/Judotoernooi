@@ -263,9 +263,8 @@
                         {{-- Vaste gewichtsklassen: 1 knop per categorie --}}
                         @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
                         <button
-                            onclick="naarZaaloverzicht('{{ $jsKey }}')"
-                            class="text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
-                            data-category="{{ $jsKey }}"
+                            onclick="naarZaaloverzicht('{{ $jsKey }}', this)"
+                            class="text-white px-3 py-1.5 text-sm rounded transition-all {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
                         >
                             {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
                         </button>
@@ -482,9 +481,8 @@
                                         {{-- Variabele gewichten: doorstuur knop per poule --}}
                                         @php $isPouleSent = isset($sentToZaaloverzichtPoules[$poule->id]) && $sentToZaaloverzichtPoules[$poule->id]; @endphp
                                         <button
-                                            onclick="naarZaaloverzichtPoule({{ $poule->id }})"
-                                            class="text-xs px-2 py-0.5 rounded transition-all naar-zaaloverzicht-poule-btn {{ $isPouleSent ? 'bg-green-500 hover:bg-green-600' : 'bg-white/20 hover:bg-white/30' }}"
-                                            data-poule-id="{{ $poule->id }}"
+                                            onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
+                                            class="text-xs px-2 py-0.5 rounded transition-all {{ $isPouleSent ? 'bg-green-500 hover:bg-green-600' : 'bg-white/20 hover:bg-white/30' }}"
                                             title="{{ $isPouleSent ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
                                         >
                                             {{ $isPouleSent ? '✓' : '→' }}
@@ -910,7 +908,11 @@ async function verwijderUitPoule(judokaId, pouleId) {
     }
 }
 
-async function naarZaaloverzicht(categoryKey) {
+async function naarZaaloverzicht(categoryKey, btn) {
+    // Disable button during request
+    btn.disabled = true;
+    btn.innerHTML = '⏳';
+
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
             method: 'POST',
@@ -923,25 +925,30 @@ async function naarZaaloverzicht(categoryKey) {
 
         if (response.ok) {
             sentCategories[categoryKey] = true;
-            // Update button appearance - use CSS.escape for special chars like apostrophes
-            const btn = document.querySelector(`.naar-zaaloverzicht-btn[data-category="${CSS.escape(categoryKey)}"]`);
-            if (btn) {
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                btn.classList.add('bg-green-600', 'hover:bg-green-700');
-                btn.innerHTML = '✓ Doorgestuurd';
-            }
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            btn.innerHTML = '✓ Doorgestuurd';
         } else {
             const data = await response.json().catch(() => ({}));
             console.error('Server error:', response.status, data);
             alert('Fout bij doorsturen: ' + (data.message || response.status));
+            btn.innerHTML = 'Naar zaaloverzicht';
+            btn.disabled = false;
         }
     } catch (error) {
         console.error('Network error:', error);
         alert('Netwerk fout: ' + error.message);
+        btn.innerHTML = 'Naar zaaloverzicht';
+        btn.disabled = false;
     }
 }
 
-async function naarZaaloverzichtPoule(pouleId) {
+async function naarZaaloverzichtPoule(pouleId, btn) {
+    // Disable button during request
+    btn.disabled = true;
+    const origText = btn.innerHTML;
+    btn.innerHTML = '⏳';
+
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi) }}', {
             method: 'POST',
@@ -953,22 +960,22 @@ async function naarZaaloverzichtPoule(pouleId) {
         });
 
         if (response.ok) {
-            // Update button appearance
-            const btn = document.querySelector(`.naar-zaaloverzicht-poule-btn[data-poule-id="${pouleId}"]`);
-            if (btn) {
-                btn.classList.remove('bg-white/20', 'hover:bg-white/30');
-                btn.classList.add('bg-green-500', 'hover:bg-green-600');
-                btn.innerHTML = '✓';
-                btn.title = 'Doorgestuurd';
-            }
+            btn.classList.remove('bg-white/20', 'hover:bg-white/30');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            btn.innerHTML = '✓';
+            btn.title = 'Doorgestuurd';
         } else {
             const data = await response.json().catch(() => ({}));
             console.error('Server error:', response.status, data);
             alert('Fout bij doorsturen: ' + (data.message || response.status));
+            btn.innerHTML = origText;
+            btn.disabled = false;
         }
     } catch (error) {
         console.error('Network error:', error);
         alert('Netwerk fout: ' + error.message);
+        btn.innerHTML = origText;
+        btn.disabled = false;
     }
 }
 
