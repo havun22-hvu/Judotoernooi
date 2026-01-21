@@ -163,13 +163,13 @@ class PouleIndelingService
                 $gewichtsklasse = $delen[1] ?? 'Onbekend';
                 $geslacht = $delen[2] ?? null;
 
-                // Check if this is an elimination category
-                $klasseKey = $this->getLeeftijdsklasseKey($leeftijdsklasse);
-                $systeem = $wedstrijdSysteem[$klasseKey] ?? 'poules';
-
-                // Eliminatie alleen bij VASTE categorieën (max_kg=0 en max_lft=0)
+                // Get categorie_key from first judoka (the reliable link to config)
+                $categorieKey = $judokas->first()->categorie_key;
                 $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-                $categorieConfig = $gewichtsklassenConfig[$klasseKey] ?? [];
+                $categorieConfig = $gewichtsklassenConfig[$categorieKey] ?? [];
+
+                // Check if this is an elimination category
+                $systeem = $wedstrijdSysteem[$categorieKey] ?? 'poules';
                 $isVasteCategorie = (($categorieConfig['max_kg_verschil'] ?? 0) == 0)
                                  && (($categorieConfig['max_leeftijd_verschil'] ?? 0) == 0);
                 $isEliminatie = $systeem === 'eliminatie' && $isVasteCategorie;
@@ -189,11 +189,7 @@ class PouleIndelingService
                     }
 
                     // Build dynamic title with actual ranges and config label
-                    $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-                    $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-                    $lkLabel = ($configKey && isset($gewichtsklassenConfig[$configKey]['label']))
-                        ? $gewichtsklassenConfig[$configKey]['label']
-                        : $leeftijdsklasse;
+                    $lkLabel = $categorieConfig['label'] ?? $leeftijdsklasse;
 
                     $leeftijden = $judokas->pluck('leeftijd')->filter()->toArray();
                     $gewichten = $judokas->pluck('gewicht')->filter()->toArray();
@@ -244,19 +240,17 @@ class PouleIndelingService
                     continue; // Skip normal pool creation
                 }
 
-                // Get sorting mode and config for title generation
+                // Get sorting mode for title generation
                 $gebruikGewichtsklassen = $toernooi->gebruik_gewichtsklassen === null ? true : $toernooi->gebruik_gewichtsklassen;
                 $volgorde = $toernooi->judoka_code_volgorde ?? 'gewicht_band';
-                $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
                 // Check if this category uses dynamic grouping (max_kg_verschil > 0)
-                // Per-category setting overrides global gebruik_gewichtsklassen
-                $usesDynamic = $this->usesDynamicGrouping($leeftijdsklasse);
+                $maxKg = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+                $maxLeeftijd = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+                $usesDynamic = $maxKg > 0;
 
                 if ($usesDynamic) {
                     // DYNAMIC GROUPING: Use DynamischeIndelingService to create weight groups
-                    $maxKg = $this->getMaxKgVerschil($leeftijdsklasse);
-                    $maxLeeftijd = $this->getMaxLeeftijdVerschil($leeftijdsklasse);
 
                     // Haal poule grootte voorkeur uit toernooi instellingen
                     $pouleGrootteVoorkeur = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
@@ -274,9 +268,6 @@ class PouleIndelingService
                     // Check if this age class uses elimination system
                     $isDynamicEliminatie = $systeem === 'eliminatie';
 
-                    // Get config key for grouping
-                    $dynamicConfigKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-
                     // Create pools from dynamische indeling result
                     foreach ($indeling['poules'] as $pouleData) {
                         $pouleJudokas = $pouleData['judokas'];
@@ -285,7 +276,7 @@ class PouleIndelingService
                         // Build dynamic title with weight range from pool
                         $gewichtRange = $pouleData['gewicht_groep'] ?? '';
                         $pouleType = $isDynamicEliminatie ? 'eliminatie' : 'voorronde';
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig, $dynamicConfigKey);
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtRange, $geslacht, $pouleNummer, $pouleJudokas, $isDynamicEliminatie, $volgorde, $gewichtsklassenConfig, $categorieKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -294,7 +285,7 @@ class PouleIndelingService
                             'type' => $pouleType,
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtRange,
-                            'categorie_key' => $dynamicConfigKey,
+                            'categorie_key' => $categorieKey,
                             'aantal_judokas' => count($pouleJudokas),
                         ]);
 
@@ -335,16 +326,17 @@ class PouleIndelingService
                         $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
 
                         // Track for kruisfinale (use leeftijdsklasse + gewichtRange)
-                        $categorieKey = "{$leeftijdsklasse}|{$gewichtRange}" . ($geslacht ? "|{$geslacht}" : '');
-                        if (!isset($voorrondesPerCategorie[$categorieKey])) {
-                            $voorrondesPerCategorie[$categorieKey] = [
+                        $kruisfinaleKey = "{$leeftijdsklasse}|{$gewichtRange}" . ($geslacht ? "|{$geslacht}" : '');
+                        if (!isset($voorrondesPerCategorie[$kruisfinaleKey])) {
+                            $voorrondesPerCategorie[$kruisfinaleKey] = [
                                 'leeftijdsklasse' => $leeftijdsklasse,
                                 'gewichtsklasse' => $gewichtRange,
                                 'geslacht' => $geslacht,
+                                'config_key' => $categorieKey,
                                 'aantal_poules' => 0,
                             ];
                         }
-                        $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+                        $voorrondesPerCategorie[$kruisfinaleKey]['aantal_poules']++;
 
                         $pouleNummer++;
                     }
@@ -360,10 +352,9 @@ class PouleIndelingService
                 } else {
                     // STANDARD GROUPING: Split into optimal pools (existing flow)
                     $pouleVerdelingen = $this->maakOptimalePoules($judokas);
-                    $standardConfigKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
 
                     foreach ($pouleVerdelingen as $pouleJudokas) {
-                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig, $standardConfigKey);
+                        $titel = $this->maakPouleTitel($leeftijdsklasse, $gewichtsklasse, $geslacht, $pouleNummer, $pouleJudokas, $gebruikGewichtsklassen, $volgorde, $gewichtsklassenConfig, $categorieKey);
 
                         $poule = Poule::create([
                             'toernooi_id' => $toernooi->id,
@@ -372,7 +363,7 @@ class PouleIndelingService
                             'type' => 'voorronde',
                             'leeftijdsklasse' => $leeftijdsklasse,
                             'gewichtsklasse' => $gewichtsklasse,
-                            'categorie_key' => $standardConfigKey,
+                            'categorie_key' => $categorieKey,
                             'aantal_judokas' => count($pouleJudokas),
                         ]);
 
@@ -413,16 +404,17 @@ class PouleIndelingService
                         $statistieken['per_leeftijdsklasse'][$leeftijdsklasse]['wedstrijden'] += $poule->aantal_wedstrijden;
 
                         // Track for kruisfinale per categorie (leeftijdsklasse + gewichtsklasse + geslacht)
-                        $categorieKey = $sleutel;
-                        if (!isset($voorrondesPerCategorie[$categorieKey])) {
-                            $voorrondesPerCategorie[$categorieKey] = [
+                        $kruisfinaleKey = $sleutel;
+                        if (!isset($voorrondesPerCategorie[$kruisfinaleKey])) {
+                            $voorrondesPerCategorie[$kruisfinaleKey] = [
                                 'leeftijdsklasse' => $leeftijdsklasse,
                                 'gewichtsklasse' => $gewichtsklasse,
                                 'geslacht' => $geslacht,
+                                'config_key' => $categorieKey,
                                 'aantal_poules' => 0,
                             ];
                         }
-                        $voorrondesPerCategorie[$categorieKey]['aantal_poules']++;
+                        $voorrondesPerCategorie[$kruisfinaleKey]['aantal_poules']++;
 
                         $pouleNummer++;
                     }
@@ -430,13 +422,13 @@ class PouleIndelingService
             }
 
             // Create kruisfinale pools where applicable (per gewichtsklasse)
-            foreach ($voorrondesPerCategorie as $categorieKey => $data) {
-                $klasseKey = $this->getLeeftijdsklasseKey($data['leeftijdsklasse']);
-                $systeem = $wedstrijdSysteem[$klasseKey] ?? 'poules';
+            foreach ($voorrondesPerCategorie as $kruisfinaleKey => $data) {
+                $configKey = $data['config_key'];
+                $systeem = $wedstrijdSysteem[$configKey] ?? 'poules';
 
                 // Kruisfinale alleen bij VASTE categorieën (max_kg=0 en max_lft=0)
                 $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-                $categorieConfig = $gewichtsklassenConfig[$klasseKey] ?? [];
+                $categorieConfig = $gewichtsklassenConfig[$configKey] ?? [];
                 $isVasteCategorie = (($categorieConfig['max_kg_verschil'] ?? 0) == 0)
                                  && (($categorieConfig['max_leeftijd_verschil'] ?? 0) == 0);
 
@@ -454,12 +446,11 @@ class PouleIndelingService
                         default => null,
                     };
 
-                    // Get label from config
+                    // Get label from config using stored config_key
                     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-                    $configKey = $this->leeftijdsklasseToConfigKey($data['leeftijdsklasse']);
-                    $lkLabel = ($configKey && isset($gewichtsklassenConfig[$configKey]['label']))
-                        ? $gewichtsklassenConfig[$configKey]['label']
-                        : $data['leeftijdsklasse'];
+                    $configKey = $data['config_key'];
+                    $categorieConfig = $gewichtsklassenConfig[$configKey] ?? [];
+                    $lkLabel = $categorieConfig['label'] ?? $data['leeftijdsklasse'];
 
                     // Include qualifying places in title
                     $plaatsenTekst = $kruisfinalesAantal === 1 ? 'top 1' : "top {$kruisfinalesAantal}";
@@ -514,23 +505,6 @@ class PouleIndelingService
 
             return $statistieken;
         });
-    }
-
-    /**
-     * Get the key used in wedstrijd_systeem for a leeftijdsklasse label
-     * Uses preset config instead of hardcoded mapping
-     */
-    private function getLeeftijdsklasseKey(string $label): string
-    {
-        // Search in preset config by label
-        foreach ($this->gewichtsklassenConfig as $key => $data) {
-            if (($data['label'] ?? '') === $label) {
-                return $key;
-            }
-        }
-
-        // Fallback: normalize label to key format
-        return strtolower(str_replace([' ', '-', "'"], '_', $label));
     }
 
     /**
@@ -723,81 +697,6 @@ class PouleIndelingService
     }
 
     /**
-     * Get config for a leeftijdsklasse label
-     */
-    private function getConfigForLeeftijdsklasse(string $leeftijdsklasse): ?array
-    {
-        $configKey = $this->leeftijdsklasseToConfigKey($leeftijdsklasse);
-        return $this->gewichtsklassenConfig[$configKey] ?? null;
-    }
-
-    /**
-     * Check if a category should use dynamic grouping (max_kg_verschil > 0)
-     */
-    private function usesDynamicGrouping(string $leeftijdsklasse): bool
-    {
-        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
-        if (!$config) {
-            return false;
-        }
-        $maxKg = $config['max_kg_verschil'] ?? 0;
-        return $maxKg > 0;
-    }
-
-    /**
-     * Get max kg verschil for a leeftijdsklasse
-     */
-    private function getMaxKgVerschil(string $leeftijdsklasse): float
-    {
-        // First check category-specific config
-        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
-        if ($config && isset($config['max_kg_verschil']) && $config['max_kg_verschil'] > 0) {
-            return (float) $config['max_kg_verschil'];
-        }
-        // Fallback to tournament-level setting
-        return (float) ($this->toernooi?->max_kg_verschil ?? 3.0);
-    }
-
-    /**
-     * Get max leeftijd verschil for a leeftijdsklasse
-     *
-     * 0 = gebruik categorie limiet (judokas in deze categorie mogen allemaal samen)
-     * 1+ = max dit aantal jaar verschil binnen een poule
-     */
-    private function getMaxLeeftijdVerschil(string $leeftijdsklasse): int
-    {
-        // First check category-specific config
-        $config = $this->getConfigForLeeftijdsklasse($leeftijdsklasse);
-        if ($config && isset($config['max_leeftijd_verschil'])) {
-            $value = (int) $config['max_leeftijd_verschil'];
-            if ($value === 0) {
-                // 0 = gebruik categorie limiet, bereken uit max_leeftijd
-                // Als categorie max_leeftijd=12, dan mogen 9-11 jarigen samen (3 jaar range)
-                $maxLeeftijd = $config['max_leeftijd'] ?? 99;
-                // Schat de range: typisch 2-3 jaar per categorie
-                return $maxLeeftijd < 99 ? 3 : 2;
-            }
-            return $value;
-        }
-        // Fallback to tournament-level setting
-        return (int) ($this->toernooi?->max_leeftijd_verschil ?? 2);
-    }
-
-    /**
-     * @deprecated Use sort_categorie field instead
-     * Get sort order for leeftijdsklasse from preset config
-     */
-    private function getLeeftijdOrder(string $leeftijd): int
-    {
-        // Get order from preset config (key position = order)
-        $configKey = $this->leeftijdsklasseToConfigKey($leeftijd);
-        $keys = array_keys($this->gewichtsklassenConfig);
-        $index = array_search($configKey, $keys);
-
-        return $index !== false ? $index : 99;
-    }
-
-    /**
      * Create optimal pool division based on preference order
      * Uses the configured preference list (e.g., [5, 4, 6, 3]) to score divisions
      */
@@ -976,33 +875,6 @@ class PouleIndelingService
         }
 
         return implode(' ', $parts) ?: 'Onbekend';
-    }
-
-    /**
-     * Convert leeftijdsklasse label to config key
-     * Uses preset config instead of hardcoded mapping
-     */
-    private function leeftijdsklasseToConfigKey(string $leeftijdsklasse): ?string
-    {
-        // Search in preset config by label
-        foreach ($this->gewichtsklassenConfig as $key => $data) {
-            if (($data['label'] ?? '') === $leeftijdsklasse) {
-                return $key;
-            }
-        }
-
-        // Try as direct config key (already a key, not a label)
-        if (isset($this->gewichtsklassenConfig[$leeftijdsklasse])) {
-            return $leeftijdsklasse;
-        }
-
-        // Fallback: normalize label to key format
-        $normalized = strtolower(preg_replace('/[\s\-\']+/', '_', $leeftijdsklasse));
-        if (isset($this->gewichtsklassenConfig[$normalized])) {
-            return $normalized;
-        }
-
-        return $normalized;
     }
 
     /**
