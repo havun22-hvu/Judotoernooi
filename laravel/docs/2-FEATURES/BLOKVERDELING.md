@@ -141,8 +141,8 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ### Toernooidag
 1. **Wedstrijddag Poules**: Overpoelen (afwezigen/te zware judoka's)
-2. **"Naar zaaloverzicht"**: Per categorie doorsturen (knop wordt groen)
-3. **Zaaloverzicht**: Witte chip klikken → mat toewijzen + wedstrijdschema genereren
+2. **Per poule "→" klikken**: Doorsturen naar zaaloverzicht (knop wordt ✓)
+3. **Zaaloverzicht**: Witte chip klikken → wedstrijdschema genereren (chip wordt groen)
 4. **Mat Interface**: Wedstrijden afwerken
 
 ---
