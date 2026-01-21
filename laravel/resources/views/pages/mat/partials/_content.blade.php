@@ -1074,15 +1074,13 @@ function matInterface() {
                 huidige = eersteNietGespeeld;
             }
 
-            // Volgende (geel) = handmatig geselecteerd OF tweede niet-gespeelde
+            // Volgende (geel) = ALLEEN handmatig geselecteerd, GEEN auto-fallback
+            // Matjury moet zelf kiezen welke wedstrijd geel wordt
             let volgende = null;
             if (poule.huidige_wedstrijd_id) {
                 volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id && !w.is_gespeeld);
             }
-            if (!volgende && huidige) {
-                // Automatisch: tweede niet-gespeelde (maar niet dezelfde als huidige)
-                volgende = wedstrijden.find(w => !w.is_gespeeld && w.id !== huidige.id);
-            }
+            // GEEN auto-fallback - matjury kiest zelf
 
             return { huidige, volgende };
         },
