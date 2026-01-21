@@ -46,12 +46,18 @@ class ImportService
             $gevonden = null;
             $gevondenIndex = null;
 
-            foreach ($zoektermen as $zoekterm) {
-                foreach ($headerLower as $index => $kolomNaam) {
-                    if (str_contains($kolomNaam, $zoekterm)) {
-                        $gevonden = $header[$index];
-                        $gevondenIndex = $index;
-                        break 2;
+            // First try exact match, then partial match
+            foreach ([true, false] as $exactMatch) {
+                foreach ($zoektermen as $zoekterm) {
+                    foreach ($headerLower as $index => $kolomNaam) {
+                        $match = $exactMatch
+                            ? ($kolomNaam === $zoekterm)
+                            : str_contains($kolomNaam, $zoekterm);
+                        if ($match) {
+                            $gevonden = $header[$index];
+                            $gevondenIndex = $index;
+                            break 3;
+                        }
                     }
                 }
             }
