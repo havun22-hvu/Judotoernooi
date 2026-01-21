@@ -501,6 +501,7 @@ class PouleController extends Controller
             ],
             'huidige_poule_id' => $huidigePoule?->id,
             'huidige_leeftijdsklasse' => $huidigeLeeftijdsklasse,
+            'gebruik_gewichtsklassen' => $toernooi->gebruik_gewichtsklassen ?? false,
             'max_kg_verschil' => $maxKgVerschil,
             'max_lft_verschil' => $maxLftVerschil,
             'matches' => $matches,

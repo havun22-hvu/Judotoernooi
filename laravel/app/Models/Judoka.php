@@ -184,6 +184,25 @@ class Judoka extends Model
     }
 
     /**
+     * Check if judoka is active for tournament (not absent, and weighed if required)
+     * Used for counting active judokas in poules
+     */
+    public function isActief(bool $wegingGesloten = false): bool
+    {
+        // Expliciet afwezig
+        if ($this->aanwezigheid === 'afwezig') {
+            return false;
+        }
+
+        // Weging gesloten en niet gewogen = niet actief
+        if ($wegingGesloten && $this->gewicht_gewogen === null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Check if weight is within allowed range for weight class
      */
     public function isGewichtBinnenKlasse(?float $gewicht = null, float $tolerantie = 0.5): bool
