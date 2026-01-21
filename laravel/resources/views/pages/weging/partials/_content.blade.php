@@ -285,6 +285,8 @@ function np(k) {
     else if (k !== '.' && weightInput.length < 5) weightInput += k;
     updateWeightDisplay();
 }
+// Alias for keyboard handler
+const numpadInput = np;
 
 function updateWeightDisplay() {
     const input = document.getElementById('weight-input');
