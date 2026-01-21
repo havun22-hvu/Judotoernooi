@@ -320,6 +320,24 @@ class WedstrijddagController extends Controller
         return response()->json(['success' => true, 'updated' => $updated]);
     }
 
+    public function naarZaaloverzichtPoule(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|integer|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this tournament
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        $poule->update(['doorgestuurd_op' => now()]);
+
+        return response()->json(['success' => true, 'poule_id' => $poule->id]);
+    }
+
     public function nieuwePoule(Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
