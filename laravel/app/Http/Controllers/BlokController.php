@@ -437,8 +437,9 @@ class BlokController extends Controller
     {
         $categories = [];
 
-        // Get all unique categories with wedstrijd count
+        // Get all poules with blok info and wedstrijd count
         $poules = $toernooi->poules()
+            ->with('blok')
             ->withCount('wedstrijden')
             ->get();
 
@@ -456,31 +457,53 @@ class BlokController extends Controller
             $wachtruimtePerCategorie[$key] = ($wachtruimtePerCategorie[$key] ?? 0) + 1;
         }
 
-        // Group poules by category and check status
-        $wedstrijdenPerCategorie = [];
-        $doorgestuurdPerCategorie = [];
+        // Group poules by BLOK + CATEGORY and check status
+        // Key = blok_nummer|leeftijdsklasse|gewichtsklasse
+        $wedstrijdenPerBlokCategorie = [];
+        $doorgestuurdPerBlokCategorie = [];
         foreach ($poules as $poule) {
-            $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            if (!isset($wedstrijdenPerCategorie[$key])) {
-                $wedstrijdenPerCategorie[$key] = 0;
-            }
-            $wedstrijdenPerCategorie[$key] += $poule->wedstrijden_count;
+            $blokNummer = $poule->blok?->nummer ?? 0;
+            $catKey = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+            $blokCatKey = $blokNummer . '|' . $catKey;
 
-            // If any poule in category has doorgestuurd_op set, category is sent
+            if (!isset($wedstrijdenPerBlokCategorie[$blokCatKey])) {
+                $wedstrijdenPerBlokCategorie[$blokCatKey] = 0;
+            }
+            $wedstrijdenPerBlokCategorie[$blokCatKey] += $poule->wedstrijden_count;
+
+            // If any poule in this blok+category has doorgestuurd_op set
             if ($poule->doorgestuurd_op) {
-                $doorgestuurdPerCategorie[$key] = true;
+                $doorgestuurdPerBlokCategorie[$blokCatKey] = true;
             }
         }
 
-        foreach ($poules->unique(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse) as $poule) {
-            $key = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            $categories[$key] = [
+        // Build categories array with blok-specific status
+        foreach ($poules->unique(fn($p) => ($p->blok?->nummer ?? 0) . '|' . $p->leeftijdsklasse . '|' . $p->gewichtsklasse) as $poule) {
+            $blokNummer = $poule->blok?->nummer ?? 0;
+            $catKey = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
+            $blokCatKey = $blokNummer . '|' . $catKey;
+
+            // Use catKey for lookup (for wachtruimte and for view compatibility)
+            // But use blokCatKey for is_activated and is_sent
+            $categories[$blokCatKey] = [
+                'blok_nummer' => $blokNummer,
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
-                'wachtruimte_count' => $wachtruimtePerCategorie[$key] ?? 0,
-                'is_activated' => ($wedstrijdenPerCategorie[$key] ?? 0) > 0,
-                'is_sent' => $doorgestuurdPerCategorie[$key] ?? false,
+                'wachtruimte_count' => $wachtruimtePerCategorie[$catKey] ?? 0,
+                'is_activated' => ($wedstrijdenPerBlokCategorie[$blokCatKey] ?? 0) > 0,
+                'is_sent' => $doorgestuurdPerBlokCategorie[$blokCatKey] ?? false,
             ];
+
+            // Also keep old category-only key for backward compatibility
+            if (!isset($categories[$catKey])) {
+                $categories[$catKey] = [
+                    'leeftijdsklasse' => $poule->leeftijdsklasse,
+                    'gewichtsklasse' => $poule->gewichtsklasse,
+                    'wachtruimte_count' => $wachtruimtePerCategorie[$catKey] ?? 0,
+                    'is_activated' => ($wedstrijdenPerBlokCategorie[$blokCatKey] ?? 0) > 0,
+                    'is_sent' => $doorgestuurdPerBlokCategorie[$blokCatKey] ?? false,
+                ];
+            }
         }
 
         return $categories;

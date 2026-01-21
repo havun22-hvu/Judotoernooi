@@ -908,21 +908,23 @@ function matInterface() {
 
             // Auto-advance when match is completed:
             // If scored match was the active (green), promote yellow to green
+            // Then find the next unplayed match to become yellow
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
                 const wasActief = poule.actieve_wedstrijd_id === wedstrijd.id;
-                const wasHuidige = poule.huidige_wedstrijd_id === wedstrijd.id;
 
-                if (wasActief || wasHuidige || poule.actieve_wedstrijd_id || poule.huidige_wedstrijd_id) {
-                    // Calculate new values
-                    let nieuweActief = null;
+                if (wasActief) {
+                    // Gele wordt groen
+                    let nieuweActief = poule.huidige_wedstrijd_id || null;
                     let nieuweHuidige = null;
 
-                    if (wasActief && poule.huidige_wedstrijd_id) {
-                        // Gele wordt groen, geel wordt auto
-                        nieuweActief = poule.huidige_wedstrijd_id;
-                        nieuweHuidige = null;
+                    // Zoek volgende niet-gespeelde wedstrijd voor nieuwe gele
+                    // (exclusief de nieuwe groene)
+                    if (nieuweActief) {
+                        const volgendeWedstrijd = poule.wedstrijden.find(w =>
+                            !w.is_gespeeld && w.id !== wedstrijd.id && w.id !== nieuweActief
+                        );
+                        nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
                     }
-                    // Otherwise just reset both to auto
 
                     poule.actieve_wedstrijd_id = nieuweActief;
                     poule.huidige_wedstrijd_id = nieuweHuidige;
@@ -1124,17 +1126,29 @@ function matInterface() {
         },
 
         // Toggle wedstrijd selectie (groen/geel systeem)
+        // - Klik op groen zonder punten = skip, geel wordt groen
+        // - Klik op geel = deselecteren
+        // - Klik op andere = selecteren (groen als geen groen, anders geel)
+        // - Eerste klik op wedstrijd maakt groen + automatisch geel
         async toggleVolgendeWedstrijd(poule, wedstrijd) {
             // Niet toestaan voor gespeelde wedstrijden
             if (wedstrijd.is_gespeeld) return;
 
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
 
-            // Klik op GROENE (huidige) wedstrijd = stop, gele wordt groen
+            // Klik op GROENE (huidige) wedstrijd = skip (geen punten), gele wordt groen
             if (huidige && wedstrijd.id === huidige.id) {
-                // Gele wordt de nieuwe groene, geel wordt null
+                // Gele wordt de nieuwe groene
                 const nieuweActieve = volgende ? volgende.id : null;
-                await this.setWedstrijdStatus(poule, nieuweActieve, null);
+                // Zoek nieuwe gele (volgende niet-gespeelde, niet de nieuwe groene)
+                let nieuweHuidige = null;
+                if (nieuweActieve) {
+                    const volgendeWedstrijd = poule.wedstrijden.find(w =>
+                        !w.is_gespeeld && w.id !== wedstrijd.id && w.id !== nieuweActieve
+                    );
+                    nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
+                }
+                await this.setWedstrijdStatus(poule, nieuweActieve, nieuweHuidige);
                 return;
             }
 
@@ -1149,8 +1163,13 @@ function matInterface() {
                 // Er is al een groene, dus deze wordt geel
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, wedstrijd.id);
             } else {
-                // Geen groene, deze wordt groen
-                await this.setWedstrijdStatus(poule, wedstrijd.id, poule.huidige_wedstrijd_id);
+                // Geen groene, deze wordt groen + automatisch geel instellen
+                // Zoek volgende niet-gespeelde wedstrijd voor geel
+                const volgendeWedstrijd = poule.wedstrijden.find(w =>
+                    !w.is_gespeeld && w.id !== wedstrijd.id
+                );
+                const nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
+                await this.setWedstrijdStatus(poule, wedstrijd.id, nieuweHuidige);
             }
         },
 
