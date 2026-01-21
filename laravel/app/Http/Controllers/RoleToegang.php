@@ -241,20 +241,24 @@ class RoleToegang extends Controller
                     foreach ($poule->wedstrijden as $w) {
                         if (!$w->is_gespeeld) continue;
                         if ($w->judoka_wit_id === $judoka->id) {
-                            $jp += $w->score_wit ?? 0;
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
                             if ($w->winnaar_id === $judoka->id) $wp++;
                         } elseif ($w->judoka_blauw_id === $judoka->id) {
-                            $jp += $w->score_blauw ?? 0;
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
                             if ($w->winnaar_id === $judoka->id) $wp++;
                         }
                     }
-                    return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
+                    return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
                 });
 
                 $wedstrijden = $poule->wedstrijden;
                 $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
-                    if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
-                    if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
+                    $wpA = (int) $a['wp'];
+                    $wpB = (int) $b['wp'];
+                    if ($wpA !== $wpB) return $wpB - $wpA;
+                    $jpA = (int) $a['jp'];
+                    $jpB = (int) $b['jp'];
+                    if ($jpA !== $jpB) return $jpB - $jpA;
                     foreach ($wedstrijden as $w) {
                         $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
                                 || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);

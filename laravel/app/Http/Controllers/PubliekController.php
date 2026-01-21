@@ -87,14 +87,14 @@ class PubliekController extends Controller
                             foreach ($poule->wedstrijden as $w) {
                                 if ($w->judoka_wit_id === $judoka->id) {
                                     $wp += $w->winnaar_id === $judoka->id ? 2 : ($w->is_gespeeld ? 0 : 0);
-                                    $jp += (int) $w->score_wit;
+                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
                                 } elseif ($w->judoka_blauw_id === $judoka->id) {
                                     $wp += $w->winnaar_id === $judoka->id ? 2 : ($w->is_gespeeld ? 0 : 0);
-                                    $jp += (int) $w->score_blauw;
+                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
                                 }
                             }
-                            return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
-                        })->sortByDesc(fn($s) => $s['wp'] * 1000 + $s['jp'])->values();
+                            return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
+                        })->sortByDesc(fn($s) => (int) $s['wp'] * 1000 + (int) $s['jp'])->values();
 
                         // Determine groen (speelt nu) en geel (klaar maken) wedstrijden
                         $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
@@ -170,18 +170,18 @@ class PubliekController extends Controller
                 foreach ($poule->wedstrijden as $w) {
                     if ($w->judoka_wit_id === $judoka->id) {
                         $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
-                        $jp += (int) $w->score_wit;
+                        $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
                     } elseif ($w->judoka_blauw_id === $judoka->id) {
                         $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
-                        $jp += (int) $w->score_blauw;
+                        $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
                     }
                 }
-                return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
+                return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
             });
 
             // Sort by WP desc, JP desc
             $poule->standings = $standings->sortByDesc('wp')->sortByDesc(function ($s) {
-                return $s['wp'] * 1000 + $s['jp'];
+                return (int) $s['wp'] * 1000 + (int) $s['jp'];
             })->values();
 
             return $poule;
