@@ -246,6 +246,8 @@ class BlokController extends Controller
             'doorgestuurd_op' => null,
             'spreker_klaar' => null,
             'afgeroepen_at' => null,
+            'huidige_wedstrijd_id' => null,
+            'actieve_wedstrijd_id' => null,
         ]);
 
         // Update aantal_judokas en aantal_wedstrijden voor alle poules
