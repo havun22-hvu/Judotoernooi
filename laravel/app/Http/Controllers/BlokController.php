@@ -402,6 +402,87 @@ class BlokController extends Controller
     }
 
     /**
+     * Activate a single poule: generate match schedule
+     */
+    public function activeerPoule(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|integer|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this tournament
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return redirect()
+                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->with('error', 'Poule niet gevonden');
+        }
+
+        // Only generate if no wedstrijden exist yet
+        $totaalWedstrijden = 0;
+        $isEliminatie = false;
+
+        if ($poule->wedstrijden()->count() === 0) {
+            if ($poule->type === 'eliminatie') {
+                $isEliminatie = true;
+                $judokaIds = $poule->judokas()
+                    ->where(function ($q) {
+                        $q->whereNull('aanwezigheid')
+                          ->orWhere('aanwezigheid', '!=', 'afwezig');
+                    })
+                    ->pluck('judokas.id')
+                    ->toArray();
+                $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
+                $stats = $this->eliminatieService->genereerBracket($poule, $judokaIds, $eliminatieType);
+                $totaalWedstrijden = $stats['totaal_wedstrijden'] ?? 0;
+            } else {
+                $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+                $totaalWedstrijden = count($wedstrijden);
+            }
+        }
+
+        $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poule';
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', "✓ {$poule->titel} geactiveerd - {$typeLabel}" .
+                ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden)" : ""));
+    }
+
+    /**
+     * Reset a single poule: delete wedstrijden
+     */
+    public function resetPoule(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|integer|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this tournament
+        if ($poule->toernooi_id !== $toernooi->id) {
+            return redirect()
+                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->with('error', 'Poule niet gevonden');
+        }
+
+        // Verwijder alle wedstrijden
+        $verwijderd = $poule->wedstrijden()->delete();
+
+        // Reset poule status (keep mat_id!)
+        $poule->update([
+            'spreker_klaar' => null,
+            'afgeroepen_at' => null,
+            'aantal_wedstrijden' => 0,
+        ]);
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', "✓ Poule {$poule->nummer} gereset - {$verwijderd} wedstrijden verwijderd");
+    }
+
+    /**
      * NUCLEAR OPTION: Reset ALLES - alle wedstrijden, alle matten, alle blokken
      */
     public function resetAlles(Toernooi $toernooi): RedirectResponse
