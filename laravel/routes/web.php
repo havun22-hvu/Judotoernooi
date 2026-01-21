@@ -371,6 +371,8 @@ Route::middleware('device.binding')->group(function () {
     Route::get('mat/{toegang}', [RoleToegang::class, 'matDeviceBound'])->name('mat.interface');
     Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
     Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
+    Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');
+    Route::get('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesGet'])->name('spreker.notities.get');
     Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
 });
 

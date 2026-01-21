@@ -313,6 +313,40 @@ class RoleToegang extends Controller
     }
 
     /**
+     * Save spreker notities (device-bound PWA)
+     */
+    public function sprekerNotitiesSave(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        $validated = $request->validate([
+            'notities' => 'nullable|string|max:10000',
+        ]);
+
+        $toernooi->update(['spreker_notities' => $validated['notities']]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notities opgeslagen',
+        ]);
+    }
+
+    /**
+     * Get spreker notities (device-bound PWA)
+     */
+    public function sprekerNotitiesGet(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        return response()->json([
+            'success' => true,
+            'notities' => $toernooi->spreker_notities ?? '',
+        ]);
+    }
+
+    /**
      * Get standings for elimination bracket (for spreker interface)
      */
     private function getEliminatieStandings($poule): \Illuminate\Support\Collection

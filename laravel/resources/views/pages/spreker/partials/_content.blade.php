@@ -430,7 +430,7 @@ function sprekerInterface() {
 
         async loadNotities() {
             try {
-                const response = await fetch('{{ route('toernooi.spreker.notities.get', $toernooi) }}');
+                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.get", $toegang) : route("toernooi.spreker.notities.get", $toernooi) }}');
                 const data = await response.json();
                 if (data.success && data.notities) {
                     this.notities = data.notities;
@@ -491,7 +491,7 @@ function sprekerInterface() {
 
         async saveNotities() {
             try {
-                const response = await fetch('{{ route('toernooi.spreker.notities.save', $toernooi) }}', {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.save", $toegang) : route("toernooi.spreker.notities.save", $toernooi) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
