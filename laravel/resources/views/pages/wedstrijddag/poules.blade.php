@@ -259,8 +259,8 @@
                             </div>
                         </div>
                         @endif
-                        @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
-                        {{-- Knop per categorie (bij variabele gewichten: alle poules in categorie tegelijk) --}}
+                        @if($totaalActiefInCategorie > 0)
+                        {{-- Knop per categorie - lege poules worden genegeerd in zaaloverzicht --}}
                         @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
                         <button
                             onclick="naarZaaloverzicht('{{ $jsKey }}', this)"
@@ -268,9 +268,7 @@
                         >
                             {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
                         </button>
-                        @elseif($aantalLegePoules > 0 && !$isEliminatie)
-                        <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
-                        @elseif($totaalActiefInCategorie === 0)
+                        @else
                         <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
                         @endif
                     </div>
