@@ -348,7 +348,7 @@ async function zetTerug(pouleId, button) {
         button.disabled = true;
         button.innerHTML = '⏳ Bezig...';
 
-        const response = await fetch('{{ route('toernooi.spreker.terug', $toernooi) }}', {
+        const response = await fetch('{{ isset($toegang) ? route("spreker.terug", $toegang) : route("toernooi.spreker.terug", $toernooi) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -454,7 +454,7 @@ function sprekerInterface() {
 
         async markeerAfgeroepen(pouleId, pouleNaam, pouleType) {
             try {
-                const response = await fetch('{{ route('toernooi.spreker.afgeroepen', $toernooi) }}', {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.afgeroepen", $toegang) : route("toernooi.spreker.afgeroepen", $toernooi) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
