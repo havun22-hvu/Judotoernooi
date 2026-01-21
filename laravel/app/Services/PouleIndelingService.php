@@ -911,21 +911,10 @@ class PouleIndelingService
     {
         $parts = [];
 
-        // Get category config for this leeftijdsklasse
-        // Same lookup logic as updateDynamischeTitel in PouleController
+        // Get category config via categorie_key (the reliable link to config)
         $categorieConfig = null;
-        if ($gewichtsklassenConfig) {
-            // Try by label first (most reliable)
-            foreach ($gewichtsklassenConfig as $key => $data) {
-                if (($data['label'] ?? '') === $leeftijdsklasse) {
-                    $categorieConfig = $data;
-                    break;
-                }
-            }
-            // Fallback: direct config key lookup
-            if (!$categorieConfig && $categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
-                $categorieConfig = $gewichtsklassenConfig[$categorieKey];
-            }
+        if ($gewichtsklassenConfig && $categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
+            $categorieConfig = $gewichtsklassenConfig[$categorieKey];
         }
 
         // 1. Label (optional via checkbox, default true)

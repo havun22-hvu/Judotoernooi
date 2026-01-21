@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.2.2 - 2026-01-21: Fix poule title: use weight class for fixed categories, range for dynamic
-const VERSION = '1.2.2';
+// v1.2.3 - 2026-01-21: Simplify config lookup - use categorie_key directly
+const VERSION = '1.2.3';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
