@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.1.6 - 2026-01-21: Simple numpad onclick
-const VERSION = '1.1.6';
+// v1.1.7 - 2026-01-21: Fix input text color
+const VERSION = '1.1.7';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
