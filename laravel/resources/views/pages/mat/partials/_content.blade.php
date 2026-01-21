@@ -907,32 +907,21 @@ function matInterface() {
             wedstrijd.winnaar_id = winnaarId;
 
             // Auto-advance when match is completed:
-            // If scored match was the active (green), promote yellow to green
-            // Then find the next unplayed match to become yellow
+            // CODE mag alleen: geel→groen promoten, groen uitzetten
+            // CODE maakt NOOIT automatisch een nieuwe gele aan - matjury kiest zelf
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
                 // Check of deze wedstrijd de huidige groene was
-                // Dit kan via handmatige selectie (actieve_wedstrijd_id) OF via auto-fallback
                 const { huidige: huidigGroen, volgende: huidigGeel } = this.getHuidigeEnVolgende(poule);
                 const wasActief = huidigGroen && huidigGroen.id === wedstrijd.id;
 
                 if (wasActief) {
-                    // Gele wordt groen
-                    let nieuweActief = huidigGeel ? huidigGeel.id : null;
-                    let nieuweHuidige = null;
-
-                    // Zoek volgende niet-gespeelde wedstrijd voor nieuwe gele
-                    // (exclusief de net gespeelde EN de nieuwe groene)
-                    if (nieuweActief) {
-                        const volgendeWedstrijd = poule.wedstrijden.find(w =>
-                            !w.is_gespeeld && w.id !== wedstrijd.id && w.id !== nieuweActief
-                        );
-                        nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
-                    }
+                    // Gele wordt groen, geen nieuwe gele (matjury kiest zelf)
+                    const nieuweActief = huidigGeel ? huidigGeel.id : null;
 
                     poule.actieve_wedstrijd_id = nieuweActief;
-                    poule.huidige_wedstrijd_id = nieuweHuidige;
+                    poule.huidige_wedstrijd_id = null; // Geen automatische gele!
 
-                    // Notify backend (both calls)
+                    // Notify backend
                     fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
                         method: 'POST',
                         headers: {
@@ -953,7 +942,7 @@ function matInterface() {
                         },
                         body: JSON.stringify({
                             poule_id: poule.poule_id,
-                            wedstrijd_id: nieuweHuidige,
+                            wedstrijd_id: null,
                             type: 'volgend'
                         })
                     });
@@ -1129,33 +1118,24 @@ function matInterface() {
         },
 
         // Toggle wedstrijd selectie (groen/geel systeem)
-        // - Klik op groen zonder punten = skip, geel wordt groen
-        // - Klik op geel = deselecteren
-        // - Klik op andere = selecteren (groen als geen groen, anders geel)
-        // - Eerste klik op wedstrijd maakt groen + automatisch geel
+        // MATJURY kan handmatig groen/geel instellen door te klikken
+        // CODE mag alleen: geel→groen promoten bij score, groen uitzetten bij score
+        // CODE maakt NOOIT automatisch een nieuwe gele aan
         async toggleVolgendeWedstrijd(poule, wedstrijd) {
             // Niet toestaan voor gespeelde wedstrijden
             if (wedstrijd.is_gespeeld) return;
 
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
 
-            // Klik op GROENE (huidige) wedstrijd = skip (geen punten), gele wordt groen
+            // Klik op GROENE wedstrijd = skip (geen punten), gele wordt groen
+            // Geen nieuwe gele - matjury moet dat zelf kiezen
             if (huidige && wedstrijd.id === huidige.id) {
-                // Gele wordt de nieuwe groene
                 const nieuweActieve = volgende ? volgende.id : null;
-                // Zoek nieuwe gele (volgende niet-gespeelde, niet de nieuwe groene)
-                let nieuweHuidige = null;
-                if (nieuweActieve) {
-                    const volgendeWedstrijd = poule.wedstrijden.find(w =>
-                        !w.is_gespeeld && w.id !== wedstrijd.id && w.id !== nieuweActieve
-                    );
-                    nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
-                }
-                await this.setWedstrijdStatus(poule, nieuweActieve, nieuweHuidige);
+                await this.setWedstrijdStatus(poule, nieuweActieve, null);
                 return;
             }
 
-            // Klik op GELE (volgende) wedstrijd = deselecteren
+            // Klik op GELE wedstrijd = deselecteren
             if (volgende && wedstrijd.id === volgende.id) {
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, null);
                 return;
@@ -1166,13 +1146,8 @@ function matInterface() {
                 // Er is al een groene, dus deze wordt geel
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, wedstrijd.id);
             } else {
-                // Geen groene, deze wordt groen + automatisch geel instellen
-                // Zoek volgende niet-gespeelde wedstrijd voor geel
-                const volgendeWedstrijd = poule.wedstrijden.find(w =>
-                    !w.is_gespeeld && w.id !== wedstrijd.id
-                );
-                const nieuweHuidige = volgendeWedstrijd ? volgendeWedstrijd.id : null;
-                await this.setWedstrijdStatus(poule, wedstrijd.id, nieuweHuidige);
+                // Geen groene, deze wordt groen (geen automatische gele)
+                await this.setWedstrijdStatus(poule, wedstrijd.id, null);
             }
         },
 
