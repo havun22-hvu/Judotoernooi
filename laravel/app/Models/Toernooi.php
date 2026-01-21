@@ -139,6 +139,7 @@ class Toernooi extends Model
         'mollie_token_expires_at',
         'mollie_onboarded',
         'mollie_organization_name',
+        'import_fouten',
     ];
 
     protected $hidden = [
@@ -187,6 +188,7 @@ class Toernooi extends Model
         'platform_toeslag_percentage' => 'boolean',
         'mollie_token_expires_at' => 'datetime',
         'mollie_onboarded' => 'boolean',
+        'import_fouten' => 'array',
     ];
 
     /**
