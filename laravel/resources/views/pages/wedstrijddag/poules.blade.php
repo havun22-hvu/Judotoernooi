@@ -1050,7 +1050,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             body: JSON.stringify({ judoka_id: judokaId, from_poule_id: vanPouleId })
                         });
                         const data = await response.json();
-                        console.log('naarWachtruimte response:', data);
                         if (!data.success) {
                             console.error('Server error:', data);
                             alert('Fout: ' + (data.error || data.message));
@@ -1060,7 +1059,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Update poule markering op basis van hervalidatie
                         if (data.van_poule) {
                             const pouleCard = document.getElementById('poule-' + data.van_poule.id);
-                            console.log('Updating poule card:', pouleCard, 'is_problematisch:', data.van_poule.is_problematisch);
                             if (pouleCard) {
                                 // Update titel met nieuwe gewichtsrange
                                 updatePouleTitel(pouleCard, data.van_poule);
@@ -1092,7 +1090,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                             subtitle.classList.add('text-blue-200');
                                         }
                                     }
-                                    console.log('Removed orange/red styling from poule', data.van_poule.id);
                                 }
                             }
                             // Update gewichtsrange box bovenaan
@@ -1326,7 +1323,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         titelEl.textContent = nieuweTitel;
-        console.log('Updated poule titel:', nieuweTitel);
     }
 
     // Update gewichtsrange box (oranje warning bovenaan)
@@ -1360,8 +1356,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const pouleId = String(pouleData.id);
         const existingLink = document.querySelector(`[data-probleem-poule="${pouleId}"]`);
         const pouleCard = document.querySelector(`.poule-card[data-poule-id="${pouleId}"]`);
-
-        console.log('updateProblematischePoules:', { pouleId, isProblematisch, existingLink: !!existingLink });
 
         if (isProblematisch) {
             if (existingLink) {
@@ -1403,17 +1397,13 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // Niet problematisch - verwijder uit lijst als aanwezig
             if (existingLink) {
-                console.log('Removing problematic link for poule:', pouleId);
                 existingLink.remove();
 
                 // Update count en verwijder hele section als leeg
                 const updatedLinksContainer = document.getElementById('problematische-links');
                 if (updatedLinksContainer) {
                     const remaining = updatedLinksContainer.querySelectorAll('[data-probleem-poule]').length;
-                    console.log('Remaining problematic poules:', remaining);
-
                     if (countEl) countEl.textContent = remaining;
-
                     if (remaining === 0 && container) {
                         container.innerHTML = '';
                     }
