@@ -765,14 +765,6 @@
                 </div>
                 <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
 
-                <!-- Clubspreiding checkbox -->
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="hidden" name="clubspreiding" value="0">
-                    <input type="checkbox" name="clubspreiding" id="clubspreiding" value="1"
-                           class="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
-                           {{ old('clubspreiding', $toernooi->clubspreiding ?? false) ? 'checked' : '' }}>
-                    <label for="clubspreiding" class="text-yellow-800 text-sm">🏠 Clubspreiding (probeer judoka's van zelfde club te verdelen over poules)</label>
-                </div>
             </div>
 
             @php

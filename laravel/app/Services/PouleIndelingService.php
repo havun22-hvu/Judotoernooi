@@ -14,7 +14,6 @@ class PouleIndelingService
     private int $minJudokas;
     private int $maxJudokas;
     private array $voorkeur;
-    private bool $clubspreiding;
     private array $prioriteiten;
     private ?Toernooi $toernooi = null;
     private array $gewichtsklassenConfig = [];
@@ -31,7 +30,6 @@ class PouleIndelingService
         // Min/max are derived from preference list
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
-        $this->clubspreiding = $toernooi->clubspreiding ?? true;
         $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
         $this->classifier = new CategorieClassifier(
@@ -46,7 +44,6 @@ class PouleIndelingService
         $this->voorkeur = [5, 4, 6, 3];
         $this->minJudokas = 3;
         $this->maxJudokas = 6;
-        $this->clubspreiding = true;
         $this->prioriteiten = ['leeftijd', 'gewicht', 'band'];
         $this->dynamischeIndelingService = $dynamischeIndelingService;
     }
@@ -271,7 +268,6 @@ class PouleIndelingService
                         [
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
                             'verdeling_prioriteiten' => $this->prioriteiten,
-                            'clubspreiding' => $this->clubspreiding,
                         ]
                     );
 
@@ -867,13 +863,6 @@ class PouleIndelingService
         foreach ($bestePouleGroottes as $grootte) {
             $verdeling[] = array_slice($judokasArray, $index, $grootte);
             $index += $grootte;
-        }
-
-        // Apply club spreading as refinement
-        // Only swap judokas with same band and within max_kg_verschil
-        if ($this->clubspreiding && count($verdeling) > 1) {
-            $maxGewichtVerschilBijSwap = $this->toernooi?->max_kg_verschil ?? 3.0;
-            $verdeling = $this->pasClubspreidingToe($verdeling, true, $maxGewichtVerschilBijSwap);
         }
 
         return $verdeling;
