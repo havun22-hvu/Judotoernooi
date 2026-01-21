@@ -9,17 +9,18 @@ namespace App\Helpers;
 class BandHelper
 {
     /**
-     * Belt order mapping: wit (beginner) = 0, zwart (expert) = 6
-     * Matches the Band enum values.
+     * Belt order mapping: zwart (expert) = 0, wit (beginner) = 6
+     * Matches the Band enum values (kyu system: 0=dan, 6=6e kyu).
+     * For sorting: higher value = lower belt = comes first in ascending sort.
      */
     public const BAND_VOLGORDE = [
-        'wit' => 0,
-        'geel' => 1,
-        'oranje' => 2,
+        'zwart' => 0,
+        'bruin' => 1,
+        'blauw' => 2,
         'groen' => 3,
-        'blauw' => 4,
-        'bruin' => 5,
-        'zwart' => 6,
+        'oranje' => 4,
+        'geel' => 5,
+        'wit' => 6,
     ];
 
     /**
@@ -48,12 +49,13 @@ class BandHelper
             }
         }
 
-        return 0; // Unknown = treat as beginner (wit)
+        return 6; // Unknown = treat as beginner (wit)
     }
 
     /**
      * Check if a belt matches a filter.
-     * Filters: "tm_groen" (up to green), "vanaf_blauw" (from blue onwards)
+     * Filters: "tm_groen" (up to green/beginners), "vanaf_blauw" (from blue onwards/advanced)
+     * Note: Lower value = higher belt (zwart=0, wit=6)
      */
     public static function pastInFilter(?string $band, ?string $filter): bool
     {
@@ -64,15 +66,19 @@ class BandHelper
         $bandIdx = self::getNiveau($band);
 
         if (str_starts_with($filter, 'tm_')) {
+            // "tm_groen" = beginners up to green (wit, geel, oranje, groen)
+            // bandIdx must be >= filterIdx (higher value = lower belt)
             $filterBand = str_replace('tm_', '', $filter);
-            $filterIdx = self::BAND_VOLGORDE[$filterBand] ?? 99;
-            return $bandIdx <= $filterIdx;
+            $filterIdx = self::BAND_VOLGORDE[$filterBand] ?? 0;
+            return $bandIdx >= $filterIdx;
         }
 
         if (str_starts_with($filter, 'vanaf_')) {
+            // "vanaf_blauw" = advanced from blue onwards (blauw, bruin, zwart)
+            // bandIdx must be <= filterIdx (lower value = higher belt)
             $filterBand = str_replace('vanaf_', '', $filter);
-            $filterIdx = self::BAND_VOLGORDE[$filterBand] ?? 0;
-            return $bandIdx >= $filterIdx;
+            $filterIdx = self::BAND_VOLGORDE[$filterBand] ?? 6;
+            return $bandIdx <= $filterIdx;
         }
 
         return true;
