@@ -347,6 +347,56 @@ class RoleToegang extends Controller
     }
 
     /**
+     * Mark poule as announced (device-bound PWA)
+     */
+    public function sprekerAfgeroepen(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        $validated = $request->validate([
+            'poule_id' => 'required|integer',
+        ]);
+
+        $poule = $toernooi->poules()->find($validated['poule_id']);
+        if (!$poule) {
+            return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        $poule->update(['afgeroepen_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Poule gemarkeerd als afgeroepen',
+        ]);
+    }
+
+    /**
+     * Undo announced poule (device-bound PWA)
+     */
+    public function sprekerTerug(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        $validated = $request->validate([
+            'poule_id' => 'required|integer',
+        ]);
+
+        $poule = $toernooi->poules()->find($validated['poule_id']);
+        if (!$poule) {
+            return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        $poule->update(['afgeroepen_at' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Poule teruggezet',
+        ]);
+    }
+
+    /**
      * Get standings for elimination bracket (for spreker interface)
      */
     private function getEliminatieStandings($poule): \Illuminate\Support\Collection
