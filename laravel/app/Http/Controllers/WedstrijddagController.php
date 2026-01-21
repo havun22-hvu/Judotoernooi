@@ -127,10 +127,18 @@ class WedstrijddagController extends Controller
         });
 
         // Get sent-to-zaaloverzicht status from database (doorgestuurd_op column)
+        // Per categorie (voor vaste gewichtsklassen)
         $sentToZaaloverzicht = $toernooi->poules()
             ->whereNotNull('doorgestuurd_op')
             ->get()
             ->groupBy(fn($p) => $p->leeftijdsklasse . '|' . $p->gewichtsklasse)
+            ->map(fn() => true)
+            ->toArray();
+
+        // Per poule (voor variabele gewichten)
+        $sentToZaaloverzichtPoules = $toernooi->poules()
+            ->whereNotNull('doorgestuurd_op')
+            ->pluck('doorgestuurd_op', 'id')
             ->map(fn() => true)
             ->toArray();
 
@@ -147,6 +155,7 @@ class WedstrijddagController extends Controller
             'toernooi',
             'blokken',
             'sentToZaaloverzicht',
+            'sentToZaaloverzichtPoules',
             'problematischeGewichtsPoules'
         ));
     }
@@ -319,6 +328,20 @@ class WedstrijddagController extends Controller
             ->update(['doorgestuurd_op' => now()]);
 
         return response()->json(['success' => true, 'updated' => $updated]);
+    }
+
+    public function naarZaaloverzichtPoule(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Update only this poule with doorgestuurd_op timestamp
+        $poule->update(['doorgestuurd_op' => now()]);
+
+        return response()->json(['success' => true, 'poule_id' => $poule->id]);
     }
 
     public function nieuwePoule(Request $request, Toernooi $toernooi): JsonResponse
