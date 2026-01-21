@@ -447,7 +447,7 @@
                                         @php $isDoorgestuurd = $poule->doorgestuurd_op !== null; @endphp
                                         <button
                                             onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
-                                            class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-white/20 hover:bg-white/30' }}"
+                                            class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600' }}"
                                             title="{{ $isDoorgestuurd ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
                                         >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
                                         @else
@@ -815,7 +815,7 @@ async function naarZaaloverzichtPoule(pouleId, btn) {
         });
 
         if (response.ok) {
-            btn.classList.remove('bg-white/20', 'hover:bg-white/30');
+            btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
             btn.classList.add('bg-green-500', 'hover:bg-green-600');
             btn.innerHTML = '✓';
             btn.title = 'Doorgestuurd';
