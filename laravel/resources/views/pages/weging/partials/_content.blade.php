@@ -353,6 +353,73 @@ async function registreerGewicht() {
     }
 }
 
+// Keyboard support (for barcode scanners and physical keyboards)
+let barcodeBuffer = '';
+let barcodeTimeout = null;
+
+document.addEventListener('keydown', function(e) {
+    // If judoka overlay is open, handle numpad input
+    if (selectedJudoka && !document.getElementById('judoka-section').classList.contains('hidden')) {
+        // Numbers 0-9
+        if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            numpadInput(e.key);
+            return;
+        }
+        // Decimal point
+        if (e.key === '.' || e.key === ',') {
+            e.preventDefault();
+            numpadInput('.');
+            return;
+        }
+        // Backspace = Clear
+        if (e.key === 'Backspace') {
+            e.preventDefault();
+            weightInput = weightInput.slice(0, -1);
+            updateWeightDisplay();
+            return;
+        }
+        // Enter = Register
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            registreerGewicht();
+            return;
+        }
+        // Escape = Close
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            clearSelection();
+            return;
+        }
+        return;
+    }
+
+    // Barcode scanner mode (when no judoka selected)
+    // Scanners type fast and end with Enter
+    if (e.key === 'Enter' && barcodeBuffer.length > 3) {
+        e.preventDefault();
+        // Process barcode
+        onScanSuccess(barcodeBuffer);
+        barcodeBuffer = '';
+        clearTimeout(barcodeTimeout);
+        return;
+    }
+
+    // Build barcode buffer (alphanumeric only)
+    if (e.key.length === 1 && /[a-zA-Z0-9\-_]/.test(e.key)) {
+        // Don't capture if typing in search input
+        if (document.activeElement === document.getElementById('search-input')) {
+            return;
+        }
+        barcodeBuffer += e.key;
+        // Clear buffer after 100ms of no input (scanners are fast)
+        clearTimeout(barcodeTimeout);
+        barcodeTimeout = setTimeout(() => {
+            barcodeBuffer = '';
+        }, 100);
+    }
+});
+
 // History
 function addToHistory(naam, gewicht, binnenKlasse) {
     history.unshift({ naam, gewicht, binnenKlasse, tijd: new Date().toISOString() });
