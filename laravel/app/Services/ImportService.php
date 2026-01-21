@@ -250,7 +250,15 @@ class ImportService
             // Set fallback leeftijdsklasse based on birth year
             if ($geboortejaar) {
                 $leeftijd = (date('Y')) - $geboortejaar;
-                $leeftijdsklasse = $leeftijd <= 10 ? 'Jeugd' : ($leeftijd <= 14 ? 'Aspiranten' : 'Senioren');
+                if ($leeftijd <= 6) {
+                    $leeftijdsklasse = "Mini's";
+                } elseif ($leeftijd <= 10) {
+                    $leeftijdsklasse = 'Jeugd';
+                } elseif ($leeftijd <= 14) {
+                    $leeftijdsklasse = 'Aspiranten';
+                } else {
+                    $leeftijdsklasse = 'Senioren';
+                }
             } else {
                 $leeftijdsklasse = 'Onbekend';
             }
