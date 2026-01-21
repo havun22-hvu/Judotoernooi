@@ -170,7 +170,7 @@
         <div class="flex justify-between items-center">
             <div>
                 <span class="font-bold text-lg">
-                    Poule #{{ $poule->nummer }} - {{ $poule->titel ?? ($poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse) }}
+                    Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                 </span>
             </div>
             <div class="text-sm text-gray-600">

@@ -228,6 +228,15 @@ class Poule extends Model
     }
 
     /**
+     * Get display titel
+     * Gebruikt opgeslagen titel (wordt correct gezet bij aanmaken poule)
+     */
+    public function getDisplayTitel(): string
+    {
+        return $this->titel ?? $this->leeftijdsklasse . ' ' . $this->gewichtsklasse;
+    }
+
+    /**
      * Bereken de gewichtsrange van actieve judoka's in de poule
      * Retourneert [min_kg, max_kg, range] of null als geen gewogen judoka's
      */

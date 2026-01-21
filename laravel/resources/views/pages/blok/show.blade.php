@@ -42,7 +42,7 @@
                 <td class="px-4 py-3 font-medium">Mat {{ $poule->mat?->nummer }}</td>
                 <td class="px-4 py-3">
                     <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="text-blue-600 hover:text-blue-800">
-                        {{ $poule->titel }}
+                        {{ $poule->getDisplayTitel() }}
                     </a>
                 </td>
                 <td class="px-4 py-3">{{ $poule->judokas->count() }}</td>
