@@ -25,6 +25,7 @@ docs/
 
 ### 2. Features
 - [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding
+- [Import](./2-FEATURES/IMPORT.md) - CSV/Excel import met warnings
 - [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie (Connect + Platform)
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
