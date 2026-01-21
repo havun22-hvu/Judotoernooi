@@ -910,15 +910,18 @@ function matInterface() {
             // If scored match was the active (green), promote yellow to green
             // Then find the next unplayed match to become yellow
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
-                const wasActief = poule.actieve_wedstrijd_id === wedstrijd.id;
+                // Check of deze wedstrijd de huidige groene was
+                // Dit kan via handmatige selectie (actieve_wedstrijd_id) OF via auto-fallback
+                const { huidige: huidigGroen, volgende: huidigGeel } = this.getHuidigeEnVolgende(poule);
+                const wasActief = huidigGroen && huidigGroen.id === wedstrijd.id;
 
                 if (wasActief) {
                     // Gele wordt groen
-                    let nieuweActief = poule.huidige_wedstrijd_id || null;
+                    let nieuweActief = huidigGeel ? huidigGeel.id : null;
                     let nieuweHuidige = null;
 
                     // Zoek volgende niet-gespeelde wedstrijd voor nieuwe gele
-                    // (exclusief de nieuwe groene)
+                    // (exclusief de net gespeelde EN de nieuwe groene)
                     if (nieuweActief) {
                         const volgendeWedstrijd = poule.wedstrijden.find(w =>
                             !w.is_gespeeld && w.id !== wedstrijd.id && w.id !== nieuweActief
