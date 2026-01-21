@@ -120,33 +120,53 @@ class WegingService
 
     /**
      * Bepaal nieuwe gewichtsklasse op basis van gewogen gewicht
+     * Gebruikt de werkelijke gewichtsklassen uit de leeftijdscategorie
      */
     private function bepaalNieuweGewichtsklasse(Judoka $judoka): ?string
     {
         $gewicht = $judoka->gewicht_gewogen;
         if (!$gewicht) return null;
 
-        // Standaard gewichtsklassen (sorteer van licht naar zwaar)
-        $klassen = ['-30', '-34', '-38', '-42', '-45', '-48', '-52', '-57', '-63', '-70', '-78', '+78'];
+        $tolerantie = $judoka->toernooi->gewicht_tolerantie ?? 0.5;
 
+        // Haal beschikbare gewichtsklassen op voor deze leeftijdscategorie
+        $klassen = Judoka::where('leeftijdsklasse', $judoka->leeftijdsklasse)
+            ->where('toernooi_id', $judoka->toernooi_id)
+            ->whereNotNull('gewichtsklasse')
+            ->distinct()
+            ->pluck('gewichtsklasse')
+            ->toArray();
+
+        // Sorteer klassen van licht naar zwaar
+        usort($klassen, function ($a, $b) {
+            $aNum = floatval(preg_replace('/[^0-9.]/', '', $a));
+            $bNum = floatval(preg_replace('/[^0-9.]/', '', $b));
+            $aPlus = str_starts_with($a, '+');
+            $bPlus = str_starts_with($b, '+');
+
+            if ($aPlus && !$bPlus) return 1;
+            if (!$aPlus && $bPlus) return -1;
+            return $aNum - $bNum;
+        });
+
+        // Vind de laagste klasse waar het gewicht in past (met tolerantie)
         foreach ($klassen as $klasse) {
             $isPlusKlasse = str_starts_with($klasse, '+');
             $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
 
             if ($isPlusKlasse) {
-                // +78 = boven 78kg
-                if ($gewicht >= $limiet) {
-                    return $klasse;
-                }
+                // +78 = boven 78kg (dit is altijd de laatste optie)
+                return $klasse;
             } else {
-                // -30 = onder 30kg
-                if ($gewicht <= $limiet) {
+                // -30 = max 30kg (+ tolerantie)
+                if ($gewicht <= $limiet + $tolerantie) {
                     return $klasse;
                 }
             }
         }
 
-        return '+78'; // Fallback voor heel zwaar
+        // Fallback: hoogste klasse (+ klasse als die bestaat)
+        return end($klassen) ?: null;
     }
 
     /**
