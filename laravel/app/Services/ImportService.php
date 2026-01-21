@@ -168,9 +168,10 @@ class ImportService
                         $resultaat['overgeslagen']++;
                     }
                 } catch (\Exception $e) {
-                    $fout = "Rij {$rijNummer}: {$e->getMessage()}";
-                    $resultaat['fouten'][] = $fout;
-                    \Log::error("Import fout: {$fout}", ['exception' => $e->getTraceAsString()]);
+                    $naam = $this->getWaarde($rij, $mapping['naam']) ?? '(geen naam)';
+                    $leesbareFout = $this->maakFoutLeesbaar($e->getMessage(), $naam);
+                    $resultaat['fouten'][] = "Rij {$rijNummer} ({$naam}): {$leesbareFout}";
+                    \Log::error("Import fout rij {$rijNummer}: {$e->getMessage()}", ['exception' => $e->getTraceAsString()]);
                 }
             }
 
@@ -675,5 +676,54 @@ class ImportService
         }
 
         return $aangemaakt;
+    }
+
+    /**
+     * Convert technical error messages to human-readable Dutch
+     */
+    private function maakFoutLeesbaar(string $error, string $naam): string
+    {
+        // Database constraint errors
+        if (str_contains($error, 'cannot be null')) {
+            if (str_contains($error, 'leeftijdsklasse')) {
+                return 'Kan leeftijdsklasse niet bepalen - controleer geboortejaar';
+            }
+            if (str_contains($error, 'geslacht')) {
+                return 'Geslacht ontbreekt of ongeldig (verwacht M/V)';
+            }
+            if (str_contains($error, 'gewicht')) {
+                return 'Gewicht ontbreekt';
+            }
+            if (str_contains($error, 'naam')) {
+                return 'Naam ontbreekt';
+            }
+            return 'Verplicht veld ontbreekt';
+        }
+
+        // Duplicate entry
+        if (str_contains($error, 'Duplicate entry') || str_contains($error, 'UNIQUE constraint')) {
+            return 'Dubbele invoer - judoka bestaat al';
+        }
+
+        // Invalid data format
+        if (str_contains($error, 'Ongeldig geboortejaar')) {
+            return 'Ongeldig geboortejaar - verwacht 4 cijfers (bijv. 2015)';
+        }
+
+        // Data too long
+        if (str_contains($error, 'Data too long')) {
+            return 'Tekst te lang voor database veld';
+        }
+
+        // Generic fallback - shorten technical message
+        if (strlen($error) > 100) {
+            // Extract the useful part before SQL details
+            if (preg_match('/^(.+?)(?:\s*\(Connection:|SQLSTATE)/s', $error, $matches)) {
+                return trim($matches[1]);
+            }
+            return substr($error, 0, 100) . '...';
+        }
+
+        return $error;
     }
 }
