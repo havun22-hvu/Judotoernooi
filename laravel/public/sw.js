@@ -1,6 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-const VERSION = '1.1.3';
+// v1.1.4 - 2026-01-21: Aggressive forced updates, no user choice
+const VERSION = '1.1.4';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

@@ -90,17 +90,7 @@
                 <p class="text-sm text-gray-500 mt-2 text-center">Installeer als losse app op je device</p>
             </div>
 
-            {{-- Update Available --}}
-            <div id="pwa-update-section" class="hidden">
-                <button id="pwa-update-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Update Beschikbaar
-                </button>
-            </div>
-
-            {{-- Force Refresh --}}
+            {{-- Force Refresh (manual option in settings) --}}
             <button onclick="forceRefresh()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -147,11 +137,14 @@
     </div>
 </div>
 
-{{-- Update Banner (top of screen) --}}
+{{-- Update Toast (top of screen - only warning, no choice) --}}
 <div id="pwa-update-banner" class="hidden fixed top-0 left-0 right-0 bg-orange-500 text-white p-3 z-50 safe-area-top">
-    <div class="flex items-center justify-between max-w-lg mx-auto">
-        <p class="font-medium">Nieuwe versie beschikbaar!</p>
-        <button onclick="applyUpdate()" class="bg-white text-orange-600 px-4 py-1 rounded font-medium">Update</button>
+    <div class="flex items-center justify-center max-w-lg mx-auto gap-2">
+        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="font-medium">Updaten... pagina herlaadt automatisch</p>
     </div>
 </div>
 
@@ -215,29 +208,28 @@
                 newWorker = reg.installing;
                 newWorker.addEventListener('statechange', () => {
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // New version available - show banner immediately
-                        document.getElementById('pwa-update-section').classList.remove('hidden');
+                        // New version available - FORCED UPDATE (no user choice)
+                        console.log('[PWA] v1.1.4 - Forcing update without user choice');
                         document.getElementById('pwa-update-banner').classList.remove('hidden');
-                        // Auto-apply after 2 seconds for seamless update
+                        // Force update after brief delay (show warning toast)
                         setTimeout(() => {
-                            if (confirm('Nieuwe versie beschikbaar! Nu updaten?')) {
-                                applyUpdate();
-                            }
-                        }, 1000);
+                            forceRefresh();
+                        }, 500);
                     }
                 });
             });
 
-            // Get current SW version
+            // Get current SW version and force update on mismatch
             if (reg.active) {
                 const channel = new MessageChannel();
                 channel.port1.onmessage = (event) => {
                     const swVersion = event.data.version;
                     document.getElementById('pwa-sw-version').textContent = `SW: v${swVersion}`;
-                    // Check if SW version matches app version
+                    // Version mismatch - FORCE immediate refresh
                     if (swVersion !== APP_VERSION) {
-                        console.log('Version mismatch! App:', APP_VERSION, 'SW:', swVersion);
-                        reg.update(); // Force update check
+                        console.log('[PWA] Version mismatch! App:', APP_VERSION, 'SW:', swVersion, '- FORCING UPDATE');
+                        document.getElementById('pwa-update-banner').classList.remove('hidden');
+                        setTimeout(() => forceRefresh(), 500);
                     }
                 };
                 reg.active.postMessage('CHECK_UPDATE', [channel.port2]);
@@ -285,6 +277,4 @@
         }
     }
 
-    // Bind update button
-    document.getElementById('pwa-update-btn')?.addEventListener('click', applyUpdate);
 </script>
