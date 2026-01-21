@@ -911,7 +911,6 @@ async function verwijderUitPoule(judokaId, pouleId) {
 }
 
 async function naarZaaloverzicht(categoryKey) {
-    console.log('naarZaaloverzicht called with:', categoryKey);
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
             method: 'POST',
@@ -921,8 +920,6 @@ async function naarZaaloverzicht(categoryKey) {
             },
             body: JSON.stringify({ category: categoryKey }),
         });
-
-        console.log('Response status:', response.status);
 
         if (response.ok) {
             sentCategories[categoryKey] = true;
