@@ -6,10 +6,12 @@
 
 | Aspect | Waarde |
 |--------|--------|
-| **Naam** | WestFries Open JudoToernooi |
+| **Naam** | JudoToernooi (multi-tenant platform) |
 | **Type** | Laravel 11 + Blade + Alpine.js + Tailwind |
-| **Eigenaar** | Judoschool Cees Veen |
+| **URL** | judotournament.org |
 | **Status** | Production (live) |
+
+> **Let op:** "WestFries Open" is een specifiek toernooi van klant Cees Veen, niet de naam van het platform.
 
 ## Omgevingen
 
