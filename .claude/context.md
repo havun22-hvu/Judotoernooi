@@ -475,6 +475,7 @@ php artisan view:cache
   - `getCategoryStatuses()` herschreven voor per-poule status
   - Nieuwe routes: `activeer-poule`, `reset-poule`
 - **MD files consistency check** - Docs zijn consistent (doorsturen per poule, kleuren correct)
+- **Test data gereset** - Blok 1 klaar voor test (70 judoka's gewogen, weging gesloten)
 
 ### Niet afgerond:
 - [ ] Gebruiker moet nog testen in browser (server draait op localhost:8007)
@@ -485,11 +486,52 @@ php artisan view:cache
 - [ ] Poule header kleur blijft oranje na fix
 
 ### Belangrijke context Zaaloverzicht:
-- **Per-poule chips** - elke poule apart activeerbaar (niet per categorie)
-- Chip kleuren: grijs (niet doorgestuurd) → wit (doorgestuurd) → groen (geactiveerd)
-- Routes: `blok.activeer-poule`, `blok.reset-poule`
+
+**Probleem dat opgelost is:**
+Bij variabele categorieën (max_kg_verschil > 0) hebben meerdere poules dezelfde `leeftijdsklasse|gewichtsklasse` combinatie:
+- Jeugd|-24 = 7 poules
+- Jeugd|-27 = 4 poules
+- etc.
+
+De oude code groepeerde per categorie → maar 1 chip voor 7 poules!
+Nu: elke poule een eigen chip zodat ze apart geactiveerd kunnen worden.
+
+**Flow toernooidag:**
+1. **Wedstrijddag Poules**: per poule → klikken (blauw wordt groen ✓)
+2. **Zaaloverzicht**: chip per poule verschijnt:
+   - **Grijs** = niet doorgestuurd
+   - **Wit** = doorgestuurd, klaar voor activatie
+   - **Groen** = geactiveerd (wedstrijden gegenereerd)
+3. Klik witte chip → `activeerPoule()` → wedstrijdschema genereren
+
+**Routes:**
+- `POST blok/activeer-poule` → genereert wedstrijdschema voor 1 poule
+- `POST blok/reset-poule` → verwijdert wedstrijden van 1 poule
+
+**Chip naam format:**
+```
+{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}
+Voorbeeld: "Jeugd -24 #5"
+```
 
 ### Bestanden gewijzigd deze sessie:
-- `app/Http/Controllers/BlokController.php` - getCategoryStatuses(), activeerPoule(), resetPoule()
-- `resources/views/pages/blok/zaaloverzicht.blade.php` - per-poule chips view
-- `routes/web.php` - nieuwe routes
+- `app/Http/Controllers/BlokController.php`:
+  - `getCategoryStatuses()` - herschreven, returned nu per-poule status met key `poule_{id}`
+  - `activeerPoule()` - nieuw, genereert wedstrijden voor 1 poule
+  - `resetPoule()` - nieuw, verwijdert wedstrijden van 1 poule
+- `resources/views/pages/blok/zaaloverzicht.blade.php`:
+  - `$blokPoulesList` i.p.v. `$blokCategories`
+  - Chips tonen nu poule nummer (#) i.p.v. alleen categorie
+- `routes/web.php` - routes `blok.activeer-poule` en `blok.reset-poule`
+
+### Test instructies voor volgende sessie:
+```bash
+cd laravel && php artisan serve --port=8007
+```
+1. Open http://localhost:8007
+2. Log in als organisator
+3. Ga naar Zaaloverzicht (via Blokken)
+4. Blok 1: alle poules moeten als grijze chips verschijnen
+5. Ga naar Wedstrijddag Poules → klik → bij poules (blauw wordt groen)
+6. Terug naar Zaaloverzicht → chips moeten nu wit zijn
+7. Klik witte chip → moet groen worden (wedstrijden gegenereerd)
