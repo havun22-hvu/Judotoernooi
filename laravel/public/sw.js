@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.1.8 - 2026-01-21: Explicit text colors everywhere
-const VERSION = '1.1.8';
+// v1.1.9 - 2026-01-21: More explicit text colors (dojo, club)
+const VERSION = '1.1.9';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
