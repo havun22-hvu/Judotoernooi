@@ -245,18 +245,6 @@
                             </div>
                         </div>
                         @endif
-                        @if($totaalActiefInCategorie > 0)
-                        {{-- Knop per categorie - lege poules worden genegeerd in zaaloverzicht --}}
-                        @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
-                        <button
-                            onclick="naarZaaloverzicht('{{ $jsKey }}', this)"
-                            class="text-white px-3 py-1.5 text-sm rounded transition-all {{ $isSent ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700' }}"
-                        >
-                            {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
-                        </button>
-                        @else
-                        <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
-                        @endif
                     </div>
                 </div>
 
@@ -455,7 +443,14 @@
                                             <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekst->join("\n") }}</div>
                                         </div>
                                         @endif
-                                        @if($aantalActief === 0)
+                                        @if($aantalActief > 0)
+                                        @php $isDoorgestuurd = $poule->doorgestuurd_op !== null; @endphp
+                                        <button
+                                            onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
+                                            class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-white/20 hover:bg-white/30' }}"
+                                            title="{{ $isDoorgestuurd ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                                        >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
+                                        @else
                                         <button
                                             onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                                             class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
@@ -708,11 +703,7 @@ async function verwijderPoule(pouleId, pouleNummer) {
             // Remove the poule card from DOM
             const pouleCard = document.getElementById('poule-' + pouleId);
             if (pouleCard) {
-                const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
                 pouleCard.remove();
-
-                // Check if category now has no empty poules - show "Naar zaaloverzicht" button
-                updateCategoryStatus(categoryKey);
             }
         } else {
             alert(data.message || 'Fout bij verwijderen');
@@ -720,61 +711,6 @@ async function verwijderPoule(pouleId, pouleNummer) {
     } catch (error) {
         console.error('Error:', error);
         alert('Fout bij verwijderen');
-    }
-}
-
-function updateCategoryStatus(categoryKey) {
-    // Find all poules in this category
-    const [leeftijd, gewicht] = categoryKey.split('|');
-    const poules = document.querySelectorAll(`.poule-card[data-poule-leeftijdsklasse="${leeftijd}"][data-poule-gewichtsklasse="${gewicht}"]`);
-
-    let totaalActief = 0;
-    let aantalLeeg = 0;
-
-    poules.forEach(poule => {
-        const actief = parseInt(poule.dataset.actief) || 0;
-        totaalActief += actief;
-        if (actief === 0) aantalLeeg++;
-    });
-
-    // Find the category header
-    const categoryHeader = Array.from(document.querySelectorAll('.bg-gray-100.border-b')).find(header => {
-        const title = header.querySelector('h2');
-        return title && title.textContent.trim() === `${leeftijd} ${gewicht}`;
-    });
-
-    if (!categoryHeader) return;
-
-    // Find the right side of the header (where button/message goes)
-    const rightSide = categoryHeader.querySelector('.flex.items-center.gap-3')?.parentElement;
-    if (!rightSide) return;
-
-    // Remove existing button/message
-    const existingBtn = rightSide.querySelector('.naar-zaaloverzicht-btn');
-    const existingMsg = rightSide.querySelector('span.text-orange-600, span.text-gray-400');
-    if (existingBtn) existingBtn.remove();
-    if (existingMsg) existingMsg.remove();
-
-    // Add appropriate element
-    if (totaalActief > 0 && aantalLeeg === 0) {
-        const btn = document.createElement('button');
-        btn.className = 'text-white px-3 py-1.5 text-sm rounded transition-all naar-zaaloverzicht-btn bg-blue-600 hover:bg-blue-700';
-        btn.dataset.category = categoryKey;
-        btn.innerHTML = 'Naar zaaloverzicht';
-        btn.onclick = function() {
-            Alpine.evaluate(this, `naarZaaloverzicht('${categoryKey}')`);
-        };
-        rightSide.appendChild(btn);
-    } else if (aantalLeeg > 0) {
-        const msg = document.createElement('span');
-        msg.className = 'text-orange-600 text-sm italic px-3 py-1.5';
-        msg.textContent = `${aantalLeeg} lege poule(s) - verwijder eerst`;
-        rightSide.appendChild(msg);
-    } else {
-        const msg = document.createElement('span');
-        msg.className = 'text-gray-400 text-sm italic px-3 py-1.5';
-        msg.textContent = 'Geen actieve judoka\'s';
-        rightSide.appendChild(msg);
     }
 }
 
@@ -828,13 +764,8 @@ async function verifieerPoules() {
     }
 }
 
-// Global state for sent categories
-const sentCategories = @json($sentToZaaloverzicht ?? []);
-
 function wedstrijddagPoules() {
-    return {
-        sentCategories: sentCategories,
-    }
+    return {}
 }
 
 async function verwijderUitPoule(judokaId, pouleId) {
@@ -868,37 +799,35 @@ async function verwijderUitPoule(judokaId, pouleId) {
     }
 }
 
-async function naarZaaloverzicht(categoryKey, btn) {
-    // Disable button during request
+async function naarZaaloverzichtPoule(pouleId, btn) {
+    const originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '⏳';
 
     try {
-        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
-            body: JSON.stringify({ category: categoryKey }),
+            body: JSON.stringify({ poule_id: pouleId }),
         });
 
         if (response.ok) {
-            sentCategories[categoryKey] = true;
-            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            btn.classList.add('bg-green-600', 'hover:bg-green-700');
-            btn.innerHTML = '✓ Doorgestuurd';
+            btn.classList.remove('bg-white/20', 'hover:bg-white/30');
+            btn.classList.add('bg-green-500', 'hover:bg-green-600');
+            btn.innerHTML = '✓';
+            btn.title = 'Doorgestuurd';
         } else {
             const data = await response.json().catch(() => ({}));
-            console.error('Server error:', response.status, data);
             alert('Fout bij doorsturen: ' + (data.message || response.status));
-            btn.innerHTML = 'Naar zaaloverzicht';
+            btn.innerHTML = originalText;
             btn.disabled = false;
         }
     } catch (error) {
-        console.error('Network error:', error);
         alert('Netwerk fout: ' + error.message);
-        btn.innerHTML = 'Naar zaaloverzicht';
+        btn.innerHTML = originalText;
         btn.disabled = false;
     }
 }
