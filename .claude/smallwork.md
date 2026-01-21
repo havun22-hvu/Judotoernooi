@@ -582,6 +582,28 @@
 
 ---
 
+## Sessie: 21 januari 2026 (vervolg)
+
+### Feat: Per-poule chips in Zaaloverzicht
+- **Type:** Feature (BELANGRIJK)
+- **Wat:** Zaaloverzicht toont nu elke poule als aparte chip i.p.v. per categorie
+- **Waarom:** Bij variabele categorieën zijn er meerdere poules met dezelfde leeftijdsklasse+gewichtsklasse, die moeten apart geactiveerd kunnen worden
+- **Chip format:** `{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}` (bijv. "Jeugd -24 #5")
+- **Bestanden:**
+  - `app/Http/Controllers/BlokController.php` - `getCategoryStatuses()` herschreven voor per-poule status
+  - `app/Http/Controllers/BlokController.php` - `activeerPoule()` en `resetPoule()` methods toegevoegd
+  - `resources/views/pages/blok/zaaloverzicht.blade.php` - view toont nu per-poule chips
+  - `routes/web.php` - routes `blok.activeer-poule` en `blok.reset-poule` toegevoegd
+- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (activatie sectie) en BLOKVERDELING.md
+
+### Docs: MD files consistentie check
+- **Type:** Docs verification
+- **Wat:** GEBRUIKERSHANDLEIDING.md en BLOKVERDELING.md gecontroleerd op consistentie
+- **Resultaat:** ✓ Doorsturen per poule correct gedocumenteerd, button kleuren correct, chip kleuren correct
+- **Naar permanente docs?** ☑ Nee - was alleen verificatie
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

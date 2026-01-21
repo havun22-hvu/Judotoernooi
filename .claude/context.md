@@ -467,28 +467,29 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 21 januari 2026
+## Laatste Sessie: 21 januari 2026 (vervolg)
 
 ### Wat is gedaan:
-- **Groen/Geel wedstrijd selectie** - Mat interface toont nu correct:
-  - Groen = speelt nu (actieve_wedstrijd_id)
-  - Geel = klaar maken (huidige_wedstrijd_id)
-  - Als groen klaar → geel wordt groen (niet volgende nummer!)
-- **Telefoon veld** - toegevoegd aan import, coach portal, club pagina (WhatsApp links)
+- **Per-poule chips in Zaaloverzicht** - Elke poule krijgt nu een eigen chip i.p.v. per categorie
+  - Chip format: `{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}`
+  - `getCategoryStatuses()` herschreven voor per-poule status
+  - Nieuwe routes: `activeer-poule`, `reset-poule`
+- **MD files consistency check** - Docs zijn consistent (doorsturen per poule, kleuren correct)
 
-### Te testen morgen:
-- [ ] Publieks/coach app: krijgen ze de juiste wedstrijd te zien via actieve_wedstrijd_id en huidige_wedstrijd_id?
+### Niet afgerond:
+- [ ] Gebruiker moet nog testen in browser (server draait op localhost:8007)
+- [ ] GEBRUIKERSHANDLEIDING.md updaten voor per-poule activatie uitleg
 
 ### Openstaande bugs (uit vorige sessies):
 - [ ] Vals-positieve gewichtsrange markering (oranje bij OK poules)
 - [ ] Poule header kleur blijft oranje na fix
 
-### Belangrijke context Mat Interface:
-- **actieve_wedstrijd_id** = groen (speelt nu) → getoond in publieks/coach app
-- **huidige_wedstrijd_id** = geel (klaar maken) → volgende wedstrijd
-- `saveScore()` in `_content.blade.php` handelt auto-advance af
-- `setWedstrijdStatus()` helper voor backend sync
+### Belangrijke context Zaaloverzicht:
+- **Per-poule chips** - elke poule apart activeerbaar (niet per categorie)
+- Chip kleuren: grijs (niet doorgestuurd) → wit (doorgestuurd) → groen (geactiveerd)
+- Routes: `blok.activeer-poule`, `blok.reset-poule`
 
-### Bestanden:
-- `resources/views/pages/mat/partials/_content.blade.php` - hoofdlogica
-- `app/Http/Controllers/MatController.php` - `setHuidigeWedstrijd()` endpoint
+### Bestanden gewijzigd deze sessie:
+- `app/Http/Controllers/BlokController.php` - getCategoryStatuses(), activeerPoule(), resetPoule()
+- `resources/views/pages/blok/zaaloverzicht.blade.php` - per-poule chips view
+- `routes/web.php` - nieuwe routes
