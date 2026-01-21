@@ -575,17 +575,18 @@ class BlokController extends Controller
                     foreach ($poule->wedstrijden as $wedstrijd) {
                         if ($wedstrijd->judoka_wit_id === $judoka->id) {
                             $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
-                            $jp += (int) $wedstrijd->score_wit;
+                            // Parse score as integer (handles "10", "7", or empty strings)
+                            $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_wit ?? '');
                         } elseif ($wedstrijd->judoka_blauw_id === $judoka->id) {
                             $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
-                            $jp += (int) $wedstrijd->score_blauw;
+                            $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_blauw ?? '');
                         }
                     }
 
                     return [
                         'judoka' => $judoka,
-                        'wp' => $wp,
-                        'jp' => $jp,
+                        'wp' => (int) $wp,
+                        'jp' => (int) $jp,
                     ];
                 });
 
@@ -593,12 +594,16 @@ class BlokController extends Controller
                 $wedstrijden = $poule->wedstrijden;
                 $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
                     // First: compare WP (higher is better)
-                    if ($a['wp'] !== $b['wp']) {
-                        return $b['wp'] - $a['wp'];
+                    $wpA = (int) $a['wp'];
+                    $wpB = (int) $b['wp'];
+                    if ($wpA !== $wpB) {
+                        return $wpB - $wpA;
                     }
                     // Second: compare JP (higher is better)
-                    if ($a['jp'] !== $b['jp']) {
-                        return $b['jp'] - $a['jp'];
+                    $jpA = (int) $a['jp'];
+                    $jpB = (int) $b['jp'];
+                    if ($jpA !== $jpB) {
+                        return $jpB - $jpA;
                     }
                     // Third: head-to-head winner
                     foreach ($wedstrijden as $w) {
