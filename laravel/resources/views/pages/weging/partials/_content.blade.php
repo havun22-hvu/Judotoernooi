@@ -62,7 +62,7 @@
                 <div class="mb-2">
                     <div class="relative">
                         <input type="text" id="weight-input" readonly
-                               class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-3xl text-center font-bold"
+                               class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-3xl text-center font-bold text-gray-900 bg-white"
                                placeholder="0.0">
                         <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">kg</span>
                     </div>
@@ -291,7 +291,7 @@ const numpadInput = np;
 function updateWeightDisplay() {
     const input = document.getElementById('weight-input');
     input.value = weightInput || '';
-    input.className = `w-full border-2 rounded-lg px-4 py-3 text-2xl text-center font-bold ${weightInput ? 'border-blue-500' : 'border-gray-300'}`;
+    input.className = `w-full border-2 rounded-lg px-3 py-2 text-3xl text-center font-bold text-gray-900 bg-white ${weightInput ? 'border-blue-500' : 'border-gray-300'}`;
 }
 
 // Register weight
