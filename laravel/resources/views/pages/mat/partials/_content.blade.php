@@ -907,19 +907,27 @@ function matInterface() {
             wedstrijd.winnaar_id = winnaarId;
 
             // Auto-advance when match is completed:
-            // CODE mag alleen: geel→groen promoten, groen uitzetten
-            // CODE maakt NOOIT automatisch een nieuwe gele aan - matjury kiest zelf
+            // Als de groene wedstrijd punten krijgt → gele wordt groen
+            // Gebruik DIRECT de opgeslagen IDs, niet getHuidigeEnVolgende (die kijkt naar is_gespeeld)
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
-                // Check of deze wedstrijd de huidige groene was
-                const { huidige: huidigGroen, volgende: huidigGeel } = this.getHuidigeEnVolgende(poule);
-                const wasActief = huidigGroen && huidigGroen.id === wedstrijd.id;
+                // Check of deze wedstrijd de handmatig geselecteerde groene was
+                // OF de auto-fallback groene (eerste niet-gespeelde VOOR deze score)
+                const wasHandmatigActief = poule.actieve_wedstrijd_id === wedstrijd.id;
+                const wasAutoActief = !poule.actieve_wedstrijd_id &&
+                    poule.wedstrijden.findIndex(w => !w.is_gespeeld || w.id === wedstrijd.id) ===
+                    poule.wedstrijden.findIndex(w => w.id === wedstrijd.id);
 
-                if (wasActief) {
-                    // Gele wordt groen, geen nieuwe gele (matjury kiest zelf)
-                    const nieuweActief = huidigGeel ? huidigGeel.id : null;
+                if (wasHandmatigActief || wasAutoActief) {
+                    // Gele wordt groen (gebruik handmatig geselecteerde geel, of auto-fallback)
+                    let nieuweActief = poule.huidige_wedstrijd_id;
+                    if (!nieuweActief) {
+                        // Auto-fallback: tweede niet-gespeelde (na de net gespeelde)
+                        const volgende = poule.wedstrijden.find(w => !w.is_gespeeld && w.id !== wedstrijd.id);
+                        nieuweActief = volgende ? volgende.id : null;
+                    }
 
                     poule.actieve_wedstrijd_id = nieuweActief;
-                    poule.huidige_wedstrijd_id = null; // Geen automatische gele!
+                    poule.huidige_wedstrijd_id = null; // Reset geel, auto-fallback neemt over
 
                     // Notify backend
                     fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
@@ -1074,13 +1082,16 @@ function matInterface() {
                 huidige = eersteNietGespeeld;
             }
 
-            // Volgende (geel) = ALLEEN handmatig geselecteerd, GEEN auto-fallback
-            // Matjury moet zelf kiezen welke wedstrijd geel wordt
+            // Volgende (geel) = handmatig geselecteerd OF auto-fallback
+            // Auto-fallback is nodig zodat zaal/coach-app de volgende wedstrijd zien
             let volgende = null;
             if (poule.huidige_wedstrijd_id) {
                 volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id && !w.is_gespeeld);
             }
-            // GEEN auto-fallback - matjury kiest zelf
+            // Auto-fallback: tweede niet-gespeelde (na huidige)
+            if (!volgende && huidige) {
+                volgende = wedstrijden.find(w => !w.is_gespeeld && w.id !== huidige.id);
+            }
 
             return { huidige, volgende };
         },
