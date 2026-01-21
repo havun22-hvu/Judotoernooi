@@ -41,25 +41,34 @@
 @php
     $leeftijdVolgorde = $leeftijdVolgordeZaal;
 
-    // Get unique categories in this blok with leeftijdsklasse and gewichtsklasse for sorting
-    $blokCategories = collect($blok['matten'])
+    // Get ALL poules in this blok (not grouped by category)
+    $blokPoulesList = collect($blok['matten'])
         ->flatMap(fn($m) => $m['poules'])
-        ->map(function($p) use ($leeftijdVolgorde) {
+        ->filter(fn($p) => ($p['judokas'] ?? 0) > 1)  // Skip empty poules
+        ->map(function($p) use ($leeftijdVolgorde, $categories) {
             $lk = $p['leeftijdsklasse'] ?? '';
             $gk = $p['gewichtsklasse'] ?? '';
             // Sorteer: nummer + 1000 als het een + categorie is (zodat +60 na -60 komt)
             $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gk));
             $isPlus = str_starts_with($gk, '+');
+
+            // Get status from categories (now keyed by poule_id)
+            $pouleKey = 'poule_' . $p['id'];
+            $pouleStatus = $categories[$pouleKey] ?? null;
+
             return [
+                'id' => $p['id'],
+                'nummer' => $p['nummer'] ?? '',
                 'leeftijdsklasse' => $lk,
                 'gewichtsklasse' => $gk,
-                'naam' => $lk . ' ' . $gk,
+                'titel' => $p['titel'] ?? ($lk . ' ' . $gk),
                 'leeftijd_sort' => $leeftijdVolgorde[$lk] ?? 99,
                 'gewicht_sort' => $gewichtNum + ($isPlus ? 1000 : 0),
+                'is_sent' => $pouleStatus['is_sent'] ?? false,
+                'is_activated' => $pouleStatus['is_activated'] ?? false,
             ];
         })
-        ->unique('naam')
-        ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc']])
+        ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc'], ['nummer', 'asc']])
         ->values();
 @endphp
 <div class="mb-6 w-full" x-data="{
@@ -89,26 +98,19 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        @if($blokCategories->isNotEmpty())
+        @if($blokPoulesList->isNotEmpty())
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
-            @foreach($blokCategories as $catInfo)
+            @foreach($blokPoulesList as $pouleInfo)
             @php
-                $catNaam = $catInfo['naam'];
-                $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
-                // Use blok-specific key for status (is_sent, is_activated)
-                $blokCatKey = $blok['nummer'] . '|' . $catKey;
-                $catData = ($categories ?? [])[$blokCatKey] ?? ($categories ?? [])[$catKey] ?? null;
-                $isSent = $catData && ($catData['is_sent'] ?? false);
-                $hasWedstrijden = $catData && ($catData['is_activated'] ?? false);
-                $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
+                // Korte chip naam: categorie + poule nummer
+                $chipNaam = $pouleInfo['leeftijdsklasse'] . ' ' . $pouleInfo['gewichtsklasse'] . ' #' . $pouleInfo['nummer'];
+                $isSent = $pouleInfo['is_sent'];
+                $isActivated = $pouleInfo['is_activated'];
 
-                // Status flow (consistent with wedstrijddag):
+                // Status flow:
                 // 1. Groen = doorgestuurd EN wedstrijdschema gegenereerd
                 // 2. Wit = doorgestuurd, klaar voor activatie
-                // 3. Grijs = NIET doorgestuurd (wacht op overpoulen)
-                // BELANGRIJK: kan alleen groen zijn als eerst doorgestuurd!
-                $isActivated = $isSent && $hasWedstrijden;
-
+                // 3. Grijs = NIET doorgestuurd (wacht op doorsturen)
                 if ($isActivated) {
                     $btnClass = 'bg-green-500 text-white font-medium';
                 } elseif ($isSent) {
@@ -121,49 +123,38 @@
             {{-- Groen: al geactiveerd, dropdown met mat interface en reset --}}
             <div class="relative inline-block" x-data="{ dropdown: false }">
                 <button @click="dropdown = !dropdown" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
-                    ✓ {{ $catNaam }} ▾
+                    ✓ {{ $chipNaam }} ▾
                 </button>
                 <div x-show="dropdown" @click.away="dropdown = false" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
                     <a href="{{ route('toernooi.mat.interface', ['toernooi' => $toernooi, 'blok' => $blok['nummer']]) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         🖥️ Mat Interface
                     </a>
-                    <form action="{{ route('toernooi.blok.reset-categorie', $toernooi) }}" method="POST">
+                    <form action="{{ route('toernooi.blok.reset-poule', $toernooi) }}" method="POST">
                         @csrf
-                        <input type="hidden" name="category" value="{{ $catKey }}">
-                        <input type="hidden" name="blok" value="{{ $blok['nummer'] }}">
+                        <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                         <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                                onclick="return confirm('Reset {{ $catNaam }}? Wedstrijden worden verwijderd.')">
+                                onclick="return confirm('Reset poule {{ $pouleInfo['nummer'] }}? Wedstrijden worden verwijderd.')">
                             🔄 Reset
                         </button>
                     </form>
                 </div>
             </div>
-            @elseif($hasWaiting && !$isSent)
-            {{-- Heeft wachtende judokas, moet eerst overpoulen --}}
-            <button
-                onclick="alert('Maak eerst de poules klaar bij Overpoulen')"
-                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80 cursor-not-allowed"
-            >
-                {{ $catNaam }}
-                <span class="text-xs">({{ $catData['wachtruimte_count'] }})</span>
-            </button>
             @elseif($isSent)
             {{-- Wit: klaar voor activatie, klik genereert wedstrijdschema --}}
-            <form action="{{ route('toernooi.blok.activeer-categorie', $toernooi) }}" method="POST" class="inline">
+            <form action="{{ route('toernooi.blok.activeer-poule', $toernooi) }}" method="POST" class="inline">
                 @csrf
-                <input type="hidden" name="category" value="{{ $catKey }}">
-                <input type="hidden" name="blok" value="{{ $blok['nummer'] }}">
+                <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                 <button type="submit" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
-                    {{ $catNaam }}
+                    {{ $chipNaam }}
                 </button>
             </form>
             @else
-            {{-- Grijs: wacht op overpoulen, link naar wedstrijddag --}}
-            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}#{{ urlencode($catKey) }}"
+            {{-- Grijs: wacht op doorsturen, link naar wedstrijddag --}}
+            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
-                {{ $catNaam }}
+                {{ $chipNaam }}
             </a>
             @endif
             @endforeach

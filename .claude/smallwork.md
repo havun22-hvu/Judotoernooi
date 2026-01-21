@@ -549,6 +549,39 @@
 
 ---
 
+## Sessie: 21 januari 2026
+
+### Fix: Groen/Geel wedstrijd selectie systeem (Mat Interface)
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Groen/geel systeem werkt nu correct:
+  - **Groen** = speelt nu (actieve_wedstrijd_id)
+  - **Geel** = klaar maken (huidige_wedstrijd_id)
+  - Als groene wedstrijd punten krijgt → gele wordt groen
+- **Probleem was:** Gele werd niet groen, volgende sequentiële nummer werd groen
+- **Oorzaak:** `saveScore()` had complexe logica die verkeerd werkte + API route gaf 404
+- **Oplossing:**
+  1. `saveScore()` vereenvoudigd - gebruikt nu `getHuidigeEnVolgende()` correct
+  2. `setWedstrijdStatus()` helper functie opgeschoond
+  3. Debug logging verwijderd
+- **Bestanden:**
+  - `resources/views/pages/mat/partials/_content.blade.php` (saveScore, setWedstrijdStatus)
+- **Naar permanente docs?** ☑ Nee - technische bugfix
+
+### Fix: Telefoon veld toegevoegd aan judoka import + coach portal
+- **Type:** Enhancement
+- **Wat:** Telefoon veld toegevoegd aan:
+  - Import CSV (auto-detectie kolom)
+  - Coach portal (toevoegen + bewerken)
+  - Club pagina (WhatsApp link)
+- **Waarom:** WhatsApp contact met coaches/ouders
+- **Bestanden:**
+  - `app/Services/ImportService.php` - kolom detectie + parseTelefoon()
+  - `resources/views/pages/coach/judokas.blade.php` - form velden
+  - `resources/views/pages/club/index.blade.php` - telefoon kolom
+- **Naar permanente docs?** ☑ Nee - feature enhancement
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
