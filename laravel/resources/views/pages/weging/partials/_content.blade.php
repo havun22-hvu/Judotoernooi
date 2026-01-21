@@ -16,7 +16,7 @@
             <!-- Scanner (when scanning) -->
             <div id="scanner-container" class="text-center w-full" style="display: none;">
                 <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
-                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-bold">
+                <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">
                     Stop
                 </button>
             </div>
@@ -70,18 +70,18 @@
 
                 <!-- Numpad -->
                 <div class="grid grid-cols-4 gap-1 mb-2">
-                    <button type="button" onclick="np('7')" class="bg-gray-200 rounded py-3 text-2xl font-bold">7</button>
-                    <button type="button" onclick="np('8')" class="bg-gray-200 rounded py-3 text-2xl font-bold">8</button>
-                    <button type="button" onclick="np('9')" class="bg-gray-200 rounded py-3 text-2xl font-bold">9</button>
+                    <button type="button" onclick="np('7')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">7</button>
+                    <button type="button" onclick="np('8')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">8</button>
+                    <button type="button" onclick="np('9')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">9</button>
                     <button type="button" onclick="np('C')" class="bg-red-200 text-red-700 rounded py-3 text-2xl font-bold">C</button>
-                    <button type="button" onclick="np('4')" class="bg-gray-200 rounded py-3 text-2xl font-bold">4</button>
-                    <button type="button" onclick="np('5')" class="bg-gray-200 rounded py-3 text-2xl font-bold">5</button>
-                    <button type="button" onclick="np('6')" class="bg-gray-200 rounded py-3 text-2xl font-bold">6</button>
-                    <button type="button" onclick="np('.')" class="bg-gray-200 rounded py-3 text-2xl font-bold">.</button>
-                    <button type="button" onclick="np('1')" class="bg-gray-200 rounded py-3 text-2xl font-bold">1</button>
-                    <button type="button" onclick="np('2')" class="bg-gray-200 rounded py-3 text-2xl font-bold">2</button>
-                    <button type="button" onclick="np('3')" class="bg-gray-200 rounded py-3 text-2xl font-bold">3</button>
-                    <button type="button" onclick="np('0')" class="bg-gray-200 rounded py-3 text-2xl font-bold">0</button>
+                    <button type="button" onclick="np('4')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">4</button>
+                    <button type="button" onclick="np('5')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">5</button>
+                    <button type="button" onclick="np('6')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">6</button>
+                    <button type="button" onclick="np('.')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">.</button>
+                    <button type="button" onclick="np('1')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">1</button>
+                    <button type="button" onclick="np('2')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">2</button>
+                    <button type="button" onclick="np('3')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">3</button>
+                    <button type="button" onclick="np('0')" class="bg-gray-200 text-gray-900 rounded py-3 text-2xl font-bold">0</button>
                 </div>
 
                 <!-- Register button -->
