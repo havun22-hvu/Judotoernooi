@@ -259,7 +259,8 @@
                             </div>
                         </div>
                         @endif
-                        @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0)
+                        @if($totaalActiefInCategorie > 0 && $aantalLegePoules === 0 && !$heeftVariabeleCategorieen)
+                        {{-- Vaste gewichtsklassen: 1 knop per categorie --}}
                         @php $isSent = isset($sentToZaaloverzicht[$category['key']]) && $sentToZaaloverzicht[$category['key']]; @endphp
                         <button
                             onclick="naarZaaloverzicht('{{ $jsKey }}')"
@@ -268,7 +269,7 @@
                         >
                             {{ $isSent ? '✓ Doorgestuurd' : 'Naar zaaloverzicht' }}
                         </button>
-                        @elseif($aantalLegePoules > 0 && !$isEliminatie)
+                        @elseif($aantalLegePoules > 0 && !$isEliminatie && !$heeftVariabeleCategorieen)
                         <span class="text-orange-600 text-sm italic px-3 py-1.5">{{ $aantalLegePoules }} lege poule(s) - verwijder eerst</span>
                         @elseif($totaalActiefInCategorie === 0)
                         <span class="text-gray-400 text-sm italic px-3 py-1.5">Geen actieve judoka's</span>
@@ -477,6 +478,18 @@
                                         <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')) }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
+                                        @if($heeftVariabeleCategorieen && $aantalActief > 0)
+                                        {{-- Variabele gewichten: doorstuur knop per poule --}}
+                                        @php $isPouleSent = isset($sentToZaaloverzichtPoules[$poule->id]) && $sentToZaaloverzichtPoules[$poule->id]; @endphp
+                                        <button
+                                            onclick="naarZaaloverzichtPoule({{ $poule->id }})"
+                                            class="text-xs px-2 py-0.5 rounded transition-all naar-zaaloverzicht-poule-btn {{ $isPouleSent ? 'bg-green-500 hover:bg-green-600' : 'bg-white/20 hover:bg-white/30' }}"
+                                            data-poule-id="{{ $poule->id }}"
+                                            title="{{ $isPouleSent ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                                        >
+                                            {{ $isPouleSent ? '✓' : '→' }}
+                                        </button>
+                                        @endif
                                         @if($verwijderdeTekst->isNotEmpty())
                                         <div class="relative" x-data="{ show: false }">
                                             <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
@@ -919,6 +932,37 @@ async function naarZaaloverzicht(categoryKey) {
                 btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 btn.classList.add('bg-green-600', 'hover:bg-green-700');
                 btn.innerHTML = '✓ Doorgestuurd';
+            }
+        } else {
+            const data = await response.json().catch(() => ({}));
+            console.error('Server error:', response.status, data);
+            alert('Fout bij doorsturen: ' + (data.message || response.status));
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+        alert('Netwerk fout: ' + error.message);
+    }
+}
+
+async function naarZaaloverzichtPoule(pouleId) {
+    try {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ poule_id: pouleId }),
+        });
+
+        if (response.ok) {
+            // Update button appearance
+            const btn = document.querySelector(`.naar-zaaloverzicht-poule-btn[data-poule-id="${pouleId}"]`);
+            if (btn) {
+                btn.classList.remove('bg-white/20', 'hover:bg-white/30');
+                btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                btn.innerHTML = '✓';
+                btn.title = 'Doorgestuurd';
             }
         } else {
             const data = await response.json().catch(() => ({}));
