@@ -910,6 +910,12 @@ function matInterface() {
             // Als de groene wedstrijd punten krijgt → gele wordt groen
             // Gebruik DIRECT de opgeslagen IDs, niet getHuidigeEnVolgende (die kijkt naar is_gespeeld)
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
+                // DEBUG
+                console.log('=== SCORE SAVED ===');
+                console.log('Wedstrijd ID:', wedstrijd.id);
+                console.log('poule.actieve_wedstrijd_id (groen):', poule.actieve_wedstrijd_id);
+                console.log('poule.huidige_wedstrijd_id (geel):', poule.huidige_wedstrijd_id);
+
                 // Check of deze wedstrijd de handmatig geselecteerde groene was
                 // OF de auto-fallback groene (eerste niet-gespeelde VOOR deze score)
                 const wasHandmatigActief = poule.actieve_wedstrijd_id === wedstrijd.id;
@@ -917,13 +923,18 @@ function matInterface() {
                     poule.wedstrijden.findIndex(w => !w.is_gespeeld || w.id === wedstrijd.id) ===
                     poule.wedstrijden.findIndex(w => w.id === wedstrijd.id);
 
+                console.log('wasHandmatigActief:', wasHandmatigActief);
+                console.log('wasAutoActief:', wasAutoActief);
+
                 if (wasHandmatigActief || wasAutoActief) {
                     // Gele wordt groen (gebruik handmatig geselecteerde geel, of auto-fallback)
                     let nieuweActief = poule.huidige_wedstrijd_id;
+                    console.log('nieuweActief (uit geel):', nieuweActief);
                     if (!nieuweActief) {
                         // Auto-fallback: tweede niet-gespeelde (na de net gespeelde)
                         const volgende = poule.wedstrijden.find(w => !w.is_gespeeld && w.id !== wedstrijd.id);
                         nieuweActief = volgende ? volgende.id : null;
+                        console.log('nieuweActief (auto-fallback):', nieuweActief);
                     }
 
                     poule.actieve_wedstrijd_id = nieuweActief;
