@@ -34,7 +34,7 @@ Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proc
 1. Weging (gewicht registreren per judoka)
 2. Einde weegtijd per blok
 3. **Wedstrijddag Poules** → overpoelen (te zware/afwezige judoka's)
-4. Per categorie: **"Naar zaaloverzicht"** klikken (knop wordt groen)
+4. Per poule: **"→"** knop klikken (knop wordt groen ✓)
 5. **Zaaloverzicht** → witte chip klikken → wedstrijdschema genereren (chip wordt groen)
 6. Wedstrijden op mat
 7. Poule klaar → spreker voor prijsuitreiking
@@ -501,17 +501,17 @@ Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden 
 
 ### Naar Zaaloverzicht Sturen
 
-Wanneer een categorie klaar is (overgepouled):
+Wanneer een poule klaar is (overgepouled):
 
-1. Klik **"Naar zaaloverzicht"** knop bij de categorie
-2. Knop wordt **groen** met "✓ Doorgestuurd"
-3. In zaaloverzicht verschijnt de categorie als **witte chip**
+1. Klik **"→"** knop bij de poule (in de poule header)
+2. Knop wordt **"✓"** (groen)
+3. In zaaloverzicht verschijnt de categorie chip als **wit** zodra minstens 1 poule doorgestuurd is
 
-**Knop kleuren:**
-| Kleur | Status |
-|-------|--------|
-| Blauw | Nog niet doorgestuurd |
-| Groen "✓ Doorgestuurd" | Klaar voor zaaloverzicht |
+**Knop kleuren per poule:**
+| Knop | Status |
+|------|--------|
+| **→** (transparant) | Nog niet doorgestuurd |
+| **✓** (groen) | Doorgestuurd naar zaaloverzicht |
 
 ## Zaaloverzicht & Activatie
 
