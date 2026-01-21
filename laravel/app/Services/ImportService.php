@@ -236,13 +236,22 @@ class ImportService
             $sortCategorie = $classificatie['sortCategorie'];
             // gewichtsklasse is null for variable categories (max_kg_verschil > 0)
             $gewichtsklasse = $classificatie['gewichtsklasse'];
-        } elseif ($gewichtsklasseRaw) {
-            // Use CSV weight class if provided
-            $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
+        } else {
+            // No config or no birth year - use CSV weight class if provided
+            if ($gewichtsklasseRaw) {
+                $gewichtsklasse = $this->parseGewichtsklasse($gewichtsklasseRaw) ?? 'onbekend';
 
-            // If no weight but weight class given, derive weight from class (use upper limit)
-            if (!$gewicht && $gewichtsklasse !== 'onbekend') {
-                $gewicht = $this->gewichtVanKlasse($gewichtsklasse);
+                // If no weight but weight class given, derive weight from class (use upper limit)
+                if (!$gewicht && $gewichtsklasse !== 'onbekend') {
+                    $gewicht = $this->gewichtVanKlasse($gewichtsklasse);
+                }
+            }
+            // Set fallback leeftijdsklasse based on birth year
+            if ($geboortejaar) {
+                $leeftijd = (date('Y')) - $geboortejaar;
+                $leeftijdsklasse = $leeftijd <= 10 ? 'Jeugd' : ($leeftijd <= 14 ? 'Aspiranten' : 'Senioren');
+            } else {
+                $leeftijdsklasse = 'Onbekend';
             }
         }
 

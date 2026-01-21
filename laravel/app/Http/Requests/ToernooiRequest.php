@@ -49,7 +49,6 @@ class ToernooiRequest extends FormRequest
             'aantal_blokken' => 'nullable|integer|min:1|max:12',
             'poule_grootte_voorkeur' => 'nullable|array|min:1',
             'poule_grootte_voorkeur.*' => 'integer|min:2|max:12',
-            'clubspreiding' => 'nullable|boolean',
             'wedstrijd_systeem' => 'nullable|array',
             'wedstrijd_systeem.*' => 'string|in:poules,poules_kruisfinale,eliminatie',
             'eliminatie_gewichtsklassen' => 'nullable|array',
@@ -69,7 +68,6 @@ class ToernooiRequest extends FormRequest
             'max_leeftijd_verschil' => 'nullable|integer|min:1|max:5',
             'verdeling_prioriteiten' => 'nullable|array',
             'verdeling_prioriteiten.*' => 'string|in:leeftijd,gewicht,band',
-            'clubspreiding' => 'nullable|boolean',
             'wedstrijd_schemas' => 'nullable|array',
         ];
     }
