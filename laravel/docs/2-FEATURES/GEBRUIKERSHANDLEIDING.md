@@ -510,7 +510,7 @@ Wanneer een poule klaar is (overgepouled):
 **Knop kleuren per poule:**
 | Knop | Status |
 |------|--------|
-| **→** (transparant) | Nog niet doorgestuurd |
+| **→** (blauw) | Nog niet doorgestuurd |
 | **✓** (groen) | Doorgestuurd naar zaaloverzicht |
 
 ## Zaaloverzicht & Activatie
