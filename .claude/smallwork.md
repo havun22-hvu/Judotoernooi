@@ -604,6 +604,58 @@
 
 ---
 
+## Sessie: 21 januari 2026 (avond)
+
+### Fix: Import warnings zichtbaar per club op admin pagina
+- **Type:** Enhancement
+- **Wat:** Import warnings worden nu gegroepeerd per club getoond met contactgegevens
+- **Waarom:** Organisator moet weten welke judoschool te contacteren voor import problemen
+- **Bestanden:**
+  - `app/Http/Controllers/JudokaController.php` - `importWarningsPerClub` toegevoegd
+  - `resources/views/pages/judoka/index.blade.php` - collapsible sectie met clubs + email/telefoon
+- **Naar permanente docs?** ☑ Ja → IMPORT.md
+
+### Fix: Import NOOIT falen op null gewichtsklasse (KRITIEK)
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** `gewichtsklasse` is NOOIT meer null - altijd 'Onbekend' of 'Variabel'
+- **Waarom:** 14 judoka's werden geweigerd omdat U7 categorie geen gewichtsklassen had
+- **Oorzaak:** `classificeerJudoka()` returde `null` voor gewichtsklasse bij ontbrekende config
+- **Oplossing:**
+  - Bij match: `'Variabel'` als default, `'Onbekend'` als bepaling faalt
+  - Bij geen match: `'Onbekend'` als fallback
+- **Regel:** "een gewichtscategorie is helemaal niet verplicht, wel een opgegeven gewicht"
+- **Bestanden:**
+  - `app/Services/ImportService.php` - `classificeerJudoka()` aangepast
+- **Naar permanente docs?** ☑ Ja → IMPORT.md (regel toegevoegd: import mag NOOIT falen op null gewichtsklasse)
+
+### Feat: import_warnings veld op judokas tabel
+- **Type:** Feature
+- **Wat:** Nieuw veld `import_warnings` (TEXT) om warnings te persisteren
+- **Waarom:** Warnings waren session-based en verdwenen na refresh
+- **Bestanden:**
+  - `database/migrations/2026_01_21_160000_add_import_warnings_to_judokas_table.php`
+  - `app/Models/Judoka.php` - veld toegevoegd aan fillable
+- **Naar permanente docs?** ☑ Ja → IMPORT.md
+
+### Feat: import_fouten veld op toernooien tabel
+- **Type:** Feature (GEDEELTELIJK)
+- **Wat:** Nieuw veld `import_fouten` (JSON) voor persistente opslag van import fouten
+- **Waarom:** Fouten verdwenen na page refresh (session-based)
+- **Status:** Migration aangemaakt, nog niet gebruikt in controller
+- **Bestanden:**
+  - `database/migrations/2026_01_21_170000_add_import_fouten_to_toernooien_table.php`
+  - `app/Models/Toernooi.php` - veld toegevoegd aan fillable/casts
+- **Naar permanente docs?** ☐ Nog niet volledig geïmplementeerd
+
+### Docs: IMPORT.md aangemaakt
+- **Type:** Documentation
+- **Wat:** Nieuwe documentatie voor import feature
+- **Inhoud:** Workflow, foutafhandeling, warnings, belangrijke regels (gewichtsklasse nooit verplicht)
+- **Bestanden:** `docs/2-FEATURES/IMPORT.md`
+- **Naar permanente docs?** ☑ Al gedaan
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 

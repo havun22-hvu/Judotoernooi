@@ -469,19 +469,22 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 21 januari 2026 (vervolg)
+## Laatste Sessie: 21 januari 2026 (avond)
 
 ### Wat is gedaan:
-- **Per-poule chips in Zaaloverzicht** - Elke poule krijgt nu een eigen chip i.p.v. per categorie
-  - Chip format: `{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}`
-  - `getCategoryStatuses()` herschreven voor per-poule status
-  - Nieuwe routes: `activeer-poule`, `reset-poule`
-- **MD files consistency check** - Docs zijn consistent (doorsturen per poule, kleuren correct)
-- **Test data gereset** - Blok 1 klaar voor test (70 judoka's gewogen, weging gesloten)
+- **Import warnings per club** - Admin judoka pagina toont nu warnings gegroepeerd per club met contactgegevens (email/telefoon)
+- **Import nooit falen op null gewichtsklasse** (KRITIEK FIX)
+  - 14 judoka's werden geweigerd omdat U7 geen gewichtsklassen had
+  - Fix: `gewichtsklasse` is NOOIT null - altijd 'Onbekend' of 'Variabel'
+  - Regel: "gewichtscategorie is NIET verplicht, alleen opgegeven gewicht"
+- **Migrations voor import velden**:
+  - `import_warnings` op judokas tabel (persistent warnings)
+  - `import_fouten` op toernooien tabel (nog niet volledig gebruikt)
+- **IMPORT.md documentatie** - Nieuwe doc met import workflow en regels
 
 ### Niet afgerond:
-- [ ] Gebruiker moet nog testen in browser (server draait op localhost:8007)
-- [ ] GEBRUIKERSHANDLEIDING.md updaten voor per-poule activatie uitleg
+- [ ] `import_fouten` veld daadwerkelijk vullen in JudokaController (migration bestaat)
+- [ ] Local testing: APP_URL in .env moet `http://127.0.0.1:8007` zijn voor reset button
 
 ### Openstaande bugs (uit vorige sessies):
 - [ ] Vals-positieve gewichtsrange markering (oranje bij OK poules)
