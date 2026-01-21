@@ -569,6 +569,81 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 
 ---
 
+## Publieke PWA (Toeschouwers)
+
+**Route:** `/publiek/{slug}`
+**View:** `resources/views/pages/publiek/index.blade.php`
+**Controller:** `PubliekController`
+
+### Toegang
+- Openbaar, geen authenticatie nodig
+- PWA installeerbaar op homescreen
+
+### Tabs
+
+| Tab | Beschikbaarheid | Inhoud |
+|-----|-----------------|--------|
+| **Info** | Altijd | Toernooi info, tijdschema, QR-code |
+| **Deelnemers** | Altijd | Per leeftijd/gewicht, ster voor favoriet |
+| **Favorieten** | Altijd | Geselecteerde judoka's + hun poules |
+| **Live Matten** | Wedstrijddag | Per mat wie speelt/klaar maakt |
+| **Uitslagen** | Na afloop | Eindstanden per poule |
+
+### Live Matten Tab - Groen/Geel Weergave
+
+Per mat worden getoond:
+1. **Groen (speelt nu)**: Wedstrijd met beide judoka's
+2. **Geel (klaar maken)**: Volgende wedstrijd met beide judoka's
+
+```
+┌─────────────────────────────────┐
+│ MAT 1                    [LIVE] │
+│ Poule #5 - Jeugd -24            │
+├─────────────────────────────────┤
+│ 🥋 SPEELT NU                    │
+│ Jan (wit) vs Piet (blauw)       │
+│ Judo Hoorn vs Judo Alkmaar      │
+├─────────────────────────────────┤
+│ ⏳ KLAAR MAKEN                  │
+│ Karel (wit) vs Ahmed (blauw)    │
+│ Judo Enkhuizen vs Judo Den Helder│
+└─────────────────────────────────┘
+```
+
+**Data:** Komt van `actieve_wedstrijd_id` (groen) en `huidige_wedstrijd_id` (geel) op de poule.
+
+### Favorieten Tab - Groen/Geel Weergave
+
+In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
+
+```
+┌─────────────────────────────────┐
+│ P#5 Jeugd -24    Mat 1 | Blok 1 │
+├─────────────────────────────────┤
+│ 🥋 Jan (speelt nu)         2pt  │  ← Groen, altijd bovenaan
+│ ⏳ Karel (klaar maken)     1pt  │  ← Geel, daarna
+├─────────────────────────────────┤
+│ 1. Piet ★                  3pt  │  ← Je favoriet
+│ 2. Ahmed                   2pt  │
+│ 3. ...                          │
+└─────────────────────────────────┘
+```
+
+**Alerts:**
+- Groene banner: "🥋 NU! [Naam] is aan het vechten!"
+- Gele banner: "⚡ Maak je klaar! [Naam] is bijna aan de beurt"
+
+### Auto-refresh
+- **Favorieten:** Elke 15 seconden (AJAX)
+- **Live Matten:** Elke 30 seconden (page reload)
+
+### Bestanden
+- `PubliekController@index` - Hoofd view
+- `PubliekController@favorieten` - AJAX endpoint voor favorieten poules
+- `resources/views/pages/publiek/index.blade.php` - Alpine.js SPA
+
+---
+
 ## Versie & Updates
 
 - Versie in `config/toernooi.php` → `version`
