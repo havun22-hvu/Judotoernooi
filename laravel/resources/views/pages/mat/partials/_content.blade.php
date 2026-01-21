@@ -875,13 +875,8 @@ function matInterface() {
         },
 
         async saveScore(wedstrijd, poule) {
-            console.log('=== saveScore CALLED ===');
-            console.log('wedstrijd.id:', wedstrijd.id);
-            console.log('poule:', poule ? poule.poule_id : 'null');
-
             // Skip if no judokas (eliminatie TBD)
             if (!wedstrijd.wit || !wedstrijd.blauw) {
-                console.log('SKIP: no wit or blauw');
                 return;
             }
 
@@ -913,65 +908,21 @@ function matInterface() {
             wedstrijd.is_gespeeld = !!(winnaarId || (wedstrijd.jpScores[wedstrijd.wit.id] !== undefined && wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined));
             wedstrijd.winnaar_id = winnaarId;
 
-            // Auto-advance when match is completed:
-            // Als de groene wedstrijd punten krijgt → gele wordt groen
-            // Gebruik DIRECT de opgeslagen IDs, niet getHuidigeEnVolgende (die kijkt naar is_gespeeld)
+            // Auto-advance: als groene wedstrijd klaar → gele (klaar maken) wordt groen (speelt)
             if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
-                // DEBUG
-                console.log('=== SCORE SAVED ===');
-                console.log('Wedstrijd ID:', wedstrijd.id);
-                console.log('poule.actieve_wedstrijd_id (groen):', poule.actieve_wedstrijd_id);
-                console.log('poule.huidige_wedstrijd_id (geel):', poule.huidige_wedstrijd_id);
+                // Bepaal of deze wedstrijd de "actieve" (groene) was
+                const { huidige } = this.getHuidigeEnVolgende(poule);
+                const wasActief = huidige && huidige.id === wedstrijd.id;
 
-                // Check of deze wedstrijd de handmatig geselecteerde groene was
-                // OF de auto-fallback groene (eerste niet-gespeelde VOOR deze score)
-                const wasHandmatigActief = poule.actieve_wedstrijd_id === wedstrijd.id;
-                const wasAutoActief = !poule.actieve_wedstrijd_id &&
-                    poule.wedstrijden.findIndex(w => !w.is_gespeeld || w.id === wedstrijd.id) ===
-                    poule.wedstrijden.findIndex(w => w.id === wedstrijd.id);
-
-                console.log('wasHandmatigActief:', wasHandmatigActief);
-                console.log('wasAutoActief:', wasAutoActief);
-
-                if (wasHandmatigActief || wasAutoActief) {
-                    // Gele wordt groen (gebruik handmatig geselecteerde geel, of auto-fallback)
-                    let nieuweActief = poule.huidige_wedstrijd_id;
-                    console.log('nieuweActief (uit geel):', nieuweActief);
-                    if (!nieuweActief) {
-                        // Auto-fallback: tweede niet-gespeelde (na de net gespeelde)
-                        const volgende = poule.wedstrijden.find(w => !w.is_gespeeld && w.id !== wedstrijd.id);
-                        nieuweActief = volgende ? volgende.id : null;
-                        console.log('nieuweActief (auto-fallback):', nieuweActief);
-                    }
+                if (wasActief) {
+                    // Gele (huidige_wedstrijd_id = klaar maken) wordt groen (actief)
+                    const nieuweActief = poule.huidige_wedstrijd_id || null;
 
                     poule.actieve_wedstrijd_id = nieuweActief;
-                    poule.huidige_wedstrijd_id = null; // Reset geel, auto-fallback neemt over
+                    poule.huidige_wedstrijd_id = null; // Reset geel
 
                     // Notify backend
-                    fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            poule_id: poule.poule_id,
-                            wedstrijd_id: nieuweActief,
-                            type: 'actief'
-                        })
-                    });
-                    fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            poule_id: poule.poule_id,
-                            wedstrijd_id: null,
-                            type: 'volgend'
-                        })
-                    });
+                    await this.setWedstrijdStatus(poule, nieuweActief, null);
                 }
             }
         },
@@ -1181,8 +1132,10 @@ function matInterface() {
         // Helper: update actieve en/of huidige wedstrijd
         async setWedstrijdStatus(poule, actieveId, huidigeId) {
             try {
+                const url = `{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`;
+
                 // Update actieve (groen)
-                const response1 = await fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
+                const response1 = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1195,8 +1148,10 @@ function matInterface() {
                     })
                 });
 
-                // Update huidige (geel)
-                const response2 = await fetch(`{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`, {
+                if (!response1.ok) return;
+
+                // Update huidige (geel = klaar maken)
+                const response2 = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1208,6 +1163,8 @@ function matInterface() {
                         type: 'volgend'
                     })
                 });
+
+                if (!response2.ok) return;
 
                 const data1 = await response1.json();
                 const data2 = await response2.json();

@@ -435,78 +435,34 @@ class BlokController extends Controller
      */
     private function getCategoryStatuses(Toernooi $toernooi): array
     {
-        $categories = [];
+        $statuses = [];
 
         // Get all poules with blok info and wedstrijd count
         $poules = $toernooi->poules()
             ->with('blok')
-            ->withCount('wedstrijden')
+            ->withCount(['wedstrijden', 'judokas'])
             ->get();
 
-        // Get judokas that need re-pooling (outside weight class)
-        $judokasNaarWachtruimte = \App\Models\Judoka::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('gewicht_gewogen')
-            ->where('aanwezigheid', 'aanwezig')
-            ->get()
-            ->filter(fn($j) => !$j->isGewichtBinnenKlasse());
-
-        // Group by target category
-        $wachtruimtePerCategorie = [];
-        foreach ($judokasNaarWachtruimte as $judoka) {
-            $key = $judoka->leeftijdsklasse . '|' . $judoka->gewichtsklasse;
-            $wachtruimtePerCategorie[$key] = ($wachtruimtePerCategorie[$key] ?? 0) + 1;
-        }
-
-        // Group poules by BLOK + CATEGORY and check status
-        // Key = blok_nummer|leeftijdsklasse|gewichtsklasse
-        $wedstrijdenPerBlokCategorie = [];
-        $doorgestuurdPerBlokCategorie = [];
+        // Build status per POULE (not per category)
+        // Key = "poule_" + poule_id
         foreach ($poules as $poule) {
             $blokNummer = $poule->blok?->nummer ?? 0;
-            $catKey = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            $blokCatKey = $blokNummer . '|' . $catKey;
+            $pouleKey = 'poule_' . $poule->id;
 
-            if (!isset($wedstrijdenPerBlokCategorie[$blokCatKey])) {
-                $wedstrijdenPerBlokCategorie[$blokCatKey] = 0;
-            }
-            $wedstrijdenPerBlokCategorie[$blokCatKey] += $poule->wedstrijden_count;
-
-            // If any poule in this blok+category has doorgestuurd_op set
-            if ($poule->doorgestuurd_op) {
-                $doorgestuurdPerBlokCategorie[$blokCatKey] = true;
-            }
-        }
-
-        // Build categories array with blok-specific status
-        foreach ($poules->unique(fn($p) => ($p->blok?->nummer ?? 0) . '|' . $p->leeftijdsklasse . '|' . $p->gewichtsklasse) as $poule) {
-            $blokNummer = $poule->blok?->nummer ?? 0;
-            $catKey = $poule->leeftijdsklasse . '|' . $poule->gewichtsklasse;
-            $blokCatKey = $blokNummer . '|' . $catKey;
-
-            // Use catKey for lookup (for wachtruimte and for view compatibility)
-            // But use blokCatKey for is_activated and is_sent
-            $categories[$blokCatKey] = [
+            $statuses[$pouleKey] = [
+                'poule_id' => $poule->id,
                 'blok_nummer' => $blokNummer,
+                'nummer' => $poule->nummer,
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
-                'wachtruimte_count' => $wachtruimtePerCategorie[$catKey] ?? 0,
-                'is_activated' => ($wedstrijdenPerBlokCategorie[$blokCatKey] ?? 0) > 0,
-                'is_sent' => $doorgestuurdPerBlokCategorie[$blokCatKey] ?? false,
+                'titel' => $poule->titel,
+                'judokas_count' => $poule->judokas_count,
+                'is_activated' => $poule->wedstrijden_count > 0,
+                'is_sent' => $poule->doorgestuurd_op !== null,
             ];
-
-            // Also keep old category-only key for backward compatibility
-            if (!isset($categories[$catKey])) {
-                $categories[$catKey] = [
-                    'leeftijdsklasse' => $poule->leeftijdsklasse,
-                    'gewichtsklasse' => $poule->gewichtsklasse,
-                    'wachtruimte_count' => $wachtruimtePerCategorie[$catKey] ?? 0,
-                    'is_activated' => ($wedstrijdenPerBlokCategorie[$blokCatKey] ?? 0) > 0,
-                    'is_sent' => $doorgestuurdPerBlokCategorie[$blokCatKey] ?? false,
-                ];
-            }
         }
 
-        return $categories;
+        return $statuses;
     }
 
     public function sprekerInterface(Toernooi $toernooi): View

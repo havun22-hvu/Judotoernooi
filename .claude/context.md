@@ -467,20 +467,28 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 20 januari 2026
+## Laatste Sessie: 21 januari 2026
 
 ### Wat is gedaan:
-- Wedstrijdsysteem dropdown toegevoegd aan ALLE poule types (voorronde/eliminatie/kruisfinale)
-- Lege kruisfinales kunnen nu verwijderd worden met (-) knop
-- Gewichtsklasse headers boven poule groepen verwijderd (te verwarrend)
-- "P1" → "#1" in blokoverzicht voor consistentie
-- Coachkaarten: huidig/benodigd weergave + "Genereer Coachkaarten" knop op club pagina
+- **Groen/Geel wedstrijd selectie** - Mat interface toont nu correct:
+  - Groen = speelt nu (actieve_wedstrijd_id)
+  - Geel = klaar maken (huidige_wedstrijd_id)
+  - Als groen klaar → geel wordt groen (niet volgende nummer!)
+- **Telefoon veld** - toegevoegd aan import, coach portal, club pagina (WhatsApp links)
+
+### Te testen morgen:
+- [ ] Publieks/coach app: krijgen ze de juiste wedstrijd te zien via actieve_wedstrijd_id en huidige_wedstrijd_id?
 
 ### Openstaande bugs (uit vorige sessies):
 - [ ] Vals-positieve gewichtsrange markering (oranje bij OK poules)
 - [ ] Poule header kleur blijft oranje na fix
 
-### Belangrijke context:
-- Coachkaarten berekening: `Club::berekenAantalCoachKaarten()` in model
-- Wedstrijdsysteem wijzigen: `WedstrijddagController::wijzigPouleType()`
-- UI Conventie: altijd `#` prefix voor poule nummers, `W` voor wedstrijden
+### Belangrijke context Mat Interface:
+- **actieve_wedstrijd_id** = groen (speelt nu) → getoond in publieks/coach app
+- **huidige_wedstrijd_id** = geel (klaar maken) → volgende wedstrijd
+- `saveScore()` in `_content.blade.php` handelt auto-advance af
+- `setWedstrijdStatus()` helper voor backend sync
+
+### Bestanden:
+- `resources/views/pages/mat/partials/_content.blade.php` - hoofdlogica
+- `app/Http/Controllers/MatController.php` - `setHuidigeWedstrijd()` endpoint

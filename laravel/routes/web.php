@@ -173,6 +173,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::get('blok/zaaloverzicht', [BlokController::class, 'zaaloverzicht'])->name('blok.zaaloverzicht');
         Route::post('blok/activeer-categorie', [BlokController::class, 'activeerCategorie'])->name('blok.activeer-categorie');
         Route::post('blok/reset-categorie', [BlokController::class, 'resetCategorie'])->name('blok.reset-categorie');
+        Route::post('blok/activeer-poule', [BlokController::class, 'activeerPoule'])->name('blok.activeer-poule');
+        Route::post('blok/reset-poule', [BlokController::class, 'resetPoule'])->name('blok.reset-poule');
         Route::post('blok/reset-alles', [BlokController::class, 'resetAlles'])->name('blok.reset-alles');
         Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
