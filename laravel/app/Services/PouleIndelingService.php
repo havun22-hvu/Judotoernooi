@@ -953,32 +953,32 @@ class PouleIndelingService
         }
 
         // 4. Weight: use weight class for fixed categories, range for variable
+        // Check if gewichtsklasse looks like a valid class name (e.g. "-24", "+60")
+        $isValidGewichtsklasse = !empty($gewichtsklasse)
+            && $gewichtsklasse !== 'Onbekend'
+            && (str_starts_with($gewichtsklasse, '-') || str_starts_with($gewichtsklasse, '+'));
+
+        // Determine if category is fixed (max_kg_verschil = 0) or dynamic (> 0)
         $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
         $isVasteGewichtsklasse = $maxKgVerschil == 0;
 
-        if ($isVasteGewichtsklasse && !empty($gewichtsklasse)) {
-            // Fixed weight class: show class name (e.g. "-34kg", "+60kg")
+        if ($isValidGewichtsklasse) {
+            // Valid weight class provided: always use it (e.g. "-34kg", "+60kg")
             $gk = $gewichtsklasse;
             if (!str_contains($gk, 'kg')) {
                 $gk .= 'kg';
             }
             $parts[] = $gk;
-        } elseif (!empty($pouleJudokas)) {
-            // Variable weight: calculate range from judokas
+        } elseif (!$isVasteGewichtsklasse && !empty($pouleJudokas)) {
+            // Dynamic category (max_kg_verschil > 0): calculate range from judokas
             $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
             if (!empty($gewichten)) {
                 $min = min($gewichten);
                 $max = max($gewichten);
                 $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
-            } elseif (!empty($gewichtsklasse)) {
-                $gk = $gewichtsklasse;
-                if (!str_contains($gk, 'kg')) {
-                    $gk .= 'kg';
-                }
-                $parts[] = $gk;
             }
-        } elseif (!empty($gewichtsklasse)) {
-            // No judokas: use weight class from preset
+        } elseif (!empty($gewichtsklasse) && $gewichtsklasse !== 'Onbekend') {
+            // Fallback: use provided gewichtsklasse if not empty/unknown
             $gk = $gewichtsklasse;
             if (!str_contains($gk, 'kg')) {
                 $gk .= 'kg';
