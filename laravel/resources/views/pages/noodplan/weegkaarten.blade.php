@@ -49,7 +49,7 @@
             </tr>
             <tr>
                 <td class="py-1 text-gray-500">Band:</td>
-                <td class="py-1 font-medium">{{ $judoka->band_enum?->label() ?? $judoka->band ?? '-' }}</td>
+                <td class="py-1 font-medium">{{ $judoka->band_enum?->label() ?? ucfirst(explode(' ', $judoka->band ?? '')[0]) ?: '-' }}</td>
             </tr>
             <tr>
                 <td class="py-1 text-gray-500">Gewichtsklasse:</td>
