@@ -256,7 +256,7 @@
                     <h2 class="text-2xl font-bold mb-2">${data.naam || 'Onbekend'}</h2>
                     <p class="text-xl">${data.message}</p>
                     ${data.club ? `<p class="text-lg opacity-80 mt-2">${data.club}</p>` : ''}
-                    <button onclick="hideResult()" class="mt-6 bg-white/20 hover:bg-white/30 px-8 py-3 rounded-lg font-medium">
+                    <button onclick="hideResult()" class="mt-6 bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-medium">
                         Volgende scan
                     </button>
                 </div>
