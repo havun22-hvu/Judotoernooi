@@ -95,7 +95,9 @@
             @php
                 $catNaam = $catInfo['naam'];
                 $catKey = $catInfo['leeftijdsklasse'] . '|' . $catInfo['gewichtsklasse'];
-                $catData = ($categories ?? [])[$catKey] ?? null;
+                // Use blok-specific key for status (is_sent, is_activated)
+                $blokCatKey = $blok['nummer'] . '|' . $catKey;
+                $catData = ($categories ?? [])[$blokCatKey] ?? ($categories ?? [])[$catKey] ?? null;
                 $isSent = $catData && ($catData['is_sent'] ?? false);
                 $hasWedstrijden = $catData && ($catData['is_activated'] ?? false);
                 $hasWaiting = $catData && $catData['wachtruimte_count'] > 0;
