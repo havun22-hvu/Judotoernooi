@@ -304,18 +304,37 @@ async function registreerGewicht() {
     btn.disabled = true;
     btn.textContent = 'Bezig...';
 
+    const feedback = document.getElementById('feedback');
+    const url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${selectedJudoka.id}/registreer`;
+
     try {
-        const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${selectedJudoka.id}/registreer`, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({ gewicht: parseFloat(weightInput) })
         });
 
+        // Check HTTP status first
+        if (!response.ok) {
+            let errorMsg = `HTTP ${response.status}`;
+            if (response.status === 419) {
+                errorMsg = 'Sessie verlopen - herlaad pagina';
+            } else if (response.status === 404) {
+                errorMsg = 'Route niet gevonden';
+            } else if (response.status === 500) {
+                errorMsg = 'Server fout';
+            }
+            feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
+            feedback.textContent = errorMsg;
+            feedback.classList.remove('hidden');
+            return;
+        }
+
         const data = await response.json();
-        const feedback = document.getElementById('feedback');
 
         if (data.success) {
             // Add to history
@@ -343,9 +362,8 @@ async function registreerGewicht() {
         }
     } catch (e) {
         console.error('Register error:', e);
-        const feedback = document.getElementById('feedback');
         feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
-        feedback.textContent = 'Verbindingsfout';
+        feedback.textContent = 'Geen verbinding met server';
         feedback.classList.remove('hidden');
     } finally {
         btn.disabled = false;
