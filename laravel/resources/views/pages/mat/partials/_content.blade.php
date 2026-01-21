@@ -875,8 +875,15 @@ function matInterface() {
         },
 
         async saveScore(wedstrijd, poule) {
+            console.log('=== saveScore CALLED ===');
+            console.log('wedstrijd.id:', wedstrijd.id);
+            console.log('poule:', poule ? poule.poule_id : 'null');
+
             // Skip if no judokas (eliminatie TBD)
-            if (!wedstrijd.wit || !wedstrijd.blauw) return;
+            if (!wedstrijd.wit || !wedstrijd.blauw) {
+                console.log('SKIP: no wit or blauw');
+                return;
+            }
 
             // Determine winner based on WP
             let winnaarId = null;
