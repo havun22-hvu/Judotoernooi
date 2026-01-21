@@ -126,8 +126,7 @@ class WedstrijddagController extends Controller
             ];
         });
 
-        // Get sent-to-zaaloverzicht status from database (doorgestuurd_op column)
-        // Per categorie (voor vaste gewichtsklassen)
+        // Get sent-to-zaaloverzicht status per categorie
         $sentToZaaloverzicht = $toernooi->poules()
             ->whereNotNull('doorgestuurd_op')
             ->get()
@@ -135,15 +134,7 @@ class WedstrijddagController extends Controller
             ->map(fn() => true)
             ->toArray();
 
-        // Per poule (voor variabele gewichten)
-        $sentToZaaloverzichtPoules = $toernooi->poules()
-            ->whereNotNull('doorgestuurd_op')
-            ->pluck('doorgestuurd_op', 'id')
-            ->map(fn() => true)
-            ->toArray();
-
         // Detecteer problematische poules na weging (gewichtsrange > max_kg_verschil)
-        // Dit is alleen relevant voor dynamische categorieën waar weging gesloten is
         $problematischeGewichtsPoules = collect();
         foreach ($toernooi->blokken()->where('weging_gesloten', true)->get() as $blok) {
             foreach ($blok->getProblematischePoules() as $poule) {
@@ -155,7 +146,6 @@ class WedstrijddagController extends Controller
             'toernooi',
             'blokken',
             'sentToZaaloverzicht',
-            'sentToZaaloverzichtPoules',
             'problematischeGewichtsPoules'
         ));
     }
@@ -328,20 +318,6 @@ class WedstrijddagController extends Controller
             ->update(['doorgestuurd_op' => now()]);
 
         return response()->json(['success' => true, 'updated' => $updated]);
-    }
-
-    public function naarZaaloverzichtPoule(Request $request, Toernooi $toernooi): JsonResponse
-    {
-        $validated = $request->validate([
-            'poule_id' => 'required|exists:poules,id',
-        ]);
-
-        $poule = Poule::findOrFail($validated['poule_id']);
-
-        // Update only this poule with doorgestuurd_op timestamp
-        $poule->update(['doorgestuurd_op' => now()]);
-
-        return response()->json(['success' => true, 'poule_id' => $poule->id]);
     }
 
     public function nieuwePoule(Request $request, Toernooi $toernooi): JsonResponse

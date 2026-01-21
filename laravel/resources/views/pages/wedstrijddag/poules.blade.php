@@ -930,42 +930,6 @@ async function naarZaaloverzicht(categoryKey, btn) {
     }
 }
 
-async function naarZaaloverzichtPoule(pouleId, btn) {
-    // Disable button during request
-    btn.disabled = true;
-    const origText = btn.innerHTML;
-    btn.innerHTML = '⏳';
-
-    try {
-        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi) }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: JSON.stringify({ poule_id: pouleId }),
-        });
-
-        if (response.ok) {
-            btn.classList.remove('bg-white/20', 'hover:bg-white/30');
-            btn.classList.add('bg-green-500', 'hover:bg-green-600');
-            btn.innerHTML = '✓';
-            btn.title = 'Doorgestuurd';
-        } else {
-            const data = await response.json().catch(() => ({}));
-            console.error('Server error:', response.status, data);
-            alert('Fout bij doorsturen: ' + (data.message || response.status));
-            btn.innerHTML = origText;
-            btn.disabled = false;
-        }
-    } catch (error) {
-        console.error('Network error:', error);
-        alert('Netwerk fout: ' + error.message);
-        btn.innerHTML = origText;
-        btn.disabled = false;
-    }
-}
-
 async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
