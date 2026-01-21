@@ -453,17 +453,69 @@
                         </div>
                         @if($mat->huidigePoule)
                         <div class="text-blue-200 text-sm mt-1">
-                            Poule {{ $mat->huidigePoule->nummer }} - {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }}
+                            #{{ $mat->huidigePoule->nummer }} {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }}
                             @if($mat->huidigePoule->gewichtsklasse && $mat->huidigePoule->gewichtsklasse !== 'onbekend')
-                            / {{ $mat->huidigePoule->gewichtsklasse }}
+                            {{ $mat->huidigePoule->gewichtsklasse }}
                             @endif
                         </div>
                         @endif
                     </div>
 
                     @if($mat->huidigePoule)
-                    <!-- Standings -->
-                    <div class="border-b bg-gray-50 px-4 py-2">
+                    <!-- Groen: Speelt nu -->
+                    @if($mat->huidigePoule->groeneWedstrijd)
+                    <div class="bg-green-100 border-l-4 border-green-500 px-4 py-3">
+                        <div class="flex items-center gap-2 text-green-800 font-bold text-sm mb-2">
+                            <span class="text-lg">🥋</span> SPEELT NU
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
+                                    <span class="font-medium">{{ $mat->huidigePoule->groeneWedstrijd->wit?->naam ?? '?' }}</span>
+                                </div>
+                                <div class="text-gray-500 text-xs ml-6">{{ $mat->huidigePoule->groeneWedstrijd->wit?->club?->naam ?? '' }}</div>
+                            </div>
+                            <span class="text-gray-400 font-bold mx-3">vs</span>
+                            <div class="flex-1 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="font-medium">{{ $mat->huidigePoule->groeneWedstrijd->blauw?->naam ?? '?' }}</span>
+                                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                                </div>
+                                <div class="text-gray-500 text-xs mr-6">{{ $mat->huidigePoule->groeneWedstrijd->blauw?->club?->naam ?? '' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Geel: Klaar maken -->
+                    @if($mat->huidigePoule->geleWedstrijd)
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 px-4 py-3">
+                        <div class="flex items-center gap-2 text-yellow-800 font-bold text-sm mb-2">
+                            <span class="text-lg">⏳</span> KLAAR MAKEN
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
+                                    <span class="font-medium">{{ $mat->huidigePoule->geleWedstrijd->wit?->naam ?? '?' }}</span>
+                                </div>
+                                <div class="text-gray-500 text-xs ml-6">{{ $mat->huidigePoule->geleWedstrijd->wit?->club?->naam ?? '' }}</div>
+                            </div>
+                            <span class="text-gray-400 font-bold mx-3">vs</span>
+                            <div class="flex-1 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <span class="font-medium">{{ $mat->huidigePoule->geleWedstrijd->blauw?->naam ?? '?' }}</span>
+                                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                                </div>
+                                <div class="text-gray-500 text-xs mr-6">{{ $mat->huidigePoule->geleWedstrijd->blauw?->club?->naam ?? '' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Stand -->
+                    <div class="border-t bg-gray-50 px-4 py-2">
                         <div class="text-xs font-bold text-gray-500 mb-1">STAND</div>
                         <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                             @foreach($mat->huidigePoule->standings as $index => $standing)
@@ -474,46 +526,11 @@
                                     @elseif($index === 2) bg-orange-300 text-orange-900
                                     @else bg-gray-200 text-gray-600
                                     @endif">{{ $index + 1 }}</span>
-                                <span class="font-medium">{{ Str::limit($standing['judoka']->naam, 15) }}</span>
+                                <span class="font-medium">{{ Str::limit($standing['judoka']->naam, 12) }}</span>
                                 <span class="text-blue-600 font-bold">{{ $standing['wp'] }}</span>
-                                <span class="text-gray-400 text-xs">({{ $standing['jp'] }})</span>
                             </div>
                             @endforeach
                         </div>
-                    </div>
-
-                    <!-- Wedstrijden -->
-                    <div class="divide-y max-h-64 overflow-y-auto">
-                        @foreach($mat->huidigePoule->wedstrijden as $wedstrijd)
-                        @php
-                            $wit = $mat->huidigePoule->judokas->firstWhere('id', $wedstrijd->judoka_wit_id);
-                            $blauw = $mat->huidigePoule->judokas->firstWhere('id', $wedstrijd->judoka_blauw_id);
-                        @endphp
-                        <div class="px-4 py-2 flex items-center gap-2 text-sm {{ $wedstrijd->is_gespeeld ? 'bg-green-50' : '' }}">
-                            <span class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600">{{ $wedstrijd->volgorde }}</span>
-                            <div class="flex-1 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-3 h-3 rounded-full bg-white border-2 border-gray-300"></span>
-                                    <span class="{{ $wedstrijd->winnaar_id === $wedstrijd->judoka_wit_id ? 'font-bold text-green-700' : '' }}">
-                                        {{ $wit?->naam ?? '?' }}
-                                    </span>
-                                    @if($wedstrijd->is_gespeeld)
-                                    <span class="text-blue-600 font-bold">{{ $wedstrijd->score_wit }}</span>
-                                    @endif
-                                </div>
-                                <span class="text-gray-400 mx-2">vs</span>
-                                <div class="flex items-center gap-2">
-                                    @if($wedstrijd->is_gespeeld)
-                                    <span class="text-blue-600 font-bold">{{ $wedstrijd->score_blauw }}</span>
-                                    @endif
-                                    <span class="{{ $wedstrijd->winnaar_id === $wedstrijd->judoka_blauw_id ? 'font-bold text-green-700' : '' }}">
-                                        {{ $blauw?->naam ?? '?' }}
-                                    </span>
-                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
                     </div>
                     @else
                     <div class="p-8 text-center text-gray-500">
@@ -691,7 +708,7 @@
                                     </div>
                                 </div>
                                 <div class="divide-y">
-                                    <template x-for="(judoka, index) in poule.judokas" :key="judoka.id">
+                                    <template x-for="(judoka, index) in sortJudokas(poule.judokas)" :key="judoka.id">
                                         <div class="px-3 py-2 flex justify-between items-center"
                                              :class="{
                                                  'bg-green-100 border-l-4 border-green-500': judoka.id === activeFavoriet && judoka.is_aan_de_beurt,
@@ -966,6 +983,20 @@
                 kortLeeftijd(lk) {
                     // Gebruik volledige label of maak automatisch korte versie
                     return lk.length <= 10 ? lk : lk.substring(0, 8) + '..';
+                },
+
+                // Sorteer judokas: groen (speelt) eerst, dan geel (klaar), dan op punten
+                sortJudokas(judokas) {
+                    return [...judokas].sort((a, b) => {
+                        // Groen (speelt nu) altijd eerst
+                        if (a.is_aan_de_beurt && !b.is_aan_de_beurt) return -1;
+                        if (!a.is_aan_de_beurt && b.is_aan_de_beurt) return 1;
+                        // Geel (klaar maken) daarna
+                        if (a.is_volgende && !b.is_volgende) return -1;
+                        if (!a.is_volgende && b.is_volgende) return 1;
+                        // Dan op punten (hoog naar laag)
+                        return (b.punten || 0) - (a.punten || 0);
+                    });
                 },
 
                 async zoekJudokas() {

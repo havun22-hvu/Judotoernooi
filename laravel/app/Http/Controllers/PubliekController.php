@@ -95,6 +95,40 @@ class PubliekController extends Controller
                             }
                             return ['judoka' => $judoka, 'wp' => $wp, 'jp' => $jp];
                         })->sortByDesc(fn($s) => $s['wp'] * 1000 + $s['jp'])->values();
+
+                        // Determine groen (speelt nu) en geel (klaar maken) wedstrijden
+                        $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
+
+                        // Groen: actieve_wedstrijd_id of auto-fallback (eerste niet-gespeelde)
+                        $groeneWedstrijd = null;
+                        if ($poule->actieve_wedstrijd_id) {
+                            $groeneWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->actieve_wedstrijd_id && !$w->is_gespeeld);
+                        }
+                        if (!$groeneWedstrijd) {
+                            $groeneWedstrijd = $wedstrijden->first(fn($w) => !$w->is_gespeeld);
+                        }
+
+                        // Geel: huidige_wedstrijd_id of auto-fallback (tweede niet-gespeelde)
+                        $geleWedstrijd = null;
+                        if ($poule->huidige_wedstrijd_id) {
+                            $geleWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && !$w->is_gespeeld);
+                        }
+                        if (!$geleWedstrijd && $groeneWedstrijd) {
+                            $geleWedstrijd = $wedstrijden->first(fn($w) => !$w->is_gespeeld && $w->id !== $groeneWedstrijd->id);
+                        }
+
+                        // Add judoka info to wedstrijden
+                        if ($groeneWedstrijd) {
+                            $groeneWedstrijd->wit = $poule->judokas->firstWhere('id', $groeneWedstrijd->judoka_wit_id);
+                            $groeneWedstrijd->blauw = $poule->judokas->firstWhere('id', $groeneWedstrijd->judoka_blauw_id);
+                        }
+                        if ($geleWedstrijd) {
+                            $geleWedstrijd->wit = $poule->judokas->firstWhere('id', $geleWedstrijd->judoka_wit_id);
+                            $geleWedstrijd->blauw = $poule->judokas->firstWhere('id', $geleWedstrijd->judoka_blauw_id);
+                        }
+
+                        $poule->groeneWedstrijd = $groeneWedstrijd;
+                        $poule->geleWedstrijd = $geleWedstrijd;
                     }
                     $mat->huidigePoule = $poule;
                     return $mat;
