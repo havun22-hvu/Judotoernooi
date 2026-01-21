@@ -133,13 +133,14 @@
     </div>
 
     <script>
+        let fotoSelected = false;
+
         function previewImage(input) {
             const preview = document.getElementById('preview');
             const container = document.getElementById('preview-container');
-            const submitBtn = document.getElementById('submit-btn');
-            const nameInput = document.getElementById('naam');
 
             if (input.files && input.files[0]) {
+                fotoSelected = true;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
@@ -151,17 +152,23 @@
         }
 
         function updateSubmitButton() {
-            const foto = document.getElementById('foto');
             const naam = document.getElementById('naam');
             const pincode = document.getElementById('pincode');
             const submitBtn = document.getElementById('submit-btn');
 
             const pincodeValid = pincode.value.length === 4 && /^\d{4}$/.test(pincode.value);
-            submitBtn.disabled = !(foto.files.length > 0 && naam.value.trim().length > 0 && pincodeValid);
+            const allValid = fotoSelected && naam.value.trim().length > 0 && pincodeValid;
+
+            submitBtn.disabled = !allValid;
+            console.log('Button update:', { fotoSelected, naam: naam.value, pincodeValid, allValid });
         }
 
         document.getElementById('naam').addEventListener('input', updateSubmitButton);
         document.getElementById('pincode').addEventListener('input', updateSubmitButton);
+        document.getElementById('foto').addEventListener('change', function() {
+            fotoSelected = this.files.length > 0;
+            updateSubmitButton();
+        });
     </script>
 </body>
 </html>

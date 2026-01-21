@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.1.9 - 2026-01-21: More explicit text colors (dojo, club)
-const VERSION = '1.1.9';
+// v1.2.0 - 2026-01-21: Fix coach card takeover button validation
+const VERSION = '1.2.0';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
