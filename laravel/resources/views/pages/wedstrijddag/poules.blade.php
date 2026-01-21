@@ -5,23 +5,20 @@
 @section('content')
 @php
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-    // Check of toernooi variabele categorieën heeft
-    $heeftVariabeleCategorieen = ($toernooi->max_kg_verschil > 0 || $toernooi->max_leeftijd_verschil > 0);
-    // Verzamel alle poules met te weinig (< 3) of te veel (>= 6) actieve judoka's
-    // NEGEER kruisfinales - die hebben nog geen judokas gekoppeld
-    // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+    // Onderscheid vaste gewichtsklassen vs variabele poules
+    // gebruik_gewichtsklassen = true  → vaste klassen (-24kg, -27kg, etc.)
+    // gebruik_gewichtsklassen = false → variabele poules (dynamisch op gewicht/leeftijd)
+    $heeftVasteGewichtsklassen = $toernooi->gebruik_gewichtsklassen ?? false;
+    $heeftVariabeleCategorieen = !$heeftVasteGewichtsklassen;
+    // Verzamel problematische poules (< 3 of >= 6 actieve judoka's)
     $teWeinigjudokas = collect();
     $teVeelJudokas = collect();
     foreach ($blokken as $blok) {
-        $blokWegingGesloten = $blok['weging_gesloten'] ?? false;
+        $wegingGesloten = $blok['weging_gesloten'] ?? false;
         foreach ($blok['categories'] as $category) {
             foreach ($category['poules'] as $poule) {
                 if ($poule->type === 'kruisfinale') continue;
-                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
-                $actief = $poule->judokas->filter(fn($j) =>
-                    $j->aanwezigheid !== 'afwezig' &&
-                    !($blokWegingGesloten && $j->gewicht_gewogen === null)
-                )->count();
+                $actief = $poule->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
                 if ($actief > 0 && $actief < 3) {
                     $teWeinigjudokas->push([
                         'id' => $poule->id,
@@ -179,11 +176,7 @@
                         $blokJudokas += $p->aantal_judokas;
                         $blokWedstrijden += $p->aantal_wedstrijden;
                     } else {
-                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
-                        $actief = $p->judokas->filter(fn($j) =>
-                            $j->aanwezigheid !== 'afwezig' &&
-                            !($wegingGesloten && $j->gewicht_gewogen === null)
-                        )->count();
+                        $actief = $p->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
                         $blokJudokas += $actief;
                         $blokWedstrijden += $p->berekenAantalWedstrijden($actief);
                     }
@@ -221,10 +214,7 @@
                             // Tel actieve judoka's in categorie
                             $totaalActiefInCategorie = 0;
                             foreach ($category['poules'] as $p) {
-                                $totaalActiefInCategorie += $p->judokas->filter(fn($j) =>
-                                    $j->aanwezigheid !== 'afwezig' &&
-                                    !($wegingGesloten && $j->gewicht_gewogen === null)
-                                )->count();
+                                $totaalActiefInCategorie += $p->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
                             }
                         @endphp
                         @if(!$isEliminatie)
@@ -274,13 +264,10 @@
                     @if($isEliminatie)
                     {{-- Eliminatie: één grote box met alle judoka's in grid --}}
                     @php
-                        // $elimPoule is already set in header for the dropdown
                         // Collect removed judokas for info tooltip
-                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
                         $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten) {
-                            $isAfwezig = $j->aanwezigheid === 'afwezig' || ($wegingGesloten && $j->gewicht_gewogen === null);
                             $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-                            return $isAfwezig || $isAfwijkend;
+                            return !$j->isActief($wegingGesloten) || $isAfwijkend;
                         });
 
                         // Calculate active count
@@ -288,8 +275,7 @@
 
                         // Format removed for tooltip
                         $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie, $wegingGesloten) {
-                            if ($j->aanwezigheid === 'afwezig') return $j->naam . ' (afwezig)';
-                            if ($wegingGesloten && $j->gewicht_gewogen === null) return $j->naam . ' (afwezig)';
+                            if (!$j->isActief($wegingGesloten)) return $j->naam . ' (afwezig)';
                             return $j->naam . ' (afwijkend gewicht)';
                         });
                     @endphp
@@ -308,14 +294,10 @@
                         </div>
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             @foreach($elimPoule->judokas as $judoka)
-                            @php
-                                $isGewogen = $judoka->gewicht_gewogen !== null;
-                                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
-                                $isAfwezig = $judoka->aanwezigheid === 'afwezig' || ($wegingGesloten && !$isGewogen);
-                            @endphp
-                            @if($isAfwezig)
+                            @if(!$judoka->isActief($wegingGesloten))
                                 @continue
                             @endif
+                            @php $isGewogen = $judoka->gewicht_gewogen !== null; @endphp
                             <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
                                 <div class="flex items-center gap-1">
                                     @if($isGewogen)
@@ -417,11 +399,7 @@
                             @endif
                             @php
                                 // Collect afwezige judokas for info tooltip
-                                // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
-                                $afwezigeJudokas = $poule->judokas->filter(fn($j) =>
-                                    $j->aanwezigheid === 'afwezig' ||
-                                    ($wegingGesloten && $j->gewicht_gewogen === null)
-                                );
+                                $afwezigeJudokas = $poule->judokas->filter(fn($j) => !$j->isActief($wegingGesloten));
 
                                 // Collect overpoulers (judokas die uit DEZE poule overpouled zijn)
                                 $overpoulers = \App\Models\Judoka::where('overpouled_van_poule_id', $poule->id)->get();
@@ -490,8 +468,7 @@
                                     @foreach($poule->judokas as $judoka)
                                     @php
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
-                                        // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
-                                        $isAfwezig = $judoka->aanwezigheid === 'afwezig' || ($wegingGesloten && !$isGewogen);
+                                        $isAfwezig = !$judoka->isActief($wegingGesloten);
 
                                         // Check of judoka past in DEZE POULE's gewichtsklasse
                                         $isVerkeerdePoule = false;
@@ -1601,8 +1578,8 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
 
             for (const match of blok.matches) {
                 const statusIcon = match.status === 'ok' ? '✅' : match.status === 'warning' ? '⚠️' : '❌';
-                // Alleen kg overschrijding tonen bij variabele gewichtsklassen (max_kg_verschil > 0)
-                const isVariabel = data.max_kg_verschil > 0;
+                // Alleen kg overschrijding tonen bij variabele poules (geen vaste gewichtsklassen)
+                const isVariabel = !data.gebruik_gewichtsklassen;
                 const overschrijding = isVariabel && match.kg_overschrijding > 0 ? `<span class="text-orange-600 text-sm ml-2">+${match.kg_overschrijding}kg</span>` : '';
 
                 html += `<div class="border rounded p-2 hover:bg-gray-50 cursor-pointer transition-colors"
