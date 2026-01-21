@@ -260,8 +260,8 @@ class ImportService
             $leeftijdsklasse = $classificatie['label'];
             $categorieKey = $classificatie['configKey'];
             $sortCategorie = $classificatie['sortCategorie'];
-            // gewichtsklasse is null for variable categories (max_kg_verschil > 0)
-            $gewichtsklasse = $classificatie['gewichtsklasse'];
+            // gewichtsklasse is never null - use 'Onbekend' or 'Variabel' as fallback
+            $gewichtsklasse = $classificatie['gewichtsklasse'] ?? 'Onbekend';
         } else {
             // No config or no birth year - use CSV weight class if provided
             if ($gewichtsklasseRaw) {
@@ -553,9 +553,9 @@ class ImportService
             // Match found!
             // Only determine gewichtsklasse if NOT variable (max_kg_verschil == 0)
             $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
-            $gewichtsklasse = null;
+            $gewichtsklasse = 'Variabel'; // Default for variable categories
             if ($maxKgVerschil == 0) {
-                $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig($gewicht ?? 0, $config, $tolerantie);
+                $gewichtsklasse = $this->bepaalGewichtsklasseUitConfig($gewicht ?? 0, $config, $tolerantie) ?? 'Onbekend';
             }
 
             return [
@@ -566,12 +566,12 @@ class ImportService
             ];
         }
 
-        // No match found
+        // No match found - still import with 'Onbekend' values
         return [
             'configKey' => null,
             'label' => 'Onbekend',
             'sortCategorie' => 99,
-            'gewichtsklasse' => null,
+            'gewichtsklasse' => 'Onbekend',
         ];
     }
 
