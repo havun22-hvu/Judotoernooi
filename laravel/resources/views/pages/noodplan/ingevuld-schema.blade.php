@@ -82,29 +82,33 @@
     }
     .header-row th {
         border-color: #374151;
+        font-size: 13px;
+        padding: 6px 4px;
     }
     .sub-header {
-        font-size: 10px;
+        font-size: 11px;
         font-weight: normal;
         color: #9ca3af;
     }
     .judoka-row td {
-        height: 28px;
+        height: 36px;
     }
     .nr-cel {
-        width: 24px;
+        width: 32px;
+        font-size: 14px;
     }
     .naam-cel {
-        width: 200px;
-        max-width: 200px;
+        width: 280px;
+        max-width: 280px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        font-size: 13px;
     }
     .score-cel {
-        width: 20px;
+        width: 28px;
         text-align: center;
-        font-size: 10px;
+        font-size: 13px;
     }
     .score-cel.w-cel {
         border-right: 1px solid #ccc;
@@ -120,22 +124,25 @@
         background: #1f2937;
     }
     .totaal-cel {
-        width: 32px;
+        width: 40px;
         background: #f3f4f6;
         color: #000;
         text-align: center;
+        font-size: 13px;
+        font-weight: bold;
     }
     .plts-cel {
-        width: 28px;
+        width: 36px;
         background: #fef9c3;
         color: #000;
         text-align: center;
+        font-size: 13px;
     }
     .poule-header {
         background: #f3f4f6;
         border: 2px solid #333;
-        padding: 8px 12px;
-        margin-bottom: 8px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
     }
 </style>
 @endpush
@@ -178,7 +185,7 @@
     </div>
 
     <!-- Matrix tabel -->
-    <table class="schema-table text-xs">
+    <table class="schema-table text-sm">
         <thead>
             <tr class="header-row">
                 <th class="px-1 py-1 text-center nr-cel">Nr</th>
