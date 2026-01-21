@@ -33,10 +33,16 @@ class GewichtsklassenPresetController extends Controller
 
         $organisatorId = Auth::guard('organisator')->id();
 
+        // Sort categories by max_leeftijd (youngest first)
+        $configuratie = $validated['configuratie'];
+        uasort($configuratie, function ($a, $b) {
+            return ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99);
+        });
+
         // Update existing or create new
         $preset = GewichtsklassenPreset::updateOrCreate(
             ['organisator_id' => $organisatorId, 'naam' => $validated['naam']],
-            ['configuratie' => $validated['configuratie']]
+            ['configuratie' => $configuratie]
         );
 
         return response()->json([

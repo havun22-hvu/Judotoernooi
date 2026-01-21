@@ -101,6 +101,13 @@ class ToernooiController extends Controller
             $data['gewichtsklassen'] = $gewichtsklassen;
         }
 
+        // Sort categories by max_leeftijd (youngest first)
+        if (!empty($data['gewichtsklassen']) && is_array($data['gewichtsklassen'])) {
+            uasort($data['gewichtsklassen'], function ($a, $b) {
+                return ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99);
+            });
+        }
+
         // Process wedstrijd_systeem from form (fallback if not in JSON)
         if (!isset($data['wedstrijd_systeem']) && $request->has('wedstrijd_systeem')) {
             $data['wedstrijd_systeem'] = $request->input('wedstrijd_systeem');
