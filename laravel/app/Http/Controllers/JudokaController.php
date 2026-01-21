@@ -193,6 +193,11 @@ class JudokaController extends Controller
 
         $redirect = redirect()->route('toernooi.judoka.index', $toernooi)->with('success', $message);
 
+        // Store import errors in session for display
+        if (!empty($resultaat['fouten'])) {
+            $redirect = $redirect->with('import_fouten', $resultaat['fouten']);
+        }
+
         if ($nietGecategoriseerd > 0) {
             $redirect = $redirect->with('warning', "⚠️ {$nietGecategoriseerd} judoka('s) niet gecategoriseerd! Pas de categorie-instellingen aan.");
         }

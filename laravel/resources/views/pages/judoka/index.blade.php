@@ -76,6 +76,34 @@
 </div>
 @endif
 
+@if(session('import_fouten'))
+<div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6" x-data="{ open: false }">
+    <div class="flex items-center justify-between">
+        <h3 class="font-bold text-orange-800">
+            <span class="cursor-pointer hover:underline" @click="open = !open">
+                {{ count(session('import_fouten')) }} import fouten
+                <span class="text-sm font-normal ml-2">(klik voor details)</span>
+            </span>
+        </h3>
+        <button @click="open = !open" class="text-orange-600 hover:text-orange-800">
+            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+            <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+        </button>
+    </div>
+    <div x-show="open" x-collapse class="mt-3">
+        <ul class="list-disc list-inside text-orange-700 text-sm max-h-64 overflow-y-auto">
+            @foreach(session('import_fouten') as $fout)
+            <li>{{ $fout }}</li>
+            @endforeach
+        </ul>
+    </div>
+</div>
+@endif
+
 <!-- Judoka tabel -->
 @if($judokas->count() > 0)
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">
