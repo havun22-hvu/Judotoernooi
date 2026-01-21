@@ -163,8 +163,15 @@ class JudokaController extends Controller
             }
         }
 
-        // Convert to associative array
-        $rows = array_map(fn($row) => array_combine($header, $row), $data);
+        // Convert to associative array (pad rows to match header length)
+        $headerCount = count($header);
+        $rows = array_map(function($row) use ($header, $headerCount) {
+            // Pad row with empty values if shorter than header
+            $row = array_pad($row, $headerCount, '');
+            // Truncate if longer than header
+            $row = array_slice($row, 0, $headerCount);
+            return array_combine($header, $row);
+        }, $data);
 
         $resultaat = $this->importService->importeerDeelnemers($toernooi, $rows, $kolomMapping);
 
