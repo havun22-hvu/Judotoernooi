@@ -498,34 +498,53 @@
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
                                         // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
                                         $isAfwezig = $judoka->aanwezigheid === 'afwezig' || ($wegingGesloten && !$isGewogen);
-                                        // Bij variabele categorieën: geen individuele markering (poule-niveau markering is voldoende)
-                                        // Bij vaste categorieën: wel markeren als buiten gewichtsklasse
+
+                                        // Check of judoka past in DEZE POULE's gewichtsklasse
+                                        $isVerkeerdePoule = false;
+                                        if (!$heeftVariabeleCategorieen && $poule->gewichtsklasse) {
+                                            $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
+                                            $isPlusKlasse = str_starts_with($poule->gewichtsklasse, '+');
+                                            $pouleLimiet = floatval(preg_replace('/[^0-9.]/', '', $poule->gewichtsklasse));
+
+                                            if ($isPlusKlasse) {
+                                                // +70 = minimaal 70kg (- tolerantie)
+                                                $isVerkeerdePoule = $judokaGewicht < ($pouleLimiet - $tolerantie);
+                                            } else {
+                                                // -24 = maximaal 24kg (+ tolerantie)
+                                                $isVerkeerdePoule = $judokaGewicht > ($pouleLimiet + $tolerantie);
+                                            }
+                                        }
+
+                                        // Afwijkend = eigen gewichtsklasse niet gehaald (overpouler)
                                         $isAfwijkendGewicht = !$heeftVariabeleCategorieen && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+
+                                        // Combineer: verkeerde poule OF afwijkend gewicht
+                                        $heeftProbleem = $isVerkeerdePoule || $isAfwijkendGewicht;
                                     @endphp
                                     @if($isAfwezig)
                                         @continue
                                     @endif
                                     <div
-                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move {{ $isAfwijkendGewicht ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
+                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move {{ $heeftProbleem ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
                                         data-judoka-id="{{ $judoka->id }}"
                                         draggable="true"
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
-                                                {{-- Status marker: green = gewogen, orange = afwijkend gewicht --}}
-                                                @if($isAfwijkendGewicht)
-                                                    <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
+                                                {{-- Status marker: green = gewogen, orange = probleem --}}
+                                                @if($heeftProbleem)
+                                                    <span class="text-orange-500 text-xs flex-shrink-0" title="{{ $isVerkeerdePoule ? 'Verkeerde gewichtsklasse' : 'Afwijkend gewicht' }}">⚠</span>
                                                 @elseif($isGewogen)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
                                                 <div class="min-w-0">
-                                                    <div class="font-medium {{ $isAfwijkendGewicht ? 'text-orange-800' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
+                                                    <div class="font-medium {{ $heeftProbleem ? 'text-orange-800' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 <div class="text-right text-xs">
-                                                    <div class="{{ $isAfwijkendGewicht ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                    <div class="{{ $heeftProbleem ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
                                                     <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                                                 </div>
                                                 <button
@@ -879,6 +898,7 @@ async function verwijderUitPoule(judokaId, pouleId) {
 }
 
 async function naarZaaloverzicht(categoryKey) {
+    console.log('naarZaaloverzicht called with:', categoryKey);
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht", $toernooi) }}', {
             method: 'POST',
@@ -889,6 +909,8 @@ async function naarZaaloverzicht(categoryKey) {
             body: JSON.stringify({ category: categoryKey }),
         });
 
+        console.log('Response status:', response.status);
+
         if (response.ok) {
             sentCategories[categoryKey] = true;
             // Update button appearance
@@ -898,9 +920,14 @@ async function naarZaaloverzicht(categoryKey) {
                 btn.classList.add('bg-green-600', 'hover:bg-green-700');
                 btn.innerHTML = '✓ Doorgestuurd';
             }
+        } else {
+            const data = await response.json().catch(() => ({}));
+            console.error('Server error:', response.status, data);
+            alert('Fout bij doorsturen: ' + (data.message || response.status));
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Network error:', error);
+        alert('Netwerk fout: ' + error.message);
     }
 }
 
@@ -1132,6 +1159,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             updateProblematischePoules(data.naar_poule, data.naar_poule.aantal_judokas > 0 && data.naar_poule.aantal_judokas < 3);
                             updateTeVeelJudokas(data.naar_poule, data.naar_poule.aantal_judokas >= 6);
                         }
+                        // Update judoka styling (verkeerde poule markering)
+                        if (data.judoka_id !== undefined) {
+                            updateJudokaStyling(data.judoka_id, !data.judoka_past_in_poule);
+                        }
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -1141,6 +1172,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Update judoka styling (verkeerde poule markering)
+    function updateJudokaStyling(judokaId, heeftProbleem) {
+        const judokaEl = document.querySelector(`.judoka-item[data-judoka-id="${judokaId}"]`);
+        if (!judokaEl) return;
+
+        // Update container styling
+        if (heeftProbleem) {
+            judokaEl.classList.add('bg-orange-50', 'border-l-4', 'border-orange-400');
+        } else {
+            judokaEl.classList.remove('bg-orange-50', 'border-l-4', 'border-orange-400');
+        }
+
+        // Update status icon
+        const iconContainer = judokaEl.querySelector('.flex.items-center.gap-1');
+        if (iconContainer) {
+            const existingIcon = iconContainer.querySelector('span:first-child');
+            if (existingIcon) {
+                if (heeftProbleem) {
+                    existingIcon.className = 'text-orange-500 text-xs flex-shrink-0';
+                    existingIcon.textContent = '⚠';
+                    existingIcon.title = 'Verkeerde gewichtsklasse';
+                } else {
+                    existingIcon.className = 'text-green-500 text-xs flex-shrink-0';
+                    existingIcon.textContent = '●';
+                    existingIcon.title = '';
+                }
+            }
+        }
+
+        // Update naam en gewicht kleuren
+        const naamEl = judokaEl.querySelector('.font-medium');
+        const gewichtEl = judokaEl.querySelector('.text-right .font-medium');
+        if (naamEl) {
+            naamEl.classList.toggle('text-orange-800', heeftProbleem);
+            naamEl.classList.toggle('text-gray-800', !heeftProbleem);
+        }
+        if (gewichtEl) {
+            gewichtEl.classList.toggle('text-orange-600', heeftProbleem);
+            gewichtEl.classList.toggle('font-bold', heeftProbleem);
+            gewichtEl.classList.toggle('text-gray-600', !heeftProbleem);
+        }
+    }
 
     // Update poule styling voor gewichtsprobleem (oranje header)
     function updatePouleGewichtsStyling(pouleCard, isGewichtProblematisch) {
@@ -1483,10 +1557,11 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     content.innerHTML = '';
 
     try {
-        let url = zoekMatchUrl.replace('__JUDOKA_ID__', judokaId) + '?wedstrijddag=1';
+        let url = zoekMatchUrl.replace('__JUDOKA_ID__', judokaId) + '?wedstrijddag=1&_t=' + Date.now();
         if (fromPouleId) url += '&from_poule_id=' + fromPouleId;
         const response = await fetch(url, {
-            headers: { 'Accept': 'application/json' }
+            headers: { 'Accept': 'application/json' },
+            cache: 'no-store'
         });
         const data = await response.json();
 
@@ -1541,13 +1616,15 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
 
             for (const match of blok.matches) {
                 const statusIcon = match.status === 'ok' ? '✅' : match.status === 'warning' ? '⚠️' : '❌';
-                const overschrijding = match.kg_overschrijding > 0 ? `<span class="text-orange-600 text-sm ml-2">+${match.kg_overschrijding}kg</span>` : '';
+                // Alleen kg overschrijding tonen bij variabele gewichtsklassen (max_kg_verschil > 0)
+                const isVariabel = data.max_kg_verschil > 0;
+                const overschrijding = isVariabel && match.kg_overschrijding > 0 ? `<span class="text-orange-600 text-sm ml-2">+${match.kg_overschrijding}kg</span>` : '';
 
                 html += `<div class="border rounded p-2 hover:bg-gray-50 cursor-pointer transition-colors"
                     onclick="selecteerPouleWedstrijddag(${judokaId}, ${fromPouleId}, ${match.poule_id})">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="font-medium">${statusIcon} #${match.poule_nummer} ${match.leeftijdsklasse}</span>
+                            <span class="font-medium">${statusIcon} #${match.poule_nummer} ${match.leeftijdsklasse}${match.gewichtsklasse ? ' ' + match.gewichtsklasse + ' kg' : ''}</span>
                             ${match.categorie_overschrijding ? '<span class="text-orange-500 text-xs ml-1">(andere categorie)</span>' : ''}
                             ${overschrijding}
                         </div>
