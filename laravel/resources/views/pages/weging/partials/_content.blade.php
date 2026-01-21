@@ -374,38 +374,72 @@ async function registreerGewicht() {
 // Keyboard support (for barcode scanners and physical keyboards)
 let barcodeBuffer = '';
 let barcodeTimeout = null;
+let keyboardReady = false;
 
-document.addEventListener('keydown', function(e) {
+// Initialize keyboard listener when DOM is ready
+function initKeyboard() {
+    if (keyboardReady) return;
+    keyboardReady = true;
+    console.log('Keyboard support initialized');
+
+    // Use both keydown and keypress for better compatibility
+    document.addEventListener('keydown', handleKeyInput, true);
+
+    // Ensure body can receive focus
+    document.body.tabIndex = -1;
+    document.body.focus();
+}
+
+function handleKeyInput(e) {
+    // Skip if typing in a text input (except weight-input which is readonly)
+    const activeEl = document.activeElement;
+    if (activeEl && activeEl.tagName === 'INPUT' && activeEl.id !== 'weight-input' && !activeEl.readOnly) {
+        return;
+    }
+
     // If judoka overlay is open, handle numpad input
-    if (selectedJudoka && !document.getElementById('judoka-section').classList.contains('hidden')) {
+    const judokaSection = document.getElementById('judoka-section');
+    if (selectedJudoka && judokaSection && !judokaSection.classList.contains('hidden')) {
         // Numbers 0-9
         if (e.key >= '0' && e.key <= '9') {
             e.preventDefault();
+            e.stopPropagation();
             numpadInput(e.key);
             return;
         }
         // Decimal point
         if (e.key === '.' || e.key === ',') {
             e.preventDefault();
+            e.stopPropagation();
             numpadInput('.');
             return;
         }
-        // Backspace = Clear
+        // Backspace = delete last char
         if (e.key === 'Backspace') {
             e.preventDefault();
+            e.stopPropagation();
             weightInput = weightInput.slice(0, -1);
             updateWeightDisplay();
+            return;
+        }
+        // Delete/C = Clear all
+        if (e.key === 'Delete' || e.key.toLowerCase() === 'c') {
+            e.preventDefault();
+            e.stopPropagation();
+            numpadInput('C');
             return;
         }
         // Enter = Register
         if (e.key === 'Enter') {
             e.preventDefault();
+            e.stopPropagation();
             registreerGewicht();
             return;
         }
         // Escape = Close
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             clearSelection();
             return;
         }
@@ -416,7 +450,9 @@ document.addEventListener('keydown', function(e) {
     // Scanners type fast and end with Enter
     if (e.key === 'Enter' && barcodeBuffer.length > 3) {
         e.preventDefault();
+        e.stopPropagation();
         // Process barcode
+        console.log('Barcode scanned:', barcodeBuffer);
         onScanSuccess(barcodeBuffer);
         barcodeBuffer = '';
         clearTimeout(barcodeTimeout);
@@ -425,16 +461,29 @@ document.addEventListener('keydown', function(e) {
 
     // Build barcode buffer (alphanumeric only)
     if (e.key.length === 1 && /[a-zA-Z0-9\-_]/.test(e.key)) {
-        // Don't capture if typing in search input
-        if (document.activeElement === document.getElementById('search-input')) {
-            return;
-        }
         barcodeBuffer += e.key;
-        // Clear buffer after 100ms of no input (scanners are fast)
+        // Clear buffer after 150ms of no input (scanners are fast)
         clearTimeout(barcodeTimeout);
         barcodeTimeout = setTimeout(() => {
             barcodeBuffer = '';
-        }, 100);
+        }, 150);
+    }
+}
+
+// Initialize keyboard on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKeyboard);
+} else {
+    initKeyboard();
+}
+
+// Also init on window load as fallback
+window.addEventListener('load', initKeyboard);
+
+// Re-focus body when clicking outside inputs (helps with barcode scanners)
+document.addEventListener('click', function(e) {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+        document.body.focus();
     }
 });
 
