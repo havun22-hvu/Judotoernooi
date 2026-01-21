@@ -218,17 +218,13 @@
                             $jsLeeftijd = addslashes($category['leeftijdsklasse']);
                             $jsGewicht = addslashes($category['gewichtsklasse']);
                             $jsKey = addslashes($category['key']);
-                            // Calculate active judokas per category
-                            // Afwezig = expliciet afwezig OF (weging gesloten EN niet gewogen)
+                            // Tel actieve judoka's in categorie
                             $totaalActiefInCategorie = 0;
-                            $aantalLegePoules = 0;
                             foreach ($category['poules'] as $p) {
-                                $actief = $p->judokas->filter(fn($j) =>
+                                $totaalActiefInCategorie += $p->judokas->filter(fn($j) =>
                                     $j->aanwezigheid !== 'afwezig' &&
                                     !($wegingGesloten && $j->gewicht_gewogen === null)
                                 )->count();
-                                $totaalActiefInCategorie += $actief;
-                                if ($actief === 0) $aantalLegePoules++;
                             }
                         @endphp
                         @if(!$isEliminatie)
