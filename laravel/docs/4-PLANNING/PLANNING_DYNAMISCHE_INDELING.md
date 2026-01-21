@@ -129,7 +129,6 @@ Deze criteria bepalen hoe judoka's BINNEN een categorie in poules worden verdeel
 | Instelling | Waarde | Betekenis |
 |------------|--------|-----------|
 | `poule_grootte_voorkeur` | [5, 4, 6, 3] | Poule groottes (zie onder) |
-| `clubspreiding` | aan/uit | Probeer clubs te verdelen |
 
 #### poule_grootte_voorkeur - Twee functies
 
@@ -175,8 +174,6 @@ De lijst heeft **twee functies**:
 ┌─────────────────────────────────────────────────────────────────┐
 │ Sorteer prioriteit: (sleep om te wisselen)                      │
 │ [1. Leeftijd] [2. Gewicht] [3. Band]                           │
-│                                                                 │
-│ [ ] Clubspreiding (probeer zelfde club te verdelen over poules)│
 └─────────────────────────────────────────────────────────────────┘
 ```
 

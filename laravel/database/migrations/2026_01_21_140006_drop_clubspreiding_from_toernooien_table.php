@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('toernooien', function (Blueprint $table) {
-            //
+            $table->dropColumn('clubspreiding');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('toernooien', function (Blueprint $table) {
-            //
+            $table->boolean('clubspreiding')->default(true)->after('poule_grootte_voorkeur');
         });
     }
 };

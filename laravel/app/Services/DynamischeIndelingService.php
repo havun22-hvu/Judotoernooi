@@ -45,7 +45,7 @@ class DynamischeIndelingService
      * @param Collection $judokas Judoka's in deze categorie
      * @param int $maxLeeftijdVerschil Max jaren verschil in poule (uit config)
      * @param float $maxKgVerschil Max kg verschil in poule (uit config)
-     * @param array $config Extra config (poule_grootte_voorkeur, clubspreiding)
+     * @param array $config Extra config (poule_grootte_voorkeur, verdeling_prioriteiten)
      */
     public function berekenIndeling(
         Collection $judokas,
