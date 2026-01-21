@@ -19,7 +19,7 @@
         </ul>
     </div>
 
-    <form action="{{ route('toernooi.judoka.import.store', $toernooi) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow p-6">
+    <form action="{{ route('toernooi.judoka.import.store', $toernooi) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-lg shadow p-6" data-loading="Bestand importeren...">
         @csrf
 
         <div class="mb-6">

@@ -36,6 +36,27 @@
         .animate-error-blink {
             animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
         }
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #fff;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -250,5 +271,18 @@
     @if(isset($toernooi))
         @include('partials.chat-widget-hoofdjury', ['toernooi' => $toernooi])
     @endif
+
+    {{-- Loading spinner for forms with data-loading attribute --}}
+    <script>
+        document.querySelectorAll('form[data-loading]').forEach(form => {
+            form.addEventListener('submit', function() {
+                const msg = this.dataset.loading || 'Bezig...';
+                const overlay = document.createElement('div');
+                overlay.className = 'loading-overlay';
+                overlay.innerHTML = `<div class="text-center text-white"><div class="loading-spinner mx-auto mb-4"></div><div class="text-lg font-medium">${msg}</div></div>`;
+                document.body.appendChild(overlay);
+            });
+        });
+    </script>
 </body>
 </html>

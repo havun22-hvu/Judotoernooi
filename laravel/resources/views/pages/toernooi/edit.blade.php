@@ -71,7 +71,7 @@
 
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
-    <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form">
+    <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form" data-loading="Instellingen opslaan...">
         @csrf
         @method('PUT')
 

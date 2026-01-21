@@ -64,7 +64,7 @@
     </div>
 @endif
 
-    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi) }}" method="POST" id="import-form">
+    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi) }}" method="POST" id="import-form" data-loading="Judoka's importeren...">
         @csrf
 
         {{-- Kolom Mapping Tabel --}}
