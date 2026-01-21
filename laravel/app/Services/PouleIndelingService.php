@@ -901,12 +901,11 @@ class PouleIndelingService
      * Title composition based on category config:
      * - Label: optional via toon_label_in_titel checkbox
      * - Age range: only if max_leeftijd_verschil > 0 (variable)
-     * - Weight: fixed class OR variable range based on max_kg_verschil
+     * - Weight: fixed class (max_kg_verschil=0) OR variable range (max_kg_verschil>0)
      *
      * Examples:
-     * - "Mini's U7 -26kg" (label on, fixed category)
-     * - "Mini's U7 28-32kg" (label on, variable weight)
-     * - "9-10j 28-32kg" (label off, both variable)
+     * - "Aspiranten -34kg" (fixed category, shows weight CLASS)
+     * - "Mini's 5-6j 24-28kg" (variable category, shows weight RANGE)
      */
     private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null, ?string $categorieKey = null): string
     {
@@ -953,15 +952,25 @@ class PouleIndelingService
             }
         }
 
-        // 4. Weight: always calculate range from judokas if available
-        if (!empty($pouleJudokas)) {
+        // 4. Weight: use weight class for fixed categories, range for variable
+        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+        $isVasteGewichtsklasse = $maxKgVerschil == 0;
+
+        if ($isVasteGewichtsklasse && !empty($gewichtsklasse)) {
+            // Fixed weight class: show class name (e.g. "-34kg", "+60kg")
+            $gk = $gewichtsklasse;
+            if (!str_contains($gk, 'kg')) {
+                $gk .= 'kg';
+            }
+            $parts[] = $gk;
+        } elseif (!empty($pouleJudokas)) {
+            // Variable weight: calculate range from judokas
             $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
             if (!empty($gewichten)) {
                 $min = min($gewichten);
                 $max = max($gewichten);
                 $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
             } elseif (!empty($gewichtsklasse)) {
-                // Fallback to weight class if no weights available
                 $gk = $gewichtsklasse;
                 if (!str_contains($gk, 'kg')) {
                     $gk .= 'kg';
