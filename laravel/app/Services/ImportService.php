@@ -168,7 +168,9 @@ class ImportService
                         $resultaat['overgeslagen']++;
                     }
                 } catch (\Exception $e) {
-                    $resultaat['fouten'][] = "Rij {$rijNummer}: {$e->getMessage()}";
+                    $fout = "Rij {$rijNummer}: {$e->getMessage()}";
+                    $resultaat['fouten'][] = $fout;
+                    \Log::error("Import fout: {$fout}", ['exception' => $e->getTraceAsString()]);
                 }
             }
 
