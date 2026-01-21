@@ -913,8 +913,8 @@ async function naarZaaloverzicht(categoryKey) {
 
         if (response.ok) {
             sentCategories[categoryKey] = true;
-            // Update button appearance
-            const btn = document.querySelector(`.naar-zaaloverzicht-btn[data-category="${categoryKey}"]`);
+            // Update button appearance - use CSS.escape for special chars like apostrophes
+            const btn = document.querySelector(`.naar-zaaloverzicht-btn[data-category="${CSS.escape(categoryKey)}"]`);
             if (btn) {
                 btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
                 btn.classList.add('bg-green-600', 'hover:bg-green-700');
