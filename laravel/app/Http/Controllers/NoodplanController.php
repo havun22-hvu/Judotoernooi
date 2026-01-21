@@ -240,6 +240,49 @@ class NoodplanController extends Controller
     }
 
     /**
+     * Print ingevulde wedstrijdschema's in matrix-formaat (zoals mat interface)
+     * 1 poule per A4, landscape voor ≥6 judoka's
+     */
+    public function printIngevuldSchemas(Toernooi $toernooi, ?int $blokNummer = null): View
+    {
+        $blok = null;
+        if ($blokNummer) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if (!$blok) {
+                abort(404, 'Blok niet gevonden');
+            }
+            $poules = $blok->poules()
+                ->whereNotNull('mat_id')
+                ->whereHas('wedstrijden')
+                ->with(['judokas.club', 'wedstrijden', 'mat', 'blok'])
+                ->get();
+            $titel = "Wedstrijdschema's (Matrix) - Blok {$blok->nummer}";
+        } else {
+            $poules = Poule::where('toernooi_id', $toernooi->id)
+                ->whereNotNull('mat_id')
+                ->whereHas('wedstrijden')
+                ->with(['judokas.club', 'wedstrijden', 'mat', 'blok'])
+                ->orderBy('blok_id')
+                ->get();
+            $titel = "Alle Wedstrijdschema's (Matrix)";
+        }
+
+        // Build schema for each poule
+        $schemas = $toernooi->wedstrijd_schemas ?? [];
+        $poulesMetSchema = $poules->map(function ($poule) use ($schemas) {
+            $aantal = $poule->judokas->count();
+            $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal);
+            return [
+                'poule' => $poule,
+                'schema' => $schema,
+                'aantal' => $aantal,
+            ];
+        });
+
+        return view('pages.noodplan.ingevuld-schema', compact('toernooi', 'poulesMetSchema', 'titel', 'blok'));
+    }
+
+    /**
      * Export poules naar Excel/CSV (1 sheet per blok)
      */
     public function exportPoules(Toernooi $toernooi, string $format = 'xlsx')

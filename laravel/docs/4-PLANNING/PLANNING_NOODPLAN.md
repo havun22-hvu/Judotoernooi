@@ -34,7 +34,8 @@ Het noodplan biedt organisators de mogelijkheid om alle essentiële toernooigege
 |-------|--------------|
 | **Gecorrigeerde poules** | Na overpoulen - per blok of alle blokken |
 | **Aangepast zaaloverzicht** | Na overpoulen/nieuwe matverdeling |
-| **Ingevulde wedstrijdschema's** | Per blok - met scores |
+| **Ingevulde wedstrijdschema's** | Per blok - met scores (lijst-formaat) |
+| **Ingevulde schema's (matrix)** | Matrix-formaat zoals mat interface, 1 per A4, met namen ingevuld |
 | **Actief wedstrijdschema** | Huidige staat van lopende poule |
 
 ---
@@ -65,6 +66,7 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
     // Tijdens wedstrijd
     Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
     Route::get('/poule/{poule}/schema', [NoodplanController::class, 'printPouleSchema'])->name('poule-schema');
+    Route::get('/ingevuld-schemas/{blok?}', [NoodplanController::class, 'printIngevuldSchemas'])->name('ingevuld-schemas');
 });
 ```
 
@@ -121,6 +123,7 @@ Route::prefix('noodplan')->name('noodplan.')->group(function () {
 | `resources/views/pages/noodplan/contactlijst.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/wedstrijdschemas.blade.php` | NIEUW |
 | `resources/views/pages/noodplan/poule-schema.blade.php` | NIEUW |
+| `resources/views/pages/noodplan/ingevuld-schema.blade.php` | NIEUW (matrix met namen) |
 | `resources/views/layouts/print.blade.php` | NIEUW (basis print layout) |
 | `resources/views/pages/toernooi/edit.blade.php` | Toggle toevoegen |
 | `routes/web.php` | Routes toevoegen |
@@ -189,7 +192,45 @@ J = Judopunten (Yuko=5, Waza-Ari=7, Ippon=10)
 
 ---
 
-## 6. Print CSS Strategie (Algemeen)
+## 6. Ingevulde Schema's (Matrix) - Print Specificaties
+
+Print van poules die op de mat staan, in matrix-formaat zoals de mat interface.
+
+### Kenmerken
+
+- **1 poule per A4 pagina** (page-break tussen poules)
+- **Matrix layout** zoals leeg-schema, maar met namen ingevuld
+- **Oriëntatie:** Portrait (≤5 judoka's) / Landscape (≥6 judoka's)
+- **Scores optioneel:** als wedstrijden gespeeld zijn, toon W/J scores
+
+### Header per poule
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Poule #12 - Mini's 7-8j 22-25kg          Mat 2 | Blok 1        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Matrix
+
+Zelfde layout als leeg-schema:
+- Kolom 1: Nr (1, 2, 3...)
+- Kolom 2: Naam + club (ingevuld!)
+- Kolommen 3+: Wedstrijden (W | J) - actieve cellen wit, inactief zwart
+- Laatste kolommen: WP, JP, Plts
+
+### Route
+
+```
+GET /noodplan/ingevuld-schemas/{blok?}
+```
+
+- Zonder blok: alle blokken met poules die wedstrijden hebben
+- Met blok: alleen dat blok
+
+---
+
+## 7. Print CSS Strategie (Algemeen)
 
 ```css
 @media print {

@@ -238,6 +238,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         // Tijdens wedstrijd (live)
         Route::get('/wedstrijdschemas/{blok?}', [NoodplanController::class, 'printWedstrijdschemas'])->name('wedstrijdschemas');
         Route::get('/poule/{poule}/schema', [NoodplanController::class, 'printPouleSchema'])->name('poule-schema');
+        Route::get('/ingevuld-schemas/{blok?}', [NoodplanController::class, 'printIngevuldSchemas'])->name('ingevuld-schemas');
 
         // Export
         Route::get('/export-poules/{format?}', [NoodplanController::class, 'exportPoules'])->name('export-poules');
