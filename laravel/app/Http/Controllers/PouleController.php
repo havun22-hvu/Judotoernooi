@@ -109,17 +109,28 @@ class PouleController extends Controller
     }
 
     /**
-     * Delete an empty poule
+     * Delete an empty poule (or poule with only absent judokas)
      */
     public function destroy(Toernooi $toernooi, Poule $poule): JsonResponse
     {
-        // Only allow deleting empty poules
-        if ($poule->judokas()->count() > 0) {
+        // Check for active judokas (not absent, and weighted if weging is closed)
+        $blok = $poule->blok;
+        $wegingGesloten = $blok ? $blok->weging_gesloten : false;
+
+        $actieveJudokas = $poule->judokas->filter(function ($j) use ($wegingGesloten) {
+            return $j->aanwezigheid !== 'afwezig' &&
+                   !($wegingGesloten && $j->gewicht_gewogen === null);
+        });
+
+        if ($actieveJudokas->count() > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kan alleen lege poules verwijderen',
+                'message' => 'Kan alleen lege poules verwijderen (poule heeft nog ' . $actieveJudokas->count() . ' actieve judoka\'s)',
             ], 400);
         }
+
+        // Detach any remaining (absent) judokas
+        $poule->judokas()->detach();
 
         $nummer = $poule->nummer;
         $poule->delete();
