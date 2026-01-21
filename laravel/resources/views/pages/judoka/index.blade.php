@@ -104,6 +104,55 @@
 </div>
 @endif
 
+@if($importWarningsPerClub->count() > 0)
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6" x-data="{ open: false }">
+    <div class="flex items-center justify-between">
+        <h3 class="font-bold text-red-800">
+            <span class="cursor-pointer hover:underline" @click="open = !open">
+                ⚠️ {{ $importWarningsPerClub->flatten()->count() }} judoka's met import waarschuwingen
+                <span class="text-sm font-normal ml-2">(klik voor details per club)</span>
+            </span>
+        </h3>
+        <button @click="open = !open" class="text-red-600 hover:text-red-800">
+            <svg x-show="!open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+            <svg x-show="open" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+            </svg>
+        </button>
+    </div>
+    <div x-show="open" x-collapse class="mt-3 space-y-4">
+        @foreach($importWarningsPerClub as $clubNaam => $clubJudokas)
+        @php $club = $clubJudokas->first()->club; @endphp
+        <div class="bg-white rounded p-3 border border-red-100">
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold text-red-900">{{ $clubNaam }} ({{ $clubJudokas->count() }})</h4>
+                @if($club)
+                <div class="text-xs text-gray-600 text-right">
+                    @if($club->email)
+                    <a href="mailto:{{ $club->email }}?subject=Judoka%20gegevens%20aanvullen%20-%20{{ urlencode($toernooi->naam) }}" class="text-blue-600 hover:underline">{{ $club->email }}</a>
+                    @endif
+                    @if($club->telefoon)
+                    <span class="ml-2">{{ $club->telefoon }}</span>
+                    @endif
+                </div>
+                @endif
+            </div>
+            <ul class="text-sm text-red-700 space-y-1">
+                @foreach($clubJudokas as $judoka)
+                <li class="flex justify-between">
+                    <span>{{ $judoka->naam }}</span>
+                    <span class="text-red-500 text-xs">{{ $judoka->import_warnings }}</span>
+                </li>
+                @endforeach
+            </ul>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 <!-- Judoka tabel -->
 @if($judokas->count() > 0)
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="judokaTable()">

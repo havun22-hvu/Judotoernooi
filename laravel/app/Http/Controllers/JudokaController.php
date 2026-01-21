@@ -36,7 +36,12 @@ class JudokaController extends Controller
         $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse')
             ->sortBy(fn ($group, $klasse) => $toernooi->getLeeftijdsklasseSortValue($klasse));
 
-        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse'));
+        // Get judokas with import warnings, grouped by club
+        $importWarningsPerClub = $judokas
+            ->filter(fn ($j) => !empty($j->import_warnings))
+            ->groupBy(fn ($j) => $j->club?->naam ?? 'Geen club');
+
+        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'importWarningsPerClub'));
     }
 
     /**
