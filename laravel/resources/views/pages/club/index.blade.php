@@ -60,6 +60,7 @@
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Plaats</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Email</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Telefoon</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Website</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Judoka's</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Kaarten</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">Coach Portal</th>
@@ -86,6 +87,17 @@
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->plaats ?? '-' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->email ?? '-' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->telefoon ?? '-' }}</td>
+                <td class="px-4 py-3 text-sm">
+                    @if($club->website)
+                    <a href="{{ Str::startsWith($club->website, 'http') ? $club->website : 'https://' . $club->website }}"
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 hover:underline">
+                        {{ Str::limit(preg_replace('#^https?://(www\.)?#', '', $club->website), 25) }}
+                    </a>
+                    @else
+                    <span class="text-gray-400">-</span>
+                    @endif
+                </td>
                 <td class="px-4 py-3">
                     <span class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">{{ $club->judokas_count }}</span>
                 </td>
@@ -147,7 +159,7 @@
                             </button>
                         </form>
                         @endif
-                        <button onclick="editClub({{ $club->id }}, '{{ $club->naam }}', '{{ $club->plaats }}', '{{ $club->email }}', '{{ $club->telefoon }}')"
+                        <button onclick="editClub({{ $club->id }}, '{{ $club->naam }}', '{{ $club->plaats }}', '{{ $club->email }}', '{{ $club->telefoon }}', '{{ $club->website }}')"
                                 class="px-2 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 rounded">
                             Bewerk
                         </button>
@@ -162,7 +174,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                     Nog geen clubs. Voeg hieronder een club toe.
                 </td>
             </tr>
@@ -191,6 +203,10 @@
         <div>
             <label class="block text-sm text-gray-600 mb-1">Telefoon</label>
             <input type="tel" name="telefoon" class="border rounded px-3 py-2 w-36">
+        </div>
+        <div>
+            <label class="block text-sm text-gray-600 mb-1">Website</label>
+            <input type="url" name="website" placeholder="https://..." class="border rounded px-3 py-2 w-48">
         </div>
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded">
             Toevoegen
@@ -222,6 +238,10 @@
                     <label class="block text-sm text-gray-600 mb-1">Telefoon</label>
                     <input type="tel" name="telefoon" id="editTelefoon" class="w-full border rounded px-3 py-2">
                 </div>
+                <div>
+                    <label class="block text-sm text-gray-600 mb-1">Website</label>
+                    <input type="url" name="website" id="editWebsite" placeholder="https://..." class="w-full border rounded px-3 py-2">
+                </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded">
@@ -238,12 +258,13 @@
 </div>
 
 <script>
-function editClub(id, naam, plaats, email, telefoon) {
+function editClub(id, naam, plaats, email, telefoon, website) {
     document.getElementById('editForm').action = '{{ url("toernooi/{$toernooi->slug}/club") }}/' + id;
     document.getElementById('editNaam').value = naam;
     document.getElementById('editPlaats').value = plaats || '';
     document.getElementById('editEmail').value = email || '';
     document.getElementById('editTelefoon').value = telefoon || '';
+    document.getElementById('editWebsite').value = website || '';
     document.getElementById('editModal').classList.remove('hidden');
     document.getElementById('editModal').classList.add('flex');
 }
