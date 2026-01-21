@@ -208,6 +208,7 @@
             $syncedJudokas = $judokas->filter(fn($j) => $j->isSynced() && !$j->isGewijzigdNaSync());
             $gewijzigdJudokas = $judokas->filter(fn($j) => $j->isGewijzigdNaSync());
             $nietSyncedVolledig = $volledigeJudokas->filter(fn($j) => !$j->isSynced() || $j->isGewijzigdNaSync());
+            $judokasMetImportWarnings = $judokas->filter(fn($j) => !empty($j->import_warnings));
         @endphp
 
         <!-- Sync Status Box -->
@@ -259,6 +260,18 @@
                 <div>
                     <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
                     <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet {{ ($betalingActief ?? false) ? 'afgerekend' : 'gesynced' }} worden. Vul de ontbrekende gegevens aan.</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($judokasMetImportWarnings->count() > 0)
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <span class="text-red-600 text-xl mr-2">⚠️</span>
+                <div>
+                    <p class="font-medium text-red-800">{{ $judokasMetImportWarnings->count() }} judoka('s) met import waarschuwingen</p>
+                    <p class="text-sm text-red-700">Er waren problemen bij het importeren van deze judoka's. Controleer de gegevens en pas aan indien nodig.</p>
                 </div>
             </div>
         </div>
@@ -341,7 +354,7 @@
                         $warnings[] = "Leeftijd " . (date('Y') - $judoka->geboortejaar) . " jaar lijkt erg hoog";
                     }
                 @endphp
-                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '' }}" x-data="{ editing: false }">
+                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '') }}" x-data="{ editing: false }">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
                         <div class="flex items-start gap-2">
@@ -406,6 +419,9 @@
                             @endif
                             @if(count($warnings) > 0)
                             <p class="text-xs text-orange-600 mt-1">⚠ {{ implode(' | ', $warnings) }}</p>
+                            @endif
+                            @if($judoka->import_warnings)
+                            <p class="text-xs text-red-600 mt-1">⚠️ Import: {{ $judoka->import_warnings }}</p>
                             @endif
                             </div>
                         </div>

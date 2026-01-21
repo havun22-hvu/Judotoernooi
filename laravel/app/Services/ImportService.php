@@ -193,8 +193,8 @@ class ImportService
         $clubNaam = $this->getWaarde($rij, $mapping['club']);
         $gewicht = $this->getWaarde($rij, $mapping['gewicht']);
         $gewichtsklasseRaw = $this->getWaarde($rij, $mapping['gewichtsklasse']);
-        $geslacht = $this->getWaarde($rij, $mapping['geslacht']);
-        $geboortejaar = $this->getWaarde($rij, $mapping['geboortejaar']);
+        $geslachtRaw = $this->getWaarde($rij, $mapping['geslacht']);
+        $geboortejaarRaw = $this->getWaarde($rij, $mapping['geboortejaar']);
         $telefoon = $this->getWaarde($rij, $mapping['telefoon']);
 
         // Skip rows without name (name is required)
@@ -204,14 +204,39 @@ class ImportService
 
         // Track if judoka has incomplete data
         // Weight is not required if weight class is provided
-        $isOnvolledig = empty($geboortejaar) || empty($geslacht) || (empty($gewicht) && empty($gewichtsklasseRaw));
+        $isOnvolledig = empty($geboortejaarRaw) || empty($geslachtRaw) || (empty($gewicht) && empty($gewichtsklasseRaw));
+
+        // Collect warnings during parsing
+        $warnings = [];
 
         // Parse and validate data
         $naam = $this->normaliseerNaam($naam);
-        $geboortejaar = !empty($geboortejaar) ? $this->parseGeboortejaar($geboortejaar) : null;
-        $geslacht = $this->parseGeslacht($geslacht);
+        $geboortejaar = !empty($geboortejaarRaw) ? $this->parseGeboortejaar($geboortejaarRaw) : null;
+        $geslacht = $this->parseGeslacht($geslachtRaw);
         $band = $this->parseBand($band);
         $gewicht = $this->parseGewicht($gewicht);
+
+        // Check for parsing issues and unusual values
+        if (!empty($geslachtRaw) && !Geslacht::fromString((string)$geslachtRaw)) {
+            $warnings[] = "Geslacht '{$geslachtRaw}' niet herkend, standaard M gebruikt";
+        }
+
+        if ($gewicht !== null) {
+            if ($gewicht > 100) {
+                $warnings[] = "Gewicht {$gewicht} kg lijkt hoog";
+            } elseif ($gewicht < 15) {
+                $warnings[] = "Gewicht {$gewicht} kg lijkt laag";
+            }
+        }
+
+        if ($geboortejaar !== null) {
+            $leeftijd = date('Y') - $geboortejaar;
+            if ($leeftijd < 4) {
+                $warnings[] = "Leeftijd {$leeftijd} jaar erg jong";
+            } elseif ($leeftijd > 50) {
+                $warnings[] = "Leeftijd {$leeftijd} jaar erg hoog";
+            }
+        }
 
         // Get or create club
         $club = null;
@@ -276,6 +301,9 @@ class ImportService
 
         $bestaande = $query->first();
 
+        // Convert warnings array to string (or null if empty)
+        $importWarnings = !empty($warnings) ? implode(' | ', $warnings) : null;
+
         if ($bestaande) {
             // Update existing judoka instead of creating new one
             $bestaande->update([
@@ -288,6 +316,7 @@ class ImportService
                 'sort_categorie' => $sortCategorie,
                 'gewichtsklasse' => $gewichtsklasse,
                 'is_onvolledig' => $isOnvolledig,
+                'import_warnings' => $importWarnings,
                 'telefoon' => $this->parseTelefoon($telefoon),
             ]);
             return null; // Return null to count as skipped
@@ -307,6 +336,7 @@ class ImportService
             'sort_categorie' => $sortCategorie,
             'gewichtsklasse' => $gewichtsklasse,
             'is_onvolledig' => $isOnvolledig,
+            'import_warnings' => $importWarnings,
             'telefoon' => $this->parseTelefoon($telefoon),
         ]);
 

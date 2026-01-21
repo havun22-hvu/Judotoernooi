@@ -42,6 +42,7 @@ class Judoka extends Model
         'betaling_id',
         'betaald_op',
         'is_onvolledig',
+        'import_warnings',
         'telefoon',
         'overpouled_van_poule_id',
     ];
