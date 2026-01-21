@@ -155,6 +155,56 @@
         </div>
     </div>
 
+    <!-- TIJDENS DE WEDSTRIJD -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🏆</span>
+            TIJDENS DE WEDSTRIJD (live)
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Ingevulde wedstrijdschema's (matrix) -->
+            <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div>
+                    <h3 class="font-medium text-yellow-800">Ingevulde schema's (matrix)</h3>
+                    <p class="text-sm text-yellow-600">1 poule per A4, zoals mat interface</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi) }}" target="_blank"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', [$toernooi, $blok->nummer]) }}" target="_blank"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Wedstrijdschema's (lijst) -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Wedstrijdschema's (lijst)</h3>
+                    <p class="text-sm text-gray-500">Alle wedstrijden met scores</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', [$toernooi, $blok->nummer]) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Info box -->
     <div class="p-4 bg-blue-50 rounded-lg">
         <h3 class="font-bold text-blue-800 mb-2">Tip voor noodgevallen</h3>
