@@ -69,19 +69,19 @@
                 </div>
 
                 <!-- Numpad (3 rijen + registreer) -->
-                <div class="grid grid-cols-4 gap-1 mb-2">
-                    <button onclick="numpadInput('7')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">7</button>
-                    <button onclick="numpadInput('8')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">8</button>
-                    <button onclick="numpadInput('9')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">9</button>
-                    <button onclick="numpadInput('C')" class="bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold">C</button>
-                    <button onclick="numpadInput('4')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">4</button>
-                    <button onclick="numpadInput('5')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">5</button>
-                    <button onclick="numpadInput('6')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">6</button>
-                    <button onclick="numpadInput('.')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">.</button>
-                    <button onclick="numpadInput('1')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">1</button>
-                    <button onclick="numpadInput('2')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">2</button>
-                    <button onclick="numpadInput('3')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">3</button>
-                    <button onclick="numpadInput('0')" class="bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">0</button>
+                <div class="grid grid-cols-4 gap-1 mb-2" id="numpad-grid">
+                    <button type="button" data-key="7" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">7</button>
+                    <button type="button" data-key="8" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">8</button>
+                    <button type="button" data-key="9" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">9</button>
+                    <button type="button" data-key="C" class="numpad-key bg-red-100 active:bg-red-300 text-red-700 rounded py-2.5 text-xl font-bold">C</button>
+                    <button type="button" data-key="4" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">4</button>
+                    <button type="button" data-key="5" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">5</button>
+                    <button type="button" data-key="6" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">6</button>
+                    <button type="button" data-key="." class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">.</button>
+                    <button type="button" data-key="1" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">1</button>
+                    <button type="button" data-key="2" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">2</button>
+                    <button type="button" data-key="3" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">3</button>
+                    <button type="button" data-key="0" class="numpad-key bg-gray-100 active:bg-gray-300 rounded py-2.5 text-xl font-bold">0</button>
                 </div>
 
                 <!-- Register button -->
@@ -278,7 +278,7 @@ function clearSelection() {
     document.getElementById('feedback').classList.add('hidden');
 }
 
-// Numpad
+// Numpad - use event delegation for better mobile support
 function numpadInput(key) {
     if (key === 'C') {
         weightInput = '';
@@ -289,6 +289,29 @@ function numpadInput(key) {
     }
     updateWeightDisplay();
 }
+
+// Initialize numpad with event delegation (works better on mobile)
+document.addEventListener('DOMContentLoaded', function() {
+    const numpadGrid = document.getElementById('numpad-grid');
+    if (numpadGrid) {
+        numpadGrid.addEventListener('click', function(e) {
+            const btn = e.target.closest('.numpad-key');
+            if (btn) {
+                const key = btn.dataset.key;
+                if (key) numpadInput(key);
+            }
+        });
+        // Also handle touch events explicitly
+        numpadGrid.addEventListener('touchend', function(e) {
+            const btn = e.target.closest('.numpad-key');
+            if (btn) {
+                e.preventDefault();
+                const key = btn.dataset.key;
+                if (key) numpadInput(key);
+            }
+        });
+    }
+});
 
 function updateWeightDisplay() {
     const input = document.getElementById('weight-input');
