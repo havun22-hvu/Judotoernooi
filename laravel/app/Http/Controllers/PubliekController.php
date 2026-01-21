@@ -193,37 +193,32 @@ class PubliekController extends Controller
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
                 // Find current and next match
-                // Huidige (groen) = always automatic (first unplayed after last played)
-                // Volgende (geel) = manual override OR automatic (second unplayed)
+                // Huidige (groen) = manual override (actieve_wedstrijd_id) OR auto-fallback
+                // Volgende (geel) = manual override (huidige_wedstrijd_id) OR auto-fallback
                 $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
 
                 $huidigeWedstrijd = null;
                 $volgendeWedstrijd = null;
 
-                // Automatic: based on last played match
-                $laatstGespeeld = $wedstrijden->filter(fn($w) => $w->status === 'gespeeld')->last();
+                // Groen (speelt nu): check manual override first
+                if ($poule->actieve_wedstrijd_id) {
+                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->actieve_wedstrijd_id && $w->status !== 'gespeeld');
+                }
 
-                if ($laatstGespeeld) {
-                    // Current (green) = first unplayed after last played
-                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $laatstGespeeld->volgorde && $w->status !== 'gespeeld');
-                    // Next (yellow) = manual override OR second unplayed after last played
-                    if ($poule->huidige_wedstrijd_id) {
-                        $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
-                    }
-                    if (!$volgendeWedstrijd && $huidigeWedstrijd) {
-                        $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->volgorde > $huidigeWedstrijd->volgorde && $w->status !== 'gespeeld');
-                    }
-                } else {
-                    // No matches played yet - first is current
+                // Auto-fallback for groen: first unplayed
+                if (!$huidigeWedstrijd) {
                     $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
-                    $huidigeWedstrijd = $ongespeeld->get(0);
-                    // Next (yellow) = manual override OR second unplayed
-                    if ($poule->huidige_wedstrijd_id) {
-                        $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
-                    }
-                    if (!$volgendeWedstrijd) {
-                        $volgendeWedstrijd = $ongespeeld->get(1);
-                    }
+                    $huidigeWedstrijd = $ongespeeld->first();
+                }
+
+                // Geel (klaar maken): check manual override first
+                if ($poule->huidige_wedstrijd_id) {
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
+                }
+
+                // Auto-fallback for geel: second unplayed (after huidige)
+                if (!$volgendeWedstrijd && $huidigeWedstrijd) {
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->status !== 'gespeeld' && $w->id !== $huidigeWedstrijd->id);
                 }
 
                 // IDs of judokas in current/next match

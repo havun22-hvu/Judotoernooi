@@ -17,9 +17,9 @@
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-> **Type:** Laravel 11 toernooi management systeem
+> **Type:** Laravel 11 toernooi management systeem (multi-tenant)
 > **URL:** https://judotournament.org (production)
-> **Doel:** WestFries Open Judo Toernooi beheren
+> **Doel:** Platform voor judo toernooien (meerdere klanten/toernooien)
 
 ## Rules (ALWAYS follow)
 
