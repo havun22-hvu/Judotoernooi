@@ -1213,8 +1213,11 @@
                     if (response.ok) {
                         const data = await response.json();
                         hidePresetModal();
-                        showStatus(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
-                        setTimeout(() => document.getElementById('save-status').classList.add('hidden'), 3000);
+                        // Toon groene toast melding
+                        const toast = document.getElementById('save-status');
+                        toast.textContent = overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen';
+                        toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-green-600 bg-green-100 border border-green-300';
+                        setTimeout(() => toast.classList.add('hidden'), 3000);
                         await loadEigenPresets();
                         if (data.id) {
                             presetsDropdown.value = data.id;
@@ -1223,11 +1226,15 @@
                         }
                     } else {
                         const data = await response.json();
-                        showStatus('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
+                        const toast = document.getElementById('save-status');
+                        toast.textContent = '✗ ' + (data.message || 'Kon preset niet opslaan');
+                        toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
                     }
                 } catch (e) {
                     console.error('Fout bij opslaan:', e);
-                    showStatus('✗ Er ging iets mis bij het opslaan', 'error');
+                    const toast = document.getElementById('save-status');
+                    toast.textContent = '✗ Er ging iets mis bij het opslaan';
+                    toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
                 }
             }
 
@@ -1279,7 +1286,9 @@
                 const input = document.getElementById('new-preset-naam');
                 const naam = input?.value?.trim();
                 if (!naam) {
-                    showStatus('Vul een naam in', 'error');
+                    const toast = document.getElementById('save-status');
+                    toast.textContent = 'Vul een naam in';
+                    toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
                     return;
                 }
                 savePreset(naam, false);
