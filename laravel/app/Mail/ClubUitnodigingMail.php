@@ -26,13 +26,16 @@ class ClubUitnodigingMail extends Mailable
 
     public function content(): Content
     {
+        $club = $this->uitnodiging->club;
+
         return new Content(
             view: 'emails.club-uitnodiging',
             with: [
                 'uitnodiging' => $this->uitnodiging,
                 'toernooi' => $this->uitnodiging->toernooi,
-                'club' => $this->uitnodiging->club,
-                'coachUrl' => route('coach.portal', $this->uitnodiging->token),
+                'club' => $club,
+                'portalUrl' => $club->getPortalUrl(),
+                'pincode' => $club->pincode,
             ],
         );
     }

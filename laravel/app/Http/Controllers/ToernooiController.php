@@ -138,17 +138,19 @@ class ToernooiController extends Controller
             ->with('success', 'Toernooi bijgewerkt');
     }
 
-    public function destroy(Toernooi $toernooi): RedirectResponse
+    public function destroy(Request $request, Toernooi $toernooi): RedirectResponse
     {
-        // Only sitebeheerder (admin) can delete
         $organisator = auth('organisator')->user();
-        if (!$organisator || !$organisator->isSitebeheerder()) {
+
+        // Eigenaar of sitebeheerder mag verwijderen
+        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->ownsToernooi($toernooi))) {
             return redirect()
                 ->route('toernooi.index')
-                ->with('error', 'Alleen een sitebeheerder kan toernooien verwijderen');
+                ->with('error', 'Je hebt geen rechten om dit toernooi te verwijderen');
         }
 
         $naam = $toernooi->naam;
+        $bewaarPresets = $request->boolean('bewaar_presets');
 
         // Delete all related data explicitly
         $pouleIds = $toernooi->poules()->pluck('id');
@@ -158,11 +160,22 @@ class ToernooiController extends Controller
         $toernooi->judokas()->delete();
         $toernooi->blokken()->delete();
         $toernooi->matten()->delete();
+
+        // Presets alleen verwijderen als gebruiker dat wil
+        if (!$bewaarPresets) {
+            \App\Models\GewichtsklassenPreset::where('organisator_id', $organisator->id)->delete();
+        }
+
         $toernooi->delete();
+
+        $message = "Toernooi '{$naam}' volledig verwijderd";
+        if ($bewaarPresets) {
+            $message .= " (presets bewaard)";
+        }
 
         return redirect()
             ->route('toernooi.index')
-            ->with('success', "Toernooi '{$naam}' volledig verwijderd");
+            ->with('success', $message);
     }
 
     /**

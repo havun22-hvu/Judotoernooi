@@ -76,6 +76,12 @@
 </div>
 @endif
 
+@if(session('correctie_mails'))
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <p class="text-blue-800">{{ session('correctie_mails') }}</p>
+</div>
+@endif
+
 @if(session('import_fouten'))
 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6" x-data="{ open: false }">
     <div class="flex items-center justify-between">

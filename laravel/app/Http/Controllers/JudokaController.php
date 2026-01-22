@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Band;
+use App\Mail\CorrectieVerzoekMail;
+use App\Models\Club;
 use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Services\ImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -207,7 +210,48 @@ class JudokaController extends Controller
             $redirect = $redirect->with('warning', "⚠️ {$nietGecategoriseerd} judoka('s) niet gecategoriseerd! Pas de categorie-instellingen aan.");
         }
 
+        // Send correction emails to clubs with judokas that need correction
+        $correctieMailsVerstuurd = $this->verstuurCorrectieMails($toernooi);
+        if ($correctieMailsVerstuurd > 0) {
+            $redirect = $redirect->with('correctie_mails', "{$correctieMailsVerstuurd} correctie email(s) verstuurd naar clubs.");
+        }
+
         return $redirect;
+    }
+
+    /**
+     * Send correction emails to clubs with judokas marked as 'te_corrigeren'
+     */
+    private function verstuurCorrectieMails(Toernooi $toernooi): int
+    {
+        // Get judokas that need correction, grouped by club
+        $judokasTeCorrigeren = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('import_status', 'te_corrigeren')
+            ->whereNotNull('club_id')
+            ->with('club')
+            ->get()
+            ->groupBy('club_id');
+
+        $verstuurd = 0;
+
+        foreach ($judokasTeCorrigeren as $clubId => $judokas) {
+            $club = Club::find($clubId);
+
+            if (!$club || !$club->email) {
+                continue;
+            }
+
+            try {
+                $recipients = array_filter([$club->email, $club->email2]);
+                Mail::to($recipients)->send(new CorrectieVerzoekMail($toernooi, $club, $judokas));
+                $verstuurd++;
+            } catch (\Exception $e) {
+                // Log error but don't stop the process
+                \Log::error("Failed to send correction email to club {$club->naam}: " . $e->getMessage());
+            }
+        }
+
+        return $verstuurd;
     }
 
     /**

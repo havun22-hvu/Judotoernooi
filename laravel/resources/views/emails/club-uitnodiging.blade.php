@@ -129,16 +129,19 @@
 
         <h3>Hoe werkt het?</h3>
         <ol class="steps">
-            <li><strong>Klik op de onderstaande link</strong> om naar uw persoonlijke coach-pagina te gaan</li>
-            <li><strong>Maak een wachtwoord aan</strong> (alleen de eerste keer)</li>
+            <li><strong>Ga naar de onderstaande link</strong> om naar uw club-pagina te gaan</li>
+            <li><strong>Log in met de PIN code</strong> (zie hieronder)</li>
             <li><strong>Voeg uw judoka's toe</strong> met naam, geboortejaar, geslacht, band en gewichtsklasse</li>
             <li><strong>Ontvang de weegkaarten</strong> voor uw judoka's zodra de indeling klaar is</li>
         </ol>
 
         <div class="cta-section">
-            <a href="{{ $coachUrl }}" class="cta-button">Naar Coach Portaal</a>
-            <p style="color: #666; font-size: 14px;">Link werkt niet? Kopieer deze URL:</p>
-            <div class="link-fallback">{{ $coachUrl }}</div>
+            <a href="{{ $portalUrl }}" class="cta-button">Naar Club Portaal</a>
+            <div style="margin-top: 15px; background: #fef3c7; padding: 15px; border-radius: 8px; display: inline-block;">
+                <p style="margin: 0; color: #92400e; font-weight: bold;">PIN code: <span style="font-size: 20px; letter-spacing: 2px;">{{ $pincode }}</span></p>
+            </div>
+            <p style="color: #666; font-size: 14px; margin-top: 15px;">Link werkt niet? Kopieer deze URL:</p>
+            <div class="link-fallback">{{ $portalUrl }}</div>
         </div>
 
         <div class="info-box">

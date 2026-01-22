@@ -43,9 +43,9 @@
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         Reset
                     </button>
-                    {{-- Delete alleen voor sitebeheerder - later activeren --}}
-                    @if(auth('organisator')->user()?->isSitebeheerder())
-                    <button onclick="confirmDelete({{ $toernooi->id }}, '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded" title="Verwijder toernooi permanent">
+                    {{-- Delete voor eigenaar of sitebeheerder --}}
+                    @if(auth('organisator')->user()?->isSitebeheerder() || auth('organisator')->user()?->ownsToernooi($toernooi))
+                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded" title="Verwijder toernooi permanent">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Delete
                     </button>
@@ -74,6 +74,7 @@
 <form id="delete-form" method="POST" style="display:none;">
     @csrf
     @method('DELETE')
+    <input type="hidden" name="bewaar_presets" id="bewaar-presets" value="0">
 </form>
 
 <script>
@@ -85,12 +86,15 @@ function confirmReset(id, naam) {
     }
 }
 
-function confirmDelete(id, naam) {
+function confirmDelete(slug, naam) {
     const bevestig = prompt(`🚨 VERWIJDER TOERNOOI PERMANENT\n\nDit verwijdert ALLES:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!\n\nTyp de naam van het toernooi om te bevestigen:`);
 
     if (bevestig === naam) {
+        const bewaarPresets = confirm('Wil je je gewichtsklassen-presets bewaren?\n\n• JA = presets blijven voor toekomstige toernooien\n• NEE = alles verwijderen inclusief presets');
+
         const form = document.getElementById('delete-form');
-        form.action = `/toernooi/${id}`;
+        document.getElementById('bewaar-presets').value = bewaarPresets ? '1' : '0';
+        form.action = `/toernooi/${slug}`;
         form.submit();
     } else if (bevestig !== null) {
         alert('Naam komt niet overeen. Toernooi NIET verwijderd.');
