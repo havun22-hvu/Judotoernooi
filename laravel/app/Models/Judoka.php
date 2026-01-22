@@ -43,6 +43,7 @@ class Judoka extends Model
         'betaald_op',
         'is_onvolledig',
         'import_warnings',
+        'import_status',
         'telefoon',
         'overpouled_van_poule_id',
     ];
@@ -353,5 +354,80 @@ class Judoka extends Model
 
         // If weight exceeds all classes, return the highest (+ class)
         return end($gewichtsklassen);
+    }
+
+    /**
+     * Check of judoka correctie nodig heeft (import problemen)
+     */
+    public function isTeCorrigeren(): bool
+    {
+        return $this->import_status === 'te_corrigeren';
+    }
+
+    /**
+     * Hervalideer import status na wijziging
+     * Controleert of alle velden nu correct zijn en update status
+     */
+    public function hervalideerImportStatus(): void
+    {
+        // Alleen hervalideren als status 'te_corrigeren' was
+        if ($this->import_status !== 'te_corrigeren') {
+            return;
+        }
+
+        $problemen = $this->detecteerImportProblemen();
+
+        if (empty($problemen)) {
+            // Alles is nu correct
+            $this->update([
+                'import_status' => 'compleet',
+                'import_warnings' => null,
+            ]);
+        } else {
+            // Nog steeds problemen, update warnings
+            $this->update([
+                'import_warnings' => implode(' | ', $problemen),
+            ]);
+        }
+    }
+
+    /**
+     * Detecteer problemen met judoka data
+     * Gebruikt bij import en bij hervalidatie
+     */
+    public function detecteerImportProblemen(): array
+    {
+        $problemen = [];
+        $huidigJaar = (int) date('Y');
+
+        // Geboortejaar check
+        if (empty($this->geboortejaar)) {
+            $problemen[] = 'Geboortejaar ontbreekt';
+        } elseif ($this->geboortejaar < 1950 || $this->geboortejaar > $huidigJaar) {
+            $problemen[] = "Geboortejaar {$this->geboortejaar} lijkt ongeldig";
+        } else {
+            $leeftijd = $huidigJaar - $this->geboortejaar;
+            if ($leeftijd < 4) {
+                $problemen[] = "Leeftijd {$leeftijd} jaar erg jong";
+            } elseif ($leeftijd > 50) {
+                $problemen[] = "Leeftijd {$leeftijd} jaar erg hoog";
+            }
+        }
+
+        // Gewicht check
+        if ($this->gewicht === null) {
+            $problemen[] = 'Gewicht ontbreekt';
+        } elseif ($this->gewicht < 15) {
+            $problemen[] = "Gewicht {$this->gewicht} kg lijkt laag";
+        } elseif ($this->gewicht > 150) {
+            $problemen[] = "Gewicht {$this->gewicht} kg lijkt hoog";
+        }
+
+        // Geslacht check
+        if (empty($this->geslacht)) {
+            $problemen[] = 'Geslacht ontbreekt';
+        }
+
+        return $problemen;
     }
 }

@@ -209,6 +209,7 @@
             $gewijzigdJudokas = $judokas->filter(fn($j) => $j->isGewijzigdNaSync());
             $nietSyncedVolledig = $volledigeJudokas->filter(fn($j) => !$j->isSynced() || $j->isGewijzigdNaSync());
             $judokasMetImportWarnings = $judokas->filter(fn($j) => !empty($j->import_warnings));
+            $judokasTeCorrigeren = $judokas->filter(fn($j) => $j->isTeCorrigeren());
         @endphp
 
         <!-- Sync Status Box -->
@@ -265,7 +266,25 @@
         </div>
         @endif
 
-        @if($judokasMetImportWarnings->count() > 0)
+        @if($judokasTeCorrigeren->count() > 0)
+        <div class="bg-orange-50 border-2 border-orange-300 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <span class="text-orange-600 text-xl mr-2">⚠️</span>
+                <div class="flex-1">
+                    <p class="font-bold text-orange-800">{{ $judokasTeCorrigeren->count() }} judoka('s) vereisen correctie</p>
+                    <p class="text-sm text-orange-700 mb-3">Bij de import zijn er problemen gedetecteerd. Pas de gegevens aan en sla op om de problemen op te lossen.</p>
+                    <ul class="text-sm text-orange-800 space-y-1">
+                        @foreach($judokasTeCorrigeren as $j)
+                        <li class="flex items-center gap-2">
+                            <span class="font-medium">{{ $j->naam }}:</span>
+                            <span class="text-orange-600">{{ $j->import_warnings }}</span>
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+        @elseif($judokasMetImportWarnings->count() > 0)
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div class="flex items-start">
                 <span class="text-red-600 text-xl mr-2">⚠️</span>
