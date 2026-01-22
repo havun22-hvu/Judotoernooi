@@ -369,8 +369,8 @@ class CategorieClassifier
         $filter1 = $config1['band_filter'] ?? null;
         $filter2 = $config2['band_filter'] ?? null;
 
-        // No filter = alle banden = overlaps with everything
-        if ($filter1 === null || $filter2 === null) {
+        // No filter or empty string = alle banden = overlaps with everything
+        if (empty($filter1) || empty($filter2)) {
             return true;
         }
 
