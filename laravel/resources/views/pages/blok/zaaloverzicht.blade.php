@@ -4,8 +4,24 @@
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
     <div class="flex items-center gap-4">
+        <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
+        @if($toernooi->voorbereiding_klaar_op)
+        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+            Voorbereiding klaar
+        </span>
+        @endif
+    </div>
+    <div class="flex items-center gap-4">
+        @if(!$toernooi->voorbereiding_klaar_op)
+        <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi) }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    onclick="return confirm('Voorbereiding afronden?\n\nDit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.')">
+                Einde Voorbereiding
+            </button>
+        </form>
+        @endif
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
         </a>
