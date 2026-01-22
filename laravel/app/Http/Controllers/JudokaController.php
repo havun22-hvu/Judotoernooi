@@ -40,7 +40,11 @@ class JudokaController extends Controller
         $judokasPerKlasse = collect();
 
         // Add all configured categories (sorted by max_leeftijd)
+        // Skip metadata keys (starting with _) and non-array entries
         foreach ($gewichtsklassen as $key => $config) {
+            if (!is_array($config) || str_starts_with($key, '_')) {
+                continue;
+            }
             $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $key));
             $judokasPerKlasse[$label] = $judokas->filter(fn ($j) => $j->leeftijdsklasse === $label);
         }
