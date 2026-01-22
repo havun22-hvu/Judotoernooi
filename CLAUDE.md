@@ -109,6 +109,7 @@ cd laravel && php artisan serve --port=8007
 | Onderwerp | Locatie |
 |-----------|---------|
 | Project details | `.claude/context.md` |
+| Classificatie/Poules | `laravel/docs/2-FEATURES/CLASSIFICATIE.md` |
 | Mollie betalingen | `laravel/docs/2-FEATURES/BETALINGEN.md` |
-| Project docs | `laravel/docs/` |
+| Project docs | `laravel/docs/README.md` |
 | HavunCore KB | `D:\GitHub\HavunCore\docs\kb\`

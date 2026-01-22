@@ -1,7 +1,7 @@
-# Planning: Dynamische Poule Indeling
+# Classificatie & Poule Indeling
 
-> **Status:** Fase 1-2 voltooid, Fase 3-4 gepland
-> **Laatst bijgewerkt:** 17 jan 2026
+> **Status:** Grotendeels voltooid, Python solver nog gepland
+> **Laatst bijgewerkt:** 22 jan 2026
 
 ## Kernbegrippen
 

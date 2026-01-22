@@ -1,6 +1,6 @@
 # Wedstrijdschema Systeem
 
-Dit document beschrijft het wedstrijdschema systeem van het WestFries Open JudoToernooi.
+Dit document beschrijft het wedstrijdschema systeem van JudoToernooi.
 
 ## Overzicht
 

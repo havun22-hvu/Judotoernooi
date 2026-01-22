@@ -1,6 +1,6 @@
-# WestFries Open JudoToernooi - Documentatie
+# JudoToernooi - Documentatie
 
-Welkom bij de documentatie van het WestFries Open JudoToernooi Management Systeem.
+Welkom bij de documentatie van het JudoToernooi Management Systeem.
 
 ## Structuur
 
@@ -13,8 +13,7 @@ docs/
 ├── 3-TECHNICAL/           # API, database, ontwikkelaar
 ├── 4-PLANNING/            # Toekomstige features
 ├── 5-REGLEMENT/           # JBN reglementen
-├── 6-INTERNAL/            # Interne docs, lessons learned
-└── archive/               # Verouderde documentatie
+└── 6-INTERNAL/            # Interne docs, lessons learned
 ```
 
 ## Inhoud
@@ -26,6 +25,7 @@ docs/
 ### 2. Features
 - [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding
 - [Import](./2-FEATURES/IMPORT.md) - CSV/Excel import met warnings
+- [Classificatie & Poule Indeling](./2-FEATURES/CLASSIFICATIE.md) - Algoritme voor poule-indeling
 - [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie (Connect + Platform)
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
@@ -40,9 +40,8 @@ docs/
 - [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info
 
 ### 4. Planning
-- [Dynamische Indeling](./4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md) - Poule indeling algoritme
-- [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md)
-- [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md)
+- [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding
+- [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md) - Offline fallback
 
 ### 5. Reglement
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)
@@ -98,6 +97,5 @@ laravel/
 
 ## Contact
 
-- **Organisatie**: Judoschool Cees Veen
-- **Toernooi**: WestFries Open JudoToernooi
+- **Platform**: JudoToernooi (judotournament.org)
 - **GitHub**: https://github.com/havun22-hvu/judotoernooi
