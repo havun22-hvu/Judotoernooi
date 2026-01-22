@@ -52,7 +52,9 @@ class ToernooiController extends Controller
     public function edit(Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
-        return view('pages.toernooi.edit', compact('toernooi', 'blokken'));
+        $overlapWarning = $this->checkCategorieOverlap($toernooi);
+
+        return view('pages.toernooi.edit', compact('toernooi', 'blokken', 'overlapWarning'));
     }
 
     public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse

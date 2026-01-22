@@ -69,6 +69,24 @@
     </div>
     @endif
 
+    <!-- WAARSCHUWING: Overlappende categorieën -->
+    @if(isset($overlapWarning) && $overlapWarning)
+    <div id="overlap-warning-alert"
+         class="mb-6 p-4 bg-orange-100 border-2 border-orange-500 rounded-lg animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+        <div class="flex items-start gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+                <p class="font-bold text-orange-800">Overlappende categorieën gedetecteerd!</p>
+                <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
+                <p class="text-xs text-orange-600 mt-1">Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan (geslacht of bandfilter).</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
     <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form" data-loading="Instellingen opslaan...">
