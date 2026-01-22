@@ -44,7 +44,7 @@ php artisan serve --port=8007   # http://localhost:8007
 
 ### Classificatie
 
-> **Volledige docs:** `laravel/docs/4-PLANNING/PLANNING_DYNAMISCHE_INDELING.md`
+> **Volledige docs:** `laravel/docs/2-FEATURES/CLASSIFICATIE.md`
 
 **Presets:**
 | Type | Opslag |
@@ -540,3 +540,34 @@ cd laravel && php artisan serve --port=8007
 5. Ga naar Wedstrijddag Poules → klik → bij poules (blauw wordt groen)
 6. Terug naar Zaaloverzicht → chips moeten nu wit zijn
 7. Klik witte chip → moet groen worden (wedstrijden gegenereerd)
+
+---
+
+## Laatste Sessie: 22 januari 2026
+
+### Wat is gedaan:
+- **Docs reorganisatie** - Volledige audit en cleanup van documentatie structuur
+- Verouderde HANDOVER.md bestanden verwijderd
+- smallwork.md getrimd (670→238 regels, alleen laatste 3 sessies)
+- Platformnaam gefixed: "WestFries Open" → "JudoToernooi" in docs
+- PLANNING_DYNAMISCHE_INDELING.md verplaatst naar 2-FEATURES/CLASSIFICATIE.md
+- README.md links en structuur geüpdatet
+- CLAUDE.md Knowledge Base tabel geüpdatet
+
+### Openstaande items (uit smallwork.md):
+- [ ] BUG: Vals-positieve gewichtsrange markering (Poule.php)
+- [ ] BUG: Poule header kleur blijft oranje na fix
+- [ ] import_fouten veld nog niet volledig geïmplementeerd in controller
+
+### Documentatie structuur na deze sessie:
+```
+docs/
+├── 2-FEATURES/
+│   ├── CLASSIFICATIE.md      ← NIEUW (voltooid algoritme)
+│   ├── BETALINGEN.md
+│   ├── BLOKVERDELING.md
+│   └── ...
+└── 4-PLANNING/               ← Alleen ongeïmplementeerde features
+    ├── PLANNING_AUTHENTICATIE_SYSTEEM.md
+    └── PLANNING_NOODPLAN.md
+```
