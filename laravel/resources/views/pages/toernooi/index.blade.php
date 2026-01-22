@@ -90,7 +90,13 @@ function confirmDelete(slug, naam) {
     const bevestig = prompt(`🚨 VERWIJDER TOERNOOI PERMANENT\n\nDit verwijdert ALLES:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!\n\nTyp de naam van het toernooi om te bevestigen:`);
 
     if (bevestig === naam) {
-        const bewaarPresets = confirm('Wil je je gewichtsklassen-presets bewaren?\n\n• JA = presets blijven voor toekomstige toernooien\n• NEE = alles verwijderen inclusief presets');
+        const presetKeuze = prompt('Wil je je gewichtsklassen-presets BEWAREN?\n\nTyp "ja" om presets te bewaren\nTyp "nee" om alles te verwijderen');
+
+        if (presetKeuze === null) {
+            return; // Gebruiker annuleerde
+        }
+
+        const bewaarPresets = presetKeuze.toLowerCase() === 'ja';
 
         const form = document.getElementById('delete-form');
         document.getElementById('bewaar-presets').value = bewaarPresets ? '1' : '0';
