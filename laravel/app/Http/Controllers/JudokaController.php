@@ -35,9 +35,18 @@ class JudokaController extends Controller
             fn ($a, $b) => $a->naam <=> $b->naam,
         ]);
 
-        // Group by leeftijdsklasse and sort groups (youngest first using config)
-        $judokasPerKlasse = $judokas->groupBy('leeftijdsklasse')
-            ->sortBy(fn ($group, $klasse) => $toernooi->getLeeftijdsklasseSortValue($klasse));
+        // Build judokasPerKlasse with ALL categories from config (including empty ones)
+        $gewichtsklassen = $toernooi->gewichtsklassen ?? [];
+        $judokasPerKlasse = collect();
+
+        // Add all configured categories (sorted by max_leeftijd)
+        foreach ($gewichtsklassen as $key => $config) {
+            $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $key));
+            $judokasPerKlasse[$label] = $judokas->filter(fn ($j) => $j->leeftijdsklasse === $label);
+        }
+
+        // Sort by config order (already sorted by max_leeftijd in gewichtsklassen)
+        $judokasPerKlasse = $judokasPerKlasse->sortBy(fn ($group, $klasse) => $toernooi->getLeeftijdsklasseSortValue($klasse));
 
         // Get judokas with import warnings, grouped by club
         $importWarningsPerClub = $judokas

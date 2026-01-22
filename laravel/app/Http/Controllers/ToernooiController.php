@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ToernooiRequest;
 use App\Models\Judoka;
 use App\Models\Toernooi;
+use App\Services\CategorieClassifier;
 use App\Services\PouleIndelingService;
 use App\Services\ToernooiService;
 use Illuminate\Http\JsonResponse;
@@ -136,16 +137,24 @@ class ToernooiController extends Controller
         $this->toernooiService->syncBlokken($toernooi);
         $this->toernooiService->syncMatten($toernooi);
 
+        // Check for overlapping categories
+        $overlapWarning = $this->checkCategorieOverlap($toernooi);
+
         // Return JSON for AJAX requests (auto-save)
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
+                'overlapWarning' => $overlapWarning,
             ]);
         }
 
-        return redirect()
-            ->route('toernooi.edit', $toernooi)
-            ->with('success', 'Toernooi bijgewerkt');
+        $redirect = redirect()->route('toernooi.edit', $toernooi);
+
+        if ($overlapWarning) {
+            return $redirect->with('warning', $overlapWarning);
+        }
+
+        return $redirect->with('success', 'Toernooi bijgewerkt');
     }
 
     public function destroy(Request $request, Toernooi $toernooi): RedirectResponse
@@ -489,5 +498,32 @@ class ToernooiController extends Controller
     {
         $publiekController = app(PubliekController::class);
         return $publiekController->getClubRanking($toernooi);
+    }
+
+    /**
+     * Check for overlapping categories in tournament config.
+     * Returns warning message if overlap found, null otherwise.
+     */
+    private function checkCategorieOverlap(Toernooi $toernooi): ?string
+    {
+        $config = $toernooi->gewichtsklassen ?? [];
+        if (empty($config)) {
+            return null;
+        }
+
+        $classifier = new CategorieClassifier($config);
+        $overlaps = $classifier->detectOverlap();
+
+        if (empty($overlaps)) {
+            return null;
+        }
+
+        // Build warning message
+        $warnings = [];
+        foreach ($overlaps as $overlap) {
+            $warnings[] = "⚠️ \"{$overlap['cat1']}\" en \"{$overlap['cat2']}\" overlappen: {$overlap['reden']}";
+        }
+
+        return 'Categorie overlap gedetecteerd! Judoka\'s kunnen in meerdere categorieën passen: ' . implode(' | ', $warnings);
     }
 }

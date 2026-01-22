@@ -254,4 +254,171 @@ class CategorieClassifier
             'isDynamisch' => false,
         ];
     }
+
+    /**
+     * Detect overlapping categories where a judoka could match multiple.
+     * Returns array of overlap warnings.
+     *
+     * Overlap exists when:
+     * - Same max_leeftijd AND
+     * - Same geslacht (or one is gemengd) AND
+     * - Overlapping band_filter (null=alle, or ranges overlap)
+     *
+     * @return array<array{cat1: string, cat2: string, reden: string}>
+     */
+    public function detectOverlap(): array
+    {
+        $overlaps = [];
+        $categories = array_keys($this->config);
+
+        for ($i = 0; $i < count($categories); $i++) {
+            for ($j = $i + 1; $j < count($categories); $j++) {
+                $key1 = $categories[$i];
+                $key2 = $categories[$j];
+                $config1 = $this->config[$key1];
+                $config2 = $this->config[$key2];
+
+                // Check max_leeftijd
+                $leeftijd1 = $config1['max_leeftijd'] ?? 99;
+                $leeftijd2 = $config2['max_leeftijd'] ?? 99;
+                if ($leeftijd1 !== $leeftijd2) {
+                    continue; // Different age = no overlap
+                }
+
+                // Check geslacht overlap
+                if (!$this->geslachtenOverlappen($config1, $key1, $config2, $key2)) {
+                    continue; // Different gender = no overlap
+                }
+
+                // Check band_filter overlap
+                if (!$this->bandFiltersOverlappen($config1, $config2)) {
+                    continue; // Non-overlapping bands = no overlap
+                }
+
+                // Overlap detected!
+                $label1 = $config1['label'] ?? $key1;
+                $label2 = $config2['label'] ?? $key2;
+                $overlaps[] = [
+                    'cat1' => $label1,
+                    'cat2' => $label2,
+                    'reden' => $this->beschrijfOverlap($config1, $config2),
+                ];
+            }
+        }
+
+        return $overlaps;
+    }
+
+    /**
+     * Check if two categories have overlapping geslacht.
+     */
+    private function geslachtenOverlappen(array $config1, string $key1, array $config2, string $key2): bool
+    {
+        $geslacht1 = $this->getNormaliseerdeGeslacht($config1, $key1);
+        $geslacht2 = $this->getNormaliseerdeGeslacht($config2, $key2);
+
+        // Gemengd overlaps with everything
+        if ($geslacht1 === 'GEMENGD' || $geslacht2 === 'GEMENGD') {
+            return true;
+        }
+
+        return $geslacht1 === $geslacht2;
+    }
+
+    /**
+     * Get normalized geslacht from config (same logic as geslachtMatcht).
+     */
+    private function getNormaliseerdeGeslacht(array $config, string $key): string
+    {
+        $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
+        $label = strtolower($config['label'] ?? '');
+
+        // Normalize legacy values
+        if ($configGeslacht === 'MEISJES') {
+            $configGeslacht = 'V';
+        } elseif ($configGeslacht === 'JONGENS') {
+            $configGeslacht = 'M';
+        }
+
+        // Auto-detect from label if not explicitly set
+        $originalGeslacht = strtolower($config['geslacht'] ?? '');
+        $isExplicitGemengd = $originalGeslacht === 'gemengd';
+
+        if ($configGeslacht === 'GEMENGD' && !$isExplicitGemengd) {
+            if (str_contains($label, 'dames') || str_contains($label, 'meisjes') || str_ends_with($key, '_d') || str_contains($key, '_d_')) {
+                return 'V';
+            } elseif (str_contains($label, 'heren') || str_contains($label, 'jongens') || str_ends_with($key, '_h') || str_contains($key, '_h_')) {
+                return 'M';
+            }
+        }
+
+        return $configGeslacht;
+    }
+
+    /**
+     * Check if two band filters overlap.
+     * null = alle banden, overlaps with everything
+     */
+    private function bandFiltersOverlappen(?array $config1, ?array $config2): bool
+    {
+        $filter1 = $config1['band_filter'] ?? null;
+        $filter2 = $config2['band_filter'] ?? null;
+
+        // No filter = alle banden = overlaps with everything
+        if ($filter1 === null || $filter2 === null) {
+            return true;
+        }
+
+        // Get ranges
+        $range1 = $this->getBandRange($filter1);
+        $range2 = $this->getBandRange($filter2);
+
+        // Check if ranges overlap: max(min1, min2) <= min(max1, max2)
+        return max($range1['min'], $range2['min']) <= min($range1['max'], $range2['max']);
+    }
+
+    /**
+     * Get band niveau range from filter.
+     * Returns [min, max] niveau values.
+     */
+    private function getBandRange(string $filter): array
+    {
+        if (str_starts_with($filter, 'tm_') || str_starts_with($filter, 't/m ')) {
+            $band = str_replace(['tm_', 't/m '], '', $filter);
+            $maxNiveau = BandHelper::getSortNiveau($band);
+            return ['min' => 0, 'max' => $maxNiveau];
+        }
+
+        if (str_starts_with($filter, 'vanaf_') || str_starts_with($filter, 'vanaf ')) {
+            $band = str_replace(['vanaf_', 'vanaf '], '', $filter);
+            $minNiveau = BandHelper::getSortNiveau($band);
+            return ['min' => $minNiveau, 'max' => 99];
+        }
+
+        // Unknown filter, assume all bands
+        return ['min' => 0, 'max' => 99];
+    }
+
+    /**
+     * Describe why categories overlap.
+     */
+    private function beschrijfOverlap(array $config1, array $config2): string
+    {
+        $filter1 = $config1['band_filter'] ?? null;
+        $filter2 = $config2['band_filter'] ?? null;
+
+        if ($filter1 === null && $filter2 === null) {
+            return 'Beide hebben alle banden';
+        }
+
+        if ($filter1 === null) {
+            return 'Categorie 1 heeft alle banden, overlapt met ' . $filter2;
+        }
+
+        if ($filter2 === null) {
+            return 'Categorie 2 heeft alle banden, overlapt met ' . $filter1;
+        }
+
+        return "Bandfilters overlappen: {$filter1} en {$filter2}";
+    }
 }
