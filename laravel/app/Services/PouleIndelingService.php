@@ -640,63 +640,6 @@ class PouleIndelingService
     }
 
     /**
-     * Find the config key for a judoka based on their age and gender
-     */
-    private function findConfigKeyForJudoka(Judoka $judoka, Toernooi $toernooi): ?string
-    {
-        $leeftijd = $judoka->leeftijd ?? ($toernooi->datum?->year ?? date('Y')) - $judoka->geboortejaar;
-        $geslacht = strtoupper($judoka->geslacht);
-
-        // Find matching config based on max_leeftijd
-        foreach ($this->gewichtsklassenConfig as $key => $config) {
-            $maxLeeftijd = $config['max_leeftijd'] ?? 99;
-            $configGeslacht = strtoupper($config['geslacht'] ?? 'gemengd');
-
-            // Check age match
-            if ($leeftijd <= $maxLeeftijd) {
-                // Check gender match (gemengd matches all, or specific gender must match)
-                if ($configGeslacht === 'GEMENGD' || $configGeslacht === $geslacht) {
-                    return $key;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Update sort fields for a judoka based on classification
-     */
-    public function updateSorteerVelden(Judoka $judoka, Toernooi $toernooi): void
-    {
-        // Ensure config and classifier are loaded
-        if (empty($this->gewichtsklassenConfig)) {
-            $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-        }
-        if (!$this->classifier) {
-            $this->classifier = new CategorieClassifier(
-                $this->gewichtsklassenConfig,
-                $toernooi->gewicht_tolerantie ?? 0.5
-            );
-        }
-
-        $classificatie = $this->classifier->classificeer($judoka, $toernooi->datum?->year);
-
-        // Calculate sort_gewicht (weight in grams for precision)
-        $gewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
-        $sortGewicht = (int) round($gewicht * 1000);
-
-        $judoka->update([
-            'leeftijdsklasse' => $classificatie['label'],
-            'categorie_key' => $classificatie['key'],
-            'sort_categorie' => $classificatie['sortCategorie'],
-            'sort_gewicht' => $sortGewicht,
-            'sort_band' => BandHelper::getSortNiveau($judoka->band ?? ''),
-            'gewichtsklasse' => $classificatie['gewichtsklasse'] ?? $judoka->gewichtsklasse,
-        ]);
-    }
-
-    /**
      * Create optimal pool division based on preference order
      * Uses the configured preference list (e.g., [5, 4, 6, 3]) to score divisions
      */
@@ -900,14 +843,6 @@ class PouleIndelingService
                 $judoka->update(['gewichtsklasse' => $nieuwePoule->gewichtsklasse]);
             }
         });
-    }
-
-    /**
-     * Calculate total matches for tournament
-     */
-    public function berekenTotaalWedstrijden(Toernooi $toernooi): int
-    {
-        return $toernooi->poules()->sum('aantal_wedstrijden');
     }
 
     /**

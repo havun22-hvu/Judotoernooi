@@ -237,16 +237,17 @@
                 <p>Het systeem werkt in 4 stappen:</p>
                 <ol class="list-decimal list-inside space-y-1">
                     <li><strong>Categoriseren</strong> - Judoka naar categorie (harde criteria: leeftijd, geslacht, band)</li>
-                    <li><strong>Sorteren</strong> - Op prioriteit (leeftijd/gewicht/band)</li>
+                    <li><strong>Sorteren</strong> - Binnen de categorie op prioriteit (leeftijd/gewicht/band)</li>
                     <li><strong>Groeperen</strong> - Per categorie</li>
                     <li><strong>Poules maken</strong> - Verdelen binnen kg/leeftijd limieten</li>
                 </ol>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Poule grootte</h4>
+                <p>Instelbaar via <strong>poule_grootte_voorkeur</strong> (bv. [5, 4, 6, 3]):</p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li><strong>Ideaal: 5</strong> judoka's (10 wedstrijden)</li>
-                    <li><strong>Minimum: 3</strong> judoka's (6 wedstrijden, dubbele ronde)</li>
-                    <li><strong>Maximum: 6</strong> judoka's (15 wedstrijden)</li>
+                    <li>Eerste getal = ideale grootte (bv. 5 judoka's)</li>
+                    <li>Volgorde = voorkeur bij verdeling</li>
+                    <li>Groottes niet in lijst = problematisch (rood)</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Handmatig aanpassen</h4>

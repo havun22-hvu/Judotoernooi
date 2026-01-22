@@ -10,9 +10,9 @@
 | Stap | Wat | Resultaat |
 |------|-----|-----------|
 | **1. Categoriseren** | Judoka → categorie (harde criteria) | Elke judoka heeft een categorie |
-| **2. Sorteren** | Alle judoka's op prioriteiten | Gesorteerde lijst (jong/licht eerst) |
+| **2. Sorteren** | Binnen categorie op prioriteiten | Gesorteerde lijst per categorie |
 | **3. Groeperen** | Per categorie groeperen | Gesorteerde lijst PER categorie |
-| **4. Poules maken** | Verdelen in poules van 5 | Poules binnen kg/lft limieten |
+| **4. Poules maken** | Verdelen in poules (bv. 5) | Poules binnen kg/lft limieten |
 
 **Stap 1: Categoriseren** = Welke groep?
 - Judoka moet voldoen aan ALLE harde criteria
@@ -25,7 +25,7 @@
 
 **Stap 4: Poules maken** = Verdelen
 - Binnen limieten: max_kg_verschil, max_leeftijd_verschil
-- Poulegrootte voorkeur: [5, 4, 6, 3]
+- Poulegrootte voorkeur instelbaar (bv. [5, 4, 6, 3])
 
 ---
 
@@ -441,9 +441,9 @@ class CategorieClassifier
 
 Hoofdservice voor poule-indeling:
 - `herberkenKlassen()` - Categoriseert judoka's opnieuw (gebruikt CategorieClassifier)
-- `genereerPoules()` - Maakt poules aan, roept Python solver aan per categorie
-- `updateSorteerVelden()` - Update sorteervelden voor één judoka (gebruikt CategorieClassifier)
+- `genereerPouleIndeling()` - Maakt poules aan, roept Python solver aan per categorie
 - `maakPouleTitel()` - Genereert titel
+- `verplaatsJudoka()` - Verplaatst judoka naar andere poule
 
 **Flow:**
 1. `CategorieClassifier` → classificeert judoka's naar categorieën
