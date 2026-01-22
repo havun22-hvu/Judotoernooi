@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Blok;
+use App\Models\Club;
+use App\Models\CoachKaart;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
@@ -302,6 +304,98 @@ class BlokController extends Controller
 
         // No flash message needed - indicator next to title is sufficient
         return redirect()->route('toernooi.blok.zaaloverzicht', $toernooi);
+    }
+
+    /**
+     * Einde voorbereiding: valideer alles, herbereken coachkaarten
+     * Dit is het punt waarop de voorbereiding klaar is en info naar clubs kan
+     */
+    public function eindeVoorbereiding(Toernooi $toernooi): RedirectResponse
+    {
+        $errors = [];
+
+        // 1. Check: alle judoka's hebben een poule
+        $judokasZonderPoule = $toernooi->judokas()
+            ->whereDoesntHave('poules')
+            ->count();
+        if ($judokasZonderPoule > 0) {
+            $errors[] = "{$judokasZonderPoule} judoka's zonder poule";
+        }
+
+        // 2. Check: alle poules hebben een blok
+        $poulesZonderBlok = $toernooi->poules()
+            ->whereNull('blok_id')
+            ->where('aantal_judokas', '>', 1)
+            ->count();
+        if ($poulesZonderBlok > 0) {
+            $errors[] = "{$poulesZonderBlok} poules zonder blok";
+        }
+
+        // 3. Check: alle poules hebben een mat
+        $poulesZonderMat = $toernooi->poules()
+            ->whereNull('mat_id')
+            ->where('aantal_judokas', '>', 1)
+            ->count();
+        if ($poulesZonderMat > 0) {
+            $errors[] = "{$poulesZonderMat} poules zonder mat";
+        }
+
+        if (!empty($errors)) {
+            return redirect()
+                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->with('error', 'Voorbereiding niet compleet: ' . implode(', ', $errors));
+        }
+
+        // 4. Herbereken coachkaarten voor alle clubs
+        $clubs = Club::whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))->get();
+        $totaalAangemaakt = 0;
+        $totaalVerwijderd = 0;
+
+        foreach ($clubs as $club) {
+            $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
+            $huidigeKaarten = CoachKaart::where('club_id', $club->id)
+                ->where('toernooi_id', $toernooi->id)
+                ->orderBy('id')
+                ->get();
+            $huidigAantal = $huidigeKaarten->count();
+
+            // Maak ontbrekende kaarten aan
+            if ($huidigAantal < $benodigdAantal) {
+                for ($i = $huidigAantal; $i < $benodigdAantal; $i++) {
+                    CoachKaart::create([
+                        'toernooi_id' => $toernooi->id,
+                        'club_id' => $club->id,
+                    ]);
+                    $totaalAangemaakt++;
+                }
+            }
+
+            // Verwijder overtollige kaarten (alleen niet-gescande)
+            if ($huidigAantal > $benodigdAantal) {
+                $teVerwijderen = $huidigeKaarten->skip($benodigdAantal);
+                foreach ($teVerwijderen as $kaart) {
+                    if (!$kaart->gescand_at) {
+                        $kaart->delete();
+                        $totaalVerwijderd++;
+                    }
+                }
+            }
+        }
+
+        // 5. Markeer voorbereiding als klaar
+        $toernooi->update([
+            'voorbereiding_klaar_op' => now(),
+            'weegkaarten_gemaakt_op' => $toernooi->weegkaarten_gemaakt_op ?? now(),
+        ]);
+
+        $message = 'Voorbereiding afgerond!';
+        if ($totaalAangemaakt > 0 || $totaalVerwijderd > 0) {
+            $message .= " Coachkaarten: {$totaalAangemaakt} aangemaakt, {$totaalVerwijderd} verwijderd.";
+        }
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->with('success', $message);
     }
 
     /**

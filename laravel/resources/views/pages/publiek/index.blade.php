@@ -582,11 +582,29 @@
                     </div>
                     <div class="divide-y">
                         @foreach($judokas as $judoka)
+                        @php
+                            $judokaPoule = $judoka->poules->first();
+                            $judokaBlok = $judokaPoule?->blok;
+                            $judokaMat = $judokaPoule?->mat;
+                        @endphp
                         <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100">
                             <div class="flex-1 min-w-0">
                                 <span class="text-gray-800">{{ $judoka->naam }}</span>
                                 <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
                                 <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
+                                @if($toernooi->voorbereiding_klaar_op && $judokaBlok)
+                                <div class="text-xs text-blue-600 mt-1">
+                                    <span class="font-medium">Blok {{ $judokaBlok->nummer }}</span>
+                                    @if($judokaMat)
+                                    <span class="text-gray-400">|</span>
+                                    <span>Mat {{ $judokaMat->nummer }}</span>
+                                    @endif
+                                    @if($judokaBlok->weging_start && $judokaBlok->weging_einde)
+                                    <span class="text-gray-400">|</span>
+                                    <span class="text-green-600">Weging {{ \Carbon\Carbon::parse($judokaBlok->weging_start)->format('H:i') }}-{{ \Carbon\Carbon::parse($judokaBlok->weging_einde)->format('H:i') }}</span>
+                                    @endif
+                                </div>
+                                @endif
                             </div>
                             <button @click="toggleFavoriet({{ $judoka->id }})"
                                     class="favorite-star text-2xl flex-shrink-0"

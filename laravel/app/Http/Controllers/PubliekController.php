@@ -27,10 +27,11 @@ class PubliekController extends Controller
         $totaalJudokas = Judoka::where('toernooi_id', $toernooi->id)->count();
 
         // Get judokas with complete data for category display
+        // Include poules.blok and poules.mat for showing blok/mat info after voorbereiding
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->whereNotNull('leeftijdsklasse')
             ->whereNotNull('gewichtsklasse')
-            ->with('club')
+            ->with(['club', 'poules.blok', 'poules.mat'])
             ->orderBy('leeftijdsklasse')
             ->orderBy('gewichtsklasse')
             ->orderBy('naam')
