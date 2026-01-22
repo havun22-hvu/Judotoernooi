@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Club;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
 use App\Models\CoachKaart;
 use App\Models\Judoka;
+use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -554,51 +556,55 @@ class CoachPortalController extends Controller
 
     // ========================================
     // Portal code + PIN based methods (new system)
+    // Portal access is now on Club, not Coach
     // ========================================
 
-    private function getCoachesByCode(string $code)
+    private function getClubByCode(string $code): ?Club
     {
-        return Coach::where('portal_code', $code)
-            ->with(['club', 'toernooi'])
-            ->get();
+        return Club::where('portal_code', $code)->first();
     }
 
-    private function getLoggedInCoach(Request $request, string $code): ?Coach
+    private function getLoggedInClub(Request $request, string $code): ?Club
     {
-        $coachId = $request->session()->get("coach_code_{$code}");
-        if (!$coachId) {
+        if (!$request->session()->get("club_logged_in_{$code}")) {
             return null;
         }
-        return Coach::with(['club', 'toernooi'])->find($coachId);
+        return $this->getClubByCode($code);
+    }
+
+    private function getActiveToernooi(): ?Toernooi
+    {
+        // Get the most recent active toernooi
+        return Toernooi::orderByDesc('created_at')->first();
     }
 
     public function indexCode(Request $request, string $code): View|RedirectResponse
     {
-        $coaches = $this->getCoachesByCode($code);
+        $club = $this->getClubByCode($code);
 
-        if ($coaches->isEmpty()) {
+        if (!$club) {
             abort(404, 'Ongeldige school link');
         }
 
-        $loggedInCoach = $this->getLoggedInCoach($request, $code);
-        if ($loggedInCoach) {
+        $loggedInClub = $this->getLoggedInClub($request, $code);
+        if ($loggedInClub) {
             return redirect()->route('coach.portal.judokas', $code);
         }
 
-        $firstCoach = $coaches->first();
+        $toernooi = $this->getActiveToernooi();
 
         return view('pages.coach.login-pin', [
             'code' => $code,
-            'club' => $firstCoach->club,
-            'toernooi' => $firstCoach->toernooi,
+            'club' => $club,
+            'toernooi' => $toernooi,
         ]);
     }
 
     public function loginPin(Request $request, string $code): RedirectResponse
     {
-        $coaches = $this->getCoachesByCode($code);
+        $club = $this->getClubByCode($code);
 
-        if ($coaches->isEmpty()) {
+        if (!$club) {
             abort(404);
         }
 
@@ -606,23 +612,20 @@ class CoachPortalController extends Controller
             'pincode' => 'required|string|size:5',
         ]);
 
-        // Find coach by PIN
-        $coach = $coaches->first(fn($c) => $c->pincode === $validated['pincode']);
-
-        if (!$coach) {
+        // Check club PIN
+        if (!$club->checkPincode($validated['pincode'])) {
             return redirect()->route('coach.portal.code', $code)
                 ->with('error', 'Onjuiste PIN code');
         }
 
-        $request->session()->put("coach_code_{$code}", $coach->id);
-        $coach->updateLaatstIngelogd();
+        $request->session()->put("club_logged_in_{$code}", true);
 
         return redirect()->route('coach.portal.judokas', $code);
     }
 
     public function logoutCode(Request $request, string $code): RedirectResponse
     {
-        $request->session()->forget("coach_code_{$code}");
+        $request->session()->forget("club_logged_in_{$code}");
 
         return redirect()->route('coach.portal.code', $code)
             ->with('success', 'Je bent uitgelogd');
@@ -630,14 +633,13 @@ class CoachPortalController extends Controller
 
     public function judokasCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $toernooi = $coach->toernooi;
-        $club = $coach->club;
+        $toernooi = $this->getActiveToernooi();
 
         // Sort: young to old (high geboortejaar first), then light to heavy
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
@@ -656,7 +658,6 @@ class CoachPortalController extends Controller
         $betaald = $judokas->filter(fn($j) => $j->isBetaald());
 
         return view('pages.coach.judokas', [
-            'coach' => $coach,
             'toernooi' => $toernooi,
             'club' => $club,
             'judokas' => $judokas,
@@ -682,13 +683,13 @@ class CoachPortalController extends Controller
 
     public function storeJudokaCode(Request $request, string $code): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             abort(403);
         }
 
-        $toernooi = $coach->toernooi;
+        $toernooi = $this->getActiveToernooi();
 
         if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.portal.judokas', $code)
@@ -743,7 +744,7 @@ class CoachPortalController extends Controller
 
         $judoka = Judoka::create([
             'toernooi_id' => $toernooi->id,
-            'club_id' => $coach->club_id,
+            'club_id' => $club->id,
             'naam' => $validated['naam'],
             'geboortejaar' => $validated['geboortejaar'] ?? null,
             'geslacht' => $validated['geslacht'] ?? null,
@@ -760,17 +761,16 @@ class CoachPortalController extends Controller
 
     public function updateJudokaCode(Request $request, string $code, Judoka $judoka): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
+        $toernooi = $this->getActiveToernooi();
 
-        if (!$coach) {
+        if (!$club) {
             abort(403);
         }
 
-        if ($judoka->club_id !== $coach->club_id || $judoka->toernooi_id !== $coach->toernooi_id) {
+        if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooi->id) {
             abort(403);
         }
-
-        $toernooi = $coach->toernooi;
 
         if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.portal.judokas', $code)
@@ -826,17 +826,18 @@ class CoachPortalController extends Controller
 
     public function destroyJudokaCode(Request $request, string $code, Judoka $judoka): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
+        $toernooi = $this->getActiveToernooi();
 
-        if (!$coach) {
+        if (!$club) {
             abort(403);
         }
 
-        if ($judoka->club_id !== $coach->club_id || $judoka->toernooi_id !== $coach->toernooi_id) {
+        if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooi->id) {
             abort(403);
         }
 
-        if (!$coach->toernooi->isInschrijvingOpen()) {
+        if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.portal.judokas', $code)
                 ->with('error', 'De inschrijving is gesloten');
         }
@@ -849,14 +850,13 @@ class CoachPortalController extends Controller
 
     public function weegkaartenCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $toernooi = $coach->toernooi;
-        $club = $coach->club;
+        $toernooi = $this->getActiveToernooi();
 
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
@@ -868,7 +868,6 @@ class CoachPortalController extends Controller
             ->get();
 
         return view('pages.coach.weegkaarten', [
-            'coach' => $coach,
             'toernooi' => $toernooi,
             'club' => $club,
             'judokas' => $judokas,
@@ -879,14 +878,13 @@ class CoachPortalController extends Controller
 
     public function coachkaartenCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $toernooi = $coach->toernooi;
-        $club = $coach->club;
+        $toernooi = $this->getActiveToernooi();
 
         // Get number of judokas for this club
         $aantalJudokas = Judoka::where('toernooi_id', $toernooi->id)
@@ -923,7 +921,6 @@ class CoachPortalController extends Controller
             ->get();
 
         return view('pages.coach.coachkaarten', [
-            'coach' => $coach,
             'toernooi' => $toernooi,
             'club' => $club,
             'coachKaarten' => $coachKaarten,
@@ -938,14 +935,15 @@ class CoachPortalController extends Controller
 
     public function toewijzenCoachkaart(Request $request, string $code, CoachKaart $coachKaart): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
+        $toernooi = $this->getActiveToernooi();
 
-        if (!$coach) {
+        if (!$club) {
             abort(403);
         }
 
         // Check ownership
-        if ($coachKaart->club_id !== $coach->club_id || $coachKaart->toernooi_id !== $coach->toernooi_id) {
+        if ($coachKaart->club_id !== $club->id || $coachKaart->toernooi_id !== $toernooi->id) {
             abort(403);
         }
 
@@ -957,7 +955,7 @@ class CoachPortalController extends Controller
         // If organisatie coach selected, copy name
         if (!empty($validated['organisatie_coach_id'])) {
             $orgCoach = Coach::find($validated['organisatie_coach_id']);
-            if ($orgCoach && $orgCoach->club_id === $coach->club_id) {
+            if ($orgCoach && $orgCoach->club_id === $club->id) {
                 $coachKaart->update(['naam' => $orgCoach->naam]);
             }
         } elseif (!empty($validated['naam'])) {
@@ -973,14 +971,13 @@ class CoachPortalController extends Controller
      */
     public function syncJudokasCode(Request $request, string $code): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $club = $coach->club;
-        $toernooi = $coach->toernooi;
+        $toernooi = $this->getActiveToernooi();
 
         // Get all judokas for this club
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
@@ -1018,20 +1015,18 @@ class CoachPortalController extends Controller
 
     public function afrekenCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $toernooi = $coach->toernooi;
+        $toernooi = $this->getActiveToernooi();
 
         if (!$toernooi->betaling_actief) {
             return redirect()->route('coach.portal.judokas', $code)
                 ->with('error', 'Betalingen zijn niet actief voor dit toernooi');
         }
-
-        $club = $coach->club;
 
         // Get judokas ready for payment
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
@@ -1045,7 +1040,6 @@ class CoachPortalController extends Controller
         $totaalBedrag = $klaarVoorBetaling->count() * $toernooi->inschrijfgeld;
 
         return view('pages.coach.afrekenen', [
-            'coach' => $coach,
             'toernooi' => $toernooi,
             'club' => $club,
             'klaarVoorBetaling' => $klaarVoorBetaling,
@@ -1059,20 +1053,18 @@ class CoachPortalController extends Controller
 
     public function betalenCode(Request $request, string $code): RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             abort(403);
         }
 
-        $toernooi = $coach->toernooi;
+        $toernooi = $this->getActiveToernooi();
 
         if (!$toernooi->betaling_actief) {
             return redirect()->route('coach.portal.judokas', $code)
                 ->with('error', 'Betalingen zijn niet actief');
         }
-
-        $club = $coach->club;
 
         // Get judokas ready for payment
         $klaarVoorBetaling = Judoka::where('toernooi_id', $toernooi->id)
@@ -1147,16 +1139,17 @@ class CoachPortalController extends Controller
 
     public function betalingSuccesCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
+        $toernooi = $this->getActiveToernooi();
+
         return view('pages.coach.betaling-succes', [
-            'coach' => $coach,
-            'toernooi' => $coach->toernooi,
-            'club' => $coach->club,
+            'toernooi' => $toernooi,
+            'club' => $club,
             'useCode' => true,
             'code' => $code,
         ]);
@@ -1170,14 +1163,13 @@ class CoachPortalController extends Controller
 
     public function resultatenCode(Request $request, string $code): View|RedirectResponse
     {
-        $coach = $this->getLoggedInCoach($request, $code);
+        $club = $this->getLoggedInClub($request, $code);
 
-        if (!$coach) {
+        if (!$club) {
             return redirect()->route('coach.portal.code', $code);
         }
 
-        $toernooi = $coach->toernooi;
-        $club = $coach->club;
+        $toernooi = $this->getActiveToernooi();
 
         // Get results for this club using PubliekController
         $publiekController = new PubliekController();
@@ -1209,7 +1201,6 @@ class CoachPortalController extends Controller
         }
 
         return view('pages.coach.resultaten', [
-            'coach' => $coach,
             'toernooi' => $toernooi,
             'club' => $club,
             'resultaten' => $clubResultaten,

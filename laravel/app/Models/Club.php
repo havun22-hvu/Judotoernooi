@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Club extends Model
 {
@@ -19,7 +20,57 @@ class Club extends Model
         'contact_naam',
         'telefoon',
         'website',
+        'portal_code',
+        'pincode',
     ];
+
+    protected $hidden = [
+        'pincode',
+    ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Club $club) {
+            if (empty($club->portal_code)) {
+                $club->portal_code = self::generatePortalCode();
+            }
+            if (empty($club->pincode)) {
+                $club->pincode = self::generatePincode();
+            }
+        });
+    }
+
+    public static function generatePortalCode(): string
+    {
+        $chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz';
+        $code = '';
+        for ($i = 0; $i < 12; $i++) {
+            $code .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $code;
+    }
+
+    public static function generatePincode(): string
+    {
+        return str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
+    }
+
+    public function getPortalUrl(): string
+    {
+        return url('/school/' . $this->portal_code);
+    }
+
+    public function checkPincode(string $pincode): bool
+    {
+        return $this->pincode === $pincode;
+    }
+
+    public function regeneratePincode(): string
+    {
+        $this->pincode = self::generatePincode();
+        $this->save();
+        return $this->pincode;
+    }
 
     public function judokas(): HasMany
     {

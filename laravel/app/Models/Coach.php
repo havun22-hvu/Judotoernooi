@@ -37,18 +37,7 @@ class Coach extends Model
             if (empty($coach->uuid)) {
                 $coach->uuid = (string) Str::uuid();
             }
-            if (empty($coach->pincode)) {
-                $coach->pincode = self::generatePincode();
-            }
-            // Share portal_code with other coaches of same club+toernooi
-            if (empty($coach->portal_code)) {
-                $existing = self::where('club_id', $coach->club_id)
-                    ->where('toernooi_id', $coach->toernooi_id)
-                    ->whereNotNull('portal_code')
-                    ->first();
-
-                $coach->portal_code = $existing?->portal_code ?? self::generatePortalCode();
-            }
+            // Portal access is now on Club model, not Coach
         });
     }
 
