@@ -124,32 +124,64 @@ Elke judoka krijgt een unieke code (bv. `U1234M01`) voor poule-indeling. Deze co
 - Bij klikken op **"Valideren"** knop
 - Bij wijziging **prioriteit instellingen** (drag & drop volgorde) - automatisch bij opslaan
 
-### Coach Portal (Clubs Beheren)
+### Budoclub vs Wedstrijdcoach
 
-Coaches kunnen zelf judoka's aanmelden via het Coach Portal:
+Het systeem maakt onderscheid tussen twee concepten:
 
-1. Ga naar **Toernooi** > **Clubs**
-2. Voeg clubs toe met naam, email, telefoon
-3. Per club wordt automatisch een coach + PIN aangemaakt
-4. Stuur uitnodigingen:
-   - **Alle Uitnodigen** - Stuurt email naar alle clubs met email
-   - **Email** knop per club - Stuurt individuele email
+| Concept | Doel | Wanneer aangemaakt |
+|---------|------|-------------------|
+| **Budoclub** | Inschrijven judoka's via portal | Bij toevoegen club door organisator |
+| **Wedstrijdcoach** | Begeleiding judoka's op wedstrijddag | Bij aanmelden 1e judoka |
 
-**URL en PIN direct bekijken:**
+**Budoclub:**
+- Krijgt portal URL + PIN voor inschrijving
+- Kan judoka's aanmelden/wijzigen tot deadline
+- Elke bekende club krijgt uitnodiging
 
-Per club toont de tabel de Coach Portal toegang:
-- **URL** knop → kopieert portal URL naar klembord
-- **PIN** knop → toont PIN en kopieert naar klembord
-- **Volledige URL** → zichtbaar in de tabel (voor handmatig delen via WhatsApp etc.)
+**Wedstrijdcoach:**
+- Fysieke begeleider op de wedstrijddag
+- Krijgt coachkaart (toegang dojo)
+- Minimaal 1 per club met judoka's
+- Definitief aantal berekend bij "Einde Voorbereiding"
 
-**Wanneer email kwijt is:**
-- Organisator kan URL + PIN direct zien in de clubs tabel
-- Kopieer en deel via WhatsApp, SMS, of mondeling
-- Geen nieuwe email nodig
+### Inschrijfflow
 
-### Coachkaarten
+**Workflow voor een toernooi:**
 
-Coaches krijgen toegangskaarten voor de dojo (wedstrijdruimte). Het aantal kaarten is gebaseerd op het **grootste blok** van de club (niet het totaal aantal judoka's).
+1. **Organisator maakt toernooi aan** met inschrijfdeadline
+2. **Organisator voegt budoclubs toe** (via Clubs pagina)
+   - Per club wordt automatisch een portal URL + PIN aangemaakt
+3. **Organisator deelt URL + PIN** met elke budoclub (email, WhatsApp, etc.)
+4. **Budoclubs schrijven judoka's in** via hun portal (tot deadline)
+   - Bij 1e judoka: automatisch 1 wedstrijdcoach aangemaakt
+5. **Na deadline**: Organisator valideert, poules en blokken worden gemaakt
+6. **Einde Voorbereiding**: Definitief aantal coachkaarten berekend per club
+
+### Budoclubs Beheren
+
+Ga naar **Toernooi** > **Clubs** om budoclubs te beheren:
+
+**Club toevoegen:**
+1. Vul clubnaam (+ optioneel plaats, email, telefoon, website) in
+2. Klik **Toevoegen**
+3. Automatisch wordt aangemaakt:
+   - Portal URL (bijv. `/school/ABC123`)
+   - PIN code (5 cijfers)
+
+**URL en PIN bekijken/delen:**
+
+Per club toont de tabel de portal toegang:
+- **URL** → kopieer knop voor portal link
+- **PIN** → kopieer knop voor pincode
+- Deel via email, WhatsApp, SMS of mondeling
+
+**Uitnodiging per email:**
+- **Alle Uitnodigen** - Stuurt email naar alle clubs met email adres
+- **Email** knop per club - Stuurt individuele email
+
+### Coachkaarten (Wedstrijdcoaches)
+
+Wedstrijdcoaches krijgen toegangskaarten voor de dojo. Het aantal kaarten is gebaseerd op het **grootste blok** van de club (niet het totaal aantal judoka's).
 
 **Waarom per blok?**
 Een coach hoeft alleen aanwezig te zijn wanneer zijn judoka's wedstrijden hebben. Als een club 15 judoka's heeft verdeeld over 3 blokken (8, 4, 3), dan zijn er maximaal 8 judoka's tegelijk actief.

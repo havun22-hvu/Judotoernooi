@@ -72,17 +72,11 @@
             @php
                 $uitnodiging = $uitnodigingen[$club->id] ?? null;
                 $inschrijfUrl = $uitnodiging ? route('coach.portal', $uitnodiging->token) : null;
-                $coach = $club->coaches->first();
-                $portalUrl = $coach ? url('/school/' . $coach->portal_code) : null;
+                $portalUrl = $club->getPortalUrl();
             @endphp
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3">
                     <span class="font-medium text-gray-800">{{ $club->naam }}</span>
-                    @if($coach)
-                    <div class="text-xs text-gray-500 mt-1">
-                        Coach: {{ $coach->naam }}
-                    </div>
-                    @endif
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->plaats ?? '-' }}</td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->email ?? '-' }}</td>
@@ -120,7 +114,6 @@
                     </div>
                 </td>
                 <td class="px-4 py-3">
-                    @if($coach)
                     <div class="space-y-1">
                         {{-- URL + kopieer knop --}}
                         <div class="flex items-center gap-1">
@@ -136,8 +129,8 @@
                         </div>
                         {{-- PIN --}}
                         <div class="flex items-center gap-1">
-                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $coach->pincode }}</span>
-                            <button @click="navigator.clipboard.writeText('{{ $coach->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $club->pincode }}</span>
+                            <button @click="navigator.clipboard.writeText('{{ $club->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
                                     class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
                                     :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'"
                                     title="Kopieer PIN">
@@ -145,9 +138,6 @@
                             </button>
                         </div>
                     </div>
-                    @else
-                    <span class="text-xs text-gray-400">Geen coach</span>
-                    @endif
                 </td>
                 <td class="px-4 py-3 text-right">
                     <div class="flex justify-end gap-2">

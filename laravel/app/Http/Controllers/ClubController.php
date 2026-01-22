@@ -17,6 +17,9 @@ class ClubController extends Controller
 {
     public function index(Toernooi $toernooi): View
     {
+        // Ensure all clubs have portal access
+        $this->ensureClubsHavePortalAccess($toernooi);
+
         $clubs = Club::withCount(['judokas' => function ($query) use ($toernooi) {
             $query->where('toernooi_id', $toernooi->id);
         }])
@@ -54,23 +57,12 @@ class ClubController extends Controller
             'plaats' => 'nullable|string|max:255',
         ]);
 
+        // Club krijgt automatisch portal_code en pincode via model boot
         $club = Club::create($validated);
-
-        // Auto-create coach and coach card for new club
-        $coach = Coach::create([
-            'club_id' => $club->id,
-            'toernooi_id' => $toernooi->id,
-            'naam' => 'Coach ' . $club->naam,
-        ]);
-
-        CoachKaart::create([
-            'toernooi_id' => $toernooi->id,
-            'club_id' => $club->id,
-        ]);
 
         return redirect()
             ->route('toernooi.club.index', $toernooi)
-            ->with('success', 'Club toegevoegd met coach portal (PIN: ' . $coach->pincode . ')');
+            ->with('success', 'Club toegevoegd (PIN: ' . $club->pincode . ')');
     }
 
     public function update(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
@@ -329,5 +321,43 @@ class ClubController extends Controller
         return redirect()
             ->route('toernooi.club.index', $toernooi)
             ->with('success', 'Coachkaart verwijderd voor ' . $club->naam);
+    }
+
+    /**
+     * Ensure all clubs have portal access and coachkaarten for clubs with judokas
+     */
+    private function ensureClubsHavePortalAccess(Toernooi $toernooi): void
+    {
+        $alleClubs = Club::all();
+
+        foreach ($alleClubs as $club) {
+            // Ensure club has portal_code and pincode
+            if (empty($club->portal_code)) {
+                $club->portal_code = Club::generatePortalCode();
+                $club->save();
+            }
+            if (empty($club->pincode)) {
+                $club->pincode = Club::generatePincode();
+                $club->save();
+            }
+
+            // Only create coachkaart if club has judokas
+            $heeftJudokas = $club->judokas()
+                ->where('toernooi_id', $toernooi->id)
+                ->exists();
+
+            if ($heeftJudokas) {
+                $hasCoachKaart = CoachKaart::where('club_id', $club->id)
+                    ->where('toernooi_id', $toernooi->id)
+                    ->exists();
+
+                if (!$hasCoachKaart) {
+                    CoachKaart::create([
+                        'toernooi_id' => $toernooi->id,
+                        'club_id' => $club->id,
+                    ]);
+                }
+            }
+        }
     }
 }
