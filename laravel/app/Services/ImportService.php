@@ -673,7 +673,7 @@ class ImportService
     {
         $aangemaakt = 0;
 
-        // Get all clubs with judokas in this tournament
+        // Only create wedstrijdcoaches for clubs that have judokas in this tournament
         $clubIds = Judoka::where('toernooi_id', $toernooi->id)
             ->whereNotNull('club_id')
             ->distinct()

@@ -179,6 +179,35 @@ Per club toont de tabel de portal toegang:
 - **Alle Uitnodigen** - Stuurt email naar alle clubs met email adres
 - **Email** knop per club - Stuurt individuele email
 
+**Email bevat:**
+- Toernooi info (naam, datum, locatie, deadline)
+- Portal URL voor de club
+- PIN code om in te loggen
+- Instructies voor inschrijving
+
+### Import Correctie Workflow
+
+Bij import van judoka's (CSV) kunnen er onvolledige gegevens zijn. Het systeem:
+
+1. **Detecteert problemen** tijdens import (ontbrekend geslacht, onbekende club, etc.)
+2. **Markeert judoka's** met `import_status = 'te_corrigeren'`
+3. **Toont overzicht** aan organisator per club
+
+**Organisator ziet:**
+- Aantal te corrigeren judoka's per club
+- Welke velden ontbreken per judoka
+- Optie om correctie email te sturen
+
+**Correctie email:**
+- Automatisch verstuurd naar clubs met te corrigeren judoka's
+- Bevat lijst van judoka's die correctie nodig hebben
+- Directe link naar portal om gegevens aan te vullen
+
+**Budoclub portal toont:**
+- Waarschuwing bovenaan als er te corrigeren judoka's zijn
+- Per judoka de import warnings
+- Coach kan gegevens direct aanpassen en opslaan
+
 ### Coachkaarten (Wedstrijdcoaches)
 
 Wedstrijdcoaches krijgen toegangskaarten voor de dojo. Het aantal kaarten is gebaseerd op het **grootste blok** van de club (niet het totaal aantal judoka's).
