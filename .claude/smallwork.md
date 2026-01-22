@@ -42,30 +42,20 @@
 - **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
 - **Naar permanente docs?** ☑ Nee - technische fix
 
-### BUG (OPENSTAAND): Vals-positieve gewichtsrange markering
-- **Type:** Bug (NIET OPGELOST)
-- **Wat:** Poules worden oranje gemarkeerd terwijl gewichtsrange OK is
-- **Voorbeelden:**
-  - Poule #9 Jeugd 26.5-28.8kg: range 27.3-31.8 = 4.5kg (1 judoka buiten klasse)
-  - Poule #5 Jeugd 21-23kg: range 21.5-23.4 = 1.9kg (zou OK moeten zijn!)
-- **Mogelijke oorzaken:**
-  1. `isDynamisch()` retourneert true voor vaste gewichtsklassen
-  2. `max_kg_verschil` staat verkeerd geconfigureerd
-  3. `isProblematischNaWeging()` checkt verkeerde data
-- **Bestanden:** `app/Models/Poule.php` - `isProblematischNaWeging()`, `isDynamisch()`
-- **Naar permanente docs?** ☐ Moet eerst opgelost worden
+### FIX: Vals-positieve gewichtsrange markering
+- **Type:** Bug fix
+- **Wat:** Poules werden onterecht oranje gemarkeerd (gewichtsprobleem) terwijl range OK was
+- **Oorzaak:** `isProblematischNaWeging()` gebruikte fallback `?? 3` voor `max_kg_verschil`, waardoor bij config mismatch een verkeerde waarde werd gebruikt
+- **Oplossing:** Extra check toegevoegd: als `max_kg_verschil <= 0` na config lookup, behandel als niet-problematisch (consistent met `isDynamisch()` logica)
+- **Bestanden:** `app/Models/Poule.php:276-298` - `isProblematischNaWeging()`
+- **Naar permanente docs?** ☑ Nee - bug fix
 
-### BUG (OPENSTAAND): Poule header kleur blijft oranje na fix
-- **Type:** Bug (NIET OPGELOST)
-- **Wat:** Header is oranje/rood i.p.v. blauw bij poules met >= 3 judoka's
-- **Verwacht:** bg-blue-700 (blauw) bij >= 3 actieve judoka's
-- **Realiteit:** Headers zijn oranje/bruin kleur
-- **Mogelijke oorzaken:**
-  1. CSS override ergens
-  2. Cached oude versie
-  3. Styling die ik niet heb gevonden
-- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
-- **Naar permanente docs?** ☐ Moet eerst opgelost worden
+### FIX: Poule header kleur bleef oranje
+- **Type:** Bug fix (gerelateerd aan bovenstaande)
+- **Wat:** Header was oranje i.p.v. blauw bij poules met >= 3 judoka's
+- **Oorzaak:** Zelfde root cause - `$heeftGewichtsprobleem` was true door vals-positieve detectie
+- **Oplossing:** Opgelost met bovenstaande fix
+- **Naar permanente docs?** ☑ Nee - bug fix
 
 ---
 

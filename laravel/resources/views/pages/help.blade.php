@@ -91,6 +91,9 @@
             <a href="#inschrijving" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Inschrijving</a>
             <a href="#judokas" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Judoka's</a>
             <a href="#poules" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Poules</a>
+            <a href="#wedstrijdsystemen" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Wedstrijdsystemen</a>
+            <a href="#kruisfinales" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Kruisfinales</a>
+            <a href="#eliminatie" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Eliminatie</a>
             <a href="#blokken" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Blokken</a>
             <a href="#weegkaarten" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Weegkaarten</a>
             <a href="#coachkaarten" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">Coachkaarten</a>
@@ -255,6 +258,130 @@
 
                 <h4 class="font-semibold text-gray-800 mt-4">Sortering aanpassen</h4>
                 <p>Bij <strong>Instellingen</strong> kun je de sorteer prioriteit aanpassen door te slepen: Leeftijd, Gewicht, Band.</p>
+            </div>
+        </section>
+
+        {{-- Wedstrijdsystemen --}}
+        <section id="wedstrijdsystemen" class="help-section bg-white rounded-lg shadow p-6" data-keywords="wedstrijdsysteem poule kruisfinale eliminatie knockout double elimination">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">&#127942;</span> Wedstrijdsystemen
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <p>Per categorie kun je kiezen uit drie wedstrijdsystemen:</p>
+
+                <table class="min-w-full text-sm mt-2">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-1">Systeem</th>
+                            <th class="text-left py-1">Geschikt voor</th>
+                            <th class="text-left py-1">Kenmerken</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="py-1"><strong>Poules</strong></td>
+                            <td class="py-1">Beginners, recreatief</td>
+                            <td class="py-1">Iedereen tegen iedereen, veel wedstrijdervaring</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-1"><strong>Kruisfinale</strong></td>
+                            <td class="py-1">Grotere groepen</td>
+                            <td class="py-1">Voorrondes + finale met beste judoka's</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1"><strong>Eliminatie</strong></td>
+                            <td class="py-1">Competitief, gevorderden</td>
+                            <td class="py-1">Double elimination, pas na 2 nederlagen uit</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Instellen</h4>
+                <p>Bij <strong>Toernooi Bewerken &gt; Categorieën</strong> kies je per leeftijdsgroep het wedstrijdsysteem.</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Achteraf wijzigen</h4>
+                <p>Op de <strong>Poules</strong> pagina kun je via de dropdown bij elke poule het systeem nog wijzigen (bijv. eliminatie → poules bij te weinig deelnemers).</p>
+            </div>
+        </section>
+
+        {{-- Kruisfinales --}}
+        <section id="kruisfinales" class="help-section bg-white rounded-lg shadow p-6" data-keywords="kruisfinale finale doorplaatsing winnaar plaats">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">&#127941;</span> Kruisfinales
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">Hoe werkt het?</h4>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li><strong>Voorrondes</strong> - Judoka's spelen in poules (iedereen tegen iedereen)</li>
+                    <li><strong>Doorplaatsing</strong> - Beste judoka's (1e of 1e+2e) gaan door</li>
+                    <li><strong>Kruisfinale</strong> - Finale poule met alle doorgeplaatste judoka's</li>
+                </ol>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Configuratie</h4>
+                <p>Bij <strong>Toernooi Instellingen</strong> stel je in hoeveel plaatsen doorgaan:</p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>1 plaats</strong> - Alleen de winnaar van elke voorronde</li>
+                    <li><strong>2 plaatsen</strong> - Nummer 1 en 2 van elke voorronde</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Workflow</h4>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Voorrondes worden gespeeld en afgerond</li>
+                    <li>Systeem selecteert automatisch de beste judoka's</li>
+                    <li>Hoofdjury wijst mat toe aan kruisfinale</li>
+                    <li>Nieuw wedstrijdschema wordt gegenereerd</li>
+                </ol>
+            </div>
+        </section>
+
+        {{-- Eliminatie --}}
+        <section id="eliminatie" class="help-section bg-white rounded-lg shadow p-6" data-keywords="eliminatie knockout dubbel verliezer brons herkansing bracket">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">&#129351;</span> Eliminatie (Knock-out)
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">Double Elimination</h4>
+                <p>Bij eliminatie worden judoka's pas na <strong>twee nederlagen</strong> uitgeschakeld:</p>
+
+                <table class="min-w-full text-sm mt-2">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-1">Groep</th>
+                            <th class="text-left py-1">Wie</th>
+                            <th class="text-left py-1">Uitkomst</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="py-1"><strong>A-groep</strong> (Hoofdboom)</td>
+                            <td class="py-1">Alle judoka's starten hier</td>
+                            <td class="py-1">Winnaar = Goud, Verliezer finale = Zilver</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1"><strong>B-groep</strong> (Herkansing)</td>
+                            <td class="py-1">Verliezers uit A-groep</td>
+                            <td class="py-1">Winnaar(s) = Brons</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Flow</h4>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Alle judoka's starten in de <strong>A-groep</strong></li>
+                    <li>Verlies in A → naar <strong>B-groep</strong> (herkansing)</li>
+                    <li>Verlies in B → <strong>uitgeschakeld</strong></li>
+                    <li>Winnaars B-groep krijgen <strong>brons</strong></li>
+                </ol>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Aantal brons medailles</h4>
+                <p>Bij <strong>Toernooi Instellingen</strong> kies je 1 of 2 brons medailles per categorie.</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Wanneer gebruiken?</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Competitieve toernooien</li>
+                    <li>Gevorderde judoka's (groen band en hoger)</li>
+                    <li>Wanneer snelle progressie gewenst is</li>
+                </ul>
             </div>
         </section>
 

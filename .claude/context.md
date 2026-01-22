@@ -554,9 +554,7 @@ cd laravel && php artisan serve --port=8007
 - README.md links en structuur geüpdatet
 - CLAUDE.md Knowledge Base tabel geüpdatet
 
-### Openstaande items (uit smallwork.md):
-- [ ] BUG: Vals-positieve gewichtsrange markering (Poule.php)
-- [ ] BUG: Poule header kleur blijft oranje na fix
+### Openstaande items:
 - [ ] import_fouten veld nog niet volledig geïmplementeerd in controller
 
 ### Documentatie structuur na deze sessie:
