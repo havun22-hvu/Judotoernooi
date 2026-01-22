@@ -339,6 +339,9 @@ class CoachPortalController extends Controller
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
 
+        // Hervalideer import status als judoka problemen had
+        $judoka->hervalideerImportStatus();
+
         return redirect()->route('coach.judokas', $token)
             ->with('success', 'Judoka bijgewerkt');
     }
@@ -813,6 +816,9 @@ class CoachPortalController extends Controller
             'gewichtsklasse' => $gewichtsklasse,
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
         ]);
+
+        // Hervalideer import status als judoka problemen had
+        $judoka->hervalideerImportStatus();
 
         return redirect()->route('coach.portal.judokas', $code)
             ->with('success', 'Judoka bijgewerkt');

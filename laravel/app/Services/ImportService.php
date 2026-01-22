@@ -304,6 +304,9 @@ class ImportService
         // Convert warnings array to string (or null if empty)
         $importWarnings = !empty($warnings) ? implode(' | ', $warnings) : null;
 
+        // Bepaal import_status: 'te_corrigeren' als er warnings zijn, anders 'compleet'
+        $importStatus = !empty($warnings) ? 'te_corrigeren' : 'compleet';
+
         if ($bestaande) {
             // Update existing judoka instead of creating new one
             $bestaande->update([
@@ -317,6 +320,7 @@ class ImportService
                 'gewichtsklasse' => $gewichtsklasse,
                 'is_onvolledig' => $isOnvolledig,
                 'import_warnings' => $importWarnings,
+                'import_status' => $importStatus,
                 'telefoon' => $this->parseTelefoon($telefoon),
             ]);
             return null; // Return null to count as skipped
@@ -337,6 +341,7 @@ class ImportService
             'gewichtsklasse' => $gewichtsklasse,
             'is_onvolledig' => $isOnvolledig,
             'import_warnings' => $importWarnings,
+            'import_status' => $importStatus,
             'telefoon' => $this->parseTelefoon($telefoon),
         ]);
 
