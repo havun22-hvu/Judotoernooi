@@ -214,30 +214,43 @@
 
         <!-- Sync Status Box -->
         @if(isset($useCode) && $useCode)
-        <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-4 text-sm">
-                    <span class="flex items-center gap-1">
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
+                            :class="filter === 'alle' ? 'bg-gray-200 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
+                        <span class="text-gray-600">Alle ({{ $judokas->count() }})</span>
+                    </button>
+                    <button @click="filter = 'synced'; $dispatch('filter-changed', 'synced')"
+                            :class="filter === 'synced' ? 'bg-green-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-green-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $syncedJudokas->count() }} gesynced</span>
-                    </span>
+                    </button>
                     @if($gewijzigdJudokas->count() > 0)
-                    <span class="flex items-center gap-1">
+                    <button @click="filter = 'gewijzigd'; $dispatch('filter-changed', 'gewijzigd')"
+                            :class="filter === 'gewijzigd' ? 'bg-orange-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $gewijzigdJudokas->count() }} gewijzigd</span>
-                    </span>
+                    </button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
-                    <span class="flex items-center gap-1">
+                    <button @click="filter = 'incompleet'; $dispatch('filter-changed', 'incompleet')"
+                            :class="filter === 'incompleet' ? 'bg-yellow-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} incompleet</span>
-                    </span>
+                    </button>
                     @endif
                     @if($nietSyncedVolledig->count() > 0)
-                    <span class="flex items-center gap-1">
-                        <span class="w-3 h-3 bg-gray-300 rounded-full"></span>
+                    <button @click="filter = 'klaar'; $dispatch('filter-changed', 'klaar')"
+                            :class="filter === 'klaar' ? 'bg-gray-300 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
+                        <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
                         <span class="text-gray-600">{{ $nietSyncedVolledig->count() }} klaar om te syncen</span>
-                    </span>
+                    </button>
                     @endif
                 </div>
                 <form action="{{ route('coach.portal.sync', $code) }}" method="POST">
@@ -298,24 +311,35 @@
 
         {{-- Payment Box --}}
         @if($betalingActief ?? false)
-        <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-4 text-sm">
-                    <span class="flex items-center gap-1">
+                <div class="flex flex-wrap items-center gap-2 text-sm">
+                    <button @click="filter = 'alle'; $dispatch('filter-changed', 'alle')"
+                            :class="filter === 'alle' ? 'bg-gray-200 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
+                        <span class="text-gray-600">Alle ({{ $judokas->count() }})</span>
+                    </button>
+                    <button @click="filter = 'betaald'; $dispatch('filter-changed', 'betaald')"
+                            :class="filter === 'betaald' ? 'bg-green-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-green-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $aantalBetaald ?? 0 }} betaald</span>
-                    </span>
+                    </button>
                     @if(($volledigeOnbetaald ?? collect())->count() > 0)
-                    <span class="flex items-center gap-1">
+                    <button @click="filter = 'klaar_betaling'; $dispatch('filter-changed', 'klaar_betaling')"
+                            :class="filter === 'klaar_betaling' ? 'bg-blue-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $volledigeOnbetaald->count() }} klaar voor betaling</span>
-                    </span>
+                    </button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
-                    <span class="flex items-center gap-1">
+                    <button @click="filter = 'incompleet'; $dispatch('filter-changed', 'incompleet')"
+                            :class="filter === 'incompleet' ? 'bg-yellow-100 font-medium' : 'hover:bg-gray-100'"
+                            class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
                         <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} incompleet</span>
-                    </span>
+                    </button>
                     @endif
                 </div>
                 @if(($volledigeOnbetaald ?? collect())->count() > 0)
@@ -335,7 +359,7 @@
         </div>
         @endif
 
-        <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
             <div class="px-6 py-4 border-b bg-gray-50">
                 <h2 class="text-xl font-bold text-gray-800">Mijn Judoka's ({{ $volledigeJudokas->count() }} volledig, {{ $onvolledigeJudokas->count() }} onvolledig)</h2>
             </div>
@@ -349,6 +373,8 @@
                     $isSynced = $judoka->isSynced() && !$judoka->isGewijzigdNaSync();
                     $isGewijzigd = $judoka->isGewijzigdNaSync();
                     $isBetaald = $judoka->isBetaald();
+                    $isKlaarOmTeSyncen = $judoka->isVolledig() && (!$judoka->isSynced() || $judoka->isGewijzigdNaSync());
+                    $isKlaarVoorBetaling = $judoka->isVolledig() && !$judoka->isBetaald();
                     // Check of judoka in eliminatie categorie zit
                     $lkKey = null;
                     if ($judoka->geboortejaar && $judoka->geslacht) {
@@ -373,7 +399,9 @@
                         $warnings[] = "Leeftijd " . (date('Y') - $judoka->geboortejaar) . " jaar lijkt erg hoog";
                     }
                 @endphp
-                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '') }}" x-data="{ editing: false }">
+                <div class="p-4 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '') }}"
+                     x-data="{ editing: false }"
+                     x-show="filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }})">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
                         <div class="flex items-start gap-2">
