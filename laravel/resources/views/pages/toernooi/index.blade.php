@@ -87,23 +87,22 @@ function confirmReset(id, naam) {
 }
 
 function confirmDelete(slug, naam) {
-    const bevestig = prompt(`🚨 VERWIJDER TOERNOOI PERMANENT\n\nDit verwijdert ALLES:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!\n\nTyp de naam van het toernooi om te bevestigen:`);
+    // Stap 1: Vraag of presets bewaard moeten worden
+    const presetKeuze = prompt('Wil je je gewichtsklassen-presets BEWAREN?\n\nTyp "ja" om presets te bewaren voor toekomstige toernooien\nTyp "nee" om alles te verwijderen');
 
-    if (bevestig === naam) {
-        const presetKeuze = prompt('Wil je je gewichtsklassen-presets BEWAREN?\n\nTyp "ja" om presets te bewaren\nTyp "nee" om alles te verwijderen');
+    if (presetKeuze === null) {
+        return; // Gebruiker annuleerde
+    }
 
-        if (presetKeuze === null) {
-            return; // Gebruiker annuleerde
-        }
+    const bewaarPresets = presetKeuze.toLowerCase() === 'ja';
+    const presetTekst = bewaarPresets ? '(presets worden bewaard)' : '(presets worden ook verwijderd)';
 
-        const bewaarPresets = presetKeuze.toLowerCase() === 'ja';
-
+    // Stap 2: Definitieve bevestiging
+    if (confirm(`🚨 VERWIJDER "${naam}" PERMANENT?\n\n${presetTekst}\n\nDit verwijdert:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!`)) {
         const form = document.getElementById('delete-form');
         document.getElementById('bewaar-presets').value = bewaarPresets ? '1' : '0';
         form.action = `/toernooi/${slug}`;
         form.submit();
-    } else if (bevestig !== null) {
-        alert('Naam komt niet overeen. Toernooi NIET verwijderd.');
     }
 }
 </script>
