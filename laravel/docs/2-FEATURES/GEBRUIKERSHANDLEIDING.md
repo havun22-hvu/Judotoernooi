@@ -16,7 +16,7 @@
 
 ## Overzicht
 
-Het WestFries Open JudoToernooi Management Systeem ondersteunt het complete proces van een judotoernooi in twee fasen:
+Het JudoToernooi Management Systeem ondersteunt het complete proces van een judotoernooi in twee fasen:
 
 ### Fase 1: Voorbereiding (weken/maanden voor toernooi)
 1. Toernooi aanmaken
