@@ -330,7 +330,7 @@
                             :class="filter === 'klaar_betaling' ? 'bg-blue-100 font-medium' : 'hover:bg-gray-100'"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
-                        <span class="text-gray-600">{{ $volledigeOnbetaald->count() }} klaar voor betaling</span>
+                        <span class="text-gray-600">{{ $volledigeOnbetaald->count() }} klaar voor betaling en syncen</span>
                     </button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
