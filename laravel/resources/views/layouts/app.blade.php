@@ -134,28 +134,30 @@
         </div>
     </nav>
 
-    @if(session('success'))
-    <div class="max-w-7xl mx-auto px-4 mt-4">
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-            {{ session('success') }}
+    {{-- Centrale toast container (fixed bovenaan scherm) --}}
+    <div id="app-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+        <div id="app-toast-content" class="px-6 py-3 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2">
+            <span id="app-toast-message"></span>
+            <button onclick="hideAppToast()" class="ml-2 text-current opacity-70 hover:opacity-100">&times;</button>
         </div>
     </div>
+
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => showAppToast('✓ {{ session('success') }}', 'success'));
+    </script>
     @endif
 
     @if(session('error'))
-    <div class="max-w-7xl mx-auto px-4 mt-4">
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded animate-blink-10s font-bold">
-            ⚠️ {{ session('error') }}
-        </div>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => showAppToast('⚠️ {{ session('error') }}', 'error', 10000));
+    </script>
     @endif
 
     @if(session('warning'))
-    <div class="max-w-7xl mx-auto px-4 mt-4">
-        <div class="bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded">
-            {{ session('warning') }}
-        </div>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => showAppToast('{{ session('warning') }}', 'warning'));
+    </script>
     @endif
 
     <main class="@yield('main-class', 'max-w-7xl mx-auto') px-4 py-8 flex-grow">
@@ -283,6 +285,36 @@
                 document.body.appendChild(overlay);
             });
         });
+    </script>
+
+    {{-- Globale toast functies --}}
+    <script>
+        let appToastTimeout = null;
+        function showAppToast(message, type = 'success', duration = 4000) {
+            const toast = document.getElementById('app-toast');
+            const content = document.getElementById('app-toast-content');
+            const msg = document.getElementById('app-toast-message');
+            if (!toast || !content || !msg) return;
+
+            msg.textContent = message;
+            content.className = 'px-6 py-3 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 ';
+            if (type === 'success') {
+                content.className += 'bg-green-100 text-green-800 border border-green-300';
+            } else if (type === 'error') {
+                content.className += 'bg-red-100 text-red-800 border border-red-300';
+            } else {
+                content.className += 'bg-orange-100 text-orange-800 border border-orange-300';
+            }
+            toast.classList.remove('hidden');
+
+            if (appToastTimeout) clearTimeout(appToastTimeout);
+            appToastTimeout = setTimeout(() => hideAppToast(), duration);
+        }
+        function hideAppToast() {
+            const toast = document.getElementById('app-toast');
+            if (toast) toast.classList.add('hidden');
+            if (appToastTimeout) clearTimeout(appToastTimeout);
+        }
     </script>
 </body>
 </html>
