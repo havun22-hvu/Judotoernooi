@@ -120,7 +120,17 @@ class ToernooiController extends Controller
         $nieuweGebruikGewichtsklassen = (bool) ($data['gebruik_gewichtsklassen'] ?? 1);
         $data['gebruik_gewichtsklassen'] = $nieuweGebruikGewichtsklassen;
 
+        // Check of categorieën zijn gewijzigd
+        $oudeGewichtsklassen = $toernooi->gewichtsklassen ?? [];
+        $nieuweGewichtsklassen = $data['gewichtsklassen'] ?? [];
+        $categorieenGewijzigd = json_encode($oudeGewichtsklassen) !== json_encode($nieuweGewichtsklassen);
+
         $toernooi->update($data);
+
+        // Auto-valideer judoka's als categorieën gewijzigd zijn
+        if ($categorieenGewijzigd && $toernooi->judokas()->count() > 0) {
+            app(JudokaController::class)->voerValidatieUit($toernooi);
+        }
 
         // Sync blokken and matten to match settings
         $this->toernooiService->syncBlokken($toernooi);

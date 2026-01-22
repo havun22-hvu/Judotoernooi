@@ -345,6 +345,24 @@ class JudokaController extends Controller
 
     public function valideer(Toernooi $toernooi): RedirectResponse
     {
+        $result = $this->voerValidatieUit($toernooi);
+
+        $message = "Validatie voltooid: {$result['gecorrigeerd']} judoka's gecorrigeerd.";
+        if (!empty($result['fouten'])) {
+            $message .= " " . count($result['fouten']) . " met ontbrekende gegevens.";
+            session()->flash('validatie_fouten', $result['fouten']);
+        }
+
+        return redirect()
+            ->route('toernooi.judoka.index', $toernooi)
+            ->with('success', $message);
+    }
+
+    /**
+     * Voer validatie uit zonder redirect (voor gebruik vanuit andere controllers)
+     */
+    public function voerValidatieUit(Toernooi $toernooi): array
+    {
         $judokas = $toernooi->judokas()->get();
         $gecorrigeerd = 0;
         $fouten = [];
@@ -412,15 +430,10 @@ class JudokaController extends Controller
             }
         }
 
-        $message = "Validatie voltooid: {$gecorrigeerd} judoka's gecorrigeerd.";
-        if (!empty($fouten)) {
-            $message .= " " . count($fouten) . " met ontbrekende gegevens.";
-            session()->flash('validatie_fouten', $fouten);
-        }
-
-        return redirect()
-            ->route('toernooi.judoka.index', $toernooi)
-            ->with('success', $message);
+        return [
+            'gecorrigeerd' => $gecorrigeerd,
+            'fouten' => $fouten,
+        ];
     }
 
 }
