@@ -1919,7 +1919,10 @@ window.triggerAutoSave = function() {};
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Server error: ' + response.status);
+                return response.text().then(text => {
+                    console.error('Server response:', text);
+                    throw new Error('Server error: ' + response.status);
+                });
             }
             return response.json();
         })
