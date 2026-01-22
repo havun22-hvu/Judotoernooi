@@ -1928,11 +1928,42 @@ window.triggerAutoSave = function() {};
                 showStatus('✓ Opgeslagen', 'success');
                 markClean();
                 setTimeout(() => status.classList.add('hidden'), 2000);
+
+                // Update overlap warning banner dynamically
+                const overlapAlert = document.getElementById('overlap-warning-alert');
+                if (data.overlapWarning) {
+                    if (overlapAlert) {
+                        overlapAlert.querySelector('.text-sm').textContent = data.overlapWarning;
+                        overlapAlert.classList.remove('hidden');
+                    } else {
+                        // Create banner if it doesn't exist
+                        const banner = document.createElement('div');
+                        banner.id = 'overlap-warning-alert';
+                        banner.className = 'mb-6 p-4 bg-orange-100 border-2 border-orange-500 rounded-lg';
+                        banner.innerHTML = `
+                            <div class="flex items-start gap-3">
+                                <span class="text-2xl">⚠️</span>
+                                <div>
+                                    <p class="font-bold text-orange-800">Overlappende categorieën gedetecteerd!</p>
+                                    <p class="text-sm text-orange-700">${data.overlapWarning}</p>
+                                    <p class="text-xs text-orange-600 mt-1">Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan.</p>
+                                </div>
+                            </div>
+                        `;
+                        const tabsContainer = document.querySelector('.flex.border-b.mb-6');
+                        if (tabsContainer) {
+                            tabsContainer.after(banner);
+                        }
+                    }
+                } else if (overlapAlert) {
+                    overlapAlert.classList.add('hidden');
+                }
             } else {
                 showStatus('✗ Fout bij opslaan', 'error');
             }
         })
-        .catch(() => {
+        .catch((error) => {
+            console.error('Auto-save error:', error);
             showStatus('✗ Fout bij opslaan', 'error');
         });
     }

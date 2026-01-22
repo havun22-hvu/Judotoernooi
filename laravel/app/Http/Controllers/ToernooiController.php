@@ -52,7 +52,13 @@ class ToernooiController extends Controller
     public function edit(Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
-        $overlapWarning = $this->checkCategorieOverlap($toernooi);
+
+        try {
+            $overlapWarning = $this->checkCategorieOverlap($toernooi);
+        } catch (\Throwable $e) {
+            \Log::error('Category overlap check failed: ' . $e->getMessage());
+            $overlapWarning = null;
+        }
 
         return view('pages.toernooi.edit', compact('toernooi', 'blokken', 'overlapWarning'));
     }
@@ -140,7 +146,12 @@ class ToernooiController extends Controller
         $this->toernooiService->syncMatten($toernooi);
 
         // Check for overlapping categories
-        $overlapWarning = $this->checkCategorieOverlap($toernooi);
+        try {
+            $overlapWarning = $this->checkCategorieOverlap($toernooi);
+        } catch (\Throwable $e) {
+            \Log::error('Category overlap check failed: ' . $e->getMessage());
+            $overlapWarning = null;
+        }
 
         // Return JSON for AJAX requests (auto-save)
         if ($request->ajax()) {
