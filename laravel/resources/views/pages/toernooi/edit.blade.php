@@ -1213,11 +1213,7 @@
                     if (response.ok) {
                         const data = await response.json();
                         hidePresetModal();
-                        // Toon groene toast melding
-                        const toast = document.getElementById('save-status');
-                        toast.textContent = overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen';
-                        toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-green-600 bg-green-100 border border-green-300';
-                        setTimeout(() => toast.classList.add('hidden'), 3000);
+                        showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
                         await loadEigenPresets();
                         if (data.id) {
                             presetsDropdown.value = data.id;
@@ -1226,15 +1222,11 @@
                         }
                     } else {
                         const data = await response.json();
-                        const toast = document.getElementById('save-status');
-                        toast.textContent = '✗ ' + (data.message || 'Kon preset niet opslaan');
-                        toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
+                        showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
                     }
                 } catch (e) {
                     console.error('Fout bij opslaan:', e);
-                    const toast = document.getElementById('save-status');
-                    toast.textContent = '✗ Er ging iets mis bij het opslaan';
-                    toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
+                    showAppToast('✗ Er ging iets mis bij het opslaan', 'error');
                 }
             }
 
@@ -1286,9 +1278,7 @@
                 const input = document.getElementById('new-preset-naam');
                 const naam = input?.value?.trim();
                 if (!naam) {
-                    const toast = document.getElementById('save-status');
-                    toast.textContent = 'Vul een naam in';
-                    toast.className = 'fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium text-red-600 bg-red-100 border border-red-300';
+                    showAppToast('Vul een naam in', 'error');
                     return;
                 }
                 savePreset(naam, false);
