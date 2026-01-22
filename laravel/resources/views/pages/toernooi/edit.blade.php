@@ -1213,7 +1213,8 @@
                     if (response.ok) {
                         const data = await response.json();
                         hidePresetModal();
-                        alert(overschrijven ? 'Preset bijgewerkt!' : 'Preset opgeslagen!');
+                        showStatus(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
+                        setTimeout(() => document.getElementById('save-status').classList.add('hidden'), 3000);
                         await loadEigenPresets();
                         if (data.id) {
                             presetsDropdown.value = data.id;
@@ -1222,11 +1223,11 @@
                         }
                     } else {
                         const data = await response.json();
-                        alert('Fout: ' + (data.message || 'Kon preset niet opslaan'));
+                        showStatus('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
                     }
                 } catch (e) {
                     console.error('Fout bij opslaan:', e);
-                    alert('Er ging iets mis bij het opslaan');
+                    showStatus('✗ Er ging iets mis bij het opslaan', 'error');
                 }
             }
 
@@ -1278,7 +1279,7 @@
                 const input = document.getElementById('new-preset-naam');
                 const naam = input?.value?.trim();
                 if (!naam) {
-                    alert('Vul een naam in');
+                    showStatus('Vul een naam in', 'error');
                     return;
                 }
                 savePreset(naam, false);
