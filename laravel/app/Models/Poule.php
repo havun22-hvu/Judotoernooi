@@ -269,6 +269,9 @@ class Poule extends Model
     /**
      * Check of poule problematisch is na weging (range > max_kg_verschil)
      * Retourneert null als niet problematisch, anders array met details
+     *
+     * BELANGRIJK: Alleen voor dynamische categorieën (max_kg_verschil > 0)
+     * Vaste categorieën (max_kg_verschil = 0) worden NIET gecheckt op gewichtsrange
      */
     public function isProblematischNaWeging(): ?array
     {
@@ -283,7 +286,16 @@ class Poule extends Model
         }
 
         $config = $this->getCategorieConfig();
-        $maxKgVerschil = $config['max_kg_verschil'] ?? 3;
+
+        // Haal max_kg_verschil uit config - GEEN fallback, want isDynamisch()
+        // heeft al bevestigd dat de config max_kg_verschil > 0 heeft
+        $maxKgVerschil = $config['max_kg_verschil'] ?? 0;
+
+        // Extra check: als max_kg_verschil = 0, is dit geen dynamische categorie
+        // Dit kan voorkomen bij config mismatch - behandel als niet-problematisch
+        if ($maxKgVerschil <= 0) {
+            return null;
+        }
 
         if ($range['range'] <= $maxKgVerschil) {
             return null;
