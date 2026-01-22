@@ -414,8 +414,9 @@ class JudokaController extends Controller
                         $judoka->geslacht,
                         $wijzigingen['band'] ?? $judoka->band
                     );
-                    // Update if changed (null means dynamic category - keep existing or set null)
-                    if ($nieuweGewichtsklasse !== $judoka->gewichtsklasse) {
+                    // Update if changed (null means dynamic category - keep existing value)
+                    // Don't set null due to database NOT NULL constraint
+                    if ($nieuweGewichtsklasse !== null && $nieuweGewichtsklasse !== $judoka->gewichtsklasse) {
                         $wijzigingen['gewichtsklasse'] = $nieuweGewichtsklasse;
                     }
                 }
