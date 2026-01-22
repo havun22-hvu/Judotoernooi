@@ -278,6 +278,11 @@ class CategorieClassifier
                 $config1 = $this->config[$key1];
                 $config2 = $this->config[$key2];
 
+                // Skip non-array entries (e.g. global settings like poule_grootte_voorkeur)
+                if (!is_array($config1) || !is_array($config2)) {
+                    continue;
+                }
+
                 // Check max_leeftijd
                 $leeftijd1 = $config1['max_leeftijd'] ?? 99;
                 $leeftijd2 = $config2['max_leeftijd'] ?? 99;
