@@ -23,9 +23,24 @@ class JudokaController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        $judokas = $toernooi->judokas()
+        $alleJudokas = $toernooi->judokas()
             ->with('club')
             ->get();
+
+        // Filter out judokas that don't fit in any category (from file import)
+        // These are shown in the portal but not in the main list
+        $judokas = $alleJudokas->filter(fn ($j) =>
+            !empty($j->leeftijdsklasse) &&
+            $j->leeftijdsklasse !== 'Onbekend' &&
+            $j->import_status !== 'niet_in_categorie'
+        );
+
+        // Keep track of excluded judokas for warning display
+        $nietInCategorie = $alleJudokas->filter(fn ($j) =>
+            $j->import_status === 'niet_in_categorie' ||
+            empty($j->leeftijdsklasse) ||
+            $j->leeftijdsklasse === 'Onbekend'
+        );
 
         // Sort by: age class (youngest first), weight class (lightest first), gender, name
         $judokas = $judokas->sortBy([
@@ -57,7 +72,7 @@ class JudokaController extends Controller
             ->filter(fn ($j) => !empty($j->import_warnings))
             ->groupBy(fn ($j) => $j->club?->naam ?? 'Geen club');
 
-        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'importWarningsPerClub'));
+        return view('pages.judoka.index', compact('toernooi', 'judokas', 'judokasPerKlasse', 'importWarningsPerClub', 'nietInCategorie'));
     }
 
     /**
@@ -135,8 +150,27 @@ class JudokaController extends Controller
         $gewichtsklasse = null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
-            $leeftijd = date('Y') - $validated['geboortejaar'];
+            $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
+            $leeftijd = $toernooiJaar - $validated['geboortejaar'];
             $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $validated['band'] ?? null);
+
+            // Block if judoka doesn't fit in any category
+            if (empty($leeftijdsklasse)) {
+                $config = $toernooi->getAlleGewichtsklassen();
+                $maxLeeftijd = 0;
+                foreach ($config as $cat) {
+                    $catMax = $cat['max_leeftijd'] ?? 99;
+                    if ($catMax > $maxLeeftijd && $catMax < 99) $maxLeeftijd = $catMax;
+                }
+
+                $probleem = $leeftijd > $maxLeeftijd
+                    ? "Te oud ({$leeftijd} jaar, max {$maxLeeftijd})"
+                    : "Past niet in een categorie (leeftijd {$leeftijd})";
+
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Judoka kan niet worden toegevoegd: {$probleem}");
+            }
 
             if (!empty($validated['gewicht'])) {
                 $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $validated['band'] ?? null);
