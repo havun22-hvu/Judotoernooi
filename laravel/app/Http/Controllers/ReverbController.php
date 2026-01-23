@@ -21,7 +21,7 @@ class ReverbController extends Controller
             ]);
         }
 
-        $result = Process::run('supervisorctl status reverb-production');
+        $result = Process::run('supervisorctl status reverb');
         $output = $result->output();
 
         $running = str_contains($output, 'RUNNING');
@@ -46,7 +46,7 @@ class ReverbController extends Controller
         }
 
         try {
-            $result = Process::run('supervisorctl start reverb-production');
+            $result = Process::run('supervisorctl start reverb');
 
             return response()->json([
                 'success' => $result->successful(),
@@ -75,7 +75,7 @@ class ReverbController extends Controller
         }
 
         try {
-            $result = Process::run('supervisorctl stop reverb-production');
+            $result = Process::run('supervisorctl stop reverb');
 
             return response()->json([
                 'success' => $result->successful(),
