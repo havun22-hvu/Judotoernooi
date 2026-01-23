@@ -304,8 +304,19 @@ class ImportService
         // Convert warnings array to string (or null if empty)
         $importWarnings = !empty($warnings) ? implode(' | ', $warnings) : null;
 
-        // Bepaal import_status: 'te_corrigeren' als er warnings zijn, anders 'compleet'
-        $importStatus = !empty($warnings) ? 'te_corrigeren' : 'compleet';
+        // Bepaal import_status:
+        // - 'niet_in_categorie' als judoka niet past in een leeftijdscategorie (te oud/jong)
+        // - 'te_corrigeren' als er warnings zijn
+        // - 'compleet' anders
+        $importStatus = 'compleet';
+        if ($leeftijdsklasse === 'Onbekend' || empty($leeftijdsklasse)) {
+            $importStatus = 'niet_in_categorie';
+            // Add warning for portal display
+            $warnings[] = $this->bepaalCategorieProbleem($geboortejaar, $toernooi);
+            $importWarnings = implode(' | ', array_filter($warnings));
+        } elseif (!empty($warnings)) {
+            $importStatus = 'te_corrigeren';
+        }
 
         if ($bestaande) {
             // Update existing judoka instead of creating new one
@@ -719,6 +730,34 @@ class ImportService
         }
 
         return $aangemaakt;
+    }
+
+    /**
+     * Bepaal waarom judoka niet in categorie past (voor import warnings)
+     */
+    private function bepaalCategorieProbleem(?int $geboortejaar, Toernooi $toernooi): string
+    {
+        if (!$geboortejaar) {
+            return 'Geboortejaar ontbreekt';
+        }
+
+        $toernooiJaar = $toernooi->datum?->year ?? (int) date('Y');
+        $leeftijd = $toernooiJaar - $geboortejaar;
+
+        // Zoek max leeftijd uit config
+        $maxLeeftijd = 0;
+        foreach ($this->gewichtsklassenConfig as $cat) {
+            $catMax = $cat['max_leeftijd'] ?? 99;
+            if ($catMax > $maxLeeftijd && $catMax < 99) {
+                $maxLeeftijd = $catMax;
+            }
+        }
+
+        if ($leeftijd > $maxLeeftijd) {
+            return "Te oud ({$leeftijd} jaar, max {$maxLeeftijd})";
+        }
+
+        return "Past niet in categorie (leeftijd {$leeftijd})";
     }
 
     /**

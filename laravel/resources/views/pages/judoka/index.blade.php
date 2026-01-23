@@ -8,8 +8,48 @@
     $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
 @endphp
 
-<!-- WAARSCHUWING: Niet-gecategoriseerde judoka's -->
-@if($nietGecategoriseerdAantal > 0)
+<!-- INFO: Judoka's die niet in een categorie passen (alleen via portal te zien) -->
+@if($nietInCategorie->count() > 0)
+<div class="mb-4 p-4 bg-orange-50 border border-orange-300 rounded-lg" x-data="{ open: false }">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🚫</span>
+            <div>
+                <p class="font-bold text-orange-800">{{ $nietInCategorie->count() }} judoka('s) niet in deelnemerslijst</p>
+                <p class="text-sm text-orange-700">Te oud/jong voor dit toernooi. Alleen zichtbaar in het club portal.</p>
+            </div>
+        </div>
+        <button @click="open = !open" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm font-medium">
+            <span x-text="open ? 'Verbergen' : 'Tonen'"></span>
+        </button>
+    </div>
+    <div x-show="open" x-collapse class="mt-4 border-t border-orange-200 pt-3">
+        <table class="w-full text-sm">
+            <thead class="text-orange-800">
+                <tr>
+                    <th class="text-left py-1">Naam</th>
+                    <th class="text-left py-1">Geb.jaar</th>
+                    <th class="text-left py-1">Club</th>
+                    <th class="text-left py-1">Reden</th>
+                </tr>
+            </thead>
+            <tbody class="text-orange-700">
+                @foreach($nietInCategorie as $judoka)
+                <tr class="border-t border-orange-100">
+                    <td class="py-1">{{ $judoka->naam }}</td>
+                    <td class="py-1">{{ $judoka->geboortejaar }}</td>
+                    <td class="py-1">{{ $judoka->club?->naam ?? '-' }}</td>
+                    <td class="py-1 text-red-600">{{ $judoka->import_warnings ?: 'Onbekende categorie' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+<!-- WAARSCHUWING: Niet-gecategoriseerde judoka's (oude stijl - voor backward compatibility) -->
+@if($nietGecategoriseerdAantal > 0 && $nietInCategorie->count() === 0)
 <div id="niet-gecategoriseerd-alert"
      class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
      x-data="{ show: true }"
