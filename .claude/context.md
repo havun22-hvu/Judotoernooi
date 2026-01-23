@@ -569,30 +569,35 @@ docs/
 
 ---
 
-## Laatste Sessie: 23 januari 2026 (vervolg)
+## Laatste Sessie: 23 januari 2026 (middag) - HANDOVER
 
-### Wat besproken:
-- Alle geïmporteerde judoka's komen ALTIJD in het club portaal (geen filter op "volledig")
-- Portaal instellingen moeten flexibeler: organisator kiest hoe inschrijving werkt
-
-### Te bouwen:
-1. **Migration:** `portaal_modus` ENUM('uit', 'mutaties', 'volledig') op toernooien
-2. **UI:** Dropdown in Instellingen → Organisatie
-3. **Handmatige invoer:** "Judoka toevoegen" knop op admin judoka pagina
-4. **Portaal logica:** Functies tonen/verbergen op basis van modus
+### Wat is gedaan:
+- **Portaal modus feature COMPLEET:**
+  - Migration: `portaal_modus` veld (uit/mutaties/volledig)
+  - Model helpers: `portaalMagInschrijven()`, `portaalMagWijzigen()`, `portaalIsUit()`
+  - UI: Dropdown in Instellingen → Organisatie + Mollie hint
+  - Controller checks in CoachPortalController
+  - View: Info banners + knoppen per modus
+- **Handmatige judoka invoer:** "+ Judoka toevoegen" modal op admin pagina
 
 ### Portaal modus:
-| Modus | Nieuw | Wijzigen | Mollie optie |
-|-------|-------|----------|--------------|
-| **UIT** | ❌ | ❌ | verborgen |
-| **Alleen mutaties** | ❌ | ✅ | verborgen |
-| **Volledig** | ✅ | ✅ | ☐/☑ zichtbaar |
+| Modus | Nieuw | Wijzigen | Verwijderen |
+|-------|-------|----------|-------------|
+| **uit** | ❌ | ❌ | ❌ |
+| **mutaties** | ❌ | ✅ | ❌ |
+| **volledig** | ✅ | ✅ | ✅ |
 
-**Altijd passief beschikbaar:** Clubs kunnen ingeschreven judoka's BEKIJKEN, ook als portaal UIT.
-**Mollie checkbox:** Alleen zichtbaar bij "Volledig" - hergebruikt bestaande `betaling_actief` veld.
+### Te testen:
+1. Instellingen → Organisatie → Portaal modus dropdown
+2. Coach portal per modus (banner + knoppen)
+3. Admin → Judoka's → "+ Judoka toevoegen"
 
-### Docs bijgewerkt:
-- `docs/2-FEATURES/INTERFACES.md` - Budoschool Portaal Instellingen sectie
+### Deploy nodig:
+```bash
+php artisan migrate
+```
+
+### Commit: `2463ebf`
 
 ---
 
