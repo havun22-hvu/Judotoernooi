@@ -1506,7 +1506,9 @@
             },
             async checkStatus() {
                 try {
-                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi) }}');
+                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi) }}', {
+                        headers: { 'Accept': 'application/json' }
+                    });
                     const data = await res.json();
                     this.running = data.running;
                     this.local = data.local || false;
@@ -1519,7 +1521,7 @@
                 try {
                     const res = await fetch('{{ route("toernooi.reverb.start", $toernooi) }}', {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                     });
                     const data = await res.json();
                     this.message = data.message;
@@ -1534,7 +1536,7 @@
                 try {
                     const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi) }}', {
                         method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                     });
                     const data = await res.json();
                     this.message = data.message;
