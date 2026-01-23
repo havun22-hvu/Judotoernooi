@@ -67,6 +67,29 @@
     });
 </script>
 @endif
+
+{{-- WAARSCHUWING: Niet-gecategoriseerde judoka's --}}
+@php
+    $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
+@endphp
+@if($nietGecategoriseerdAantal > 0)
+<div class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+                <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
+                <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
+            </div>
+        </div>
+        <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi#categorieen"
+           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+            Naar Instellingen
+        </a>
+    </div>
+</div>
+@endif
+
 {{-- Statistieken sectie (blijft zichtbaar) --}}
 <div id="poule-statistieken" class="bg-white rounded-lg shadow p-4 mb-6 no-print">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">

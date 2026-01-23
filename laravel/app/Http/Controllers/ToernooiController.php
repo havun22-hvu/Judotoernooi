@@ -155,9 +155,14 @@ class ToernooiController extends Controller
 
         // Return JSON for AJAX requests (auto-save)
         if ($request->ajax()) {
+            // Refresh toernooi to get updated judoka counts after validation
+            $toernooi->refresh();
+            $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
+
             return response()->json([
                 'success' => true,
                 'overlapWarning' => $overlapWarning,
+                'nietGecategoriseerd' => $nietGecategoriseerd,
             ]);
         }
 
