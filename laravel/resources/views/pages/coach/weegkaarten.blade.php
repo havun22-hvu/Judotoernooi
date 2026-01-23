@@ -6,6 +6,7 @@
     <title>{{ $club->naam }} - Weegkaarten</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8 px-4">
@@ -87,9 +88,14 @@
                     $weegkaartUrl = route('weegkaart.show', $judoka->qr_code);
                     $blok = $judoka->poules->first()?->blok;
                 @endphp
-                <div class="p-4 hover:bg-gray-50">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-grow">
+                <div class="p-4 hover:bg-gray-50" x-data="{ showQr: false }">
+                    <div class="flex justify-between items-start gap-4">
+                        <!-- QR Code (clickable) -->
+                        <div class="cursor-pointer shrink-0" @click="showQr = !showQr" title="Klik voor grote QR">
+                            <canvas id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></canvas>
+                        </div>
+
+                        <div class="flex-grow min-w-0">
                             <p class="font-medium text-gray-800">{{ $judoka->naam }}</p>
                             <p class="text-sm text-gray-600">
                                 {{ $judoka->gewichtsklasse }} kg |
@@ -109,7 +115,7 @@
                         </div>
 
                         <!-- Action buttons -->
-                        <div class="flex items-center space-x-2 ml-4">
+                        <div class="flex items-center space-x-2 shrink-0">
                             <!-- View link -->
                             <a href="{{ $weegkaartUrl }}" target="_blank"
                                class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
@@ -157,6 +163,12 @@
                                 WhatsApp
                             </a>
                         </div>
+                    </div>
+
+                    <!-- Grote QR popup -->
+                    <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center">
+                        <p class="text-sm text-gray-600 mb-2">Laat {{ $judoka->naam }} deze QR scannen voor de weegkaart</p>
+                        <canvas id="qr-weeg-large-{{ $judoka->id }}" class="mx-auto"></canvas>
                     </div>
                 </div>
                 @endforeach
@@ -214,6 +226,24 @@
                 alert('Alle links gekopieerd naar klembord!');
             });
         }
+
+        // Generate QR codes for weegkaarten
+        document.addEventListener('DOMContentLoaded', function() {
+            @foreach($judokas as $judoka)
+            // Small QR
+            QRCode.toCanvas(document.getElementById('qr-weeg-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+                width: 56,
+                margin: 0,
+                color: { dark: '#1d4ed8' }
+            });
+            // Large QR
+            QRCode.toCanvas(document.getElementById('qr-weeg-large-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+                width: 200,
+                margin: 1,
+                color: { dark: '#1d4ed8' }
+            });
+            @endforeach
+        });
     </script>
 </body>
 </html>

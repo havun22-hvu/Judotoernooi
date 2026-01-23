@@ -6,6 +6,7 @@
     <title>{{ $club->naam }} - Coach Kaarten</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8 px-4">
@@ -70,21 +71,12 @@
             @if($coachKaarten->count() > 0)
             <div class="divide-y">
                 @foreach($coachKaarten as $index => $kaart)
-                <div class="p-4" x-data="{ showForm: false, copied: false }">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <!-- Status indicator -->
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center
-                                {{ $kaart->is_geactiveerd ? 'bg-green-100' : 'bg-gray-100' }}">
-                                @if($kaart->is_geactiveerd && $kaart->foto)
-                                <img src="{{ $kaart->getFotoUrl() }}" class="w-12 h-12 rounded-full object-cover">
-                                @elseif($kaart->is_geactiveerd)
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                @else
-                                <span class="text-gray-400 font-bold">{{ $index + 1 }}</span>
-                                @endif
+                <div class="p-4" x-data="{ showForm: false, showQr: false, copied: false }">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex items-center gap-4 flex-grow">
+                            <!-- QR Code (clickable) -->
+                            <div class="cursor-pointer" @click="showQr = !showQr" title="Klik voor grote QR">
+                                <canvas id="qr-coach-{{ $kaart->id }}" class="w-16 h-16"></canvas>
                             </div>
 
                             <div>
@@ -113,7 +105,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 shrink-0">
                             @if(!$kaart->is_geactiveerd)
                             <button @click="showForm = !showForm" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
                                 <span x-text="showForm ? 'Annuleer' : 'Naam toewijzen'"></span>
@@ -133,6 +125,13 @@
                                 Bekijk
                             </a>
                         </div>
+                    </div>
+
+                    <!-- Grote QR popup -->
+                    <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center">
+                        <p class="text-sm text-gray-600 mb-2">Scan met je telefoon om de coachkaart te openen</p>
+                        <canvas id="qr-coach-large-{{ $kaart->id }}" class="mx-auto"></canvas>
+                        <p class="text-xs text-gray-500 mt-2">PIN: <span class="font-bold">{{ $kaart->pincode }}</span></p>
                     </div>
 
                     <!-- Naam toewijzen form -->
@@ -175,5 +174,25 @@
             </ol>
         </div>
     </div>
+
+    <script>
+        // Generate QR codes for coach cards
+        document.addEventListener('DOMContentLoaded', function() {
+            @foreach($coachKaarten as $kaart)
+            // Small QR
+            QRCode.toCanvas(document.getElementById('qr-coach-{{ $kaart->id }}'), '{{ $kaart->getShowUrl() }}', {
+                width: 64,
+                margin: 0,
+                color: { dark: '#6b21a8' }
+            });
+            // Large QR
+            QRCode.toCanvas(document.getElementById('qr-coach-large-{{ $kaart->id }}'), '{{ $kaart->getShowUrl() }}', {
+                width: 200,
+                margin: 1,
+                color: { dark: '#6b21a8' }
+            });
+            @endforeach
+        });
+    </script>
 </body>
 </html>
