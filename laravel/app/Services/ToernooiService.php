@@ -103,7 +103,9 @@ class ToernooiService
         5 => 'oranje',
         6 => 'paars',
         7 => 'roze',
-        8 => 'cyaan',
+        8 => 'bruin',
+        9 => 'wit',
+        10 => 'zwart',
     ];
 
     /**

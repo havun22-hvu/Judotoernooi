@@ -81,7 +81,9 @@
                 'oranje' => 'bg-orange-500',
                 'paars' => 'bg-purple-500',
                 'roze' => 'bg-pink-500',
-                'cyaan' => 'bg-cyan-500',
+                'bruin' => 'bg-amber-700',
+                'wit' => 'bg-white border-2 border-gray-400',
+                'zwart' => 'bg-gray-900 !text-white',
             ];
             $matKleur = $mat?->kleur ? ($matKleuren[strtolower($mat->kleur)] ?? 'bg-gray-500') : 'bg-gray-500';
         @endphp

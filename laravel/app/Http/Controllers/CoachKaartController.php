@@ -288,4 +288,81 @@ class CoachKaartController extends Controller
 
         return view('pages.coach-kaart.index', compact('toernooi', 'clubs'));
     }
+
+    /**
+     * Geschiedenis van een coachkaart (alle coaches met check-ins)
+     */
+    public function geschiedenis(string $qrCode): View
+    {
+        $coachKaart = CoachKaart::where('qr_code', $qrCode)
+            ->with(['club', 'toernooi', 'wisselingen', 'checkinsVandaag'])
+            ->firstOrFail();
+
+        return view('pages.coach-kaart.geschiedenis', compact('coachKaart'));
+    }
+
+    /**
+     * API: Alle clubs met coach kaarten voor dojo scanner overzicht
+     */
+    public function dojoClubs(Toernooi $toernooi)
+    {
+        $clubs = Club::whereHas('coachKaarten', fn($q) => $q->where('toernooi_id', $toernooi->id))
+            ->with(['coachKaarten' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
+            ->orderBy('naam')
+            ->get()
+            ->map(function ($club) {
+                $kaarten = $club->coachKaarten;
+                return [
+                    'id' => $club->id,
+                    'naam' => $club->naam,
+                    'totaal_kaarten' => $kaarten->count(),
+                    'ingecheckt' => $kaarten->filter(fn($k) => $k->isIngecheckt())->count(),
+                    'uitgecheckt' => $kaarten->filter(fn($k) => !$k->isIngecheckt() && $k->is_geactiveerd)->count(),
+                    'ongebruikt' => $kaarten->filter(fn($k) => !$k->is_geactiveerd)->count(),
+                ];
+            });
+
+        return response()->json($clubs);
+    }
+
+    /**
+     * API: Detail van een club voor dojo scanner overzicht
+     */
+    public function dojoClubDetail(Toernooi $toernooi, Club $club)
+    {
+        $kaarten = CoachKaart::where('toernooi_id', $toernooi->id)
+            ->where('club_id', $club->id)
+            ->get()
+            ->map(function ($kaart, $index) {
+                $status = 'ongebruikt';
+                $statusTijd = null;
+
+                if ($kaart->isIngecheckt()) {
+                    $status = 'in';
+                    $statusTijd = $kaart->ingecheckt_op->format('H:i');
+                } elseif ($kaart->is_geactiveerd) {
+                    $status = 'uit';
+                    // Zoek laatste uitcheck
+                    $laatsteUit = $kaart->checkinsVandaag()->where('actie', '!=', 'in')->first();
+                    $statusTijd = $laatsteUit?->created_at->format('H:i');
+                }
+
+                return [
+                    'id' => $kaart->id,
+                    'qr_code' => $kaart->qr_code,
+                    'nummer' => $index + 1,
+                    'naam' => $kaart->naam ?? '(niet geactiveerd)',
+                    'status' => $status,
+                    'status_tijd' => $statusTijd,
+                ];
+            });
+
+        return response()->json([
+            'club' => [
+                'id' => $club->id,
+                'naam' => $club->naam,
+            ],
+            'kaarten' => $kaarten,
+        ]);
+    }
 }
