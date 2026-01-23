@@ -554,9 +554,6 @@ cd laravel && php artisan serve --port=8007
 - README.md links en structuur geüpdatet
 - CLAUDE.md Knowledge Base tabel geüpdatet
 
-### Openstaande items:
-- [ ] import_fouten veld nog niet volledig geïmplementeerd in controller
-
 ### Documentatie structuur na deze sessie:
 ```
 docs/
@@ -583,7 +580,7 @@ docs/
 - Niet-gecategoriseerd waarschuwing toegevoegd aan Poules pagina
 
 ### Openstaande items:
-- [ ] import_fouten veld nog niet volledig geïmplementeerd in controller
+- Geen
 
 ### Belangrijke context:
 - **BandHelper::BAND_VOLGORDE** is omgekeerd: wit=6, zwart=0 (hogere waarde = lagere band)
