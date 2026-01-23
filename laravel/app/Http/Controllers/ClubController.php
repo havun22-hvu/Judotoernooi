@@ -55,6 +55,7 @@ class ClubController extends Controller
             'contact_naam' => 'nullable|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'plaats' => 'nullable|string|max:255',
+            'website' => 'nullable|string|max:255',
         ]);
 
         // Club krijgt automatisch portal_code en pincode via model boot
@@ -74,6 +75,7 @@ class ClubController extends Controller
             'contact_naam' => 'nullable|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'plaats' => 'nullable|string|max:255',
+            'website' => 'nullable|string|max:255',
         ]);
 
         $club->update($validated);
