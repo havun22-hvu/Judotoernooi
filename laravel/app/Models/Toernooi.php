@@ -104,6 +104,7 @@ class Toernooi extends Model
         'weging_verplicht',
         'max_wegingen',
         'judokas_per_coach',
+        'coach_incheck_actief',
         'is_actief',
         'poules_gegenereerd_op',
         'blokken_verdeeld_op',
@@ -192,6 +193,7 @@ class Toernooi extends Model
         'mollie_token_expires_at' => 'datetime',
         'mollie_onboarded' => 'boolean',
         'import_fouten' => 'array',
+        'coach_incheck_actief' => 'boolean',
     ];
 
     /**

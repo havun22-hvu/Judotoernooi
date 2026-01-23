@@ -460,6 +460,137 @@ Bij scannen toont de dojo scanner niet alleen de huidige coach, maar ook alle wi
 - `resources/views/pages/coach-kaart/activeer.blade.php` - Activatie formulier
 - `resources/views/pages/coach-kaart/scan-result.blade.php` - Dojo scanner resultaat
 
+### Coach In/Uitcheck Systeem (optioneel)
+
+**Doel:** Voorkomen dat coachkaart wordt overgedragen terwijl coach nog in de dojo is.
+
+**Instelling:** `coach_incheck_actief` in toernooi instellingen (default: false)
+
+#### Flow bij ingeschakeld
+
+**Dojo Scanner - In/Uitcheck:**
+```
+┌─────────────────────────────────┐
+│  ✓ GELDIGE COACH                │
+│                                 │
+│  ┌─────────┐  Piet Jansen       │
+│  │  foto   │  Club: Judo Hoorn  │
+│  └─────────┘                    │
+│                                 │
+│  Status: ⬚ Niet ingecheckt      │  ← of ✅ Ingecheckt sinds 09:15
+│                                 │
+│  ┌─────────────────────────────┐│
+│  │      CHECK IN               ││  ← Groene knop
+│  └─────────────────────────────┘│
+│  (of "CHECK UIT" als ingecheckt)│
+└─────────────────────────────────┘
+```
+
+**Portal - Overdracht GEBLOKKEERD als coach ingecheckt:**
+
+Clubs kunnen NIET zelf bepalen of overdracht mogelijk is. Dit voorkomt dat meerdere coaches op 1 QR-code "binnen gesmokkeld" worden.
+
+```
+┌─────────────────────────────────┐
+│  🔒 OVERDRACHT NIET MOGELIJK    │
+│                                 │
+│  Huidige coach [Naam] is nog    │
+│  ingecheckt in de dojo.         │
+│                                 │
+│  De coach moet eerst UIT-       │
+│  checken bij de dojo scanner    │
+│  voordat de kaart kan worden    │
+│  overgedragen.                  │
+│                                 │
+│  [Begrepen]                     │
+└─────────────────────────────────┘
+```
+
+**Coachkaart view - Instructie voor huidige coach:**
+
+Als coach ingecheckt is en kaart bekijkt:
+```
+┌─────────────────────────────────┐
+│  ℹ️ OVERDRACHT                  │
+│                                 │
+│  Wilt u deze kaart overdragen   │
+│  aan een andere coach?          │
+│                                 │
+│  Ga naar de dojo scanner en     │
+│  check uit. Daarna kan de       │
+│  nieuwe coach de kaart          │
+│  overnemen.                     │
+└─────────────────────────────────┘
+```
+
+**Coachkaart view - Instructie voor nieuwe coach:**
+
+Als nieuwe coach de link opent maar huidige coach nog ingecheckt:
+```
+┌─────────────────────────────────┐
+│  🔒 KAART NOG IN GEBRUIK        │
+│                                 │
+│  [Naam huidige coach] is nog    │
+│  ingecheckt in de dojo.         │
+│                                 │
+│  Vraag de huidige coach om      │
+│  uit te checken bij de dojo     │
+│  scanner. Daarna kunt u de      │
+│  kaart overnemen.               │
+└─────────────────────────────────┘
+```
+
+#### Database
+
+**coach_kaarten tabel (nieuw veld):**
+```sql
+ingecheckt_op    TIMESTAMP NULL    -- NULL = niet ingecheckt
+```
+
+**toernooien tabel (nieuw veld):**
+```sql
+coach_incheck_actief    BOOLEAN DEFAULT FALSE
+```
+
+#### Implementatie
+
+**Routes:**
+- `POST /dojo/coach/{id}/checkin` - Check coach in
+- `POST /dojo/coach/{id}/checkout` - Check coach uit
+
+**Controller:** `DojoController`
+```php
+public function checkin(CoachKaart $coachKaart) {
+    $coachKaart->update(['ingecheckt_op' => now()]);
+    return back()->with('success', 'Coach ingecheckt');
+}
+
+public function checkout(CoachKaart $coachKaart) {
+    $coachKaart->update(['ingecheckt_op' => null]);
+    return back()->with('success', 'Coach uitgecheckt');
+}
+```
+
+**Validatie in CoachKaartController@activeer (overdracht):**
+```php
+if ($toernooi->coach_incheck_actief && $coachKaart->ingecheckt_op) {
+    // HARD BLOKKEREN - geen overdracht mogelijk
+    // Huidige coach moet eerst uitchecken bij dojo scanner
+    return back()->with('error', 'Overdracht niet mogelijk. Huidige coach moet eerst uitchecken bij de dojo scanner.');
+}
+```
+
+**View logica (show.blade.php):**
+```php
+@if($toernooi->coach_incheck_actief && $coachKaart->ingecheckt_op)
+    @if($isHuidigeCoach)
+        // Toon: "Ga naar dojo scanner om uit te checken"
+    @else
+        // Toon: "Kaart nog in gebruik, vraag coach om uit te checken"
+    @endif
+@endif
+```
+
 ---
 
 ## Dojo Scanner Interface

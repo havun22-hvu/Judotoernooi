@@ -129,6 +129,9 @@ class ToernooiController extends Controller
         $nieuweGebruikGewichtsklassen = (bool) ($data['gebruik_gewichtsklassen'] ?? 1);
         $data['gebruik_gewichtsklassen'] = $nieuweGebruikGewichtsklassen;
 
+        // Handle coach_incheck_actief checkbox
+        $data['coach_incheck_actief'] = (bool) ($data['coach_incheck_actief'] ?? false);
+
         // Check of categorieën zijn gewijzigd
         $oudeGewichtsklassen = $toernooi->gewichtsklassen ?? [];
         $nieuweGewichtsklassen = $data['gewichtsklassen'] ?? [];

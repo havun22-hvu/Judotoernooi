@@ -648,6 +648,17 @@
                            class="w-16 border rounded px-2 py-1 text-center" min="1" max="20">
                     <span class="text-sm text-gray-500">(toegang tot dojo)</span>
                 </div>
+
+                <!-- Coach in/uitcheck systeem -->
+                <div class="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
+                    <input type="checkbox" name="coach_incheck_actief" id="coach_incheck_actief"
+                           value="1" {{ old('coach_incheck_actief', $toernooi->coach_incheck_actief) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="coach_incheck_actief" class="text-gray-700 font-medium">Coach in/uitcheck bij dojo</label>
+                        <p class="text-sm text-gray-500">Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen</p>
+                    </div>
+                </div>
             </div>
 
             <div class="max-w-md border-t pt-4">

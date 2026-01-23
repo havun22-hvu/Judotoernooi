@@ -360,6 +360,8 @@ Route::get('coach-kaart/{qrCode}', [CoachKaartController::class, 'show'])->name(
 Route::get('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeer'])->name('coach-kaart.activeer');
 Route::post('coach-kaart/{qrCode}/activeer', [CoachKaartController::class, 'activeerOpslaan'])->name('coach-kaart.activeer.opslaan');
 Route::get('coach-kaart/{qrCode}/scan', [CoachKaartController::class, 'scan'])->name('coach-kaart.scan');
+Route::post('coach-kaart/{qrCode}/checkin', [CoachKaartController::class, 'checkin'])->name('coach-kaart.checkin');
+Route::post('coach-kaart/{qrCode}/checkout', [CoachKaartController::class, 'checkout'])->name('coach-kaart.checkout');
 
 // Role access via secret code (vrijwilligers) - LEGACY
 Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');

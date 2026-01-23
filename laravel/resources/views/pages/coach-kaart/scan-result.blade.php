@@ -88,6 +88,40 @@
             </div>
         </div>
 
+        {{-- Check-in/Check-out (alleen als actief) --}}
+        @if($coachKaart->toernooi->coach_incheck_actief)
+        <div class="px-4 py-3 border-t">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-sm text-gray-600">Status:</span>
+                @if($coachKaart->isIngecheckt())
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                        ✅ Ingecheckt sinds {{ $coachKaart->ingecheckt_op->format('H:i') }}
+                    </span>
+                @else
+                    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                        ⬚ Niet ingecheckt
+                    </span>
+                @endif
+            </div>
+
+            @if($coachKaart->isIngecheckt())
+                <form action="{{ route('coach-kaart.checkout', $coachKaart->qr_code) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-medium">
+                        🚪 Check uit
+                    </button>
+                </form>
+            @else
+                <form action="{{ route('coach-kaart.checkin', $coachKaart->qr_code) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium">
+                        ✓ Check in
+                    </button>
+                </form>
+            @endif
+        </div>
+        @endif
+
         {{-- Footer --}}
         <div class="px-4 py-3 {{ $wasAlreadyScanned ? 'bg-yellow-50' : 'bg-green-50' }} border-t text-center">
             <p class="text-sm {{ $wasAlreadyScanned ? 'text-yellow-700' : 'text-green-700' }} font-medium">
