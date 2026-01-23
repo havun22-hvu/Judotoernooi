@@ -196,7 +196,7 @@
         </div>
         <div>
             <label class="block text-sm text-gray-600 mb-1">Website</label>
-            <input type="url" name="website" placeholder="https://..." class="border rounded px-3 py-2 w-48">
+            <input type="text" name="website" placeholder="judoschool.nl" class="border rounded px-3 py-2 w-48">
         </div>
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded">
             Toevoegen
@@ -230,7 +230,7 @@
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">Website</label>
-                    <input type="url" name="website" id="editWebsite" placeholder="https://..." class="w-full border rounded px-3 py-2">
+                    <input type="text" name="website" id="editWebsite" placeholder="judoschool.nl" class="w-full border rounded px-3 py-2">
                 </div>
             </div>
             <div class="flex justify-end gap-3 mt-6">
