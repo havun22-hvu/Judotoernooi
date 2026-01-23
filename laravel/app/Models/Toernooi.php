@@ -270,6 +270,16 @@ class Toernooi extends Model
         return $this->hasMany(ClubUitnodiging::class);
     }
 
+    /**
+     * Get all clubs that have judokas in this tournament.
+     * Returns a query builder for clubs.
+     */
+    public function clubs(): \Illuminate\Database\Eloquent\Builder
+    {
+        $clubIds = $this->judokas()->whereNotNull('club_id')->pluck('club_id')->unique();
+        return Club::whereIn('id', $clubIds);
+    }
+
     public function deviceToegangen(): HasMany
     {
         return $this->hasMany(DeviceToegang::class);
