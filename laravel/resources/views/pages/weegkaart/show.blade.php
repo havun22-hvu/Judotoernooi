@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Weegkaart - {{ $judoka->naam }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        [x-cloak] { display: none !important; }
         @media print {
             .no-print { display: none !important; }
             body { padding: 0; background: white; }
@@ -21,8 +23,38 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 pb-24">
-    <div id="weegkaart" class="bg-white rounded-xl shadow-xl w-full overflow-hidden">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-2 pb-24"
+      x-data="{ confirmed: localStorage.getItem('weegkaart_{{ $judoka->qr_code }}') === 'true' }">
+
+    {{-- Confirmation Modal --}}
+    <div x-show="!confirmed" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div class="text-5xl mb-4">⚠️</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Weegkaart opslaan?</h2>
+            <p class="text-gray-600 mb-4">
+                Je gaat de weegkaart van <strong class="text-blue-700">{{ $judoka->naam }}</strong> op dit apparaat zetten.
+            </p>
+            <p class="text-sm text-gray-500 mb-6">
+                Is dit jouw kind of ben je de begeleider?
+            </p>
+            <div class="flex gap-3 justify-center">
+                <button
+                    @click="window.history.back()"
+                    class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium"
+                >
+                    Nee, terug
+                </button>
+                <button
+                    @click="localStorage.setItem('weegkaart_{{ $judoka->qr_code }}', 'true'); confirmed = true"
+                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                >
+                    Ja, doorgaan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="weegkaart" class="bg-white rounded-xl shadow-xl w-full overflow-hidden" x-show="confirmed" x-cloak>
         {{-- Header --}}
         <div class="bg-blue-700 text-white px-3 py-2 flex justify-between items-center">
             <span class="text-sm font-medium truncate">{{ $judoka->toernooi->naam ?? 'Judo Toernooi' }}</span>
@@ -139,7 +171,7 @@
     </div>
 
     {{-- Action buttons --}}
-    <div class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
+    <div x-show="confirmed" x-cloak class="no-print fixed bottom-4 left-0 right-0 flex justify-center gap-2 px-4">
         <button
             onclick="downloadWeegkaart()"
             class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-5 rounded-full shadow-lg flex items-center gap-2 transition-colors text-sm"
