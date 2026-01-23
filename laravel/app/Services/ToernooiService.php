@@ -93,6 +93,20 @@ class ToernooiService
     }
 
     /**
+     * Kindvriendelijke heldere kleuren voor matten
+     */
+    private const MAT_KLEUREN = [
+        1 => 'rood',
+        2 => 'blauw',
+        3 => 'groen',
+        4 => 'geel',
+        5 => 'oranje',
+        6 => 'paars',
+        7 => 'roze',
+        8 => 'cyaan',
+    ];
+
+    /**
      * Sync mats to match aantal_matten setting
      */
     public function syncMatten(Toernooi $toernooi): void
@@ -106,6 +120,7 @@ class ToernooiService
                 Mat::create([
                     'toernooi_id' => $toernooi->id,
                     'nummer' => $i,
+                    'kleur' => self::MAT_KLEUREN[$i] ?? null,
                 ]);
             }
         } elseif ($huidigAantal > $gewenstAantal) {
@@ -126,6 +141,7 @@ class ToernooiService
             Mat::create([
                 'toernooi_id' => $toernooi->id,
                 'nummer' => $i,
+                'kleur' => self::MAT_KLEUREN[$i] ?? null,
             ]);
         }
     }
