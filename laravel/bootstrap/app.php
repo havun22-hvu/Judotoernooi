@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Redirect guests to organisator login
         $middleware->redirectGuestsTo('/organisator/login');
 
+        // Redirect authenticated users away from guest routes (login/register)
+        // to the dashboard instead of default home
+        $middleware->redirectUsersTo('/organisator/dashboard');
+
         // Exclude public API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'publiek/*/favorieten',

@@ -43,11 +43,13 @@ Route::get('/help', fn() => view('pages.help'))->name('help');
 |--------------------------------------------------------------------------
 */
 Route::prefix('organisator')->name('organisator.')->group(function () {
-    // Guest routes
+    // Login route without middleware - controller handles auth check and corrupt sessions
+    Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
+    Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
+
+    // Guest routes (only for users not logged in)
     Route::middleware('guest:organisator')->group(function () {
-        Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
-        Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
-        Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
         Route::get('register', [OrganisatorAuthController::class, 'showRegister'])->name('register');
         Route::post('register', [OrganisatorAuthController::class, 'register'])->name('register.submit');
         Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
