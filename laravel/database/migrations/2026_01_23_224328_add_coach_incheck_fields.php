@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('coach_kaarten', function (Blueprint $table) {
-            $table->timestamp('ingecheckt_op')->nullable()->after('overgedragen_op');
+            $table->timestamp('ingecheckt_op')->nullable();
         });
 
         Schema::table('toernooien', function (Blueprint $table) {
-            $table->boolean('coach_incheck_actief')->default(false)->after('judokas_per_coach');
+            $table->boolean('coach_incheck_actief')->default(false);
         });
     }
 
