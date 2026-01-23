@@ -569,3 +569,24 @@ docs/
     ├── PLANNING_AUTHENTICATIE_SYSTEEM.md
     └── PLANNING_NOODPLAN.md
 ```
+
+---
+
+## Laatste Sessie: 23 januari 2026
+
+### Wat is gedaan:
+- Categorie overlap detectie gebouwd (CategorieClassifier::detectOverlap)
+- Waarschuwing banner voor overlappende categorieën in Instellingen
+- Fix: gewichtsklasse null constraint error bij save
+- Fix: metadata (_preset_type, _eigen_preset_id) in judokasPerKlasse overzicht
+- Fix: band range berekening (BandHelper heeft omgekeerde volgorde)
+- Niet-gecategoriseerd waarschuwing toegevoegd aan Poules pagina
+
+### Openstaande items:
+- [ ] import_fouten veld nog niet volledig geïmplementeerd in controller
+
+### Belangrijke context:
+- **BandHelper::BAND_VOLGORDE** is omgekeerd: wit=6, zwart=0 (hogere waarde = lagere band)
+- **Gewichtsklassen config** bevat metadata keys met `_` prefix die gefilterd moeten worden
+- **Categorie overlap** check: zelfde max_leeftijd + zelfde geslacht + overlappende band_filter
+- **Niet-gecategoriseerd waarschuwing** moet zichtbaar zijn op Judoka's en Poules pagina's (niet dynamisch in Instellingen tijdens configureren)

@@ -214,6 +214,60 @@
 
 ---
 
+## Sessie: 23 januari 2026
+
+### Feat: Categorie overlap detectie
+- **Type:** Feature
+- **Wat:** Waarschuwing wanneer categorieën overlappen (judoka kan in meerdere passen)
+- **Wanneer overlap:** Zelfde max_leeftijd + zelfde geslacht + overlappende band_filter
+- **Wanneer OK:** Zelfde leeftijd maar verschillend geslacht OF niet-overlappende banden (tm_oranje + vanaf_groen)
+- **UI:** Oranje banner in Instellingen pagina, update dynamisch na AJAX save
+- **Bestanden:**
+  - `app/Services/CategorieClassifier.php` - `detectOverlap()` + helpers
+  - `app/Http/Controllers/ToernooiController.php` - check in edit() en update()
+  - `resources/views/pages/toernooi/edit.blade.php` - banner + JS update
+- **Naar permanente docs?** ☑ Nee - feature enhancement
+
+### Fix: Gewichtsklasse null constraint error
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Save faalde bij wijzigen band_filter in categorieën
+- **Oorzaak:** `voerValidatieUit()` zette gewichtsklasse op null, database heeft NOT NULL constraint
+- **Oplossing:** Skip update als nieuwe gewichtsklasse null zou zijn
+- **Bestanden:** `app/Http/Controllers/JudokaController.php:417-421`
+- **Naar permanente docs?** ☑ Nee - bug fix
+
+### Fix: Metadata in judokasPerKlasse overzicht
+- **Type:** Bug fix
+- **Wat:** "preset type 0" en "eigen preset id 0" verscheen als leeftijdsklasse
+- **Oorzaak:** Gewichtsklassen config bevat metadata keys (`_preset_type`, `_eigen_preset_id`)
+- **Oplossing:** Skip non-array entries en keys die met `_` beginnen
+- **Bestanden:** `app/Http/Controllers/JudokaController.php:43-47`
+- **Naar permanente docs?** ☑ Nee - bug fix
+
+### Fix: Non-array config entries in overlap check
+- **Type:** Bug fix
+- **Wat:** Overlap check crashte op non-array config entries (poule_grootte_voorkeur etc)
+- **Oplossing:** `is_array()` check toegevoegd
+- **Bestanden:** `app/Services/CategorieClassifier.php:281-284`
+- **Naar permanente docs?** ☑ Nee - bug fix
+
+### Fix: Band range berekening voor overlap detectie
+- **Type:** Bug fix
+- **Wat:** tm_oranje + vanaf_groen werd foutief als overlap gemarkeerd
+- **Oorzaak:** BandHelper gebruikt omgekeerde volgorde (wit=6, zwart=0)
+- **Oplossing:** Range logica omgedraaid: tm_ = hoge nummers, vanaf_ = lage nummers
+- **Bestanden:** `app/Services/CategorieClassifier.php:393-411`
+- **Naar permanente docs?** ☑ Nee - bug fix
+
+### Feat: Niet-gecategoriseerd waarschuwing op Poules pagina
+- **Type:** Enhancement
+- **Wat:** Rode waarschuwing banner toegevoegd aan Poules pagina
+- **Waarom:** Gebruiker moet gewaarschuwd worden voordat ze poules gaan maken
+- **Bestanden:** `resources/views/pages/poule/index.blade.php:71-91`
+- **Naar permanente docs?** ☑ Nee - UI enhancement
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
