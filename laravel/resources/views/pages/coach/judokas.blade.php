@@ -208,9 +208,10 @@
         @php
             $volledigeJudokas = $judokas->filter(fn($j) => $j->isVolledig());
             $onvolledigeJudokas = $judokas->filter(fn($j) => !$j->isVolledig());
+            $nietInCategorie = $judokas->filter(fn($j) => $j->isVolledig() && !$j->pastInCategorie());
             $syncedJudokas = $judokas->filter(fn($j) => $j->isSynced() && !$j->isGewijzigdNaSync());
             $gewijzigdJudokas = $judokas->filter(fn($j) => $j->isGewijzigdNaSync());
-            $nietSyncedVolledig = $volledigeJudokas->filter(fn($j) => !$j->isSynced() || $j->isGewijzigdNaSync());
+            $nietSyncedVolledig = $volledigeJudokas->filter(fn($j) => $j->isKlaarVoorSync() && (!$j->isSynced() || $j->isGewijzigdNaSync()));
             $judokasMetImportWarnings = $judokas->filter(fn($j) => !empty($j->import_warnings));
             $judokasTeCorrigeren = $judokas->filter(fn($j) => $j->isTeCorrigeren());
         @endphp
@@ -277,6 +278,18 @@
                 <div>
                     <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
                     <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet {{ ($betalingActief ?? false) ? 'afgerekend' : 'gesynced' }} worden. Vul de ontbrekende gegevens aan.</p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($nietInCategorie->count() > 0)
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <span class="text-red-600 text-xl mr-2">🚫</span>
+                <div>
+                    <p class="font-medium text-red-800">{{ $nietInCategorie->count() }} judoka('s) passen niet in een categorie</p>
+                    <p class="text-sm text-red-700">Deze judoka's zijn te oud of te jong voor dit toernooi en kunnen niet worden ingeschreven.</p>
                 </div>
             </div>
         </div>
@@ -360,11 +373,13 @@
                 @php
                     $isOnvolledig = !$judoka->isVolledig();
                     $ontbrekend = $judoka->getOntbrekendeVelden();
+                    $pastNietInCategorie = $judoka->isVolledig() && !$judoka->pastInCategorie();
+                    $categorieProbleem = $judoka->getCategorieProbleem();
                     $isSynced = $judoka->isSynced() && !$judoka->isGewijzigdNaSync();
                     $isGewijzigd = $judoka->isGewijzigdNaSync();
                     $isBetaald = $judoka->isBetaald();
-                    $isKlaarOmTeSyncen = $judoka->isVolledig() && (!$judoka->isSynced() || $judoka->isGewijzigdNaSync());
-                    $isKlaarVoorBetaling = $judoka->isVolledig() && !$judoka->isBetaald();
+                    $isKlaarOmTeSyncen = $judoka->isKlaarVoorSync() && (!$judoka->isSynced() || $judoka->isGewijzigdNaSync());
+                    $isKlaarVoorBetaling = $judoka->isKlaarVoorSync() && !$judoka->isBetaald();
                     // Check of judoka in eliminatie categorie zit
                     $lkKey = null;
                     if ($judoka->geboortejaar && $judoka->geslacht) {
@@ -389,7 +404,7 @@
                         $warnings[] = "Leeftijd " . (date('Y') - $judoka->geboortejaar) . " jaar lijkt erg hoog";
                     }
                 @endphp
-                <div class="px-4 py-3 hover:bg-gray-50 {{ $isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : ''))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig ? 'bg-orange-50' : '') }}"
+                <div class="px-4 py-3 hover:bg-gray-50 {{ $pastNietInCategorie ? 'bg-red-50 border-l-4 border-red-400' : ($isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig && !$pastNietInCategorie ? 'bg-orange-50' : '') }}"
                      x-data="{ editing: false }"
                      x-show="filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }})">
                     <!-- View mode -->
@@ -397,20 +412,23 @@
                         <div class="flex items-center gap-3 min-w-0">
                             @if($betalingActief ?? false)
                                 @if($isBetaald)<span class="text-green-600 text-lg">€</span>
+                                @elseif($pastNietInCategorie)<span class="text-red-500 text-lg">🚫</span>
                                 @elseif($isOnvolledig)<span class="text-yellow-500 text-lg">!</span>
                                 @else<span class="text-blue-400 text-lg">○</span>@endif
                             @else
                                 @if($isSynced)<span class="text-green-500 text-lg">✓</span>
                                 @elseif($isGewijzigd)<span class="text-orange-500 text-lg">⟳</span>
+                                @elseif($pastNietInCategorie)<span class="text-red-500 text-lg">🚫</span>
                                 @elseif($isOnvolledig)<span class="text-yellow-500 text-lg">!</span>
                                 @else<span class="text-gray-300 text-lg">○</span>@endif
                             @endif
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="font-medium {{ $isOnvolledig ? 'text-yellow-800' : 'text-gray-800' }}">{{ $judoka->naam }}</span>
+                                    <span class="font-medium {{ $pastNietInCategorie ? 'text-red-800' : ($isOnvolledig ? 'text-yellow-800' : 'text-gray-800') }}">{{ $judoka->naam }}</span>
                                     <span class="text-sm text-gray-500">{{ $judoka->geboortejaar ?? '?' }} · {{ $judoka->geslacht === 'M' ? 'M' : ($judoka->geslacht === 'V' ? 'V' : '?') }} · {{ $judoka->band ? ucfirst(explode(' ', $judoka->band)[0]) : '?' }} · {{ $judoka->gewicht ? $judoka->gewicht . 'kg' : '?' }}@if($judoka->gewichtsklasse) ({{ $judoka->gewichtsklasse }})@endif</span>
                                     @if($judoka->leeftijdsklasse)<span class="text-sm text-blue-600">{{ $judoka->leeftijdsklasse }}@if($isEliminatie) <span class="text-orange-600">(E)</span>@endif</span>@endif
                                 </div>
+                                @if($pastNietInCategorie)<p class="text-sm text-red-700 mt-1 font-medium">🚫 {{ $categorieProbleem }}</p>@endif
                                 @if($isOnvolledig)<p class="text-sm text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>@endif
                                 @if(count($warnings) > 0)<p class="text-sm text-orange-600 mt-1">⚠ {{ implode(' | ', $warnings) }}</p>@endif
                                 @if($judoka->import_warnings)<p class="text-sm text-red-600 mt-1">⚠️ {{ $judoka->import_warnings }}</p>@endif

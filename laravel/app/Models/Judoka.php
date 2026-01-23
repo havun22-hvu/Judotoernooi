@@ -315,6 +315,69 @@ class Judoka extends Model
     }
 
     /**
+     * Check of judoka in een categorie past (niet te oud/jong)
+     */
+    public function pastInCategorie(): bool
+    {
+        // Als niet volledig, kunnen we niet bepalen
+        if (!$this->isVolledig()) {
+            return false;
+        }
+
+        // Als leeftijdsklasse is ingevuld, past de judoka
+        return !empty($this->leeftijdsklasse);
+    }
+
+    /**
+     * Get reden waarom judoka niet in categorie past
+     */
+    public function getCategorieProbleem(): ?string
+    {
+        if (!$this->isVolledig()) {
+            return null; // Eerst gegevens invullen
+        }
+
+        if (!empty($this->leeftijdsklasse)) {
+            return null; // Past in categorie
+        }
+
+        // Bereken leeftijd
+        $toernooi = $this->toernooi;
+        if (!$toernooi) {
+            return 'Geen toernooi gekoppeld';
+        }
+
+        $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
+        $leeftijd = $toernooiJaar - $this->geboortejaar;
+
+        // Check of te oud of te jong
+        $config = $toernooi->getAlleGewichtsklassen();
+        $minLeeftijd = 99;
+        $maxLeeftijd = 0;
+
+        foreach ($config as $cat) {
+            $catMax = $cat['max_leeftijd'] ?? 99;
+            if ($catMax < $minLeeftijd) $minLeeftijd = $catMax;
+            if ($catMax > $maxLeeftijd) $maxLeeftijd = $catMax;
+        }
+
+        if ($leeftijd > $maxLeeftijd) {
+            return "Te oud ({$leeftijd} jaar, max {$maxLeeftijd})";
+        }
+
+        // Kan ook te jong zijn of andere reden
+        return "Past niet in categorie (leeftijd {$leeftijd})";
+    }
+
+    /**
+     * Check of judoka klaar is voor sync (volledig EN past in categorie)
+     */
+    public function isKlaarVoorSync(): bool
+    {
+        return $this->isVolledig() && $this->pastInCategorie();
+    }
+
+    /**
      * Bepaal gewichtsklasse op basis van gewicht en leeftijdsklasse
      * Returns bijv. "-34" voor 32.5 kg in categorie met [-30, -34, -38]
      */

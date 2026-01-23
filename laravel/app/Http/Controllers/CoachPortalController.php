@@ -1039,23 +1039,39 @@ class CoachPortalController extends Controller
 
         $synced = 0;
         $incomplete = 0;
+        $nietInCategorie = 0;
 
         foreach ($judokas as $judoka) {
-            if ($judoka->isVolledig()) {
+            if ($judoka->isKlaarVoorSync()) {
                 // Only update if not synced or changed after sync
                 if (!$judoka->isSynced() || $judoka->isGewijzigdNaSync()) {
                     $judoka->synced_at = now();
                     $judoka->save();
                     $synced++;
                 }
+            } elseif ($judoka->isVolledig() && !$judoka->pastInCategorie()) {
+                // Volledig maar past niet in categorie (te oud/jong)
+                $nietInCategorie++;
             } else {
                 $incomplete++;
             }
         }
 
+        // Build message based on results
+        $messages = [];
+        if ($synced > 0) {
+            $messages[] = "{$synced} judoka(s) gesynced";
+        }
         if ($incomplete > 0) {
+            $messages[] = "{$incomplete} judoka(s) zijn incompleet";
+        }
+        if ($nietInCategorie > 0) {
+            $messages[] = "{$nietInCategorie} judoka(s) passen niet in een categorie (te oud/jong)";
+        }
+
+        if ($nietInCategorie > 0 || $incomplete > 0) {
             return redirect()->route('coach.portal.judokas', $code)
-                ->with('warning', "{$synced} judoka(s) gesynced. {$incomplete} judoka(s) zijn incompleet en niet gesynced.");
+                ->with('warning', implode('. ', $messages) . '.');
         }
 
         return redirect()->route('coach.portal.judokas', $code)
