@@ -26,8 +26,37 @@
             <p class="text-purple-200 text-sm mt-1">{{ $coachKaart->toernooi->naam }}</p>
         </div>
 
-        {{-- Takeover info --}}
-        @if($isOvername)
+        {{-- BLOCKED: Coach still checked in --}}
+        @if($isOvername && !$coachKaart->kanOverdragen())
+        <div class="px-4 py-6 bg-red-50 border-b border-red-200">
+            <div class="text-center mb-4">
+                <span class="text-4xl">🔒</span>
+                <h2 class="text-xl font-bold text-red-800 mt-2">Kaart nog in gebruik</h2>
+            </div>
+
+            <div class="flex items-center gap-3 mb-4 bg-white rounded-lg p-3">
+                @if($coachKaart->foto)
+                <img src="{{ $coachKaart->getFotoUrl() }}" alt="Huidige coach"
+                     class="w-16 h-16 object-cover rounded-lg border-2 border-red-300">
+                @endif
+                <div>
+                    <p class="text-red-900 font-bold">{{ $coachKaart->naam }}</p>
+                    <p class="text-red-600 text-sm">Ingecheckt sinds {{ $coachKaart->ingecheckt_op?->format('H:i') }}</p>
+                </div>
+            </div>
+
+            <div class="bg-red-100 rounded-lg p-4 text-red-800">
+                <p class="font-medium mb-2">Overdracht niet mogelijk</p>
+                <p class="text-sm">Vraag de huidige coach om uit te checken bij de dojo scanner. Pas daarna kunt u de kaart overnemen.</p>
+            </div>
+
+            <a href="{{ route('coach-kaart.show', $coachKaart->qr_code) }}"
+               class="block w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg text-center">
+                Terug
+            </a>
+        </div>
+        @elseif($isOvername)
+        {{-- Takeover info (when allowed) --}}
         <div class="px-4 py-4 bg-amber-50 border-b border-amber-200">
             <div class="flex items-center gap-3">
                 @if($coachKaart->foto)
@@ -46,6 +75,8 @@
         </div>
         @endif
 
+        {{-- Only show form if takeover is allowed --}}
+        @if(!$isOvername || $coachKaart->kanOverdragen())
         {{-- Club info --}}
         <div class="px-4 py-3 bg-purple-50 border-b">
             <p class="text-center text-purple-900 font-semibold">{{ $coachKaart->club->naam }}</p>
@@ -130,6 +161,7 @@
                 De QR-code is alleen zichtbaar op dit apparaat.
             </p>
         </div>
+        @endif
     </div>
 
     <script>

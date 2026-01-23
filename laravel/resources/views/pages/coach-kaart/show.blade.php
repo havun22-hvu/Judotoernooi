@@ -74,6 +74,16 @@
             >
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ $coachKaart->qr_code }}</p>
         </div>
+
+        {{-- Info over overdracht als incheck systeem actief is --}}
+        @if($coachKaart->toernooi->coach_incheck_actief && $coachKaart->isIngecheckt())
+        <div class="px-4 py-3 bg-blue-50 border-t border-blue-200">
+            <p class="text-sm text-blue-800 font-medium mb-1">ℹ️ Wilt u deze kaart overdragen?</p>
+            <p class="text-xs text-blue-700">
+                Ga naar de dojo scanner en check uit. Daarna kan de nieuwe coach de kaart overnemen.
+            </p>
+        </div>
+        @endif
         @else
         <div class="p-6 bg-red-50 text-center">
             <div class="text-red-600 text-4xl mb-3">🔒</div>

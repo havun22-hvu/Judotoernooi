@@ -27,6 +27,7 @@ class CoachKaart extends Model
         'device_token',
         'device_info',
         'gebonden_op',
+        'ingecheckt_op',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class CoachKaart extends Model
         'is_gescand' => 'boolean',
         'gescand_op' => 'datetime',
         'gebonden_op' => 'datetime',
+        'ingecheckt_op' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -212,5 +214,43 @@ class CoachKaart extends Model
     public static function generateDeviceToken(): string
     {
         return bin2hex(random_bytes(32));
+    }
+
+    /**
+     * Check of coach is ingecheckt in de dojo
+     */
+    public function isIngecheckt(): bool
+    {
+        return $this->ingecheckt_op !== null;
+    }
+
+    /**
+     * Check coach in bij dojo scanner
+     */
+    public function checkin(): void
+    {
+        $this->update(['ingecheckt_op' => now()]);
+    }
+
+    /**
+     * Check coach uit bij dojo scanner
+     */
+    public function checkout(): void
+    {
+        $this->update(['ingecheckt_op' => null]);
+    }
+
+    /**
+     * Check of overdracht mogelijk is (niet ingecheckt of incheck niet actief)
+     */
+    public function kanOverdragen(): bool
+    {
+        // Als incheck systeem niet actief is, altijd mogelijk
+        if (!$this->toernooi?->coach_incheck_actief) {
+            return true;
+        }
+
+        // Niet ingecheckt = kan overdragen
+        return !$this->isIngecheckt();
     }
 }

@@ -86,6 +86,12 @@ class CoachKaartController extends Controller
             ->with(['club', 'toernooi'])
             ->firstOrFail();
 
+        // Check if takeover is blocked (coach still checked in)
+        if ($coachKaart->is_geactiveerd && !$coachKaart->kanOverdragen()) {
+            return redirect()->back()
+                ->withErrors(['overdracht' => 'Overdracht niet mogelijk. Huidige coach moet eerst uitchecken bij de dojo scanner.']);
+        }
+
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'foto' => 'required|image|max:5120', // Max 5MB
@@ -233,6 +239,40 @@ class CoachKaartController extends Controller
 
         return redirect()->back()
             ->with('success', "{$aangemaakt} coach kaarten aangemaakt");
+    }
+
+    /**
+     * Check coach in at dojo scanner
+     */
+    public function checkin(string $qrCode): RedirectResponse
+    {
+        $coachKaart = CoachKaart::where('qr_code', $qrCode)->firstOrFail();
+
+        if (!$coachKaart->toernooi?->coach_incheck_actief) {
+            return redirect()->back()->with('info', 'Check-in systeem is niet actief voor dit toernooi');
+        }
+
+        $coachKaart->checkin();
+
+        return redirect()->route('coach-kaart.scan', $qrCode)
+            ->with('success', 'Coach ingecheckt');
+    }
+
+    /**
+     * Check coach out at dojo scanner
+     */
+    public function checkout(string $qrCode): RedirectResponse
+    {
+        $coachKaart = CoachKaart::where('qr_code', $qrCode)->firstOrFail();
+
+        if (!$coachKaart->toernooi?->coach_incheck_actief) {
+            return redirect()->back()->with('info', 'Check-in systeem is niet actief voor dit toernooi');
+        }
+
+        $coachKaart->checkout();
+
+        return redirect()->route('coach-kaart.scan', $qrCode)
+            ->with('success', 'Coach uitgecheckt');
     }
 
     /**
