@@ -385,19 +385,25 @@ class CategorieClassifier
     /**
      * Get band niveau range from filter.
      * Returns [min, max] niveau values.
+     *
+     * IMPORTANT: BandHelper uses INVERTED order (wit=6, zwart=0)
+     * So "tm_oranje" (beginners) = high numbers (4-6)
+     * And "vanaf_groen" (advanced) = low numbers (0-3)
      */
     private function getBandRange(string $filter): array
     {
         if (str_starts_with($filter, 'tm_') || str_starts_with($filter, 't/m ')) {
+            // tm_oranje = wit t/m oranje = niveaus oranje(4) t/m wit(6)
             $band = str_replace(['tm_', 't/m '], '', $filter);
-            $maxNiveau = BandHelper::getSortNiveau($band);
-            return ['min' => 0, 'max' => $maxNiveau];
+            $minNiveau = BandHelper::getSortNiveau($band);
+            return ['min' => $minNiveau, 'max' => 99]; // 99 = includes wit (highest number)
         }
 
         if (str_starts_with($filter, 'vanaf_') || str_starts_with($filter, 'vanaf ')) {
+            // vanaf_groen = groen t/m zwart = niveaus zwart(0) t/m groen(3)
             $band = str_replace(['vanaf_', 'vanaf '], '', $filter);
-            $minNiveau = BandHelper::getSortNiveau($band);
-            return ['min' => $minNiveau, 'max' => 99];
+            $maxNiveau = BandHelper::getSortNiveau($band);
+            return ['min' => 0, 'max' => $maxNiveau]; // 0 = includes zwart (lowest number)
         }
 
         // Unknown filter, assume all bands
