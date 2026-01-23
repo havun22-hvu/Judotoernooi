@@ -569,7 +569,34 @@ docs/
 
 ---
 
-## Laatste Sessie: 23 januari 2026
+## Laatste Sessie: 23 januari 2026 (vervolg)
+
+### Wat besproken:
+- Alle geïmporteerde judoka's komen ALTIJD in het club portaal (geen filter op "volledig")
+- Portaal instellingen moeten flexibeler: organisator kiest hoe inschrijving werkt
+
+### Te bouwen:
+1. **Migration:** `portaal_modus` ENUM('uit', 'mutaties', 'volledig') op toernooien
+2. **UI:** Dropdown in Instellingen → Organisatie
+3. **Handmatige invoer:** "Judoka toevoegen" knop op admin judoka pagina
+4. **Portaal logica:** Functies tonen/verbergen op basis van modus
+
+### Portaal modus:
+| Modus | Nieuw | Wijzigen | Mollie optie |
+|-------|-------|----------|--------------|
+| **UIT** | ❌ | ❌ | verborgen |
+| **Alleen mutaties** | ❌ | ✅ | verborgen |
+| **Volledig** | ✅ | ✅ | ☐/☑ zichtbaar |
+
+**Altijd passief beschikbaar:** Clubs kunnen ingeschreven judoka's BEKIJKEN, ook als portaal UIT.
+**Mollie checkbox:** Alleen zichtbaar bij "Volledig" - hergebruikt bestaande `betaling_actief` veld.
+
+### Docs bijgewerkt:
+- `docs/2-FEATURES/INTERFACES.md` - Budoschool Portaal Instellingen sectie
+
+---
+
+## Sessie: 23 januari 2026 (ochtend)
 
 ### Wat is gedaan:
 - Categorie overlap detectie gebouwd (CategorieClassifier::detectOverlap)
@@ -578,9 +605,6 @@ docs/
 - Fix: metadata (_preset_type, _eigen_preset_id) in judokasPerKlasse overzicht
 - Fix: band range berekening (BandHelper heeft omgekeerde volgorde)
 - Niet-gecategoriseerd waarschuwing toegevoegd aan Poules pagina
-
-### Openstaande items:
-- Geen
 
 ### Belangrijke context:
 - **BandHelper::BAND_VOLGORDE** is omgekeerd: wit=6, zwart=0 (hogere waarde = lagere band)

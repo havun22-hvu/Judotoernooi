@@ -350,6 +350,21 @@ class ToernooiController extends Controller
             ->with('success', 'Betalingsinstellingen bijgewerkt');
     }
 
+    public function updatePortaalInstellingen(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'portaal_modus' => 'required|in:uit,mutaties,volledig',
+        ]);
+
+        $toernooi->update([
+            'portaal_modus' => $validated['portaal_modus'],
+        ]);
+
+        return redirect()
+            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->with('success', 'Portaalinstellingen bijgewerkt');
+    }
+
     /**
      * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
      */

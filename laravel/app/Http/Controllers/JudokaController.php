@@ -118,6 +118,54 @@ class JudokaController extends Controller
             ->with('success', 'Judoka bijgewerkt');
     }
 
+    public function store(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'club_id' => 'nullable|exists:clubs,id',
+            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'geslacht' => 'nullable|in:M,V',
+            'band' => 'nullable|string|max:20',
+            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'telefoon' => 'nullable|string|max:20',
+        ]);
+
+        // Calculate leeftijdsklasse and gewichtsklasse
+        $leeftijdsklasse = null;
+        $gewichtsklasse = null;
+
+        if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
+            $leeftijd = date('Y') - $validated['geboortejaar'];
+            $leeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $validated['geslacht'], $validated['band'] ?? null);
+
+            if (!empty($validated['gewicht'])) {
+                $gewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, $validated['geslacht'], $validated['band'] ?? null);
+            }
+        }
+
+        // Fallback gewichtsklasse
+        if (empty($gewichtsklasse) && !empty($validated['gewicht'])) {
+            $gewichtsklasse = '-' . (int) $validated['gewicht'];
+        }
+
+        $judoka = Judoka::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $validated['club_id'] ?? null,
+            'naam' => $validated['naam'],
+            'geboortejaar' => $validated['geboortejaar'] ?? null,
+            'geslacht' => $validated['geslacht'] ?? null,
+            'band' => $validated['band'] ?? null,
+            'gewicht' => $validated['gewicht'] ?? null,
+            'leeftijdsklasse' => $leeftijdsklasse,
+            'gewichtsklasse' => $gewichtsklasse ?? 'Onbekend',
+            'telefoon' => $validated['telefoon'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('toernooi.judoka.index', $toernooi)
+            ->with('success', 'Judoka toegevoegd');
+    }
+
     public function destroy(Toernooi $toernooi, Judoka $judoka): RedirectResponse
     {
         $judoka->delete();

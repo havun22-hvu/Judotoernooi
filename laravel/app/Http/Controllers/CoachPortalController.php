@@ -197,6 +197,9 @@ class CoachPortalController extends Controller
             'inschrijfgeld' => $toernooi->inschrijfgeld,
             'volledigeOnbetaald' => $volledigeOnbetaald,
             'aantalBetaald' => $betaald->count(),
+            // Portal mode permissions
+            'magInschrijven' => $toernooi->portaalMagInschrijven(),
+            'magWijzigen' => $toernooi->portaalMagWijzigen(),
         ]);
     }
 
@@ -209,6 +212,12 @@ class CoachPortalController extends Controller
         }
 
         $toernooi = $uitnodiging->toernooi;
+
+        // Check portal mode - only 'volledig' allows new registrations
+        if (!$toernooi->portaalMagInschrijven()) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Nieuwe inschrijvingen zijn niet toegestaan via het portaal');
+        }
 
         // Check if registration is still open
         if (!$toernooi->isInschrijvingOpen()) {
@@ -292,13 +301,19 @@ class CoachPortalController extends Controller
             abort(403);
         }
 
+        $toernooi = $uitnodiging->toernooi;
+
+        // Check portal mode - 'mutaties' or 'volledig' allows edits
+        if (!$toernooi->portaalMagWijzigen()) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Wijzigingen zijn niet toegestaan via het portaal');
+        }
+
         // Check if registration is still open
-        if (!$uitnodiging->toernooi->isInschrijvingOpen()) {
+        if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.judokas', $token)
                 ->with('error', 'De inschrijving is gesloten');
         }
-
-        $toernooi = $uitnodiging->toernooi;
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
@@ -361,8 +376,16 @@ class CoachPortalController extends Controller
             abort(403);
         }
 
+        $toernooi = $uitnodiging->toernooi;
+
+        // Check portal mode - only 'volledig' allows deletions
+        if (!$toernooi->portaalMagInschrijven()) {
+            return redirect()->route('coach.judokas', $token)
+                ->with('error', 'Verwijderen is niet toegestaan via het portaal');
+        }
+
         // Check if registration is still open
-        if (!$uitnodiging->toernooi->isInschrijvingOpen()) {
+        if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.judokas', $token)
                 ->with('error', 'De inschrijving is gesloten');
         }
@@ -678,6 +701,9 @@ class CoachPortalController extends Controller
             'inschrijfgeld' => $toernooi->inschrijfgeld,
             'volledigeOnbetaald' => $volledigeOnbetaald,
             'aantalBetaald' => $betaald->count(),
+            // Portal mode permissions
+            'magInschrijven' => $toernooi->portaalMagInschrijven(),
+            'magWijzigen' => $toernooi->portaalMagWijzigen(),
         ]);
     }
 
@@ -690,6 +716,12 @@ class CoachPortalController extends Controller
         }
 
         $toernooi = $this->getActiveToernooi();
+
+        // Check portal mode - only 'volledig' allows new registrations
+        if (!$toernooi->portaalMagInschrijven()) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Nieuwe inschrijvingen zijn niet toegestaan via het portaal');
+        }
 
         if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.portal.judokas', $code)
@@ -772,6 +804,12 @@ class CoachPortalController extends Controller
             abort(403);
         }
 
+        // Check portal mode - 'mutaties' or 'volledig' allows edits
+        if (!$toernooi->portaalMagWijzigen()) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Wijzigingen zijn niet toegestaan via het portaal');
+        }
+
         if (!$toernooi->isInschrijvingOpen()) {
             return redirect()->route('coach.portal.judokas', $code)
                 ->with('error', 'De inschrijving is gesloten');
@@ -835,6 +873,12 @@ class CoachPortalController extends Controller
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooi->id) {
             abort(403);
+        }
+
+        // Check portal mode - only 'volledig' allows deletions
+        if (!$toernooi->portaalMagInschrijven()) {
+            return redirect()->route('coach.portal.judokas', $code)
+                ->with('error', 'Verwijderen is niet toegestaan via het portaal');
         }
 
         if (!$toernooi->isInschrijvingOpen()) {
