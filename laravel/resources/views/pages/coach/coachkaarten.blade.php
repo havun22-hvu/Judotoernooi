@@ -89,12 +89,14 @@
 
                             <div>
                                 <p class="font-medium text-gray-800">
-                                    Kaart {{ $index + 1 }}
                                     @if($kaart->naam)
-                                    - {{ $kaart->naam }}
+                                    {{ $kaart->naam }}
+                                    @else
+                                    <span class="text-gray-400 italic">Naam nog niet ingevuld</span>
                                     @endif
                                 </p>
-                                <p class="text-sm text-gray-500">
+                                <p class="text-sm text-gray-600">{{ $club->naam }}</p>
+                                <p class="text-sm text-gray-500 mt-1">
                                     @if($kaart->is_geactiveerd)
                                     <span class="text-green-600">Geactiveerd {{ $kaart->geactiveerd_op?->format('d-m') }}</span>
                                     @if($kaart->is_gescand)
@@ -137,26 +139,11 @@
                     <div x-show="showForm" x-collapse class="mt-4 pt-4 border-t">
                         <form action="{{ route('coach.portal.coachkaart.toewijzen', [$code, $kaart]) }}" method="POST">
                             @csrf
-                            <p class="text-sm text-gray-600 mb-3">Wijs een naam toe aan deze kaart (optioneel - de begeleider kan dit ook zelf invullen bij activatie)</p>
-
-                            @if($organisatieCoaches->count() > 0)
-                            <div class="mb-3">
-                                <label class="block text-gray-700 text-sm font-medium mb-1">Kies een organisatie coach:</label>
-                                <div class="flex flex-wrap gap-2">
-                                    @foreach($organisatieCoaches as $orgCoach)
-                                    <label class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input type="radio" name="organisatie_coach_id" value="{{ $orgCoach->id }}" class="text-purple-600">
-                                        <span>{{ $orgCoach->naam }}</span>
-                                    </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                            <p class="text-sm text-gray-500 mb-3">— of —</p>
-                            @endif
+                            <p class="text-sm text-gray-600 mb-3">Vul de naam in van de begeleider die deze kaart gebruikt.</p>
 
                             <div class="flex gap-2">
-                                <input type="text" name="naam" placeholder="Voer een nieuwe naam in"
-                                       class="flex-1 border rounded px-3 py-2">
+                                <input type="text" name="naam" placeholder="Naam van de begeleider"
+                                       class="flex-1 border rounded px-3 py-2" required>
                                 <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">
                                     Opslaan
                                 </button>
