@@ -947,9 +947,10 @@ class CoachPortalController extends Controller
         // Calculate how many coach cards they get
         $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
 
-        // Get existing coach cards
+        // Get existing coach cards with history
         $coachKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
+            ->with(['wisselingen', 'checkinsVandaag'])
             ->orderBy('id')
             ->get();
 
@@ -961,9 +962,10 @@ class CoachPortalController extends Controller
                     'club_id' => $club->id,
                 ]);
             }
-            // Refresh
+            // Refresh with history
             $coachKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
                 ->where('club_id', $club->id)
+                ->with(['wisselingen', 'checkinsVandaag'])
                 ->orderBy('id')
                 ->get();
         }

@@ -365,4 +365,45 @@ class CoachKaartController extends Controller
             'kaarten' => $kaarten,
         ]);
     }
+
+    /**
+     * Toggle coach incheck system for a tournament
+     */
+    public function toggleIncheck(Toernooi $toernooi): RedirectResponse
+    {
+        $toernooi->update([
+            'coach_incheck_actief' => !$toernooi->coach_incheck_actief,
+        ]);
+
+        $status = $toernooi->coach_incheck_actief ? 'geactiveerd' : 'gedeactiveerd';
+        return redirect()->back()->with('success', "Coach in/uitcheck systeem {$status}");
+    }
+
+    /**
+     * Force checkout a coach (hoofdjury only)
+     */
+    public function forceCheckout(CoachKaart $coachKaart): RedirectResponse
+    {
+        if (!$coachKaart->isIngecheckt()) {
+            return redirect()->back()->with('info', 'Coach is niet ingecheckt');
+        }
+
+        $coachKaart->forceCheckout();
+
+        return redirect()->back()->with('success', "Coach {$coachKaart->naam} geforceerd uitgecheckt");
+    }
+
+    /**
+     * Get all currently checked-in coaches for a tournament
+     */
+    public function ingecheckteCoaches(Toernooi $toernooi): View
+    {
+        $ingecheckteKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('ingecheckt_op')
+            ->with(['club'])
+            ->orderBy('ingecheckt_op', 'desc')
+            ->get();
+
+        return view('pages.coach-kaart.ingecheckt', compact('toernooi', 'ingecheckteKaarten'));
+    }
 }

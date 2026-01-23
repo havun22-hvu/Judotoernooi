@@ -38,19 +38,29 @@
         </div>
     </header>
 
-    <main class="p-3 flex flex-col relative" style="height: calc(100vh - 60px);">
+    <!-- Tab Bar -->
+    <div class="flex border-b border-blue-700 bg-blue-800">
+        <button onclick="showTab('scanner')" id="tab-scanner"
+                class="flex-1 py-3 text-center font-medium border-b-2 border-white">
+            Scanner
+        </button>
+        <button onclick="showTab('overzicht')" id="tab-overzicht"
+                class="flex-1 py-3 text-center font-medium border-b-2 border-transparent text-blue-300">
+            Overzicht
+        </button>
+    </div>
+
+    <!-- TAB 1: Scanner -->
+    <main id="content-scanner" class="p-3 flex flex-col relative" style="height: calc(100vh - 110px);">
         <!-- TOP HALF: Scanner area (fixed height 45%) -->
         <div class="bg-blue-800/50 rounded-lg p-3 mb-3 flex flex-col" style="height: 45%;">
-            <!-- Scanner area (fixed) -->
             <div class="flex-1 flex items-center justify-center">
-                <!-- Scan button (when not scanning) -->
                 <button id="scan-button" onclick="startScanner()"
                         class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                     <span class="text-3xl mb-1">📷</span>
                     <span class="font-bold text-sm">Scan</span>
                 </button>
 
-                <!-- Scanner (when scanning) -->
                 <div id="scanner-container" class="text-center w-full" style="display: none;">
                     <div id="reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
                     <button onclick="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
@@ -59,7 +69,6 @@
                 </div>
             </div>
 
-            <!-- Manual input (fixed position below scanner) -->
             <div class="mt-2">
                 <button onclick="showManualEntry()"
                         class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center text-blue-300 hover:bg-blue-700">
@@ -68,9 +77,8 @@
             </div>
         </div>
 
-        <!-- BOTTOM HALF: Info & Instructions (fixed position 55%) -->
+        <!-- BOTTOM HALF: Info & Instructions -->
         <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
-            <!-- Instructions -->
             <div class="bg-white rounded-lg shadow p-4 text-gray-800">
                 <h2 class="font-bold text-lg mb-2">Instructies</h2>
                 <ol class="list-decimal list-inside space-y-1 text-sm">
@@ -80,58 +88,218 @@
                 </ol>
             </div>
 
-            <!-- Stats -->
             <div class="bg-white rounded-lg shadow p-4 text-gray-800">
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600">Coaches gescand vandaag</span>
                     <span class="text-2xl font-bold text-green-600" id="total-scanned">0</span>
                 </div>
             </div>
+        </div>
+    </main>
 
-            <!-- Info -->
-            <div class="bg-blue-800/50 rounded-lg p-3 text-center text-sm">
-                <p>Scan de QR-code op de coach kaart</p>
-                <p class="text-blue-300 mt-1">Controleer de foto met de persoon</p>
-            </div>
+    <!-- TAB 2: Overzicht -->
+    <main id="content-overzicht" class="hidden p-3" style="height: calc(100vh - 110px); overflow-y: auto;">
+        <!-- Zoekbalk -->
+        <div class="mb-3">
+            <input type="text" id="club-search" placeholder="Zoek budoschool..."
+                   class="w-full bg-blue-800 border border-blue-600 rounded-lg px-4 py-3 text-white placeholder-blue-400"
+                   oninput="filterClubs(this.value)">
         </div>
 
-        <!-- Result overlay (hidden by default) -->
-        <div id="result-container" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-            <div class="result-overlay w-full max-w-md">
-                <!-- Will be filled dynamically -->
-            </div>
+        <!-- Club lijst -->
+        <div id="clubs-list" class="space-y-2">
+            <div class="text-center text-blue-300 py-8">Laden...</div>
         </div>
 
-        <!-- Manual entry modal (hidden by default) -->
-        <div id="manual-entry" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-xl p-6 w-full max-w-md text-gray-800">
-                <h2 class="text-xl font-bold mb-4">Handmatig invoeren</h2>
-                <p class="text-gray-600 mb-4">Voer de code onder de QR-code in:</p>
-                <input type="text" id="manual-code"
-                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
-                       placeholder="XXXXXX" maxlength="32"
-                       oninput="this.value = this.value.toUpperCase()">
-                <div class="flex gap-3 mt-4">
-                    <button onclick="hideManualEntry()"
-                            class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
-                        Annuleren
-                    </button>
-                    <button onclick="submitManualCode()"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
-                        Controleren
-                    </button>
-                </div>
+        <!-- Club detail (hidden by default) -->
+        <div id="club-detail" class="hidden">
+            <button onclick="hideClubDetail()" class="flex items-center gap-2 text-blue-300 mb-3">
+                <span>←</span>
+                <span id="club-detail-naam">Club naam</span>
+            </button>
+
+            <div id="club-kaarten" class="space-y-2">
+                <!-- Kaarten worden hier ingeladen -->
             </div>
         </div>
     </main>
 
+    <!-- Result overlay -->
+    <div id="result-container" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="result-overlay w-full max-w-md"></div>
+    </div>
+
+    <!-- Manual entry modal -->
+    <div id="manual-entry" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md text-gray-800">
+            <h2 class="text-xl font-bold mb-4">Handmatig invoeren</h2>
+            <p class="text-gray-600 mb-4">Voer de code onder de QR-code in:</p>
+            <input type="text" id="manual-code"
+                   class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
+                   placeholder="XXXXXX" maxlength="32"
+                   oninput="this.value = this.value.toUpperCase()">
+            <div class="flex gap-3 mt-4">
+                <button onclick="hideManualEntry()"
+                        class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
+                    Annuleren
+                </button>
+                <button onclick="submitManualCode()"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
+                    Controleren
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kaart detail modal -->
+    <div id="kaart-detail-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto text-gray-800">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="font-bold" id="kaart-detail-title">Kaart Detail</h2>
+                <button onclick="hideKaartDetail()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            </div>
+            <div id="kaart-detail-content" class="p-4">
+                <!-- Content wordt dynamisch geladen -->
+            </div>
+        </div>
+    </div>
+
     <script>
+        const toernooiId = {{ $toernooi->id }};
         let html5QrCode = null;
         let scanCount = 0;
         let isProcessing = false;
         let scannerActive = false;
+        let allClubs = [];
+        let selectedClubId = null;
 
-        // Update clock
+        // Tab switching
+        function showTab(tab) {
+            document.getElementById('content-scanner').classList.toggle('hidden', tab !== 'scanner');
+            document.getElementById('content-overzicht').classList.toggle('hidden', tab !== 'overzicht');
+
+            document.getElementById('tab-scanner').classList.toggle('border-white', tab === 'scanner');
+            document.getElementById('tab-scanner').classList.toggle('border-transparent', tab !== 'scanner');
+            document.getElementById('tab-scanner').classList.toggle('text-blue-300', tab !== 'scanner');
+
+            document.getElementById('tab-overzicht').classList.toggle('border-white', tab === 'overzicht');
+            document.getElementById('tab-overzicht').classList.toggle('border-transparent', tab !== 'overzicht');
+            document.getElementById('tab-overzicht').classList.toggle('text-blue-300', tab !== 'overzicht');
+
+            if (tab === 'overzicht') {
+                loadClubs();
+            }
+        }
+
+        // Load clubs
+        async function loadClubs() {
+            try {
+                const response = await fetch(`/dojo/${toernooiId}/clubs`);
+                allClubs = await response.json();
+                renderClubs(allClubs);
+            } catch (error) {
+                console.error('Error loading clubs:', error);
+                document.getElementById('clubs-list').innerHTML = '<div class="text-red-400 text-center py-4">Fout bij laden</div>';
+            }
+        }
+
+        function renderClubs(clubs) {
+            const container = document.getElementById('clubs-list');
+            if (clubs.length === 0) {
+                container.innerHTML = '<div class="text-blue-300 text-center py-4">Geen clubs gevonden</div>';
+                return;
+            }
+
+            container.innerHTML = clubs.map(club => `
+                <div onclick="showClubDetail(${club.id})" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">${club.naam}</span>
+                        <span class="text-blue-300 text-sm">${club.totaal_kaarten} kaarten</span>
+                    </div>
+                    <div class="flex gap-4 mt-2 text-sm">
+                        <span class="text-green-400">✓ ${club.ingecheckt} in</span>
+                        <span class="text-gray-400">🚪 ${club.uitgecheckt} uit</span>
+                        <span class="text-blue-400">⬚ ${club.ongebruikt} ongebruikt</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterClubs(query) {
+            const filtered = allClubs.filter(c => c.naam.toLowerCase().includes(query.toLowerCase()));
+            renderClubs(filtered);
+        }
+
+        // Club detail
+        async function showClubDetail(clubId) {
+            selectedClubId = clubId;
+            document.getElementById('clubs-list').classList.add('hidden');
+            document.getElementById('club-detail').classList.remove('hidden');
+
+            try {
+                const response = await fetch(`/dojo/${toernooiId}/club/${clubId}`);
+                const data = await response.json();
+
+                document.getElementById('club-detail-naam').textContent = data.club.naam;
+
+                document.getElementById('club-kaarten').innerHTML = data.kaarten.map(kaart => {
+                    const statusIcon = kaart.status === 'in' ? '✓' : kaart.status === 'uit' ? '🚪' : '⬚';
+                    const statusClass = kaart.status === 'in' ? 'text-green-400' : kaart.status === 'uit' ? 'text-gray-400' : 'text-blue-400';
+                    const statusText = kaart.status === 'in' ? `IN (${kaart.status_tijd})` :
+                                       kaart.status === 'uit' ? `UIT (${kaart.status_tijd || '--'})` : '--';
+
+                    return `
+                        <div onclick="showKaartDetail('${kaart.qr_code}')" class="bg-blue-800 rounded-lg p-3 cursor-pointer hover:bg-blue-700">
+                            <div class="flex justify-between items-center">
+                                <span>Kaart ${kaart.nummer}: ${kaart.naam}</span>
+                                <span class="${statusClass}">${statusIcon} ${statusText}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading club detail:', error);
+            }
+        }
+
+        function hideClubDetail() {
+            document.getElementById('clubs-list').classList.remove('hidden');
+            document.getElementById('club-detail').classList.add('hidden');
+            loadClubs(); // Refresh
+        }
+
+        // Kaart detail modal
+        async function showKaartDetail(qrCode) {
+            document.getElementById('kaart-detail-modal').classList.remove('hidden');
+            document.getElementById('kaart-detail-content').innerHTML = '<div class="text-center py-4">Laden...</div>';
+
+            try {
+                const response = await fetch(`/coach-kaart/${qrCode}/geschiedenis`);
+                const html = await response.text();
+                // Extract just the content we need
+                document.getElementById('kaart-detail-content').innerHTML = `
+                    <a href="/coach-kaart/${qrCode}/scan" class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-center font-medium mb-4">
+                        Bekijk volledige kaart
+                    </a>
+                    <p class="text-sm text-gray-500 text-center">Klik om check-in/uit te doen</p>
+                `;
+            } catch (error) {
+                console.error('Error loading kaart detail:', error);
+                document.getElementById('kaart-detail-content').innerHTML = '<div class="text-red-500 text-center py-4">Fout bij laden</div>';
+            }
+        }
+
+        function hideKaartDetail() {
+            document.getElementById('kaart-detail-modal').classList.add('hidden');
+        }
+
+        // Auto-select club after scan
+        function selectClubAfterScan(clubId) {
+            showTab('overzicht');
+            setTimeout(() => showClubDetail(clubId), 100);
+        }
+
+        // Clock
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').textContent =
@@ -140,7 +308,7 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // Start scanner
+        // Scanner functions
         async function startScanner() {
             if (scannerActive) return;
 
@@ -152,11 +320,7 @@
             try {
                 await html5QrCode.start(
                     { facingMode: "environment" },
-                    {
-                        fps: 10,
-                        qrbox: { width: 220, height: 220 },
-                        aspectRatio: 1.0
-                    },
+                    { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1.0 },
                     onScanSuccess,
                     onScanFailure
                 );
@@ -176,102 +340,30 @@
             }
         }
 
-        // Stop scanner
         async function stopScanner() {
             if (!scannerActive || !html5QrCode) return;
-
-            try {
-                await html5QrCode.stop();
-            } catch (err) {
-                console.error("Stop error:", err);
-            }
-
+            try { await html5QrCode.stop(); } catch (err) {}
             scannerActive = false;
             html5QrCode = null;
-
             document.getElementById('scanner-container').style.display = 'none';
             document.getElementById('scan-button').style.display = 'flex';
         }
 
-        // Handle successful scan
         async function onScanSuccess(decodedText) {
             if (isProcessing) return;
             isProcessing = true;
 
             let qrCode = decodedText;
             const match = decodedText.match(/coach-kaart\/([a-zA-Z0-9]+)/);
-            if (match) {
-                qrCode = match[1];
-            }
+            if (match) qrCode = match[1];
 
-            if (navigator.vibrate) {
-                navigator.vibrate(100);
-            }
+            if (navigator.vibrate) navigator.vibrate(100);
 
-            await checkCoachKaart(qrCode);
+            window.location.href = `/coach-kaart/${qrCode}/scan`;
         }
 
-        function onScanFailure(error) {
-            // Ignore scan failures (no QR in frame)
-        }
+        function onScanFailure(error) {}
 
-        // Check coach kaart via API
-        async function checkCoachKaart(qrCode) {
-            try {
-                const response = await fetch(`/coach-kaart/${qrCode}/scan`);
-
-                if (!response.ok) {
-                    showResult({
-                        valid: false,
-                        status: 'error',
-                        message: 'Coach kaart niet gevonden'
-                    });
-                    return;
-                }
-
-                window.location.href = `/coach-kaart/${qrCode}/scan`;
-
-            } catch (error) {
-                console.error('Scan error:', error);
-                showResult({
-                    valid: false,
-                    status: 'error',
-                    message: 'Fout bij controleren'
-                });
-            }
-        }
-
-        // Show result overlay
-        function showResult(data) {
-            const container = document.getElementById('result-container');
-            const bgColor = data.status === 'valid' ? 'bg-green-600' :
-                           data.status === 'already_scanned' ? 'bg-yellow-500' : 'bg-red-600';
-            const icon = data.status === 'valid' ? '✓' :
-                        data.status === 'already_scanned' ? '!' : '✗';
-
-            container.querySelector('.result-overlay').innerHTML = `
-                <div class="${bgColor} rounded-xl p-6 text-center text-white">
-                    <div class="text-6xl mb-4">${icon}</div>
-                    ${data.foto ? `<img src="${data.foto}" class="w-48 h-48 object-cover rounded-full mx-auto mb-4 border-4 border-white">` : ''}
-                    <h2 class="text-2xl font-bold mb-2">${data.naam || 'Onbekend'}</h2>
-                    <p class="text-xl">${data.message}</p>
-                    ${data.club ? `<p class="text-lg opacity-80 mt-2">${data.club}</p>` : ''}
-                    <button onclick="hideResult()" class="mt-6 bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-lg font-medium">
-                        Volgende scan
-                    </button>
-                </div>
-            `;
-            container.classList.remove('hidden');
-
-            setTimeout(() => hideResult(), 5000);
-        }
-
-        function hideResult() {
-            document.getElementById('result-container').classList.add('hidden');
-            isProcessing = false;
-        }
-
-        // Manual entry
         function showManualEntry() {
             document.getElementById('manual-entry').classList.remove('hidden');
             document.getElementById('manual-code').focus();
@@ -285,22 +377,17 @@
         async function submitManualCode() {
             const code = document.getElementById('manual-code').value.trim();
             if (!code) return;
-
             hideManualEntry();
-            isProcessing = true;
-            await checkCoachKaart(code);
+            window.location.href = `/coach-kaart/${code}/scan`;
         }
 
         document.getElementById('manual-code').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                submitManualCode();
-            }
+            if (e.key === 'Enter') submitManualCode();
         });
     </script>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'dojo'])
 
-    {{-- Chat Widget --}}
     @include('partials.chat-widget', [
         'chatType' => 'dojo',
         'chatId' => null,
