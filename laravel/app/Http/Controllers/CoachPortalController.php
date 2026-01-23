@@ -595,6 +595,15 @@ class CoachPortalController extends Controller
         return $this->getClubByCode($code);
     }
 
+    /**
+     * Redirect to login page with session expired message.
+     */
+    private function redirectToLoginExpired(string $code): RedirectResponse
+    {
+        return redirect()->route('coach.portal.code', $code)
+            ->with('error', 'Je sessie is verlopen. Log opnieuw in.');
+    }
+
     private function getActiveToernooi(): ?Toernooi
     {
         // Get the most recent active toernooi
@@ -712,7 +721,7 @@ class CoachPortalController extends Controller
         $club = $this->getLoggedInClub($request, $code);
 
         if (!$club) {
-            abort(403);
+            return $this->redirectToLoginExpired($code);
         }
 
         $toernooi = $this->getActiveToernooi();
@@ -797,7 +806,7 @@ class CoachPortalController extends Controller
         $toernooi = $this->getActiveToernooi();
 
         if (!$club) {
-            abort(403);
+            return $this->redirectToLoginExpired($code);
         }
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooi->id) {
@@ -868,7 +877,7 @@ class CoachPortalController extends Controller
         $toernooi = $this->getActiveToernooi();
 
         if (!$club) {
-            abort(403);
+            return $this->redirectToLoginExpired($code);
         }
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooi->id) {
@@ -983,7 +992,7 @@ class CoachPortalController extends Controller
         $toernooi = $this->getActiveToernooi();
 
         if (!$club) {
-            abort(403);
+            return $this->redirectToLoginExpired($code);
         }
 
         // Check ownership
@@ -1100,7 +1109,7 @@ class CoachPortalController extends Controller
         $club = $this->getLoggedInClub($request, $code);
 
         if (!$club) {
-            abort(403);
+            return $this->redirectToLoginExpired($code);
         }
 
         $toernooi = $this->getActiveToernooi();
