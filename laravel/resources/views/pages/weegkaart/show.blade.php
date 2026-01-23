@@ -69,10 +69,31 @@
             </div>
         </div>
 
-        {{-- BLOK + TIJDEN - Compact (geen mat, die is flexibel) --}}
+        {{-- BLOK + MAT + TIJDEN --}}
         @if($blok)
-        <div class="px-3 py-2 bg-amber-50 border-b flex items-center justify-between">
-            <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
+        @php
+            // Kindvriendelijke heldere kleuren voor matten
+            $matKleuren = [
+                'rood' => 'bg-red-500',
+                'blauw' => 'bg-blue-500',
+                'groen' => 'bg-green-500',
+                'geel' => 'bg-yellow-400',
+                'oranje' => 'bg-orange-500',
+                'paars' => 'bg-purple-500',
+                'roze' => 'bg-pink-500',
+                'cyaan' => 'bg-cyan-500',
+            ];
+            $matKleur = $mat?->kleur ? ($matKleuren[strtolower($mat->kleur)] ?? 'bg-gray-500') : 'bg-gray-500';
+        @endphp
+        <div class="px-3 py-2 bg-amber-50 border-b flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
+                @if($mat)
+                <span class="{{ $matKleur }} text-black text-lg font-black px-3 py-1 rounded-lg shadow-sm">
+                    Mat {{ $mat->nummer }}
+                </span>
+                @endif
+            </div>
             {{-- Tijden --}}
             <div class="text-right text-xs">
                 @if($blok->weging_start && $blok->weging_einde)
