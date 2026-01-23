@@ -6,7 +6,6 @@
     <title>{{ $club->naam }} - Coach Kaarten</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="max-w-4xl mx-auto py-8 px-4">
@@ -90,7 +89,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 @foreach($coachKaarten as $index => $kaart)
                 <div class="border rounded-lg overflow-hidden bg-white shadow-sm"
-                     x-data="{ showHistory: false, showQr: false, copied: false }">
+                     x-data="{ showHistory: false, copied: false }">
                     <!-- Card Header with status indicator -->
                     <div class="px-4 py-2 bg-gray-50 border-b flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600">Kaart #{{ $index + 1 }}</span>
@@ -167,11 +166,6 @@
 
                         <!-- Action buttons -->
                         <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t">
-                            <button @click="showQr = !showQr"
-                                    class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
-                                QR Code
-                            </button>
-
                             @if($kaart->wisselingen->count() > 0)
                             <button @click="showHistory = !showHistory"
                                     class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm">
@@ -191,14 +185,6 @@
                                class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
                                 Bekijk
                             </a>
-                        </div>
-
-                        <!-- QR Code popup -->
-                        <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center"
-                             x-init="$watch('showQr', value => { if(value && typeof QRCode !== 'undefined') { const canvas = document.getElementById('qr-coach-large-{{ $kaart->id }}'); if(canvas && !canvas.dataset.rendered) { QRCode.toCanvas(canvas, '{{ $kaart->getShowUrl() }}', { width: 200, margin: 1, color: { dark: '#6b21a8' } }); canvas.dataset.rendered = 'true'; } } })">
-                            <p class="text-sm text-gray-600 mb-2">Scan met je telefoon om de coachkaart te openen</p>
-                            <canvas id="qr-coach-large-{{ $kaart->id }}" class="mx-auto"></canvas>
-                            <p class="text-xs text-gray-500 mt-2">PIN: <span class="font-bold">{{ $kaart->pincode }}</span></p>
                         </div>
 
                         <!-- History panel -->
