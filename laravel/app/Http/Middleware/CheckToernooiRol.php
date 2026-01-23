@@ -19,6 +19,11 @@ class CheckToernooiRol
     {
         $toernooi = $request->route('toernooi');
 
+        // Als route model binding nog niet is gebeurd, handmatig oplossen
+        if (is_string($toernooi)) {
+            $toernooi = Toernooi::where('slug', $toernooi)->first();
+        }
+
         if (!$toernooi instanceof Toernooi) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Toernooi niet gevonden'], 404);

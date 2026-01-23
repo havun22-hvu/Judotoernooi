@@ -409,7 +409,7 @@
                                 </svg>
                                 <div>
                                     <p class="font-medium text-orange-800">Inschrijving sluit op {{ $toernooi->inschrijving_deadline->format('d F Y') }}</p>
-                                    <p class="text-sm text-orange-600">Nog {{ $toernooi->inschrijving_deadline->diffInDays(now()) }} dagen om in te schrijven</p>
+                                    <p class="text-sm text-orange-600">Nog {{ floor(now()->floatDiffInDays($toernooi->inschrijving_deadline)) }} dagen om in te schrijven</p>
                                 </div>
                             </div>
                         </div>
