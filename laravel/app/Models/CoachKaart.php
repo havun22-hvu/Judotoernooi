@@ -80,6 +80,16 @@ class CoachKaart extends Model
         return $this->hasMany(CoachKaartWisseling::class)->orderBy('geactiveerd_op', 'desc');
     }
 
+    public function checkins(): HasMany
+    {
+        return $this->hasMany(CoachCheckin::class)->orderBy('created_at', 'desc');
+    }
+
+    public function checkinsVandaag(): HasMany
+    {
+        return $this->checkins()->whereDate('created_at', today());
+    }
+
     public function huidigeWisseling(): ?CoachKaartWisseling
     {
         return $this->wisselingen()->whereNull('overgedragen_op')->first();
@@ -230,6 +240,15 @@ class CoachKaart extends Model
     public function checkin(): void
     {
         $this->update(['ingecheckt_op' => now()]);
+
+        // Log in history
+        $this->checkins()->create([
+            'toernooi_id' => $this->toernooi_id,
+            'naam' => $this->naam,
+            'club_naam' => $this->club->naam ?? 'Onbekend',
+            'foto' => $this->foto,
+            'actie' => 'in',
+        ]);
     }
 
     /**
@@ -238,6 +257,33 @@ class CoachKaart extends Model
     public function checkout(): void
     {
         $this->update(['ingecheckt_op' => null]);
+
+        // Log in history
+        $this->checkins()->create([
+            'toernooi_id' => $this->toernooi_id,
+            'naam' => $this->naam,
+            'club_naam' => $this->club->naam ?? 'Onbekend',
+            'foto' => $this->foto,
+            'actie' => 'uit',
+        ]);
+    }
+
+    /**
+     * Geforceerde uitcheck door hoofdjury
+     */
+    public function forceCheckout(): void
+    {
+        $this->update(['ingecheckt_op' => null]);
+
+        // Log in history met geforceerd
+        $this->checkins()->create([
+            'toernooi_id' => $this->toernooi_id,
+            'naam' => $this->naam,
+            'club_naam' => $this->club->naam ?? 'Onbekend',
+            'foto' => $this->foto,
+            'actie' => 'uit_geforceerd',
+            'geforceerd_door' => 'hoofdjury',
+        ]);
     }
 
     /**
