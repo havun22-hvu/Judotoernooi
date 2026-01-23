@@ -62,53 +62,120 @@
             <p class="text-sm mt-1">Elke coach kaart geeft toegang tot de dojo (judozaal). Deel de link met de begeleider zodat zij hun foto kunnen toevoegen.</p>
         </div>
 
-        <!-- Coach Kaarten -->
+        <!-- Check-in legenda -->
+        @if($toernooi->coach_incheck_actief)
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
+            <p class="font-medium">Check-in systeem actief</p>
+            <div class="flex gap-4 mt-2 text-sm">
+                <span class="flex items-center gap-1">
+                    <span class="w-3 h-3 bg-green-500 rounded-full"></span> Ingecheckt
+                </span>
+                <span class="flex items-center gap-1">
+                    <span class="w-3 h-3 bg-orange-500 rounded-full"></span> Uitgecheckt
+                </span>
+                <span class="flex items-center gap-1">
+                    <span class="w-3 h-3 bg-gray-300 rounded-full"></span> Niet geactiveerd
+                </span>
+            </div>
+        </div>
+        @endif
+
+        <!-- Coach Kaarten Grid -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b bg-gray-50">
                 <h2 class="text-xl font-bold text-gray-800">Coach Kaarten ({{ $coachKaarten->count() }})</h2>
             </div>
 
             @if($coachKaarten->count() > 0)
-            <div class="divide-y">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
                 @foreach($coachKaarten as $index => $kaart)
-                <div class="p-4" x-data="{ showForm: false, showQr: false, copied: false }">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex items-center gap-4 flex-grow">
-                            <!-- QR Code (clickable) -->
-                            <div class="cursor-pointer" @click="showQr = !showQr" title="Klik voor grote QR">
-                                <canvas id="qr-coach-{{ $kaart->id }}" class="w-16 h-16"></canvas>
+                <div class="border rounded-lg overflow-hidden bg-white shadow-sm"
+                     x-data="{ showHistory: false, showQr: false, copied: false }">
+                    <!-- Card Header with status indicator -->
+                    <div class="px-4 py-2 bg-gray-50 border-b flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-600">Kaart #{{ $index + 1 }}</span>
+                        @if($toernooi->coach_incheck_actief)
+                            @if($kaart->isIngecheckt())
+                            <span class="flex items-center gap-1 text-sm text-green-600">
+                                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                In ({{ $kaart->ingecheckt_op->format('H:i') }})
+                            </span>
+                            @elseif($kaart->is_geactiveerd)
+                            <span class="flex items-center gap-1 text-sm text-orange-600">
+                                <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                Uit
+                            </span>
+                            @else
+                            <span class="flex items-center gap-1 text-sm text-gray-400">
+                                <span class="w-2 h-2 bg-gray-300 rounded-full"></span>
+                                Ongebruikt
+                            </span>
+                            @endif
+                        @endif
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="p-4">
+                        <div class="flex gap-4">
+                            <!-- Photo or placeholder -->
+                            <div class="w-20 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                @if($kaart->foto)
+                                <img src="{{ $kaart->getFotoUrl() }}" alt="{{ $kaart->naam }}"
+                                     class="w-full h-full object-cover">
+                                @else
+                                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                </div>
+                                @endif
                             </div>
 
-                            <div>
-                                <p class="font-medium text-gray-800">
+                            <!-- Info -->
+                            <div class="flex-grow">
+                                <p class="font-bold text-gray-800 text-lg">
                                     @if($kaart->naam)
                                     {{ $kaart->naam }}
                                     @else
-                                    <span class="text-gray-400 italic">Naam nog niet ingevuld</span>
+                                    <span class="text-gray-400 italic font-normal">Nog niet ingevuld</span>
                                     @endif
                                 </p>
                                 <p class="text-sm text-gray-600">{{ $club->naam }}</p>
-                                <p class="text-sm text-gray-500 mt-1">
+
+                                <p class="text-sm mt-2">
                                     @if($kaart->is_geactiveerd)
-                                    <span class="text-green-600">Geactiveerd {{ $kaart->geactiveerd_op?->format('d-m') }}</span>
-                                    @if($kaart->is_gescand)
-                                    · <span class="text-blue-600">Gescand {{ $kaart->gescand_op?->format('H:i') }}</span>
-                                    @endif
+                                    <span class="text-green-600">Geactiveerd {{ $kaart->geactiveerd_op?->format('d-m H:i') }}</span>
                                     @else
                                     <span class="text-orange-600">Nog niet geactiveerd</span>
                                     @endif
                                 </p>
+
                                 <p class="text-sm font-mono mt-1">
                                     <span class="text-gray-500">PIN:</span>
                                     <span class="font-bold text-purple-700 tracking-wider">{{ $kaart->pincode }}</span>
                                 </p>
+
+                                <!-- Overdracht count -->
+                                @if($kaart->wisselingen->count() > 1)
+                                <p class="text-xs text-blue-600 mt-1">
+                                    {{ $kaart->wisselingen->count() }} coaches hebben deze kaart gebruikt
+                                </p>
+                                @endif
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 shrink-0">
-                            @if(!$kaart->is_geactiveerd)
-                            <button @click="showForm = !showForm" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
-                                <span x-text="showForm ? 'Annuleer' : 'Naam toewijzen'"></span>
+                        <!-- Action buttons -->
+                        <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t">
+                            <button @click="showQr = !showQr"
+                                    class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
+                                QR Code
+                            </button>
+
+                            @if($kaart->wisselingen->count() > 0)
+                            <button @click="showHistory = !showHistory"
+                                    class="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm">
+                                Geschiedenis
                             </button>
                             @endif
 
@@ -125,29 +192,73 @@
                                 Bekijk
                             </a>
                         </div>
-                    </div>
 
-                    <!-- Grote QR popup -->
-                    <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center">
-                        <p class="text-sm text-gray-600 mb-2">Scan met je telefoon om de coachkaart te openen</p>
-                        <canvas id="qr-coach-large-{{ $kaart->id }}" class="mx-auto"></canvas>
-                        <p class="text-xs text-gray-500 mt-2">PIN: <span class="font-bold">{{ $kaart->pincode }}</span></p>
-                    </div>
+                        <!-- QR Code popup -->
+                        <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center"
+                             x-init="$watch('showQr', value => { if(value && typeof QRCode !== 'undefined') { const canvas = document.getElementById('qr-coach-large-{{ $kaart->id }}'); if(canvas && !canvas.dataset.rendered) { QRCode.toCanvas(canvas, '{{ $kaart->getShowUrl() }}', { width: 200, margin: 1, color: { dark: '#6b21a8' } }); canvas.dataset.rendered = 'true'; } } })">
+                            <p class="text-sm text-gray-600 mb-2">Scan met je telefoon om de coachkaart te openen</p>
+                            <canvas id="qr-coach-large-{{ $kaart->id }}" class="mx-auto"></canvas>
+                            <p class="text-xs text-gray-500 mt-2">PIN: <span class="font-bold">{{ $kaart->pincode }}</span></p>
+                        </div>
 
-                    <!-- Naam toewijzen form -->
-                    <div x-show="showForm" x-collapse class="mt-4 pt-4 border-t">
-                        <form action="{{ route('coach.portal.coachkaart.toewijzen', [$code, $kaart]) }}" method="POST">
-                            @csrf
-                            <p class="text-sm text-gray-600 mb-3">Vul de naam in van de begeleider die deze kaart gebruikt.</p>
+                        <!-- History panel -->
+                        <div x-show="showHistory" x-collapse class="mt-4 pt-4 border-t">
+                            <h4 class="font-medium text-gray-700 mb-3">Geschiedenis van deze kaart</h4>
 
-                            <div class="flex gap-2">
-                                <input type="text" name="naam" placeholder="Naam van de begeleider"
-                                       class="flex-1 border rounded px-3 py-2" required>
-                                <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded">
-                                    Opslaan
-                                </button>
+                            @foreach($kaart->wisselingen as $wisseling)
+                            <div class="flex gap-3 mb-3 pb-3 @if(!$loop->last) border-b @endif">
+                                <!-- Small photo -->
+                                <div class="w-12 h-14 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
+                                    @if($wisseling->foto)
+                                    <img src="{{ asset('storage/' . $wisseling->foto) }}"
+                                         alt="{{ $wisseling->naam }}"
+                                         class="w-full h-full object-cover">
+                                    @else
+                                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                <div class="flex-grow">
+                                    <p class="font-medium text-gray-800">{{ $wisseling->naam }}</p>
+                                    <p class="text-xs text-gray-500">{{ $wisseling->device_info ?? 'Onbekend device' }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        Geactiveerd: {{ $wisseling->geactiveerd_op?->format('d-m H:i') }}
+                                        @if($wisseling->overgedragen_op)
+                                        <br>Overgedragen: {{ $wisseling->overgedragen_op->format('d-m H:i') }}
+                                        @else
+                                        <span class="text-green-600 font-medium"> (huidige)</span>
+                                        @endif
+                                    </p>
+                                </div>
                             </div>
-                        </form>
+                            @endforeach
+
+                            <!-- Check-in history for today -->
+                            @if($kaart->checkinsVandaag->count() > 0)
+                            <div class="mt-3 pt-3 border-t">
+                                <h5 class="text-sm font-medium text-gray-600 mb-2">Check-ins vandaag</h5>
+                                @foreach($kaart->checkinsVandaag as $checkin)
+                                <div class="flex items-center gap-2 text-sm py-1">
+                                    @if($checkin->isIn())
+                                    <span class="text-green-600">▶</span>
+                                    <span>In om {{ $checkin->created_at->format('H:i') }}</span>
+                                    @elseif($checkin->isGeforceerd())
+                                    <span class="text-red-600">⏹</span>
+                                    <span>Geforceerd uit om {{ $checkin->created_at->format('H:i') }}</span>
+                                    @else
+                                    <span class="text-orange-600">◀</span>
+                                    <span>Uit om {{ $checkin->created_at->format('H:i') }}</span>
+                                    @endif
+                                </div>
+                                @endforeach
+                            </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
                 @endforeach
@@ -175,24 +286,5 @@
         </div>
     </div>
 
-    <script>
-        // Generate QR codes for coach cards
-        document.addEventListener('DOMContentLoaded', function() {
-            @foreach($coachKaarten as $kaart)
-            // Small QR
-            QRCode.toCanvas(document.getElementById('qr-coach-{{ $kaart->id }}'), '{{ $kaart->getShowUrl() }}', {
-                width: 64,
-                margin: 0,
-                color: { dark: '#6b21a8' }
-            });
-            // Large QR
-            QRCode.toCanvas(document.getElementById('qr-coach-large-{{ $kaart->id }}'), '{{ $kaart->getShowUrl() }}', {
-                width: 200,
-                margin: 1,
-                color: { dark: '#6b21a8' }
-            });
-            @endforeach
-        });
-    </script>
 </body>
 </html>

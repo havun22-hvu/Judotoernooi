@@ -204,6 +204,9 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         // Coach Kaarten (toegang dojo)
         Route::get('coach-kaarten', [CoachKaartController::class, 'index'])->name('coach-kaart.index');
         Route::post('coach-kaarten/genereer', [CoachKaartController::class, 'genereer'])->name('coach-kaart.genereer');
+        Route::post('coach-kaarten/toggle-incheck', [CoachKaartController::class, 'toggleIncheck'])->name('coach-kaart.toggle-incheck');
+        Route::get('coach-kaarten/ingecheckt', [CoachKaartController::class, 'ingecheckteCoaches'])->name('coach-kaart.ingecheckt');
+        Route::post('coach-kaarten/{coachKaart}/force-checkout', [CoachKaartController::class, 'forceCheckout'])->name('coach-kaart.force-checkout');
 
         // Pagina Builder (publieke voorpagina bewerken)
         Route::get('pagina-builder', [PaginaBuilderController::class, 'index'])->name('pagina-builder.index');
