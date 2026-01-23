@@ -232,7 +232,7 @@ class CoachPortalController extends Controller
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
-            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
             'geslacht' => 'nullable|in:M,V',
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
@@ -317,7 +317,7 @@ class CoachPortalController extends Controller
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
-            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
             'geslacht' => 'nullable|in:M,V',
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
@@ -735,7 +735,7 @@ class CoachPortalController extends Controller
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
-            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
             'geslacht' => 'nullable|in:M,V',
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
@@ -817,7 +817,7 @@ class CoachPortalController extends Controller
 
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
-            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
             'geslacht' => 'nullable|in:M,V',
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',

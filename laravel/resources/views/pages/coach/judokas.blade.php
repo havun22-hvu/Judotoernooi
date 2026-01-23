@@ -153,7 +153,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 font-medium mb-1">Geboortejaar</label>
-                        <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" min="1990" max="{{ date('Y') }}"
+                        <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" min="2000" max="{{ date('Y') }}"
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
