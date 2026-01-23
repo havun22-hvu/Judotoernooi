@@ -266,6 +266,31 @@
 - **Bestanden:** `resources/views/pages/poule/index.blade.php:71-91`
 - **Naar permanente docs?** ☑ Nee - UI enhancement
 
+### Feat: Portaal modus instellingen
+- **Type:** Feature
+- **Wat:** Organisator kan kiezen hoe clubs het portaal gebruiken (uit/mutaties/volledig)
+- **Modi:**
+  - `uit` = alleen bekijken (clubs zien judoka's maar kunnen niets wijzigen)
+  - `mutaties` = clubs kunnen bestaande judoka's wijzigen, geen nieuwe toevoegen
+  - `volledig` = clubs kunnen inschrijven én wijzigen
+- **UI:** Dropdown in Instellingen → Organisatie, Mollie hint bij niet-volledig
+- **Bestanden:**
+  - Migration: `add_portaal_modus_to_toernooien_table.php`
+  - Model: `Toernooi.php` - helper methods
+  - Controller: `ToernooiController.php`, `CoachPortalController.php`
+  - Views: `edit.blade.php`, `coach/judokas.blade.php`
+- **Naar permanente docs?** ☑ Ja → INTERFACES.md (al gedaan)
+
+### Feat: Handmatige judoka invoer admin
+- **Type:** Feature
+- **Wat:** "+ Judoka toevoegen" knop op admin judoka pagina met modal
+- **Waarom:** Organisator moet ook handmatig judoka's kunnen toevoegen (naast import)
+- **Bestanden:**
+  - `resources/views/pages/judoka/index.blade.php` - modal
+  - `app/Http/Controllers/JudokaController.php` - store method
+  - `routes/web.php` - store route
+- **Naar permanente docs?** ☑ Nee - UI feature
+
 ---
 
 <!--
