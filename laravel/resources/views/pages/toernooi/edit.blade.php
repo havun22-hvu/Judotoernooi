@@ -1537,9 +1537,86 @@
     }
     </script>
 
-    <!-- ONLINE BETALINGEN -->
+    <!-- INSCHRIJVING & PORTAAL -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Inschrijving & Portaal</h2>
+        <p class="text-gray-600 mb-4">
+            Bepaal hoe judoka's in het systeem komen en wat budoscholen zelf kunnen doen via het portaal.
+        </p>
+
+        <form action="{{ route('toernooi.portaal.instellingen', $toernooi) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="space-y-4">
+                <!-- Portaal Modus -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <label for="portaal_modus" class="block font-bold text-gray-800 mb-2">Portaal modus</label>
+                    <select name="portaal_modus" id="portaal_modus"
+                            class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onchange="toggleMollieOptie()">
+                        <option value="uit" {{ ($toernooi->portaal_modus ?? 'uit') === 'uit' ? 'selected' : '' }}>
+                            Uit - Alleen bekijken (organisator beheert alles)
+                        </option>
+                        <option value="mutaties" {{ ($toernooi->portaal_modus ?? 'uit') === 'mutaties' ? 'selected' : '' }}>
+                            Alleen mutaties - Budoscholen kunnen wijzigen, niet inschrijven
+                        </option>
+                        <option value="volledig" {{ ($toernooi->portaal_modus ?? 'uit') === 'volledig' ? 'selected' : '' }}>
+                            Volledig - Budoscholen kunnen inschrijven én wijzigen
+                        </option>
+                    </select>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <strong>Tip:</strong> Budoscholen kunnen hun judoka's altijd <em>bekijken</em>, ongeacht deze instelling.
+                    </p>
+                </div>
+
+                <!-- Uitleg per modus -->
+                <div class="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
+                    <strong>Wanneer welke modus?</strong>
+                    <ul class="list-disc ml-5 mt-1 space-y-1">
+                        <li><strong>Uit:</strong> Je importeert zelf via CSV of voegt handmatig judoka's toe</li>
+                        <li><strong>Alleen mutaties:</strong> Inschrijving via extern systeem, budoscholen corrigeren gewicht/band via portaal</li>
+                        <li><strong>Volledig:</strong> Budoscholen schrijven zelf in via het portaal</li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg">
+                        Opslaan
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    function toggleMollieOptie() {
+        const modus = document.getElementById('portaal_modus').value;
+        const mollieSection = document.getElementById('mollie-section');
+        if (mollieSection) {
+            // Mollie optie alleen relevant bij 'volledig' modus
+            const hint = mollieSection.querySelector('.mollie-hint');
+            if (hint) {
+                hint.style.display = modus === 'volledig' ? 'none' : 'block';
+            }
+        }
+    }
+    // Init on page load
+    document.addEventListener('DOMContentLoaded', toggleMollieOptie);
+    </script>
+
+    <!-- ONLINE BETALINGEN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" id="mollie-section">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Online Betalingen</h2>
+
+        <!-- Hint als portaal niet op volledig staat -->
+        <div class="mollie-hint p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4 {{ ($toernooi->portaal_modus ?? 'uit') === 'volledig' ? 'hidden' : '' }}">
+            <p class="text-yellow-800 text-sm">
+                <strong>Let op:</strong> Online betalingen zijn alleen zinvol als het portaal op "Volledig" staat (nieuwe inschrijvingen).
+                Bij "Uit" of "Alleen mutaties" regel je de betaling extern.
+            </p>
+        </div>
+
         <p class="text-gray-600 mb-4">
             Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka's definitief ingeschreven zijn.
         </p>

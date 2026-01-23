@@ -86,6 +86,7 @@ Route::put('toernooi/{toernooi}', [ToernooiController::class, 'update'])->name('
 Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
 Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
 Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
+Route::put('toernooi/{toernooi}/portaal', [ToernooiController::class, 'updatePortaalInstellingen'])->name('toernooi.portaal.instellingen');
 Route::post('toernooi/{toernooi}/heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('toernooi.heropen-voorbereiding');
 
 // Mollie OAuth & Payments
@@ -135,6 +136,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
         Route::post('judoka/import/confirm', [JudokaController::class, 'importConfirm'])->name('judoka.import.confirm');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
+        Route::post('judoka', [JudokaController::class, 'store'])->name('judoka.store');
         Route::patch('judoka/{judoka}/update-api', [JudokaController::class, 'updateApi'])->name('judoka.update-api');
         Route::resource('judoka', JudokaController::class)->except(['create', 'store']);
 

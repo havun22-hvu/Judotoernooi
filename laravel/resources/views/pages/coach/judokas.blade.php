@@ -123,8 +123,19 @@
         </div>
         @endif
 
+        <!-- Portal mode info banner -->
+        @if(!($magInschrijven ?? true) && !($magWijzigen ?? true))
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
+            <strong>Alleen bekijken:</strong> De organisator beheert de inschrijvingen. Je kunt je judoka's hier bekijken maar niet wijzigen.
+        </div>
+        @elseif(!($magInschrijven ?? true) && ($magWijzigen ?? true))
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
+            <strong>Alleen mutaties:</strong> Je kunt bestaande judoka's wijzigen, maar geen nieuwe inschrijvingen doen.
+        </div>
+        @endif
+
         <!-- Add Judoka Form -->
-        @if($inschrijvingOpen && !$maxBereikt)
+        @if($inschrijvingOpen && !$maxBereikt && ($magInschrijven ?? true))
         <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm()">
             <button @click="open = !open" class="flex justify-between items-center w-full text-left">
                 <h2 class="text-xl font-bold text-gray-800">+ Nieuwe Judoka Toevoegen</h2>
@@ -472,11 +483,14 @@
                             @endif
                             </div>
                         </div>
-                        @if($inschrijvingOpen)
+                        @if($inschrijvingOpen && (($magWijzigen ?? true) || ($magInschrijven ?? true)))
                         <div class="flex space-x-2">
+                            @if($magWijzigen ?? true)
                             <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">
                                 {{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}
                             </button>
+                            @endif
+                            @if($magInschrijven ?? true)
                             <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.destroy', [$code, $judoka]) : route('coach.judoka.destroy', [$uitnodiging->token, $judoka]) }}" method="POST"
                                   onsubmit="return confirm('Weet je zeker dat je deze judoka wilt verwijderen?')">
                                 @csrf
@@ -485,12 +499,13 @@
                                     Verwijder
                                 </button>
                             </form>
+                            @endif
                         </div>
                         @endif
                     </div>
 
                     <!-- Edit mode -->
-                    @if($inschrijvingOpen)
+                    @if($inschrijvingOpen && ($magWijzigen ?? true))
                     <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }})">
                         <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.update', [$code, $judoka]) : route('coach.judoka.update', [$uitnodiging->token, $judoka]) }}" method="POST">
                             @csrf

@@ -39,9 +39,13 @@
         @endif
     </div>
     <div class="flex space-x-2">
+        <button onclick="document.getElementById('addJudokaModal').classList.remove('hidden')"
+                class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            + Judoka toevoegen
+        </button>
         <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
             @csrf
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 Valideren
             </button>
         </form>
@@ -418,4 +422,84 @@ function judokaTable() {
     Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-blue-600">Importeer deelnemers</a>.
 </div>
 @endif
+
+<!-- Add Judoka Modal -->
+<div id="addJudokaModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Judoka toevoegen</h3>
+            <button onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
+                    class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+        </div>
+
+        <form action="{{ route('toernooi.judoka.store', $toernooi) }}" method="POST">
+            @csrf
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Naam *</label>
+                        <input type="text" name="naam" required
+                               class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Club</label>
+                        <select name="club_id" class="w-full border rounded px-3 py-2">
+                            <option value="">-- Geen club --</option>
+                            @foreach($toernooi->clubs()->orderBy('naam')->get() as $club)
+                            <option value="{{ $club->id }}">{{ $club->naam }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Geboortejaar</label>
+                        <input type="number" name="geboortejaar" min="1990" max="{{ date('Y') }}"
+                               class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Geslacht</label>
+                        <select name="geslacht" class="w-full border rounded px-3 py-2">
+                            <option value="">--</option>
+                            <option value="M">Man</option>
+                            <option value="V">Vrouw</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Band</label>
+                        <select name="band" class="w-full border rounded px-3 py-2">
+                            <option value="">--</option>
+                            @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $band)
+                            <option value="{{ $band }}">{{ ucfirst($band) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Gewicht (kg)</label>
+                        <input type="number" name="gewicht" step="0.1" min="10" max="200"
+                               class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">Telefoon</label>
+                        <input type="tel" name="telefoon"
+                               class="w-full border rounded px-3 py-2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button"
+                        onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
+                        class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    Annuleren
+                </button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Toevoegen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
