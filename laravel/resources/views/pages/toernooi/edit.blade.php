@@ -1262,6 +1262,19 @@
                 return configuratie;
             }
 
+            // Delete preset button (moet vóór savePreset staan voor forward reference)
+            const deletePresetBtn = document.getElementById('btn-delete-preset');
+
+            // Show/hide delete button based on selection
+            function updateDeleteButton() {
+                const presetId = presetsDropdown.value;
+                if (presetId) {
+                    deletePresetBtn.classList.remove('hidden');
+                } else {
+                    deletePresetBtn.classList.add('hidden');
+                }
+            }
+
             // Save preset to server
             async function savePreset(naam, overschrijven = false) {
                 const configuratie = collectConfiguratie();
@@ -1285,6 +1298,9 @@
                             presetsDropdown.value = data.id;
                             huidigePresetId = data.id;
                             huidigePresetNaam = naam;
+                            // Activeer radio button en toon delete knop
+                            updateEigenPresetRadio(naam, true);
+                            updateDeleteButton();
                         }
                     } else {
                         const data = await response.json();
@@ -1353,19 +1369,6 @@
             // Make savePreset and hidePresetModal available globally
             window.savePreset = savePreset;
             window.hidePresetModal = hidePresetModal;
-
-            // Delete preset button
-            const deletePresetBtn = document.getElementById('btn-delete-preset');
-
-            // Show/hide delete button based on selection
-            function updateDeleteButton() {
-                const presetId = presetsDropdown.value;
-                if (presetId) {
-                    deletePresetBtn.classList.remove('hidden');
-                } else {
-                    deletePresetBtn.classList.add('hidden');
-                }
-            }
 
             // Update delete button visibility when dropdown changes
             presetsDropdown.addEventListener('change', () => {
