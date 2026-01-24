@@ -238,6 +238,13 @@ De lijst heeft **twee functies**:
 | JBN 2026 | Hardcoded: `Toernooi::getJbn2026Gewichtsklassen()` |
 | Eigen presets | Database: `gewichtsklassen_presets` tabel |
 
+### Preset opslaan gedrag
+
+Na het opslaan van een preset:
+1. **Preset geselecteerd**: De opgeslagen preset wordt automatisch geselecteerd in dropdown EN radio button
+2. **Scroll positie behouden**: Pagina blijft op dezelfde scroll positie (niet naar top springen)
+3. **Delete knop zichtbaar**: De verwijder knop verschijnt naast de dropdown
+
 ### JBN Leeftijdsklassen (referentie)
 
 | Klasse | U-nummer | max_leeftijd | Leeftijden |

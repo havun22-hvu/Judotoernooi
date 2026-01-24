@@ -1158,7 +1158,8 @@
             // Opgeslagen eigen preset ID (uit gewichtsklassen JSON)
             const opgeslagenEigenPresetId = {{ $eigenPresetId ?? 'null' }};
 
-            async function loadEigenPresets() {
+            // Load presets. Optional selectPresetId to select after loading (used after saving new preset)
+            async function loadEigenPresets(selectPresetId = null) {
                 @if(Auth::guard('organisator')->check())
                 try {
                     const response = await fetch('{{ route("organisator.presets.index") }}', {
@@ -1175,17 +1176,15 @@
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
-                            // Selecteer opgeslagen preset in dropdown en activeer radio button
-                            if (opgeslagenEigenPresetId) {
-                                huidigePresetId = opgeslagenEigenPresetId;
-                                // Find preset name and show in radio
-                                const savedPreset = eigenPresets.find(p => p.id == opgeslagenEigenPresetId);
-                                if (savedPreset) {
-                                    huidigePresetNaam = savedPreset.naam;
-                                    // Selecteer in dropdown
-                                    presetsDropdown.value = opgeslagenEigenPresetId;
-                                    // Show AND activate radio button with preset name
-                                    setTimeout(() => updateEigenPresetRadio(savedPreset.naam, true), 0);
+                            // Determine which preset to select: passed parameter, or initial saved preset
+                            const presetIdToSelect = selectPresetId || opgeslagenEigenPresetId;
+                            if (presetIdToSelect) {
+                                const presetToSelect = eigenPresets.find(p => p.id == presetIdToSelect);
+                                if (presetToSelect) {
+                                    huidigePresetId = presetToSelect.id;
+                                    huidigePresetNaam = presetToSelect.naam;
+                                    presetsDropdown.value = presetToSelect.id;
+                                    setTimeout(() => updateEigenPresetRadio(presetToSelect.naam, true), 0);
                                 }
                             }
                         }
@@ -1324,17 +1323,11 @@
                         const data = await response.json();
                         hidePresetModal();
                         showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
-                        await loadEigenPresets();
-                        if (data.id) {
-                            presetsDropdown.value = data.id;
-                            huidigePresetId = data.id;
-                            huidigePresetNaam = naam;
-                            // Activeer radio button en toon delete knop
-                            updateEigenPresetRadio(naam, true);
-                            updateDeleteButton();
-                        }
-                        // Herstel scroll positie
-                        window.scrollTo(0, scrollPos);
+                        // Load presets en selecteer direct de nieuwe/bijgewerkte preset
+                        await loadEigenPresets(data.id);
+                        updateDeleteButton();
+                        // Herstel scroll positie (MOET na alle DOM updates)
+                        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
                     } else {
                         const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
