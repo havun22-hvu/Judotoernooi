@@ -406,7 +406,7 @@
                                     $verwijderdeTekst->push($j->naam . ' (afwezig)');
                                 }
                                 foreach ($overpoulers as $j) {
-                                    $verwijderdeTekst->push($j->naam . ' (→ ' . $j->gewichtsklasse . ')');
+                                    $verwijderdeTekst->push($j->naam . ' (afwijkend gewicht → ' . $j->gewichtsklasse . ')');
                                 }
                             @endphp
                             <div
