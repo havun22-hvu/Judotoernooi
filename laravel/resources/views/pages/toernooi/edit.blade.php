@@ -931,6 +931,28 @@
                     gewichtenContainer?.classList.remove('hidden');
                     dynamischLabel?.classList.add('hidden');
                 }
+                // Check warning na toggle
+                const gewichtenInput = item.querySelector('.gewichten-input');
+                if (gewichtenInput) checkGewichtsklassenWarning(gewichtenInput);
+                updateJsonInput();
+            }
+
+            // Check of Δkg=0 maar geen gewichtsklassen ingevuld
+            window.checkGewichtsklassenWarning = function(input) {
+                const item = input.closest('.gewichtsklasse-item');
+                const maxKgInput = item.querySelector('.max-kg-input');
+                const warning = item.querySelector('.gewichten-warning');
+                const maxKg = parseFloat(maxKgInput?.value) || 0;
+                const gewichten = input.value.trim();
+
+                // Toon warning als Δkg=0 maar geen gewichtsklassen ingevuld
+                if (maxKg === 0 && !gewichten) {
+                    warning?.classList.remove('hidden');
+                    input.classList.add('border-red-400');
+                } else {
+                    warning?.classList.add('hidden');
+                    input.classList.remove('border-red-400');
+                }
                 updateJsonInput();
             }
 
@@ -1096,7 +1118,11 @@
                             <input type="text" name="gewichtsklassen[${key}]"
                                    value="${(item.gewichten || []).join(', ')}"
                                    class="gewichten-input w-full border rounded px-3 py-2 font-mono text-sm"
-                                   placeholder="-20, -23, -26, +26">
+                                   placeholder="-20, -23, -26, +26"
+                                   onchange="checkGewichtsklassenWarning(this)">
+                            <div class="gewichten-warning hidden text-red-600 text-xs mt-1">
+                                ⚠️ Δkg=0 maar geen gewichtsklassen ingevuld
+                            </div>
                         </div>
                         <div class="dynamisch-label text-sm text-blue-600 italic ${dynamischHidden}">
                             Dynamische indeling
@@ -1112,6 +1138,10 @@
                 for (const [key, item] of entries) {
                     container.appendChild(createCategorieElement(key, item));
                 }
+                // Check alle gewichtsklassen warnings na render
+                container.querySelectorAll('.gewichten-input').forEach(input => {
+                    checkGewichtsklassenWarning(input);
+                });
                 updateJsonInput();
             }
 
@@ -2011,6 +2041,36 @@
                 <span class="font-medium">Gespeelde wedstrijden:</span>
                 <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->where('is_gespeeld', true)->count() }}</span>
             </div>
+        </div>
+    </div>
+
+    <!-- TOERNOOI VERWIJDEREN -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6 border-2 border-red-300">
+        <h2 class="text-xl font-bold text-red-800 mb-4 pb-2 border-b border-red-200 flex items-center gap-2">
+            <span class="text-2xl">🗑️</span> Toernooi Verwijderen
+        </h2>
+
+        <p class="text-gray-700 mb-4">
+            Verwijder dit toernooi permanent. <strong class="text-red-600">Dit kan niet ongedaan gemaakt worden!</strong>
+        </p>
+
+        <form action="{{ route('toernooi.destroy', $toernooi) }}" method="POST"
+              onsubmit="return confirm('🚨 WEET JE HET ABSOLUUT ZEKER?\n\nDit verwijdert het GEHELE toernooi:\n- Alle judoka\'s\n- Alle clubs\n- Alle poules\n- Alle wedstrijden\n- Alle resultaten\n\nDit kan NIET ongedaan worden!')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="px-8 py-4 bg-red-700 hover:bg-red-800 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
+                🗑️ VERWIJDER TOERNOOI 🗑️
+            </button>
+        </form>
+
+        <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
+            <strong>⚠️ Dit verwijdert ALLES:</strong>
+            <ul class="list-disc list-inside mt-1">
+                <li>Alle judoka's en hun gegevens</li>
+                <li>Alle clubs</li>
+                <li>Alle poules en wedstrijden</li>
+                <li>Alle resultaten en statistieken</li>
+            </ul>
         </div>
     </div>
 
