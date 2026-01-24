@@ -31,6 +31,7 @@
                     <th class="text-left py-1">Geb.jaar</th>
                     <th class="text-left py-1">Club</th>
                     <th class="text-left py-1">Reden</th>
+                    <th class="text-right py-1">Acties</th>
                 </tr>
             </thead>
             <tbody class="text-orange-700">
@@ -40,6 +41,20 @@
                     <td class="py-1">{{ $judoka->geboortejaar }}</td>
                     <td class="py-1">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="py-1 text-red-600">{{ $judoka->import_warnings ?: 'Onbekende categorie' }}</td>
+                    <td class="py-1 text-right whitespace-nowrap">
+                        <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}"
+                           class="text-blue-600 hover:text-blue-800 text-xs mr-2">
+                            Bekijken
+                        </a>
+                        <form action="{{ route('toernooi.judoka.destroy', [$toernooi, $judoka]) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Weet je zeker dat je {{ $judoka->naam }} wilt verwijderen?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-800 text-xs">
+                                Verwijderen
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
