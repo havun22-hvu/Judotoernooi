@@ -29,6 +29,8 @@ docs/
 - [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie (Connect + Platform)
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
+- [Chat](./2-FEATURES/CHAT.md) - Realtime chat met Laravel Reverb
+- [Interfaces](./2-FEATURES/INTERFACES.md) - PWA's en device binding
 - [Eliminatie Systeem](./2-FEATURES/ELIMINATIE/README.md) - Double elimination
   - [Formules](./2-FEATURES/ELIMINATIE/FORMULES.md)
   - [Slot Systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md)
@@ -42,6 +44,8 @@ docs/
 ### 4. Planning
 - [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding
 - [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md) - Offline fallback
+- [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - Publieke website vs live app
+- [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - Meerdere organisatoren
 
 ### 5. Reglement
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)
@@ -49,6 +53,7 @@ docs/
 ### 6. Internal
 - [Lessons Learned](./6-INTERNAL/LESSONS-LEARNED-AI-SAMENWERKING.md) - AI samenwerking
 - [Rollen Hierarchie](./6-INTERNAL/ROLLEN_HIERARCHIE.md) - Gebruikersrollen
+- [Evaluatie Demo 21 Jan](./6-INTERNAL/EVALUATIE-DEMO-21-JAN.md) - Post-mortem demo
 
 ## Snelle Start
 

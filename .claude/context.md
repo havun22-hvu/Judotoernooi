@@ -367,75 +367,7 @@ php artisan view:cache
 
 ---
 
-## Laatste Sessie: 19 januari 2026 (avond)
-
-### Wat is gedaan:
-- **Kruisfinales check** - alleen bij vaste categorieën (max_kg=0 EN max_lft=0)
-  - Bestand: `PouleIndelingService.php:413-420`
-
-- **Eliminatie niet als probleem-poule** - uitgesloten van "Problematische poules" sectie
-  - Bestand: `resources/views/pages/poule/index.blade.php`
-  - Filter: `$p->type !== 'eliminatie' && $p->type !== 'kruisfinale'`
-
-- **Eliminatie wedstrijden formule** - was complex, nu simpel:
-  - 2 brons: `2N - 5`
-  - 1 brons: `2N - 4`
-  - Leest `aantal_brons` uit toernooi instellingen
-  - Bestand: `Poule.php:149-158` (`berekenEliminatieWedstrijden`)
-
-- **Eliminatie poule layout**:
-  - 5 kolommen grid
-  - Zelfde judoka-chip als normale poules:
-    ```
-    Naam (lft)       x.y kg
-    judoschool       band
-    ```
-  - Bestand: `resources/views/pages/poule/index.blade.php:256-290`
-
-- **Wedstrijdsysteem dropdown op alle poule types**:
-  - Poule (voorronde): → Eliminatie, → Kruisfinale
-  - Eliminatie: → Poules, → Kruisfinale (bestond al)
-  - Kruisfinale: → Poules, → Eliminatie
-  - Bestand: `resources/views/pages/poule/index.blade.php`
-
-### LES (KRITIEK):
-- **EERST VRAGEN, DAN IMPLEMENTEREN** - 30 min verspild door niet te luisteren
-- Bij UI wijzigingen: vraag exact wat de gebruiker wil zien, bevestig, dan pas coderen
-
----
-
-## Sessie: 19 januari 2026 (middag)
-
-### Wat is gedaan:
-- **gewichtsklasse kolom te kort** - migration gemaakt om van 10 naar 50 chars uit te breiden
-  - Error: "17.9-18.5kg" (12 chars) paste niet in kolom van 10 chars
-  - Fix: `2026_01_19_162817_extend_gewichtsklasse_column_length.php`
-
-- **Mollie ontkoppelen werkte niet** - APP_URL was verkeerd op production
-  - `.env` had `APP_URL=https://staging.judotournament.org` i.p.v. `https://judotournament.org`
-  - Form action ging naar staging → cross-origin fail
-
-- **Mollie koppelen** - opent nu in nieuw venster (`target="_blank"`)
-
-- **wedstrijd_systeem werd niet opgeslagen** (Poules/Kruisfinale/Eliminatie dropdown)
-  - **Oorzaak:** JavaScript `updateJsonInput()` verzamelde NIET het `wedstrijd_systeem` veld
-  - Alle andere velden (label, leeftijd, geslacht, etc.) werden wel meegenomen
-  - **Fix:**
-    1. `updateJsonInput()` → voeg `wedstrijd_systeem` toe aan JSON
-    2. `collectConfiguratie()` (presets) → voeg `wedstrijd_systeem` toe
-    3. Controller → extract `wedstrijd_systeem` uit JSON en sla apart op
-
-- **CheckToernooiRol middleware** - `route('dashboard')` bestond niet, vervangen door `route('home')`
-
-### Openstaande items:
-- [ ] **Import preview UI verbeteren** (PRIORITEIT)
-- [ ] Debug logging verwijderen uit edit.blade.php (console.log statements)
-- [ ] Openstaande bugs van 17 jan: vals-positieve gewichtsrange markering
-
-### LESSEN (KRITIEK):
-1. **Bij "veld wordt niet opgeslagen"** → EERST checken hoe form data wordt verzameld (JavaScript), niet direct backend debuggen
-2. **Direct deployen naar staging** als gebruiker daar test - niet lokaal fixen en vergeten te deployen
-3. **APP_URL in .env** moet kloppen per omgeving - verschil veroorzaakt cross-origin problemen
+## Belangrijke Technische Context
 
 ### Categorieën: Vast vs Variabel
 
@@ -449,11 +381,7 @@ php artisan view:cache
 - ✅ Alleen poules mogelijk
 - ❌ Geen kruisfinales
 - ❌ Geen eliminatie
-- Blokverdeling: elke poule apart als chip (verdeling op aansluiting + gelijke blokken)
-
-**UI:**
-- Dropdown in poule titel om achteraf eliminatie → poules te wijzigen (bij te weinig judoka's)
-- `eliminatie_gewichtsklassen` veld is DEPRECATED - niet gebruiken
+- Blokverdeling: elke poule apart als chip
 
 ### UI Conventies
 
@@ -462,181 +390,23 @@ php artisan view:cache
 | Poule nummer | `#` prefix | #1, #42, #80 |
 | Wedstrijd nummer | `W` prefix | W1, W2 |
 
-### Belangrijke bestanden:
-- `resources/views/pages/toernooi/edit.blade.php` → `updateJsonInput()` functie (regel ~840)
-- `app/Http/Controllers/ToernooiController.php` → `update()` method
-- Presets: `collectConfiguratie()` functie in edit.blade.php
+### Band Mapping
 
----
+**BandHelper::BAND_VOLGORDE** is omgekeerd: wit=6, zwart=0 (hogere waarde = lagere band)
 
-## Laatste Sessie: 21 januari 2026 (avond)
+### SQLite Gotchas
 
-### Wat is gedaan:
-- **Import warnings per club** - Admin judoka pagina toont nu warnings gegroepeerd per club met contactgegevens (email/telefoon)
-- **Import nooit falen op null gewichtsklasse** (KRITIEK FIX)
-  - 14 judoka's werden geweigerd omdat U7 geen gewichtsklassen had
-  - Fix: `gewichtsklasse` is NOOIT null - altijd 'Onbekend' of 'Variabel'
-  - Regel: "gewichtscategorie is NIET verplicht, alleen opgegeven gewicht"
-- **Migrations voor import velden**:
-  - `import_warnings` op judokas tabel (persistent warnings)
-  - `import_fouten` op toernooien tabel (nog niet volledig gebruikt)
-- **IMPORT.md documentatie** - Nieuwe doc met import workflow en regels
-
-### Niet afgerond:
-- [ ] `import_fouten` veld daadwerkelijk vullen in JudokaController (migration bestaat)
-- [ ] Local testing: APP_URL in .env moet `http://127.0.0.1:8007` zijn voor reset button
-
-### Openstaande bugs (uit vorige sessies):
-- [ ] Vals-positieve gewichtsrange markering (oranje bij OK poules)
-- [ ] Poule header kleur blijft oranje na fix
-
-### Belangrijke context Zaaloverzicht:
-
-**Probleem dat opgelost is:**
-Bij variabele categorieën (max_kg_verschil > 0) hebben meerdere poules dezelfde `leeftijdsklasse|gewichtsklasse` combinatie:
-- Jeugd|-24 = 7 poules
-- Jeugd|-27 = 4 poules
-- etc.
-
-De oude code groepeerde per categorie → maar 1 chip voor 7 poules!
-Nu: elke poule een eigen chip zodat ze apart geactiveerd kunnen worden.
-
-**Flow toernooidag:**
-1. **Wedstrijddag Poules**: per poule → klikken (blauw wordt groen ✓)
-2. **Zaaloverzicht**: chip per poule verschijnt:
-   - **Grijs** = niet doorgestuurd
-   - **Wit** = doorgestuurd, klaar voor activatie
-   - **Groen** = geactiveerd (wedstrijden gegenereerd)
-3. Klik witte chip → `activeerPoule()` → wedstrijdschema genereren
-
-**Routes:**
-- `POST blok/activeer-poule` → genereert wedstrijdschema voor 1 poule
-- `POST blok/reset-poule` → verwijdert wedstrijden van 1 poule
-
-**Chip naam format:**
-```
-{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}
-Voorbeeld: "Jeugd -24 #5"
-```
-
-### Bestanden gewijzigd deze sessie:
-- `app/Http/Controllers/BlokController.php`:
-  - `getCategoryStatuses()` - herschreven, returned nu per-poule status met key `poule_{id}`
-  - `activeerPoule()` - nieuw, genereert wedstrijden voor 1 poule
-  - `resetPoule()` - nieuw, verwijdert wedstrijden van 1 poule
-- `resources/views/pages/blok/zaaloverzicht.blade.php`:
-  - `$blokPoulesList` i.p.v. `$blokCategories`
-  - Chips tonen nu poule nummer (#) i.p.v. alleen categorie
-- `routes/web.php` - routes `blok.activeer-poule` en `blok.reset-poule`
-
-### Test instructies voor volgende sessie:
-```bash
-cd laravel && php artisan serve --port=8007
-```
-1. Open http://localhost:8007
-2. Log in als organisator
-3. Ga naar Zaaloverzicht (via Blokken)
-4. Blok 1: alle poules moeten als grijze chips verschijnen
-5. Ga naar Wedstrijddag Poules → klik → bij poules (blauw wordt groen)
-6. Terug naar Zaaloverzicht → chips moeten nu wit zijn
-7. Klik witte chip → moet groen worden (wedstrijden gegenereerd)
-
----
-
-## Laatste Sessie: 24 januari 2026
-
-### Wat is gedaan:
-- **Reverb Chat fix** - CheckToernooiRol middleware kreeg string ipv model, handmatige resolution toegevoegd
-- **Supervisor permissions** - Socket permissions gefixed voor www-data toegang
-- **Deployed** - Beide fixes naar staging en production
-
-### Database reset (KRITIEK):
-- **Probleem:** SQLite FK constraints verwezen naar `judokas_backup` (niet-bestaande tabel)
-- **Oorzaak:** Migration `2026_01_23_204738` hernoemde judokas, SQLite hernoemde FK refs mee
-- **Fix:** `migrate:fresh` uitgevoerd - **ALLE LOKALE DATA GEWIST**
-- **Status:** Lokale database is leeg, moet opnieuw test-toernooi aanmaken
-
-### Openstaand voor morgen:
-- [ ] Nieuw test-toernooi aanmaken
-- [ ] Judoka's importeren
-- [ ] Coach check-in systeem testen (zie handover 23-jan-avond)
-
-### SQLite les (documenteren):
 Bij tabel hernoemen in SQLite migration: FK constraints in ANDERE tabellen worden mee hernoemd.
 Altijd controleren of andere tabellen FK refs hebben naar de hernoemde tabel.
 
----
+### Portaal Modus
 
-## Sessie: 22 januari 2026
-
-### Wat is gedaan:
-- **Docs reorganisatie** - Volledige audit en cleanup van documentatie structuur
-- Verouderde HANDOVER.md bestanden verwijderd
-- smallwork.md getrimd (670→238 regels, alleen laatste 3 sessies)
-- Platformnaam gefixed: "WestFries Open" → "JudoToernooi" in docs
-- PLANNING_DYNAMISCHE_INDELING.md verplaatst naar 2-FEATURES/CLASSIFICATIE.md
-- README.md links en structuur geüpdatet
-- CLAUDE.md Knowledge Base tabel geüpdatet
-
-### Documentatie structuur na deze sessie:
-```
-docs/
-├── 2-FEATURES/
-│   ├── CLASSIFICATIE.md      ← NIEUW (voltooid algoritme)
-│   ├── BETALINGEN.md
-│   ├── BLOKVERDELING.md
-│   └── ...
-└── 4-PLANNING/               ← Alleen ongeïmplementeerde features
-    ├── PLANNING_AUTHENTICATIE_SYSTEEM.md
-    └── PLANNING_NOODPLAN.md
-```
-
----
-
-## Laatste Sessie: 23 januari 2026 (middag) - HANDOVER
-
-### Wat is gedaan:
-- **Portaal modus feature COMPLEET:**
-  - Migration: `portaal_modus` veld (uit/mutaties/volledig)
-  - Model helpers: `portaalMagInschrijven()`, `portaalMagWijzigen()`, `portaalIsUit()`
-  - UI: Dropdown in Instellingen → Organisatie + Mollie hint
-  - Controller checks in CoachPortalController
-  - View: Info banners + knoppen per modus
-- **Handmatige judoka invoer:** "+ Judoka toevoegen" modal op admin pagina
-
-### Portaal modus:
 | Modus | Nieuw | Wijzigen | Verwijderen |
 |-------|-------|----------|-------------|
 | **uit** | ❌ | ❌ | ❌ |
 | **mutaties** | ❌ | ✅ | ❌ |
 | **volledig** | ✅ | ✅ | ✅ |
 
-### Te testen:
-1. Instellingen → Organisatie → Portaal modus dropdown
-2. Coach portal per modus (banner + knoppen)
-3. Admin → Judoka's → "+ Judoka toevoegen"
-
-### Deploy nodig:
-```bash
-php artisan migrate
-```
-
-### Commit: `2463ebf`
-
 ---
 
-## Sessie: 23 januari 2026 (ochtend)
-
-### Wat is gedaan:
-- Categorie overlap detectie gebouwd (CategorieClassifier::detectOverlap)
-- Waarschuwing banner voor overlappende categorieën in Instellingen
-- Fix: gewichtsklasse null constraint error bij save
-- Fix: metadata (_preset_type, _eigen_preset_id) in judokasPerKlasse overzicht
-- Fix: band range berekening (BandHelper heeft omgekeerde volgorde)
-- Niet-gecategoriseerd waarschuwing toegevoegd aan Poules pagina
-
-### Belangrijke context:
-- **BandHelper::BAND_VOLGORDE** is omgekeerd: wit=6, zwart=0 (hogere waarde = lagere band)
-- **Gewichtsklassen config** bevat metadata keys met `_` prefix die gefilterd moeten worden
-- **Categorie overlap** check: zelfde max_leeftijd + zelfde geslacht + overlappende band_filter
-- **Niet-gecategoriseerd waarschuwing** moet zichtbaar zijn op Judoka's en Poules pagina's (niet dynamisch in Instellingen tijdens configureren)
+> **Sessie logs:** Zie `.claude/smallwork.md` voor recente wijzigingen
