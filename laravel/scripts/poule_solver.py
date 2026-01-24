@@ -109,6 +109,56 @@ def score_indeling(poules: List[Poule], voorkeur: List[int]) -> int:
     return sum(bereken_grootte_penalty(p.size, voorkeur) for p in poules)
 
 
+def verfijn_poule(
+    judokas: List[Judoka],
+    max_kg: float,
+    max_lft: int,
+    max_band: int,
+    band_grens: int = -1,
+    band_verschil_beginners: int = 1
+) -> List[Judoka]:
+    """
+    Verfijn een lijst judoka's zodat ze allemaal onderling binnen constraints vallen.
+    Verwijdert judoka's die niet passen tot de groep consistent is.
+    """
+    if len(judokas) <= 1:
+        return judokas
+
+    # Check of alle judoka's onderling passen
+    def alle_passen(groep: List[Judoka]) -> bool:
+        if len(groep) <= 1:
+            return True
+
+        gewichten = [j.gewicht for j in groep]
+        leeftijden = [j.leeftijd for j in groep]
+        banden = [j.band for j in groep]
+
+        if max(gewichten) - min(gewichten) > max_kg:
+            return False
+        if max(leeftijden) - min(leeftijden) > max_lft:
+            return False
+
+        if max_band > 0:
+            effectieve_max = max_band
+            if band_grens >= 0 and min(banden) <= band_grens:
+                effectieve_max = band_verschil_beginners
+            if max(banden) - min(banden) > effectieve_max:
+                return False
+
+        return True
+
+    # Als ze al passen, return
+    if alle_passen(judokas):
+        return judokas
+
+    # Anders: verwijder van achteren tot ze passen
+    result = list(judokas)
+    while len(result) > 1 and not alle_passen(result):
+        result.pop()
+
+    return result
+
+
 # =============================================================================
 # Sliding Window Algoritme
 # =============================================================================
@@ -119,16 +169,14 @@ def sliding_window(
     max_lft: int,
     max_band: int,
     voorkeur: List[int],
-    band_grens: int = -1, band_verschil_beginners: int = 1
+    band_grens: int = -1, band_verschil_beginners: int = 1,
+    prioriteiten: List[str] = None
 ) -> List[Poule]:
     """
     Sliding Window algoritme voor poule-indeling.
 
-    1. Leeftijdsgroep (jongste + max_lft_verschil)
-    2. Gewichtsrange (lichtste + max_kg_verschil)
-    3. Bandrange (laagste + max_band_verschil)
-    4. Sorteer op band, maak 1 poule (max 5)
-    5. Herhaal
+    Sorteert op basis van prioriteiten (default: band, gewicht, leeftijd).
+    Behandelt alle constraints (kg, leeftijd, band) gelijk bij poule vorming.
     """
     if not judokas:
         return []
@@ -139,8 +187,22 @@ def sliding_window(
     # Bepaal ideale poulegrootte
     ideale_grootte = voorkeur[0] if voorkeur else 5
 
-    # Sorteer alle judoka's op leeftijd
-    alle_judokas = sorted(judokas, key=lambda j: j.leeftijd)
+    # Sorteer op basis van prioriteiten (default: band eerst, dan gewicht, dan leeftijd)
+    if prioriteiten is None:
+        prioriteiten = ['band', 'gewicht', 'leeftijd']
+
+    def sort_key(j: Judoka):
+        keys = []
+        for p in prioriteiten:
+            if p == 'band':
+                keys.append(j.band)
+            elif p == 'gewicht':
+                keys.append(j.gewicht)
+            elif p == 'leeftijd':
+                keys.append(j.leeftijd)
+        return tuple(keys)
+
+    alle_judokas = sorted(judokas, key=sort_key)
 
     while True:
         # Bepaal beschikbare judoka's (niet geplaatst)
@@ -149,33 +211,47 @@ def sliding_window(
         if not beschikbaar:
             break
 
-        # STAP 1: Bepaal leeftijdsgroep
-        jongste_leeftijd = min(j.leeftijd for j in beschikbaar)
-        max_leeftijd_groep = jongste_leeftijd + max_lft
+        # Pak eerste beschikbare judoka (al gesorteerd op prioriteiten)
+        anchor = beschikbaar[0]
 
-        # Judoka's in deze leeftijdsgroep
-        lft_groep = [j for j in beschikbaar if j.leeftijd <= max_leeftijd_groep]
+        # Vind alle judoka's die binnen ALLE constraints vallen t.o.v. anchor
+        kandidaten = [anchor]
+        for j in beschikbaar[1:]:
+            # Check alle constraints
+            kg_ok = abs(j.gewicht - anchor.gewicht) <= max_kg
+            lft_ok = abs(j.leeftijd - anchor.leeftijd) <= max_lft
 
-        if not lft_groep:
-            break
-
-        # STAP 2: Maak 1 poule binnen deze leeftijdsgroep
-        poule_gemaakt = maak_een_poule(
-            lft_groep, max_kg, max_band, ideale_grootte, poules, geplaatst, band_streng_beginners
-        )
-
-        if not poule_gemaakt:
-            # Geen poule gemaakt (te weinig judoka's of geen match)
-            # Markeer jongste als orphan en ga door
-            jongste_niet_geplaatst = [j for j in lft_groep if j.id not in geplaatst and j.leeftijd == jongste_leeftijd]
-            if jongste_niet_geplaatst:
-                # Maak orphan poule
-                orphan = jongste_niet_geplaatst[0]
-                poules.append(Poule(judokas=[orphan]))
-                geplaatst.add(orphan.id)
+            # Band check met beginner regel
+            if max_band > 0:
+                effectieve_max = max_band
+                if band_grens >= 0 and min(anchor.band, j.band) <= band_grens:
+                    effectieve_max = band_verschil_beginners
+                band_ok = abs(j.band - anchor.band) <= effectieve_max
             else:
-                # Geen jongste meer, break om infinite loop te voorkomen
-                break
+                band_ok = True
+
+            if kg_ok and lft_ok and band_ok:
+                kandidaten.append(j)
+
+        # Verfijn kandidaten: check of ze ook onderling passen
+        # Sorteer kandidaten opnieuw op prioriteiten voor consistentie
+        kandidaten = sorted(kandidaten, key=sort_key)
+
+        # Maak poule van kandidaten (max ideale_grootte)
+        poule_judokas = kandidaten[:ideale_grootte]
+
+        # Valideer dat alle judoka's in poule onderling passen
+        if len(poule_judokas) > 1:
+            poule_judokas = verfijn_poule(poule_judokas, max_kg, max_lft, max_band, band_grens, band_verschil_beginners)
+
+        if poule_judokas:
+            poules.append(Poule(judokas=poule_judokas))
+            for j in poule_judokas:
+                geplaatst.add(j.id)
+        else:
+            # Anchor als orphan
+            poules.append(Poule(judokas=[anchor]))
+            geplaatst.add(anchor.id)
 
     # Na-verwerking: probeer kleine poules te mergen
     poules = merge_kleine_poules(poules, max_kg, max_lft, max_band, voorkeur, band_grens, band_verschil_beginners)
@@ -721,6 +797,7 @@ def solve(input_data: dict) -> dict:
         band_grens = int(input_data.get('band_grens', -1))  # -1 = geen grens
         band_verschil_beginners = int(input_data.get('band_verschil_beginners', 1))
         voorkeur = input_data.get('poule_grootte_voorkeur', [5, 4, 6, 3])
+        prioriteiten = input_data.get('verdeling_prioriteiten', ['leeftijd', 'gewicht', 'band'])
 
         judokas_data = input_data.get('judokas', [])
         judokas = [
@@ -742,7 +819,7 @@ def solve(input_data: dict) -> dict:
             }
 
         # Sliding window basis indeling
-        poules = sliding_window(judokas, max_kg, max_lft, max_band, voorkeur, band_grens, band_verschil_beginners)
+        poules = sliding_window(judokas, max_kg, max_lft, max_band, voorkeur, band_grens, band_verschil_beginners, prioriteiten)
 
         # Greedy++ optimalisatie
         poules = greedy_plus_plus(poules, max_kg, max_lft, max_band, voorkeur, band_grens, band_verschil_beginners)
