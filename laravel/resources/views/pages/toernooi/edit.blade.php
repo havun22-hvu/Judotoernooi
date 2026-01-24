@@ -1020,6 +1020,21 @@
                                 <option value="V" ${geslacht === 'V' ? 'selected' : ''}>V</option>
                             </select>
                         </div>
+                        <div class="flex items-center gap-1">
+                            <select name="gewichtsklassen_band_filter[${key}]"
+                                    class="band-filter-select border rounded px-1 py-1 text-xs bg-white"
+                                    title="Band filter (hard criterium)">
+                                <option value="" ${!bandFilter ? 'selected' : ''}>Alle</option>
+                                <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>≤wit</option>
+                                <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>≤geel</option>
+                                <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>≤oranje</option>
+                                <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>≤groen</option>
+                                <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>≥geel</option>
+                                <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>≥oranje</option>
+                                <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>≥groen</option>
+                                <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>≥blauw</option>
+                            </select>
+                        </div>
                         <div class="flex items-center gap-2">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white">
@@ -1060,30 +1075,7 @@
                                    ${bandStrengBeginners ? 'checked' : ''}
                                    class="band-streng-checkbox"
                                    title="Wit/geel max 1 niveau verschil">
-                            <label class="text-gray-500 text-xs">streng beginners</label>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm">Band:</label>
-                            <select name="gewichtsklassen_band_filter[${key}]"
-                                    class="band-filter-select border rounded px-2 py-1 text-sm bg-white">
-                                <option value="" ${!bandFilter ? 'selected' : ''}>Alle banden</option>
-                                <optgroup label="t/m (beginners)">
-                                    <option value="tm_wit" ${bandFilter === 'tm_wit' ? 'selected' : ''}>t/m wit</option>
-                                    <option value="tm_geel" ${bandFilter === 'tm_geel' ? 'selected' : ''}>t/m geel</option>
-                                    <option value="tm_oranje" ${bandFilter === 'tm_oranje' ? 'selected' : ''}>t/m oranje</option>
-                                    <option value="tm_groen" ${bandFilter === 'tm_groen' ? 'selected' : ''}>t/m groen</option>
-                                    <option value="tm_blauw" ${bandFilter === 'tm_blauw' ? 'selected' : ''}>t/m blauw</option>
-                                    <option value="tm_bruin" ${bandFilter === 'tm_bruin' ? 'selected' : ''}>t/m bruin</option>
-                                </optgroup>
-                                <optgroup label="vanaf (gevorderden)">
-                                    <option value="vanaf_geel" ${bandFilter === 'vanaf_geel' ? 'selected' : ''}>vanaf geel</option>
-                                    <option value="vanaf_oranje" ${bandFilter === 'vanaf_oranje' ? 'selected' : ''}>vanaf oranje</option>
-                                    <option value="vanaf_groen" ${bandFilter === 'vanaf_groen' ? 'selected' : ''}>vanaf groen</option>
-                                    <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>vanaf blauw</option>
-                                    <option value="vanaf_bruin" ${bandFilter === 'vanaf_bruin' ? 'selected' : ''}>vanaf bruin</option>
-                                    <option value="vanaf_zwart" ${bandFilter === 'vanaf_zwart' ? 'selected' : ''}>vanaf zwart</option>
-                                </optgroup>
-                            </select>
+                            <label class="text-gray-500 text-xs whitespace-nowrap">streng</label>
                         </div>
                         <div class="gewichten-container flex-1 ${gewichtenHidden}">
                             <input type="text" name="gewichtsklassen[${key}]"
