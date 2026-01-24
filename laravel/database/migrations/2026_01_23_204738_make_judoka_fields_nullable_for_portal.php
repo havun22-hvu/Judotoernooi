@@ -77,6 +77,10 @@ return new class extends Migration
                 $table->string('sort_categorie', 50)->nullable();
                 $table->decimal('sort_gewicht', 5, 1)->nullable();
                 $table->string('sort_band', 20)->nullable();
+                $table->string('categorie_key', 50)->nullable();
+
+                // Incomplete data flag
+                $table->boolean('is_onvolledig')->default(false);
 
                 // Betaling
                 $table->foreignId('betaling_id')->nullable()->constrained('betalingen')->nullOnDelete();
