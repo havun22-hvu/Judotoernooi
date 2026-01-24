@@ -698,11 +698,12 @@ public function genereerGemengdeVerdeling(Toernooi $toernooi): array
 - [x] Variabele blokverdeling
 - [x] Live titel update bij drag & drop
 - [x] Hardcoded categorieën opgeruimd
+- [x] **Python Poule Solver (Fase 3)** - Greedy++ met sliding window
+- [x] **Finetuning** - orphan rescue, rebalance, band/club swap
 
 ### Gepland
 
 - [ ] **Gemengde Blokverdeling** - Vast + variabel in één toernooi (twee-fasen algoritme)
-- [ ] **Python Poule Solver (Fase 3)** - zie hieronder
 - [ ] UI varianten weergave (Fase 4)
 - [ ] Unit tests (Fase 5)
 
