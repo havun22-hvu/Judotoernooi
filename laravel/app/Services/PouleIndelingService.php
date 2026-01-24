@@ -744,26 +744,27 @@ class PouleIndelingService
     }
 
     /**
-     * Create standardized pool title
+     * Create pool title
      *
-     * Title composition based on category config:
-     * - Label: optional via toon_label_in_titel checkbox
-     * - Age range: only if max_leeftijd_verschil > 0 (variable)
-     * - Weight: fixed class (max_kg_verschil=0) OR variable range (max_kg_verschil>0)
-     *
-     * Examples:
-     * - "Aspiranten -34kg" (fixed category, shows weight CLASS)
-     * - "Mini's 5-6j 24-28kg" (variable category, shows weight RANGE)
+     * Rules:
+     * - Vaste categorie met gewichtsklassen: "Label -24kg"
+     * - Dynamische categorie (max_kg>0 of max_lft>0): "Label 6-7j 22-25kg"
+     * - Alle variabelen=0: alleen "Label"
      */
     private function maakPouleTitel(string $leeftijdsklasse, string $gewichtsklasse, ?string $geslacht, int $pouleNr, array $pouleJudokas = [], bool $gebruikGewichtsklassen = true, string $volgorde = 'gewicht_band', ?array $gewichtsklassenConfig = null, ?string $categorieKey = null): string
     {
         $parts = [];
 
-        // Get category config via categorie_key (the reliable link to config)
+        // Get category config
         $categorieConfig = null;
         if ($gewichtsklassenConfig && $categorieKey && isset($gewichtsklassenConfig[$categorieKey])) {
             $categorieConfig = $gewichtsklassenConfig[$categorieKey];
         }
+
+        // Config values
+        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+        $isDynamisch = $maxKgVerschil > 0 || $maxLftVerschil > 0;
 
         // 1. Label (optional via checkbox, default true)
         $toonLabel = $categorieConfig['toon_label_in_titel'] ?? true;
@@ -774,53 +775,45 @@ class PouleIndelingService
 
         // 2. Gender (if not mixed)
         if ($geslacht && $geslacht !== 'gemengd') {
-            $parts[] = $geslacht; // 'M' or 'V'
+            $parts[] = $geslacht;
         }
 
-        // 3. Age range (only if variable: max_leeftijd_verschil > 0)
-        $maxLftVerschil = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
-
-        if ($maxLftVerschil > 0 && !empty($pouleJudokas)) {
-            $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
-            if (!empty($leeftijden)) {
-                $min = min($leeftijden);
-                $max = max($leeftijden);
-                $parts[] = $min == $max ? "{$min}j" : "{$min}-{$max}j";
-            }
-        }
-
-        // 4. Weight: use weight class for fixed categories, range for variable
-        // Check if gewichtsklasse looks like a valid class name (e.g. "-24", "+60")
+        // 3. Vaste categorie met gewichtsklassen: toon gewichtsklasse
         $isValidGewichtsklasse = !empty($gewichtsklasse)
             && $gewichtsklasse !== 'Onbekend'
             && (str_starts_with($gewichtsklasse, '-') || str_starts_with($gewichtsklasse, '+'));
 
-        // Determine if category is fixed (max_kg_verschil = 0) or dynamic (> 0)
-        $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
-        $isVasteGewichtsklasse = $maxKgVerschil == 0;
-
         if ($isValidGewichtsklasse) {
-            // Valid weight class provided: always use it (e.g. "-34kg", "+60kg")
             $gk = $gewichtsklasse;
             if (!str_contains($gk, 'kg')) {
                 $gk .= 'kg';
             }
             $parts[] = $gk;
-        } elseif (!$isVasteGewichtsklasse && !empty($pouleJudokas)) {
-            // Dynamic category (max_kg_verschil > 0): calculate range from judokas
-            $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
-            if (!empty($gewichten)) {
-                $min = min($gewichten);
-                $max = max($gewichten);
-                $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
+            // Bij vaste gewichtsklasse geen ranges tonen
+            return implode(' ', $parts) ?: 'Onbekend';
+        }
+
+        // 4. Dynamische categorie: toon ranges alleen als variabel > 0
+        if ($isDynamisch && !empty($pouleJudokas)) {
+            // Leeftijdsrange (alleen als max_lft > 0)
+            if ($maxLftVerschil > 0) {
+                $leeftijden = array_filter(array_map(fn($j) => $j->leeftijd, $pouleJudokas));
+                if (!empty($leeftijden)) {
+                    $min = min($leeftijden);
+                    $max = max($leeftijden);
+                    $parts[] = $min == $max ? "{$min}j" : "{$min}-{$max}j";
+                }
             }
-        } elseif (!empty($gewichtsklasse) && $gewichtsklasse !== 'Onbekend') {
-            // Fallback: use provided gewichtsklasse if not empty/unknown
-            $gk = $gewichtsklasse;
-            if (!str_contains($gk, 'kg')) {
-                $gk .= 'kg';
+
+            // Gewichtsrange (alleen als max_kg > 0)
+            if ($maxKgVerschil > 0) {
+                $gewichten = array_filter(array_map(fn($j) => $j->gewicht, $pouleJudokas));
+                if (!empty($gewichten)) {
+                    $min = min($gewichten);
+                    $max = max($gewichten);
+                    $parts[] = $min == $max ? "{$min}kg" : "{$min}-{$max}kg";
+                }
             }
-            $parts[] = $gk;
         }
 
         return implode(' ', $parts) ?: 'Onbekend';
