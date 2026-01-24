@@ -46,6 +46,7 @@ class DynamischeIndelingService
      * @param int $maxLeeftijdVerschil Max jaren verschil in poule (uit config)
      * @param float $maxKgVerschil Max kg verschil in poule (uit config)
      * @param int $maxBandVerschil Max band niveaus verschil (0 = geen limiet)
+     * @param bool $bandStrengBeginners Strenger voor beginners (wit/geel max 1)
      * @param array $config Extra config (poule_grootte_voorkeur, verdeling_prioriteiten)
      */
     public function berekenIndeling(
@@ -53,6 +54,7 @@ class DynamischeIndelingService
         int $maxLeeftijdVerschil = 2,
         float $maxKgVerschil = 3.0,
         int $maxBandVerschil = 0,
+        bool $bandStrengBeginners = false,
         array $config = []
     ): array {
         $this->config = array_merge($this->config, $config);
@@ -61,7 +63,7 @@ class DynamischeIndelingService
             return $this->maakResultaat([], $judokas->count());
         }
 
-        $poules = $this->callPythonSolver($judokas, $maxKgVerschil, $maxLeeftijdVerschil, $maxBandVerschil);
+        $poules = $this->callPythonSolver($judokas, $maxKgVerschil, $maxLeeftijdVerschil, $maxBandVerschil, $bandStrengBeginners);
         return $this->maakResultaat($poules, $judokas->count());
     }
 
@@ -72,9 +74,10 @@ class DynamischeIndelingService
      * @param float $maxKg
      * @param int $maxLeeftijd
      * @param int $maxBand Max band verschil (0 = geen limiet)
+     * @param bool $bandStrengBeginners Strenger voor beginners (wit/geel max 1)
      * @return array Poules met judoka objecten
      */
-    private function callPythonSolver(Collection $judokas, float $maxKg, int $maxLeeftijd, int $maxBand = 0): array
+    private function callPythonSolver(Collection $judokas, float $maxKg, int $maxLeeftijd, int $maxBand = 0, bool $bandStrengBeginners = false): array
     {
         // Bouw input voor Python solver
         $judokaMap = [];
@@ -82,6 +85,7 @@ class DynamischeIndelingService
             'max_kg_verschil' => $maxKg,
             'max_leeftijd_verschil' => $maxLeeftijd,
             'max_band_verschil' => $maxBand,
+            'band_streng_beginners' => $bandStrengBeginners,
             'poule_grootte_voorkeur' => $this->config['poule_grootte_voorkeur'],
             'judokas' => [],
         ];
@@ -104,7 +108,7 @@ class DynamischeIndelingService
 
         if (!$pythonCmd || !file_exists($scriptPath)) {
             Log::warning('Python solver niet beschikbaar, fallback naar simpele indeling');
-            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand);
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandStrengBeginners);
         }
 
         $inputJson = json_encode($pythonInput);
@@ -204,7 +208,7 @@ class DynamischeIndelingService
      * Simpele fallback als Python niet beschikbaar is.
      * Maakt poules van max 5 judoka's, gesorteerd op leeftijd en gewicht.
      */
-    private function simpleFallback(Collection $judokas, float $maxKg, int $maxLeeftijd, int $maxBand = 0): array
+    private function simpleFallback(Collection $judokas, float $maxKg, int $maxLeeftijd, int $maxBand = 0, bool $bandStrengBeginners = false): array
     {
         $maxGrootte = $this->config['poule_grootte_voorkeur'][0] ?? 5;
         $gesorteerd = $judokas->sortBy([
@@ -237,9 +241,16 @@ class DynamischeIndelingService
             $nieuwMinBand = min($minBand, $band);
             $nieuwMaxBand = max($maxBand_poule, $band);
 
+            // Bepaal effectieve band limiet (strenger voor beginners)
+            $effectieveMaxBand = $maxBand;
+            if ($bandStrengBeginners && $nieuwMinBand <= 1) {
+                // Poule bevat beginner (wit=0 of geel=1), max 1 niveau verschil
+                $effectieveMaxBand = min($maxBand, 1);
+            }
+
             $past = ($nieuwMaxGew - $nieuwMinGew) <= $maxKg
                 && ($nieuwMaxLft - $nieuwMinLft) <= $maxLeeftijd
-                && ($maxBand == 0 || ($nieuwMaxBand - $nieuwMinBand) <= $maxBand)
+                && ($effectieveMaxBand == 0 || ($nieuwMaxBand - $nieuwMinBand) <= $effectieveMaxBand)
                 && count($huidigePoule) < $maxGrootte;
 
             if ($past) {
@@ -381,7 +392,7 @@ class DynamischeIndelingService
      */
     public function genereerVarianten(Collection $judokas, array $config = []): array
     {
-        $indeling = $this->berekenIndeling($judokas, 2, 3.0, 0, $config);
+        $indeling = $this->berekenIndeling($judokas, 2, 3.0, 0, false, $config);
 
         return [
             'varianten' => [$indeling],
