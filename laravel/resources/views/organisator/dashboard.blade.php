@@ -119,10 +119,22 @@
                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
                         Beheer
                     </a>
-                    <a href="{{ route('toernooi.edit', $toernooi) }}"
-                       class="text-gray-500 hover:text-gray-700 text-sm">
-                        Instellingen
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('toernooi.edit', $toernooi) }}"
+                           class="text-gray-500 hover:text-gray-700 text-sm">
+                            Instellingen
+                        </a>
+                        @if($organisator->isSitebeheerder() || ($toernooi->pivot && $toernooi->pivot->rol === 'eigenaar'))
+                        <form action="{{ route('toernooi.destroy', $toernooi) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-400 hover:text-red-600 text-sm" title="Verwijder toernooi">
+                                🗑️
+                            </button>
+                        </form>
+                        @endif
+                    </div>
                 </div>
             </div>
             @endforeach
