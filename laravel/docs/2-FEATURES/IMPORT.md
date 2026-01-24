@@ -58,6 +58,12 @@ Import van judoka's via CSV/Excel bestand door de organisator.
 
 ## Belangrijke regels
 
+### Gewichtsklasse kolom in import preview
+- Gewichtsklasse kolom wordt **ALLEEN** getoond als toernooi vaste gewichtsklassen heeft
+- Vaste gewichtsklassen = minstens 1 categorie met gevulde `gewichten` array (bijv. `-22, -25, -30`)
+- Dynamische categorieën (alleen Δkg, geen gewichten) → **GEEN** gewichtsklasse kolom
+- **Sla eerst de categorieën op** voordat je importeert, anders wordt de check niet correct uitgevoerd
+
 ### Gewichtsklasse is NOOIT verplicht
 - Gewicht is belangrijk, gewichtsklasse niet
 - Als categorie niet geconfigureerd → `gewichtsklasse = 'Onbekend'`
