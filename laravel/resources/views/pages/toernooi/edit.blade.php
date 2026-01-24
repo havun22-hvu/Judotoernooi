@@ -6,6 +6,58 @@
 <!-- Fixed toast voor autosave status -->
 <div id="save-status" class="fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-medium hidden bg-white border"></div>
 
+<!-- Fixed waarschuwingen bovenaan scherm -->
+@php
+    $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
+@endphp
+@if($nietGecategoriseerdAantal > 0 || (isset($overlapWarning) && $overlapWarning))
+<div class="fixed top-0 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
+    @if($nietGecategoriseerdAantal > 0)
+    <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
+                    <p class="text-sm text-red-700">Pas de categorie-instellingen aan.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('toernooi.judoka.index', $toernooi) }}?filter=niet_gecategoriseerd"
+                   class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                    Bekijk lijst
+                </a>
+                <button type="button" @click="show = false" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if(isset($overlapWarning) && $overlapWarning)
+    <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
+         x-data="{ show: true }"
+         x-show="show"
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-orange-800">Overlappende categorieën!</p>
+                    <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
+                </div>
+            </div>
+            <button type="button" @click="show = false" class="text-orange-600 hover:text-orange-800 text-xl px-2">&times;</button>
+        </div>
+    </div>
+    @endif
+</div>
+<!-- Spacer voor fixed warnings -->
+<div class="h-16"></div>
+@endif
+
 <div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
@@ -42,50 +94,6 @@
         </button>
         @endif
     </div>
-
-    <!-- WAARSCHUWING: Niet-gecategoriseerde judoka's -->
-    @php
-        $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
-    @endphp
-    @if($nietGecategoriseerdAantal > 0)
-    <div id="niet-gecategoriseerd-alert"
-         class="mb-6 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
-         x-data="{ show: true }"
-         x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <span class="text-2xl">⚠️</span>
-                <div>
-                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
-                    <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
-                </div>
-            </div>
-            <a href="{{ route('toernooi.judoka.index', $toernooi) }}?filter=niet_gecategoriseerd"
-               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                Bekijk lijst
-            </a>
-        </div>
-    </div>
-    @endif
-
-    <!-- WAARSCHUWING: Overlappende categorieën -->
-    @if(isset($overlapWarning) && $overlapWarning)
-    <div id="overlap-warning-alert"
-         class="mb-6 p-4 bg-orange-100 border-2 border-orange-500 rounded-lg animate-error-blink"
-         x-data="{ show: true }"
-         x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
-        <div class="flex items-start gap-3">
-            <span class="text-2xl">⚠️</span>
-            <div>
-                <p class="font-bold text-orange-800">Overlappende categorieën gedetecteerd!</p>
-                <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
-                <p class="text-xs text-orange-600 mt-1">Judoka's kunnen in meerdere categorieën passen. Pas de categorie-instellingen aan (geslacht of bandfilter).</p>
-            </div>
-        </div>
-    </div>
-    @endif
 
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
