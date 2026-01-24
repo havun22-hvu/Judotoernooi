@@ -745,6 +745,9 @@
                     <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="Huidige configuratie opslaan">
                         💾 Opslaan
                     </button>
+                    <button type="button" id="btn-delete-preset" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm" title="Geselecteerde preset verwijderen">
+                        🗑️
+                    </button>
                 </div>
             </div>
 
@@ -1350,6 +1353,64 @@
             // Make savePreset and hidePresetModal available globally
             window.savePreset = savePreset;
             window.hidePresetModal = hidePresetModal;
+
+            // Delete preset button
+            const deletePresetBtn = document.getElementById('btn-delete-preset');
+
+            // Show/hide delete button based on selection
+            function updateDeleteButton() {
+                const presetId = presetsDropdown.value;
+                if (presetId) {
+                    deletePresetBtn.classList.remove('hidden');
+                } else {
+                    deletePresetBtn.classList.add('hidden');
+                }
+            }
+
+            // Update delete button visibility when dropdown changes
+            presetsDropdown.addEventListener('change', () => {
+                updateDeleteButton();
+            });
+
+            // Delete preset
+            deletePresetBtn.addEventListener('click', async () => {
+                const presetId = presetsDropdown.value;
+                if (!presetId) return;
+
+                const preset = eigenPresets.find(p => p.id == presetId);
+                const presetNaam = preset?.naam || 'deze preset';
+
+                if (!confirm(`Preset "${presetNaam}" definitief verwijderen?`)) return;
+
+                try {
+                    const response = await fetch(`{{ url('organisator/presets') }}/${presetId}`, {
+                        method: 'DELETE',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+                    if (response.ok) {
+                        showAppToast('✓ Preset verwijderd', 'success');
+                        // Reset state
+                        if (huidigePresetId == presetId) {
+                            huidigePresetId = null;
+                            huidigePresetNaam = null;
+                            updateEigenPresetRadio(null);
+                        }
+                        // Reload presets
+                        await loadEigenPresets();
+                        updateDeleteButton();
+                    } else {
+                        const data = await response.json();
+                        showAppToast('✗ ' + (data.error || 'Kon preset niet verwijderen'), 'error');
+                    }
+                } catch (e) {
+                    console.error('Fout bij verwijderen:', e);
+                    showAppToast('✗ Er ging iets mis', 'error');
+                }
+            });
 
             // Add category - uses same template function as renderCategorieen (DRY)
             document.getElementById('add-categorie').addEventListener('click', () => {
