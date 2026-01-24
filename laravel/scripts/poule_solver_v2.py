@@ -372,25 +372,53 @@ def solve(input_data: dict) -> dict:
         prioriteiten = input_data.get('verdeling_prioriteiten', ['band', 'gewicht', 'leeftijd'])
 
         judokas_data = input_data.get('judokas', [])
-        judokas = [
-            Judoka(
-                id=j['id'],
-                leeftijd=j.get('leeftijd', 0),
-                gewicht=float(j.get('gewicht', 0)),
-                band=j.get('band', 0),
-                club_id=j.get('club_id', 0)
-            )
-            for j in judokas_data
-        ]
 
-        if not judokas:
+        # Filter: splits complete en onvolledige judoka's
+        complete_judokas = []
+        onvolledige_judokas = []
+
+        for j in judokas_data:
+            gewicht = j.get('gewicht')
+            leeftijd = j.get('leeftijd')
+
+            # Check of essentiële velden aanwezig zijn
+            is_onvolledig = (
+                gewicht is None or gewicht == 0 or
+                leeftijd is None or leeftijd == 0
+            )
+
+            if is_onvolledig:
+                onvolledige_judokas.append(j['id'])
+                logging.debug(f"  Onvolledige judoka J{j['id']}: gewicht={gewicht}, leeftijd={leeftijd}")
+            else:
+                complete_judokas.append(
+                    Judoka(
+                        id=j['id'],
+                        leeftijd=leeftijd,
+                        gewicht=float(gewicht),
+                        band=j.get('band', 0),
+                        club_id=j.get('club_id', 0)
+                    )
+                )
+
+        if onvolledige_judokas:
+            logging.debug(f"=== {len(onvolledige_judokas)} ONVOLLEDIGE JUDOKA'S UITGESLOTEN ===")
+
+        if not complete_judokas:
             return {
                 "success": True,
                 "poules": [],
-                "stats": {"totaal_judokas": 0, "totaal_poules": 0, "score": 0}
+                "onvolledige_judokas": onvolledige_judokas,
+                "stats": {
+                    "totaal_judokas": len(judokas_data),
+                    "complete_judokas": 0,
+                    "onvolledige_judokas": len(onvolledige_judokas),
+                    "totaal_poules": 0,
+                    "score": 0
+                }
             }
 
-        poules, orphans = verdeel_judokas(judokas, max_kg, max_lft, max_band, voorkeur, prioriteiten)
+        poules, orphans = verdeel_judokas(complete_judokas, max_kg, max_lft, max_band, voorkeur, prioriteiten)
 
         poules_output = []
         grootte_counts = {}
@@ -407,8 +435,11 @@ def solve(input_data: dict) -> dict:
         return {
             "success": True,
             "poules": poules_output,
+            "onvolledige_judokas": onvolledige_judokas,
             "stats": {
-                "totaal_judokas": len(judokas),
+                "totaal_judokas": len(judokas_data),
+                "complete_judokas": len(complete_judokas),
+                "onvolledige_judokas": len(onvolledige_judokas),
                 "totaal_poules": len(poules),
                 "score": score_indeling(poules, voorkeur),
                 "grootte_verdeling": grootte_counts,
