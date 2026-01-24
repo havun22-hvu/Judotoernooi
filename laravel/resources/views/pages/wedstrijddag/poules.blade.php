@@ -491,7 +491,7 @@
                                         @continue
                                     @endif
                                     <div
-                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move {{ $heeftProbleem ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
+                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move group {{ $heeftProbleem ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
                                         data-judoka-id="{{ $judoka->id }}"
                                         draggable="true"
                                     >
@@ -515,7 +515,7 @@
                                                 </div>
                                                 <button
                                                     onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
-                                                    class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                    class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                                     title="Zoek geschikte poule"
                                                 >🔍</button>
                                             </div>
@@ -539,7 +539,7 @@
                             <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
                                 @forelse($category['wachtruimte'] as $judoka)
                                 <div
-                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item"
+                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item group"
                                     data-judoka-id="{{ $judoka->id }}"
                                 >
                                     <div class="flex justify-between items-start">
@@ -557,7 +557,7 @@
                                             </div>
                                             <button
                                                 onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
-                                                class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                                class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                                 title="Zoek geschikte poule"
                                             >🔍</button>
                                         </div>
