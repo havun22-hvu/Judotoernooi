@@ -61,7 +61,8 @@ class WegingService
             ]);
 
             // Bij vaste gewichtsklassen en overpoulen: verplaats naar wachtruimte
-            if (!$binnenKlasse && $this->heeftVasteGewichtsklassen($judoka->toernooi)) {
+            // Check per CATEGORIE, niet per toernooi (toernooi kan mix hebben)
+            if (!$binnenKlasse && $this->heeftVasteGewichtsklassenVoorJudoka($judoka)) {
                 $this->verplaatsOverpoulerNaarWachtruimte($judoka);
             }
 
@@ -79,12 +80,33 @@ class WegingService
     }
 
     /**
-     * Check of toernooi vaste gewichtsklassen gebruikt (niet variabel)
+     * Check of de CATEGORIE van deze judoka vaste gewichtsklassen gebruikt
+     * (niet per toernooi, want toernooi kan mix van vast + variabel hebben)
      */
-    private function heeftVasteGewichtsklassen(Toernooi $toernooi): bool
+    private function heeftVasteGewichtsklassenVoorJudoka(Judoka $judoka): bool
     {
-        // Vaste gewichtsklassen = max_kg_verschil is 0 of null
-        return ($toernooi->max_kg_verschil ?? 0) == 0;
+        $toernooi = $judoka->toernooi;
+        $categorieKey = $judoka->categorie_key;
+
+        // Probeer categorie config op te halen
+        $config = $toernooi->getAlleGewichtsklassen();
+
+        // Als we de categorie_key hebben, check die specifieke categorie
+        if ($categorieKey && isset($config[$categorieKey])) {
+            $maxKgVerschil = $config[$categorieKey]['max_kg_verschil'] ?? 0;
+            return $maxKgVerschil == 0;
+        }
+
+        // Fallback: zoek op leeftijdsklasse label
+        foreach ($config as $key => $cat) {
+            if (($cat['label'] ?? $key) === $judoka->leeftijdsklasse) {
+                $maxKgVerschil = $cat['max_kg_verschil'] ?? 0;
+                return $maxKgVerschil == 0;
+            }
+        }
+
+        // Default: neem aan dat het vaste klassen zijn (veiligste optie)
+        return true;
     }
 
     /**
