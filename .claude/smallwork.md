@@ -214,6 +214,34 @@
 
 ---
 
+## Sessie: 24 januari 2026
+
+### Fix: CheckToernooiRol middleware route model binding
+- **Type:** Bug fix (KRITIEK)
+- **Wat:** Middleware kreeg string ipv Toernooi model voor API routes
+- **Oorzaak:** Route model binding was nog niet gebeurd wanneer middleware runde
+- **Oplossing:** Handmatige model resolution toegevoegd: `Toernooi::where('slug', $toernooi)->first()`
+- **Bestanden:** `app/Http/Middleware/CheckToernooiRol.php:20-25`
+- **Naar permanente docs?** ☑ Nee - technische bug fix
+
+### Fix: Supervisor socket permissions
+- **Type:** Server config fix
+- **Wat:** PHP kon supervisorctl niet aanroepen voor Reverb status
+- **Oorzaak:** Socket had `chmod=0700`, www-data had geen toegang
+- **Oplossing:** `chmod=0770` + `chown=root:www-data` in supervisord.conf
+- **Bestanden:** `/etc/supervisor/supervisord.conf` (server)
+- **Naar permanente docs?** ☑ Nee - server config
+
+### Issue: SQLite FK referenties na tabel hernoemen
+- **Type:** Database issue (veroorzaakte data verlies!)
+- **Wat:** FK constraints in `poule_judoka`, `wegingen`, `wedstrijden` verwezen naar `judokas_backup`
+- **Oorzaak:** Migration `2026_01_23_204738` hernoemde judokas tabel, SQLite hernoemde FK refs mee
+- **Oplossing:** `migrate:fresh` - alle data gewist
+- **LES:** Bij SQLite tabel hernoemen: altijd FK constraints in andere tabellen controleren
+- **Naar permanente docs?** ☑ Ja → SQLite gotchas documenteren
+
+---
+
 ## Sessie: 23 januari 2026
 
 ### Feat: Categorie overlap detectie
