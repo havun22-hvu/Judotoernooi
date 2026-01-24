@@ -1361,8 +1361,9 @@
                     geslacht: 'gemengd',
                     max_kg_verschil: 3,
                     max_leeftijd_verschil: 2,
-                    max_band_verschil: 0,
-                    band_streng_beginners: false,
+                    max_band_verschil: 2,
+                    band_grens: 'geel',
+                    band_verschil_beginners: 1,
                     band_filter: '',
                     gewichten: [],
                     toon_label_in_titel: true
