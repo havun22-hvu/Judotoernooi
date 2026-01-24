@@ -2,6 +2,41 @@
 
 Alle belangrijke wijzigingen worden hier bijgehouden.
 
+## [2026-01-24] - Docs Reorganisatie & Bug Fixes
+
+### Verplaatst
+- `2-FEATURES/PLANNING_INTROPAGE_PWA.md` → `4-PLANNING/` (was planning doc in features)
+- `4-PLANNING/PLANNING_CHAT_REVERB.md` → `2-FEATURES/CHAT.md` (werkend feature)
+- `EVALUATIE-DEMO-21-JAN.md` → `6-INTERNAL/` (intern document)
+
+### Verwijderd
+- `4-PLANNING/PLAN_GREEDY_PLUS_BAND.md` - Was geïmplementeerd
+- `.claude/plan-refactor-classificatie.md` - Was geïmplementeerd
+
+### Gewijzigd
+- `README.md` - Links bijgewerkt naar nieuwe locaties
+- `CLAUDE.md` - Test data regels toegevoegd
+
+### Fixes
+- Categorie overlap waarschuwing positie (was achter header)
+- Niet-gecategoriseerde judoka's kunnen nu verwijderd/bekeken worden
+- Middleware route model binding voor API routes
+
+---
+
+## [2026-01-21] - Chat & Import Verbeteringen
+
+### Toegevoegd
+- `2-FEATURES/IMPORT.md` - Import documentatie
+- Import warnings zichtbaar per club met contactgegevens
+- Telefoon veld in import en coach portal
+
+### Fixes
+- Groen/geel wedstrijd selectie in mat interface
+- Import faalt NOOIT meer op null gewichtsklasse
+
+---
+
 ## [2026-01-03] - Weging PWA & Authenticatie Cleanup
 
 ### Gewijzigd
