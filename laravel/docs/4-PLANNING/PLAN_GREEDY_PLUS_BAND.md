@@ -202,8 +202,12 @@ if max_band > 0 and max(banden) - min(banden) > max_band:  # NIEUW
 Na de initiële sliding window indeling:
 1. **Orphan rescue** - Probeer orphans (poule van 1) toe te voegen aan bestaande poules
 2. **Small poule merge** - Probeer kleine poules (< min voorkeur) samen te voegen
-3. **Band swap** - Swap judoka's tussen poules om band spreiding te verbeteren
-4. **Club spreiding** - Swap judoka's om clubs te spreiden (LAAGSTE prioriteit)
+3. **Rebalance naar 5** - Verplaats judoka van grote poule (6) naar kleine (4) om 2x5 te krijgen
+4. **Band swap** - Swap judoka's tussen poules om band spreiding te verbeteren
+5. **Club spreiding** - Swap judoka's om clubs te spreiden (LAAGSTE prioriteit)
+
+**Prioriteit poulegrootte:** Stap 1-3 zijn gericht op optimale poulegrootte (5).
+Stap 4-5 mogen alleen uitvoeren als poulegrootte al goed is.
 
 ### 2.2 Python Implementatie
 
@@ -277,7 +281,31 @@ def greedy_plus_plus(
         # === STAP 2: Small merge (al in merge_kleine_poules) ===
         # Skip
 
-        # === STAP 3: Band swap ===
+        # === STAP 3: Rebalance naar 5 ===
+        # Zoek poule van 6 + poule van 4 → verplaats 1 judoka → 2x poule van 5
+        for p_groot in [p for p in poules if len(p.judokas) == 6]:
+            if verbeterd:
+                break
+            for p_klein in [p for p in poules if len(p.judokas) == 4]:
+                if p_groot is p_klein:
+                    continue
+                # Zoek judoka uit grote poule die naar kleine kan
+                for judoka in p_groot.judokas:
+                    if kan_toevoegen(judoka, p_klein, max_kg, max_lft, max_band):
+                        # Check of grote poule nog valid is zonder deze judoka
+                        p_groot_na = [j for j in p_groot.judokas if j is not judoka]
+                        if check_poule_constraints(p_groot_na, max_kg, max_lft, max_band):
+                            p_groot.judokas.remove(judoka)
+                            p_klein.judokas.append(judoka)
+                            verbeterd = True
+                            break
+                if verbeterd:
+                    break
+
+        if verbeterd:
+            continue
+
+        # === STAP 4: Band swap ===
         for i, p1 in enumerate(poules):
             if verbeterd:
                 break
@@ -295,7 +323,7 @@ def greedy_plus_plus(
         if verbeterd:
             continue
 
-        # === STAP 4: Club spreiding ===
+        # === STAP 5: Club spreiding ===
         for i, p1 in enumerate(poules):
             if verbeterd:
                 break
@@ -592,9 +620,10 @@ if __name__ == '__main__':
 ### Stap 4: Greedy++ implementatie
 - [ ] `kan_toevoegen()` helper
 - [ ] `check_poule_constraints()` helper
+- [ ] Rebalance logica (6→4 wordt 5+5)
 - [ ] `vind_band_verbeterende_swap()`
 - [ ] `club_penalty()` + `vind_club_verbeterende_swap()`
-- [ ] `greedy_plus_plus()` hoofdfunctie
+- [ ] `greedy_plus_plus()` hoofdfunctie (5 stappen)
 - [ ] Integratie in `solve()`
 
 ### Stap 5: Testen & Documentatie
@@ -612,11 +641,19 @@ HARDE CRITERIA (mogen NOOIT overschreden):
 2. max_leeftijd_verschil
 3. max_band_verschil
 
-ZACHTE OPTIMALISATIE (verbeteren waar mogelijk):
-4. Poulegrootte (voorkeur [5,4,6,3])
+BELANGRIJKSTE OPTIMALISATIE:
+4. Poulegrootte = 5 ← KRITIEK! Waar mogelijk ALTIJD poules van 5!
+   - Penalty scores: 5=0, 4=5, 6=40, 3=40, 2=70, 1=100
+   - Orphan rescue is topprioriteit in Greedy++
+   - Liever 2x poule van 5 dan 1x poule van 4 + 1x poule van 6
+
+LAGERE OPTIMALISATIE (alleen als poulegrootte goed is):
 5. Band spreiding (minder spreiding = beter)
 6. Club spreiding (meer spreiding = beter) ← LAAGSTE prioriteit
 ```
+
+**Belangrijk:** Band swap en club swap mogen NOOIT de poulegrootte verslechteren!
+Een swap tussen poules verandert de groottes niet (1-op-1), dus dit is veilig.
 
 ---
 
