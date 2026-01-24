@@ -529,7 +529,8 @@
                             @endforeach
                         </div>
 
-                        {{-- Wachtruimte (rechts) --}}
+                        {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën --}}
+                        @if(!$heeftVariabeleCategorieen)
                         <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
                                 <span>Wachtruimte</span>
@@ -567,6 +568,7 @@
                                 @endforelse
                             </div>
                         </div>
+                        @endif
                     </div>
                     @endif
                 </div>
