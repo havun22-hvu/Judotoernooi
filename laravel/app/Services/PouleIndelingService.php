@@ -247,6 +247,7 @@ class PouleIndelingService
                 // Check if this category uses dynamic grouping (max_kg_verschil > 0)
                 $maxKg = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
                 $maxLeeftijd = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
+                $maxBand = (int) ($categorieConfig['max_band_verschil'] ?? 0);
                 $usesDynamic = $maxKg > 0;
 
                 if ($usesDynamic) {
@@ -259,6 +260,7 @@ class PouleIndelingService
                         $judokas,
                         $maxLeeftijd,
                         $maxKg,
+                        $maxBand,
                         [
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
                             'verdeling_prioriteiten' => $this->prioriteiten,

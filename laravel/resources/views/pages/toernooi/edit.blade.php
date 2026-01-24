@@ -860,7 +860,8 @@
                         .map(g => g.trim())
                         .filter(g => g) || [];
                     const systeem = item.querySelector('.systeem-select')?.value || 'poules';
-                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
+                    const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
+                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -962,6 +963,7 @@
                 const toonLabel = item.toon_label_in_titel ?? true;
                 const maxKg = item.max_kg_verschil || 0;
                 const maxLft = item.max_leeftijd_verschil || 0;
+                const maxBand = item.max_band_verschil || 0;
 
                 // Support both old band_tot and new band_filter
                 let bandFilter = item.band_filter || item.band_tot || '';
@@ -1034,6 +1036,14 @@
                                    class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
                                    min="0" max="5" step="1"
                                    title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δband:</label>
+                            <input type="number" name="gewichtsklassen_max_band[${key}]"
+                                   value="${maxBand}"
+                                   class="max-band-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   min="0" max="6" step="1"
+                                   title="0 = geen limiet, 2 = max 2 niveaus (wit-oranje)">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="text-gray-600 text-sm">Band:</label>
@@ -1217,6 +1227,7 @@
                         geslacht: item.querySelector('.geslacht-select')?.value || 'gemengd',
                         max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
                         max_leeftijd_verschil: parseInt(item.querySelector('.max-lft-input')?.value) || 0,
+                        max_band_verschil: parseInt(item.querySelector('.max-band-input')?.value) || 0,
                         band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                         wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',
@@ -1327,6 +1338,7 @@
                     geslacht: 'gemengd',
                     max_kg_verschil: 3,
                     max_leeftijd_verschil: 2,
+                    max_band_verschil: 0,
                     band_filter: '',
                     gewichten: [],
                     toon_label_in_titel: true
