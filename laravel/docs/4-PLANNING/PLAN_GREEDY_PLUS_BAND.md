@@ -1,6 +1,6 @@
 # Implementatieplan: Greedy++ & max_band_verschil
 
-> **Status:** Klaar voor implementatie
+> **Status:** ✅ GEÏMPLEMENTEERD (24 jan 2026)
 > **Datum:** 24 jan 2026
 > **Geschatte omvang:** Medium-groot
 
@@ -603,31 +603,31 @@ if __name__ == '__main__':
 ## Implementatie Volgorde
 
 ### Stap 1: Band mapping documenteren
-- [x] Band niveaus vastleggen (1=wit → 7=zwart)
+- [x] Band niveaus vastleggen (0=wit → 6=zwart)
 - [ ] CLASSIFICATIE.md updaten (check consistentie)
 - [ ] context.md updaten (verwijder tegenstrijdige info)
 
 ### Stap 2: max_band_verschil basis
-- [ ] UI veld toevoegen in edit.blade.php
-- [ ] JavaScript collectFormData/renderCategorieen aanpassen
-- [ ] PHP service aanpassen (callPythonSolver + simpleFallback)
+- [x] UI veld toevoegen in edit.blade.php
+- [x] JavaScript collectFormData/renderCategorieen aanpassen
+- [x] PHP service aanpassen (callPythonSolver + simpleFallback)
 
 ### Stap 3: Python solver max_band
-- [ ] Input parsing uitbreiden
-- [ ] Sliding window op band toevoegen
-- [ ] Merge check uitbreiden met band
+- [x] Input parsing uitbreiden
+- [x] Sliding window op band toevoegen
+- [x] Merge check uitbreiden met band
 
 ### Stap 4: Greedy++ implementatie
-- [ ] `kan_toevoegen()` helper
-- [ ] `check_poule_constraints()` helper
-- [ ] Rebalance logica (6→4 wordt 5+5)
-- [ ] `vind_band_verbeterende_swap()`
-- [ ] `club_penalty()` + `vind_club_verbeterende_swap()`
-- [ ] `greedy_plus_plus()` hoofdfunctie (5 stappen)
-- [ ] Integratie in `solve()`
+- [x] `kan_toevoegen()` helper
+- [x] `check_poule_constraints()` helper
+- [x] Rebalance logica (6→4 wordt 5+5)
+- [x] `vind_band_verbeterende_swap()`
+- [x] `club_penalty()` + `vind_club_verbeterende_swap()`
+- [x] `greedy_plus_plus()` hoofdfunctie (4 stappen)
+- [x] Integratie in `solve()`
 
 ### Stap 5: Testen & Documentatie
-- [ ] Unit tests Python
+- [x] Basis test Python solver
 - [ ] Handmatige test op staging
 - [ ] CLASSIFICATIE.md updaten
 
