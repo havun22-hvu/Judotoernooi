@@ -1052,7 +1052,7 @@
                             <label class="text-gray-600 text-sm whitespace-nowrap">Δkg:</label>
                             <input type="number" name="gewichtsklassen_max_kg[${key}]"
                                    value="${maxKg}"
-                                   class="max-kg-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   class="max-kg-input w-14 border rounded px-2 py-1.5 text-center text-sm"
                                    min="0" max="10" step="0.5"
                                    onchange="toggleGewichtsklassen(this)">
                         </div>
@@ -1060,32 +1060,32 @@
                             <label class="text-gray-600 text-sm whitespace-nowrap">Δlft:</label>
                             <input type="number" name="gewichtsklassen_max_lft[${key}]"
                                    value="${maxLft}"
-                                   class="max-lft-input w-12 border rounded px-1 py-1 text-center text-sm"
+                                   class="max-lft-input w-14 border rounded px-2 py-1.5 text-center text-sm"
                                    min="0" max="5" step="1"
                                    title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
                         </div>
-                        <div class="flex items-center gap-1">
-                            <label class="text-gray-500 text-xs whitespace-nowrap">tot</label>
+                        <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
                             <select name="gewichtsklassen_band_grens[${key}]"
-                                    class="band-grens-select border rounded px-1 py-0.5 text-xs bg-white"
+                                    class="band-grens-select border rounded px-2 py-1 text-sm bg-white"
                                     title="Tot welke band geldt het eerste verschil">
                                 <option value="" ${!bandGrens ? 'selected' : ''}>-</option>
                                 <option value="wit" ${bandGrens === 'wit' ? 'selected' : ''}>wit</option>
                                 <option value="geel" ${bandGrens === 'geel' ? 'selected' : ''}>geel</option>
                                 <option value="oranje" ${bandGrens === 'oranje' ? 'selected' : ''}>oranje</option>
                             </select>
-                            <label class="text-gray-500 text-xs">Δ:</label>
+                            <label class="text-gray-600 text-sm">Δ:</label>
                             <input type="number" name="gewichtsklassen_band_verschil_1[${key}]"
                                    value="${bandVerschil1}"
-                                   class="band-verschil-1-input w-8 border rounded px-1 py-0.5 text-center text-xs"
+                                   class="band-verschil-1-input w-12 border rounded px-2 py-1 text-center text-sm"
                                    min="0" max="3" step="1"
                                    title="Max band verschil voor beginners">
                         </div>
-                        <div class="flex items-center gap-1">
-                            <label class="text-gray-500 text-xs whitespace-nowrap">Δband:</label>
+                        <div class="flex items-center gap-2">
+                            <label class="text-gray-600 text-sm whitespace-nowrap">Δband:</label>
                             <input type="number" name="gewichtsklassen_max_band[${key}]"
                                    value="${maxBand}"
-                                   class="max-band-input w-8 border rounded px-1 py-0.5 text-center text-xs"
+                                   class="max-band-input w-12 border rounded px-2 py-1.5 text-center text-sm"
                                    min="0" max="6" step="1"
                                    title="0 = geen limiet, max band verschil algemeen">
                         </div>
