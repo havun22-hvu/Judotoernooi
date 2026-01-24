@@ -11,7 +11,7 @@
     $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
 @endphp
 @if($nietGecategoriseerdAantal > 0 || (isset($overlapWarning) && $overlapWarning))
-<div class="fixed top-0 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
+<div class="fixed top-16 left-0 right-0 z-40 shadow-lg" x-data="{ showWarnings: true }" x-show="showWarnings">
     @if($nietGecategoriseerdAantal > 0)
     <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
          x-data="{ show: true }"
