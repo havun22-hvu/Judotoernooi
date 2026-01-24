@@ -248,6 +248,7 @@ class PouleIndelingService
                 $maxKg = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
                 $maxLeeftijd = (int) ($categorieConfig['max_leeftijd_verschil'] ?? 0);
                 $maxBand = (int) ($categorieConfig['max_band_verschil'] ?? 0);
+                $bandStrengBeginners = (bool) ($categorieConfig['band_streng_beginners'] ?? false);
                 $usesDynamic = $maxKg > 0;
 
                 if ($usesDynamic) {
@@ -261,6 +262,7 @@ class PouleIndelingService
                         $maxLeeftijd,
                         $maxKg,
                         $maxBand,
+                        $bandStrengBeginners,
                         [
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
                             'verdeling_prioriteiten' => $this->prioriteiten,
