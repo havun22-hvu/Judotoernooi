@@ -10,7 +10,56 @@
     $isProblematischeGrootte = fn($count) => $count > 0 && !in_array($count, $toegestaneGroottes);
     // Check of inschrijving gesloten is (weegkaarten hebben dan al bloknummers)
     $inschrijvingGesloten = !$toernooi->isInschrijvingOpen();
+    // Categorie problemen detectie
+    $nietGecategoriseerdAantal = $toernooi->countNietGecategoriseerd();
+    $overlapWarning = null;
+    if (!empty($toernooi->gewichtsklassen)) {
+        $classifier = new \App\Services\CategorieClassifier($toernooi->gewichtsklassen);
+        $overlaps = $classifier->detectOverlap();
+        if (!empty($overlaps)) {
+            $overlapWarning = 'Overlappende categorieën gedetecteerd';
+        }
+    }
+    $heeftCategorieProbleem = $nietGecategoriseerdAantal > 0 || $overlapWarning;
 @endphp
+
+{{-- Categorie waarschuwingen --}}
+@if($heeftCategorieProbleem)
+<div class="mb-4 no-print">
+    @if($nietGecategoriseerdAantal > 0)
+    <div class="p-3 bg-red-100 border-l-4 border-red-500 rounded mb-2">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
+                    <p class="text-sm text-red-700">Pas de categorie-instellingen aan voordat je poules genereert.</p>
+                </div>
+            </div>
+            <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                Naar instellingen
+            </a>
+        </div>
+    </div>
+    @endif
+    @if($overlapWarning)
+    <div class="p-3 bg-orange-100 border-l-4 border-orange-500 rounded">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">⚠️</span>
+                <div>
+                    <p class="font-bold text-orange-800">{{ $overlapWarning }}</p>
+                    <p class="text-sm text-orange-700">Categorieën mogen niet overlappen.</p>
+                </div>
+            </div>
+            <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi" class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-medium">
+                Naar instellingen
+            </a>
+        </div>
+    </div>
+    @endif
+</div>
+@endif
 
 {{-- Knipperende popup als inschrijving gesloten is --}}
 @if($inschrijvingGesloten)
@@ -116,15 +165,6 @@
     <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
-        @php
-            $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
-            $heeftOverlap = false;
-            if (!empty($toernooi->gewichtsklassen)) {
-                $classifier = new \App\Services\CategorieClassifier($toernooi->gewichtsklassen);
-                $heeftOverlap = !empty($classifier->detectOverlap());
-            }
-            $heeftCategorieProbleem = $nietGecategoriseerd > 0 || $heeftOverlap;
-        @endphp
         @if($heeftCategorieProbleem)
         <span class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed opacity-60" title="Los eerst categorie-problemen op">
             (her)Verdelen
