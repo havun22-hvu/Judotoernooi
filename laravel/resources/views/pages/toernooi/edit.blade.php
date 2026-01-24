@@ -1278,6 +1278,7 @@
             // Save preset to server
             async function savePreset(naam, overschrijven = false) {
                 const configuratie = collectConfiguratie();
+                const scrollPos = window.scrollY; // Bewaar scroll positie
                 try {
                     const response = await fetch('{{ route("organisator.presets.store") }}', {
                         method: 'POST',
@@ -1302,6 +1303,8 @@
                             updateEigenPresetRadio(naam, true);
                             updateDeleteButton();
                         }
+                        // Herstel scroll positie
+                        window.scrollTo(0, scrollPos);
                     } else {
                         const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
