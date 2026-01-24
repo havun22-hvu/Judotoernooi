@@ -538,7 +538,118 @@ Roept Python solver aan voor dynamische categorieën:
 - `berekenIndeling()` - Wrapper rond Python solver
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
 
-#### Algoritme Python Solver (Sliding Window)
+#### Algoritme Python Solver V2 (Cascading Band Verdeling)
+
+```
+INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, max_band, poule_grootte_voorkeur)
+OUTPUT: Poules binnen constraints
+
+============================================================================
+KERNPRINCIPE: INVENTARISATIE + RESTANTEN VOORAF BEPALEN
+============================================================================
+
+PROBLEEM met greedy aanpak:
+  - Maakt poules zonder overzicht
+  - Weet niet hoeveel judoka's er nog komen
+  - Orphans ontstaan "per ongeluk"
+
+OPLOSSING: Tel eerst, bepaal restanten vooraf, verdeel dan
+  - Tel hoeveel judoka's per band niveau
+  - Bereken hoeveel poules + restanten dat wordt
+  - Bepaal VOORAF wie de restanten zijn (grensgevallen)
+  - Restanten schuiven door naar volgende band groep
+
+============================================================================
+STAP 0: INVENTARISATIE
+============================================================================
+
+Tel judoka's per band niveau:
+  - Wit (6e kyu):   2 judoka's
+  - Geel (5e kyu): 25 judoka's
+  - Oranje (4e kyu): 15 judoka's
+  - Groen (3e kyu): 10 judoka's
+
+Combineer aangrenzende banden (max_band_verschil = 1):
+  - Groep 1: Wit(2) + Geel(25) = 27 judoka's
+  - Groep 2: Geel(restant) + Oranje(15)
+  - Groep 3: Oranje(restant) + Groen(10)
+
+============================================================================
+STAP 1: BEREKEN RESTANTEN PER GROEP
+============================================================================
+
+Groep 1: Wit + Geel = 27 judoka's
+  27 / 5 = 5 poules van 5 + 2 RESTANT
+
+Wie worden de 2 restanten?
+  → De "grensgevallen" die beter passen in volgende groep
+  → Sorteer op: band↓ (hoogste), gewicht↓ (zwaarste), leeftijd↓ (oudste)
+  → Pak top 2 als kandidaat-restanten
+
+============================================================================
+STAP 2: VALIDEER RESTANTEN (KRITIEK!)
+============================================================================
+
+Voor elke kandidaat-restant, CHECK:
+  - Past de LEEFTIJD in de volgende groep?
+
+VOORBEELD:
+  Kandidaat: Geel, 35kg, 7 jaar
+  Volgende groep (Geel+Oranje): leeftijd range 9-11 jaar
+  → 7 jaar past NIET!
+
+  ZOEK ALTERNATIEF:
+    - Zelfde band (Geel)
+    - In "bovenklasse" qua gewicht (niet de lichtste)
+    - WEL passende leeftijd (9+ jaar)
+
+  WISSEL: 7-jarige blijft in Groep 1, 9-jarige wordt restant
+
+RESULTAAT: Alle restanten passen GEGARANDEERD in volgende groep
+
+============================================================================
+STAP 3: VERDEEL DE BLIJVERS
+============================================================================
+
+De judoka's die NIET restant zijn worden verdeeld:
+  - Sorteer op prioriteiten (band, gewicht, leeftijd volgens config)
+  - Maak poules binnen alle constraints (max_kg, max_lft, max_band)
+  - Zoveel mogelijk gelijke band + gewicht bij elkaar
+
+============================================================================
+STAP 4: CASCADE NAAR VOLGENDE GROEP
+============================================================================
+
+Restanten (2 gelen) → voeg toe aan Groep 2 (Geel+Oranje)
+Herhaal STAP 1-4 voor Groep 2
+
+  Groep 2: RestGeel(2) + Oranje(15) = 17 judoka's
+  17 / 5 = 3 poules van 5 + 2 RESTANT
+  Restanten = zwaarste/oudste oranje → door naar Groep 3
+
+============================================================================
+RESTANT IN LICHTSTE POULES (EERLIJKER)
+============================================================================
+
+Restanten (hogere band) worden in LICHTERE poules geplaatst:
+  - Hogere band = meer ervaring
+  - Lichtere tegenstanders = compensatie
+  - Voorbeeld: Oranje in poule met lichtste groenen = eerlijk
+
+============================================================================
+SAMENVATTING FLOW
+============================================================================
+
+1. INVENTARISEER: Tel per band, combineer aangrenzende
+2. BEREKEN: Hoeveel poules + restanten per groep
+3. SELECTEER RESTANTEN: Grensgevallen (band↓, gewicht↓, leeftijd↓)
+4. VALIDEER: Past restant qua leeftijd in volgende groep? Zo niet: wissel
+5. VERDEEL BLIJVERS: Maak poules, groepeer op band/gewicht
+6. CASCADE: Restanten → volgende groep, herhaal
+
+```
+
+#### Algoritme Python Solver (Sliding Window - Detail)
 
 ```
 INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, poule_grootte_voorkeur)

@@ -107,8 +107,8 @@ class DynamischeIndelingService
             ];
         }
 
-        // Roep Python aan
-        $scriptPath = base_path('scripts/poule_solver.py');
+        // Roep Python aan - V2 voor test (cascading band verdeling)
+        $scriptPath = base_path('scripts/poule_solver_v2.py');
         $pythonCmd = $this->findPython();
 
         if (!$pythonCmd || !file_exists($scriptPath)) {
@@ -148,6 +148,11 @@ class DynamischeIndelingService
         fclose($pipes[2]);
 
         $exitCode = proc_close($process);
+
+        // Log debug output van Python solver
+        if (!empty($stderr)) {
+            Log::debug('Python solver debug output', ['stderr' => $stderr]);
+        }
 
         if ($exitCode !== 0 || empty($output)) {
             Log::error('Python solver fout', ['exitCode' => $exitCode, 'stderr' => $stderr]);
