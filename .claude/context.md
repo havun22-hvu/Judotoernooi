@@ -543,7 +543,31 @@ cd laravel && php artisan serve --port=8007
 
 ---
 
-## Laatste Sessie: 22 januari 2026
+## Laatste Sessie: 24 januari 2026
+
+### Wat is gedaan:
+- **Reverb Chat fix** - CheckToernooiRol middleware kreeg string ipv model, handmatige resolution toegevoegd
+- **Supervisor permissions** - Socket permissions gefixed voor www-data toegang
+- **Deployed** - Beide fixes naar staging en production
+
+### Database reset (KRITIEK):
+- **Probleem:** SQLite FK constraints verwezen naar `judokas_backup` (niet-bestaande tabel)
+- **Oorzaak:** Migration `2026_01_23_204738` hernoemde judokas, SQLite hernoemde FK refs mee
+- **Fix:** `migrate:fresh` uitgevoerd - **ALLE LOKALE DATA GEWIST**
+- **Status:** Lokale database is leeg, moet opnieuw test-toernooi aanmaken
+
+### Openstaand voor morgen:
+- [ ] Nieuw test-toernooi aanmaken
+- [ ] Judoka's importeren
+- [ ] Coach check-in systeem testen (zie handover 23-jan-avond)
+
+### SQLite les (documenteren):
+Bij tabel hernoemen in SQLite migration: FK constraints in ANDERE tabellen worden mee hernoemd.
+Altijd controleren of andere tabellen FK refs hebben naar de hernoemde tabel.
+
+---
+
+## Sessie: 22 januari 2026
 
 ### Wat is gedaan:
 - **Docs reorganisatie** - Volledige audit en cleanup van documentatie structuur
