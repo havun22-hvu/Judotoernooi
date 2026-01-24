@@ -396,6 +396,11 @@
                                 <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
                                 <div class="text-gray-400">{{ ucfirst($judoka->band) }}</div>
                             </div>
+                            <button
+                                onclick="event.stopPropagation(); openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
+                                class="zoek-match-btn text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
+                                title="Zoek geschikte poule"
+                            >🔍</button>
                         </div>
                     </div>
                     @endforeach
