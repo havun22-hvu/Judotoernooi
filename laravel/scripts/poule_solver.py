@@ -117,6 +117,7 @@ def sliding_window(
     judokas: List[Judoka],
     max_kg: float,
     max_lft: int,
+    max_band: int,
     voorkeur: List[int]
 ) -> List[Poule]:
     """
@@ -124,8 +125,8 @@ def sliding_window(
 
     1. Leeftijdsgroep (jongste + max_lft_verschil)
     2. Gewichtsrange (lichtste + max_kg_verschil)
-    3. Sorteer op band, maak 1 poule (max 5)
-    4. Check of jongste leeftijd "op" is → zo ja, nieuwe leeftijdsgroep
+    3. Bandrange (laagste + max_band_verschil)
+    4. Sorteer op band, maak 1 poule (max 5)
     5. Herhaal
     """
     if not judokas:
@@ -159,7 +160,7 @@ def sliding_window(
 
         # STAP 2: Maak 1 poule binnen deze leeftijdsgroep
         poule_gemaakt = maak_een_poule(
-            lft_groep, max_kg, ideale_grootte, poules, geplaatst
+            lft_groep, max_kg, max_band, ideale_grootte, poules, geplaatst
         )
 
         if not poule_gemaakt:
@@ -176,7 +177,7 @@ def sliding_window(
                 break
 
     # Na-verwerking: probeer kleine poules te mergen
-    poules = merge_kleine_poules(poules, max_kg, max_lft, voorkeur)
+    poules = merge_kleine_poules(poules, max_kg, max_lft, max_band, voorkeur)
 
     return poules
 
@@ -184,6 +185,7 @@ def sliding_window(
 def maak_een_poule(
     lft_groep: List[Judoka],
     max_kg: float,
+    max_band: int,
     ideale_grootte: int,
     poules: List[Poule],
     geplaatst: Set[int]
@@ -194,8 +196,9 @@ def maak_een_poule(
     1. Sorteer op gewicht
     2. Bepaal gewichtsrange (lichtste + max_kg)
     3. Sorteer op band binnen gewichtsrange
-    4. Pak max ideale_grootte judoka's
-    5. Markeer als geplaatst
+    4. Filter op bandrange (laagste + max_band) als max_band > 0
+    5. Pak max ideale_grootte judoka's
+    6. Markeer als geplaatst
 
     Returns: True als poule gemaakt, False als niet mogelijk
     """
@@ -215,11 +218,17 @@ def maak_een_poule(
     if not in_range:
         return False
 
-    # Sorteer op band (laagste eerst)
+    # Sorteer op band (laagste eerst: 0=wit, 6=zwart)
     in_range_sorted = sorted(in_range, key=lambda j: j.band)
 
-    # Pak max ideale_grootte judoka's
-    poule_judokas = in_range_sorted[:ideale_grootte]
+    # Als max_band > 0: filter ook op bandrange
+    if max_band > 0 and in_range_sorted:
+        laagste_band = in_range_sorted[0].band
+        max_toegestane_band = laagste_band + max_band
+        in_band_range = [j for j in in_range_sorted if j.band <= max_toegestane_band]
+        poule_judokas = in_band_range[:ideale_grootte]
+    else:
+        poule_judokas = in_range_sorted[:ideale_grootte]
 
     if not poule_judokas:
         return False
@@ -343,6 +352,7 @@ def merge_kleine_poules(
     poules: List[Poule],
     max_kg: float,
     max_lft: int,
+    max_band: int,
     voorkeur: List[int]
 ) -> List[Poule]:
     """
@@ -380,10 +390,13 @@ def merge_kleine_poules(
                 all_judokas = kleine_poule.judokas + andere.judokas
                 gewichten = [j.gewicht for j in all_judokas]
                 leeftijden = [j.leeftijd for j in all_judokas]
+                banden = [j.band for j in all_judokas]
 
                 if max(gewichten) - min(gewichten) > max_kg:
                     continue
                 if max(leeftijden) - min(leeftijden) > max_lft:
+                    continue
+                if max_band > 0 and max(banden) - min(banden) > max_band:
                     continue
 
                 # Check of merge score verbetert
@@ -407,6 +420,264 @@ def merge_kleine_poules(
 
 
 # =============================================================================
+# Greedy++ Optimalisatie
+# =============================================================================
+
+def check_poule_constraints(judokas: List[Judoka], max_kg: float, max_lft: int, max_band: int) -> bool:
+    """Check of lijst judoka's binnen constraints valt."""
+    if not judokas:
+        return True
+
+    gewichten = [j.gewicht for j in judokas]
+    leeftijden = [j.leeftijd for j in judokas]
+    banden = [j.band for j in judokas]
+
+    if max(gewichten) - min(gewichten) > max_kg:
+        return False
+    if max(leeftijden) - min(leeftijden) > max_lft:
+        return False
+    if max_band > 0 and max(banden) - min(banden) > max_band:
+        return False
+
+    return True
+
+
+def kan_toevoegen(judoka: Judoka, poule: Poule, max_kg: float, max_lft: int, max_band: int) -> bool:
+    """Check of judoka aan poule kan worden toegevoegd binnen constraints."""
+    if not poule.judokas:
+        return True
+
+    alle_judokas = poule.judokas + [judoka]
+    return check_poule_constraints(alle_judokas, max_kg, max_lft, max_band)
+
+
+def club_penalty(judokas: List[Judoka]) -> int:
+    """
+    Bereken club penalty voor een lijst judoka's.
+    Hoger = slechter (meer judoka's van zelfde club).
+    """
+    from collections import Counter
+    clubs = [j.club_id for j in judokas if j.club_id]
+    if not clubs:
+        return 0
+    counts = Counter(clubs)
+    return sum(count - 1 for count in counts.values())
+
+
+def vind_band_verbeterende_swap(
+    p1: Poule,
+    p2: Poule,
+    max_kg: float,
+    max_lft: int,
+    max_band: int
+) -> tuple:
+    """
+    Vind een swap die de totale band spreiding vermindert.
+    Returns (judoka_uit_p1, judoka_uit_p2) of None.
+    """
+    if not p1.judokas or not p2.judokas:
+        return None
+
+    oude_band_spread = (
+        max(j.band for j in p1.judokas) - min(j.band for j in p1.judokas) +
+        max(j.band for j in p2.judokas) - min(j.band for j in p2.judokas)
+    )
+
+    for j1 in p1.judokas:
+        for j2 in p2.judokas:
+            # Simuleer swap
+            p1_na = [j for j in p1.judokas if j is not j1] + [j2]
+            p2_na = [j for j in p2.judokas if j is not j2] + [j1]
+
+            # Check harde constraints
+            if not check_poule_constraints(p1_na, max_kg, max_lft, max_band):
+                continue
+            if not check_poule_constraints(p2_na, max_kg, max_lft, max_band):
+                continue
+
+            # Check verbetering
+            nieuwe_band_spread = (
+                max(j.band for j in p1_na) - min(j.band for j in p1_na) +
+                max(j.band for j in p2_na) - min(j.band for j in p2_na)
+            )
+
+            if nieuwe_band_spread < oude_band_spread:
+                return (j1, j2)
+
+    return None
+
+
+def vind_club_verbeterende_swap(
+    p1: Poule,
+    p2: Poule,
+    max_kg: float,
+    max_lft: int,
+    max_band: int
+) -> tuple:
+    """
+    Vind een swap die de totale club spreiding verbetert.
+    Returns (judoka_uit_p1, judoka_uit_p2) of None.
+    """
+    if not p1.judokas or not p2.judokas:
+        return None
+
+    oude_club_penalty = club_penalty(p1.judokas) + club_penalty(p2.judokas)
+
+    # Geen penalty = geen verbetering mogelijk
+    if oude_club_penalty == 0:
+        return None
+
+    for j1 in p1.judokas:
+        for j2 in p2.judokas:
+            # Skip als zelfde club (swap helpt niet)
+            if j1.club_id == j2.club_id:
+                continue
+
+            # Simuleer swap
+            p1_na = [j for j in p1.judokas if j is not j1] + [j2]
+            p2_na = [j for j in p2.judokas if j is not j2] + [j1]
+
+            # Check harde constraints
+            if not check_poule_constraints(p1_na, max_kg, max_lft, max_band):
+                continue
+            if not check_poule_constraints(p2_na, max_kg, max_lft, max_band):
+                continue
+
+            # Check verbetering
+            nieuwe_club_penalty = club_penalty(p1_na) + club_penalty(p2_na)
+
+            if nieuwe_club_penalty < oude_club_penalty:
+                return (j1, j2)
+
+    return None
+
+
+def greedy_plus_plus(
+    poules: List[Poule],
+    max_kg: float,
+    max_lft: int,
+    max_band: int,
+    voorkeur: List[int]
+) -> List[Poule]:
+    """
+    Greedy++ optimalisatie na sliding window.
+
+    Prioriteit (hoog → laag):
+    1. Orphan rescue - plaats orphans in bestaande poules
+    2. Rebalance naar 5 - verplaats judoka van 6 naar 4 om 5+5 te krijgen
+    3. Band swap - verbeter band spreiding
+    4. Club swap - verbeter club spreiding (alleen als rest gelijk)
+    """
+    if not poules:
+        return poules
+
+    max_size = max(voorkeur) if voorkeur else 6
+    min_size = min(voorkeur) if voorkeur else 3
+
+    verbeterd = True
+    max_iteraties = 100
+    iteratie = 0
+
+    while verbeterd and iteratie < max_iteraties:
+        iteratie += 1
+        verbeterd = False
+
+        # === STAP 1: Orphan rescue ===
+        orphans = [p for p in poules if len(p.judokas) == 1]
+        for orphan_poule in orphans:
+            orphan = orphan_poule.judokas[0]
+
+            beste_poule = None
+            beste_score_verbetering = 0
+
+            for poule in poules:
+                if poule is orphan_poule:
+                    continue
+                if len(poule.judokas) >= max_size:
+                    continue
+
+                if not kan_toevoegen(orphan, poule, max_kg, max_lft, max_band):
+                    continue
+
+                oude_score = (bereken_grootte_penalty(1, voorkeur) +
+                              bereken_grootte_penalty(len(poule.judokas), voorkeur))
+                nieuwe_score = bereken_grootte_penalty(len(poule.judokas) + 1, voorkeur)
+                verbetering = oude_score - nieuwe_score
+
+                if verbetering > beste_score_verbetering:
+                    beste_score_verbetering = verbetering
+                    beste_poule = poule
+
+            if beste_poule:
+                beste_poule.judokas.append(orphan)
+                poules.remove(orphan_poule)
+                verbeterd = True
+                break
+
+        if verbeterd:
+            continue
+
+        # === STAP 2: Rebalance naar 5 ===
+        # Zoek poule van 6 + poule van 4 → verplaats 1 judoka → 2x poule van 5
+        for p_groot in [p for p in poules if len(p.judokas) == 6]:
+            if verbeterd:
+                break
+            for p_klein in [p for p in poules if len(p.judokas) == 4]:
+                if p_groot is p_klein:
+                    continue
+                # Zoek judoka uit grote poule die naar kleine kan
+                for judoka in p_groot.judokas:
+                    if kan_toevoegen(judoka, p_klein, max_kg, max_lft, max_band):
+                        # Check of grote poule nog valid is zonder deze judoka
+                        p_groot_na = [j for j in p_groot.judokas if j is not judoka]
+                        if check_poule_constraints(p_groot_na, max_kg, max_lft, max_band):
+                            p_groot.judokas.remove(judoka)
+                            p_klein.judokas.append(judoka)
+                            verbeterd = True
+                            break
+                if verbeterd:
+                    break
+
+        if verbeterd:
+            continue
+
+        # === STAP 3: Band swap ===
+        for i, p1 in enumerate(poules):
+            if verbeterd:
+                break
+            for p2 in poules[i+1:]:
+                swap = vind_band_verbeterende_swap(p1, p2, max_kg, max_lft, max_band)
+                if swap:
+                    j1, j2 = swap
+                    p1.judokas.remove(j1)
+                    p2.judokas.remove(j2)
+                    p1.judokas.append(j2)
+                    p2.judokas.append(j1)
+                    verbeterd = True
+                    break
+
+        if verbeterd:
+            continue
+
+        # === STAP 4: Club spreiding ===
+        for i, p1 in enumerate(poules):
+            if verbeterd:
+                break
+            for p2 in poules[i+1:]:
+                swap = vind_club_verbeterende_swap(p1, p2, max_kg, max_lft, max_band)
+                if swap:
+                    j1, j2 = swap
+                    p1.judokas.remove(j1)
+                    p2.judokas.remove(j2)
+                    p1.judokas.append(j2)
+                    p2.judokas.append(j1)
+                    verbeterd = True
+                    break
+
+    return poules
+
+
+# =============================================================================
 # Solve Function
 # =============================================================================
 
@@ -418,6 +689,7 @@ def solve(input_data: dict) -> dict:
     {
         "max_kg_verschil": 3.0,
         "max_leeftijd_verschil": 2,
+        "max_band_verschil": 0,  // 0 = geen limiet
         "poule_grootte_voorkeur": [5, 4, 6, 3],
         "judokas": [
             {"id": 1, "leeftijd": 6, "gewicht": 22.5, "band": 2, "club_id": 1},
@@ -435,6 +707,7 @@ def solve(input_data: dict) -> dict:
     try:
         max_kg = float(input_data.get('max_kg_verschil', 3.0))
         max_lft = int(input_data.get('max_leeftijd_verschil', 2))
+        max_band = int(input_data.get('max_band_verschil', 0))  # 0 = geen limiet
         voorkeur = input_data.get('poule_grootte_voorkeur', [5, 4, 6, 3])
 
         judokas_data = input_data.get('judokas', [])
@@ -456,7 +729,11 @@ def solve(input_data: dict) -> dict:
                 "stats": {"totaal_judokas": 0, "totaal_poules": 0, "score": 0}
             }
 
-        poules = sliding_window(judokas, max_kg, max_lft, voorkeur)
+        # Sliding window basis indeling
+        poules = sliding_window(judokas, max_kg, max_lft, max_band, voorkeur)
+
+        # Greedy++ optimalisatie
+        poules = greedy_plus_plus(poules, max_kg, max_lft, max_band, voorkeur)
 
         poules_output = []
         grootte_counts = {}
