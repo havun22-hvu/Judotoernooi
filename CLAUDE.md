@@ -62,6 +62,24 @@ cd laravel && php artisan serve --port=8007
 - Database migrations op production
 - Composer/npm packages installeren
 
+### ⛔ HANDS OFF TEST DATA
+**NOOIT zonder expliciete vraag:**
+- Toernooien aanmaken via tinker/code
+- Judoka's, clubs, of andere data toevoegen
+- Bestaande data wijzigen of verplaatsen
+- `migrate:fresh` uitvoeren (wist ALLE data!)
+
+**WEL toegestaan:**
+- Code lezen en analyseren
+- Code verbeteren/fixen
+- Browser gebruiken om te BEKIJKEN (niet wijzigen)
+- Vragen stellen over wat je ziet
+
+**Bij testen:**
+- Gebruik ALLEEN data die de gebruiker aanlevert
+- Als je data nodig hebt: VRAAG de gebruiker om het aan te maken
+- Los geen "testdata problemen" zelf op
+
 ### Communication
 - Antwoord max 20-30 regels
 - Bullet points, direct to the point
