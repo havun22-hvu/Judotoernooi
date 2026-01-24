@@ -545,114 +545,87 @@ Roept Python solver aan voor dynamische categorieën:
 - `berekenIndeling()` - Wrapper rond Python solver
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
 
-#### Algoritme Python Solver V2 (Cascading Band Verdeling)
+#### Algoritme Python Solver V2 (Greedy + Slimme Herverdeling)
 
 ```
 INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, max_band, poule_grootte_voorkeur)
 OUTPUT: Poules binnen constraints
 
 ============================================================================
-KERNPRINCIPE: INVENTARISATIE + RESTANTEN VOORAF BEPALEN
+KERNPRINCIPE: SIMPEL GREEDY + ACHTERAF FIXEN
 ============================================================================
 
-PROBLEEM met greedy aanpak:
-  - Maakt poules zonder overzicht
-  - Weet niet hoeveel judoka's er nog komen
-  - Orphans ontstaan "per ongeluk"
-
-OPLOSSING: Tel eerst, bepaal restanten vooraf, verdeel dan
-  - Tel hoeveel judoka's per band niveau
-  - Bereken hoeveel poules + restanten dat wordt
-  - Bepaal VOORAF wie de restanten zijn (grensgevallen)
-  - Restanten schuiven door naar volgende band groep
+Simpele aanpak die goed werkt:
+1. Sorteer alle judoka's op prioriteit
+2. Maak poules greedy (beste match zoeken)
+3. Fix kleine poules achteraf als mogelijk
+4. Accepteer orphans die nergens passen
 
 ============================================================================
-STAP 0: INVENTARISATIE
+STAP 1: SORTEER OP PRIORITEITEN
 ============================================================================
 
-Tel judoka's per band niveau:
-  - Wit (6e kyu):   2 judoka's
-  - Geel (5e kyu): 25 judoka's
-  - Oranje (4e kyu): 15 judoka's
-  - Groen (3e kyu): 10 judoka's
+Sorteer alle judoka's op config prioriteiten (default: band → gewicht → leeftijd)
 
-Combineer aangrenzende banden (max_band_verschil = 1):
-  - Groep 1: Wit(2) + Geel(25) = 27 judoka's
-  - Groep 2: Geel(restant) + Oranje(15)
-  - Groep 3: Oranje(restant) + Groen(10)
+Resultaat:
+  wit/22kg, wit/23kg, wit/25kg, geel/23kg, geel/26kg, oranje/27kg, oranje/30kg...
+
+Lage banden en lage gewichten komen eerst = bij elkaar in poules.
 
 ============================================================================
-STAP 1: BEREKEN RESTANTEN PER GROEP
+STAP 2: SLIMME GREEDY VERDELING
 ============================================================================
 
-Groep 1: Wit + Geel = 27 judoka's
-  27 / 5 = 5 poules van 5 + 2 RESTANT
+Voor elke poule:
+1. Start met eerste ongeplaatste judoka (anchor)
+2. Zoek in ALLE overgebleven judoka's wie het beste past:
+   - Moet voldoen aan: max_kg, max_lft, max_band t.o.v. IEDEREEN in poule
+   - Score: zelfde band + dicht gewicht = beste match
+3. Voeg beste match toe, herhaal tot poule vol (ideale grootte)
+4. Geen match meer? Sluit poule, start nieuwe
 
-Wie worden de 2 restanten?
-  → De "grensgevallen" die beter passen in volgende groep
-  → Sorteer op: band↓ (hoogste), gewicht↓ (zwaarste), leeftijd↓ (oudste)
-  → Pak top 2 als kandidaat-restanten
-
-============================================================================
-STAP 2: VALIDEER RESTANTEN (KRITIEK!)
-============================================================================
-
-Voor elke kandidaat-restant, CHECK:
-  - Past de LEEFTIJD in de volgende groep?
-
-VOORBEELD:
-  Kandidaat: Geel, 35kg, 7 jaar
-  Volgende groep (Geel+Oranje): leeftijd range 9-11 jaar
-  → 7 jaar past NIET!
-
-  ZOEK ALTERNATIEF:
-    - Zelfde band (Geel)
-    - In "bovenklasse" qua gewicht (niet de lichtste)
-    - WEL passende leeftijd (9+ jaar)
-
-  WISSEL: 7-jarige blijft in Groep 1, 9-jarige wordt restant
-
-RESULTAAT: Alle restanten passen GEGARANDEERD in volgende groep
+Dit is NIET lineair door de lijst lopen, maar actief zoeken naar beste match!
 
 ============================================================================
-STAP 3: VERDEEL DE BLIJVERS
+STAP 3: HERVERDEEL KLEINE POULES
 ============================================================================
 
-De judoka's die NIET restant zijn worden verdeeld:
-  - Sorteer op prioriteiten (band, gewicht, leeftijd volgens config)
-  - Maak poules binnen alle constraints (max_kg, max_lft, max_band)
-  - Zoveel mogelijk gelijke band + gewicht bij elkaar
+Na greedy verdeling kunnen er kleine poules (1-2 judoka's) overblijven.
+
+STRATEGIE 1: Merge kleine poules
+  - Als twee kleine poules samen passen (alle constraints OK)
+  - Voeg ze samen tot één grotere poule
+
+STRATEGIE 2: Steel van te grote poules
+  - Als er poules zijn groter dan ideaal (bijv. 6 bij voorkeur 5)
+  - Zoek judoka die past bij kleine poule
+  - Verplaats alleen als die judoka nog niet eerder verplaatst is
 
 ============================================================================
-STAP 4: CASCADE NAAR VOLGENDE GROEP
+STAP 4: ACCEPTEER ORPHANS
 ============================================================================
 
-Restanten (2 gelen) → voeg toe aan Groep 2 (Geel+Oranje)
-Herhaal STAP 1-4 voor Groep 2
+Judoka's die nergens passen blijven als orphan (poule van 1-2):
+  - Te groot gewichtsverschil met anderen
+  - Te groot bandverschil
+  - Te groot leeftijdsverschil
 
-  Groep 2: RestGeel(2) + Oranje(15) = 17 judoka's
-  17 / 5 = 3 poules van 5 + 2 RESTANT
-  Restanten = zwaarste/oudste oranje → door naar Groep 3
-
-============================================================================
-RESTANT IN LICHTSTE POULES (EERLIJKER)
-============================================================================
-
-Restanten (hogere band) worden in LICHTERE poules geplaatst:
-  - Hogere band = meer ervaring
-  - Lichtere tegenstanders = compensatie
-  - Voorbeeld: Oranje in poule met lichtste groenen = eerlijk
+Dit is CORRECT gedrag! Organisator kan handmatig oplossen of constraints aanpassen.
 
 ============================================================================
-SAMENVATTING FLOW
+SAMENVATTING
 ============================================================================
 
-1. INVENTARISEER: Tel per band, combineer aangrenzende
-2. BEREKEN: Hoeveel poules + restanten per groep
-3. SELECTEER RESTANTEN: Grensgevallen (band↓, gewicht↓, leeftijd↓)
-4. VALIDEER: Past restant qua leeftijd in volgende groep? Zo niet: wissel
-5. VERDEEL BLIJVERS: Maak poules, groepeer op band/gewicht
-6. CASCADE: Restanten → volgende groep, herhaal
+1. SORTEER: Alle judoka's op prioriteit (laag → hoog)
+2. GREEDY: Maak poules door beste match te zoeken
+3. HERVERDEEL: Merge kleine poules, steel van grote
+4. ACCEPTEER: Orphans die niet passen
+
+Voordelen:
+- Simpel en begrijpelijk
+- Geen ingewikkelde cascading logica
+- Resultaat is voorspelbaar
+- Orphans zijn echt orphans (geen false positives)
 
 ```
 
