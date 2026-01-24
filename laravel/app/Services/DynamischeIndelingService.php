@@ -91,6 +91,7 @@ class DynamischeIndelingService
             'band_grens' => $this->bandNaarNummer($bandGrens ?: 'wit') - 1, // -1 als geen grens
             'band_verschil_beginners' => $bandVerschilBeginners,
             'poule_grootte_voorkeur' => $this->config['poule_grootte_voorkeur'],
+            'verdeling_prioriteiten' => $this->config['verdeling_prioriteiten'] ?? ['leeftijd', 'gewicht', 'band'],
             'judokas' => [],
         ];
 
