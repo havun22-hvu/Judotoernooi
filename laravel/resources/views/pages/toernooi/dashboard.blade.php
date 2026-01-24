@@ -102,12 +102,30 @@
                 👥 Deelnemerslijst ({{ $statistieken['totaal_judokas'] }})
             </a>
             @if($statistieken['totaal_judokas'] > 0)
-            <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full text-left bg-green-100 hover:bg-green-200 p-3 rounded">
-                    🎯 Genereer Poule-indeling
-                </button>
-            </form>
+                @php
+                    $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
+                    $heeftOverlap = false;
+                    if (!empty($toernooi->gewichtsklassen)) {
+                        $classifier = new \App\Services\CategorieClassifier($toernooi->gewichtsklassen);
+                        $heeftOverlap = !empty($classifier->detectOverlap());
+                    }
+                    $heeftCategorieProbleem = $nietGecategoriseerd > 0 || $heeftOverlap;
+                @endphp
+                @if($heeftCategorieProbleem)
+                <div class="w-full bg-gray-200 p-3 rounded opacity-60 cursor-not-allowed">
+                    <span class="text-gray-500">🎯 Genereer Poule-indeling</span>
+                    <p class="text-xs text-red-600 mt-1">
+                        ⚠️ Los eerst de categorie-problemen op
+                    </p>
+                </div>
+                @else
+                <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full text-left bg-green-100 hover:bg-green-200 p-3 rounded">
+                        🎯 Genereer Poule-indeling
+                    </button>
+                </form>
+                @endif
             @endif
         </div>
     </div>

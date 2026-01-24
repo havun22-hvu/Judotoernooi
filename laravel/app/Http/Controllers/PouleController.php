@@ -6,6 +6,7 @@ use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
+use App\Services\CategorieClassifier;
 use App\Services\EliminatieService;
 use App\Services\PouleIndelingService;
 use App\Services\WedstrijdSchemaService;
@@ -174,6 +175,30 @@ class PouleController extends Controller
 
     public function genereer(Toernooi $toernooi, Request $request): RedirectResponse
     {
+        // Block if category problems exist
+        $errors = [];
+
+        // Check for uncategorized judokas
+        $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
+        if ($nietGecategoriseerd > 0) {
+            $errors[] = "{$nietGecategoriseerd} judoka('s) zijn niet gecategoriseerd.";
+        }
+
+        // Check for overlapping categories
+        $config = $toernooi->gewichtsklassen ?? [];
+        if (!empty($config)) {
+            $classifier = new CategorieClassifier($config);
+            $overlaps = $classifier->detectOverlap();
+            if (!empty($overlaps)) {
+                $errors[] = 'Er zijn overlappende categorieën.';
+            }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->route('toernooi.edit', $toernooi)
+                ->with('error', 'Kan geen poule-indeling genereren: ' . implode(' ', $errors) . ' Pas eerst de categorie-instellingen aan.');
+        }
+
         // Generate pool division (herberkenKlassen() handles sort fields)
         $statistieken = $this->pouleService->genereerPouleIndeling($toernooi);
 

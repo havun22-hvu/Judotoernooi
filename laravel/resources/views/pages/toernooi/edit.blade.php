@@ -869,8 +869,9 @@
                         .filter(g => g) || [];
                     const systeem = item.querySelector('.systeem-select')?.value || 'poules';
                     const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
-                    const bandStreng = item.querySelector('.band-streng-checkbox')?.checked || false;
-                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_streng_beginners: bandStreng, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
+                    const bandGrens = item.querySelector('.band-grens-select')?.value || '';
+                    const bandVerschil1 = parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1;
+                    data[key] = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
                 });
                 jsonInput.value = JSON.stringify(data);
             }
@@ -973,7 +974,8 @@
                 const maxKg = item.max_kg_verschil || 0;
                 const maxLft = item.max_leeftijd_verschil || 0;
                 const maxBand = item.max_band_verschil || 0;
-                const bandStrengBeginners = item.band_streng_beginners ?? false;
+                const bandGrens = item.band_grens || '';
+                const bandVerschil1 = item.band_verschil_beginners ?? 1;
 
                 // Support both old band_tot and new band_filter
                 let bandFilter = item.band_filter || item.band_tot || '';
@@ -1062,20 +1064,30 @@
                                    min="0" max="5" step="1"
                                    title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
                         </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-gray-600 text-sm whitespace-nowrap">Δband:</label>
-                            <input type="number" name="gewichtsklassen_max_band[${key}]"
-                                   value="${maxBand}"
-                                   class="max-band-input w-12 border rounded px-1 py-1 text-center text-sm"
-                                   min="0" max="6" step="1"
-                                   title="0 = geen limiet, 2 = max 2 niveaus">
+                        <div class="flex items-center gap-1">
+                            <label class="text-gray-500 text-xs whitespace-nowrap">tot</label>
+                            <select name="gewichtsklassen_band_grens[${key}]"
+                                    class="band-grens-select border rounded px-1 py-0.5 text-xs bg-white"
+                                    title="Tot welke band geldt het eerste verschil">
+                                <option value="" ${!bandGrens ? 'selected' : ''}>-</option>
+                                <option value="wit" ${bandGrens === 'wit' ? 'selected' : ''}>wit</option>
+                                <option value="geel" ${bandGrens === 'geel' ? 'selected' : ''}>geel</option>
+                                <option value="oranje" ${bandGrens === 'oranje' ? 'selected' : ''}>oranje</option>
+                            </select>
+                            <label class="text-gray-500 text-xs">Δ:</label>
+                            <input type="number" name="gewichtsklassen_band_verschil_1[${key}]"
+                                   value="${bandVerschil1}"
+                                   class="band-verschil-1-input w-8 border rounded px-1 py-0.5 text-center text-xs"
+                                   min="0" max="3" step="1"
+                                   title="Max band verschil voor beginners">
                         </div>
                         <div class="flex items-center gap-1">
-                            <input type="checkbox" name="gewichtsklassen_band_streng[${key}]"
-                                   ${bandStrengBeginners ? 'checked' : ''}
-                                   class="band-streng-checkbox"
-                                   title="Wit/geel max 1 niveau verschil">
-                            <label class="text-gray-500 text-xs whitespace-nowrap">streng</label>
+                            <label class="text-gray-500 text-xs whitespace-nowrap">Δband:</label>
+                            <input type="number" name="gewichtsklassen_max_band[${key}]"
+                                   value="${maxBand}"
+                                   class="max-band-input w-8 border rounded px-1 py-0.5 text-center text-xs"
+                                   min="0" max="6" step="1"
+                                   title="0 = geen limiet, max band verschil algemeen">
                         </div>
                         <div class="gewichten-container flex-1 ${gewichtenHidden}">
                             <input type="text" name="gewichtsklassen[${key}]"
@@ -1237,7 +1249,8 @@
                         max_kg_verschil: parseFloat(item.querySelector('.max-kg-input')?.value) || 0,
                         max_leeftijd_verschil: parseInt(item.querySelector('.max-lft-input')?.value) || 0,
                         max_band_verschil: parseInt(item.querySelector('.max-band-input')?.value) || 0,
-                        band_streng_beginners: item.querySelector('.band-streng-checkbox')?.checked || false,
+                        band_grens: item.querySelector('.band-grens-select')?.value || '',
+                        band_verschil_beginners: parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1,
                         band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                         wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',

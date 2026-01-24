@@ -116,6 +116,20 @@
     <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
+        @php
+            $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
+            $heeftOverlap = false;
+            if (!empty($toernooi->gewichtsklassen)) {
+                $classifier = new \App\Services\CategorieClassifier($toernooi->gewichtsklassen);
+                $heeftOverlap = !empty($classifier->detectOverlap());
+            }
+            $heeftCategorieProbleem = $nietGecategoriseerd > 0 || $heeftOverlap;
+        @endphp
+        @if($heeftCategorieProbleem)
+        <span class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed opacity-60" title="Los eerst categorie-problemen op">
+            (her)Verdelen
+        </span>
+        @else
         <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
               data-loading="Poule-indeling genereren..."
               onsubmit="return {{ $poules->count() }} === 0 || confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
@@ -124,6 +138,7 @@
                 (her)Verdelen
             </button>
         </form>
+        @endif
         <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             Verifieer poules
         </button>
