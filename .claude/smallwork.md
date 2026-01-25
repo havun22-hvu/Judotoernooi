@@ -41,6 +41,11 @@
 - **Wat:** Zoekfunctie per judoka, info tooltip, → naar matten knop
 - **Bestanden:** poules.blade.php
 
+### Feat: Nieuwe poule knop in blokbalk
+- **Type:** Feature
+- **Wat:** Groene "+ Poule" knop in wedstrijddag blokbalk
+- **Bestanden:** poules.blade.php, WedstrijddagController.php
+
 ---
 
 <!--
