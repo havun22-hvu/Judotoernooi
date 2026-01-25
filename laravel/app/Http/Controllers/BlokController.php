@@ -352,7 +352,7 @@ class BlokController extends Controller
         $totaalVerwijderd = 0;
 
         foreach ($clubs as $club) {
-            $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
+            $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi, true);
             $huidigeKaarten = CoachKaart::where('club_id', $club->id)
                 ->where('toernooi_id', $toernooi->id)
                 ->orderBy('id')
