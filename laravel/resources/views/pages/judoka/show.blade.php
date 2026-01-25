@@ -93,7 +93,14 @@
     @endif
 
     <div class="flex justify-between items-center">
-        <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+        @php
+            $terugUrl = route('toernooi.judoka.index', $toernooi);
+            if (request('filter') === 'onvolledig') {
+                $terugUrl .= '#onvolledig';
+            }
+        @endphp
+        <a href="{{ $terugUrl }}" class="text-blue-600 hover:text-blue-800"
+           @if(request('filter') === 'onvolledig') onclick="sessionStorage.setItem('toonOnvolledig', 'true')" @endif>
             &larr; Terug naar lijst
         </a>
         <div class="flex gap-2">

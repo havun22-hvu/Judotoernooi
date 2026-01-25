@@ -230,8 +230,11 @@ class JudokaController extends Controller
         $header = array_shift($data);
 
         // Bepaal of toernooi vaste gewichtsklassen heeft (minstens 1 categorie met gevulde gewichten array)
+        // Filter metadata keys (beginnen met _) - alleen echte categorieën tellen mee
         $config = $toernooi->gewichtsklassen ?? [];
-        $heeftVasteGewichtsklassen = collect($config)->contains(fn($cat) => is_array($cat) && !empty($cat['gewichten'] ?? []));
+        $heeftVasteGewichtsklassen = collect($config)
+            ->filter(fn($cat, $key) => !str_starts_with($key, '_') && is_array($cat))
+            ->contains(fn($cat) => !empty($cat['gewichten'] ?? []));
 
         // Analyse columns (alleen gewichtsklasse detecteren als toernooi vaste gewichtsklassen heeft)
         $analyse = $this->importService->analyseerCsvData($header, $data, $heeftVasteGewichtsklassen);

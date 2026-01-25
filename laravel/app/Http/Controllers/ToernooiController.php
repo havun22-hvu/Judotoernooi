@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ToernooiRequest;
 use App\Models\Judoka;
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Services\CategorieClassifier;
 use App\Services\PouleIndelingService;
@@ -23,9 +24,25 @@ class ToernooiController extends Controller
 
     public function index(): View
     {
-        $toernooien = Toernooi::orderByDesc('datum')->paginate(10);
+        // Only sitebeheerder can access this page
+        $user = auth('organisator')->user();
+        if (!$user || !$user->isSitebeheerder()) {
+            abort(403, 'Alleen sitebeheerders hebben toegang tot deze pagina.');
+        }
 
-        return view('pages.toernooi.index', compact('toernooien'));
+        // Group toernooien by organisator for superadmin overview
+        $organisatoren = Organisator::with(['toernooien' => function($q) {
+            $q->withCount(['judokas', 'poules'])
+              ->orderByDesc('updated_at');
+        }])->orderBy('naam')->get();
+
+        // Also get toernooien without organisator (legacy/orphaned)
+        $toernooienZonderOrganisator = Toernooi::whereDoesntHave('organisatoren')
+            ->withCount(['judokas', 'poules'])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return view('pages.toernooi.index', compact('organisatoren', 'toernooienZonderOrganisator'));
     }
 
     public function create(): View

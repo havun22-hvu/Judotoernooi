@@ -1,76 +1,133 @@
 @extends('layouts.app')
 
-@section('title', 'Toernooien')
+@section('title', 'Alle Toernooien - Sitebeheer')
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Toernooien</h1>
-    <a href="{{ route('toernooi.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        + Nieuw Toernooi
-    </a>
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800">Sitebeheer - Alle Toernooien</h1>
+        <p class="text-gray-500 mt-1">Overzicht van alle organisatoren en hun toernooien</p>
+    </div>
 </div>
 
-<div class="bg-white rounded-lg shadow overflow-hidden">
+{{-- Statistieken --}}
+<div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-3xl font-bold text-blue-600">{{ $organisatoren->count() }}</div>
+        <div class="text-gray-500 text-sm">Organisatoren</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-3xl font-bold text-green-600">{{ $organisatoren->sum(fn($o) => $o->toernooien->count()) + $toernooienZonderOrganisator->count() }}</div>
+        <div class="text-gray-500 text-sm">Toernooien totaal</div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="text-3xl font-bold text-purple-600">{{ $organisatoren->sum(fn($o) => $o->toernooien->sum('judokas_count')) + $toernooienZonderOrganisator->sum('judokas_count') }}</div>
+        <div class="text-gray-500 text-sm">Judoka's totaal</div>
+    </div>
+</div>
+
+{{-- Organisatoren met toernooien --}}
+@foreach($organisatoren as $organisator)
+<div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
+    {{-- Organisator header --}}
+    <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+        <div>
+            <h2 class="text-lg font-bold text-gray-800">
+                @if($organisator->isSitebeheerder())
+                    <span class="text-purple-600">👑</span>
+                @endif
+                {{ $organisator->naam }}
+            </h2>
+            <div class="text-sm text-gray-500">
+                {{ $organisator->email }}
+                @if($organisator->isSitebeheerder())
+                    <span class="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">Sitebeheerder</span>
+                @endif
+            </div>
+        </div>
+        <div class="text-right text-sm text-gray-500">
+            <div>{{ $organisator->toernooien->count() }} toernooi{{ $organisator->toernooien->count() != 1 ? 'en' : '' }}</div>
+            <div>Aangemaakt: {{ $organisator->created_at?->format('d-m-Y') ?? '-' }}</div>
+        </div>
+    </div>
+
+    {{-- Toernooien tabel --}}
+    @if($organisator->toernooien->count() > 0)
     <table class="min-w-full">
-        <thead class="bg-gray-50">
+        <thead class="bg-gray-100">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organisatie</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poules</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aangemaakt</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Laatst gebruikt</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
-            @forelse($toernooien as $toernooi)
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap font-medium">{{ $toernooi->naam }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ $toernooi->datum->format('d-m-Y') }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">{{ $toernooi->organisatie }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    @if($toernooi->is_actief)
-                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Actief</span>
-                    @else
-                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inactief</span>
-                    @endif
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                    <a href="{{ route('toernooi.show', $toernooi) }}" class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded" title="Start toernooi">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Start
-                    </a>
-                    <button onclick="confirmReset({{ $toernooi->id }}, '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded" title="Reset toernooi (behoud judoka's)">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        Reset
-                    </button>
-                    {{-- Delete voor eigenaar of sitebeheerder --}}
-                    @if(auth('organisator')->user()?->isSitebeheerder() || auth('organisator')->user()?->ownsToernooi($toernooi))
-                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded" title="Verwijder toernooi permanent">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Delete
-                    </button>
-                    @endif
+            @foreach($organisator->toernooien as $toernooi)
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-3 whitespace-nowrap font-medium">{{ $toernooi->naam }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600">{{ $toernooi->datum?->format('d-m-Y') ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->judokas_count }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->poules_count }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->created_at?->format('d-m-Y H:i') ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->updated_at?->diffForHumans() ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap space-x-2">
+                    <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
+                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>
-            @empty
+            @endforeach
+        </tbody>
+    </table>
+    @else
+    <div class="px-6 py-4 text-gray-500 text-sm italic">Geen toernooien</div>
+    @endif
+</div>
+@endforeach
+
+{{-- Toernooien zonder organisator --}}
+@if($toernooienZonderOrganisator->count() > 0)
+<div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
+    <div class="bg-orange-50 px-6 py-4 border-b">
+        <h2 class="text-lg font-bold text-orange-800">⚠️ Toernooien zonder organisator</h2>
+        <div class="text-sm text-orange-600">Deze toernooien hebben geen gekoppelde organisator</div>
+    </div>
+    <table class="min-w-full">
+        <thead class="bg-gray-100">
             <tr>
-                <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                    Nog geen toernooien. <a href="{{ route('toernooi.create') }}" class="text-blue-600">Maak er een aan</a>.
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poules</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aangemaakt</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Laatst gebruikt</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            @foreach($toernooienZonderOrganisator as $toernooi)
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-3 whitespace-nowrap font-medium">{{ $toernooi->naam }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-600">{{ $toernooi->datum?->format('d-m-Y') ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->judokas_count }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->poules_count }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->created_at?->format('d-m-Y H:i') ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->updated_at?->diffForHumans() ?? '-' }}</td>
+                <td class="px-6 py-3 whitespace-nowrap space-x-2">
+                    <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
+                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
 </div>
+@endif
 
-<div class="mt-4">
-    {{ $toernooien->links() }}
-</div>
-
-<!-- Hidden forms for reset and delete -->
-<form id="reset-form" method="POST" style="display:none;">
-    @csrf
-</form>
+<!-- Hidden form for delete -->
 <form id="delete-form" method="POST" style="display:none;">
     @csrf
     @method('DELETE')
@@ -78,29 +135,9 @@
 </form>
 
 <script>
-function confirmReset(id, naam) {
-    if (confirm(`⚠️ RESET TOERNOOI\n\nWeet je zeker dat je "${naam}" wilt resetten?\n\nDit verwijdert:\n• Alle poules en wedstrijden\n• Alle weeg-resultaten\n• Alle uitslagen\n\nDit behoudt:\n• Alle judoka's\n• Toernooi instellingen\n• Blokken en matten`)) {
-        const form = document.getElementById('reset-form');
-        form.action = `/toernooi/${id}/reset`;
-        form.submit();
-    }
-}
-
 function confirmDelete(slug, naam) {
-    // Stap 1: Vraag of presets bewaard moeten worden
-    const presetKeuze = prompt('Wil je je gewichtsklassen-presets BEWAREN?\n\nTyp "ja" om presets te bewaren voor toekomstige toernooien\nTyp "nee" om alles te verwijderen');
-
-    if (presetKeuze === null) {
-        return; // Gebruiker annuleerde
-    }
-
-    const bewaarPresets = presetKeuze.toLowerCase() === 'ja';
-    const presetTekst = bewaarPresets ? '(presets worden bewaard)' : '(presets worden ook verwijderd)';
-
-    // Stap 2: Definitieve bevestiging
-    if (confirm(`🚨 VERWIJDER "${naam}" PERMANENT?\n\n${presetTekst}\n\nDit verwijdert:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!`)) {
+    if (confirm(`🚨 VERWIJDER "${naam}" PERMANENT?\n\nDit verwijdert:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!`)) {
         const form = document.getElementById('delete-form');
-        document.getElementById('bewaar-presets').value = bewaarPresets ? '1' : '0';
         form.action = `/toernooi/${slug}`;
         form.submit();
     }
