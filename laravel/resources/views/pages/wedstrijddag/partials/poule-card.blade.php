@@ -5,7 +5,8 @@
     $aantalWedstrijden = $isEliminatie
         ? $poule->berekenAantalWedstrijden($aantalActief)
         : ($aantalActief >= 2 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0);
-    $isProblematisch = !$isEliminatie && $aantalActief > 0 && $aantalActief < 3;
+    // Problematisch: normale poule <3 judoka's OF eliminatie <8 judoka's
+    $isProblematisch = $aantalActief > 0 && $aantalActief < ($isEliminatie ? 8 : 3);
 
     // Check gewichtsprobleem for dynamische poules
     $heeftGewichtsprobleem = false;
@@ -64,8 +65,9 @@
     data-actief="{{ $aantalActief }}"
 >
     @php
-        $headerBg = $aantalActief === 0 ? 'bg-gray-500' : ($isEliminatie ? 'bg-orange-600' : ($isProblematisch ? 'bg-red-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')));
-        $headerSubtext = $aantalActief === 0 ? 'text-gray-300' : ($isEliminatie ? 'text-orange-200' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')));
+        // Problematisch krijgt voorrang (rood), dan eliminatie (oranje), dan gewichtsprobleem (oranje), anders blauw
+        $headerBg = $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : ($isEliminatie ? 'bg-orange-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')));
+        $headerSubtext = $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : ($isEliminatie ? 'text-orange-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')));
     @endphp
     <div class="{{ $headerBg }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
         <div class="flex-1">
