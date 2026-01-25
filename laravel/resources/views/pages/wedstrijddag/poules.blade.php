@@ -220,16 +220,24 @@
                         $aantalActiefElim = $elimPoule->judokas->count() - $verwijderdeElim->count();
                     @endphp
                     <div id="poule-{{ $elimPoule->id }}" class="col-span-2 md:col-span-3 lg:col-span-4 border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}">
+                        @php $isDoorgestuurdElim = $elimPoule->doorgestuurd_op !== null; @endphp
                         <div class="bg-orange-600 text-white px-4 py-2 flex justify-between items-center">
                             <div>
                                 <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimPoule->titel ?? ($elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse) }} <span class="font-normal text-orange-200">(Eliminatie)</span></div>
                                 <div class="text-sm text-orange-200">{{ $aantalActiefElim }} judoka's ~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</div>
                             </div>
-                            <div class="relative" x-data="{ open: false }">
-                                <button @click="open = !open" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-0.5 rounded">⚙</button>
-                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
-                                    <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">Naar poules</button>
-                                    <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
+                            <div class="flex items-center gap-1">
+                                <button
+                                    onclick="naarZaaloverzichtPoule({{ $elimPoule->id }}, this)"
+                                    class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurdElim ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-400' }}"
+                                    title="{{ $isDoorgestuurdElim ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                                >{{ $isDoorgestuurdElim ? '✓' : '→' }}</button>
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-0.5 rounded">⚙</button>
+                                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
+                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">Naar poules</button>
+                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
