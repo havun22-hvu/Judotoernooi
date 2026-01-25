@@ -21,22 +21,14 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
-                @if(isset($useCode) && $useCode)
                 <form action="{{ route('coach.portal.logout', $code) }}" method="POST">
                     @csrf
                     <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
                 </form>
-                @else
-                <form action="{{ route('coach.logout', $uitnodiging->token) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
-                </form>
-                @endif
             </div>
 
             <!-- Navigation tabs -->
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
-                @if(isset($useCode) && $useCode)
                 <a href="{{ route('coach.portal.judokas', $code) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
                     Judoka's
@@ -53,16 +45,6 @@
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Resultaten
                 </a>
-                @else
-                <a href="{{ route('coach.judokas', $uitnodiging->token) }}"
-                   class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
-                    Judoka's
-                </a>
-                <a href="{{ route('coach.weegkaarten', $uitnodiging->token) }}"
-                   class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Weegkaarten
-                </a>
-                @endif
             </div>
 
             @if(!$inschrijvingOpen)
@@ -134,7 +116,7 @@
                 <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
             </button>
 
-            <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.store', $code) : route('coach.judoka.store', $uitnodiging->token) }}" method="POST"
+            <form action="{{ route('coach.portal.judoka.store', $code) }}" method="POST"
                   x-show="open" x-collapse class="mt-4 pt-4 border-t">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,7 +199,6 @@
         @endphp
 
         <!-- Sync Status Box -->
-        @if(isset($useCode) && $useCode)
         <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap items-center gap-2 text-sm">
@@ -269,7 +250,6 @@
             </div>
             <p class="text-xs text-gray-500 mt-2">Sync stuurt alleen volledige judoka's door naar de organisator. Na sync kun je nog wijzigen, maar dan moet je opnieuw syncen.</p>
         </div>
-        @endif
 
         @if($onvolledigeJudokas->count() > 0)
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -351,7 +331,7 @@
                     @endif
                 </div>
                 @if(($volledigeOnbetaald ?? collect())->count() > 0)
-                <a href="{{ isset($useCode) && $useCode ? route('coach.portal.afrekenen', $code) : route('coach.afrekenen', $uitnodiging->token) }}"
+                <a href="{{ route('coach.portal.afrekenen', $code) }}"
                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     €{{ number_format($volledigeOnbetaald->count() * ($inschrijfgeld ?? 0), 2, ',', '.') }}
@@ -439,7 +419,7 @@
                             @if($judoka->telefoon)<a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800 text-sm">WA</a>@endif
                             @if($magWijzigen ?? true)<button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
-                            <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.destroy', [$code, $judoka]) : route('coach.judoka.destroy', [$uitnodiging->token, $judoka]) }}" method="POST" class="inline"
+                            <form action="{{ route('coach.portal.judoka.destroy', [$code, $judoka]) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-lg">×</button>
                             </form>
@@ -451,7 +431,7 @@
                     <!-- Edit mode -->
                     @if($inschrijvingOpen && ($magWijzigen ?? true))
                     <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }})" class="mt-3">
-                        <form action="{{ isset($useCode) && $useCode ? route('coach.portal.judoka.update', [$code, $judoka]) : route('coach.judoka.update', [$uitnodiging->token, $judoka]) }}" method="POST">
+                        <form action="{{ route('coach.portal.judoka.update', [$code, $judoka]) }}" method="POST">
                             @csrf @method('PUT')
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <input type="text" name="naam" value="{{ $judoka->naam }}" required class="border rounded px-3 py-2" placeholder="Naam">
