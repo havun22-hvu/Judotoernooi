@@ -70,6 +70,13 @@
 - **Bestanden:** poule-card.blade.php
 - **Regel:** `$isProblematisch = $aantalActief > 0 && $aantalActief < ($isEliminatie ? 8 : 3)`
 
+### Feat: Barrage systeem voor 3-weg gelijkspel
+- **Type:** Feature
+- **Wat:** Detecteert 3+ judoka's met gelijke WP+JP en cirkel-verliezen, toont "Barrage" knop
+- **Bestanden:** BlokController.php, mat/_content.blade.php, Poule.php
+- **Migration:** barrage_van_poule_id in poules tabel
+- **Logica:** Barrage poule wordt aangemaakt op zelfde mat, judoka's blijven ook in originele poule
+
 ---
 
 <!--
