@@ -905,25 +905,28 @@ function matInterface() {
             });
 
             const wasGespeeld = wedstrijd.is_gespeeld;
+
+            // BELANGRIJK: Check VOOR is_gespeeld update of dit de actieve (groene) wedstrijd was
+            // Anders klopt de berekening niet meer na de update
+            const wasActief = poule && (
+                poule.actieve_wedstrijd_id === wedstrijd.id ||
+                (!poule.actieve_wedstrijd_id && !wasGespeeld)  // Fallback: eerste niet-gespeelde
+            );
+
             wedstrijd.is_gespeeld = !!(winnaarId || (wedstrijd.jpScores[wedstrijd.wit.id] !== undefined && wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined));
             wedstrijd.winnaar_id = winnaarId;
 
             // Auto-advance: als groene wedstrijd klaar → gele (klaar maken) wordt groen (speelt)
-            if (!wasGespeeld && wedstrijd.is_gespeeld && poule) {
-                // Bepaal of deze wedstrijd de "actieve" (groene) was
-                const { huidige } = this.getHuidigeEnVolgende(poule);
-                const wasActief = huidige && huidige.id === wedstrijd.id;
+            if (!wasGespeeld && wedstrijd.is_gespeeld && wasActief) {
+                // Gele (huidige_wedstrijd_id = klaar maken) wordt groen (actief)
+                // huidige_wedstrijd_id bevat de handmatig geselecteerde gele wedstrijd
+                const nieuweActief = poule.huidige_wedstrijd_id || null;
 
-                if (wasActief) {
-                    // Gele (huidige_wedstrijd_id = klaar maken) wordt groen (actief)
-                    const nieuweActief = poule.huidige_wedstrijd_id || null;
+                poule.actieve_wedstrijd_id = nieuweActief;
+                poule.huidige_wedstrijd_id = null; // Reset geel
 
-                    poule.actieve_wedstrijd_id = nieuweActief;
-                    poule.huidige_wedstrijd_id = null; // Reset geel
-
-                    // Notify backend
-                    await this.setWedstrijdStatus(poule, nieuweActief, null);
-                }
+                // Notify backend
+                await this.setWedstrijdStatus(poule, nieuweActief, null);
             }
         },
 
