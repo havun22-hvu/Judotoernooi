@@ -89,6 +89,12 @@
 - **Bestanden:** mat/_content.blade.php
 - **Logica:** `setInterval(() => laadWedstrijden(), 30000)`
 
+### Fix: Barrage altijd single round-robin
+- **Type:** Bug fix
+- **Wat:** Barrage poules negeren dubbel_bij_3_judokas config, altijd 1x tegen elkaar
+- **Bestanden:** WedstrijdSchemaService.php
+- **Logica:** Check `$poule->type === 'barrage'` → force single round-robin schema
+
 ---
 
 <!--
