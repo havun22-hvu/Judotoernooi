@@ -312,6 +312,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('mat/verwijder-judoka', [MatController::class, 'verwijderJudoka'])->name('mat.verwijder-judoka');
         Route::post('mat/finale-uitslag', [MatController::class, 'finaleUitslag'])->name('mat.finale-uitslag');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
+        Route::post('mat/barrage', [BlokController::class, 'maakBarrage'])->name('mat.barrage');
     });
 
     // Spreker routes (spreker + admin)

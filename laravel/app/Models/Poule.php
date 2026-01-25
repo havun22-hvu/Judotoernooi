@@ -24,6 +24,7 @@ class Poule extends Model
         'leeftijdsklasse',
         'gewichtsklasse',
         'categorie_key', // For grouping in block distribution (e.g., "m_variabel", "beginners")
+        'barrage_van_poule_id', // Link naar originele poule voor barrage
         'aantal_judokas',
         'aantal_wedstrijden',
         'spreker_klaar',
@@ -47,6 +48,19 @@ class Poule extends Model
     public function isVoorronde(): bool
     {
         return $this->type === 'voorronde' || $this->type === null;
+    }
+
+    public function isBarrage(): bool
+    {
+        return $this->type === 'barrage';
+    }
+
+    /**
+     * Originele poule waar deze barrage bij hoort
+     */
+    public function originelePoule(): BelongsTo
+    {
+        return $this->belongsTo(Poule::class, 'barrage_van_poule_id');
     }
 
     /**
