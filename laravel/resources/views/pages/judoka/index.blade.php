@@ -289,7 +289,8 @@
                     <td class="px-4 py-2 text-sm" x-text="judoka.geslacht === 'Jongen' ? 'M' : 'V'"></td>
                     <td class="px-4 py-2 text-sm truncate" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
                     <td class="px-4 py-2 text-sm truncate" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
-                    <td class="px-4 py-2">
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <a :href="judoka.editUrl + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 mr-2" title="Bewerken">✏️</a>
                         <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('Weet je zeker dat je ' + judoka.naam + ' wilt verwijderen?')) $el.submit()">
                             @csrf
                             @method('DELETE')
@@ -342,7 +343,7 @@ function judokaTable() {
         sortAsc: true,
         zoekterm: '',
         fuzzyLevel: 0,
-        toonOnvolledig: sessionStorage.getItem('toonOnvolledig') === 'true',
+        toonOnvolledig: sessionStorage.getItem('toonOnvolledig') === 'true' || new URLSearchParams(window.location.search).get('filter') === 'onvolledig',
 
         init() {
             // Clear sessionStorage after reading - it's only for back navigation
@@ -364,6 +365,7 @@ function judokaTable() {
                 club: @json($judoka->club?->naam),
                 incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewicht) ? 'true' : 'false' }},
                 url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}',
+                editUrl: '{{ route("toernooi.judoka.edit", [$toernooi, $judoka]) }}',
                 deleteUrl: '{{ route("toernooi.judoka.destroy", [$toernooi, $judoka]) }}'
             },
             @endforeach

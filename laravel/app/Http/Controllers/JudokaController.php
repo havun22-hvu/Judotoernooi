@@ -128,9 +128,12 @@ class JudokaController extends Controller
             }
         }
 
-        return redirect()
-            ->route('toernooi.judoka.show', [$toernooi, $judoka])
-            ->with('success', 'Judoka bijgewerkt');
+        // Return to filtered list if came from filter
+        $redirectRoute = $request->input('filter') === 'onvolledig'
+            ? route('toernooi.judoka.index', $toernooi) . '?filter=onvolledig'
+            : route('toernooi.judoka.show', [$toernooi, $judoka]);
+
+        return redirect($redirectRoute)->with('success', 'Judoka bijgewerkt');
     }
 
     public function store(Request $request, Toernooi $toernooi): RedirectResponse
