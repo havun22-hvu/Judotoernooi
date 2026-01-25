@@ -3,356 +3,51 @@
 > Kleine technische fixes die niet in permanente docs hoeven.
 >
 > **Wat hoort hier:**
-> - Typos in code (variabele namen, comments)
-> - Bug fixes (iets werkt niet zoals spec zegt)
-> - Performance optimalisaties
+> - Bug fixes, typos, performance
 > - Technische refactoring
-> - Dependency updates
 >
 > **Wat hoort hier NIET:**
-> - Features → SPEC.md of FEATURES.md
-> - Styling/design → STYLING.md
-> - Prijzen/teksten → relevante doc
-> - User flows → relevante doc
-
----
-
-## Sessie: 17 januari 2026
-
-### Feat: Revalidatie na verplaatsen judoka naar wachtruimte
-- **Type:** Enhancement
-- **Wat:** Na drag naar wachtruimte wordt poule opnieuw gevalideerd op gewichtsrange
-- **Waarom:** Oranje marking bleef staan ook als poule nu OK was
-- **Bestanden:**
-  - `app/Http/Controllers/WedstrijddagController.php` - `isProblematischNaWeging()` response
-  - `resources/views/pages/wedstrijddag/poules.blade.php` - JS update + console.log
-- **Naar permanente docs?** ☑ Nee - technische enhancement
-
-### Feat: Vergrootglas zoek-match icoon bij judoka's
-- **Type:** Enhancement
-- **Wat:** 🔍 knop bij elke judoka om geschikte poules te zoeken
-- **Waarom:** Organisator kon niet snel zien waar judoka naartoe kon
-- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
-- **Naar permanente docs?** ☑ Nee - UI enhancement
-
-### Fix: Oranje border bij initiële render voor gewichtsproblemen
-- **Type:** Bug fix
-- **Wat:** Check `$problematischeGewichtsPoules->has($poule->id)` toegevoegd aan PHP render
-- **Waarom:** Oranje border werd alleen via JS gezet, niet bij page load
-- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php`
-- **Naar permanente docs?** ☑ Nee - technische fix
-
-### FIX: Vals-positieve gewichtsrange markering
-- **Type:** Bug fix
-- **Wat:** Poules werden onterecht oranje gemarkeerd (gewichtsprobleem) terwijl range OK was
-- **Oorzaak:** `isProblematischNaWeging()` gebruikte fallback `?? 3` voor `max_kg_verschil`, waardoor bij config mismatch een verkeerde waarde werd gebruikt
-- **Oplossing:** Extra check toegevoegd: als `max_kg_verschil <= 0` na config lookup, behandel als niet-problematisch (consistent met `isDynamisch()` logica)
-- **Bestanden:** `app/Models/Poule.php:276-298` - `isProblematischNaWeging()`
-- **Naar permanente docs?** ☑ Nee - bug fix
-
-### FIX: Poule header kleur bleef oranje
-- **Type:** Bug fix (gerelateerd aan bovenstaande)
-- **Wat:** Header was oranje i.p.v. blauw bij poules met >= 3 judoka's
-- **Oorzaak:** Zelfde root cause - `$heeftGewichtsprobleem` was true door vals-positieve detectie
-- **Oplossing:** Opgelost met bovenstaande fix
-- **Naar permanente docs?** ☑ Nee - bug fix
-
----
-
-## Sessie: 20 januari 2026
-
-### Feat: Wedstrijdsysteem dropdown voor alle poule types
-- **Type:** Feature
-- **Wat:** Dropdown "Omzetten" toegevoegd aan alle poule types (voorronde, eliminatie, kruisfinale)
-- **Waarom:** Organisator wilde ook van poule naar eliminatie kunnen, niet alleen andersom
-- **Opties:**
-  - Poule → Eliminatie, Poules + kruisfinale
-  - Eliminatie → Alleen poules, Poules + kruisfinale
-  - Kruisfinale → Alleen poules, Eliminatie
-- **Bestanden:**
-  - `resources/views/pages/poule/index.blade.php` - dropdown HTML + JS
-  - `app/Http/Controllers/WedstrijddagController.php` - `wijzigPouleType()` methode
-  - `routes/web.php` - nieuwe route
-- **Naar permanente docs?** ☑ Nee - UI feature
-
-### Fix: Lege kruisfinales verwijderbaar
-- **Type:** Bug fix
-- **Wat:** (-) knop nu ook zichtbaar voor lege kruisfinales
-- **Waarom:** Na omzetten naar eliminatie kon kruisfinale niet verwijderd worden
-- **Bestanden:** `resources/views/pages/poule/index.blade.php:247`
-- **Naar permanente docs?** ☑ Nee - UI fix
-
-### Fix: Gewichtsklasse headers verwijderd
-- **Type:** Simplify
-- **Wat:** Headers "50-54 kg" boven poule groepen verwijderd
-- **Waarom:** Poule titels zijn duidelijk genoeg, headers waren verwarrend
-- **Bestanden:** `resources/views/pages/poule/index.blade.php`
-- **Naar permanente docs?** ☑ Nee - UI simplification
-
-### Fix: P → # voor poule nummers in blokken
-- **Type:** Consistency fix
-- **Wat:** "P1" gewijzigd naar "#1" in blokoverzicht
-- **Waarom:** Consistentie met poule pagina (overal # prefix)
-- **Bestanden:** `resources/views/pages/blok/index.blade.php:427`
-- **Naar permanente docs?** ☑ Ja → context.md (UI Conventies tabel)
-
-### Feat: Coachkaarten berekening + genereer knop
-- **Type:** Feature
-- **Wat:** Club pagina toont nu huidig/benodigd aantal coachkaarten + "Genereer Coachkaarten" knop
-- **Berekening:** drukste blok per club ÷ judokas_per_coach (afgerond naar boven)
-- **Bestanden:**
-  - `app/Http/Controllers/ClubController.php` - benodigdeKaarten berekening
-  - `resources/views/pages/club/index.blade.php` - huidig/benodigd display + knop
-- **Naar permanente docs?** ☑ Nee - UI feature (logica bestond al in Club model)
-
----
-
-## Sessie: 21 januari 2026
-
-### Fix: Groen/Geel wedstrijd selectie systeem (Mat Interface)
-- **Type:** Bug fix (KRITIEK)
-- **Wat:** Groen/geel systeem werkt nu correct:
-  - **Groen** = speelt nu (actieve_wedstrijd_id)
-  - **Geel** = klaar maken (huidige_wedstrijd_id)
-  - Als groene wedstrijd punten krijgt → gele wordt groen
-- **Probleem was:** Gele werd niet groen, volgende sequentiële nummer werd groen
-- **Oorzaak:** `saveScore()` had complexe logica die verkeerd werkte + API route gaf 404
-- **Oplossing:**
-  1. `saveScore()` vereenvoudigd - gebruikt nu `getHuidigeEnVolgende()` correct
-  2. `setWedstrijdStatus()` helper functie opgeschoond
-  3. Debug logging verwijderd
-- **Bestanden:**
-  - `resources/views/pages/mat/partials/_content.blade.php` (saveScore, setWedstrijdStatus)
-- **Naar permanente docs?** ☑ Nee - technische bugfix
-
-### Fix: Telefoon veld toegevoegd aan judoka import + coach portal
-- **Type:** Enhancement
-- **Wat:** Telefoon veld toegevoegd aan:
-  - Import CSV (auto-detectie kolom)
-  - Coach portal (toevoegen + bewerken)
-  - Club pagina (WhatsApp link)
-- **Waarom:** WhatsApp contact met coaches/ouders
-- **Bestanden:**
-  - `app/Services/ImportService.php` - kolom detectie + parseTelefoon()
-  - `resources/views/pages/coach/judokas.blade.php` - form velden
-  - `resources/views/pages/club/index.blade.php` - telefoon kolom
-- **Naar permanente docs?** ☑ Nee - feature enhancement
-
----
-
-## Sessie: 21 januari 2026 (vervolg)
-
-### Feat: Per-poule chips in Zaaloverzicht
-- **Type:** Feature (BELANGRIJK)
-- **Wat:** Zaaloverzicht toont nu elke poule als aparte chip i.p.v. per categorie
-- **Waarom:** Bij variabele categorieën zijn er meerdere poules met dezelfde leeftijdsklasse+gewichtsklasse, die moeten apart geactiveerd kunnen worden
-- **Chip format:** `{leeftijdsklasse} {gewichtsklasse} #{poule_nummer}` (bijv. "Jeugd -24 #5")
-- **Bestanden:**
-  - `app/Http/Controllers/BlokController.php` - `getCategoryStatuses()` herschreven voor per-poule status
-  - `app/Http/Controllers/BlokController.php` - `activeerPoule()` en `resetPoule()` methods toegevoegd
-  - `resources/views/pages/blok/zaaloverzicht.blade.php` - view toont nu per-poule chips
-  - `routes/web.php` - routes `blok.activeer-poule` en `blok.reset-poule` toegevoegd
-- **Naar permanente docs?** ☑ Ja → GEBRUIKERSHANDLEIDING.md (activatie sectie) en BLOKVERDELING.md
-
-### Docs: MD files consistentie check
-- **Type:** Docs verification
-- **Wat:** GEBRUIKERSHANDLEIDING.md en BLOKVERDELING.md gecontroleerd op consistentie
-- **Resultaat:** ✓ Doorsturen per poule correct gedocumenteerd, button kleuren correct, chip kleuren correct
-- **Naar permanente docs?** ☑ Nee - was alleen verificatie
-
----
-
-## Sessie: 21 januari 2026 (avond)
-
-### Fix: Import warnings zichtbaar per club op admin pagina
-- **Type:** Enhancement
-- **Wat:** Import warnings worden nu gegroepeerd per club getoond met contactgegevens
-- **Waarom:** Organisator moet weten welke judoschool te contacteren voor import problemen
-- **Bestanden:**
-  - `app/Http/Controllers/JudokaController.php` - `importWarningsPerClub` toegevoegd
-  - `resources/views/pages/judoka/index.blade.php` - collapsible sectie met clubs + email/telefoon
-- **Naar permanente docs?** ☑ Ja → IMPORT.md
-
-### Fix: Import NOOIT falen op null gewichtsklasse (KRITIEK)
-- **Type:** Bug fix (KRITIEK)
-- **Wat:** `gewichtsklasse` is NOOIT meer null - altijd 'Onbekend' of 'Variabel'
-- **Waarom:** 14 judoka's werden geweigerd omdat U7 categorie geen gewichtsklassen had
-- **Oorzaak:** `classificeerJudoka()` returde `null` voor gewichtsklasse bij ontbrekende config
-- **Oplossing:**
-  - Bij match: `'Variabel'` als default, `'Onbekend'` als bepaling faalt
-  - Bij geen match: `'Onbekend'` als fallback
-- **Regel:** "een gewichtscategorie is helemaal niet verplicht, wel een opgegeven gewicht"
-- **Bestanden:**
-  - `app/Services/ImportService.php` - `classificeerJudoka()` aangepast
-- **Naar permanente docs?** ☑ Ja → IMPORT.md (regel toegevoegd: import mag NOOIT falen op null gewichtsklasse)
-
-### Feat: import_warnings veld op judokas tabel
-- **Type:** Feature
-- **Wat:** Nieuw veld `import_warnings` (TEXT) om warnings te persisteren
-- **Waarom:** Warnings waren session-based en verdwenen na refresh
-- **Bestanden:**
-  - `database/migrations/2026_01_21_160000_add_import_warnings_to_judokas_table.php`
-  - `app/Models/Judoka.php` - veld toegevoegd aan fillable
-- **Naar permanente docs?** ☑ Ja → IMPORT.md
-
-### Feat: import_fouten veld op toernooien tabel
-- **Type:** Feature (GEDEELTELIJK)
-- **Wat:** Nieuw veld `import_fouten` (JSON) voor persistente opslag van import fouten
-- **Waarom:** Fouten verdwenen na page refresh (session-based)
-- **Status:** Migration aangemaakt, nog niet gebruikt in controller
-- **Bestanden:**
-  - `database/migrations/2026_01_21_170000_add_import_fouten_to_toernooien_table.php`
-  - `app/Models/Toernooi.php` - veld toegevoegd aan fillable/casts
-- **Naar permanente docs?** ☐ Nog niet volledig geïmplementeerd
-
-### Docs: IMPORT.md aangemaakt
-- **Type:** Documentation
-- **Wat:** Nieuwe documentatie voor import feature
-- **Inhoud:** Workflow, foutafhandeling, warnings, belangrijke regels (gewichtsklasse nooit verplicht)
-- **Bestanden:** `docs/2-FEATURES/IMPORT.md`
-- **Naar permanente docs?** ☑ Al gedaan
-
----
-
-## Sessie: 24 januari 2026
-
-### Fix: CheckToernooiRol middleware route model binding
-- **Type:** Bug fix (KRITIEK)
-- **Wat:** Middleware kreeg string ipv Toernooi model voor API routes
-- **Oorzaak:** Route model binding was nog niet gebeurd wanneer middleware runde
-- **Oplossing:** Handmatige model resolution toegevoegd: `Toernooi::where('slug', $toernooi)->first()`
-- **Bestanden:** `app/Http/Middleware/CheckToernooiRol.php:20-25`
-- **Naar permanente docs?** ☑ Nee - technische bug fix
-
-### Fix: Supervisor socket permissions
-- **Type:** Server config fix
-- **Wat:** PHP kon supervisorctl niet aanroepen voor Reverb status
-- **Oorzaak:** Socket had `chmod=0700`, www-data had geen toegang
-- **Oplossing:** `chmod=0770` + `chown=root:www-data` in supervisord.conf
-- **Bestanden:** `/etc/supervisor/supervisord.conf` (server)
-- **Naar permanente docs?** ☑ Nee - server config
-
-### Issue: SQLite FK referenties na tabel hernoemen
-- **Type:** Database issue (veroorzaakte data verlies!)
-- **Wat:** FK constraints in `poule_judoka`, `wegingen`, `wedstrijden` verwezen naar `judokas_backup`
-- **Oorzaak:** Migration `2026_01_23_204738` hernoemde judokas tabel, SQLite hernoemde FK refs mee
-- **Oplossing:** `migrate:fresh` - alle data gewist
-- **LES:** Bij SQLite tabel hernoemen: altijd FK constraints in andere tabellen controleren
-- **Naar permanente docs?** ☑ Ja → SQLite gotchas documenteren
-
----
-
-## Sessie: 23 januari 2026
-
-### Feat: Categorie overlap detectie
-- **Type:** Feature
-- **Wat:** Waarschuwing wanneer categorieën overlappen (judoka kan in meerdere passen)
-- **Wanneer overlap:** Zelfde max_leeftijd + zelfde geslacht + overlappende band_filter
-- **Wanneer OK:** Zelfde leeftijd maar verschillend geslacht OF niet-overlappende banden (tm_oranje + vanaf_groen)
-- **UI:** Oranje banner in Instellingen pagina, update dynamisch na AJAX save
-- **Bestanden:**
-  - `app/Services/CategorieClassifier.php` - `detectOverlap()` + helpers
-  - `app/Http/Controllers/ToernooiController.php` - check in edit() en update()
-  - `resources/views/pages/toernooi/edit.blade.php` - banner + JS update
-- **Naar permanente docs?** ☑ Nee - feature enhancement
-
-### Fix: Gewichtsklasse null constraint error
-- **Type:** Bug fix (KRITIEK)
-- **Wat:** Save faalde bij wijzigen band_filter in categorieën
-- **Oorzaak:** `voerValidatieUit()` zette gewichtsklasse op null, database heeft NOT NULL constraint
-- **Oplossing:** Skip update als nieuwe gewichtsklasse null zou zijn
-- **Bestanden:** `app/Http/Controllers/JudokaController.php:417-421`
-- **Naar permanente docs?** ☑ Nee - bug fix
-
-### Fix: Metadata in judokasPerKlasse overzicht
-- **Type:** Bug fix
-- **Wat:** "preset type 0" en "eigen preset id 0" verscheen als leeftijdsklasse
-- **Oorzaak:** Gewichtsklassen config bevat metadata keys (`_preset_type`, `_eigen_preset_id`)
-- **Oplossing:** Skip non-array entries en keys die met `_` beginnen
-- **Bestanden:** `app/Http/Controllers/JudokaController.php:43-47`
-- **Naar permanente docs?** ☑ Nee - bug fix
-
-### Fix: Non-array config entries in overlap check
-- **Type:** Bug fix
-- **Wat:** Overlap check crashte op non-array config entries (poule_grootte_voorkeur etc)
-- **Oplossing:** `is_array()` check toegevoegd
-- **Bestanden:** `app/Services/CategorieClassifier.php:281-284`
-- **Naar permanente docs?** ☑ Nee - bug fix
-
-### Fix: Band range berekening voor overlap detectie
-- **Type:** Bug fix
-- **Wat:** tm_oranje + vanaf_groen werd foutief als overlap gemarkeerd
-- **Oorzaak:** BandHelper gebruikt omgekeerde volgorde (wit=6, zwart=0)
-- **Oplossing:** Range logica omgedraaid: tm_ = hoge nummers, vanaf_ = lage nummers
-- **Bestanden:** `app/Services/CategorieClassifier.php:393-411`
-- **Naar permanente docs?** ☑ Nee - bug fix
-
-### Feat: Niet-gecategoriseerd waarschuwing op Poules pagina
-- **Type:** Enhancement
-- **Wat:** Rode waarschuwing banner toegevoegd aan Poules pagina
-- **Waarom:** Gebruiker moet gewaarschuwd worden voordat ze poules gaan maken
-- **Bestanden:** `resources/views/pages/poule/index.blade.php:71-91`
-- **Naar permanente docs?** ☑ Nee - UI enhancement
-
-### Feat: Portaal modus instellingen
-- **Type:** Feature
-- **Wat:** Organisator kan kiezen hoe clubs het portaal gebruiken (uit/mutaties/volledig)
-- **Modi:**
-  - `uit` = alleen bekijken (clubs zien judoka's maar kunnen niets wijzigen)
-  - `mutaties` = clubs kunnen bestaande judoka's wijzigen, geen nieuwe toevoegen
-  - `volledig` = clubs kunnen inschrijven én wijzigen
-- **UI:** Dropdown in Instellingen → Organisatie, Mollie hint bij niet-volledig
-- **Bestanden:**
-  - Migration: `add_portaal_modus_to_toernooien_table.php`
-  - Model: `Toernooi.php` - helper methods
-  - Controller: `ToernooiController.php`, `CoachPortalController.php`
-  - Views: `edit.blade.php`, `coach/judokas.blade.php`
-- **Naar permanente docs?** ☑ Ja → INTERFACES.md (al gedaan)
-
-### Feat: Handmatige judoka invoer admin
-- **Type:** Feature
-- **Wat:** "+ Judoka toevoegen" knop op admin judoka pagina met modal
-- **Waarom:** Organisator moet ook handmatig judoka's kunnen toevoegen (naast import)
-- **Bestanden:**
-  - `resources/views/pages/judoka/index.blade.php` - modal
-  - `app/Http/Controllers/JudokaController.php` - store method
-  - `routes/web.php` - store route
-- **Naar permanente docs?** ☑ Nee - UI feature
+> - Features → docs/
+> - Styling → STYLING.md
+>
+> **Archief:** Oude sessies staan in `archive/`
 
 ---
 
 ## Sessie: 25 januari 2026
 
-### Fix: Variabele gewichtscategorieën - per-poule validatie
-- **Type:** Enhancement
-- **Wat:** Gewichtsvalidatie op wedstrijddag gebruikt nu per-poule `$poule->isDynamisch()` check
-- **Waarom:** Bij variabele categorieën kregen ALLE judoka's met afwijkend gewogen gewicht een warning, terwijl dat alleen nodig is als de POULE range > max_kg_verschil
-- **Oplossing:**
-  - Per judoka: `$isAfwijkendGewicht` alleen checken als poule NIET dynamisch is
-  - Wachtruimte: alleen tonen voor VASTE categorieën
-- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php` (4 locaties)
-- **Naar permanente docs?** ☑ Nee - technische enhancement
+### Fix: Variabele gewichtscategorieën
+- **Type:** Bug fix
+- **Wat:** Per-poule `isDynamisch()` check i.p.v. globaal
+- **Bestanden:** Wedstrijddag controller + views
 
-### Fix: Poule breedte wedstrijddag (grid layout)
+### Fix: Poule breedte
 - **Type:** UI fix
-- **Wat:** Poules op wedstrijddag nu zelfde breedte als op poules page
-- **Probleem was:** `flex flex-wrap` met `min-w-[200px]` zorgde voor variabele breedte
-- **Oplossing:**
-  - Container: `flex flex-wrap gap-4` → `grid grid-cols-2 md:grid-cols-3 gap-3`
-  - Cards: `min-w-[200px]` verwijderd (grid bepaalt breedte)
-- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php` (regels 322, 331, 415)
-- **Naar permanente docs?** ☑ Nee - UI fix
+- **Wat:** Grid layout (grid-cols-3) i.p.v. flex-wrap met min-width
+- **Bestanden:** Wedstrijddag poules view
+
+### Fix: VARIABEL vs VAST toernooi layout
+- **Type:** Bug fix
+- **Wat:** Aparte layouts voor variabel (4 kolommen, geen headers) vs vast (headers + wachtruimte)
+- **Bestanden:** poules.blade.php, ToernooiController.php
+
+### Fix: Titel formaat met slashes
+- **Type:** UI improvement
+- **Wat:** `#1 Jeugd / 5-7j / 16.1-18.3kg` i.p.v. `#1 Jeugd 5-7j 16.1-18.3kg`
+- **Bestanden:** poule-card.blade.php, poules.blade.php, poule/index.blade.php
+
+### Fix: Eliminatie poule UX
+- **Type:** UI improvement
+- **Wat:** Zoekfunctie per judoka, info tooltip, → naar matten knop
+- **Bestanden:** poules.blade.php
 
 ---
 
 <!--
-TEMPLATE voor nieuwe entry:
+TEMPLATE:
 
 ### Fix: [korte titel]
-- **Type:** Bug fix / Performance / Refactor / Typo / Update
+- **Type:** Bug fix / Performance / Refactor
 - **Wat:** [wat aangepast]
-- **Waarom:** [reden]
-- **Bestanden:** [welke files gewijzigd]
-- **Naar permanente docs?** ☐ Ja → [welke doc] / ☑ Nee
-
+- **Bestanden:** [welke files]
 -->
