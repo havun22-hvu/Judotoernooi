@@ -9,6 +9,23 @@
     <form action="{{ route('toernooi.store') }}" method="POST" class="bg-white rounded-lg shadow p-6">
         @csrf
 
+        @if($templates->isNotEmpty())
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <label for="template_id" class="block text-gray-700 font-bold mb-2">Template gebruiken</label>
+            <select name="template_id" id="template_id" class="w-full border rounded px-3 py-2">
+                <option value="">-- Geen template (leeg toernooi) --</option>
+                @foreach($templates as $template)
+                <option value="{{ $template->id }}" {{ old('template_id') == $template->id ? 'selected' : '' }}>
+                    {{ $template->naam }}
+                    @if($template->beschrijving) - {{ Str::limit($template->beschrijving, 40) }}@endif
+                    @if($template->max_judokas) (max {{ $template->max_judokas }} judoka's)@endif
+                </option>
+                @endforeach
+            </select>
+            <p class="text-sm text-gray-600 mt-1">Een template kopieert alle instellingen zoals categorieën, gewichtsklassen en betaalinstellingen.</p>
+        </div>
+        @endif
+
         <div class="mb-4">
             <label for="naam" class="block text-gray-700 font-bold mb-2">Naam Toernooi *</label>
             <input type="text" name="naam" id="naam" value="{{ old('naam') }}" placeholder="Bijv. Judo Toernooi 2025"

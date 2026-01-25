@@ -79,6 +79,13 @@ Route::middleware('auth:organisator')->group(function () {
     Route::get('toernooi/create', [ToernooiController::class, 'create'])->name('toernooi.create');
     Route::post('toernooi', [ToernooiController::class, 'store'])->name('toernooi.store');
     Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])->name('toernooi.destroy');
+
+    // Toernooi Templates
+    Route::get('templates', [\App\Http\Controllers\ToernooiTemplateController::class, 'index'])->name('templates.index');
+    Route::post('toernooi/{toernooi}/template', [\App\Http\Controllers\ToernooiTemplateController::class, 'store'])->name('templates.store');
+    Route::put('templates/{template}/toernooi/{toernooi}', [\App\Http\Controllers\ToernooiTemplateController::class, 'update'])->name('templates.update');
+    Route::delete('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'destroy'])->name('templates.destroy');
+    Route::get('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'show'])->name('templates.show');
 });
 
 // Toernooi management - public routes (accessible via role password)

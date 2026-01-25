@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -12,6 +13,7 @@ class Club extends Model
     use HasFactory;
 
     protected $fillable = [
+        'organisator_id',
         'naam',
         'afkorting',
         'plaats',
@@ -70,6 +72,11 @@ class Club extends Model
         $this->pincode = self::generatePincode();
         $this->save();
         return $this->pincode;
+    }
+
+    public function organisator(): BelongsTo
+    {
+        return $this->belongsTo(Organisator::class);
     }
 
     public function judokas(): HasMany
@@ -148,35 +155,70 @@ class Club extends Model
         return max(1, (int) ceil($maxJudokasInBlok / $perCoach));
     }
 
-    public static function findOrCreateByName(string $naam): self
+    /**
+     * Find or create a club by name, with optional organisator scope
+     * When organisator_id is provided, searches within that organisator's clubs first
+     */
+    public static function findOrCreateByName(string $naam, ?int $organisatorId = null): self
     {
         $naam = trim($naam);
 
-        // 1. Exact match
-        $club = self::where('naam', $naam)->first();
+        // Build base query - if organisator provided, search their clubs first
+        $query = $organisatorId
+            ? self::where('organisator_id', $organisatorId)
+            : self::query();
+
+        // 1. Exact match (within organisator scope if provided)
+        $club = (clone $query)->where('naam', $naam)->first();
         if ($club) {
             return $club;
         }
 
         // 2. Case-insensitive match
-        $club = self::whereRaw('LOWER(naam) = ?', [strtolower($naam)])->first();
+        $club = (clone $query)->whereRaw('LOWER(naam) = ?', [strtolower($naam)])->first();
         if ($club) {
             return $club;
         }
 
-        // 3. Fuzzy match - check if one name contains the other (handles "Cees Veen" vs "Judoschool Cees Veen")
+        // 3. Fuzzy match - check if one name contains the other
         $naamLower = strtolower($naam);
-        $clubs = self::all();
+        $clubs = (clone $query)->get();
         foreach ($clubs as $bestaandeClub) {
             $bestaandeLower = strtolower($bestaandeClub->naam);
-            // Check if one contains the other completely
             if (str_contains($naamLower, $bestaandeLower) || str_contains($bestaandeLower, $naamLower)) {
                 return $bestaandeClub;
             }
         }
 
-        // 4. No match found - create new club
+        // 4. If organisator provided but no match, also check global clubs (for backwards compatibility)
+        if ($organisatorId) {
+            $globalClub = self::whereNull('organisator_id')
+                ->where(function ($q) use ($naam, $naamLower) {
+                    $q->where('naam', $naam)
+                      ->orWhereRaw('LOWER(naam) = ?', [strtolower($naam)]);
+                })
+                ->first();
+
+            if ($globalClub) {
+                // Claim this global club for the organisator
+                $globalClub->update(['organisator_id' => $organisatorId]);
+                return $globalClub;
+            }
+
+            // Fuzzy match on global clubs
+            $globalClubs = self::whereNull('organisator_id')->get();
+            foreach ($globalClubs as $bestaandeClub) {
+                $bestaandeLower = strtolower($bestaandeClub->naam);
+                if (str_contains($naamLower, $bestaandeLower) || str_contains($bestaandeLower, $naamLower)) {
+                    $bestaandeClub->update(['organisator_id' => $organisatorId]);
+                    return $bestaandeClub;
+                }
+            }
+        }
+
+        // 5. No match found - create new club
         return self::create([
+            'organisator_id' => $organisatorId,
             'naam' => $naam,
             'afkorting' => substr($naam, 0, 10),
         ]);
