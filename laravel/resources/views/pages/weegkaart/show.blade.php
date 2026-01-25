@@ -101,7 +101,7 @@
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Band</span>
-                <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ ucfirst($judoka->band ?? '?') }}</span>
+                <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ ucfirst(explode(' ', $judoka->band ?? '?')[0]) }}</span>
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Geslacht</span>
