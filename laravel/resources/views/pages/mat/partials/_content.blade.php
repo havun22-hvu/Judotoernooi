@@ -2065,4 +2065,12 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+// Auto-refresh poules elke 30 seconden (voor verplaatste poules van andere matten)
+setInterval(() => {
+    const component = document.querySelector('[x-data]');
+    if (component && component.__x) {
+        Alpine.evaluate(component, 'laadWedstrijden()');
+    }
+}, 30000);
 </script>
