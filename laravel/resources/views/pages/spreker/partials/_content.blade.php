@@ -59,12 +59,18 @@
             <template x-if="geschiedenis.length > 0">
                 <div class="grid gap-2 max-h-64 overflow-y-auto">
                     <template x-for="item in geschiedenis" :key="item.id + '-' + item.tijd">
-                        <div class="flex justify-between items-center bg-white px-3 py-2 rounded border text-sm">
+                        <button
+                            @click="toonPouleDetail(item.id)"
+                            class="flex justify-between items-center bg-white px-3 py-2 rounded border text-sm hover:bg-gray-50 transition-colors w-full text-left"
+                        >
                             <span>
                                 <span :class="item.type === 'eliminatie' ? 'text-purple-600' : 'text-green-600'" class="font-medium" x-text="item.naam"></span>
                             </span>
-                            <span class="text-gray-400" x-text="item.tijd"></span>
-                        </div>
+                            <span class="text-gray-400 flex items-center gap-2">
+                                <span x-text="item.tijd"></span>
+                                <span class="text-blue-500">👁️</span>
+                            </span>
+                        </button>
                     </template>
                 </div>
             </template>
@@ -338,6 +344,91 @@
             </button>
         </div>
     </div>
+
+    <!-- Modal: Poule uitslagen bekijken -->
+    <div x-show="showPouleModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showPouleModal = false">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden">
+            <!-- Header -->
+            <div :class="selectedPouleData?.poule?.is_eliminatie ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-4 py-3 flex justify-between items-center">
+                <div x-show="!loadingPoule && selectedPouleData">
+                    <div class="font-bold" x-text="selectedPouleData?.poule?.is_eliminatie
+                        ? 'Eliminatie - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
+                        : 'Poule ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse"></div>
+                </div>
+                <div x-show="loadingPoule" class="font-bold">Laden...</div>
+                <button @click="showPouleModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            </div>
+
+            <!-- Content -->
+            <div class="p-4 overflow-y-auto max-h-[60vh]">
+                <div x-show="loadingPoule" class="text-center py-8">
+                    <div class="animate-spin text-4xl">🔄</div>
+                    <p class="text-gray-500 mt-2">Uitslagen laden...</p>
+                </div>
+
+                <!-- ELIMINATIE: Medaille winnaars -->
+                <template x-if="!loadingPoule && selectedPouleData?.poule?.is_eliminatie">
+                    <div class="grid gap-3">
+                        <template x-for="(standing, index) in selectedPouleData?.standings || []" :key="index">
+                            <div class="flex items-center gap-3 p-3 rounded-lg"
+                                :class="{
+                                    'bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400': standing.plaats === 1,
+                                    'bg-gradient-to-r from-gray-100 to-gray-200 border-2 border-gray-400': standing.plaats === 2,
+                                    'bg-gradient-to-r from-orange-100 to-orange-200 border-2 border-orange-400': standing.plaats === 3
+                                }">
+                                <div class="text-3xl" x-text="standing.plaats === 1 ? '🥇' : (standing.plaats === 2 ? '🥈' : '🥉')"></div>
+                                <div>
+                                    <div class="font-bold text-lg" x-text="standing.naam"></div>
+                                    <div class="text-sm text-gray-600" x-text="standing.club"></div>
+                                </div>
+                                <div class="ml-auto text-2xl font-bold"
+                                    :class="{
+                                        'text-yellow-700': standing.plaats === 1,
+                                        'text-gray-700': standing.plaats === 2,
+                                        'text-orange-700': standing.plaats === 3
+                                    }"
+                                    x-text="standing.plaats + 'e'"></div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- POULE: Resultaten tabel -->
+                <template x-if="!loadingPoule && selectedPouleData && !selectedPouleData?.poule?.is_eliminatie">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-200 border-b-2 border-gray-400">
+                                <th class="px-3 py-2 text-left font-bold text-gray-700">Naam</th>
+                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">WP</th>
+                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">JP</th>
+                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">#</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(standing, index) in selectedPouleData?.standings || []" :key="index">
+                                <tr class="border-b last:border-0">
+                                    <td class="px-3 py-2">
+                                        <span class="font-bold" x-text="standing.naam"></span>
+                                        <span class="text-gray-500 text-xs" x-text="'(' + standing.club + ')'"></span>
+                                    </td>
+                                    <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800" x-text="standing.wp"></td>
+                                    <td class="px-2 py-2 text-center bg-blue-50 text-blue-800" x-text="standing.jp"></td>
+                                    <td class="px-2 py-2 text-center font-bold text-lg"
+                                        :class="{
+                                            'bg-yellow-400 text-yellow-900': index === 0,
+                                            'bg-gray-300 text-gray-800': index === 1,
+                                            'bg-orange-300 text-orange-900': index === 2,
+                                            'bg-yellow-50': index > 2
+                                        }"
+                                        x-text="index + 1"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -383,6 +474,9 @@ function sprekerInterface() {
         notities: '',
         notitiesSaved: false,
         isRefreshing: false,
+        showPouleModal: false,
+        selectedPouleData: null,
+        loadingPoule: false,
 
         async init() {
             // Laad geschiedenis uit localStorage
@@ -520,6 +614,35 @@ function sprekerInterface() {
         refreshUitslagen() {
             this.isRefreshing = true;
             location.reload();
+        },
+
+        async toonPouleDetail(pouleId) {
+            this.loadingPoule = true;
+            this.showPouleModal = true;
+
+            try {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.standings", $toegang) : route("toernooi.spreker.standings", $toernooi) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ poule_id: pouleId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    this.selectedPouleData = data;
+                } else {
+                    alert('Fout: ' + (data.message || 'Onbekende fout'));
+                    this.showPouleModal = false;
+                }
+            } catch (err) {
+                alert('Fout: ' + err.message);
+                this.showPouleModal = false;
+            } finally {
+                this.loadingPoule = false;
+            }
         },
 
         laadVoorbeeldtekst() {

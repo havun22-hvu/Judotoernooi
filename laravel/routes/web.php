@@ -322,6 +322,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         Route::post('spreker/terug', [BlokController::class, 'zetAfgeroepenTerug'])->name('spreker.terug');
         Route::post('spreker/notities', [BlokController::class, 'saveNotities'])->name('spreker.notities.save');
         Route::get('spreker/notities', [BlokController::class, 'getNotities'])->name('spreker.notities.get');
+        Route::post('spreker/standings', [BlokController::class, 'getPouleStandings'])->name('spreker.standings');
     });
 
 });
@@ -381,6 +382,7 @@ Route::middleware('device.binding')->group(function () {
     Route::get('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesGet'])->name('spreker.notities.get');
     Route::post('spreker/{toegang}/afgeroepen', [RoleToegang::class, 'sprekerAfgeroepen'])->name('spreker.afgeroepen');
     Route::post('spreker/{toegang}/terug', [RoleToegang::class, 'sprekerTerug'])->name('spreker.terug');
+    Route::post('spreker/{toegang}/standings', [RoleToegang::class, 'sprekerStandings'])->name('spreker.standings');
     Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
 });
 
