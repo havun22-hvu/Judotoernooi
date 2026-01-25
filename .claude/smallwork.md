@@ -77,6 +77,18 @@
 - **Migration:** barrage_van_poule_id in poules tabel
 - **Logica:** Barrage poule wordt aangemaakt op zelfde mat, judoka's blijven ook in originele poule
 
+### Fix: Poule verplaatsen vereenvoudigd
+- **Type:** Bug fix
+- **Wat:** verplaatsPoule update alleen mat_id, geen onnodige resets meer
+- **Bestanden:** BlokController.php
+- **Behouden:** Alle wedstrijden, scores, voortgang intact bij verplaatsen
+
+### Feat: Mat interface auto-refresh
+- **Type:** Feature
+- **Wat:** Mat interface refresht elke 30 sec voor verplaatste poules
+- **Bestanden:** mat/_content.blade.php
+- **Logica:** `setInterval(() => laadWedstrijden(), 30000)`
+
 ---
 
 <!--

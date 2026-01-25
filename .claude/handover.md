@@ -9,6 +9,8 @@
   - Barrage poule op zelfde mat, judoka's blijven ook in originele poule
   - Nieuw poule type: `barrage`, nieuw veld: `barrage_van_poule_id`
 - **Eliminatie <8 judoka's**: Nu ook rood (problematisch) gemarkeerd
+- **Poule verplaatsen**: Vereenvoudigd - alleen mat_id wijzigt, scores intact
+- **Mat interface auto-refresh**: Elke 30 sec voor verplaatste poules
 - **Docs opgeruimd**: .gitignore, .claude/archive/, deploy.md, features.md, mollie.md
 
 ### Belangrijke context:
@@ -17,6 +19,7 @@
   - `isCircleResult(poule, judokas)` - niemand wint van iedereen
 - Backend: `BlokController::maakBarrage()` maakt barrage poule aan
 - Judoka's worden `attach()` (niet `detach`) - blijven in beide poules
+- Poule verplaatsen: zaaloverzicht drag & drop → mat_id update → auto-refresh
 
 ### Openstaande items:
 - Geen
@@ -25,3 +28,4 @@
 - BandHelper::BAND_VOLGORDE is omgekeerd: wit=6, zwart=0
 - SQLite: bij tabel hernoemen worden FK's in andere tabellen mee hernoemd
 - `$isProblematisch = $aantalActief > 0 && $aantalActief < ($isEliminatie ? 8 : 3)`
+- Mat interface refresh: `setInterval(() => laadWedstrijden(), 30000)`
