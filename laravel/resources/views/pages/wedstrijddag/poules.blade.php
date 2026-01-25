@@ -319,7 +319,7 @@
                         {{-- Poules in 3-kolommen grid --}}
                         <div class="flex-1">
                             @foreach($poulesPerGewicht as $gewichtKey => $poulesInGewicht)
-                            <div class="flex flex-wrap gap-4 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                             @foreach($poulesInGewicht as $poule)
                             @if($poule->type === 'kruisfinale')
                             {{-- KRUISFINALE: aparte weergave --}}
@@ -328,7 +328,7 @@
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
-                                class="border-2 border-purple-400 rounded-lg overflow-hidden min-w-[200px] bg-white kruisfinale-card"
+                                class="border-2 border-purple-400 rounded-lg overflow-hidden bg-white kruisfinale-card"
                                 data-poule-id="{{ $poule->id }}"
                                 data-aantal-voorrondes="{{ $aantalVoorrondes }}"
                             >
@@ -412,7 +412,7 @@
                             @endphp
                             <div
                                 id="poule-{{ $poule->id }}"
-                                class="border rounded-lg min-w-[200px] bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }} {{ $heeftGewichtsprobleem && !$isProblematisch ? 'border-2 border-orange-400' : '' }}"
+                                class="border rounded-lg bg-white transition-colors poule-card {{ $aantalActief === 0 ? 'opacity-50' : '' }} {{ $isProblematisch ? 'border-2 border-red-300' : '' }} {{ $heeftGewichtsprobleem && !$isProblematisch ? 'border-2 border-orange-400' : '' }}"
                                 data-poule-id="{{ $poule->id }}"
                                 data-poule-nummer="{{ $poule->nummer }}"
                                 data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}"
