@@ -342,30 +342,41 @@ class WedstrijddagController extends Controller
     {
         $validated = $request->validate([
             'leeftijdsklasse' => 'required|string',
-            'gewichtsklasse' => 'required|string',
+            'gewichtsklasse' => 'nullable|string',
+            'blok_nummer' => 'nullable|integer',
         ]);
 
         // Find max nummer across entire tournament (nummer must be unique per toernooi)
         $maxNummer = Poule::where('toernooi_id', $toernooi->id)->max('nummer') ?? 0;
 
-        // Find the blok for this category (same leeftijdsklasse + gewichtsklasse)
-        $existingPoule = Poule::where('toernooi_id', $toernooi->id)
-            ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
-            ->where('gewichtsklasse', $validated['gewichtsklasse'])
-            ->whereNotNull('blok_id')
-            ->first();
+        // Determine blok_id: use provided blok_nummer or find from existing poule
+        $blokId = null;
+        if (!empty($validated['blok_nummer'])) {
+            $blok = $toernooi->blokken()->where('nummer', $validated['blok_nummer'])->first();
+            $blokId = $blok?->id;
+        }
+
+        if (!$blokId) {
+            // Find the blok for this category (same leeftijdsklasse)
+            $existingPoule = Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
+                ->whereNotNull('blok_id')
+                ->first();
+            $blokId = $existingPoule?->blok_id;
+        }
 
         // New poules always go to mat 1 (will be redistributed in zaaloverzicht)
         $mat1 = $toernooi->matten()->orderBy('nummer')->first();
 
+        $gewichtsklasse = $validated['gewichtsklasse'] ?? '';
         $poule = Poule::create([
             'toernooi_id' => $toernooi->id,
-            'blok_id' => $existingPoule?->blok_id,
+            'blok_id' => $blokId,
             'mat_id' => $mat1?->id,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
-            'gewichtsklasse' => $validated['gewichtsklasse'],
+            'gewichtsklasse' => $gewichtsklasse,
             'nummer' => $maxNummer + 1,
-            'titel' => $validated['leeftijdsklasse'] . ' ' . $validated['gewichtsklasse'] . ' Poule ' . ($maxNummer + 1),
+            'titel' => $validated['leeftijdsklasse'] . ($gewichtsklasse ? ' ' . $gewichtsklasse : '') . ' Poule ' . ($maxNummer + 1),
             'type' => 'voorronde',
             'aantal_judokas' => 0,
             'aantal_wedstrijden' => 0,

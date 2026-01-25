@@ -183,15 +183,18 @@
                 }
             }
         @endphp
-        <button @click="open = !open" class="w-full flex justify-between items-center px-4 py-3 bg-gray-800 text-white rounded-t-lg hover:bg-gray-700">
-            <div class="flex items-center gap-4">
-                <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
-                <span class="text-gray-300 text-sm">{{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blok['categories']->count() }} categorieën</span>
-            </div>
-            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </button>
+        <div class="flex items-center bg-gray-800 text-white rounded-t-lg">
+            <button @click="open = !open" class="flex-1 flex justify-between items-center px-4 py-3 hover:bg-gray-700 rounded-tl-lg">
+                <div class="flex items-center gap-4">
+                    <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
+                    <span class="text-gray-300 text-sm">{{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blok['categories']->count() }} categorieën</span>
+                </div>
+                <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <button onclick="openNieuwePouleModal({{ $blok['nummer'] }})" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ Poule</button>
+        </div>
 
         {{-- Categories within blok --}}
         <div x-show="open" x-collapse>
@@ -687,6 +690,33 @@
     </div>
 </div>
 
+<!-- Modal nieuwe poule -->
+<div id="nieuwe-poule-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Nieuwe poule aanmaken</h2>
+        <form id="nieuwe-poule-form">
+            <input type="hidden" id="nieuwe-poule-blok" value="">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+                <select id="nieuwe-poule-categorie" class="w-full border rounded px-3 py-2" required>
+                    <option value="">Selecteer...</option>
+                    @foreach($toernooi->getAlleGewichtsklassen() as $key => $klasse)
+                    <option value="{{ $klasse['label'] }}">{{ $klasse['label'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Annuleren
+                </button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Aanmaken
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
@@ -935,7 +965,32 @@ async function naarZaaloverzichtPoule(pouleId, btn) {
     }
 }
 
-async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
+// Modal functies voor nieuwe poule
+function openNieuwePouleModal(blokNummer) {
+    document.getElementById('nieuwe-poule-blok').value = blokNummer;
+    document.getElementById('nieuwe-poule-categorie').value = '';
+    document.getElementById('nieuwe-poule-modal').classList.remove('hidden');
+}
+
+function closeNieuwePouleModal() {
+    document.getElementById('nieuwe-poule-modal').classList.add('hidden');
+}
+
+document.getElementById('nieuwe-poule-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const categorie = document.getElementById('nieuwe-poule-categorie').value;
+    const blokNummer = document.getElementById('nieuwe-poule-blok').value;
+
+    if (!categorie) {
+        alert('Selecteer een categorie');
+        return;
+    }
+
+    closeNieuwePouleModal();
+    await nieuwePoule(categorie, '', blokNummer);
+});
+
+async function nieuwePoule(leeftijdsklasse, gewichtsklasse, blokNummer) {
     try {
         const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
             method: 'POST',
@@ -943,7 +998,7 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             },
-            body: JSON.stringify({ leeftijdsklasse, gewichtsklasse }),
+            body: JSON.stringify({ leeftijdsklasse, gewichtsklasse, blok_nummer: blokNummer }),
         });
 
         if (response.ok) {
