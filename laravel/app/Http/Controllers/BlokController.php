@@ -872,13 +872,8 @@ class BlokController extends Controller
 
         $poule = Poule::findOrFail($validated['poule_id']);
 
-        // Reset spreker status als poule opnieuw op mat wordt gezet
-        // (bv. volgende dag of na correctie)
-        $poule->update([
-            'mat_id' => $validated['mat_id'],
-            'spreker_klaar' => null,
-            'afgeroepen_at' => null,
-        ]);
+        // Alleen mat_id wijzigen - wedstrijden en scores blijven intact
+        $poule->update(['mat_id' => $validated['mat_id']]);
 
         return response()->json([
             'success' => true,
