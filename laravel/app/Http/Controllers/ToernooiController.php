@@ -149,9 +149,13 @@ class ToernooiController extends Controller
         // Remove temporary fields from data
         unset($data['gewichtsklassen_leeftijd'], $data['gewichtsklassen_label'], $data['gewichtsklassen_geslacht'], $data['gewichtsklassen_max_kg'], $data['gewichtsklassen_max_lft']);
 
-        // Handle gebruik_gewichtsklassen checkbox (0 from hidden field, 1 from checkbox)
-        $nieuweGebruikGewichtsklassen = (bool) ($data['gebruik_gewichtsklassen'] ?? 1);
-        $data['gebruik_gewichtsklassen'] = $nieuweGebruikGewichtsklassen;
+        // Handle gebruik_gewichtsklassen - keep existing value if not in form data
+        // (the form doesn't have a checkbox for this, it's set during toernooi creation)
+        if (!isset($data['gebruik_gewichtsklassen'])) {
+            unset($data['gebruik_gewichtsklassen']); // Don't overwrite existing value
+        } else {
+            $data['gebruik_gewichtsklassen'] = (bool) $data['gebruik_gewichtsklassen'];
+        }
 
         // Handle coach_incheck_actief checkbox
         $data['coach_incheck_actief'] = (bool) ($data['coach_incheck_actief'] ?? false);
