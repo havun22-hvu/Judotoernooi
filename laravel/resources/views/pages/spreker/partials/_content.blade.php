@@ -43,9 +43,14 @@
             >
                 <span>📋</span> Vorige
             </button>
-            <div class="text-xs text-gray-500">
-                Auto-refresh 10s
-            </div>
+            <button
+                @click="refreshUitslagen()"
+                :disabled="isRefreshing"
+                class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+                <span :class="isRefreshing ? 'animate-spin' : ''">🔄</span>
+                <span x-text="isRefreshing ? 'Laden...' : 'Vernieuwen'"></span>
+            </button>
         </div>
 
         <!-- Geschiedenis van afgeroepen poules (opgeslagen in localStorage) -->
@@ -383,6 +388,7 @@ function sprekerInterface() {
         openPoules: [],
         notities: '',
         notitiesSaved: false,
+        isRefreshing: false,
 
         async init() {
             // Laad geschiedenis uit localStorage
@@ -517,6 +523,11 @@ function sprekerInterface() {
             }
         },
 
+        refreshUitslagen() {
+            this.isRefreshing = true;
+            location.reload();
+        },
+
         laadVoorbeeldtekst() {
             const voorbeeldtekst = `WELKOMSTWOORD
 - Welkom bij het 7e WestFries Open Judotoernooi!
@@ -547,15 +558,4 @@ PRIJSUITREIKING
     }
 }
 
-// Auto-refresh elke 10 seconden (ALLEEN als uitslagen tab actief is)
-setInterval(function() {
-    // Check via data attribute welke tab actief is
-    const activeTabBtn = document.querySelector('[x-data] button.border-blue-500');
-    const isUitslagenActive = activeTabBtn && activeTabBtn.textContent.includes('Uitslagen');
-
-    // Alleen refreshen als we op de uitslagen tab zitten
-    if (isUitslagenActive) {
-        location.reload();
-    }
-}, 10000);
 </script>
