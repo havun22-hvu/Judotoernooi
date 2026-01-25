@@ -120,8 +120,9 @@
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
             @foreach($blokPoulesList as $pouleInfo)
             @php
-                // Korte chip naam: categorie + poule nummer
-                $chipNaam = $pouleInfo['leeftijdsklasse'] . ' ' . $pouleInfo['gewichtsklasse'] . ' #' . $pouleInfo['nummer'];
+                // Korte chip naam: 1e letter leeftijd + gewicht + poule nummer
+                $leeftijdKort = mb_substr($pouleInfo['leeftijdsklasse'], 0, 1) . '.';
+                $chipNaam = $leeftijdKort . ' ' . $pouleInfo['gewichtsklasse'] . ' #' . $pouleInfo['nummer'];
                 $isSent = $pouleInfo['is_sent'];
                 $isActivated = $pouleInfo['is_activated'];
 
@@ -209,7 +210,7 @@
                              data-poule-id="{{ $poule['id'] }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
                             <div class="font-medium text-gray-800">{{ $categorie }}</div>
-                            <div class="text-gray-500">Poule {{ $poule['nummer'] }} ({{ $heeftWedstrijden ? $poule['wedstrijden'] . 'w' : $poule['judokas'] . 'j' }})</div>
+                            <div class="text-gray-500">#{{ $poule['nummer'] }} ({{ $heeftWedstrijden ? $poule['wedstrijden'] . 'w' : $poule['judokas'] . 'j' }})</div>
                         </div>
                         @empty
                         <div class="text-gray-400 text-xs italic empty-message">Geen poules</div>
