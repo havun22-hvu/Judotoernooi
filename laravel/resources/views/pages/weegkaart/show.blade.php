@@ -87,7 +87,13 @@
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Gewicht</span>
-                <span class="text-sm font-bold text-green-700">{{ $judoka->gewichtsklasse ?? '?' }} kg</span>
+                <span class="text-sm font-bold text-green-700">
+                    @if($judoka->gewichtsklasse === 'Variabel')
+                        {{ $judoka->gewicht ? $judoka->gewicht . ' kg' : 'Variabel' }}
+                    @else
+                        {{ $judoka->gewichtsklasse ?? '?' }} kg
+                    @endif
+                </span>
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Band</span>

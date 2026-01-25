@@ -25,8 +25,12 @@ class ImportService
     /**
      * Analyse CSV data and detect column mapping
      * Returns detected mapping + warnings + preview data
+     *
+     * @param array $header CSV header row
+     * @param array $data CSV data rows
+     * @param bool $heeftVasteGewichtsklassen Whether to detect gewichtsklasse column (only for tournaments with fixed weight classes)
      */
-    public function analyseerCsvData(array $header, array $data): array
+    public function analyseerCsvData(array $header, array $data, bool $heeftVasteGewichtsklassen = true): array
     {
         $verwachteVelden = [
             'naam' => ['naam', 'name', 'volledige naam', 'judoka', 'deelnemer'],
@@ -35,9 +39,13 @@ class ImportService
             'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
             'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
             'band' => ['band', 'gordel', 'belt', 'kyu', 'graad'],
-            'gewichtsklasse' => ['gewichtsklasse', 'klasse', 'categorie', 'weight class'],
             'telefoon' => ['telefoon', 'tel', 'phone', 'mobiel', 'gsm', 'telefoonnummer', 'mobile'],
         ];
+
+        // Gewichtsklasse veld alleen detecteren als toernooi vaste gewichtsklassen heeft
+        if ($heeftVasteGewichtsklassen) {
+            $verwachteVelden['gewichtsklasse'] = ['gewichtsklasse', 'klasse', 'categorie', 'weight class'];
+        }
 
         $detectie = [];
         $headerLower = array_map('strtolower', $header);

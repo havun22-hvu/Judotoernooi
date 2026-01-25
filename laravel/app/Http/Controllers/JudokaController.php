@@ -229,8 +229,12 @@ class JudokaController extends Controller
         // Split header and data
         $header = array_shift($data);
 
-        // Analyse columns
-        $analyse = $this->importService->analyseerCsvData($header, $data);
+        // Bepaal of toernooi vaste gewichtsklassen heeft (minstens 1 categorie met gevulde gewichten array)
+        $config = $toernooi->gewichtsklassen ?? [];
+        $heeftVasteGewichtsklassen = collect($config)->contains(fn($cat) => is_array($cat) && !empty($cat['gewichten'] ?? []));
+
+        // Analyse columns (alleen gewichtsklasse detecteren als toernooi vaste gewichtsklassen heeft)
+        $analyse = $this->importService->analyseerCsvData($header, $data, $heeftVasteGewichtsklassen);
 
         // Store in session for step 2
         session(['import_data' => $data, 'import_header' => $header]);

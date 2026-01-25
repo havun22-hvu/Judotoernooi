@@ -61,6 +61,14 @@
             <p class="text-sm mt-1">Elke coach kaart geeft toegang tot de dojo (judozaal). Deel de link met de begeleider zodat zij hun foto kunnen toevoegen.</p>
         </div>
 
+        @if(!($blokkenIngedeeld ?? false) && $aantalJudokas > 0)
+        <!-- Warning: blokken nog niet ingedeeld -->
+        <div class="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded mb-6">
+            <p class="font-medium">Let op: voorlopig aantal</p>
+            <p class="text-sm mt-1">Het definitieve aantal coachkaarten wordt bepaald na de poule-indeling. Dit aantal kan nog wijzigen.</p>
+        </div>
+        @endif
+
         <!-- Check-in legenda -->
         @if($toernooi->coach_incheck_actief)
         <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
