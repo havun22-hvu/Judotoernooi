@@ -729,11 +729,12 @@ class BlokController extends Controller
                 return $poule;
             });
 
-        // Poules per blok/mat voor "Oproepen" tab
+        // Poules per blok/mat voor "Oproepen" tab (alleen doorgestuurde poules)
         $blokken = $toernooi->blokken()
             ->with(['poules' => function ($q) {
                 $q->with(['mat', 'judokas.club'])
                     ->whereNotNull('mat_id')
+                    ->whereNotNull('doorgestuurd_op')
                     ->orderBy('mat_id')
                     ->orderBy('nummer');
             }])
