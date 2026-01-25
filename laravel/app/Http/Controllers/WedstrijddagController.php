@@ -54,12 +54,17 @@ class WedstrijddagController extends Controller
             $leeftijdVolgorde = $gewichtsklassenConfig ? array_flip(array_map(fn($d) => $d['label'] ?? '', $gewichtsklassenConfig)) : [];
 
             $categories = $blokPoules
-                // Filter lege poules bij variabel gewicht (die gebruiken wachtpoules)
-                // Bij vaste categorieën: lege poules WEL tonen (wachtruimte nodig)
+                // Filter alleen automatisch aangemaakte lege poules bij variabel gewicht
+                // Handmatig aangemaakte poules (nummer > 100 of recent aangemaakt) WEL tonen
                 ->filter(function ($poule) use ($gewichtsklassenConfig, $leeftijdsklasseToKey, $tolerantie) {
                     // Altijd tonen als poule judoka's heeft
                     $actief = $poule->judokas->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))->count();
                     if ($actief > 0) return true;
+
+                    // Handmatig aangemaakte poules altijd tonen (created recent = binnen 24h)
+                    if ($poule->created_at && $poule->created_at->gt(now()->subDay())) {
+                        return true;
+                    }
 
                     // Check of dit een dynamische categorie is
                     $configKey = $leeftijdsklasseToKey[$poule->leeftijdsklasse] ?? null;
@@ -68,7 +73,7 @@ class WedstrijddagController extends Controller
                         $maxKgVerschil = $gewichtsklassenConfig[$configKey]['max_kg_verschil'];
                     }
 
-                    // Dynamisch (max_kg_verschil > 0): lege poules NIET tonen
+                    // Dynamisch (max_kg_verschil > 0): lege automatische poules NIET tonen
                     // Vast (max_kg_verschil = 0): lege poules WEL tonen (wachtruimte)
                     return $maxKgVerschil == 0;
                 })
