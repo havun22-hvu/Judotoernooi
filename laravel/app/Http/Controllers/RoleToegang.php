@@ -398,6 +398,92 @@ class RoleToegang extends Controller
     }
 
     /**
+     * Get poule standings for speaker interface (view previously announced)
+     */
+    public function sprekerStandings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        $validated = $request->validate([
+            'poule_id' => 'required|integer',
+        ]);
+
+        $poule = $toernooi->poules()->with(['judokas.club', 'wedstrijden'])->find($validated['poule_id']);
+        if (!$poule) {
+            return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        $isEliminatie = $poule->type === 'eliminatie';
+
+        if ($isEliminatie) {
+            $standings = $this->getEliminatieStandings($poule);
+        } else {
+            $standings = $this->berekenPouleStand($poule);
+        }
+
+        return response()->json([
+            'success' => true,
+            'poule' => [
+                'id' => $poule->id,
+                'nummer' => $poule->nummer,
+                'leeftijdsklasse' => $poule->leeftijdsklasse,
+                'gewichtsklasse' => $poule->gewichtsklasse,
+                'type' => $poule->type,
+                'is_eliminatie' => $isEliminatie,
+            ],
+            'standings' => $standings->map(fn($s) => [
+                'naam' => $s['judoka']->naam,
+                'club' => $s['judoka']->club?->naam ?? '-',
+                'wp' => $s['wp'],
+                'jp' => $s['jp'],
+                'plaats' => $s['plaats'] ?? null,
+            ])->toArray(),
+        ]);
+    }
+
+    /**
+     * Calculate poule standings (WP/JP sorted)
+     */
+    private function berekenPouleStand($poule): \Illuminate\Support\Collection
+    {
+        $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+            $wp = 0;
+            $jp = 0;
+
+            foreach ($poule->wedstrijden as $wedstrijd) {
+                if ($wedstrijd->judoka_wit_id === $judoka->id) {
+                    $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
+                    $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_wit ?? '');
+                } elseif ($wedstrijd->judoka_blauw_id === $judoka->id) {
+                    $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
+                    $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_blauw ?? '');
+                }
+            }
+
+            return [
+                'judoka' => $judoka,
+                'wp' => (int) $wp,
+                'jp' => (int) $jp,
+            ];
+        });
+
+        $wedstrijden = $poule->wedstrijden;
+        return $standings->sort(function ($a, $b) use ($wedstrijden) {
+            if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
+            if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
+            foreach ($wedstrijden as $w) {
+                $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
+                        || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
+                if ($isMatch && $w->winnaar_id) {
+                    return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
+                }
+            }
+            return 0;
+        })->values();
+    }
+
+    /**
      * Get standings for elimination bracket (for spreker interface)
      */
     private function getEliminatieStandings($poule): \Illuminate\Support\Collection
