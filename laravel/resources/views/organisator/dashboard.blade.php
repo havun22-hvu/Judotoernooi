@@ -14,6 +14,9 @@
                     <h1 class="text-xl font-bold text-gray-800">JudoToernooi</h1>
                 </div>
                 <div class="flex items-center space-x-4">
+                    @if($organisator->isSitebeheerder())
+                    <a href="{{ route('toernooi.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">Alle Organisatoren</a>
+                    @endif
                     <span class="text-gray-600">{{ $organisator->naam }}</span>
                     @if($organisator->isSitebeheerder())
                     <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">Sitebeheerder</span>
