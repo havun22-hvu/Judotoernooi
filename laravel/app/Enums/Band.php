@@ -54,6 +54,16 @@ enum Band: int
         };
     }
 
+    /**
+     * Strip kyu notation from band string: "Geel (5e kyu)" → "Geel"
+     */
+    public static function stripKyu(string $band): string
+    {
+        // Remove everything from " (" onwards
+        $pos = strpos($band, ' (');
+        return $pos !== false ? substr($band, 0, $pos) : $band;
+    }
+
     public static function fromString(string $band): ?self
     {
         $band = strtolower(trim($band));
