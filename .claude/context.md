@@ -410,3 +410,18 @@ Altijd controleren of andere tabellen FK refs hebben naar de hernoemde tabel.
 ---
 
 > **Sessie logs:** Zie `.claude/smallwork.md` voor recente wijzigingen
+
+---
+
+## Laatste Sessie: 25 januari 2026
+
+### Wat is gedaan:
+- Variabele gewichtscategorieën fix: per-poule `isDynamisch()` check i.p.v. globaal
+- Poule breedte fix: grid layout (grid-cols-3) i.p.v. flex-wrap met min-width
+
+### Openstaande items:
+- Geen
+
+### Belangrijke context:
+- Wedstrijddag poules gebruiken nu `grid grid-cols-2 md:grid-cols-3 gap-3` (zelfde als poules page)
+- Wachtruimte wordt alleen getoond voor VASTE categorieën (niet dynamisch)
