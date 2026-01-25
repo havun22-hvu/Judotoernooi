@@ -18,6 +18,9 @@ class DynamischeIndelingService
         'poule_grootte_voorkeur' => [5, 4, 6, 3],
     ];
 
+    /** @var array Judoka's met ontbrekende gegevens (gewicht/leeftijd) */
+    private array $onvolledigeJudokas = [];
+
     /**
      * Get effectief gewicht voor poule-indeling.
      *
@@ -60,6 +63,7 @@ class DynamischeIndelingService
         array $config = []
     ): array {
         $this->config = array_merge($this->config, $config);
+        $this->onvolledigeJudokas = []; // Reset
 
         if ($judokas->isEmpty()) {
             return $this->maakResultaat([], $judokas->count());
@@ -180,6 +184,18 @@ class DynamischeIndelingService
                 $poules[] = $this->maakPouleData($judokasInPoule);
             }
         }
+
+        // Haal onvolledige judoka's uit Python response
+        $onvolledigeIds = $result['onvolledige_judokas'] ?? [];
+        $onvolledigeJudokas = [];
+        foreach ($onvolledigeIds as $id) {
+            if (isset($judokaMap[$id])) {
+                $onvolledigeJudokas[] = $judokaMap[$id];
+            }
+        }
+
+        // Store incomplete judokas for later retrieval
+        $this->onvolledigeJudokas = $onvolledigeJudokas;
 
         return $poules;
     }
@@ -344,6 +360,7 @@ class DynamischeIndelingService
             'totaal_ingedeeld' => $totaalIngedeeld,
             'totaal_judokas' => $totaalJudokas,
             'aantal_poules' => count($poules),
+            'onvolledige_judokas' => $this->onvolledigeJudokas,
             'params' => [],
             'stats' => $this->berekenStatistieken($poules),
         ];

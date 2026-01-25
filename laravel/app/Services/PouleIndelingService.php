@@ -271,6 +271,18 @@ class PouleIndelingService
                         ]
                     );
 
+                    // Check for incomplete judokas (missing weight/age)
+                    $onvolledigeJudokas = $indeling['onvolledige_judokas'] ?? [];
+                    if (!empty($onvolledigeJudokas)) {
+                        $namen = array_map(fn($j) => $j->naam, $onvolledigeJudokas);
+                        $statistieken['waarschuwingen'][] = [
+                            'type' => 'warning',
+                            'categorie' => $leeftijdsklasse,
+                            'bericht' => count($onvolledigeJudokas) . " judoka's met ontbrekende gegevens (gewicht/leeftijd) niet ingedeeld: " . implode(', ', array_slice($namen, 0, 5)) . (count($namen) > 5 ? '...' : ''),
+                            'onvolledige_judokas' => $onvolledigeJudokas,
+                        ];
+                    }
+
                     // Check if this age class uses elimination system
                     $isDynamicEliminatie = $systeem === 'eliminatie';
 
