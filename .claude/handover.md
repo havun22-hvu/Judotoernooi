@@ -20,6 +20,8 @@
 - Backend: `BlokController::maakBarrage()` maakt barrage poule aan
 - Judoka's worden `attach()` (niet `detach`) - blijven in beide poules
 - Poule verplaatsen: zaaloverzicht drag & drop → mat_id update → auto-refresh
+- **Barrage wedstrijdschema**: Altijd single round-robin (1x tegen elkaar), negeert dubbel_bij_3_judokas config
+- Bij barrage gelijkspel: nieuwe barrage poule wordt aangemaakt
 
 ### Openstaande items:
 - Geen
