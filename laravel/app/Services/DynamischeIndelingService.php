@@ -112,7 +112,7 @@ class DynamischeIndelingService
         }
 
         // Roep Python aan - V2 voor test (cascading band verdeling)
-        $scriptPath = base_path('scripts/poule_solver_v2.py');
+        $scriptPath = base_path('scripts/poule_solver.py');
         $pythonCmd = $this->findPython();
 
         if (!$pythonCmd || !file_exists($scriptPath)) {
