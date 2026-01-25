@@ -9,6 +9,9 @@
     <form action="{{ route('toernooi.judoka.update', [$toernooi, $judoka]) }}" method="POST" class="bg-white rounded-lg shadow p-6">
         @csrf
         @method('PUT')
+        @if(request('filter'))
+        <input type="hidden" name="filter" value="{{ request('filter') }}">
+        @endif
 
         <div class="mb-4">
             <label for="naam" class="block text-gray-700 font-bold mb-2">Naam *</label>
@@ -47,8 +50,15 @@
             </div>
         </div>
 
+        @php
+            $terugUrl = route('toernooi.judoka.index', $toernooi);
+            if (request('filter') === 'onvolledig') {
+                $terugUrl .= '#onvolledig';
+            }
+        @endphp
         <div class="flex justify-end space-x-4">
-            <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            <a href="{{ $terugUrl }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+               @if(request('filter') === 'onvolledig') onclick="sessionStorage.setItem('toonOnvolledig', 'true')" @endif>
                 Annuleren
             </a>
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
