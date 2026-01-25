@@ -252,19 +252,36 @@ class PouleController extends Controller
             $verwachtWedstrijden = $aantalJudokas >= 2 ? ($aantalJudokas * ($aantalJudokas - 1)) / 2 : 0;
 
             // Check for problems (empty poules are ok)
-            if ($aantalJudokas > 0 && $aantalJudokas < 3) {
-                $problemen[] = [
-                    'poule' => $poule->titel,
-                    'type' => 'te_weinig',
-                    'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 3)",
-                ];
-            } elseif ($aantalJudokas > 6) {
-                $problemen[] = [
-                    'poule' => $poule->titel,
-                    'type' => 'te_veel',
-                    'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (max. 6)",
-                ];
+            // Skip eliminatie and kruisfinale - they have different size requirements
+            $isEliminatie = $poule->type === 'eliminatie';
+            $isKruisfinale = $poule->isKruisfinale();
+
+            if ($isEliminatie) {
+                // Eliminatie needs at least 8 judokas
+                if ($aantalJudokas > 0 && $aantalJudokas < 8) {
+                    $problemen[] = [
+                        'poule' => $poule->titel,
+                        'type' => 'te_weinig',
+                        'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 8 voor eliminatie)",
+                    ];
+                }
+            } elseif (!$isKruisfinale) {
+                // Regular poules: 3-6 judokas
+                if ($aantalJudokas > 0 && $aantalJudokas < 3) {
+                    $problemen[] = [
+                        'poule' => $poule->titel,
+                        'type' => 'te_weinig',
+                        'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 3)",
+                    ];
+                } elseif ($aantalJudokas > 6) {
+                    $problemen[] = [
+                        'poule' => $poule->titel,
+                        'type' => 'te_veel',
+                        'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (max. 6)",
+                    ];
+                }
             }
+            // Kruisfinale: no size restrictions
 
             // Check and fix match count
             $huidigWedstrijden = $poule->wedstrijden()->count();
