@@ -99,7 +99,7 @@
                         <!-- Action buttons -->
                         <div class="flex items-center space-x-2 shrink-0">
                             <!-- View link -->
-                            <a href="{{ $weegkaartUrl }}" target="_blank"
+                            <a href="{{ $weegkaartUrl }}?from_portal" target="_blank"
                                class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
