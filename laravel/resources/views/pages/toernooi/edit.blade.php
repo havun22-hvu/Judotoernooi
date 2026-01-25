@@ -1183,8 +1183,10 @@
                                 if (presetToSelect) {
                                     huidigePresetId = presetToSelect.id;
                                     huidigePresetNaam = presetToSelect.naam;
-                                    presetsDropdown.value = presetToSelect.id;
-                                    setTimeout(() => updateEigenPresetRadio(presetToSelect.naam, true), 0);
+                                    // Force string comparison for dropdown value
+                                    presetsDropdown.value = String(presetToSelect.id);
+                                    // Direct call - no setTimeout needed
+                                    updateEigenPresetRadio(presetToSelect.naam, true);
                                 }
                             }
                         }
@@ -1326,8 +1328,8 @@
                         // Load presets en selecteer direct de nieuwe/bijgewerkte preset
                         await loadEigenPresets(data.id);
                         updateDeleteButton();
-                        // Herstel scroll positie (MOET na alle DOM updates)
-                        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
+                        // Herstel scroll positie - gebruik setTimeout voor stabiele restore na alle DOM updates
+                        setTimeout(() => window.scrollTo(0, scrollPos), 50);
                     } else {
                         const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
