@@ -304,8 +304,9 @@
                     {{-- Normale poules - groepeer op gewichtsklasse voor aparte rijen --}}
                     @php
                         // Groepeer poules op gewicht (uit titel of gewichtsklasse)
-                        $poulesPerGewicht = $category['poules']->groupBy(function($poule) use ($heeftVariabeleCategorieen) {
-                            if ($heeftVariabeleCategorieen && $poule->titel) {
+                        // Gebruik per-poule check of het dynamisch is
+                        $poulesPerGewicht = $category['poules']->groupBy(function($poule) {
+                            if ($poule->isDynamisch() && $poule->titel) {
                                 // Haal gewichtsbereik uit titel (bijv. "21.5-24.4kg" uit "Jeugd 7-9j 21.5-24.4kg")
                                 if (preg_match('/([\d.]+)-([\d.]+)kg/', $poule->titel, $m)) {
                                     return $m[1] . '-' . $m[2] . 'kg';
@@ -419,13 +420,14 @@
                                 data-actief="{{ $aantalActief }}"
                             >
                                 @php
-                                    // Bij variabele categorieën: toon actuele gewichtsrange (niet de oorspronkelijke)
-                                    $pouleRange = $heeftVariabeleCategorieen ? $poule->getGewichtsRange() : null;
-                                    if ($heeftVariabeleCategorieen && $pouleRange) {
+                                    // Bij dynamische categorieën: toon actuele gewichtsrange (niet de oorspronkelijke)
+                                    $pouleIsDynamischTitel = $poule->isDynamisch();
+                                    $pouleRange = $pouleIsDynamischTitel ? $poule->getGewichtsRange() : null;
+                                    if ($pouleIsDynamischTitel && $pouleRange) {
                                         // Haal leeftijdsdeel uit titel (bijv. "Jeugd 7-9j" uit "Jeugd 7-9j 21.5-24.4kg")
                                         $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $poule->titel ?? '');
                                         $pouleTitel = $titelZonderKg . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
-                                    } elseif ($heeftVariabeleCategorieen && $poule->titel) {
+                                    } elseif ($pouleIsDynamischTitel && $poule->titel) {
                                         $pouleTitel = $poule->titel;
                                     } else {
                                         $pouleTitel = $category['label'] . ' / ' . $poule->gewichtsklasse;
@@ -466,8 +468,11 @@
                                         $isAfwezig = !$judoka->isActief($wegingGesloten);
 
                                         // Check of judoka past in DEZE POULE's gewichtsklasse
+                                        // ALLEEN voor VASTE categorieën (niet dynamisch)
+                                        // Dynamische categorieën: poule-level check via $problematischeGewichtsPoules
+                                        $pouleIsDynamisch = $poule->isDynamisch();
                                         $isVerkeerdePoule = false;
-                                        if (!$heeftVariabeleCategorieen && $poule->gewichtsklasse) {
+                                        if (!$pouleIsDynamisch && $poule->gewichtsklasse) {
                                             $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
                                             $isPlusKlasse = str_starts_with($poule->gewichtsklasse, '+');
                                             $pouleLimiet = floatval(preg_replace('/[^0-9.]/', '', $poule->gewichtsklasse));
@@ -482,7 +487,8 @@
                                         }
 
                                         // Afwijkend = eigen gewichtsklasse niet gehaald (overpouler)
-                                        $isAfwijkendGewicht = !$heeftVariabeleCategorieen && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                        // Alleen voor VASTE categorieën - dynamische gebruiken poule-level check
+                                        $isAfwijkendGewicht = !$pouleIsDynamisch && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
 
                                         // Combineer: verkeerde poule OF afwijkend gewicht
                                         $heeftProbleem = $isVerkeerdePoule || $isAfwijkendGewicht;
@@ -529,8 +535,13 @@
                             @endforeach
                         </div>
 
-                        {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën --}}
-                        @if(!$heeftVariabeleCategorieen)
+                        {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën (niet dynamisch) --}}
+                        @php
+                            // Check of deze categorie dynamisch is via de eerste poule
+                            $eerstePouleInCategorie = $category['poules']->first();
+                            $categorieIsDynamisch = $eerstePouleInCategorie && $eerstePouleInCategorie->isDynamisch();
+                        @endphp
+                        @if(!$categorieIsDynamisch)
                         <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
                                 <span>Wachtruimte</span>
