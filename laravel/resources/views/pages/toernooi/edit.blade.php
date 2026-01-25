@@ -836,6 +836,13 @@
 
         <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Herstel scroll positie na preset opslaan (fallback)
+            const presetScrollRestore = sessionStorage.getItem('preset_scroll_restore');
+            if (presetScrollRestore) {
+                sessionStorage.removeItem('preset_scroll_restore');
+                setTimeout(() => window.scrollTo(0, parseInt(presetScrollRestore)), 100);
+            }
+
             const container = document.getElementById('gewichtsklassen-container');
             const jsonInput = document.getElementById('gewichtsklassen_json_input');
 
@@ -1309,7 +1316,8 @@
             // Save preset to server
             async function savePreset(naam, overschrijven = false) {
                 const configuratie = collectConfiguratie();
-                const scrollPos = window.scrollY; // Bewaar scroll positie
+                // Gebruik de scroll positie die werd opgeslagen VOOR de modal opende
+                const savedScrollPos = presetScrollPosition;
                 try {
                     const response = await fetch('{{ route("organisator.presets.store") }}', {
                         method: 'POST',
@@ -1328,8 +1336,17 @@
                         // Load presets en selecteer direct de nieuwe/bijgewerkte preset
                         await loadEigenPresets(data.id);
                         updateDeleteButton();
-                        // Herstel scroll positie - gebruik setTimeout voor stabiele restore na alle DOM updates
-                        setTimeout(() => window.scrollTo(0, scrollPos), 50);
+                        // Herstel scroll positie vanuit sessionStorage
+                        const scrollPos = sessionStorage.getItem('preset_scroll_restore');
+                        if (scrollPos) {
+                            sessionStorage.removeItem('preset_scroll_restore');
+                            // Gebruik meerdere pogingen met toenemende delays
+                            const restore = () => window.scrollTo(0, parseInt(scrollPos));
+                            restore();
+                            setTimeout(restore, 50);
+                            setTimeout(restore, 150);
+                            setTimeout(restore, 300);
+                        }
                     } else {
                         const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
@@ -1342,6 +1359,9 @@
 
             // Save current config as preset
             document.getElementById('btn-save-preset').addEventListener('click', () => {
+                // Bewaar scroll positie in sessionStorage VOORDAT modal opent
+                sessionStorage.setItem('preset_scroll_restore', window.scrollY);
+
                 if (huidigePresetId && huidigePresetNaam) {
                     // Show 3-button modal
                     showPresetModal('Preset opslaan', `
