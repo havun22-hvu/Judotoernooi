@@ -46,6 +46,18 @@
 - **Wat:** Groene "+ Poule" knop in wedstrijddag blokbalk
 - **Bestanden:** poules.blade.php, WedstrijddagController.php
 
+### Fix: Weegkaart modal skip voor portal
+- **Type:** Bug fix
+- **Wat:** "Weegkaart opslaan?" modal niet tonen bij portal/organisator toegang, alleen bij QR-scan smartphone
+- **Bestanden:** weegkaart/show.blade.php, coach/weegkaarten.blade.php, judoka/show.blade.php
+- **Oplossing:** `?from_portal` query parameter
+
+### Fix: Weegkaart band zonder kyu
+- **Type:** UI fix
+- **Wat:** Band tonen als "Blauw" i.p.v. "Blauw (2e kyu)"
+- **Bestanden:** weegkaart/show.blade.php
+- **Regel:** `explode(' ', $judoka->band)[0]` - alleen eerste woord
+
 ---
 
 <!--
