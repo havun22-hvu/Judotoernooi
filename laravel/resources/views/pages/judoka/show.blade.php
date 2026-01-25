@@ -105,7 +105,7 @@
         </a>
         <div class="flex gap-2">
             @if($judoka->qr_code)
-            <a href="{{ route('weegkaart.show', $judoka->qr_code) }}" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+            <a href="{{ route('weegkaart.show', $judoka->qr_code) }}?from_portal" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
                 Weegkaart
             </a>
             @endif
