@@ -29,14 +29,27 @@
         $verwijderdeTekst->push($j->naam . ' (afwijkend gewicht)');
     }
 
-    // Poule titel
+    // Poule titel - formaat: Label / leeftijd / gewicht
     $pouleIsDynamisch = $poule->isDynamisch();
     $pouleRange = $pouleIsDynamisch ? $poule->getGewichtsRange() : null;
     if ($pouleIsDynamisch && $pouleRange) {
+        // Haal label en leeftijd uit titel (bijv. "Jeugd 5-7j 16.1-18.3kg" -> "Jeugd" en "5-7j")
         $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $poule->titel ?? '');
-        $pouleTitel = $titelZonderKg . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
+        // Split label en leeftijd
+        if (preg_match('/^(.+?)\s+(\d+-\d+j)$/', trim($titelZonderKg), $matches)) {
+            $pouleTitel = $matches[1] . ' / ' . $matches[2] . ' / ' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg';
+        } else {
+            $pouleTitel = $titelZonderKg . ' / ' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg';
+        }
     } elseif ($poule->titel) {
-        $pouleTitel = $poule->titel;
+        // Formatteer bestaande titel met slashes
+        $titel = $poule->titel;
+        // Probeer "Label Xj gewicht" te parsen en te formatteren
+        if (preg_match('/^(.+?)\s+(\d+-?\d*j)\s+(.+)$/', $titel, $matches)) {
+            $pouleTitel = $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
+        } else {
+            $pouleTitel = $titel;
+        }
     } else {
         $pouleTitel = $poule->leeftijdsklasse . ' / ' . $poule->gewichtsklasse;
     }
@@ -55,7 +68,7 @@
         $headerSubtext = $aantalActief === 0 ? 'text-gray-300' : ($isEliminatie ? 'text-orange-200' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')));
     @endphp
     <div class="{{ $headerBg }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
-        <div class="pointer-events-none flex-1">
+        <div class="flex-1">
             <div class="font-bold text-sm">@if($isEliminatie)⚔️ @endif#{{ $poule->nummer }} {{ $pouleTitel }}</div>
             <div class="text-xs {{ $headerSubtext }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's ~<span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
         </div>

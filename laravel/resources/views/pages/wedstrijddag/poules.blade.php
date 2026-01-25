@@ -214,19 +214,46 @@
                     {{-- Eliminatie poules eerst: volle breedte --}}
                     @foreach($eliminatiePoules as $elimPoule)
                     @php
-                        $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten) {
-                            return !$j->isActief($wegingGesloten);
-                        });
-                        $aantalActiefElim = $elimPoule->judokas->count() - $verwijderdeElim->count();
+                        // Afwezige judoka's
+                        $afwezigeElim = $elimPoule->judokas->filter(fn($j) => !$j->isActief($wegingGesloten));
+                        // Overgepoulde judoka's (afwijkend gewicht maar wel actief)
+                        $overpoulersElim = $elimPoule->judokas->filter(fn($j) =>
+                            $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie) && $j->isActief($wegingGesloten)
+                        );
+                        $aantalActiefElim = $elimPoule->judokas->count() - $afwezigeElim->count();
+
+                        // Info tekst voor tooltip
+                        $verwijderdeTekstElim = collect();
+                        foreach ($afwezigeElim as $j) {
+                            $verwijderdeTekstElim->push($j->naam . ' (afwezig)');
+                        }
+                        foreach ($overpoulersElim as $j) {
+                            $verwijderdeTekstElim->push($j->naam . ' (afwijkend gewicht)');
+                        }
+
+                        // Titel formaat met slashes
+                        $elimTitel = $elimPoule->titel ?? ($elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse);
+                        if (preg_match('/^(.+?)\s+(\d+-?\d*j)\s+(.+)$/', $elimTitel, $matches)) {
+                            $elimTitelFormatted = $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
+                        } else {
+                            $elimTitelFormatted = $elimTitel;
+                        }
+
+                        $isDoorgestuurdElim = $elimPoule->doorgestuurd_op !== null;
                     @endphp
                     <div id="poule-{{ $elimPoule->id }}" class="col-span-2 md:col-span-3 lg:col-span-4 border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}">
-                        @php $isDoorgestuurdElim = $elimPoule->doorgestuurd_op !== null; @endphp
                         <div class="bg-orange-600 text-white px-4 py-2 flex justify-between items-center">
                             <div>
-                                <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimPoule->titel ?? ($elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse) }} <span class="font-normal text-orange-200">(Eliminatie)</span></div>
+                                <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimTitelFormatted }} <span class="font-normal text-orange-200">(Eliminatie)</span></div>
                                 <div class="text-sm text-orange-200">{{ $aantalActiefElim }} judoka's ~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</div>
                             </div>
                             <div class="flex items-center gap-1">
+                                @if($verwijderdeTekstElim->isNotEmpty())
+                                <div class="relative" x-data="{ show: false }">
+                                    <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                    <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
+                                </div>
+                                @endif
                                 <button
                                     onclick="naarZaaloverzichtPoule({{ $elimPoule->id }}, this)"
                                     class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurdElim ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-400' }}"
@@ -244,9 +271,20 @@
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             @foreach($elimPoule->judokas as $judoka)
                             @if(!$judoka->isActief($wegingGesloten)) @continue @endif
-                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
-                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
-                                <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                            @php $isGewogenElim = $judoka->gewicht_gewogen !== null; @endphp
+                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 group relative">
+                                <div class="flex items-center gap-1">
+                                    @if($isGewogenElim)<span class="text-green-500 text-xs">●</span>@endif
+                                    <div class="min-w-0 flex-1">
+                                        <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }}</div>
+                                        <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                    </div>
+                                    <button
+                                        onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
+                                        class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Zoek geschikte poule"
+                                    >🔍</button>
+                                </div>
                             </div>
                             @endforeach
                         </div>
@@ -331,15 +369,20 @@
                                 @continue
                             @endif
                             @php $isGewogen = $judoka->gewicht_gewogen !== null; @endphp
-                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
+                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 group">
                                 <div class="flex items-center gap-1">
                                     @if($isGewogen)
                                         <span class="text-green-500 text-xs">●</span>
                                     @endif
-                                    <div class="min-w-0">
+                                    <div class="min-w-0 flex-1">
                                         <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
                                         <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                     </div>
+                                    <button
+                                        onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
+                                        class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Zoek geschikte poule"
+                                    >🔍</button>
                                 </div>
                             </div>
                             @endforeach
