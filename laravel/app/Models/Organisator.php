@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -88,5 +89,21 @@ class Organisator extends Authenticatable
     {
         $this->laatste_login = now();
         $this->save();
+    }
+
+    /**
+     * Get all clubs belonging to this organisator
+     */
+    public function clubs(): HasMany
+    {
+        return $this->hasMany(Club::class);
+    }
+
+    /**
+     * Get all toernooi templates belonging to this organisator
+     */
+    public function toernooiTemplates(): HasMany
+    {
+        return $this->hasMany(ToernooiTemplate::class);
     }
 }

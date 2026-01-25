@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - JudoToernooi</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <nav class="bg-white shadow-sm">
@@ -52,6 +54,59 @@
                 Nieuw Toernooi
             </a>
         </div>
+
+        {{-- Templates Section --}}
+        <div x-data="templateManager()" class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-700">Mijn Templates</h3>
+                <button @click="open = !open" class="text-blue-600 hover:text-blue-800 text-sm">
+                    <span x-show="!open">Toon templates</span>
+                    <span x-show="open">Verberg</span>
+                </button>
+            </div>
+
+            <div x-show="open" x-collapse class="bg-white rounded-lg shadow p-4">
+                <template x-if="templates.length === 0">
+                    <p class="text-gray-500 text-sm">Nog geen templates. Sla instellingen op vanuit een bestaand toernooi.</p>
+                </template>
+                <template x-if="templates.length > 0">
+                    <div class="space-y-3">
+                        <template x-for="template in templates" :key="template.id">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded border">
+                                <div>
+                                    <span class="font-medium" x-text="template.naam"></span>
+                                    <span x-show="template.beschrijving" class="text-gray-500 text-sm ml-2" x-text="'- ' + template.beschrijving"></span>
+                                    <span x-show="template.max_judokas" class="text-gray-400 text-xs ml-2" x-text="'(max ' + template.max_judokas + ' judokas)'"></span>
+                                </div>
+                                <button @click="deleteTemplate(template.id)" class="text-red-500 hover:text-red-700 text-sm">Verwijderen</button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <script>
+            function templateManager() {
+                return {
+                    open: false,
+                    templates: @json($organisator->toernooiTemplates ?? []),
+                    async deleteTemplate(id) {
+                        if (!confirm('Weet je zeker dat je deze template wilt verwijderen?')) return;
+                        const response = await fetch(`/templates/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        if (response.ok) {
+                            this.templates = this.templates.filter(t => t.id !== id);
+                        }
+                    }
+                }
+            }
+        </script>
 
         @if($toernooien->isEmpty())
         <div class="bg-white rounded-lg shadow p-8 text-center">

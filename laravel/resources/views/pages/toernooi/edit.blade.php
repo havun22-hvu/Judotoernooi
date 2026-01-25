@@ -1566,6 +1566,87 @@
     <!-- VRIJWILLIGERS (device toegangen met binding) -->
     @include('pages.toernooi.partials.device-toegangen')
 
+    <!-- TEMPLATE OPSLAAN -->
+    @auth('organisator')
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Opslaan als Template</h2>
+        <p class="text-gray-600 mb-4">
+            Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.
+        </p>
+
+        <div x-show="!showForm" class="flex gap-4">
+            <button type="button" @click="showForm = true" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Nieuwe template maken
+            </button>
+        </div>
+
+        <div x-show="showForm" x-cloak class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Template naam *</label>
+                <input type="text" x-model="naam" placeholder="Bijv. Intern toernooi, Open toernooi" class="w-full border rounded px-3 py-2">
+            </div>
+            <div>
+                <label class="block text-gray-700 font-medium mb-1">Beschrijving (optioneel)</label>
+                <input type="text" x-model="beschrijving" placeholder="Korte omschrijving van dit type toernooi" class="w-full border rounded px-3 py-2">
+            </div>
+            <div class="flex gap-2">
+                <button type="button" @click="save()" :disabled="loading || !naam.trim()"
+                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    <span x-show="!loading">Opslaan</span>
+                    <span x-show="loading">Bezig...</span>
+                </button>
+                <button type="button" @click="showForm = false; naam = ''; beschrijving = ''" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                    Annuleren
+                </button>
+            </div>
+            <p x-show="message" x-text="message" :class="success ? 'text-green-600' : 'text-red-600'" class="text-sm"></p>
+        </div>
+    </div>
+
+    <script>
+    function templateSave() {
+        return {
+            showForm: false,
+            naam: '',
+            beschrijving: '',
+            loading: false,
+            message: '',
+            success: false,
+            async save() {
+                this.loading = true;
+                this.message = '';
+                try {
+                    const res = await fetch('{{ route("templates.store", $toernooi) }}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ naam: this.naam, beschrijving: this.beschrijving })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        this.success = true;
+                        this.message = data.message || 'Template opgeslagen!';
+                        this.naam = '';
+                        this.beschrijving = '';
+                        setTimeout(() => { this.showForm = false; this.message = ''; }, 2000);
+                    } else {
+                        this.success = false;
+                        this.message = data.error || 'Fout bij opslaan';
+                    }
+                } catch (e) {
+                    this.success = false;
+                    this.message = 'Fout bij opslaan';
+                }
+                this.loading = false;
+            }
+        }
+    }
+    </script>
+    @endauth
+
     <!-- SNELKOPPELINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Snelkoppelingen</h2>

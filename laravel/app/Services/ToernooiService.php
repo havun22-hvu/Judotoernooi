@@ -6,6 +6,7 @@ use App\Models\Blok;
 use App\Models\DeviceToegang;
 use App\Models\Mat;
 use App\Models\Toernooi;
+use App\Models\ToernooiTemplate;
 use Illuminate\Support\Facades\DB;
 
 class ToernooiService
@@ -34,6 +35,14 @@ class ToernooiService
                 'is_actief' => true,
                 'gebruik_gewichtsklassen' => false, // Default: dynamische indeling (geen vaste klassen)
             ]);
+
+            // Apply template if provided
+            if (!empty($data['template_id'])) {
+                $template = ToernooiTemplate::find($data['template_id']);
+                if ($template) {
+                    $template->applyToToernooi($toernooi);
+                }
+            }
 
             // Create blocks
             $this->maakBlokken($toernooi);

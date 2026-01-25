@@ -38,6 +38,7 @@ class ToernooiRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'template_id' => 'nullable|integer|exists:toernooi_templates,id',
             'naam' => 'required|string|max:255',
             'organisatie' => 'nullable|string|max:255',
             'datum' => 'required|date',

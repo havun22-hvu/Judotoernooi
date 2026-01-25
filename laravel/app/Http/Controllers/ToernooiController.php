@@ -6,6 +6,7 @@ use App\Http\Requests\ToernooiRequest;
 use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Toernooi;
+use App\Models\ToernooiTemplate;
 use App\Services\CategorieClassifier;
 use App\Services\PouleIndelingService;
 use App\Services\ToernooiService;
@@ -47,7 +48,10 @@ class ToernooiController extends Controller
 
     public function create(): View
     {
-        return view('pages.toernooi.create');
+        $organisator = auth('organisator')->user();
+        $templates = $organisator ? $organisator->toernooiTemplates()->orderBy('naam')->get() : collect();
+
+        return view('pages.toernooi.create', compact('templates'));
     }
 
     public function store(ToernooiRequest $request): RedirectResponse

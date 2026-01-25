@@ -246,10 +246,11 @@ class ImportService
             }
         }
 
-        // Get or create club
+        // Get or create club (scoped to organisator if available)
         $club = null;
         if (!empty($clubNaam)) {
-            $club = Club::findOrCreateByName($clubNaam);
+            $organisatorId = $toernooi->organisatoren()->first()?->id;
+            $club = Club::findOrCreateByName($clubNaam, $organisatorId);
         }
 
         // Calculate age class using preset config (not hardcoded enum)
