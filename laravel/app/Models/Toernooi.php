@@ -6,6 +6,7 @@ use App\Helpers\BandHelper;
 use App\Http\Controllers\RoleToegang;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -285,6 +286,16 @@ class Toernooi extends Model
     public function deviceToegangen(): HasMany
     {
         return $this->hasMany(DeviceToegang::class);
+    }
+
+    /**
+     * Get all organisatoren linked to this toernooi
+     */
+    public function organisatoren(): BelongsToMany
+    {
+        return $this->belongsToMany(Organisator::class, 'organisator_toernooi')
+            ->withPivot('rol')
+            ->withTimestamps();
     }
 
     public function isInschrijvingOpen(): bool
