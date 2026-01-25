@@ -64,6 +64,12 @@
 - **Bestanden:** WedstrijddagController.php
 - **Oplossing:** Poules aangemaakt binnen 24h altijd tonen
 
+### Fix: Eliminatie poule te weinig judoka's
+- **Type:** Bug fix
+- **Wat:** Eliminatie poules met <8 judoka's nu ook als problematisch (rood) gemarkeerd
+- **Bestanden:** poule-card.blade.php
+- **Regel:** `$isProblematisch = $aantalActief > 0 && $aantalActief < ($isEliminatie ? 8 : 3)`
+
 ---
 
 <!--
