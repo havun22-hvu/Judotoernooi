@@ -249,12 +249,10 @@ def herverdeel_kleine_poules(
                 continue
 
             # STRATEGIE 2: Steel judoka van TE GROTE poule (> ideale grootte)
-            # Alleen stelen van poules die groter zijn dan ideaal
             if kleine.size < min_size and kleine in poules:
                 grote_poules = [p for p in poules if p.size > ideale_size]
 
                 for grote in grote_poules:
-                    # Zoek judoka in grote die past bij kleine EN nog niet verplaatst
                     for judoka in grote.judokas:
                         if judoka.id in verplaatste_judokas:
                             continue
@@ -268,7 +266,70 @@ def herverdeel_kleine_poules(
                             break
 
                     if kleine.size >= min_size:
-                        break  # Kleine is nu groot genoeg
+                        break
+
+            # STRATEGIE 3: Cascade - verplaats lichtste uit poule naar lichtere poule, zodat orphan past
+            # Voorbeeld: orphan 42kg past niet in poule 38-40kg, maar als we 38kg naar lichtere poule
+            # verplaatsen, kan orphan 42kg erbij (range wordt 39-42 = 3kg)
+            if kleine.size <= 2 and kleine in poules and kleine.judokas:
+                orphan = kleine.judokas[0]
+                kandidaat_poules = [p for p in poules if p is not kleine and p.size >= 4]
+
+                for target in kandidaat_poules:
+                    # Check of orphan qua leeftijd en band zou passen
+                    if not all(abs(orphan.leeftijd - j.leeftijd) <= max_lft for j in target.judokas):
+                        continue
+                    if max_band > 0 and not all(abs(orphan.band - j.band) <= max_band for j in target.judokas):
+                        continue
+
+                    # Orphan past qua leeftijd/band, maar misschien niet qua gewicht
+                    # Zoek de lichtste in target poule
+                    lichtste = min(target.judokas, key=lambda j: j.gewicht)
+
+                    # Bereken nieuwe range als we orphan toevoegen en lichtste verwijderen
+                    overige = [j for j in target.judokas if j is not lichtste]
+                    if not overige:
+                        continue
+
+                    nieuwe_gewichten = [j.gewicht for j in overige] + [orphan.gewicht]
+                    nieuwe_range = max(nieuwe_gewichten) - min(nieuwe_gewichten)
+
+                    if nieuwe_range > max_kg:
+                        continue  # Nog steeds te groot
+
+                    # Kan lichtste naar een andere poule?
+                    for andere in poules:
+                        if andere is target or andere is kleine or andere.size >= 6:
+                            continue
+                        if past_in_poule(lichtste, andere, max_kg, max_lft, max_band):
+                            # CASCADE UITVOEREN!
+                            target.judokas.remove(lichtste)
+                            andere.judokas.append(lichtste)
+                            kleine.judokas.remove(orphan)
+                            target.judokas.append(orphan)
+                            verplaatste_judokas.add(lichtste.id)
+                            verplaatste_judokas.add(orphan.id)
+                            verbeterd = True
+                            logging.debug(f"    Cascade: J{lichtste.id}({lichtste.gewicht}kg) naar lichtere poule, orphan J{orphan.id}({orphan.gewicht}kg) naar target")
+                            break
+
+                    if verbeterd:
+                        break
+                if verbeterd:
+                    continue
+
+            # STRATEGIE 4: Directe plaatsing - steel van volle poule als orphan daar past
+            if kleine.size == 1 and kleine in poules and kleine.judokas:
+                orphan = kleine.judokas[0]
+                for target in [p for p in poules if p is not kleine and 4 <= p.size <= 5]:
+                    if past_in_poule(orphan, target, max_kg, max_lft, max_band):
+                        # Orphan past! Verplaats direct
+                        kleine.judokas.remove(orphan)
+                        target.judokas.append(orphan)
+                        verplaatste_judokas.add(orphan.id)
+                        verbeterd = True
+                        logging.debug(f"    Direct: orphan J{orphan.id} past in poule (nu {target.size})")
+                        break
 
         if not verbeterd:
             logging.debug(f"  Geen verbetering meer na {iteratie + 1} iteraties")
@@ -454,7 +515,13 @@ def solve(input_data: dict) -> dict:
 
 def main():
     try:
-        input_data = json.load(sys.stdin)
+        # Read from file argument if provided, otherwise from stdin
+        if len(sys.argv) > 1:
+            with open(sys.argv[1], 'r', encoding='utf-8') as f:
+                input_data = json.load(f)
+        else:
+            input_data = json.load(sys.stdin)
+
         result = solve(input_data)
         print(json.dumps(result, indent=2))
     except json.JSONDecodeError as e:
