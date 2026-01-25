@@ -11,3 +11,11 @@
 *.log
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Test/debug files
+laravel/scripts/debug_output.json
+laravel/scripts/test_input.json
