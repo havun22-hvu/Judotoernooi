@@ -84,6 +84,15 @@ class WedstrijdSchemaService
      */
     private function getOptimaleWedstrijdvolgorde(Poule $poule, int $aantal): array
     {
+        // Barrage: altijd single round-robin (1x tegen elkaar)
+        if ($poule->type === 'barrage') {
+            return match ($aantal) {
+                2 => [[1, 2]],
+                3 => [[1, 2], [1, 3], [2, 3]],
+                default => $this->genereerRoundRobinSchema($aantal),
+            };
+        }
+
         // Check if tournament has custom schemas
         $toernooi = $poule->toernooi;
         $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
