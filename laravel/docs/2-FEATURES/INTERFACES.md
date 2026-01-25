@@ -298,7 +298,7 @@ Voorbeeld: Club met 15 judoka's verdeeld over 3 blokken (8, 4, 3)
 
 **Instelling:** `judokas_per_coach` in toernooi instellingen (default: 5)
 
-**Fallback:** Als blokken nog niet zijn toegewezen, wordt het totaal aantal judoka's gebruikt.
+**Fallback:** Als blokken nog niet zijn toegewezen, krijgt elke club met judoka's 1 coachkaart.
 
 ### Implementatie
 
@@ -328,9 +328,9 @@ public function berekenAantalCoachKaarten(Toernooi $toernooi): int
         }
     }
 
-    // Fallback to total if no blokken assigned
+    // If no blokken assigned yet, return 1 (minimum)
     if (empty($judokasPerBlok)) {
-        return (int) ceil($judokas->count() / $perCoach);
+        return 1;
     }
 
     // Use largest block

@@ -113,7 +113,7 @@ class Club extends Model
             ->get();
 
         if ($judokas->isEmpty()) {
-            return 1; // Minimum 1 coachkaart per club
+            return 0; // No judokas = no coach cards
         }
 
         // Count judokas per blok
@@ -127,9 +127,10 @@ class Club extends Model
             }
         }
 
-        // If no blokken assigned yet, fall back to total count
+        // If no blokken assigned yet, return 1 (minimum)
+        // Correct number will be calculated after poule-indeling
         if (empty($judokasPerBlok)) {
-            return (int) ceil($judokas->count() / $perCoach);
+            return 1;
         }
 
         // Use the largest block to determine number of coach cards needed

@@ -939,10 +939,16 @@ class CoachPortalController extends Controller
 
         $toernooi = $this->getActiveToernooi();
 
-        // Get number of judokas for this club
-        $aantalJudokas = Judoka::where('toernooi_id', $toernooi->id)
+        // Get judokas for this club with their poules
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
-            ->count();
+            ->with('poules.blok')
+            ->get();
+
+        $aantalJudokas = $judokas->count();
+
+        // Check if any judoka is already assigned to a blok (poule-indeling done)
+        $blokkenIngedeeld = $judokas->contains(fn($j) => $j->poules->contains(fn($p) => $p->blok_id !== null));
 
         // Calculate how many coach cards they get
         $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
@@ -983,6 +989,7 @@ class CoachPortalController extends Controller
             'aantalJudokas' => $aantalJudokas,
             'benodigdAantal' => $benodigdAantal,
             'judokasPerCoach' => $toernooi->judokas_per_coach ?? 5,
+            'blokkenIngedeeld' => $blokkenIngedeeld,
             'useCode' => true,
             'code' => $code,
         ]);

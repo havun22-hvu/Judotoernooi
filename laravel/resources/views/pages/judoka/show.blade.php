@@ -57,7 +57,13 @@
                     </tr>
                     <tr>
                         <td class="text-gray-600 py-1.5">Gewichtsklasse</td>
-                        <td class="font-medium text-right py-1.5">{{ $judoka->gewichtsklasse }} kg</td>
+                        <td class="font-medium text-right py-1.5">
+                            @if($judoka->gewichtsklasse === 'Variabel')
+                                {{ $judoka->gewicht ? $judoka->gewicht . ' kg' : 'Variabel' }}
+                            @else
+                                {{ $judoka->gewichtsklasse }} kg
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <td class="text-gray-600 py-1.5">Opgegeven gewicht</td>

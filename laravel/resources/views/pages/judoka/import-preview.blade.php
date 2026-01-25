@@ -4,6 +4,22 @@
 
 @section('content')
 @php
+    // Check of toernooi vaste gewichtsklassen heeft
+    // Vaste = categorie heeft niet-lege 'gewichten' array (bijv. ['-22', '-25', ...])
+    // Dynamisch = categorie heeft max_kg_verschil > 0 EN lege gewichten array
+    $config = $toernooi->gewichtsklassen ?? [];
+
+    // Simpele check: heeft MINSTENS 1 categorie een niet-lege gewichten array?
+    $heeftVasteGewichtsklassen = collect($config)->contains(fn($cat) => !empty($cat['gewichten'] ?? []));
+
+    // Check configuratiefout: Δkg=0 maar geen gewichtsklassen ingevuld
+    $foutiefGeconfigureerdeCategorieen = collect($config)->filter(function($cat) {
+        $maxKg = $cat['max_kg_verschil'] ?? 0;
+        $gewichten = $cat['gewichten'] ?? [];
+        // Fout: Δkg=0 (vaste klassen) maar geen gewichten ingevuld
+        return $maxKg == 0 && empty($gewichten);
+    })->map(fn($cat) => $cat['label'] ?? 'Onbekend')->values()->all();
+
     $veldInfo = [
         'naam' => ['label' => 'Naam', 'verplicht' => true, 'uitleg' => 'Volledige naam judoka'],
         'club' => ['label' => 'Club', 'verplicht' => false, 'uitleg' => 'Vereniging/sportclub'],
@@ -11,9 +27,14 @@
         'geslacht' => ['label' => 'Geslacht', 'verplicht' => true, 'uitleg' => 'M of V'],
         'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
         'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
-        'gewichtsklasse' => ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'],
         'telefoon' => ['label' => 'Telefoon', 'verplicht' => false, 'uitleg' => 'Mobiel nummer voor WhatsApp'],
     ];
+
+    // Gewichtsklasse veld alleen tonen als toernooi vaste gewichtsklassen heeft
+    if ($heeftVasteGewichtsklassen) {
+        $veldInfo['gewichtsklasse'] = ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'];
+    }
+
     $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
     $gekoppeldeKolommen = collect($analyse['detectie'])->filter(fn($d) => $d['csv_index'] !== null)->count();
 @endphp
@@ -52,6 +73,15 @@
         ← Ander bestand
     </a>
 </div>
+
+{{-- Configuratiefout melding --}}
+@if(!empty($foutiefGeconfigureerdeCategorieen))
+    <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded">
+        <p class="text-red-800 font-medium">⚠️ Configuratiefout: de volgende categorieën hebben Δkg=0 maar geen gewichtsklassen ingevuld:</p>
+        <p class="text-red-700 mt-1">{{ implode(', ', $foutiefGeconfigureerdeCategorieen) }}</p>
+        <p class="text-red-600 text-sm mt-2">Ga naar <a href="{{ route('toernooi.edit', $toernooi) }}#categorieën" class="underline font-medium">toernooi instellingen</a> om dit te corrigeren.</p>
+    </div>
+@endif
 
 {{-- Status melding --}}
 @if($heeftWaarschuwingen)
