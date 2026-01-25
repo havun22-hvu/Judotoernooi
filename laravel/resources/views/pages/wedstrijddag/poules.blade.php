@@ -194,30 +194,114 @@
         </button>
 
         {{-- Categories within blok --}}
-        <div x-show="open" x-collapse class="divide-y">
-            @forelse($blok['categories'] as $category)
+        <div x-show="open" x-collapse>
             @php
-                $isEliminatie = $category['is_eliminatie'] ?? false;
+                // Verzamel dynamische poules (normale) en eliminatie poules apart
+                $dynamischePoules = collect();
+                $eliminatiePoules = collect();
+                $vasteCategories = collect();
+                foreach ($blok['categories'] as $cat) {
+                    $firstPoule = $cat['poules']->first();
+                    $isDynamisch = $firstPoule && $firstPoule->isDynamisch();
+                    $isEliminatie = $cat['is_eliminatie'] ?? false;
+                    if ($isEliminatie) {
+                        // Eliminatie apart voor volle breedte
+                        $eliminatiePoules = $eliminatiePoules->merge($cat['poules']);
+                    } elseif ($isDynamisch) {
+                        // Dynamisch -> naar grote grid
+                        $dynamischePoules = $dynamischePoules->merge($cat['poules']);
+                    } else {
+                        // Vast -> met header + wachtruimte
+                        $vasteCategories->push($cat);
+                    }
+                }
+                // Als er vaste categorieën zijn -> 3 kolommen (4e voor wachtruimte)
+                $heeftVast = $vasteCategories->isNotEmpty();
+                $gridCols = $heeftVast ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
             @endphp
-            <div class="bg-white">
+
+            {{-- ELIMINATIE POULES: volle breedte binnen grid --}}
+            @foreach($eliminatiePoules as $elimPoule)
+            @php
+                $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten) {
+                    $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
+                    return !$j->isActief($wegingGesloten) || $isAfwijkend;
+                });
+                $aantalActiefElim = $elimPoule->judokas->count() - $verwijderdeElim->count();
+                $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie, $wegingGesloten) {
+                    if (!$j->isActief($wegingGesloten)) return $j->naam . ' (afwezig)';
+                    return $j->naam . ' (afwijkend gewicht)';
+                });
+            @endphp
+            <div class="bg-white p-4 border-t">
+                <div id="poule-{{ $elimPoule->id }}" class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}">
+                    <div class="bg-orange-600 text-white px-4 py-2 flex justify-between items-center">
+                        <div>
+                            <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimPoule->titel ?? ($elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse) }} <span class="font-normal text-orange-200">(Eliminatie)</span></div>
+                            <div class="text-sm text-orange-200">{{ $aantalActiefElim }} judoka's ~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            @if($verwijderdeTekstElim->isNotEmpty())
+                            <div class="relative" x-data="{ show: false }">
+                                <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
+                                <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
+                            </div>
+                            @endif
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-0.5 rounded">⚙</button>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
+                                    <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">Naar poules</button>
+                                    <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 grid {{ $heeftVast ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8' }} gap-2">
+                        @foreach($elimPoule->judokas as $judoka)
+                        @if(!$judoka->isActief($wegingGesloten))
+                            @continue
+                        @endif
+                        @php $isGewogen = $judoka->gewicht_gewogen !== null; @endphp
+                        <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
+                            <div class="flex items-center gap-1">
+                                @if($isGewogen)
+                                    <span class="text-green-500 text-xs">●</span>
+                                @endif
+                                <div class="min-w-0">
+                                    <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
+                                    <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endforeach
+
+            {{-- DYNAMISCHE POULES: in grid (3 of 4 kolommen) --}}
+            @if($dynamischePoules->isNotEmpty())
+            <div class="bg-white p-4 {{ $eliminatiePoules->isNotEmpty() ? 'border-t' : '' }}">
+                <div class="grid {{ $gridCols }} gap-3">
+                @foreach($dynamischePoules as $poule)
+                    @include('pages.wedstrijddag.partials.poule-card', ['poule' => $poule, 'wegingGesloten' => $wegingGesloten, 'tolerantie' => $tolerantie])
+                @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- VASTE CATEGORIEËN: met headers en 3 kolommen (4e voor wachtruimte) --}}
+            @forelse($vasteCategories as $category)
+            @php
+                $jsLeeftijd = addslashes($category['leeftijdsklasse']);
+                $jsGewicht = addslashes($category['gewichtsklasse']);
+                $jsKey = addslashes($category['key']);
+            @endphp
+            <div class="bg-white border-t">
                 {{-- Category header --}}
-                <div class="flex justify-between items-center px-4 py-3 {{ $isEliminatie ? 'bg-orange-100' : 'bg-gray-100' }} border-b">
+                <div class="flex justify-between items-center px-4 py-3 bg-gray-100 border-b">
                     <div class="flex items-center gap-3">
-                        <h2 class="text-lg font-bold {{ $isEliminatie ? 'text-orange-800' : '' }}">
-                            @if($isEliminatie)⚔️ @endif{{ $category['label'] }} {{ $category['gewichtsklasse'] }}
-                            @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">(Eliminatie)</span>@endif
-                        </h2>
-                        @php
-                            $jsLeeftijd = addslashes($category['leeftijdsklasse']);
-                            $jsGewicht = addslashes($category['gewichtsklasse']);
-                            $jsKey = addslashes($category['key']);
-                            // Tel actieve judoka's in categorie
-                            $totaalActiefInCategorie = 0;
-                            foreach ($category['poules'] as $p) {
-                                $totaalActiefInCategorie += $p->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
-                            }
-                        @endphp
-                        @if(!$isEliminatie)
+                        <h2 class="text-lg font-bold">{{ $category['label'] }} {{ $category['gewichtsklasse'] }}</h2>
                         <button
                             onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')"
                             class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium"
@@ -225,102 +309,15 @@
                         >
                             + Poule
                         </button>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-2">
-                        @if($isEliminatie)
-                        {{-- Eliminatie: omzetten knop in header --}}
-                        @php $elimPoule = $category['poules']->first(); @endphp
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">
-                                Omzetten naar poules ▾
-                            </button>
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
-                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
-                                    Alleen poules
-                                </button>
-                                <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">
-                                    Poules + kruisfinale
-                                </button>
-                            </div>
-                        </div>
-                        @endif
                     </div>
                 </div>
 
                 <div class="p-4">
-                    @if($isEliminatie)
-                    {{-- Eliminatie: één grote box met alle judoka's in grid --}}
-                    @php
-                        // Collect removed judokas for info tooltip
-                        $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten) {
-                            $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie);
-                            return !$j->isActief($wegingGesloten) || $isAfwijkend;
-                        });
-
-                        // Calculate active count
-                        $aantalActiefElim = $elimPoule->judokas->count() - $verwijderdeElim->count();
-
-                        // Format removed for tooltip
-                        $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie, $wegingGesloten) {
-                            if (!$j->isActief($wegingGesloten)) return $j->naam . ' (afwezig)';
-                            return $j->naam . ' (afwijkend gewicht)';
-                        });
-                    @endphp
-                    <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
-                        <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
-                            <span class="font-bold">{{ $aantalActiefElim }} judoka's</span>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</span>
-                                @if($verwijderdeTekstElim->isNotEmpty())
-                                <div class="relative" x-data="{ show: false }">
-                                    <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
-                                    <div x-show="show" x-transition class="absolute bottom-full right-0 mb-2 bg-gray-900 text-white text-xs rounded px-3 py-2 whitespace-pre-line z-[9999] min-w-[200px] shadow-xl pointer-events-none">{{ $verwijderdeTekstElim->join("\n") }}</div>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
-                            @foreach($elimPoule->judokas as $judoka)
-                            @if(!$judoka->isActief($wegingGesloten))
-                                @continue
-                            @endif
-                            @php $isGewogen = $judoka->gewicht_gewogen !== null; @endphp
-                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200">
-                                <div class="flex items-center gap-1">
-                                    @if($isGewogen)
-                                        <span class="text-green-500 text-xs">●</span>
-                                    @endif
-                                    <div class="min-w-0">
-                                        <div class="font-medium text-gray-800 truncate" title="{{ $judoka->naam }}">{{ $judoka->naam }}</div>
-                                        <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @else
-                    {{-- Normale poules - groepeer op gewichtsklasse voor aparte rijen --}}
-                    @php
-                        // Groepeer poules op gewicht (uit titel of gewichtsklasse)
-                        // Gebruik per-poule check of het dynamisch is
-                        $poulesPerGewicht = $category['poules']->groupBy(function($poule) {
-                            if ($poule->isDynamisch() && $poule->titel) {
-                                // Haal gewichtsbereik uit titel (bijv. "21.5-24.4kg" uit "Jeugd 7-9j 21.5-24.4kg")
-                                if (preg_match('/([\d.]+)-([\d.]+)kg/', $poule->titel, $m)) {
-                                    return $m[1] . '-' . $m[2] . 'kg';
-                                }
-                            }
-                            return $poule->gewichtsklasse ?: 'default';
-                        })->sortKeys();
-                    @endphp
+                    {{-- Normale poules - 3 kolommen (4e voor wachtruimte) --}}
                     <div class="flex gap-4">
-                        {{-- Poules in 3-kolommen grid --}}
                         <div class="flex-1">
-                            @foreach($poulesPerGewicht as $gewichtKey => $poulesInGewicht)
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                            @foreach($poulesInGewicht as $poule)
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            @foreach($category['poules'] as $poule)
                             @if($poule->type === 'kruisfinale')
                             {{-- KRUISFINALE: aparte weergave --}}
                             @php
@@ -532,7 +529,6 @@
                             </div>
                             @endforeach
                             </div>
-                            @endforeach
                         </div>
 
                         {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën (niet dynamisch) --}}
@@ -541,47 +537,49 @@
                             $eerstePouleInCategorie = $category['poules']->first();
                             $categorieIsDynamisch = $eerstePouleInCategorie && $eerstePouleInCategorie->isDynamisch();
                         @endphp
+                        {{-- Wachtruimte (rechts) - alleen voor VASTE gewichtscategorieën --}}
                         @if(!$categorieIsDynamisch)
-                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
-                            <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
-                                <span>Wachtruimte</span>
-                                <span class="text-xs text-orange-400 wachtruimte-count">{{ count($category['wachtruimte']) }}</span>
-                            </div>
-                            <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
-                                @forelse($category['wachtruimte'] as $judoka)
-                                <div
-                                    class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item group"
-                                    data-judoka-id="{{ $judoka->id }}"
-                                >
-                                    <div class="flex justify-between items-start">
-                                        <div class="flex items-center gap-1 flex-1 min-w-0">
-                                            <span class="text-red-500 text-xs flex-shrink-0">●</span>
-                                            <div class="min-w-0">
-                                                <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
-                                                <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                        <div class="w-56 flex-shrink-0">
+                            <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 bg-orange-50 wachtruimte-container h-full" data-category="{{ $category['key'] }}">
+                                <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
+                                    <span>Wachtruimte</span>
+                                    <span class="text-xs text-orange-400 wachtruimte-count">{{ count($category['wachtruimte']) }}</span>
+                                </div>
+                                <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
+                                    @forelse($category['wachtruimte'] as $judoka)
+                                    <div
+                                        class="px-2 py-1.5 hover:bg-orange-100 cursor-move text-sm judoka-item group"
+                                        data-judoka-id="{{ $judoka->id }}"
+                                    >
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex items-center gap-1 flex-1 min-w-0">
+                                                <span class="text-red-500 text-xs flex-shrink-0">●</span>
+                                                <div class="min-w-0">
+                                                    <div class="font-medium text-gray-800 truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
+                                                    <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="flex items-center gap-1 flex-shrink-0">
-                                            <div class="text-right text-xs">
-                                                <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
-                                                <div class="text-gray-400">{{ \App\Enums\Band::stripKyu($judoka->band ?? '') }}</div>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                <div class="text-right text-xs">
+                                                    <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
+                                                    <div class="text-gray-400">{{ \App\Enums\Band::stripKyu($judoka->band ?? '') }}</div>
+                                                </div>
+                                                <button
+                                                    onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
+                                                    class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
+                                                    title="Zoek geschikte poule"
+                                                >🔍</button>
                                             </div>
-                                            <button
-                                                onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
-                                                class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Zoek geschikte poule"
-                                            >🔍</button>
                                         </div>
                                     </div>
+                                    @empty
+                                    <div class="text-sm text-gray-400 italic py-2 text-center">Leeg</div>
+                                    @endforelse
                                 </div>
-                                @empty
-                                <div class="text-sm text-gray-400 italic py-2 text-center">Leeg</div>
-                                @endforelse
                             </div>
                         </div>
                         @endif
                     </div>
-                    @endif
                 </div>
             </div>
             @empty
