@@ -321,6 +321,30 @@
 
 ---
 
+## Sessie: 25 januari 2026
+
+### Fix: Variabele gewichtscategorieën - per-poule validatie
+- **Type:** Enhancement
+- **Wat:** Gewichtsvalidatie op wedstrijddag gebruikt nu per-poule `$poule->isDynamisch()` check
+- **Waarom:** Bij variabele categorieën kregen ALLE judoka's met afwijkend gewogen gewicht een warning, terwijl dat alleen nodig is als de POULE range > max_kg_verschil
+- **Oplossing:**
+  - Per judoka: `$isAfwijkendGewicht` alleen checken als poule NIET dynamisch is
+  - Wachtruimte: alleen tonen voor VASTE categorieën
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php` (4 locaties)
+- **Naar permanente docs?** ☑ Nee - technische enhancement
+
+### Fix: Poule breedte wedstrijddag (grid layout)
+- **Type:** UI fix
+- **Wat:** Poules op wedstrijddag nu zelfde breedte als op poules page
+- **Probleem was:** `flex flex-wrap` met `min-w-[200px]` zorgde voor variabele breedte
+- **Oplossing:**
+  - Container: `flex flex-wrap gap-4` → `grid grid-cols-2 md:grid-cols-3 gap-3`
+  - Cards: `min-w-[200px]` verwijderd (grid bepaalt breedte)
+- **Bestanden:** `resources/views/pages/wedstrijddag/poules.blade.php` (regels 322, 331, 415)
+- **Naar permanente docs?** ☑ Nee - UI fix
+
+---
+
 <!--
 TEMPLATE voor nieuwe entry:
 
