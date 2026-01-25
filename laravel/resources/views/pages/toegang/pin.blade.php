@@ -7,13 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        .pin-input::-webkit-outer-spin-button,
-        .pin-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .pin-input[type=number] {
-            -moz-appearance: textfield;
+        /* Prevent text selection on pin inputs */
+        .pin-input {
+            -webkit-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
@@ -26,14 +23,25 @@
 
         <div class="bg-white rounded-xl shadow-2xl p-8" x-data="{
             pin: ['', '', '', ''],
+            filterInput(index) {
+                // Only allow single digits
+                this.pin[index] = this.pin[index].toString().replace(/[^0-9]/g, '').slice(-1);
+            },
             focusNext(index) {
+                this.filterInput(index);
                 if (this.pin[index] && index < 3) {
                     this.$refs['pin' + (index + 1)].focus();
                 }
             },
             focusPrev(index, event) {
-                if (event.key === 'Backspace' && !this.pin[index] && index > 0) {
-                    this.$refs['pin' + (index - 1)].focus();
+                if (event.key === 'Backspace') {
+                    if (!this.pin[index] && index > 0) {
+                        // Field empty, go to previous
+                        this.$refs['pin' + (index - 1)].focus();
+                    } else {
+                        // Clear current field
+                        this.pin[index] = '';
+                    }
                 }
             },
             get fullPin() {
@@ -79,14 +87,14 @@
                 <div class="flex justify-center gap-3 mb-8">
                     @for($i = 0; $i < 4; $i++)
                     <input
-                        type="number"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]"
                         x-ref="pin{{ $i }}"
                         x-model="pin[{{ $i }}]"
                         @input="focusNext({{ $i }})"
                         @keydown="focusPrev({{ $i }}, $event)"
                         maxlength="1"
-                        min="0"
-                        max="9"
                         class="pin-input w-14 h-16 text-center text-2xl font-bold border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         required
                     >
