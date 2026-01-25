@@ -58,6 +58,12 @@
 - **Bestanden:** weegkaart/show.blade.php
 - **Regel:** `explode(' ', $judoka->band)[0]` - alleen eerste woord
 
+### Fix: Nieuwe lege poules niet zichtbaar
+- **Type:** Bug fix
+- **Wat:** Handmatig aangemaakte lege poules werden uitgefilterd bij variabel gewicht
+- **Bestanden:** WedstrijddagController.php
+- **Oplossing:** Poules aangemaakt binnen 24h altijd tonen
+
 ---
 
 <!--
