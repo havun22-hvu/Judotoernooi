@@ -28,12 +28,6 @@
         </button>
     </div>
 
-    <!-- Melding: auto-refresh staat uit -->
-    <div x-show="activeTab !== 'uitslagen'" class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4 flex items-center gap-2 text-amber-800 text-sm">
-        <span>⚠️</span>
-        <span>Auto-refresh staat uit. Ga naar <button @click="activeTab = 'uitslagen'" class="underline font-medium">Uitslagen</button> voor automatische updates.</span>
-    </div>
-
     <!-- TAB 1: UITSLAGEN -->
     <div x-show="activeTab === 'uitslagen'">
         <div class="flex justify-end items-center mb-4 gap-2">
