@@ -275,16 +275,25 @@ De Weging heeft **2 totaal verschillende versies**:
 
 ## Coachkaarten
 
-Coaches krijgen toegangskaarten voor de dojo. Het aantal is gebaseerd op het **grootste blok** van de club.
+Coaches krijgen toegangskaarten voor de dojo. Het aantal wordt in twee fasen bepaald:
 
-### Berekening aantal coachkaarten
+### Fase 1: Tijdens Inschrijving
+
+**Altijd 1 coachkaart per budoschool** - ongeacht aantal judoka's.
+
+- Bij eerste judoka inschrijving → 1 coachkaart aangemaakt
+- Oude/overtollige coachkaarten worden automatisch verwijderd
+- Dit voorkomt verwarring en zorgt dat clubs niet te veel kaarten krijgen
+
+### Fase 2: Na Einde Voorbereiding
+
+Organisator klikt **"Genereer Coachkaarten"** na blokverdeling. Dan wordt berekend:
 
 ```
-Formule: ceil(max_judokas_per_blok / judokas_per_coach)
+Formule: ceil(max_judokas_in_grootste_blok / judokas_per_coach)
 
-Voorbeeld: Club met 15 judoka's verdeeld over 3 blokken (8, 4, 3)
-→ Grootste blok = 8 judoka's
-→ ceil(8 / 5) = 2 coachkaarten
+Voorbeeld: Club met 11 judoka's in grootste blok, 5 per coach
+→ ceil(11 / 5) = 3 coachkaarten
 
 ┌────────────────────────────┬─────────┐
 │ Max judoka's in één blok   │ Kaarten │
@@ -298,44 +307,47 @@ Voorbeeld: Club met 15 judoka's verdeeld over 3 blokken (8, 4, 3)
 
 **Instelling:** `judokas_per_coach` in toernooi instellingen (default: 5)
 
-**Fallback:** Als blokken nog niet zijn toegewezen, krijgt elke club met judoka's 1 coachkaart.
+### Waarom per blok?
+
+Een coach hoeft alleen aanwezig te zijn wanneer zijn judoka's wedstrijden hebben. Als een club 15 judoka's heeft verdeeld over 3 blokken (8, 4, 3), dan zijn er maximaal 8 judoka's tegelijk actief → 2 coachkaarten nodig.
 
 ### Implementatie
 
 **Model:** `app/Models/Club.php`
 ```php
-public function berekenAantalCoachKaarten(Toernooi $toernooi): int
+/**
+ * @param bool $forceCalculate - true = bereken op basis van blokken (na voorbereiding)
+ *                               false = altijd 1 (tijdens inschrijving)
+ */
+public function berekenAantalCoachKaarten(Toernooi $toernooi, bool $forceCalculate = false): int
 {
-    $perCoach = $toernooi->judokas_per_coach ?? 5;
-
-    $judokas = $this->judokas()
-        ->where('toernooi_id', $toernooi->id)
-        ->with('poules.blok')
-        ->get();
+    $judokas = $this->judokas()->where('toernooi_id', $toernooi->id)->with('poules.blok')->get();
 
     if ($judokas->isEmpty()) {
         return 0;
     }
 
-    // Count judokas per blok
+    // During inschrijving: always 1 card
+    if (!$forceCalculate) {
+        return 1;
+    }
+
+    // After voorbereiding: calculate based on largest block
+    $perCoach = $toernooi->judokas_per_coach ?? 5;
     $judokasPerBlok = [];
     foreach ($judokas as $judoka) {
         foreach ($judoka->poules as $poule) {
             if ($poule->blok_id) {
-                $blokId = $poule->blok_id;
-                $judokasPerBlok[$blokId] = ($judokasPerBlok[$blokId] ?? 0) + 1;
+                $judokasPerBlok[$poule->blok_id] = ($judokasPerBlok[$poule->blok_id] ?? 0) + 1;
             }
         }
     }
 
-    // If no blokken assigned yet, return 1 (minimum)
     if (empty($judokasPerBlok)) {
-        return 1;
+        return 1; // Fallback if no blokken assigned
     }
 
-    // Use largest block
-    $maxJudokasInBlok = max($judokasPerBlok);
-    return (int) ceil($maxJudokasInBlok / $perCoach);
+    return max(1, (int) ceil(max($judokasPerBlok) / $perCoach));
 }
 ```
 
@@ -343,27 +355,21 @@ public function berekenAantalCoachKaarten(Toernooi $toernooi): int
 
 **Controller:** `CoachKaartController@genereer`
 
-Bij genereren:
-1. Tel judoka's per club voor dit toernooi
-2. Bereken benodigd aantal kaarten
-3. Maak ontbrekende kaarten aan
-4. Verwijder overtollige (niet-gescande) kaarten
+**Wanneer:** Organisator klikt na blokverdeling op "Genereer Coachkaarten"
+
+**Wat gebeurt er:**
+1. Bereken per club het benodigde aantal op basis van grootste blok (`forceCalculate=true`)
+2. Maak ontbrekende kaarten aan
+3. Verwijder overtollige (niet-gescande) kaarten
+4. Markeer voorbereiding als afgerond (`voorbereiding_klaar_op = now()`)
 
 ```php
 foreach ($clubs as $club) {
-    $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
-    $huidigAantal = $club->coachKaartenVoorToernooi($toernooi->id)->count();
-
-    // Create missing cards
-    for ($i = $huidigAantal; $i < $benodigdAantal; $i++) {
-        CoachKaart::create([...]);
-    }
-
-    // Remove excess cards (only unscanned ones)
-    if ($huidigAantal > $benodigdAantal) {
-        // delete excess...
-    }
+    // forceCalculate=true: calculate based on largest block
+    $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi, true);
+    // ... create/delete cards
 }
+$toernooi->update(['voorbereiding_klaar_op' => now()]);
 ```
 
 ### Coachkaart activatie & device binding

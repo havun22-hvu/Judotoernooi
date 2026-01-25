@@ -99,13 +99,15 @@ class Club extends Model
 
     /**
      * Calculate number of coach cards for this club in a tournament
-     * Based on the largest block (not total judokas) since coaches only need
-     * to be present for their judokas in that block
+     *
+     * DURING INSCHRIJVING: Always returns 1 (one card per club)
+     * AFTER VOORBEREIDING: Calculate based on largest block
+     *
+     * @param Toernooi $toernooi
+     * @param bool $forceCalculate Force calculation based on blokken (used after "Einde Voorbereiding")
      */
-    public function berekenAantalCoachKaarten(Toernooi $toernooi): int
+    public function berekenAantalCoachKaarten(Toernooi $toernooi, bool $forceCalculate = false): int
     {
-        $perCoach = $toernooi->judokas_per_coach ?? 5;
-
         // Get all judokas for this club in this tournament
         $judokas = $this->judokas()
             ->where('toernooi_id', $toernooi->id)
@@ -127,13 +129,20 @@ class Club extends Model
             }
         }
 
-        // If no blokken assigned yet, return 1 (minimum)
-        // Correct number will be calculated after poule-indeling
+        // During inschrijving (no blokken assigned yet): always 1 card per club
+        // Only calculate more cards after "Einde Voorbereiding" when forceCalculate is true
         if (empty($judokasPerBlok)) {
             return 1;
         }
 
-        // Use the largest block to determine number of coach cards needed
+        // If blokken ARE assigned but forceCalculate is false, still return 1
+        // This ensures portal always shows 1 card until organisator runs "Genereer Coachkaarten"
+        if (!$forceCalculate) {
+            return 1;
+        }
+
+        // After voorbereiding: calculate based on largest block
+        $perCoach = $toernooi->judokas_per_coach ?? 5;
         $maxJudokasInBlok = max($judokasPerBlok);
 
         return max(1, (int) ceil($maxJudokasInBlok / $perCoach));

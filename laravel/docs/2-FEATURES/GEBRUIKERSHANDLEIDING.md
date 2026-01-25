@@ -210,14 +210,21 @@ Bij import van judoka's (CSV) kunnen er onvolledige gegevens zijn. Het systeem:
 
 ### Coachkaarten (Wedstrijdcoaches)
 
-Wedstrijdcoaches krijgen toegangskaarten voor de dojo. Het aantal kaarten is gebaseerd op het **grootste blok** van de club (niet het totaal aantal judoka's).
+Wedstrijdcoaches krijgen toegangskaarten voor de dojo. Het aantal kaarten wordt in **twee fasen** bepaald:
 
-**Waarom per blok?**
-Een coach hoeft alleen aanwezig te zijn wanneer zijn judoka's wedstrijden hebben. Als een club 15 judoka's heeft verdeeld over 3 blokken (8, 4, 3), dan zijn er maximaal 8 judoka's tegelijk actief.
+#### Fase 1: Tijdens Inschrijving
 
-**Berekening aantal coachkaarten:**
+**Elke budoschool krijgt 1 coachkaart** - ongeacht aantal judoka's.
 
-De instelling `judokas_per_coach` (default: 5) bepaalt hoeveel kaarten een club krijgt:
+- Bij eerste judoka inschrijving → 1 coachkaart aangemaakt
+- Oude/overtollige coachkaarten worden automatisch verwijderd
+- Dit voorkomt verwarring tijdens de inschrijfperiode
+
+#### Fase 2: Na Einde Voorbereiding
+
+Organisator klikt **"Genereer Coachkaarten"** na de blokverdeling. Dan wordt het juiste aantal berekend op basis van het **grootste blok** per club.
+
+**Formule:** `ceil(max_judokas_in_grootste_blok / judokas_per_coach)`
 
 | Max judoka's in één blok | Kaarten (bij 5 per coach) |
 |--------------------------|---------------------------|
@@ -226,14 +233,12 @@ De instelling `judokas_per_coach` (default: 5) bepaalt hoeveel kaarten een club 
 | 11-15 | 3 kaarten |
 | 16-20 | 4 kaarten |
 
-**Formule:** `ceil(max_judokas_per_blok / judokas_per_coach)`
-
 **Voorbeeld:**
-- Club A: 15 judoka's totaal
-- Blok 1: 8 judoka's, Blok 2: 4 judoka's, Blok 3: 3 judoka's
-- Grootste blok = 8 → `ceil(8/5) = 2` coachkaarten
+- Club met 11 judoka's in grootste blok, 5 per coach
+- `ceil(11/5) = 3` coachkaarten
 
-**Let op:** Als blokken nog niet zijn toegewezen, wordt het totaal aantal judoka's gebruikt als fallback.
+**Waarom per blok?**
+Een coach hoeft alleen aanwezig te zijn wanneer zijn judoka's wedstrijden hebben. Als een club 15 judoka's heeft verdeeld over 3 blokken (8, 4, 3), dan zijn er maximaal 8 judoka's tegelijk actief → 2 coachkaarten nodig.
 
 **Coachkaart activatie:**
 1. Coach scant QR-code of opent link
