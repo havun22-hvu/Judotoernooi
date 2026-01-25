@@ -26,6 +26,17 @@ Verlies in B = uitgeschakeld
 
 ## Quick Reference
 
+### Minimum Grootte
+
+**Eliminatie poules vereisen minimaal 8 judoka's.**
+
+Bij verificatie ("Verifieer poules" knop) worden eliminatie poules apart behandeld:
+- Normaal: 3-6 judoka's
+- **Eliminatie: min. 8 judoka's** (geen maximum)
+- Kruisfinale: geen grootte validatie
+
+Zie ook: [CLASSIFICATIE.md](../CLASSIFICATIE.md#verificatie-poule-grootte-per-type)
+
 ### Kernformules
 
 ```
