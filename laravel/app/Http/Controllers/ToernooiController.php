@@ -34,8 +34,11 @@ class ToernooiController extends Controller
         // Group toernooien by organisator for superadmin overview
         $organisatoren = Organisator::with(['toernooien' => function($q) {
             $q->withCount(['judokas', 'poules'])
-              ->orderByDesc('updated_at');
-        }])->orderBy('naam')->get();
+              ->orderByDesc('datum');
+        }])
+        ->withCount(['clubs', 'toernooiTemplates'])
+        ->orderBy('naam')
+        ->get();
 
         // Also get toernooien without organisator (legacy/orphaned)
         $toernooienZonderOrganisator = Toernooi::whereDoesntHave('organisatoren')

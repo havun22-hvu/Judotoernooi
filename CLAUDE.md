@@ -17,9 +17,43 @@
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-> **Type:** Laravel 11 toernooi management systeem (multi-tenant)
+> **Type:** Laravel 11 toernooi management systeem (SaaS multi-tenant)
 > **URL:** https://judotournament.org (production)
-> **Doel:** Platform voor judo toernooien (meerdere klanten/toernooien)
+> **Eigenaar:** Havun (henkvu@gmail.com = sitebeheerder)
+> **Doel:** SaaS platform voor judo toernooien - verhuurd aan judoscholen/organisatoren
+
+## Bedrijfsmodel (SaaS)
+
+**Havun** verhuurt de JudoToernooi software aan judoscholen (organisatoren).
+
+### Rollen
+| Rol | Beschrijving | Voorbeeld |
+|-----|--------------|-----------|
+| **Sitebeheerder** | Havun admin, ziet alle organisatoren en toernooien | henkvu@gmail.com |
+| **Organisator** | Klant (judoschool), beheert eigen toernooien | Judoschool Cees Veen |
+
+### Data per Organisator (blijft bewaard)
+Organisatoren zijn terugkerende klanten. Deze data blijft bewaard tussen toernooien:
+
+| Data | Beschrijving |
+|------|--------------|
+| **Clubs** | Deelnemende judoscholen (fuzzy name matching) |
+| **Templates** | Toernooi configuraties (intern/open toernooi) |
+| **Presets** | Gewichtsklassen presets |
+| **Toernooien** | Historisch overzicht (ook afgesloten) |
+
+### Toernooi Lifecycle
+```
+Nieuw → Voorbereiding → Wedstrijddag → Afgesloten
+         ↑                              |
+         └── Templates hergebruiken ────┘
+```
+
+### Sitebeheerder Dashboard
+Route: `/toernooi` (alleen voor sitebeheerder)
+- Overzicht alle organisatoren
+- Per organisator: toernooien, statistieken, status
+- KPI's: totaal judokas, omzet, actieve klanten
 
 ## Rules (ALWAYS follow)
 
