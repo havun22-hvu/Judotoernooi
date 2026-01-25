@@ -94,6 +94,9 @@
         @endif
     </div>
     <div class="flex space-x-2">
+        <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Importeren
+        </a>
         <button onclick="document.getElementById('addJudokaModal').classList.remove('hidden')"
                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             + Judoka toevoegen
@@ -104,9 +107,6 @@
                 Valideren
             </button>
         </form>
-        <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Importeren
-        </a>
     </div>
 </div>
 
@@ -280,7 +280,7 @@
             <template x-for="judoka in sortedJudokas" :key="judoka.id">
                 <tr :class="judoka.incompleet ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'">
                     <td class="px-4 py-2 truncate">
-                        <a :href="judoka.url" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
+                        <a :href="judoka.url + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 font-medium" x-text="judoka.naam"></a>
                         <span x-show="judoka.incompleet" class="ml-1 text-red-600 text-xs">⚠</span>
                     </td>
                     <td class="px-4 py-2 text-sm text-gray-600 truncate" x-text="judoka.leeftijdsklasse"></td>
@@ -342,7 +342,13 @@ function judokaTable() {
         sortAsc: true,
         zoekterm: '',
         fuzzyLevel: 0,
-        toonOnvolledig: false,
+        toonOnvolledig: sessionStorage.getItem('toonOnvolledig') === 'true',
+
+        init() {
+            // Clear sessionStorage after reading - it's only for back navigation
+            sessionStorage.removeItem('toonOnvolledig');
+        },
+
         judokas: [
             @foreach($judokas as $judoka)
             {

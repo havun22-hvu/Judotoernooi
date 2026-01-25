@@ -9,11 +9,14 @@
     // Dynamisch = categorie heeft max_kg_verschil > 0 EN lege gewichten array
     $config = $toernooi->gewichtsklassen ?? [];
 
+    // Filter metadata keys (beginnen met _) - alleen echte categorieën
+    $categorieen = collect($config)->filter(fn($cat, $key) => !str_starts_with($key, '_') && is_array($cat));
+
     // Simpele check: heeft MINSTENS 1 categorie een niet-lege gewichten array?
-    $heeftVasteGewichtsklassen = collect($config)->contains(fn($cat) => !empty($cat['gewichten'] ?? []));
+    $heeftVasteGewichtsklassen = $categorieen->contains(fn($cat) => !empty($cat['gewichten'] ?? []));
 
     // Check configuratiefout: Δkg=0 maar geen gewichtsklassen ingevuld
-    $foutiefGeconfigureerdeCategorieen = collect($config)->filter(function($cat) {
+    $foutiefGeconfigureerdeCategorieen = $categorieen->filter(function($cat) {
         $maxKg = $cat['max_kg_verschil'] ?? 0;
         $gewichten = $cat['gewichten'] ?? [];
         // Fout: Δkg=0 (vaste klassen) maar geen gewichten ingevuld
