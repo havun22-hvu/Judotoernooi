@@ -539,13 +539,14 @@ Hoofdservice voor poule-indeling:
 
 **Locatie:** `scripts/poule_solver.py`
 
-### DynamischeIndelingService (legacy)
+### DynamischeIndelingService
 
 Roept Python solver aan voor dynamische categorieën:
 - `berekenIndeling()` - Wrapper rond Python solver
 - `getEffectiefGewicht()` - Fallback: gewicht_gewogen → gewicht → gewichtsklasse
+- Filtert onvolledige judoka's (zonder gewicht/leeftijd) en rapporteert deze apart
 
-#### Algoritme Python Solver V2 (Greedy + Slimme Herverdeling)
+#### Algoritme Python Solver (Greedy + Slimme Herverdeling)
 
 ```
 INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, max_band, poule_grootte_voorkeur)
@@ -628,76 +629,6 @@ Voordelen:
 - Orphans zijn echt orphans (geen false positives)
 
 ```
-
-#### Algoritme Python Solver (Sliding Window - Detail)
-
-```
-INPUT:  Judoka's van 1 categorie + config (max_kg, max_lft, poule_grootte_voorkeur)
-OUTPUT: Poules binnen constraints
-
-STAP 1: LEEFTIJDSGROEP (sliding window)
-────────────────────────────────────────
-- Bepaal jongste leeftijd in categorie (bijv. 5 jaar)
-- Maak groep: jongste t/m jongste + max_lft_verschil (bijv. 5-6 jarigen)
-- Overblijvers uit vorige groep gaan MEE (zolang binnen lft range)
-
-STAP 2: GEWICHTSRANGE (sliding window)
-────────────────────────────────────────
-- Sorteer leeftijdsgroep op gewicht
-- Bepaal lichtste gewicht (bijv. 23kg)
-- Maak range: lichtste t/m lichtste + max_kg_verschil (bijv. 23-26kg)
-
-STAP 3: POULE MAKEN (1 poule per keer!)
-────────────────────────────────────────
-- Sorteer judoka's in gewichtsrange op band (laagste eerst: wit→geel→oranje...)
-- Maak 1 poule van max ideale_grootte (eerste voorkeur, meestal 5)
-- Geplaatste judoka's zijn "OP"
-- NIET alle judoka's in range verdelen, maar 1 poule maken en dan checken!
-
-STAP 4: HERHAAL (BELANGRIJK!)
-────────────────────────────────────────
-- NA elke poule: check of jongste leeftijd "op" is
-- Jongste "op"? → Terug naar stap 1 (nieuwe leeftijdsgroep)
-- Jongste niet "op"? → Terug naar stap 2 (nieuwe gewichtsrange)
-- Nieuwe gewichtsrange = lichtste OVERBLIJVER + max_kg_verschil
-
-ORPHAN ONTSTAAT ALLEEN ALS:
-────────────────────────────────────────
-- Geen match in huidige leeftijdsgroep
-- EN kan niet mee naar volgende leeftijdsgroep (buiten max_lft_verschil)
-
-⛔ NOOIT: gewichtsrange in poule overschrijden (max_kg_verschil is hard)
-```
-
-**Voorbeeld:**
-
-```
-Categorie "Jeugd", max_lft=1, max_kg=3
-
-Judoka's: [5j/23kg, 5j/24kg, 5j/25kg, 5j/28kg, 6j/24kg, 6j/26kg, 7j/25kg]
-
-Groep 5-6j, sorteer op gewicht:
-  [5j/23kg, 5j/24kg, 6j/24kg, 5j/25kg, 6j/26kg, 5j/28kg]
-
-Range 23-26kg, sorteer op band:
-  → Poule 1: [5j/23kg, 5j/24kg, 6j/24kg, 5j/25kg, 6j/26kg]
-
-Overblijvers: [5j/28kg]
-Range 28-31kg: alleen 5j/28kg → te weinig
-
-5-jarigen op → Nieuwe groep 6-7j
-  Overblijver 5j/28kg kan NIET mee (5j niet in 6-7 range)
-  → 5j/28kg = orphan
-
-Groep 6-7j: [7j/25kg]
-  → Poule 2 of merge poging
-```
-
-**Waarom dit beter werkt:**
-- Judoka's van vergelijkbare leeftijd EN gewicht komen samen
-- Band-sortering zorgt dat beginners bij beginners komen
-- Sliding window voorkomt harde grenzen
-- Overblijvers krijgen kans in volgende groep
 
 ### VariabeleBlokVerdelingService
 
