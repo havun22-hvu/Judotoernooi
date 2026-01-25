@@ -204,6 +204,12 @@ class CoachKaartController extends Controller
 
     /**
      * Generate coach cards for all clubs in a tournament
+     *
+     * Called by organisator after "Einde Voorbereiding" to calculate
+     * the correct number of coach cards based on largest block per club.
+     *
+     * Formula: ceil(max_judokas_in_largest_block / judokas_per_coach)
+     * Example: 11 judokas in largest block, 5 per coach = ceil(11/5) = 3 cards
      */
     public function genereer(Request $request, Toernooi $toernooi): RedirectResponse
     {
@@ -212,9 +218,11 @@ class CoachKaartController extends Controller
             ->get();
 
         $aangemaakt = 0;
+        $verwijderd = 0;
 
         foreach ($clubs as $club) {
-            $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi);
+            // forceCalculate=true: calculate based on largest block (after voorbereiding)
+            $benodigdAantal = $club->berekenAantalCoachKaarten($toernooi, true);
             $huidigAantal = $club->coachKaartenVoorToernooi($toernooi->id)->count();
 
             // Create missing cards
@@ -229,16 +237,26 @@ class CoachKaartController extends Controller
             // Remove excess cards (only unscanned ones)
             if ($huidigAantal > $benodigdAantal) {
                 $excess = $huidigAantal - $benodigdAantal;
-                $club->coachKaartenVoorToernooi($toernooi->id)
+                $deleted = $club->coachKaartenVoorToernooi($toernooi->id)
                     ->where('is_gescand', false)
                     ->orderBy('id', 'desc')
                     ->limit($excess)
                     ->delete();
+                $verwijderd += $deleted;
             }
         }
 
-        return redirect()->back()
-            ->with('success', "{$aangemaakt} coach kaarten aangemaakt");
+        // Mark voorbereiding as done (if not already)
+        if (!$toernooi->voorbereiding_klaar_op) {
+            $toernooi->update(['voorbereiding_klaar_op' => now()]);
+        }
+
+        $message = "{$aangemaakt} coach kaarten aangemaakt";
+        if ($verwijderd > 0) {
+            $message .= ", {$verwijderd} verwijderd";
+        }
+
+        return redirect()->back()->with('success', $message);
     }
 
     /**
