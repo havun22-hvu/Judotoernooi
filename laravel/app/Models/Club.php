@@ -150,9 +150,35 @@ class Club extends Model
 
     public static function findOrCreateByName(string $naam): self
     {
-        return self::firstOrCreate(
-            ['naam' => trim($naam)],
-            ['afkorting' => substr(trim($naam), 0, 10)]
-        );
+        $naam = trim($naam);
+
+        // 1. Exact match
+        $club = self::where('naam', $naam)->first();
+        if ($club) {
+            return $club;
+        }
+
+        // 2. Case-insensitive match
+        $club = self::whereRaw('LOWER(naam) = ?', [strtolower($naam)])->first();
+        if ($club) {
+            return $club;
+        }
+
+        // 3. Fuzzy match - check if one name contains the other (handles "Cees Veen" vs "Judoschool Cees Veen")
+        $naamLower = strtolower($naam);
+        $clubs = self::all();
+        foreach ($clubs as $bestaandeClub) {
+            $bestaandeLower = strtolower($bestaandeClub->naam);
+            // Check if one contains the other completely
+            if (str_contains($naamLower, $bestaandeLower) || str_contains($bestaandeLower, $naamLower)) {
+                return $bestaandeClub;
+            }
+        }
+
+        // 4. No match found - create new club
+        return self::create([
+            'naam' => $naam,
+            'afkorting' => substr($naam, 0, 10),
+        ]);
     }
 }
