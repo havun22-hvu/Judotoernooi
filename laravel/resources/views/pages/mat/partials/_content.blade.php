@@ -961,6 +961,15 @@ function matInterface() {
         },
 
         getPlaats(poule, judokaId) {
+            // Bij barrage: alle judoka's in barrage groep krijgen zelfde plaats
+            const barrageJudokas = this.getBarrageJudokas(poule);
+            if (barrageJudokas.length >= 3) {
+                const isInBarrage = barrageJudokas.some(j => j.id === judokaId);
+                if (isInBarrage) {
+                    return 1; // Allemaal 1e plaats tot barrage gespeeld
+                }
+            }
+
             const standings = poule.judokas.map(j => ({
                 id: j.id,
                 wp: this.getTotaalWP(poule, j.id),
