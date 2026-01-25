@@ -70,8 +70,6 @@
         <tbody class="divide-y">
             @forelse($clubs->sortBy('naam') as $club)
             @php
-                $uitnodiging = $uitnodigingen[$club->id] ?? null;
-                $inschrijfUrl = $uitnodiging ? route('coach.portal', $uitnodiging->token) : null;
                 $portalUrl = $club->getPortalUrl();
             @endphp
             <tr class="hover:bg-gray-50">

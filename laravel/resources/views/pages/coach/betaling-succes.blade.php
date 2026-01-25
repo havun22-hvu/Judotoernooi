@@ -26,7 +26,7 @@
                 </p>
             </div>
 
-            <a href="{{ isset($useCode) && $useCode ? route('coach.portal.judokas', $code) : route('coach.judokas', $uitnodiging->token ?? '') }}"
+            <a href="{{ route('coach.portal.judokas', $code) }}"
                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg">
                 Terug naar overzicht
             </a>

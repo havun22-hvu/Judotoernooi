@@ -325,24 +325,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
 });
 
-// Coach Portal (public routes with token authentication - legacy)
-Route::prefix('coach')->name('coach.')->group(function () {
-    Route::get('{token}', [CoachPortalController::class, 'index'])->name('portal');
-    Route::post('{token}/login', [CoachPortalController::class, 'login'])->name('login');
-    Route::post('{token}/registreer', [CoachPortalController::class, 'registreer'])->name('registreer');
-    Route::post('{token}/logout', [CoachPortalController::class, 'logout'])->name('logout');
-    Route::get('{token}/judokas', [CoachPortalController::class, 'judokas'])->name('judokas');
-    Route::post('{token}/judoka', [CoachPortalController::class, 'storeJudoka'])->name('judoka.store');
-    Route::put('{token}/judoka/{judoka}', [CoachPortalController::class, 'updateJudoka'])->name('judoka.update');
-    Route::delete('{token}/judoka/{judoka}', [CoachPortalController::class, 'destroyJudoka'])->name('judoka.destroy');
-    Route::get('{token}/weegkaarten', [CoachPortalController::class, 'weegkaarten'])->name('weegkaarten');
-    Route::get('{token}/afrekenen', [CoachPortalController::class, 'afrekenen'])->name('afrekenen');
-    Route::post('{token}/betalen', [CoachPortalController::class, 'betalen'])->name('betalen');
-    Route::get('{token}/betaling/succes', [CoachPortalController::class, 'betalingSucces'])->name('betaling.succes');
-    Route::get('{token}/betaling/geannuleerd', [CoachPortalController::class, 'betalingGeannuleerd'])->name('betaling.geannuleerd');
-});
-
-// Coach Portal with shared code and PIN (new system)
+// Coach Portal with code and PIN
 Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::get('{code}', [CoachPortalController::class, 'indexCode'])->name('code');
     Route::post('{code}/login', [CoachPortalController::class, 'loginPin'])->name('login');
