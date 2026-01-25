@@ -122,36 +122,47 @@ class DynamischeIndelingService
 
         $inputJson = json_encode($pythonInput);
 
-        // Execute Python script
-        $descriptors = [
-            0 => ['pipe', 'r'],  // stdin
-            1 => ['pipe', 'w'],  // stdout
-            2 => ['pipe', 'w'],  // stderr
-        ];
+        // Use temp files for I/O - avoids Windows pipe deadlock
+        $tempInput = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'poule_input_' . uniqid() . '.json';
+        $tempOutput = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'poule_output_' . uniqid() . '.json';
+        file_put_contents($tempInput, $inputJson);
 
-        $process = proc_open(
-            [$pythonCmd, $scriptPath],
-            $descriptors,
-            $pipes,
-            base_path('scripts')
-        );
+        $exitCode = 0;
+        $output = '';
+        $stderr = '';
 
-        if (!is_resource($process)) {
-            Log::error('Kon Python proces niet starten');
-            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandGrens, $bandVerschilBeginners);
+        // Build command with output redirection to file
+        // Note: stderr (DEBUG logs) goes to NUL/dev/null, only stdout (JSON) to output file
+        if (PHP_OS_FAMILY === 'Windows') {
+            // Windows: use cmd /c for proper redirection, discard stderr
+            $cmd = sprintf(
+                'cmd /c "%s %s %s > %s 2>NUL"',
+                $pythonCmd,
+                str_replace('/', '\\', $scriptPath),
+                str_replace('/', '\\', $tempInput),
+                str_replace('/', '\\', $tempOutput)
+            );
+        } else {
+            // Linux/Mac
+            $cmd = sprintf(
+                '%s %s %s > %s 2>/dev/null',
+                escapeshellarg($pythonCmd),
+                escapeshellarg($scriptPath),
+                escapeshellarg($tempInput),
+                escapeshellarg($tempOutput)
+            );
         }
 
-        // Schrijf input en sluit stdin
-        fwrite($pipes[0], $inputJson);
-        fclose($pipes[0]);
+        exec($cmd, $cmdOutput, $exitCode);
 
-        // Lees output
-        $output = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
+        // Read output from file
+        if (file_exists($tempOutput)) {
+            $output = file_get_contents($tempOutput);
+        }
 
-        $exitCode = proc_close($process);
+        // Cleanup temp files
+        @unlink($tempInput);
+        @unlink($tempOutput);
 
         // Log debug output van Python solver
         if (!empty($stderr)) {
