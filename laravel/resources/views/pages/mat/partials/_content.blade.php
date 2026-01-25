@@ -30,9 +30,19 @@
                     <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'">
                         ✓ Klaar om: <span x-text="poule.spreker_klaar_tijd"></span>
                     </div>
+                    <!-- Barrage knop: toon als er een 3-weg gelijkspel is -->
+                    <button
+                        x-show="heeftBarrageNodig(poule) && !poule.spreker_klaar"
+                        @click="maakBarrage(poule)"
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm font-bold"
+                        title="3+ judoka's met gelijke stand - maak barrage poule"
+                    >
+                        ⚔ Barrage
+                    </button>
+
                     <!-- Nog niet klaar maar wel afgerond: toon knop -->
                     <button
-                        x-show="isPouleAfgerond(poule) && !poule.spreker_klaar"
+                        x-show="isPouleAfgerond(poule) && !poule.spreker_klaar && !heeftBarrageNodig(poule)"
                         @click="markeerKlaar(poule)"
                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse"
                     >
@@ -1033,6 +1043,119 @@ function matInterface() {
             }
         },
 
+        // Detecteer of er een barrage nodig is (3+ judoka's met gelijke WP+JP die cirkel vormen)
+        heeftBarrageNodig(poule) {
+            if (poule.type === 'eliminatie' || poule.type === 'barrage') return false;
+            if (!this.isPouleAfgerond(poule)) return false;
+
+            const barrageJudokas = this.getBarrageJudokas(poule);
+            return barrageJudokas.length >= 3;
+        },
+
+        // Vind judoka's die barrage moeten spelen (gelijke WP+JP met cirkel-verliezen)
+        getBarrageJudokas(poule) {
+            const standings = poule.judokas.map(j => ({
+                id: j.id,
+                naam: j.naam,
+                wp: this.getTotaalWP(poule, j.id),
+                jp: this.getTotaalJP(poule, j.id)
+            }));
+
+            // Groepeer op WP+JP
+            const groups = {};
+            standings.forEach(s => {
+                const key = `${s.wp}-${s.jp}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(s);
+            });
+
+            // Zoek groepen met 3+ judoka's
+            for (const key in groups) {
+                const group = groups[key];
+                if (group.length >= 3) {
+                    // Check of ze een cirkel vormen (ieder 1x gewonnen van 1 ander in groep)
+                    if (this.isCircleResult(poule, group)) {
+                        return group;
+                    }
+                }
+            }
+
+            return [];
+        },
+
+        // Check of judoka's een cirkel vormen (A->B, B->C, C->A)
+        isCircleResult(poule, judokas) {
+            const ids = judokas.map(j => j.id);
+            const wins = {}; // wins[a] = [b, c] betekent a heeft gewonnen van b en c
+
+            // Tel wins binnen de groep
+            ids.forEach(id => wins[id] = []);
+
+            for (const w of poule.wedstrijden) {
+                if (!w.is_gespeeld || !w.winnaar_id) continue;
+
+                const witId = w.wit?.id;
+                const blauwId = w.blauw?.id;
+
+                if (ids.includes(witId) && ids.includes(blauwId)) {
+                    const winnerId = w.winnaar_id;
+                    const loserId = winnerId === witId ? blauwId : witId;
+                    if (wins[winnerId]) wins[winnerId].push(loserId);
+                }
+            }
+
+            // Cirkel = ieder heeft precies 1 win EN 1 loss binnen de groep
+            // (bij 3 judoka's: ieder 1 win, 1 loss)
+            const n = ids.length;
+            const expectedWins = n >= 3 ? 1 : 0; // Bij 3 judoka's: 1 win elk
+
+            // Meer algemeen: check of niemand duidelijk wint (geen judoka heeft van ALLE anderen gewonnen)
+            for (const id of ids) {
+                if (wins[id].length >= n - 1) {
+                    // Deze judoka heeft van alle anderen gewonnen, geen barrage nodig
+                    return false;
+                }
+            }
+
+            // Niemand heeft van iedereen gewonnen = cirkel/gelijkspel
+            return true;
+        },
+
+        async maakBarrage(poule) {
+            const barrageJudokas = this.getBarrageJudokas(poule);
+            if (barrageJudokas.length < 3) {
+                alert('Geen barrage nodig');
+                return;
+            }
+
+            const namen = barrageJudokas.map(j => j.naam).join(', ');
+            if (!confirm(`Barrage maken voor: ${namen}?`)) return;
+
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.barrage', $toernooi) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        poule_id: poule.poule_id,
+                        judoka_ids: barrageJudokas.map(j => j.id)
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Barrage poule #${data.barrage_poule.nummer} aangemaakt op dezelfde mat!`);
+                    // Herlaad wedstrijden om barrage te tonen
+                    this.laadWedstrijden();
+                } else {
+                    alert('Fout: ' + (data.error || 'Onbekende fout'));
+                }
+            } catch (err) {
+                alert('Fout bij maken barrage: ' + err.message);
+            }
+        },
 
         // Bepaal huidige (groen) en volgende (geel) wedstrijd
         // Groen = actieve_wedstrijd_id OF eerste niet-gespeelde

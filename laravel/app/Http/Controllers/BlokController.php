@@ -940,4 +940,69 @@ class BlokController extends Controller
 
         return response()->json(['success' => true, 'updated' => $updated, 'vast' => $blokVast]);
     }
+
+    /**
+     * Maak een barrage poule voor judoka's met gelijke stand (3-weg gelijkspel)
+     * Judoka's blijven in originele poule, worden TOEGEVOEGD aan barrage (niet verplaatst)
+     */
+    public function maakBarrage(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'judoka_ids' => 'required|array|min:2',
+            'judoka_ids.*' => 'exists:judokas,id',
+        ]);
+
+        $originelePoule = Poule::with(['mat', 'blok', 'judokas'])->findOrFail($validated['poule_id']);
+
+        // Verify poule belongs to this toernooi
+        if ($originelePoule->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        // Get hoogste poule nummer voor nummering
+        $maxNummer = $toernooi->poules()->max('nummer') ?? 0;
+
+        // Maak barrage poule
+        $barragePoule = Poule::create([
+            'toernooi_id' => $toernooi->id,
+            'blok_id' => $originelePoule->blok_id,
+            'mat_id' => $originelePoule->mat_id,
+            'nummer' => $maxNummer + 1,
+            'leeftijdsklasse' => $originelePoule->leeftijdsklasse,
+            'gewichtsklasse' => $originelePoule->gewichtsklasse,
+            'type' => 'barrage', // Speciaal type
+            'titel' => 'Barrage ' . $originelePoule->leeftijdsklasse . ' ' . $originelePoule->gewichtsklasse,
+            'categorie_key' => $originelePoule->categorie_key,
+            'barrage_van_poule_id' => $originelePoule->id, // Link naar originele poule
+        ]);
+
+        // Voeg judoka's toe aan barrage (NIET detach uit originele!)
+        $positie = 1;
+        foreach ($validated['judoka_ids'] as $judokaId) {
+            $barragePoule->judokas()->attach($judokaId, ['positie' => $positie++]);
+        }
+
+        // Update statistieken
+        $barragePoule->updateStatistieken();
+
+        // Genereer wedstrijdschema
+        $wedstrijden = $this->wedstrijdService->genereerWedstrijdenVoorPoule($barragePoule);
+
+        // Doorsturen naar zaaloverzicht (zelfde mat als origineel)
+        $barragePoule->update(['doorgestuurd_op' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Barrage poule aangemaakt',
+            'barrage_poule' => [
+                'id' => $barragePoule->id,
+                'nummer' => $barragePoule->nummer,
+                'titel' => $barragePoule->titel,
+                'mat_id' => $barragePoule->mat_id,
+                'aantal_judokas' => count($validated['judoka_ids']),
+                'aantal_wedstrijden' => count($wedstrijden),
+            ],
+        ]);
+    }
 }
