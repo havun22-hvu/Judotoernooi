@@ -354,8 +354,8 @@ class CoachPortalController extends Controller
             $gewichtsklasse = '-' . (int) $validated['gewicht'];
         }
 
-        $judoka->update([
-            'naam' => $validated['naam'],
+        // Free tier: naam cannot be changed after creation
+        $updateData = [
             'geboortejaar' => $validated['geboortejaar'] ?? null,
             'geslacht' => $validated['geslacht'] ?? null,
             'band' => $validated['band'] ?? null,
@@ -363,7 +363,13 @@ class CoachPortalController extends Controller
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
-        ]);
+        ];
+
+        if (!$toernooiModel->isFreeTier()) {
+            $updateData['naam'] = $validated['naam'];
+        }
+
+        $judoka->update($updateData);
 
         $judoka->hervalideerImportStatus();
 
@@ -382,6 +388,12 @@ class CoachPortalController extends Controller
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooiModel->id) {
             abort(403);
+        }
+
+        // Free tier: judokas cannot be deleted
+        if ($toernooiModel->isFreeTier()) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'In de gratis versie kunnen judoka\'s niet verwijderd worden.');
         }
 
         if (!$toernooiModel->portaalMagInschrijven()) {
