@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold text-gray-800">Havun Admin Dashboard</h1>
         <p class="text-gray-500 mt-1">Overzicht van alle klanten (organisatoren) en hun toernooien</p>
     </div>
-    <a href="{{ route('organisator.dashboard') }}" class="text-blue-600 hover:text-blue-800">
+    <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-blue-600 hover:text-blue-800">
         &larr; Terug naar Dashboard
     </a>
 </div>
