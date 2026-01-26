@@ -63,7 +63,13 @@ class DeviceToegang extends Model
 
     public function getUrl(): string
     {
-        return route('toegang.show', $this->code);
+        $toernooi = $this->toernooi;
+
+        return route('toegang.show', [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'code' => $this->code,
+        ]);
     }
 
     public function isGebonden(): bool

@@ -11,7 +11,7 @@ class DeviceToegangController extends Controller
     /**
      * Show PIN input page for device binding.
      */
-    public function show(string $code)
+    public function show(string $organisator, string $toernooi, string $code)
     {
         $toegang = DeviceToegang::where('code', $code)->first();
 
@@ -36,7 +36,7 @@ class DeviceToegangController extends Controller
     /**
      * Verify PIN and bind device.
      */
-    public function verify(Request $request, string $code)
+    public function verify(Request $request, string $organisator, string $toernooi, string $code)
     {
         $toegang = DeviceToegang::where('code', $code)->first();
 
@@ -81,15 +81,75 @@ class DeviceToegangController extends Controller
     protected function redirectToInterface(DeviceToegang $toegang)
     {
         $toegang->updateLaatstActief();
+        $toernooi = $toegang->toernooi;
+        $params = [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'toegang' => $toegang->id,
+        ];
 
         return match ($toegang->rol) {
-            'hoofdjury' => redirect()->route('jury.interface', $toegang->id),
-            'mat' => redirect()->route('mat.interface', ['toegang' => $toegang->id]),
-            'weging' => redirect()->route('weging.interface', ['toegang' => $toegang->id]),
-            'spreker' => redirect()->route('spreker.interface', ['toegang' => $toegang->id]),
-            'dojo' => redirect()->route('dojo.scanner', ['toegang' => $toegang->id]),
+            'hoofdjury' => redirect()->route('jury.interface', $params),
+            'mat' => redirect()->route('mat.interface', $params),
+            'weging' => redirect()->route('weging.interface', $params),
+            'spreker' => redirect()->route('spreker.interface', $params),
+            'dojo' => redirect()->route('dojo.scanner', $params),
             default => redirect('/'),
         };
+    }
+
+    /**
+     * Redirect legacy /toegang/{code} to new /{org}/{toernooi}/toegang/{code}
+     */
+    public function redirectToNew(string $code)
+    {
+        $toegang = DeviceToegang::where('code', $code)->first();
+
+        if (!$toegang) {
+            return $this->vrijwilligerError('Deze link is niet meer actief.');
+        }
+
+        $toernooi = $toegang->toernooi;
+
+        return redirect()->route('toegang.show', [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'code' => $code,
+        ]);
+    }
+
+    /**
+     * Redirect legacy interface routes to new URL structure
+     */
+    public function redirectInterfaceToNew(int $toegangId, string $rol)
+    {
+        $toegang = DeviceToegang::find($toegangId);
+
+        if (!$toegang) {
+            return $this->vrijwilligerError('Deze link is niet meer actief.');
+        }
+
+        $toernooi = $toegang->toernooi;
+        $params = [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'toegang' => $toegangId,
+        ];
+
+        $routeName = match ($rol) {
+            'jury' => 'jury.interface',
+            'mat' => 'mat.interface',
+            'weging' => 'weging.interface',
+            'spreker' => 'spreker.interface',
+            'dojo' => 'dojo.scanner',
+            default => null,
+        };
+
+        if (!$routeName) {
+            return redirect('/');
+        }
+
+        return redirect()->route($routeName, $params);
     }
 
     /**

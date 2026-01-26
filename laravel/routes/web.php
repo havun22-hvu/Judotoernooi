@@ -366,25 +366,35 @@ Route::get('dojo/{toernooi}/club/{club}', [CoachKaartController::class, 'dojoClu
 // Role access via secret code (vrijwilligers) - LEGACY
 Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
 
-// Device binding routes (new system)
-Route::prefix('toegang')->name('toegang.')->group(function () {
-    Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show');
-    Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify');
+// Device binding routes - NEW URL structure: /{org}/{toernooi}/toegang/{code}
+Route::prefix('{organisator}/{toernooi}')->group(function () {
+    Route::prefix('toegang')->name('toegang.')->group(function () {
+        Route::get('{code}', [DeviceToegangController::class, 'show'])->name('show');
+        Route::post('{code}/verify', [DeviceToegangController::class, 'verify'])->name('verify');
+    });
+
+    // Device-bound interfaces
+    Route::middleware('device.binding')->group(function () {
+        Route::get('weging/{toegang}', [RoleToegang::class, 'wegingDeviceBound'])->name('weging.interface');
+        Route::get('mat/{toegang}', [RoleToegang::class, 'matDeviceBound'])->name('mat.interface');
+        Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
+        Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
+        Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');
+        Route::get('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesGet'])->name('spreker.notities.get');
+        Route::post('spreker/{toegang}/afgeroepen', [RoleToegang::class, 'sprekerAfgeroepen'])->name('spreker.afgeroepen');
+        Route::post('spreker/{toegang}/terug', [RoleToegang::class, 'sprekerTerug'])->name('spreker.terug');
+        Route::post('spreker/{toegang}/standings', [RoleToegang::class, 'sprekerStandings'])->name('spreker.standings');
+        Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
+    });
 });
 
-// Device-bound interfaces (new system)
-Route::middleware('device.binding')->group(function () {
-    Route::get('weging/{toegang}', [RoleToegang::class, 'wegingDeviceBound'])->name('weging.interface');
-    Route::get('mat/{toegang}', [RoleToegang::class, 'matDeviceBound'])->name('mat.interface');
-    Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
-    Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
-    Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');
-    Route::get('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesGet'])->name('spreker.notities.get');
-    Route::post('spreker/{toegang}/afgeroepen', [RoleToegang::class, 'sprekerAfgeroepen'])->name('spreker.afgeroepen');
-    Route::post('spreker/{toegang}/terug', [RoleToegang::class, 'sprekerTerug'])->name('spreker.terug');
-    Route::post('spreker/{toegang}/standings', [RoleToegang::class, 'sprekerStandings'])->name('spreker.standings');
-    Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
-});
+// Legacy routes - redirect to new URL structure
+Route::get('toegang/{code}', [DeviceToegangController::class, 'redirectToNew'])->name('toegang.legacy');
+Route::get('weging/{toegang}', fn($toegang) => app(DeviceToegangController::class)->redirectInterfaceToNew($toegang, 'weging'));
+Route::get('mat/{toegang}', fn($toegang) => app(DeviceToegangController::class)->redirectInterfaceToNew($toegang, 'mat'));
+Route::get('jury/{toegang}', fn($toegang) => app(DeviceToegangController::class)->redirectInterfaceToNew($toegang, 'jury'));
+Route::get('spreker/{toegang}', fn($toegang) => app(DeviceToegangController::class)->redirectInterfaceToNew($toegang, 'spreker'));
+Route::get('dojo/{toegang}', fn($toegang) => app(DeviceToegangController::class)->redirectInterfaceToNew($toegang, 'dojo'));
 
 // Generic role interfaces (session-based, no toernooi in URL)
 Route::middleware('rol.sessie')->group(function () {
