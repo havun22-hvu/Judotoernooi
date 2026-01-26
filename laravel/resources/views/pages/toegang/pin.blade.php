@@ -44,6 +44,17 @@
                     }
                 }
             },
+            handlePaste(event) {
+                event.preventDefault();
+                const pasted = (event.clipboardData || window.clipboardData).getData('text');
+                const digits = pasted.replace(/[^0-9]/g, '').slice(0, 4).split('');
+                digits.forEach((digit, i) => {
+                    this.pin[i] = digit;
+                });
+                // Focus last filled or next empty
+                const focusIndex = Math.min(digits.length, 3);
+                this.$refs['pin' + focusIndex].focus();
+            },
             get fullPin() {
                 return this.pin.join('');
             }
@@ -94,6 +105,7 @@
                         x-model="pin[{{ $i }}]"
                         @input="focusNext({{ $i }})"
                         @keydown="focusPrev({{ $i }}, $event)"
+                        @paste="handlePaste($event)"
                         maxlength="1"
                         class="pin-input w-14 h-16 text-center text-2xl font-bold border-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                         required

@@ -140,6 +140,12 @@
 - **Bestanden:** device-toegangen.blade.php
 - **Oplossing:** Twee aparte knoppen met eigen `copyUrl()` en `copyPin()` functies
 
+### Fix: PIN paste in login
+- **Type:** Bug fix
+- **Wat:** Plakken van PIN verdeelt nu alle cijfers over de 4 invoervelden
+- **Bestanden:** toegang/pin.blade.php
+- **Oplossing:** `handlePaste()` functie die geplakte tekst filtert en verdeelt
+
 ---
 
 <!--
