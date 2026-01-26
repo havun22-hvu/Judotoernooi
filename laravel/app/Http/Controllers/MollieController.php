@@ -44,8 +44,9 @@ class MollieController extends Controller
         // Validate state
         $toernooiId = $this->mollieService->validateOAuthState($state);
         if (!$toernooiId) {
-            return redirect()->route('organisator.dashboard')
-                ->with('error', 'Ongeldige OAuth state');
+            // Redirect to login if state is invalid (session likely expired)
+            return redirect()->route('organisator.login')
+                ->with('error', 'Ongeldige OAuth state - sessie mogelijk verlopen');
         }
 
         $toernooi = Toernooi::findOrFail($toernooiId);
@@ -249,7 +250,10 @@ class MollieController extends Controller
         }
 
         // Get redirect URL from betaling metadata or fallback
-        $redirectUrl = $betaling?->metadata['redirect_url'] ?? route('organisator.dashboard');
+        $fallbackUrl = auth('organisator')->check()
+            ? route('organisator.dashboard', ['organisator' => auth('organisator')->user()->slug])
+            : route('organisator.login');
+        $redirectUrl = $betaling?->metadata['redirect_url'] ?? $fallbackUrl;
 
         return redirect($redirectUrl);
     }

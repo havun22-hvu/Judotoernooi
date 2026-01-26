@@ -23,7 +23,7 @@ class OrganisatorAuthController extends Controller
         if (Auth::guard('organisator')->check()) {
             $user = Auth::guard('organisator')->user();
             if ($user && $user->exists) {
-                return redirect()->route('organisator.dashboard');
+                return redirect()->route('organisator.dashboard', ['organisator' => $user->slug]);
             }
             // Corrupt session - log out and show login
             Auth::guard('organisator')->logout();
@@ -54,7 +54,7 @@ class OrganisatorAuthController extends Controller
             $organisator = Auth::guard('organisator')->user();
             $organisator->updateLaatsteLogin();
 
-            return redirect()->intended(route('organisator.dashboard'));
+            return redirect()->intended(route('organisator.dashboard', ['organisator' => $organisator->slug]));
         }
 
         return back()->withErrors([
@@ -94,7 +94,7 @@ class OrganisatorAuthController extends Controller
         $request->session()->regenerate();
         $superadmin->updateLaatsteLogin();
 
-        return redirect()->intended(route('organisator.dashboard'));
+        return redirect()->intended(route('organisator.dashboard', ['organisator' => $superadmin->slug]));
     }
 
     /**
@@ -103,7 +103,8 @@ class OrganisatorAuthController extends Controller
     public function showRegister(): View|RedirectResponse
     {
         if (Auth::guard('organisator')->check()) {
-            return redirect()->route('organisator.dashboard');
+            $user = Auth::guard('organisator')->user();
+            return redirect()->route('organisator.dashboard', ['organisator' => $user->slug]);
         }
 
         return view('organisator.auth.register');
@@ -130,7 +131,7 @@ class OrganisatorAuthController extends Controller
 
         Auth::guard('organisator')->login($organisator);
 
-        return redirect()->route('organisator.dashboard')
+        return redirect()->route('organisator.dashboard', ['organisator' => $organisator->slug])
             ->with('success', 'Account aangemaakt! Welkom bij JudoToernooi.');
     }
 

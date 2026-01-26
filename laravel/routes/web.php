@@ -63,7 +63,8 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
     // Authenticated routes
     Route::middleware('auth:organisator')->group(function () {
         Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
-        Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('dashboard');
+        // Legacy dashboard route - redirects to new URL structure
+        Route::get('dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->name('dashboard.legacy');
 
         // Gewichtsklassen presets
         Route::get('presets', [GewichtsklassenPresetController::class, 'index'])->name('presets.index');
@@ -72,8 +73,13 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
     });
 });
 
-// Dashboard - redirect to organisator dashboard (toernooi selection)
-Route::get('/dashboard', function() { return redirect('/organisator/dashboard'); })->middleware('auth:organisator');
+// New URL structure: /{organisator-slug}/dashboard
+Route::prefix('{organisator}')->middleware('auth:organisator')->group(function () {
+    Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('organisator.dashboard');
+});
+
+// Dashboard - redirect to organisator dashboard (new URL structure)
+Route::get('/dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->middleware('auth:organisator');
 
 // Toernooi management - protected routes (require organisator login)
 Route::middleware('auth:organisator')->group(function () {
@@ -112,6 +118,7 @@ Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])-
 // Toernooi upgrade routes (freemium)
 Route::middleware('auth:organisator')->prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::get('upgrade', [ToernooiBetalingController::class, 'showUpgrade'])->name('upgrade');
+    Route::post('upgrade/kyc', [ToernooiBetalingController::class, 'saveKyc'])->name('upgrade.kyc');
     Route::post('upgrade', [ToernooiBetalingController::class, 'startPayment'])->name('upgrade.start');
     Route::get('upgrade/succes/{betaling}', [ToernooiBetalingController::class, 'success'])->name('upgrade.succes');
     Route::get('upgrade/geannuleerd', [ToernooiBetalingController::class, 'cancelled'])->name('upgrade.geannuleerd');

@@ -213,7 +213,7 @@ class ToernooiController extends Controller
         // Eigenaar of sitebeheerder mag verwijderen
         if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->ownsToernooi($toernooi))) {
             return redirect()
-                ->route('organisator.dashboard')
+                ->route('organisator.dashboard', ['organisator' => $organisator->slug])
                 ->with('error', 'Je hebt geen rechten om dit toernooi te verwijderen');
         }
 
@@ -307,16 +307,34 @@ class ToernooiController extends Controller
     }
 
     /**
-     * Dashboard for authenticated organisators
+     * Redirect to new URL structure for organisator dashboard
      */
-    public function organisatorDashboard(): View
+    public function redirectToOrganisatorDashboard(): RedirectResponse
     {
-        // Fresh load to ensure we have latest toernooien (not cached from login)
-        $organisator = auth('organisator')->user()->fresh();
+        $organisator = auth('organisator')->user();
+        return redirect()->route('organisator.dashboard', ['organisator' => $organisator->slug]);
+    }
 
-        if ($organisator->isSitebeheerder()) {
+    /**
+     * Dashboard for authenticated organisators (new URL: /{organisator-slug}/dashboard)
+     */
+    public function organisatorDashboard(\App\Models\Organisator $organisator): View
+    {
+        $loggedIn = auth('organisator')->user();
+
+        // Verify access: either viewing own dashboard or is sitebeheerder
+        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
+            abort(403, 'Je hebt geen toegang tot dit dashboard.');
+        }
+
+        // Fresh load to ensure we have latest toernooien (not cached from login)
+        $organisator = $organisator->fresh();
+
+        if ($loggedIn->isSitebeheerder() && $loggedIn->id === $organisator->id) {
+            // Sitebeheerder viewing own dashboard sees all toernooien
             $toernooien = Toernooi::orderBy('datum', 'desc')->get();
         } else {
+            // Regular organisator or sitebeheerder viewing another organisator
             $toernooien = $organisator->toernooien()->orderBy('datum', 'desc')->get();
         }
 

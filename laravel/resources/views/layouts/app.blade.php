@@ -64,7 +64,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi) : route('organisator.dashboard') }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
+                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi) : route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
                     @php
                         $currentRoute = Route::currentRouteName();
@@ -100,7 +100,7 @@
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                             <a href="{{ route('toernooi.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Alle Toernooien</a>
                             @endif
-                            <a href="{{ route('organisator.dashboard') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mijn Toernooien</a>
+                            <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mijn Toernooien</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding ↗</a>
                             <hr class="my-1">
                             <form action="{{ route('organisator.logout') }}" method="POST">
