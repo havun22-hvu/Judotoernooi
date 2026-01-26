@@ -15,7 +15,7 @@
                     <h1 class="text-2xl font-bold text-gray-800">Afrekenen</h1>
                     <p class="text-gray-600">{{ $club->naam }} - {{ $toernooi->naam }}</p>
                 </div>
-                <a href="{{ route('coach.portal.judokas', $code) }}"
+                <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800">
                     &larr; Terug
                 </a>
@@ -71,7 +71,7 @@
         </div>
 
         <!-- Payment button -->
-        <form action="{{ route('coach.portal.betalen', $code) }}" method="POST">
+        <form action="{{ route('coach.portal.betalen', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
             @csrf
             <button type="submit"
                     class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg flex items-center justify-center gap-3 text-lg">
@@ -88,7 +88,7 @@
         @else
         <div class="bg-white rounded-lg shadow p-8 text-center">
             <p class="text-gray-600 mb-4">Geen judoka's om af te rekenen.</p>
-            <a href="{{ route('coach.portal.judokas', $code) }}"
+            <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                class="text-blue-600 hover:text-blue-800">
                 Terug naar judoka's
             </a>

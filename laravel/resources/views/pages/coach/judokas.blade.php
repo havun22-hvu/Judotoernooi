@@ -21,7 +21,7 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
-                <form action="{{ route('coach.portal.logout', $code) }}" method="POST">
+                <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                     @csrf
                     <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
                 </form>
@@ -29,19 +29,19 @@
 
             <!-- Navigation tabs -->
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
-                <a href="{{ route('coach.portal.judokas', $code) }}"
+                <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
                     Judoka's
                 </a>
-                <a href="{{ route('coach.portal.coachkaarten', $code) }}"
+                <a href="{{ route('coach.portal.coachkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Coach Kaarten
                 </a>
-                <a href="{{ route('coach.portal.weegkaarten', $code) }}"
+                <a href="{{ route('coach.portal.weegkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Weegkaarten
                 </a>
-                <a href="{{ route('coach.portal.resultaten', $code) }}"
+                <a href="{{ route('coach.portal.resultaten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Resultaten
                 </a>
@@ -116,7 +116,7 @@
                 <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
             </button>
 
-            <form action="{{ route('coach.portal.judoka.store', $code) }}" method="POST"
+            <form action="{{ route('coach.portal.judoka.store', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST"
                   x-show="open" x-collapse class="mt-4 pt-4 border-t">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -238,7 +238,7 @@
                     </button>
                     @endif
                 </div>
-                <form action="{{ route('coach.portal.sync', $code) }}" method="POST">
+                <form action="{{ route('coach.portal.sync', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                     @csrf
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2"
                             {{ $nietSyncedVolledig->count() === 0 ? 'disabled' : '' }}
@@ -331,7 +331,7 @@
                     @endif
                 </div>
                 @if(($volledigeOnbetaald ?? collect())->count() > 0)
-                <a href="{{ route('coach.portal.afrekenen', $code) }}"
+                <a href="{{ route('coach.portal.afrekenen', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     €{{ number_format($volledigeOnbetaald->count() * ($inschrijfgeld ?? 0), 2, ',', '.') }}
@@ -419,7 +419,7 @@
                             @if($judoka->telefoon)<a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $judoka->telefoon) }}" target="_blank" class="text-green-600 hover:text-green-800 text-sm">WA</a>@endif
                             @if($magWijzigen ?? true)<button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">{{ $isOnvolledig ? 'Aanvullen' : 'Bewerk' }}</button>@endif
                             @if($magInschrijven ?? true)
-                            <form action="{{ route('coach.portal.judoka.destroy', [$code, $judoka]) }}" method="POST" class="inline"
+                            <form action="{{ route('coach.portal.judoka.destroy', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Verwijderen?')">@csrf @method('DELETE')
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-lg">×</button>
                             </form>
@@ -431,7 +431,7 @@
                     <!-- Edit mode -->
                     @if($inschrijvingOpen && ($magWijzigen ?? true))
                     <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }})" class="mt-3">
-                        <form action="{{ route('coach.portal.judoka.update', [$code, $judoka]) }}" method="POST">
+                        <form action="{{ route('coach.portal.judoka.update', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST">
                             @csrf @method('PUT')
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                 <input type="text" name="naam" value="{{ $judoka->naam }}" required class="border rounded px-3 py-2" placeholder="Naam">

@@ -16,7 +16,7 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
-                <form action="{{ route('coach.portal.logout', $code) }}" method="POST">
+                <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                     @csrf
                     <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
                 </form>
@@ -24,19 +24,19 @@
 
             <!-- Navigation tabs -->
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
-                <a href="{{ route('coach.portal.judokas', $code) }}"
+                <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Judoka's
                 </a>
-                <a href="{{ route('coach.portal.coachkaarten', $code) }}"
+                <a href="{{ route('coach.portal.coachkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-purple-600 font-medium border-b-2 border-purple-600 px-3 py-1 whitespace-nowrap">
                     Coach Kaarten
                 </a>
-                <a href="{{ route('coach.portal.weegkaarten', $code) }}"
+                <a href="{{ route('coach.portal.weegkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Weegkaarten
                 </a>
-                <a href="{{ route('coach.portal.resultaten', $code) }}"
+                <a href="{{ route('coach.portal.resultaten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
                     Resultaten
                 </a>
