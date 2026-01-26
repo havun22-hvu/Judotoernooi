@@ -97,6 +97,27 @@
 
 ---
 
+## Sessie: 26 januari 2026
+
+### Fix: Spreker oproepen filter
+- **Type:** Bug fix
+- **Wat:** Alleen doorgestuurde poules tonen in oproepen tab
+- **Bestanden:** BlokController.php, RoleToegang.php
+- **Filter:** `whereNotNull('doorgestuurd_op')`
+
+### Fix: Spreker auto-refresh vervangen
+- **Type:** UI improvement
+- **Wat:** Vervelende 10s auto-refresh vervangen door handmatige "Vernieuwen" knop
+- **Bestanden:** spreker/_content.blade.php
+
+### Feat: Spreker geschiedenis klikbaar
+- **Type:** Feature
+- **Wat:** Eerder afgeroepen poules klikbaar → modal met uitslagen
+- **Bestanden:** spreker/_content.blade.php, BlokController.php, RoleToegang.php, web.php
+- **Route:** `POST /spreker/standings`
+
+---
+
 <!--
 TEMPLATE:
 
