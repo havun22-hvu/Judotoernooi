@@ -281,13 +281,44 @@ class Toernooi extends Model
     }
 
     /**
-     * Get all clubs that have judokas in this tournament.
-     * Returns a query builder for clubs.
+     * Get all clubs linked to this tournament via pivot.
      */
-    public function clubs(): \Illuminate\Database\Eloquent\Builder
+    public function clubs(): BelongsToMany
+    {
+        return $this->belongsToMany(Club::class, 'club_toernooi')
+            ->withPivot('portal_code', 'pincode')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all clubs that have judokas in this tournament (legacy method).
+     */
+    public function clubsMetJudokas(): \Illuminate\Database\Eloquent\Builder
     {
         $clubIds = $this->judokas()->whereNotNull('club_id')->pluck('club_id')->unique();
         return Club::whereIn('id', $clubIds);
+    }
+
+    /**
+     * Get club by portal code for this tournament.
+     */
+    public function getClubByPortalCode(string $code): ?Club
+    {
+        return $this->clubs()->wherePivot('portal_code', $code)->first();
+    }
+
+    /**
+     * Ensure a club has a pivot record for this tournament.
+     * Creates one with new portal_code if it doesn't exist.
+     */
+    public function ensureClubPivot(Club $club): void
+    {
+        if (!$this->clubs()->where('clubs.id', $club->id)->exists()) {
+            $this->clubs()->attach($club->id, [
+                'portal_code' => Club::generatePortalCode(),
+                'pincode' => Club::generatePincode(),
+            ]);
+        }
     }
 
     public function deviceToegangen(): HasMany
