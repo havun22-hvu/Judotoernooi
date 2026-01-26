@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Betaling;
 use App\Models\Judoka;
 use App\Models\Toernooi;
+use App\Models\ToernooiBetaling;
 use App\Services\MollieService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -119,6 +120,73 @@ class MollieController extends Controller
                 'error' => $e->getMessage(),
             ]);
             return response('Error', 500);
+        }
+    }
+
+    /**
+     * Handle Mollie webhook for toernooi upgrade payments
+     */
+    public function webhookToernooi(Request $request): \Illuminate\Http\Response
+    {
+        $paymentId = $request->input('id');
+
+        if (!$paymentId) {
+            return response('Missing payment ID', 400);
+        }
+
+        // Find toernooi betaling by mollie_payment_id
+        $betaling = ToernooiBetaling::where('mollie_payment_id', $paymentId)->first();
+
+        if (!$betaling) {
+            // Could be a simulated payment or unknown
+            return response('OK', 200);
+        }
+
+        try {
+            $apiKey = $this->mollieService->getPlatformApiKey();
+
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+            ])->get(config('services.mollie.api_url') . '/payments/' . $paymentId);
+
+            if (!$response->successful()) {
+                throw new \Exception('Mollie API error: ' . $response->body());
+            }
+
+            $payment = $response->object();
+
+            $this->updateToernooiBetalingStatus($betaling, $payment->status);
+
+            return response('OK', 200);
+        } catch (\Exception $e) {
+            \Log::error('Mollie toernooi webhook error', [
+                'payment_id' => $paymentId,
+                'error' => $e->getMessage(),
+            ]);
+            return response('Error', 500);
+        }
+    }
+
+    /**
+     * Update toernooi betaling status based on Mollie status
+     */
+    private function updateToernooiBetalingStatus(ToernooiBetaling $betaling, string $status): void
+    {
+        $statusMapping = [
+            'paid' => ToernooiBetaling::STATUS_PAID,
+            'failed' => ToernooiBetaling::STATUS_FAILED,
+            'expired' => ToernooiBetaling::STATUS_EXPIRED,
+            'canceled' => ToernooiBetaling::STATUS_CANCELED,
+            'open' => ToernooiBetaling::STATUS_OPEN,
+        ];
+
+        $newStatus = $statusMapping[$status] ?? $betaling->status;
+
+        $betaling->update(['status' => $newStatus]);
+
+        // If paid, activate the paid plan
+        if ($newStatus === ToernooiBetaling::STATUS_PAID && !$betaling->betaald_op) {
+            $betaling->markeerAlsBetaald();
         }
     }
 

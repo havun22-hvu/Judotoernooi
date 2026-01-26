@@ -1,0 +1,160 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Toernooi;
+use App\Models\ToernooiBetaling;
+use App\Services\FreemiumService;
+use App\Services\MollieService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+
+class ToernooiBetalingController extends Controller
+{
+    public function __construct(
+        private FreemiumService $freemiumService,
+        private MollieService $mollieService
+    ) {}
+
+    /**
+     * Show upgrade options page
+     */
+    public function showUpgrade(Toernooi $toernooi): View|RedirectResponse
+    {
+        // Already paid - redirect to toernooi
+        if ($toernooi->isPaidTier()) {
+            return redirect()->route('toernooi.show', $toernooi)
+                ->with('info', 'Dit toernooi heeft al een betaald abonnement.');
+        }
+
+        $upgradeOptions = $this->freemiumService->getUpgradeOptions($toernooi);
+        $status = $this->freemiumService->getStatus($toernooi);
+
+        return view('pages.toernooi.upgrade', [
+            'toernooi' => $toernooi,
+            'upgradeOptions' => $upgradeOptions,
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * Start the upgrade payment process
+     */
+    public function startPayment(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'tier' => 'required|string',
+        ]);
+
+        $tierInfo = $this->freemiumService->getTierInfo($validated['tier']);
+        if (!$tierInfo) {
+            return back()->with('error', 'Ongeldige staffel geselecteerd.');
+        }
+
+        $prijs = $tierInfo['prijs'];
+        $maxJudokas = $tierInfo['max'];
+
+        $organisator = Auth::guard('organisator')->user();
+
+        // Create betaling record
+        $betaling = ToernooiBetaling::create([
+            'toernooi_id' => $toernooi->id,
+            'organisator_id' => $organisator->id,
+            'mollie_payment_id' => 'pending_' . uniqid(),
+            'bedrag' => $prijs,
+            'tier' => $validated['tier'],
+            'max_judokas' => $maxJudokas,
+            'status' => ToernooiBetaling::STATUS_OPEN,
+        ]);
+
+        $description = "JudoToernooi Upgrade: {$toernooi->naam} - {$validated['tier']} judoka's";
+        $redirectUrl = route('toernooi.upgrade.succes', ['toernooi' => $toernooi, 'betaling' => $betaling]);
+
+        // Simulation mode for staging
+        if ($this->mollieService->isSimulationMode()) {
+            $payment = $this->mollieService->simulatePayment([
+                'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
+                'description' => $description,
+                'redirectUrl' => $redirectUrl,
+                'webhookUrl' => route('mollie.webhook.toernooi'),
+                'metadata' => ['toernooi_betaling_id' => $betaling->id],
+            ]);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        }
+
+        // Real Mollie payment (Platform mode - goes to JudoToernooi)
+        try {
+            $payment = $this->createPlatformPayment($toernooi, $betaling, $prijs, $description, $redirectUrl);
+
+            $betaling->update(['mollie_payment_id' => $payment->id]);
+
+            return redirect($payment->_links->checkout->href);
+        } catch (\Exception $e) {
+            \Log::error('Toernooi upgrade payment failed', ['error' => $e->getMessage()]);
+            $betaling->update(['status' => ToernooiBetaling::STATUS_FAILED]);
+
+            return back()->with('error', 'Fout bij aanmaken betaling: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create a platform payment (goes to JudoToernooi's Mollie account)
+     */
+    private function createPlatformPayment(Toernooi $toernooi, ToernooiBetaling $betaling, float $prijs, string $description, string $redirectUrl): object
+    {
+        $apiKey = $this->mollieService->getPlatformApiKey();
+
+        $response = \Illuminate\Support\Facades\Http::withHeaders([
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type' => 'application/json',
+        ])->post(config('services.mollie.api_url') . '/payments', [
+            'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
+            'description' => $description,
+            'redirectUrl' => $redirectUrl,
+            'webhookUrl' => route('mollie.webhook.toernooi'),
+            'metadata' => [
+                'toernooi_betaling_id' => $betaling->id,
+                'toernooi_id' => $toernooi->id,
+            ],
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Mollie API error: ' . $response->body());
+        }
+
+        return $response->object();
+    }
+
+    /**
+     * Payment success page
+     */
+    public function success(Toernooi $toernooi, ToernooiBetaling $betaling): View|RedirectResponse
+    {
+        // Verify this betaling belongs to this toernooi
+        if ($betaling->toernooi_id !== $toernooi->id) {
+            abort(403);
+        }
+
+        // Refresh toernooi to get updated plan_type
+        $toernooi->refresh();
+
+        return view('pages.toernooi.upgrade-succes', [
+            'toernooi' => $toernooi,
+            'betaling' => $betaling,
+        ]);
+    }
+
+    /**
+     * Payment cancelled
+     */
+    public function cancelled(Toernooi $toernooi): RedirectResponse
+    {
+        return redirect()->route('toernooi.upgrade', $toernooi)
+            ->with('warning', 'Betaling geannuleerd. Je kunt het opnieuw proberen.');
+    }
+}

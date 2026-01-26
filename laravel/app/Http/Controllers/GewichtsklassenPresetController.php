@@ -32,6 +32,18 @@ class GewichtsklassenPresetController extends Controller
         ]);
 
         $organisatorId = Auth::guard('organisator')->id();
+        $organisator = Auth::guard('organisator')->user();
+
+        // Check if this is a new preset (not an update) and if limit is reached
+        $existingPreset = GewichtsklassenPreset::where('organisator_id', $organisatorId)
+            ->where('naam', $validated['naam'])
+            ->first();
+
+        if (!$existingPreset && !$organisator->canAddMorePresets()) {
+            return response()->json([
+                'error' => 'Maximum aantal presets bereikt. Je mag maximaal 1 preset opslaan in de gratis versie.',
+            ], 422);
+        }
 
         // Sort categories by max_leeftijd (youngest first)
         $configuratie = $validated['configuratie'];

@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'publiek/*/favorieten',
             'mollie/webhook',
+            'mollie/webhook/toernooi',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

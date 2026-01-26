@@ -151,4 +151,21 @@ class Organisator extends Authenticatable
     {
         return $this->hasMany(ToernooiTemplate::class);
     }
+
+    /**
+     * Get all gewichtsklassen presets belonging to this organisator
+     */
+    public function gewichtsklassenPresets(): HasMany
+    {
+        return $this->hasMany(GewichtsklassenPreset::class);
+    }
+
+    /**
+     * Check if organisator can add more presets (freemium limit)
+     */
+    public function canAddMorePresets(): bool
+    {
+        // Free tier: max 1 preset
+        return $this->gewichtsklassenPresets()->count() < 1;
+    }
 }

@@ -22,7 +22,9 @@ use App\Http\Controllers\DeviceToegangBeheerController;
 use App\Http\Controllers\GewichtsklassenPresetController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
+use App\Http\Controllers\ToernooiBetalingController;
 use App\Http\Middleware\CheckToernooiRol;
+use App\Http\Middleware\CheckFreemiumPrint;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -103,8 +105,17 @@ Route::get('toernooi/{toernooi}/mollie/authorize', [MollieController::class, 'au
 Route::get('mollie/callback', [MollieController::class, 'callback'])->name('mollie.callback');
 Route::post('toernooi/{toernooi}/mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
 Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
+Route::post('mollie/webhook/toernooi', [MollieController::class, 'webhookToernooi'])->name('mollie.webhook.toernooi');
 Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
 Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
+
+// Toernooi upgrade routes (freemium)
+Route::middleware('auth:organisator')->prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
+    Route::get('upgrade', [ToernooiBetalingController::class, 'showUpgrade'])->name('upgrade');
+    Route::post('upgrade', [ToernooiBetalingController::class, 'startPayment'])->name('upgrade.start');
+    Route::get('upgrade/succes/{betaling}', [ToernooiBetalingController::class, 'success'])->name('upgrade.succes');
+    Route::get('upgrade/geannuleerd', [ToernooiBetalingController::class, 'cancelled'])->name('upgrade.geannuleerd');
+});
 
 // Toernooi sub-routes
 Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
@@ -232,8 +243,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         });
     });
 
-    // Noodplan routes (admin + jury/hoofdjury + organisator)
-    Route::middleware(CheckToernooiRol::class . ':jury')->prefix('noodplan')->name('noodplan.')->group(function () {
+    // Noodplan routes (admin + jury/hoofdjury + organisator) - requires paid tier for print
+    Route::middleware([CheckToernooiRol::class . ':jury', CheckFreemiumPrint::class])->prefix('noodplan')->name('noodplan.')->group(function () {
         Route::get('/', [NoodplanController::class, 'index'])->name('index');
 
         // Voor het toernooi (backup)
