@@ -1316,8 +1316,6 @@
             // Save preset to server
             async function savePreset(naam, overschrijven = false) {
                 const configuratie = collectConfiguratie();
-                // Gebruik de scroll positie die werd opgeslagen VOOR de modal opende
-                const savedScrollPos = presetScrollPosition;
                 try {
                     const response = await fetch('{{ route("organisator.presets.store") }}', {
                         method: 'POST',

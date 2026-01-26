@@ -128,6 +128,12 @@
 - **Bestanden:** ToernooiService.php
 - **Config:** max_lft=99, v.lft=1, v.kg=3, v.band=2, band_streng_beginners=true
 
+### Fix: Preset opslaan werkte niet
+- **Type:** Bug fix
+- **Wat:** `presetScrollPosition is not defined` error bij opslaan preset
+- **Bestanden:** edit.blade.php
+- **Oorzaak:** Ongebruikte variabele die niet was gedefinieerd
+
 ---
 
 <!--
