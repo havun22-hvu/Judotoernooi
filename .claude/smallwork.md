@@ -116,6 +116,12 @@
 - **Bestanden:** spreker/_content.blade.php, BlokController.php, RoleToegang.php, web.php
 - **Route:** `POST /spreker/standings`
 
+### Fix: Organisator kan toernooi niet verwijderen
+- **Type:** Bug fix
+- **Wat:** Na delete werd geredirect naar /toernooi (sitebeheerder-only), nu naar dashboard
+- **Bestanden:** ToernooiController.php
+- **Oplossing:** Sitebeheerder → toernooi.index, organisator → organisator.dashboard
+
 ---
 
 <!--
