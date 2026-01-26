@@ -1,6 +1,22 @@
 # Handover
 
-## Laatste Sessie: 25 januari 2026 (nacht)
+## Laatste Sessie: 26 januari 2026
+
+### Wat is gedaan:
+- **Barrage single round-robin**: Barrage poules negeren dubbel_bij_3 config, altijd 1x tegen elkaar
+- **Spreker oproepen filter**: Alleen doorgestuurde poules tonen in oproepen tab
+- **Spreker sync knop**: Auto-refresh (10s) vervangen door handmatige "Vernieuwen" knop
+- **Spreker geschiedenis klikbaar**: Eerder afgeroepen poules klikbaar → modal met uitslagen
+
+### Belangrijke context:
+- `WedstrijdSchemaService::getOptimaleWedstrijdvolgorde()` checkt `$poule->type === 'barrage'`
+- Spreker interface heeft nu `toonPouleDetail(pouleId)` functie + modal
+- Nieuwe route: `POST /spreker/standings` voor ophalen poule uitslagen
+- `berekenPouleStand()` methode toegevoegd aan BlokController + RoleToegang
+
+---
+
+## Vorige Sessie: 25 januari 2026 (nacht)
 
 ### Wat is gedaan:
 - **Barrage systeem** voor 3-weg gelijkspel:
