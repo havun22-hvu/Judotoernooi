@@ -200,11 +200,21 @@ class NoodplanController extends Controller
             abort(404, 'Aantal judoka\'s moet tussen 2 en 7 zijn');
         }
 
+        // Free tier: only allow schema for 6 judokas
+        if ($toernooi->isFreeTier() && $aantal !== self::FREE_WEDSTRIJDSCHEMA_JUDOKAS) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => "Leeg schema voor {$aantal} judoka's",
+            ]);
+        }
+
         // Haal wedstrijdvolgorde uit toernooi instellingen
         $schemas = $toernooi->wedstrijd_schemas ?? [];
         $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal);
 
-        return view('pages.noodplan.leeg-schema', compact('toernooi', 'aantal', 'schema'));
+        $isFreeTier = $toernooi->isFreeTier();
+
+        return view('pages.noodplan.leeg-schema', compact('toernooi', 'aantal', 'schema', 'isFreeTier'));
     }
 
     /**

@@ -111,6 +111,11 @@ class JudokaController extends Controller
             'gewicht' => 'nullable|numeric|min:10|max:200',
         ]);
 
+        // Free tier: naam cannot be changed after creation
+        if ($toernooi->isFreeTier()) {
+            unset($validated['naam']);
+        }
+
         $judoka->update($validated);
 
         // Recalculate leeftijdsklasse from toernooi config (NOT hardcoded enum)
@@ -211,6 +216,13 @@ class JudokaController extends Controller
 
     public function destroy(Toernooi $toernooi, Judoka $judoka): RedirectResponse
     {
+        // Free tier: judokas cannot be deleted
+        if ($toernooi->isFreeTier()) {
+            return redirect()
+                ->route('toernooi.judoka.index', $toernooi)
+                ->with('error', 'In de gratis versie kunnen judoka\'s niet verwijderd worden.');
+        }
+
         $judoka->delete();
 
         return redirect()
@@ -387,6 +399,11 @@ class JudokaController extends Controller
             'gewicht' => 'sometimes|nullable|numeric|min:10|max:200',
             'geboortejaar' => 'sometimes|integer|min:1900|max:' . date('Y'),
         ]);
+
+        // Free tier: naam cannot be changed after creation
+        if ($toernooi->isFreeTier()) {
+            unset($validated['naam']);
+        }
 
         $judoka->update($validated);
 
