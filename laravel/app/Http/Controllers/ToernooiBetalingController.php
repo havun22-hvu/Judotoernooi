@@ -29,14 +29,47 @@ class ToernooiBetalingController extends Controller
                 ->with('info', 'Dit toernooi heeft al een betaald abonnement.');
         }
 
+        $organisator = Auth::guard('organisator')->user();
         $upgradeOptions = $this->freemiumService->getUpgradeOptions($toernooi);
         $status = $this->freemiumService->getStatus($toernooi);
+
+        // Check if KYC is complete
+        $kycCompleet = $organisator->isKycCompleet();
 
         return view('pages.toernooi.upgrade', [
             'toernooi' => $toernooi,
             'upgradeOptions' => $upgradeOptions,
             'status' => $status,
+            'organisator' => $organisator,
+            'kycCompleet' => $kycCompleet,
         ]);
+    }
+
+    /**
+     * Save KYC data
+     */
+    public function saveKyc(Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'organisatie_naam' => 'required|string|max:255',
+            'kvk_nummer' => 'nullable|string|max:20',
+            'btw_nummer' => 'nullable|string|max:30',
+            'straat' => 'required|string|max:255',
+            'postcode' => 'required|string|max:10',
+            'plaats' => 'required|string|max:100',
+            'land' => 'required|string|max:100',
+            'contactpersoon' => 'required|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
+            'factuur_email' => 'required|email|max:255',
+            'website' => 'nullable|url|max:255',
+        ]);
+
+        $organisator = Auth::guard('organisator')->user();
+        $organisator->update($validated);
+        $organisator->markKycCompleet();
+
+        return redirect()->route('toernooi.upgrade', $toernooi)
+            ->with('success', 'Facturatiegegevens opgeslagen. Je kunt nu een staffel kiezen.');
     }
 
     /**
@@ -44,6 +77,14 @@ class ToernooiBetalingController extends Controller
      */
     public function startPayment(Request $request, Toernooi $toernooi): RedirectResponse
     {
+        $organisator = Auth::guard('organisator')->user();
+
+        // KYC must be complete before payment
+        if (!$organisator->isKycCompleet()) {
+            return redirect()->route('toernooi.upgrade', $toernooi)
+                ->with('error', 'Vul eerst je facturatiegegevens in voordat je kunt betalen.');
+        }
+
         $validated = $request->validate([
             'tier' => 'required|string',
         ]);

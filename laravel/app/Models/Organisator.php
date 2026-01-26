@@ -24,6 +24,19 @@ class Organisator extends Authenticatable
         'password',
         'email_verified_at',
         'laatste_login',
+        // KYC / Facturatiegegevens
+        'organisatie_naam',
+        'kvk_nummer',
+        'btw_nummer',
+        'straat',
+        'postcode',
+        'plaats',
+        'land',
+        'contactpersoon',
+        'factuur_email',
+        'website',
+        'kyc_compleet',
+        'kyc_ingevuld_op',
     ];
 
     protected static function booted(): void
@@ -81,6 +94,8 @@ class Organisator extends Authenticatable
             'laatste_login' => 'datetime',
             'password' => 'hashed',
             'is_sitebeheerder' => 'boolean',
+            'kyc_compleet' => 'boolean',
+            'kyc_ingevuld_op' => 'datetime',
         ];
     }
 
@@ -167,5 +182,51 @@ class Organisator extends Authenticatable
     {
         // Free tier: max 1 preset
         return $this->gewichtsklassenPresets()->count() < 1;
+    }
+
+    /**
+     * Check if KYC is complete for invoicing
+     */
+    public function isKycCompleet(): bool
+    {
+        return $this->kyc_compleet === true;
+    }
+
+    /**
+     * Check if all required KYC fields are filled
+     */
+    public function hasRequiredKycFields(): bool
+    {
+        return !empty($this->organisatie_naam)
+            && !empty($this->straat)
+            && !empty($this->postcode)
+            && !empty($this->plaats)
+            && !empty($this->contactpersoon)
+            && !empty($this->factuur_email);
+    }
+
+    /**
+     * Mark KYC as complete
+     */
+    public function markKycCompleet(): void
+    {
+        $this->update([
+            'kyc_compleet' => true,
+            'kyc_ingevuld_op' => now(),
+        ]);
+    }
+
+    /**
+     * Get formatted address for invoicing
+     */
+    public function getFactuurAdres(): string
+    {
+        $parts = array_filter([
+            $this->organisatie_naam,
+            $this->straat,
+            trim($this->postcode . ' ' . $this->plaats),
+            $this->land !== 'Nederland' ? $this->land : null,
+        ]);
+        return implode("\n", $parts);
     }
 }
