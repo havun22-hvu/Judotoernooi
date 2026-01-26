@@ -42,6 +42,22 @@ class ToernooiService
                 if ($template) {
                     $template->applyToToernooi($toernooi);
                 }
+            } else {
+                // No template: add default category for dynamic tournaments
+                $toernooi->update([
+                    'gewichtsklassen' => [
+                        'standaard' => [
+                            'label' => 'Standaard',
+                            'max_leeftijd' => 99,
+                            'geslacht' => 'gemengd',
+                            'max_kg_verschil' => 3,
+                            'max_leeftijd_verschil' => 1,
+                            'max_band_verschil' => 2,
+                            'band_streng_beginners' => true,
+                            'gewichten' => [],
+                        ],
+                    ],
+                ]);
             }
 
             // Create blocks
