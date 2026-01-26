@@ -12,7 +12,7 @@
             </svg>
         </div>
 
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Print/Noodplan Geblokkeerd</h1>
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ $feature ?? 'Deze functie' }} - Upgrade Vereist</h1>
 
         <p class="text-gray-600 mb-6">
             De Print en Noodplan functies zijn alleen beschikbaar voor toernooien met een betaald abonnement.
