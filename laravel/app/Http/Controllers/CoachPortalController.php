@@ -55,7 +55,12 @@ class CoachPortalController extends Controller
 
     private function getClubByLegacyCode(string $code): ?Club
     {
-        return Club::where('portal_code', $code)->first();
+        // Search in pivot table for portal_code
+        $pivot = \DB::table('club_toernooi')->where('portal_code', $code)->first();
+        if (!$pivot) {
+            return null;
+        }
+        return Club::find($pivot->club_id);
     }
 
     private function getLoggedInClub(Request $request, Toernooi $toernooi, string $code): ?Club
@@ -88,33 +93,23 @@ class CoachPortalController extends Controller
 
     public function redirectLegacy(string $code): RedirectResponse
     {
-        $club = $this->getClubByLegacyCode($code);
+        // Search in pivot table for this portal_code
+        $pivot = \DB::table('club_toernooi')->where('portal_code', $code)->first();
 
-        if (!$club) {
+        if (!$pivot) {
             abort(404, 'Ongeldige school link');
         }
 
-        $pivot = $club->toernooien()->orderByDesc('toernooien.created_at')->first();
+        $toernooi = Toernooi::with('organisator')->find($pivot->toernooi_id);
 
-        if (!$pivot) {
-            $judoka = Judoka::where('club_id', $club->id)->orderByDesc('created_at')->first();
-
-            if (!$judoka || !$judoka->toernooi) {
-                abort(404, 'Geen actief toernooi gevonden voor deze club');
-            }
-
-            $toernooi = $judoka->toernooi;
-            $toernooi->ensureClubPivot($club);
-            $pivotCode = $club->getPortalCodeForToernooi($toernooi);
-        } else {
-            $toernooi = $pivot;
-            $pivotCode = $pivot->pivot->portal_code;
+        if (!$toernooi) {
+            abort(404, 'Toernooi niet gevonden');
         }
 
         return redirect()->route('coach.portal.code', [
             'organisator' => $toernooi->organisator->slug,
             'toernooi' => $toernooi->slug,
-            'code' => $pivotCode,
+            'code' => $code,
         ]);
     }
 
