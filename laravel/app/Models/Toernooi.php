@@ -8,6 +8,7 @@ use App\Models\Concerns\HasMolliePayments;
 use App\Models\Concerns\HasPortaalModus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -22,9 +23,9 @@ class Toernooi extends Model
     protected static function booted(): void
     {
         static::creating(function (Toernooi $toernooi) {
-            // Generate slug from name
+            // Generate slug from name (scoped to organisator)
             if (empty($toernooi->slug) && !empty($toernooi->naam)) {
-                $toernooi->slug = static::generateUniqueSlug($toernooi->naam);
+                $toernooi->slug = static::generateUniqueSlug($toernooi->naam, $toernooi->organisator_id);
             }
 
             // Generate unique codes for each role
@@ -48,18 +49,21 @@ class Toernooi extends Model
         static::updating(function (Toernooi $toernooi) {
             // Update slug if name changed and slug not manually set
             if ($toernooi->isDirty('naam') && !$toernooi->isDirty('slug')) {
-                $toernooi->slug = static::generateUniqueSlug($toernooi->naam, $toernooi->id);
+                $toernooi->slug = static::generateUniqueSlug($toernooi->naam, $toernooi->organisator_id, $toernooi->id);
             }
         });
     }
 
-    public static function generateUniqueSlug(string $naam, ?int $excludeId = null): string
+    /**
+     * Generate unique slug scoped to organisator
+     */
+    public static function generateUniqueSlug(string $naam, ?int $organisatorId = null, ?int $excludeId = null): string
     {
         $baseSlug = Str::slug($naam);
         $slug = $baseSlug;
         $counter = 1;
 
-        $query = static::where('slug', $slug);
+        $query = static::where('slug', $slug)->where('organisator_id', $organisatorId);
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
@@ -67,7 +71,7 @@ class Toernooi extends Model
         while ($query->exists()) {
             $slug = $baseSlug . '-' . $counter;
             $counter++;
-            $query = static::where('slug', $slug);
+            $query = static::where('slug', $slug)->where('organisator_id', $organisatorId);
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
@@ -84,6 +88,7 @@ class Toernooi extends Model
     protected $table = 'toernooien';
 
     protected $fillable = [
+        'organisator_id',
         'naam',
         'slug',
         'organisatie',
@@ -291,7 +296,15 @@ class Toernooi extends Model
     }
 
     /**
-     * Get all organisatoren linked to this toernooi
+     * Get the owner organisator of this toernooi
+     */
+    public function organisator(): BelongsTo
+    {
+        return $this->belongsTo(Organisator::class);
+    }
+
+    /**
+     * Get all organisatoren linked to this toernooi (for access control)
      */
     public function organisatoren(): BelongsToMany
     {
