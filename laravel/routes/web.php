@@ -217,9 +217,7 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
         // Clubs management
         Route::get('club', [ClubController::class, 'index'])->name('club.index');
-        Route::post('club', [ClubController::class, 'store'])->name('club.store');
-        Route::put('club/{club}', [ClubController::class, 'update'])->name('club.update');
-        Route::delete('club/{club}', [ClubController::class, 'destroy'])->name('club.destroy');
+        Route::post('club/{club}/toggle', [ClubController::class, 'toggleClub'])->name('club.toggle');
         Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
         Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');

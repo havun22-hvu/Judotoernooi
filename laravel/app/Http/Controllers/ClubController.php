@@ -143,20 +143,25 @@ class ClubController extends Controller
 
     public function index(Toernooi $toernooi): View
     {
-        // Ensure all clubs have portal access
-        $this->ensureClubsHavePortalAccess($toernooi);
+        // Get the organisator who owns this toernooi
+        $organisator = $toernooi->organisator;
 
-        $clubs = Club::withCount(['judokas' => function ($query) use ($toernooi) {
-            $query->where('toernooi_id', $toernooi->id);
-        }])
-        ->with(['coaches' => function ($query) use ($toernooi) {
-            $query->where('toernooi_id', $toernooi->id);
-        }])
-        ->with(['coachKaarten' => function ($query) use ($toernooi) {
-            $query->where('toernooi_id', $toernooi->id);
-        }])
-        ->orderBy('naam')
-        ->get();
+        // Load organisator's clubs with toernooi-specific counts
+        $clubs = Club::where('organisator_id', $organisator->id)
+            ->withCount(['judokas' => function ($query) use ($toernooi) {
+                $query->where('toernooi_id', $toernooi->id);
+            }])
+            ->with(['coaches' => function ($query) use ($toernooi) {
+                $query->where('toernooi_id', $toernooi->id);
+            }])
+            ->with(['coachKaarten' => function ($query) use ($toernooi) {
+                $query->where('toernooi_id', $toernooi->id);
+            }])
+            ->orderBy('naam')
+            ->get();
+
+        // Get clubs that are linked to this toernooi (uitgenodigd)
+        $uitgenodigdeClubIds = $toernooi->clubs()->pluck('clubs.id')->toArray();
 
         $uitnodigingen = $toernooi->clubUitnodigingen()
             ->with('club')
@@ -169,7 +174,45 @@ class ClubController extends Controller
             $benodigdeKaarten[$club->id] = $club->berekenAantalCoachKaarten($toernooi);
         }
 
-        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten'));
+        // Ensure clubs have portal access
+        $this->ensureClubsHavePortalAccess($toernooi);
+
+        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten', 'uitgenodigdeClubIds', 'organisator'));
+    }
+
+    /**
+     * Toggle club selection for this toernooi
+     */
+    public function toggleClub(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    {
+        // Verify club belongs to this toernooi's organisator
+        if ($club->organisator_id !== $toernooi->organisator_id) {
+            abort(403);
+        }
+
+        $isLinked = $toernooi->clubs()->where('clubs.id', $club->id)->exists();
+
+        if ($isLinked) {
+            // Check if club has judokas - can't remove if has judokas
+            if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
+                return redirect()
+                    ->route('toernooi.club.index', $toernooi)
+                    ->with('error', "Kan {$club->naam} niet verwijderen: er zijn nog judoka's ingeschreven");
+            }
+            $toernooi->clubs()->detach($club->id);
+            $message = "{$club->naam} verwijderd uit dit toernooi";
+        } else {
+            // Add club to toernooi with portal credentials
+            $toernooi->clubs()->attach($club->id, [
+                'portal_code' => $club->portal_code,
+                'pincode' => $club->pincode,
+            ]);
+            $message = "{$club->naam} toegevoegd aan dit toernooi";
+        }
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi)
+            ->with('success', $message);
     }
 
     public function store(Request $request, Toernooi $toernooi): RedirectResponse
@@ -255,7 +298,15 @@ class ClubController extends Controller
 
     public function verstuurAlleUitnodigingen(Request $request, Toernooi $toernooi): RedirectResponse
     {
-        $clubs = Club::whereNotNull('email')->get();
+        // Only send to clubs that are linked to this toernooi AND have email
+        $clubs = $toernooi->clubs()->whereNotNull('email')->get();
+
+        if ($clubs->isEmpty()) {
+            return redirect()
+                ->route('toernooi.club.index', $toernooi)
+                ->with('error', 'Geen clubs geselecteerd met emailadres');
+        }
+
         $verzonden = 0;
         $fouten = 0;
 
