@@ -49,10 +49,16 @@
                     Mijn Toernooien
                 @endif
             </h2>
-            <a href="{{ route('toernooi.create') }}"
-               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Nieuw Toernooi
-            </a>
+            <div class="flex space-x-3">
+                <a href="{{ route('organisator.clubs.index', $organisator) }}"
+                   class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
+                    Mijn Clubs
+                </a>
+                <a href="{{ route('toernooi.create') }}"
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Nieuw Toernooi
+                </a>
+            </div>
         </div>
 
         {{-- Templates Section --}}

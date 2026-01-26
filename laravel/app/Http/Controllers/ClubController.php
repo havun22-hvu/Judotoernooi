@@ -7,6 +7,7 @@ use App\Models\Club;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
 use App\Models\CoachKaart;
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,131 @@ use Illuminate\View\View;
 
 class ClubController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | Organisator Level - Club Management (persists across toernooien)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * List all clubs for this organisator
+     */
+    public function indexOrganisator(Organisator $organisator): View
+    {
+        $loggedIn = auth('organisator')->user();
+
+        // Verify access
+        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
+            abort(403);
+        }
+
+        $clubs = Club::where('organisator_id', $organisator->id)
+            ->withCount('judokas')
+            ->orderBy('naam')
+            ->get();
+
+        return view('organisator.clubs.index', compact('organisator', 'clubs'));
+    }
+
+    /**
+     * Store a new club for this organisator
+     */
+    public function storeOrganisator(Request $request, Organisator $organisator): RedirectResponse
+    {
+        $loggedIn = auth('organisator')->user();
+
+        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'email2' => 'nullable|email|max:255',
+            'contact_naam' => 'nullable|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
+            'plaats' => 'nullable|string|max:255',
+            'website' => 'nullable|string|max:255',
+        ]);
+
+        $validated['organisator_id'] = $organisator->id;
+
+        $club = Club::create($validated);
+
+        return redirect()
+            ->route('organisator.clubs.index', $organisator)
+            ->with('success', "Club '{$club->naam}' toegevoegd");
+    }
+
+    /**
+     * Update a club
+     */
+    public function updateOrganisator(Request $request, Organisator $organisator, Club $club): RedirectResponse
+    {
+        $loggedIn = auth('organisator')->user();
+
+        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
+            abort(403);
+        }
+
+        // Verify club belongs to organisator
+        if ($club->organisator_id !== $organisator->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'email2' => 'nullable|email|max:255',
+            'contact_naam' => 'nullable|string|max:255',
+            'telefoon' => 'nullable|string|max:20',
+            'plaats' => 'nullable|string|max:255',
+            'website' => 'nullable|string|max:255',
+        ]);
+
+        $club->update($validated);
+
+        return redirect()
+            ->route('organisator.clubs.index', $organisator)
+            ->with('success', 'Club bijgewerkt');
+    }
+
+    /**
+     * Delete a club
+     */
+    public function destroyOrganisator(Organisator $organisator, Club $club): RedirectResponse
+    {
+        $loggedIn = auth('organisator')->user();
+
+        if ($loggedIn->id !== $organisator->id && !$loggedIn->isSitebeheerder()) {
+            abort(403);
+        }
+
+        if ($club->organisator_id !== $organisator->id) {
+            abort(403);
+        }
+
+        // Check if club has judokas in any toernooi
+        if ($club->judokas()->exists()) {
+            return redirect()
+                ->route('organisator.clubs.index', $organisator)
+                ->with('error', 'Kan club niet verwijderen: er zijn nog judoka\'s gekoppeld');
+        }
+
+        $naam = $club->naam;
+        $club->delete();
+
+        return redirect()
+            ->route('organisator.clubs.index', $organisator)
+            ->with('success', "Club '{$naam}' verwijderd");
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toernooi Level - Club Invitations & Coaches
+    |--------------------------------------------------------------------------
+    */
+
     public function index(Toernooi $toernooi): View
     {
         // Ensure all clubs have portal access
