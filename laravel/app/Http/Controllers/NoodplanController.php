@@ -16,6 +16,11 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class NoodplanController extends Controller
 {
+    // Free tier limits for noodplan
+    private const FREE_MAX_POULES = 2;
+    private const FREE_MAX_WEEGLIJST = 10;
+    private const FREE_WEDSTRIJDSCHEMA_JUDOKAS = 6; // Only show schemas with exactly 6 judokas
+
     /**
      * Noodplan index - overzicht met alle print opties
      */
@@ -33,7 +38,14 @@ class NoodplanController extends Controller
             ->with(['judokas', 'mat'])
             ->get();
 
-        return view('pages.noodplan.index', compact('toernooi', 'blokken', 'clubs', 'actievePoules'));
+        $isFreeTier = $toernooi->isFreeTier();
+        $freeLimits = $isFreeTier ? [
+            'max_poules' => self::FREE_MAX_POULES,
+            'max_weeglijst' => self::FREE_MAX_WEEGLIJST,
+            'wedstrijdschema_judokas' => self::FREE_WEDSTRIJDSCHEMA_JUDOKAS,
+        ] : null;
+
+        return view('pages.noodplan.index', compact('toernooi', 'blokken', 'clubs', 'actievePoules', 'isFreeTier', 'freeLimits'));
     }
 
     /**
@@ -57,6 +69,7 @@ class NoodplanController extends Controller
         }
 
         $blokken = $query->get();
+        $isFreeTier = $toernooi->isFreeTier();
 
         // Bouw lijst per blok met judoka's alfabetisch gesorteerd op voornaam
         $judokasPerBlok = $blokken->mapWithKeys(function ($blok) {
@@ -68,7 +81,21 @@ class NoodplanController extends Controller
             return [$blok->nummer => $judokas];
         });
 
-        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokasPerBlok'));
+        // Free tier: limit to 10 judokas total
+        if ($isFreeTier) {
+            $count = 0;
+            $judokasPerBlok = $judokasPerBlok->map(function ($judokas) use (&$count) {
+                $remaining = self::FREE_MAX_WEEGLIJST - $count;
+                if ($remaining <= 0) {
+                    return collect();
+                }
+                $limited = $judokas->take($remaining);
+                $count += $limited->count();
+                return $limited;
+            });
+        }
+
+        return view('pages.noodplan.weeglijst', compact('toernooi', 'judokasPerBlok', 'isFreeTier'));
     }
 
     /**
@@ -209,6 +236,8 @@ class NoodplanController extends Controller
     public function printWedstrijdschemas(Toernooi $toernooi, ?int $blokNummer = null): View
     {
         $blok = null;
+        $isFreeTier = $toernooi->isFreeTier();
+
         if ($blokNummer) {
             $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
             if (!$blok) {
@@ -226,7 +255,14 @@ class NoodplanController extends Controller
             $titel = "Alle Wedstrijdschema's";
         }
 
-        return view('pages.noodplan.wedstrijdschemas', compact('toernooi', 'poules', 'titel', 'blok'));
+        // Free tier: only show poules with exactly 6 judokas, max 2 poules
+        if ($isFreeTier) {
+            $poules = $poules->filter(fn($p) => $p->judokas->count() === self::FREE_WEDSTRIJDSCHEMA_JUDOKAS)
+                ->take(self::FREE_MAX_POULES);
+            $titel .= " (Voorbeeld - max " . self::FREE_MAX_POULES . " poules van " . self::FREE_WEDSTRIJDSCHEMA_JUDOKAS . " judoka's)";
+        }
+
+        return view('pages.noodplan.wedstrijdschemas', compact('toernooi', 'poules', 'titel', 'blok', 'isFreeTier'));
     }
 
     /**
@@ -245,6 +281,14 @@ class NoodplanController extends Controller
      */
     public function printIngevuldSchemas(Toernooi $toernooi, ?int $blokNummer = null): View
     {
+        // Free tier: not available
+        if ($toernooi->isFreeTier()) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => 'Ingevulde wedstrijdschema\'s',
+            ]);
+        }
+
         $blok = null;
         if ($blokNummer) {
             $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();

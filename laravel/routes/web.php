@@ -243,8 +243,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
         });
     });
 
-    // Noodplan routes (admin + jury/hoofdjury + organisator) - requires paid tier for print
-    Route::middleware([CheckToernooiRol::class . ':jury', CheckFreemiumPrint::class])->prefix('noodplan')->name('noodplan.')->group(function () {
+    // Noodplan routes (admin + jury/hoofdjury + organisator) - free tier has limited access
+    Route::middleware(CheckToernooiRol::class . ':jury')->prefix('noodplan')->name('noodplan.')->group(function () {
         Route::get('/', [NoodplanController::class, 'index'])->name('index');
 
         // Voor het toernooi (backup)
