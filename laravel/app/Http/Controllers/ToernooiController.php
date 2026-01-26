@@ -213,7 +213,7 @@ class ToernooiController extends Controller
         // Eigenaar of sitebeheerder mag verwijderen
         if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->ownsToernooi($toernooi))) {
             return redirect()
-                ->route('toernooi.index')
+                ->route('organisator.dashboard')
                 ->with('error', 'Je hebt geen rechten om dit toernooi te verwijderen');
         }
 
@@ -241,8 +241,11 @@ class ToernooiController extends Controller
             $message .= " (presets bewaard)";
         }
 
+        // Sitebeheerder terug naar overzicht, organisator naar dashboard
+        $route = $organisator->isSitebeheerder() ? 'toernooi.index' : 'organisator.dashboard';
+
         return redirect()
-            ->route('toernooi.index')
+            ->route($route)
             ->with('success', $message);
     }
 
