@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\DeviceToegang;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Get all device toegangen for a toernooi.
      */
-    public function index(Toernooi $toernooi): JsonResponse
+    public function index(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         $toegangen = $toernooi->deviceToegangen()
             ->orderBy('naam')
@@ -41,7 +42,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Create a new device toegang.
      */
-    public function store(Request $request, Toernooi $toernooi): JsonResponse
+    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $request->validate([
             'naam' => 'nullable|string|max:255',
@@ -160,7 +161,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Reset all device bindings for a toernooi (einde toernooi).
      */
-    public function resetAll(Toernooi $toernooi): JsonResponse
+    public function resetAll(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         $toernooi->deviceToegangen()->update([
             'device_token' => null,

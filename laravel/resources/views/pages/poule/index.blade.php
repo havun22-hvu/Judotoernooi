@@ -499,10 +499,10 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi->routeParams()) }}';
-const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', $toernooi->routeParamsWith(['format' => '__JUDOKA_ID__'])) }}';
+const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', $toernooi->routeParamsWith(['judoka' => '__JUDOKA_ID__'])) }}';
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi->routeParams()) }}';
-const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['format' => ':id'])) }}';
-const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
 const wijzigPouleTypeUrl = '{{ route('toernooi.wedstrijddag.wijzigPouleType', $toernooi->routeParams()) }}';
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Club;
 use App\Models\CoachKaart;
 use App\Models\Toernooi;
@@ -211,7 +212,7 @@ class CoachKaartController extends Controller
      * Formula: ceil(max_judokas_in_largest_block / judokas_per_coach)
      * Example: 11 judokas in largest block, 5 per coach = ceil(11/5) = 3 cards
      */
-    public function genereer(Request $request, Toernooi $toernooi): RedirectResponse
+    public function genereer(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $clubs = Club::withCount(['judokas' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
             ->whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
@@ -296,7 +297,7 @@ class CoachKaartController extends Controller
     /**
      * List all coach cards for a tournament (admin view)
      */
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         $clubs = Club::withCount(['judokas' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
             ->with(['coachKaarten' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
@@ -322,7 +323,7 @@ class CoachKaartController extends Controller
     /**
      * API: Alle clubs met coach kaarten voor dojo scanner overzicht
      */
-    public function dojoClubs(Toernooi $toernooi)
+    public function dojoClubs(Organisator $organisator, Toernooi $toernooi)
     {
         $clubs = Club::whereHas('coachKaarten', fn($q) => $q->where('toernooi_id', $toernooi->id))
             ->with(['coachKaarten' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
@@ -346,7 +347,7 @@ class CoachKaartController extends Controller
     /**
      * API: Detail van een club voor dojo scanner overzicht
      */
-    public function dojoClubDetail(Toernooi $toernooi, Club $club)
+    public function dojoClubDetail(Organisator $organisator, Toernooi $toernooi, Club $club)
     {
         $kaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
@@ -387,7 +388,7 @@ class CoachKaartController extends Controller
     /**
      * Toggle coach incheck system for a tournament
      */
-    public function toggleIncheck(Toernooi $toernooi): RedirectResponse
+    public function toggleIncheck(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $toernooi->update([
             'coach_incheck_actief' => !$toernooi->coach_incheck_actief,
@@ -414,7 +415,7 @@ class CoachKaartController extends Controller
     /**
      * Get all currently checked-in coaches for a tournament
      */
-    public function ingecheckteCoaches(Toernooi $toernooi): View
+    public function ingecheckteCoaches(Organisator $organisator, Toernooi $toernooi): View
     {
         $ingecheckteKaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->whereNotNull('ingecheckt_op')

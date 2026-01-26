@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\Band;
 use App\Mail\CorrectieVerzoekMail;
+use App\Models\Organisator;
 use App\Models\Club;
 use App\Models\Judoka;
 use App\Models\Toernooi;
@@ -21,7 +22,7 @@ class JudokaController extends Controller
         private ImportService $importService
     ) {}
 
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         $alleJudokas = $toernooi->judokas()
             ->with('club')
@@ -89,19 +90,19 @@ class JudokaController extends Controller
         return 999;
     }
 
-    public function show(Toernooi $toernooi, Judoka $judoka): View
+    public function show(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): View
     {
         $judoka->load(['club', 'poules.blok', 'poules.mat', 'wegingen']);
 
         return view('pages.judoka.show', compact('toernooi', 'judoka'));
     }
 
-    public function edit(Toernooi $toernooi, Judoka $judoka): View
+    public function edit(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): View
     {
         return view('pages.judoka.edit', compact('toernooi', 'judoka'));
     }
 
-    public function update(Request $request, Toernooi $toernooi, Judoka $judoka): RedirectResponse
+    public function update(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): RedirectResponse
     {
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
@@ -141,7 +142,7 @@ class JudokaController extends Controller
         return redirect($redirectRoute)->with('success', 'Judoka bijgewerkt');
     }
 
-    public function store(Request $request, Toernooi $toernooi): RedirectResponse
+    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         // Check freemium judoka limit
         if (!$toernooi->canAddMoreJudokas()) {
@@ -214,7 +215,7 @@ class JudokaController extends Controller
             ->with('success', 'Judoka toegevoegd');
     }
 
-    public function destroy(Toernooi $toernooi, Judoka $judoka): RedirectResponse
+    public function destroy(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): RedirectResponse
     {
         // Free tier: judokas cannot be deleted
         if ($toernooi->isFreeTier()) {
@@ -230,7 +231,7 @@ class JudokaController extends Controller
             ->with('success', 'Judoka verwijderd');
     }
 
-    public function importForm(Toernooi $toernooi): View
+    public function importForm(Organisator $organisator, Toernooi $toernooi): View
     {
         return view('pages.judoka.import', compact('toernooi'));
     }
@@ -238,7 +239,7 @@ class JudokaController extends Controller
     /**
      * Step 1: Upload file and show preview with column detection
      */
-    public function import(Request $request, Toernooi $toernooi): View
+    public function import(Organisator $organisator, Request $request, Toernooi $toernooi): View
     {
         $request->validate([
             'bestand' => 'required|file|mimes:csv,txt,xlsx,xls',
@@ -272,7 +273,7 @@ class JudokaController extends Controller
     /**
      * Step 2: Confirm import with (adjusted) column mapping
      */
-    public function importConfirm(Request $request, Toernooi $toernooi): RedirectResponse
+    public function importConfirm(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $mapping = $request->input('mapping', []);
 
@@ -389,7 +390,7 @@ class JudokaController extends Controller
     /**
      * API endpoint for inline judoka updates
      */
-    public function updateApi(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function updateApi(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $validated = $request->validate([
             'naam' => 'sometimes|string|max:255',
@@ -439,7 +440,7 @@ class JudokaController extends Controller
         ]);
     }
 
-    public function zoek(Request $request, Toernooi $toernooi): JsonResponse
+    public function zoek(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $zoekterm = $request->get('q', '');
         $blokFilter = $request->get('blok');
@@ -480,7 +481,7 @@ class JudokaController extends Controller
         return response()->json($judokas);
     }
 
-    public function valideer(Toernooi $toernooi): RedirectResponse
+    public function valideer(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $result = $this->voerValidatieUit($toernooi);
 
@@ -498,7 +499,7 @@ class JudokaController extends Controller
     /**
      * Voer validatie uit zonder redirect (voor gebruik vanuit andere controllers)
      */
-    public function voerValidatieUit(Toernooi $toernooi): array
+    public function voerValidatieUit(Organisator $organisator, Toernooi $toernooi): array
     {
         $judokas = $toernooi->judokas()->get();
         $gecorrigeerd = 0;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Mat;
 use App\Models\Poule;
@@ -20,7 +21,7 @@ class MatController extends Controller
         private EliminatieService $eliminatieService
     ) {}
 
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         $matten = $toernooi->matten;
         $blokken = $toernooi->blokken;
@@ -28,7 +29,7 @@ class MatController extends Controller
         return view('pages.mat.index', compact('toernooi', 'matten', 'blokken'));
     }
 
-    public function show(Toernooi $toernooi, Mat $mat, ?Blok $blok = null): View
+    public function show(Organisator $organisator, Toernooi $toernooi, Mat $mat, ?Blok $blok = null): View
     {
         if (!$blok) {
             // Get first non-closed block
@@ -45,7 +46,7 @@ class MatController extends Controller
         return view('pages.mat.show', compact('toernooi', 'mat', 'blok', 'schema'));
     }
 
-    public function interface(Toernooi $toernooi): View
+    public function interface(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken;
         $matten = $toernooi->matten;
@@ -54,7 +55,7 @@ class MatController extends Controller
         return view('pages.mat.interface-admin', compact('toernooi', 'blokken', 'matten'));
     }
 
-    public function getWedstrijden(Request $request, Toernooi $toernooi): JsonResponse
+    public function getWedstrijden(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'blok_id' => 'required|exists:blokken,id',
@@ -69,7 +70,7 @@ class MatController extends Controller
         return response()->json($schema);
     }
 
-    public function registreerUitslag(Request $request, Toernooi $toernooi): JsonResponse
+    public function registreerUitslag(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -121,7 +122,7 @@ class MatController extends Controller
     /**
      * Register finale/brons result via medal placement (drag to gold/silver/bronze)
      */
-    public function finaleUitslag(Request $request, Toernooi $toernooi): JsonResponse
+    public function finaleUitslag(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -182,7 +183,7 @@ class MatController extends Controller
     /**
      * Mark poule as ready for spreker (results announcement)
      */
-    public function pouleKlaar(Request $request, Toernooi $toernooi): JsonResponse
+    public function pouleKlaar(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -205,7 +206,7 @@ class MatController extends Controller
      * - actieve_wedstrijd_id = green (currently playing)
      * - huidige_wedstrijd_id = yellow (next up)
      */
-    public function setHuidigeWedstrijd(Request $request, Toernooi $toernooi): JsonResponse
+    public function setHuidigeWedstrijd(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -247,7 +248,7 @@ class MatController extends Controller
      * Als bron_wedstrijd_id is meegegeven, registreer ook de uitslag
      * Bij correctie worden foute plaatsingen automatisch opgeruimd
      */
-    public function plaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
+    public function plaatsJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -510,7 +511,7 @@ class MatController extends Controller
      * Remove a judoka from an elimination bracket slot (drag to trash)
      * Als deze judoka winnaar was van een vorige wedstrijd, reset die ook
      */
-    public function verwijderJudoka(Request $request, Toernooi $toernooi): JsonResponse
+    public function verwijderJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         \Log::info('verwijderJudoka aangeroepen', $request->all());
 

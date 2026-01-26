@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Models\ToernooiBetaling;
 use App\Services\FreemiumService;
@@ -21,7 +22,7 @@ class ToernooiBetalingController extends Controller
     /**
      * Show upgrade options page
      */
-    public function showUpgrade(Toernooi $toernooi): View|RedirectResponse
+    public function showUpgrade(Organisator $organisator, Toernooi $toernooi): View|RedirectResponse
     {
         // Already paid - redirect to toernooi
         if ($toernooi->isPaidTier()) {
@@ -48,7 +49,7 @@ class ToernooiBetalingController extends Controller
     /**
      * Save KYC data
      */
-    public function saveKyc(Request $request, Toernooi $toernooi): RedirectResponse
+    public function saveKyc(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'organisatie_naam' => 'required|string|max:255',
@@ -75,7 +76,7 @@ class ToernooiBetalingController extends Controller
     /**
      * Start the upgrade payment process
      */
-    public function startPayment(Request $request, Toernooi $toernooi): RedirectResponse
+    public function startPayment(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $organisator = Auth::guard('organisator')->user();
 
@@ -174,7 +175,7 @@ class ToernooiBetalingController extends Controller
     /**
      * Payment success page
      */
-    public function success(Toernooi $toernooi, ToernooiBetaling $betaling): View|RedirectResponse
+    public function success(Organisator $organisator, Toernooi $toernooi, ToernooiBetaling $betaling): View|RedirectResponse
     {
         // Verify this betaling belongs to this toernooi
         if ($betaling->toernooi_id !== $toernooi->id) {
@@ -193,7 +194,7 @@ class ToernooiBetalingController extends Controller
     /**
      * Payment cancelled
      */
-    public function cancelled(Toernooi $toernooi): RedirectResponse
+    public function cancelled(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         return redirect()->route('toernooi.upgrade', $toernooi->routeParams())
             ->with('warning', 'Betaling geannuleerd. Je kunt het opnieuw proberen.');

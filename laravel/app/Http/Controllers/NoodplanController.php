@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Club;
 use App\Models\Coach;
@@ -24,7 +25,7 @@ class NoodplanController extends Controller
     /**
      * Noodplan index - overzicht met alle print opties
      */
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
         $clubs = Club::whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
@@ -51,7 +52,7 @@ class NoodplanController extends Controller
     /**
      * Print poules - redirect naar reguliere poules pagina
      */
-    public function printPoules(Toernooi $toernooi, ?int $blokNummer = null)
+    public function printPoules(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null)
     {
         // Redirect naar de reguliere poules pagina (heeft print CSS)
         return redirect()->route('toernooi.poule.index', $toernooi->routeParams());
@@ -60,7 +61,7 @@ class NoodplanController extends Controller
     /**
      * Print weeglijst - alle judoka's gegroepeerd per blok, alfabetisch gesorteerd
      */
-    public function printWeeglijst(Toernooi $toernooi, ?int $blokNummer = null): View
+    public function printWeeglijst(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
         $query = $toernooi->blokken()->with(['poules.judokas.club'])->orderBy('nummer');
 
@@ -101,7 +102,7 @@ class NoodplanController extends Controller
     /**
      * Print zaaloverzicht
      */
-    public function printZaaloverzicht(Toernooi $toernooi): View
+    public function printZaaloverzicht(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()
             ->with(['poules' => fn($q) => $q->whereNotNull('mat_id')->with('mat')->orderBy('mat_id')])
@@ -114,7 +115,7 @@ class NoodplanController extends Controller
     /**
      * Print alle weegkaarten
      */
-    public function printWeegkaarten(Toernooi $toernooi): View
+    public function printWeegkaarten(Organisator $organisator, Toernooi $toernooi): View
     {
         $judokas = $toernooi->judokas()
             ->with(['club', 'poules.mat', 'poules.blok'])
@@ -131,7 +132,7 @@ class NoodplanController extends Controller
     /**
      * Print weegkaarten per club
      */
-    public function printWeegkaartenClub(Toernooi $toernooi, Club $club): View
+    public function printWeegkaartenClub(Organisator $organisator, Toernooi $toernooi, Club $club): View
     {
         $judokas = $toernooi->judokas()
             ->where('club_id', $club->id)
@@ -148,7 +149,7 @@ class NoodplanController extends Controller
     /**
      * Print 1 weegkaart
      */
-    public function printWeegkaart(Toernooi $toernooi, Judoka $judoka): View
+    public function printWeegkaart(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): View
     {
         $judokas = collect([$judoka->load(['club', 'poules.mat', 'poules.blok'])]);
 
@@ -158,7 +159,7 @@ class NoodplanController extends Controller
     /**
      * Print alle coachkaarten
      */
-    public function printCoachkaarten(Toernooi $toernooi): View
+    public function printCoachkaarten(Organisator $organisator, Toernooi $toernooi): View
     {
         $coachkaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->with(['club', 'coach'])
@@ -171,7 +172,7 @@ class NoodplanController extends Controller
     /**
      * Print coachkaarten per club
      */
-    public function printCoachkaartenClub(Toernooi $toernooi, Club $club): View
+    public function printCoachkaartenClub(Organisator $organisator, Toernooi $toernooi, Club $club): View
     {
         $coachkaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
@@ -184,7 +185,7 @@ class NoodplanController extends Controller
     /**
      * Print 1 coachkaart
      */
-    public function printCoachkaart(Toernooi $toernooi, CoachKaart $coachKaart): View
+    public function printCoachkaart(Organisator $organisator, Toernooi $toernooi, CoachKaart $coachKaart): View
     {
         $coachkaarten = collect([$coachKaart->load(['club', 'coach'])]);
 
@@ -194,7 +195,7 @@ class NoodplanController extends Controller
     /**
      * Print leeg wedstrijdschema template
      */
-    public function printLeegSchema(Toernooi $toernooi, int $aantal): View
+    public function printLeegSchema(Organisator $organisator, Toernooi $toernooi, int $aantal): View
     {
         if ($aantal < 2 || $aantal > 7) {
             abort(404, 'Aantal judoka\'s moet tussen 2 en 7 zijn');
@@ -220,7 +221,7 @@ class NoodplanController extends Controller
     /**
      * Print instellingen samenvatting
      */
-    public function printInstellingen(Toernooi $toernooi): View
+    public function printInstellingen(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
 
@@ -230,7 +231,7 @@ class NoodplanController extends Controller
     /**
      * Print contactlijst coaches
      */
-    public function printContactlijst(Toernooi $toernooi): View
+    public function printContactlijst(Organisator $organisator, Toernooi $toernooi): View
     {
         $clubs = Club::whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
             ->with(['coaches' => fn($q) => $q->where('toernooi_id', $toernooi->id)])
@@ -243,7 +244,7 @@ class NoodplanController extends Controller
     /**
      * Print ingevulde wedstrijdschema's per blok
      */
-    public function printWedstrijdschemas(Toernooi $toernooi, ?int $blokNummer = null): View
+    public function printWedstrijdschemas(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
         $blok = null;
         $isFreeTier = $toernooi->isFreeTier();
@@ -278,7 +279,7 @@ class NoodplanController extends Controller
     /**
      * Print huidige staat van 1 poule
      */
-    public function printPouleSchema(Toernooi $toernooi, Poule $poule): View
+    public function printPouleSchema(Organisator $organisator, Toernooi $toernooi, Poule $poule): View
     {
         $poule->load(['judokas', 'wedstrijden']);
 
@@ -289,7 +290,7 @@ class NoodplanController extends Controller
      * Print ingevulde wedstrijdschema's in matrix-formaat (zoals mat interface)
      * 1 poule per A4, landscape voor ≥6 judoka's
      */
-    public function printIngevuldSchemas(Toernooi $toernooi, ?int $blokNummer = null): View
+    public function printIngevuldSchemas(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
         // Free tier: not available
         if ($toernooi->isFreeTier()) {
@@ -339,7 +340,7 @@ class NoodplanController extends Controller
     /**
      * Export poules naar Excel/CSV (1 sheet per blok)
      */
-    public function exportPoules(Toernooi $toernooi, string $format = 'xlsx')
+    public function exportPoules(Organisator $organisator, Toernooi $toernooi, string $format = 'xlsx')
     {
         $filename = sprintf('poules_%s_%s', $toernooi->slug, now()->format('Y-m-d'));
 

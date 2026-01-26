@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Services\WegingService;
@@ -15,14 +16,14 @@ class WegingController extends Controller
         private WegingService $wegingService
     ) {}
 
-    public function index(Toernooi $toernooi, ?int $blok = null): View
+    public function index(Organisator $organisator, Toernooi $toernooi, ?int $blok = null): View
     {
         $judokas = $this->wegingService->getWeeglijst($toernooi, $blok);
 
         return view('pages.weging.index', compact('toernooi', 'judokas', 'blok'));
     }
 
-    public function registreer(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function registreer(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $validated = $request->validate([
             'gewicht' => 'required|numeric|min:15|max:150',
@@ -49,21 +50,21 @@ class WegingController extends Controller
         ]);
     }
 
-    public function markeerAanwezig(Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function markeerAanwezig(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $this->wegingService->markeerAanwezig($judoka);
 
         return response()->json(['success' => true]);
     }
 
-    public function markeerAfwezig(Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function markeerAfwezig(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $this->wegingService->markeerAfwezig($judoka);
 
         return response()->json(['success' => true]);
     }
 
-    public function scanQR(Request $request, Toernooi $toernooi): JsonResponse
+    public function scanQR(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'qr_code' => 'required|string',
@@ -98,7 +99,7 @@ class WegingController extends Controller
         ]);
     }
 
-    public function interface(Toernooi $toernooi): View
+    public function interface(Organisator $organisator, Toernooi $toernooi): View
     {
         $toernooi->load('blokken');
 
@@ -111,7 +112,7 @@ class WegingController extends Controller
     /**
      * JSON endpoint voor live weeglijst auto-refresh
      */
-    public function lijstJson(Toernooi $toernooi): JsonResponse
+    public function lijstJson(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         return response()->json($this->getJudokasVoorLijst($toernooi));
     }

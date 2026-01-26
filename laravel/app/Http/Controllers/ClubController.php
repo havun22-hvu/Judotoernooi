@@ -141,7 +141,7 @@ class ClubController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         // Get the organisator who owns this toernooi
         $organisator = $toernooi->organisator;
@@ -183,7 +183,7 @@ class ClubController extends Controller
     /**
      * Toggle club selection for this toernooi
      */
-    public function toggleClub(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function toggleClub(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         // Verify club belongs to this toernooi's organisator
         if ($club->organisator_id !== $toernooi->organisator_id) {
@@ -215,7 +215,7 @@ class ClubController extends Controller
             ->with('success', $message);
     }
 
-    public function store(Request $request, Toernooi $toernooi): RedirectResponse
+    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
@@ -235,7 +235,7 @@ class ClubController extends Controller
             ->with('success', 'Club toegevoegd (PIN: ' . $club->pincode . ')');
     }
 
-    public function update(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function update(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
@@ -254,7 +254,7 @@ class ClubController extends Controller
             ->with('success', 'Club bijgewerkt');
     }
 
-    public function destroy(Toernooi $toernooi, Club $club): RedirectResponse
+    public function destroy(Organisator $organisator, Toernooi $toernooi, Club $club): RedirectResponse
     {
         // Check if club has judokas in this tournament
         if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
@@ -270,7 +270,7 @@ class ClubController extends Controller
             ->with('success', 'Club verwijderd');
     }
 
-    public function verstuurUitnodiging(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function verstuurUitnodiging(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         if (!$club->email) {
             return redirect()
@@ -296,7 +296,7 @@ class ClubController extends Controller
             ->with('success', "Uitnodiging verstuurd naar {$club->email}");
     }
 
-    public function verstuurAlleUitnodigingen(Request $request, Toernooi $toernooi): RedirectResponse
+    public function verstuurAlleUitnodigingen(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         // Only send to clubs that are linked to this toernooi AND have email
         $clubs = $toernooi->clubs()->whereNotNull('email')->get();
@@ -341,7 +341,7 @@ class ClubController extends Controller
     /**
      * Get coach portal URL for a club (for manual sharing)
      */
-    public function getCoachUrl(Toernooi $toernooi, Club $club): RedirectResponse
+    public function getCoachUrl(Organisator $organisator, Toernooi $toernooi, Club $club): RedirectResponse
     {
         $uitnodiging = ClubUitnodiging::firstOrCreate(
             ['toernooi_id' => $toernooi->id, 'club_id' => $club->id],
@@ -357,7 +357,7 @@ class ClubController extends Controller
     /**
      * Store a new coach for a club
      */
-    public function storeCoach(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function storeCoach(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         // Check max 3 coaches per club
         $existingCount = Coach::where('club_id', $club->id)
@@ -395,7 +395,7 @@ class ClubController extends Controller
     /**
      * Update a coach
      */
-    public function updateCoach(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    public function updateCoach(Organisator $organisator, Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
     {
         if ($coach->toernooi_id !== $toernooi->id) {
             abort(403);
@@ -417,7 +417,7 @@ class ClubController extends Controller
     /**
      * Delete a coach
      */
-    public function destroyCoach(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    public function destroyCoach(Organisator $organisator, Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
     {
         if ($coach->toernooi_id !== $toernooi->id) {
             abort(403);
@@ -434,7 +434,7 @@ class ClubController extends Controller
     /**
      * Regenerate pincode for a coach
      */
-    public function regeneratePincode(Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
+    public function regeneratePincode(Organisator $organisator, Request $request, Toernooi $toernooi, Coach $coach): RedirectResponse
     {
         if ($coach->toernooi_id !== $toernooi->id) {
             abort(403);
@@ -453,7 +453,7 @@ class ClubController extends Controller
     /**
      * Add extra coach card for a club
      */
-    public function addCoachKaart(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function addCoachKaart(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         CoachKaart::create([
             'toernooi_id' => $toernooi->id,
@@ -468,7 +468,7 @@ class ClubController extends Controller
     /**
      * Remove a coach card from a club (only if not yet activated)
      */
-    public function removeCoachKaart(Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function removeCoachKaart(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
     {
         // Find an unactivated card to remove (no naam, no foto, no device binding)
         $kaart = CoachKaart::where('toernooi_id', $toernooi->id)
