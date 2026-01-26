@@ -89,6 +89,11 @@ class Toernooi extends Model
 
     protected $fillable = [
         'organisator_id',
+        'plan_type',
+        'paid_tier',
+        'paid_max_judokas',
+        'paid_at',
+        'toernooi_betaling_id',
         'naam',
         'slug',
         'organisatie',
@@ -205,6 +210,8 @@ class Toernooi extends Model
         'mollie_onboarded' => 'boolean',
         'import_fouten' => 'array',
         'coach_incheck_actief' => 'boolean',
+        'paid_max_judokas' => 'integer',
+        'paid_at' => 'datetime',
     ];
 
     /*
@@ -570,5 +577,101 @@ class Toernooi extends Model
         $this->save();
 
         return $this->$veld;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Freemium Methods
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the toernooi betaling (upgrade payment) for this tournament
+     */
+    public function toernooiBetaling(): BelongsTo
+    {
+        return $this->belongsTo(ToernooiBetaling::class);
+    }
+
+    /**
+     * Check if this tournament is on the free tier
+     */
+    public function isFreeTier(): bool
+    {
+        return ($this->plan_type ?? 'free') === 'free';
+    }
+
+    /**
+     * Check if this tournament is on a paid tier
+     */
+    public function isPaidTier(): bool
+    {
+        return ($this->plan_type ?? 'free') === 'paid';
+    }
+
+    /**
+     * Get the effective max judokas limit based on plan
+     */
+    public function getEffectiveMaxJudokas(): int
+    {
+        if ($this->isPaidTier()) {
+            return $this->paid_max_judokas ?? 50;
+        }
+        return 50; // Free tier limit
+    }
+
+    /**
+     * Check if more judokas can be added (freemium limit)
+     */
+    public function canAddMoreJudokas(int $toevoegen = 1): bool
+    {
+        $huidige = $this->judokas()->count();
+        $max = $this->getEffectiveMaxJudokas();
+        return ($huidige + $toevoegen) <= $max;
+    }
+
+    /**
+     * Get remaining judoka slots
+     */
+    public function getRemainingJudokaSlots(): int
+    {
+        return max(0, $this->getEffectiveMaxJudokas() - $this->judokas()->count());
+    }
+
+    /**
+     * Check if print functionality is available (paid tier only)
+     */
+    public function canUsePrint(): bool
+    {
+        return $this->isPaidTier();
+    }
+
+    /**
+     * Check if this toernooi needs an upgrade
+     */
+    public function needsUpgrade(): bool
+    {
+        if ($this->isPaidTier()) {
+            return false;
+        }
+        return $this->judokas()->count() >= 50;
+    }
+
+    /**
+     * Get the staffel price for a given tier
+     */
+    public static function getStaffelPrijs(string $tier): ?float
+    {
+        $staffels = [
+            '51-100' => 20,
+            '101-150' => 30,
+            '151-200' => 40,
+            '201-250' => 50,
+            '251-300' => 60,
+            '301-350' => 70,
+            '351-400' => 80,
+            '401-500' => 100,
+        ];
+        return $staffels[$tier] ?? null;
     }
 }

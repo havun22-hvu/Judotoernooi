@@ -244,6 +244,12 @@ class CoachPortalController extends Controller
                 ->with('error', 'Maximum aantal deelnemers bereikt');
         }
 
+        // Check freemium judoka limit
+        if (!$toernooiModel->canAddMoreJudokas()) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt. Neem contact op met de organisator om te upgraden.');
+        }
+
         $validated = $request->validate([
             'naam' => 'required|string|max:255',
             'geboortejaar' => 'nullable|integer|min:2000|max:' . date('Y'),
