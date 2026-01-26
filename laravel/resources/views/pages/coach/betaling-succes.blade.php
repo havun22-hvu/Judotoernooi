@@ -26,7 +26,7 @@
                 </p>
             </div>
 
-            <a href="{{ route('coach.portal.judokas', $code) }}"
+            <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg">
                 Terug naar overzicht
             </a>

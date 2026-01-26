@@ -26,7 +26,7 @@
         </div>
         @endif
 
-        <form action="{{ route('coach.portal.login', $code) }}" method="POST">
+        <form action="{{ route('coach.portal.login', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
             @csrf
             <div class="mb-6">
                 <label for="pincode" class="block text-sm font-medium text-gray-700 mb-2">
