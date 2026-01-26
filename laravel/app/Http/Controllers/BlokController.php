@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Club;
 use App\Models\CoachKaart;
@@ -25,7 +26,7 @@ class BlokController extends Controller
         private EliminatieService $eliminatieService
     ) {}
 
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->with('poules')->orderBy('nummer')->get();
         $toernooi->load('matten');
@@ -34,7 +35,7 @@ class BlokController extends Controller
         return view('pages.blok.index', compact('toernooi', 'blokken', 'statistieken'));
     }
 
-    public function show(Toernooi $toernooi, Blok $blok): View
+    public function show(Organisator $organisator, Toernooi $toernooi, Blok $blok): View
     {
         $blok->load(['poules.mat', 'poules.judokas']);
 
@@ -44,7 +45,7 @@ class BlokController extends Controller
     /**
      * Generate block distribution variants and show selection UI
      */
-    public function genereerVerdeling(Request $request, Toernooi $toernooi): RedirectResponse
+    public function genereerVerdeling(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         try {
             // Clear old variants first
@@ -102,7 +103,7 @@ class BlokController extends Controller
     /**
      * Apply chosen variant (supports both form POST and JSON)
      */
-    public function kiesVariant(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
+    public function kiesVariant(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
         // Accept either direct toewijzingen (from DOM) or variant index (legacy)
         $toewijzingen = $request->input('toewijzingen');
@@ -153,7 +154,7 @@ class BlokController extends Controller
      * Generate block distribution for variable categories (max wedstrijden based)
      * Uses simple algorithm: sort by age/weight, distribute evenly with connection
      */
-    public function genereerVariabeleVerdeling(Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
+    public function genereerVariabeleVerdeling(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
         try {
             // Reset non-pinned poules
@@ -212,7 +213,7 @@ class BlokController extends Controller
     /**
      * Update gewenst wedstrijden for a block via AJAX
      */
-    public function updateGewenst(Request $request, Toernooi $toernooi): JsonResponse
+    public function updateGewenst(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'blok_id' => 'required|exists:blokken,id',
@@ -237,7 +238,7 @@ class BlokController extends Controller
      * Distribute poules over mats and redirect to zaaloverzicht (voorbereiding)
      * Organizer can still adjust mat assignments before sealing with "Maak weegkaarten"
      */
-    public function zetOpMat(Toernooi $toernooi): RedirectResponse
+    public function zetOpMat(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         // Remove all existing wedstrijden (categories should be INACTIVE in voorbereiding)
         // After overpoulen, judokas may have changed, so old wedstrijden are invalid
@@ -266,7 +267,7 @@ class BlokController extends Controller
             ->with('success', 'Poules verdeeld over matten. Controleer en pas aan indien nodig, klik dan "Maak weegkaarten".');
     }
 
-    public function sluitWeging(Toernooi $toernooi, Blok $blok): RedirectResponse
+    public function sluitWeging(Organisator $organisator, Toernooi $toernooi, Blok $blok): RedirectResponse
     {
         $blok->sluitWeging();
 
@@ -275,7 +276,7 @@ class BlokController extends Controller
             ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");
     }
 
-    public function zaaloverzicht(Toernooi $toernooi): View
+    public function zaaloverzicht(Organisator $organisator, Toernooi $toernooi): View
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
@@ -289,7 +290,7 @@ class BlokController extends Controller
      * Seal preparation: mark weegkaarten as created
      * After this, preparation is "sealed" and weegkaarten show mat info
      */
-    public function maakWeegkaarten(Toernooi $toernooi): RedirectResponse
+    public function maakWeegkaarten(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         // Check if all poules have mat_id assigned
         $poulesZonderMat = $toernooi->poules()->whereNull('mat_id')->count();
@@ -310,7 +311,7 @@ class BlokController extends Controller
      * Einde voorbereiding: valideer alles, herbereken coachkaarten
      * Dit is het punt waarop de voorbereiding klaar is en info naar clubs kan
      */
-    public function eindeVoorbereiding(Toernooi $toernooi): RedirectResponse
+    public function eindeVoorbereiding(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $errors = [];
 
@@ -401,7 +402,7 @@ class BlokController extends Controller
     /**
      * Activate a category: generate match schedules (mats already assigned in voorbereiding)
      */
-    public function activeerCategorie(Request $request, Toernooi $toernooi): RedirectResponse
+    public function activeerCategorie(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'category' => 'required|string',
@@ -458,7 +459,7 @@ class BlokController extends Controller
      * Reset een categorie: verwijder wedstrijden en haal van mat
      * Categorie wordt weer inactief en kan opnieuw geactiveerd worden
      */
-    public function resetCategorie(Request $request, Toernooi $toernooi): RedirectResponse
+    public function resetCategorie(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'category' => 'required|string',
@@ -500,7 +501,7 @@ class BlokController extends Controller
     /**
      * Activate a single poule: generate match schedule
      */
-    public function activeerPoule(Request $request, Toernooi $toernooi): RedirectResponse
+    public function activeerPoule(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|integer|exists:poules,id',
@@ -548,7 +549,7 @@ class BlokController extends Controller
     /**
      * Reset a single poule: delete wedstrijden
      */
-    public function resetPoule(Request $request, Toernooi $toernooi): RedirectResponse
+    public function resetPoule(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|integer|exists:poules,id',
@@ -581,7 +582,7 @@ class BlokController extends Controller
     /**
      * NUCLEAR OPTION: Reset ALLES - alle wedstrijden, alle matten, alle blokken
      */
-    public function resetAlles(Toernooi $toernooi): RedirectResponse
+    public function resetAlles(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $poules = $toernooi->poules()->get();
         $totaalVerwijderd = 0;
@@ -642,7 +643,7 @@ class BlokController extends Controller
         return $statuses;
     }
 
-    public function sprekerInterface(Toernooi $toernooi): View
+    public function sprekerInterface(Organisator $organisator, Toernooi $toernooi): View
     {
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
@@ -844,7 +845,7 @@ class BlokController extends Controller
     /**
      * Mark poule as announced (prizes awarded) - moves to archive
      */
-    public function markeerAfgeroepen(Request $request, Toernooi $toernooi): JsonResponse
+    public function markeerAfgeroepen(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -862,7 +863,7 @@ class BlokController extends Controller
     /**
      * Zet afgeroepen poule terug naar klaar (undo)
      */
-    public function zetAfgeroepenTerug(Request $request, Toernooi $toernooi): JsonResponse
+    public function zetAfgeroepenTerug(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -880,7 +881,7 @@ class BlokController extends Controller
     /**
      * Get poule standings for speaker interface (view previously announced)
      */
-    public function getPouleStandings(Request $request, Toernooi $toernooi): JsonResponse
+    public function getPouleStandings(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -918,7 +919,7 @@ class BlokController extends Controller
     /**
      * Save speaker notes to tournament (persisted for next year)
      */
-    public function saveNotities(Request $request, Toernooi $toernooi): JsonResponse
+    public function saveNotities(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'notities' => 'nullable|string|max:10000',
@@ -935,7 +936,7 @@ class BlokController extends Controller
     /**
      * Get speaker notes from tournament
      */
-    public function getNotities(Toernooi $toernooi): JsonResponse
+    public function getNotities(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         return response()->json([
             'success' => true,
@@ -943,7 +944,7 @@ class BlokController extends Controller
         ]);
     }
 
-    public function verplaatsPoule(Request $request, Toernooi $toernooi): JsonResponse
+    public function verplaatsPoule(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -965,7 +966,7 @@ class BlokController extends Controller
      * Verplaats een categorie naar een blok (drag & drop)
      * vast parameter determines if category is pinned
      */
-    public function verplaatsCategorie(Request $request, Toernooi $toernooi): JsonResponse
+    public function verplaatsCategorie(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'key' => 'required|string',
@@ -1020,7 +1021,7 @@ class BlokController extends Controller
      * Maak een barrage poule voor judoka's met gelijke stand (3-weg gelijkspel)
      * Judoka's blijven in originele poule, worden TOEGEVOEGD aan barrage (niet verplaatst)
      */
-    public function maakBarrage(Request $request, Toernooi $toernooi): JsonResponse
+    public function maakBarrage(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',

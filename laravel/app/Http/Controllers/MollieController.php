@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Betaling;
 use App\Models\Judoka;
 use App\Models\Toernooi;
@@ -26,7 +27,7 @@ class MollieController extends Controller
     /**
      * Redirect to Mollie OAuth authorization
      */
-    public function authorize(Toernooi $toernooi): RedirectResponse
+    public function authorize(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $url = $this->mollieService->getOAuthAuthorizeUrl($toernooi);
         return redirect($url);
@@ -73,7 +74,7 @@ class MollieController extends Controller
     /**
      * Disconnect Mollie account
      */
-    public function disconnect(Toernooi $toernooi): RedirectResponse
+    public function disconnect(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         $this->mollieService->disconnectFromToernooi($toernooi);
 

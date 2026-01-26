@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Judoka;
 use App\Models\Poule;
@@ -12,7 +13,7 @@ use Illuminate\View\View;
 
 class WedstrijddagController extends Controller
 {
-    public function poules(Toernooi $toernooi): View
+    public function poules(Organisator $organisator, Toernooi $toernooi): View
     {
         // Herbereken kruisfinale aantallen op basis van actueel aantal voorrondepoules
         $this->herberkenKruisfinales($toernooi);
@@ -155,7 +156,7 @@ class WedstrijddagController extends Controller
         ));
     }
 
-    public function verplaatsJudoka(Request $request, Toernooi $toernooi): JsonResponse
+    public function verplaatsJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -290,7 +291,7 @@ class WedstrijddagController extends Controller
         ]);
     }
 
-    public function naarZaaloverzicht(Request $request, Toernooi $toernooi): JsonResponse
+    public function naarZaaloverzicht(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'category' => 'required|string',
@@ -325,7 +326,7 @@ class WedstrijddagController extends Controller
         return response()->json(['success' => true, 'updated' => $updated]);
     }
 
-    public function naarZaaloverzichtPoule(Request $request, Toernooi $toernooi): JsonResponse
+    public function naarZaaloverzichtPoule(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|integer|exists:poules,id',
@@ -343,7 +344,7 @@ class WedstrijddagController extends Controller
         return response()->json(['success' => true, 'poule_id' => $poule->id]);
     }
 
-    public function nieuwePoule(Request $request, Toernooi $toernooi): JsonResponse
+    public function nieuwePoule(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'leeftijdsklasse' => 'required|string',
@@ -397,7 +398,7 @@ class WedstrijddagController extends Controller
      * Verplaats judoka naar wachtruimte (uit poule halen)
      * Judoka kan later naar andere poule gesleept worden of via Zoek Match
      */
-    public function naarWachtruimte(Request $request, Toernooi $toernooi): JsonResponse
+    public function naarWachtruimte(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -440,7 +441,7 @@ class WedstrijddagController extends Controller
     /**
      * Verwijder judoka definitief uit poule (voor afwezige/verplaatste judoka's)
      */
-    public function verwijderUitPoule(Request $request, Toernooi $toernooi): JsonResponse
+    public function verwijderUitPoule(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -522,7 +523,7 @@ class WedstrijddagController extends Controller
     /**
      * Convert elimination poule to regular poules (with or without kruisfinale)
      */
-    public function zetOmNaarPoules(Request $request, Toernooi $toernooi): JsonResponse
+    public function zetOmNaarPoules(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
@@ -704,7 +705,7 @@ class WedstrijddagController extends Controller
     /**
      * Wijzig poule type (poule ↔ eliminatie ↔ kruisfinale)
      */
-    public function wijzigPouleType(Request $request, Toernooi $toernooi): JsonResponse
+    public function wijzigPouleType(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',

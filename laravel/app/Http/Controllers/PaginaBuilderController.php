@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,7 +12,7 @@ use Illuminate\View\View;
 
 class PaginaBuilderController extends Controller
 {
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         // Check for new Pro format (sections) or legacy format (blokken)
         $sections = $toernooi->pagina_content['sections'] ?? null;
@@ -116,7 +117,7 @@ class PaginaBuilderController extends Controller
         }
     }
 
-    public function opslaan(Request $request, Toernooi $toernooi): JsonResponse
+    public function opslaan(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         // Support both old and new format
         $sections = $request->input('sections');
@@ -149,7 +150,7 @@ class PaginaBuilderController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function upload(Request $request, Toernooi $toernooi): JsonResponse
+    public function upload(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $request->validate([
             'afbeelding' => 'required|image|max:5120', // Max 5MB
@@ -165,7 +166,7 @@ class PaginaBuilderController extends Controller
         ]);
     }
 
-    public function verwijderAfbeelding(Request $request, Toernooi $toernooi): JsonResponse
+    public function verwijderAfbeelding(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $request->validate([
             'path' => 'required|string',

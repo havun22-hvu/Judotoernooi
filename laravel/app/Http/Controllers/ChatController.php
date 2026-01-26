@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\NewChatMessage;
+use App\Models\Organisator;
 use App\Models\ChatMessage;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +14,7 @@ class ChatController extends Controller
     /**
      * Get messages for current user/device
      */
-    public function index(Request $request, Toernooi $toernooi): JsonResponse
+    public function index(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $type = $request->input('type');
         $id = $request->input('id');
@@ -54,7 +55,7 @@ class ChatController extends Controller
     /**
      * Send a new message
      */
-    public function store(Request $request, Toernooi $toernooi): JsonResponse
+    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'van_type' => 'required|string|in:hoofdjury,mat,weging,spreker,dojo',
@@ -91,7 +92,7 @@ class ChatController extends Controller
     /**
      * Mark messages as read
      */
-    public function markAsRead(Request $request, Toernooi $toernooi): JsonResponse
+    public function markAsRead(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'type' => 'required|string',
@@ -116,7 +117,7 @@ class ChatController extends Controller
     /**
      * Get unread count for recipient
      */
-    public function unreadCount(Request $request, Toernooi $toernooi): JsonResponse
+    public function unreadCount(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $type = $request->input('type');
         $id = $request->input('id');

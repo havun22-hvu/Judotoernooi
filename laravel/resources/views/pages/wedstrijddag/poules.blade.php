@@ -1593,8 +1593,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
-const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", [$toernooi, "__JUDOKA_ID__"]) }}';
-const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi) }}';
+const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", $toernooi->routeParamsWith(["judoka" => "__JUDOKA_ID__"])) }}';
+const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi->routeParams()) }}';
 
 async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
     const modal = document.getElementById('zoek-match-modal');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Judoka;
+use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
@@ -23,7 +24,7 @@ class PouleController extends Controller
         private EliminatieService $eliminatieService
     ) {}
 
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         // Get config and build dynamic ordering from preset
         $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
@@ -112,7 +113,7 @@ class PouleController extends Controller
     /**
      * Delete an empty poule (or poule with only absent judokas)
      */
-    public function destroy(Toernooi $toernooi, Poule $poule): JsonResponse
+    public function destroy(Organisator $organisator, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         // Check for active judokas (not absent, and weighted if weging is closed)
         $blok = $poule->blok;
@@ -145,7 +146,7 @@ class PouleController extends Controller
     /**
      * Create a new empty poule
      */
-    public function store(Request $request, Toernooi $toernooi): JsonResponse
+    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'leeftijdsklasse' => 'required|string',
@@ -173,7 +174,7 @@ class PouleController extends Controller
         ]);
     }
 
-    public function genereer(Toernooi $toernooi, Request $request): RedirectResponse
+    public function genereer(Organisator $organisator, Toernooi $toernooi, Request $request): RedirectResponse
     {
         // Block if category problems exist
         $errors = [];
@@ -240,7 +241,7 @@ class PouleController extends Controller
     /**
      * Verify all poules and recalculate match counts
      */
-    public function verifieer(Toernooi $toernooi): JsonResponse
+    public function verifieer(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         $poules = $toernooi->poules()->withCount('judokas')->get();
         $problemen = [];
@@ -313,7 +314,7 @@ class PouleController extends Controller
      * - wedstrijddag=1: Filter op blok beschikbaarheid (weging status)
      * - from_poule_id: Huidige poule ID (voor wedstrijddag mode)
      */
-    public function zoekMatch(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function zoekMatch(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $huidigJaar = now()->year;
         $isWedstrijddag = $request->boolean('wedstrijddag', false);
@@ -564,7 +565,7 @@ class PouleController extends Controller
     /**
      * API endpoint for drag-and-drop judoka move
      */
-    public function verplaatsJudokaApi(Request $request, Toernooi $toernooi): JsonResponse
+    public function verplaatsJudokaApi(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -634,7 +635,7 @@ class PouleController extends Controller
     /**
      * Update kruisfinale plaatsen (how many qualify from each voorronde)
      */
-    public function updateKruisfinale(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    public function updateKruisfinale(Organisator $organisator, Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         if (!$poule->isKruisfinale()) {
             return response()->json(['success' => false, 'message' => 'Dit is geen kruisfinale poule'], 400);
@@ -674,7 +675,7 @@ class PouleController extends Controller
     /**
      * Show elimination bracket for a poule
      */
-    public function eliminatie(Toernooi $toernooi, Poule $poule): View
+    public function eliminatie(Organisator $organisator, Toernooi $toernooi, Poule $poule): View
     {
         $poule->load(['judokas.club', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar']);
 
@@ -687,7 +688,7 @@ class PouleController extends Controller
     /**
      * Generate elimination bracket for a poule
      */
-    public function genereerEliminatie(Toernooi $toernooi, Poule $poule): JsonResponse
+    public function genereerEliminatie(Organisator $organisator, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $judokas = $poule->judokas;
 
@@ -723,7 +724,7 @@ class PouleController extends Controller
     /**
      * Save match result in elimination bracket
      */
-    public function opslaanEliminatieUitslag(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    public function opslaanEliminatieUitslag(Organisator $organisator, Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -763,7 +764,7 @@ class PouleController extends Controller
      * Verplaats judoka in B-groep (seeding)
      * Alleen toegestaan als de bracket nog in seeding fase is
      */
-    public function seedingBGroep(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    public function seedingBGroep(Organisator $organisator, Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -856,7 +857,7 @@ class PouleController extends Controller
     /**
      * Haal B-groep seeding informatie op
      */
-    public function getBGroepSeeding(Toernooi $toernooi, Poule $poule): JsonResponse
+    public function getBGroepSeeding(Organisator $organisator, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $poule->load(['wedstrijden.judokaWit', 'wedstrijden.judokaBlauw']);
 
@@ -898,7 +899,7 @@ class PouleController extends Controller
     /**
      * Haal A-groep seeding informatie op
      */
-    public function getSeedingStatus(Toernooi $toernooi, Poule $poule): JsonResponse
+    public function getSeedingStatus(Organisator $organisator, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $poule->load(['wedstrijden.judokaWit.club', 'wedstrijden.judokaBlauw.club']);
 
@@ -939,7 +940,7 @@ class PouleController extends Controller
      * Swap twee judoka's in de eerste ronde (A-groep seeding)
      * Alleen mogelijk in seeding-fase (voor eerste wedstrijd)
      */
-    public function swapSeeding(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    public function swapSeeding(Organisator $organisator, Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $validated = $request->validate([
             'judoka_a_id' => 'required|exists:judokas,id',
@@ -959,7 +960,7 @@ class PouleController extends Controller
      * Verplaats judoka naar lege plek in eerste ronde (A-groep seeding)
      * Alleen mogelijk in seeding-fase (voor eerste wedstrijd)
      */
-    public function moveSeeding(Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
+    public function moveSeeding(Organisator $organisator, Request $request, Toernooi $toernooi, Poule $poule): JsonResponse
     {
         $validated = $request->validate([
             'judoka_id' => 'required|exists:judokas,id',
@@ -980,7 +981,7 @@ class PouleController extends Controller
     /**
      * Herstel B-groep koppelingen voor bestaande bracket
      */
-    public function herstelBKoppelingen(Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
+    public function herstelBKoppelingen(Organisator $organisator, Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
     {
         $hersteld = $this->eliminatieService->herstelBKoppelingen($poule->id);
 
@@ -994,7 +995,7 @@ class PouleController extends Controller
     /**
      * Diagnose B-koppelingen - toon huidige koppelingen zonder wijzigingen
      */
-    public function diagnoseBKoppelingen(Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
+    public function diagnoseBKoppelingen(Organisator $organisator, Toernooi $toernooi, Poule $poule): \Illuminate\Http\JsonResponse
     {
         $wedstrijden = Wedstrijd::where('poule_id', $poule->id)
             ->where('groep', 'B')

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Judoka;
 use App\Models\Poule;
@@ -16,7 +17,7 @@ class PubliekController extends Controller
     /**
      * Show public tournament page with all judokas
      */
-    public function index(Toernooi $toernooi): View
+    public function index(Organisator $organisator, Toernooi $toernooi): View
     {
         // Get blokken with times
         $blokken = Blok::where('toernooi_id', $toernooi->id)
@@ -209,7 +210,7 @@ class PubliekController extends Controller
     /**
      * Get poules for favorite judokas (AJAX)
      */
-    public function favorieten(Request $request, Toernooi $toernooi): JsonResponse
+    public function favorieten(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $judokaIds = $request->input('judoka_ids', []);
 
@@ -302,7 +303,7 @@ class PubliekController extends Controller
     /**
      * Dynamic manifest.json for PWA per tournament
      */
-    public function manifest(Toernooi $toernooi): JsonResponse
+    public function manifest(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         return response()->json([
             'name' => $toernooi->naam,
@@ -331,7 +332,7 @@ class PubliekController extends Controller
     /**
      * Search judokas (AJAX for quick search)
      */
-    public function zoeken(Request $request, Toernooi $toernooi): JsonResponse
+    public function zoeken(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $query = $request->input('q', '');
 
@@ -367,7 +368,7 @@ class PubliekController extends Controller
     /**
      * Scan QR code and return judoka info (public, read-only)
      */
-    public function scanQR(Request $request, Toernooi $toernooi): JsonResponse
+    public function scanQR(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $qrCode = $request->input('qr_code', '');
 
@@ -411,7 +412,7 @@ class PubliekController extends Controller
     /**
      * Register weight for judoka (public route for PWA)
      */
-    public function registreerGewicht(Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    public function registreerGewicht(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         // Verify judoka belongs to this tournament
         if ($judoka->toernooi_id !== $toernooi->id) {
@@ -464,7 +465,7 @@ class PubliekController extends Controller
      * Export results as CSV for organizer
      * Sorted by age class (young to old) and weight (light to heavy)
      */
-    public function exportUitslagen(Toernooi $toernooi): Response
+    public function exportUitslagen(Organisator $organisator, Toernooi $toernooi): Response
     {
         $uitslagen = $this->getUitslagen($toernooi);
 
@@ -503,7 +504,7 @@ class PubliekController extends Controller
     /**
      * Organisator resultaten pagina - alle uitslagen + club ranking
      */
-    public function organisatorResultaten(Toernooi $toernooi): View
+    public function organisatorResultaten(Organisator $organisator, Toernooi $toernooi): View
     {
         $uitslagen = $this->getUitslagen($toernooi);
         $clubRanking = $this->getClubRanking($toernooi);
@@ -518,7 +519,7 @@ class PubliekController extends Controller
     /**
      * Calculate club ranking with medals (absolute and relative)
      */
-    public function getClubRanking(Toernooi $toernooi): array
+    public function getClubRanking(Organisator $organisator, Toernooi $toernooi): array
     {
         $uitslagen = $this->getUitslagen($toernooi);
         $clubs = [];
@@ -583,7 +584,7 @@ class PubliekController extends Controller
     /**
      * Get results for a specific club (for coach portal)
      */
-    public function getClubResultaten(Toernooi $toernooi, int $clubId): array
+    public function getClubResultaten(Organisator $organisator, Toernooi $toernooi, int $clubId): array
     {
         $uitslagen = $this->getUitslagen($toernooi);
         $resultaten = [];
