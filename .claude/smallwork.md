@@ -134,6 +134,12 @@
 - **Bestanden:** edit.blade.php
 - **Oorzaak:** Ongebruikte variabele die niet was gedefinieerd
 
+### Fix: Separate URL/PIN copy buttons
+- **Type:** UI fix
+- **Wat:** Device toegangen kopieert nu URL en PIN apart i.p.v. samen
+- **Bestanden:** device-toegangen.blade.php
+- **Oplossing:** Twee aparte knoppen met eigen `copyUrl()` en `copyPin()` functies
+
 ---
 
 <!--

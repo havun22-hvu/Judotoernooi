@@ -47,8 +47,15 @@
                                 <button type="button"
                                         @click="copyUrl(toegang)"
                                         class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-sm">
-                                    <span x-show="copiedId !== toegang.id">Kopieer URL</span>
-                                    <span x-show="copiedId === toegang.id" x-cloak>Gekopieerd!</span>
+                                    <span x-show="copiedId !== 'url_' + toegang.id">📋 URL</span>
+                                    <span x-show="copiedId === 'url_' + toegang.id" x-cloak>✓</span>
+                                </button>
+                                {{-- Copy PIN --}}
+                                <button type="button"
+                                        @click="copyPin(toegang)"
+                                        class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm">
+                                    <span x-show="copiedId !== 'pin_' + toegang.id">📋 PIN</span>
+                                    <span x-show="copiedId === 'pin_' + toegang.id" x-cloak>✓</span>
                                 </button>
                                 {{-- Test link --}}
                                 <a :href="toegang.url" target="_blank"
@@ -227,9 +234,14 @@ function deviceToegangen() {
         },
 
         copyUrl(toegang) {
-            const text = `${toegang.url}\nPIN: ${toegang.pincode}`;
-            navigator.clipboard.writeText(text);
-            this.copiedId = toegang.id;
+            navigator.clipboard.writeText(toegang.url);
+            this.copiedId = 'url_' + toegang.id;
+            setTimeout(() => this.copiedId = null, 2000);
+        },
+
+        copyPin(toegang) {
+            navigator.clipboard.writeText(toegang.pincode);
+            this.copiedId = 'pin_' + toegang.id;
             setTimeout(() => this.copiedId = null, 2000);
         },
     };
