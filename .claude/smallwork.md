@@ -122,6 +122,12 @@
 - **Bestanden:** ToernooiController.php
 - **Oplossing:** Sitebeheerder → toernooi.index, organisator → organisator.dashboard
 
+### Feat: Standaard categorie bij nieuw toernooi
+- **Type:** Feature
+- **Wat:** Bij nieuw toernooi (zonder template) wordt standaard categorie aangemaakt
+- **Bestanden:** ToernooiService.php
+- **Config:** max_lft=99, v.lft=1, v.kg=3, v.band=2, band_streng_beginners=true
+
 ---
 
 <!--
