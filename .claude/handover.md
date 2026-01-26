@@ -40,7 +40,32 @@
 - Bij barrage gelijkspel: nieuwe barrage poule wordt aangemaakt
 
 ### Openstaande items:
-- Geen
+
+#### URL Structuur Refactor (GROOT PROJECT)
+Huidige URLs zijn niet organisator/toernooi-specifiek:
+- Nu: `/mat/12`, `/weging/ABC123`
+- Moet: `/{organisator-slug}/{toernooi-slug}/mat`, etc.
+
+**Waarom:**
+- Twee organisatoren kunnen zelfde toernooi naam hebben (bijv. "Zomertoernooi 2026")
+- Club portals moeten per toernooi uniek zijn (niet per club)
+- Duidelijkere URL structuur voor gebruikers
+
+**Impact:**
+1. Organisator model: `slug` veld toevoegen
+2. Toernooi model: `slug` uniek binnen organisator (niet globaal)
+3. Club portals: verplaatsen van `clubs.portal_code` naar `club_toernooi` pivot
+4. Routes: alle device/rol routes aanpassen naar `/{org}/{toernooi}/...`
+5. DeviceToegang: lookup via organisator+toernooi context
+6. Views: alle links/URLs aanpassen
+
+**Nieuwe URL structuur:**
+```
+judotournament.org/{organisator-slug}/{toernooi-slug}/mat
+judotournament.org/{organisator-slug}/{toernooi-slug}/weging
+judotournament.org/{organisator-slug}/{toernooi-slug}/spreker
+judotournament.org/{organisator-slug}/{toernooi-slug}/portal/{club-code}
+```
 
 ### Technische notities:
 - BandHelper::BAND_VOLGORDE is omgekeerd: wit=6, zwart=0
