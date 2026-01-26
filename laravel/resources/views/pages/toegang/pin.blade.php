@@ -90,7 +90,7 @@
             </div>
             @endif
 
-            <form action="{{ route('toegang.verify', $toegang->code) }}" method="POST">
+            <form action="{{ route('toegang.verify', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'code' => $toegang->code]) }}" method="POST">
                 @csrf
                 <input type="hidden" name="pincode" x-bind:value="fullPin">
 
