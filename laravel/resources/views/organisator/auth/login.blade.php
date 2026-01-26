@@ -25,6 +25,12 @@
         </div>
         @endif
 
+        @if(session('warning'))
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+            {{ session('warning') }}
+        </div>
+        @endif
+
         <form action="{{ route('organisator.login.submit') }}" method="POST">
             @csrf
 
