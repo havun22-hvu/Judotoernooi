@@ -73,9 +73,15 @@ Route::prefix('organisator')->name('organisator.')->group(function () {
     });
 });
 
-// New URL structure: /{organisator-slug}/dashboard
+// New URL structure: /{organisator-slug}/...
 Route::prefix('{organisator}')->middleware('auth:organisator')->group(function () {
     Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('organisator.dashboard');
+
+    // Club management (organisator level - clubs persist across toernooien)
+    Route::get('clubs', [ClubController::class, 'indexOrganisator'])->name('organisator.clubs.index');
+    Route::post('clubs', [ClubController::class, 'storeOrganisator'])->name('organisator.clubs.store');
+    Route::put('clubs/{club}', [ClubController::class, 'updateOrganisator'])->name('organisator.clubs.update');
+    Route::delete('clubs/{club}', [ClubController::class, 'destroyOrganisator'])->name('organisator.clubs.destroy');
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)
