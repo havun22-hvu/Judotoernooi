@@ -31,7 +31,7 @@
         <div class="text-2xl font-mono" id="clock"></div>
     </header>
 
-    <main class="p-3">
+    <main class="p-3 max-w-5xl mx-auto">
         @include('pages.mat.partials._content')
     </main>
 
