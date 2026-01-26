@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -57,7 +58,73 @@ class Club extends Model
         return str_pad((string) random_int(0, 99999), 5, '0', STR_PAD_LEFT);
     }
 
-    public function getPortalUrl(): string
+    /**
+     * Get portal URL for a specific tournament (new URL structure).
+     */
+    public function getPortalUrl(Toernooi $toernooi): string
+    {
+        $pivot = $this->toernooien()->where('toernooien.id', $toernooi->id)->first()?->pivot;
+
+        if (!$pivot || !$pivot->portal_code) {
+            // Ensure pivot exists with code
+            $toernooi->ensureClubPivot($this);
+            $pivot = $this->toernooien()->where('toernooien.id', $toernooi->id)->first()->pivot;
+        }
+
+        return route('coach.portal.code', [
+            'organisator' => $toernooi->organisator->slug,
+            'toernooi' => $toernooi->slug,
+            'code' => $pivot->portal_code,
+        ]);
+    }
+
+    /**
+     * Get portal code for a specific tournament.
+     */
+    public function getPortalCodeForToernooi(Toernooi $toernooi): ?string
+    {
+        return $this->toernooien()
+            ->where('toernooien.id', $toernooi->id)
+            ->first()
+            ?->pivot
+            ?->portal_code;
+    }
+
+    /**
+     * Get pincode for a specific tournament.
+     */
+    public function getPincodeForToernooi(Toernooi $toernooi): ?string
+    {
+        return $this->toernooien()
+            ->where('toernooien.id', $toernooi->id)
+            ->first()
+            ?->pivot
+            ?->pincode;
+    }
+
+    /**
+     * Check pincode for a specific tournament.
+     */
+    public function checkPincodeForToernooi(Toernooi $toernooi, string $pincode): bool
+    {
+        return $this->getPincodeForToernooi($toernooi) === $pincode;
+    }
+
+    /**
+     * Regenerate pincode for a specific tournament.
+     */
+    public function regeneratePincodeForToernooi(Toernooi $toernooi): string
+    {
+        $newPincode = self::generatePincode();
+        $this->toernooien()->updateExistingPivot($toernooi->id, ['pincode' => $newPincode]);
+        return $newPincode;
+    }
+
+    /**
+     * Legacy: Get portal URL using old portal_code on club (deprecated).
+     * @deprecated Use getPortalUrl(Toernooi) instead
+     */
+    public function getLegacyPortalUrl(): string
     {
         return url('/school/' . $this->portal_code);
     }
@@ -77,6 +144,16 @@ class Club extends Model
     public function organisator(): BelongsTo
     {
         return $this->belongsTo(Organisator::class);
+    }
+
+    /**
+     * Get all toernooien this club is linked to via pivot.
+     */
+    public function toernooien(): BelongsToMany
+    {
+        return $this->belongsToMany(Toernooi::class, 'club_toernooi')
+            ->withPivot('portal_code', 'pincode')
+            ->withTimestamps();
     }
 
     public function judokas(): HasMany

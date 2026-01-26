@@ -327,8 +327,8 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
 
 });
 
-// Coach Portal with code and PIN
-Route::prefix('school')->name('coach.portal.')->group(function () {
+// Coach Portal with code and PIN - NEW URL structure: /{org}/{toernooi}/school/{code}
+Route::prefix('{organisator}/{toernooi}/school')->name('coach.portal.')->group(function () {
     Route::get('{code}', [CoachPortalController::class, 'indexCode'])->name('code');
     Route::post('{code}/login', [CoachPortalController::class, 'loginPin'])->name('login');
     Route::post('{code}/logout', [CoachPortalController::class, 'logoutCode'])->name('logout');
@@ -345,6 +345,11 @@ Route::prefix('school')->name('coach.portal.')->group(function () {
     Route::post('{code}/betalen', [CoachPortalController::class, 'betalenCode'])->name('betalen');
     Route::get('{code}/betaling/succes', [CoachPortalController::class, 'betalingSuccesCode'])->name('betaling.succes');
     Route::get('{code}/betaling/geannuleerd', [CoachPortalController::class, 'betalingGeannuleerdCode'])->name('betaling.geannuleerd');
+});
+
+// Legacy coach portal routes - redirect to new URL structure
+Route::prefix('school')->name('coach.portal.legacy.')->group(function () {
+    Route::get('{code}', [CoachPortalController::class, 'redirectLegacy'])->name('code');
 });
 
 // Weegkaart (public, accessed via QR code)
