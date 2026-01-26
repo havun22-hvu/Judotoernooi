@@ -143,13 +143,26 @@
                     <span class="font-medium">{{ $toernooi->datum ? $toernooi->datum->format('d-m-Y') : 'Geen datum' }}</span>
                 </div>
 
+                {{-- Plan Badge --}}
+                <div class="mb-3">
+                    @if($toernooi->isPaidTier())
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            ✓ Betaald ({{ $toernooi->paid_tier }})
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Gratis (max 50)
+                        </span>
+                    @endif
+                </div>
+
                 {{-- Statistieken --}}
                 <div class="grid grid-cols-2 gap-2 text-sm text-gray-500 mb-3">
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        {{ $toernooi->judokas_count ?? $toernooi->judokas()->count() }} judoka's
+                        {{ $toernooi->judokas_count ?? $toernooi->judokas()->count() }}/{{ $toernooi->getEffectiveMaxJudokas() }} judoka's
                     </div>
                     <div class="flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
