@@ -30,8 +30,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         // Handle 419 Page Expired (CSRF token expired) - redirect to login
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'CSRF token mismatch'], 419);
+            }
             return redirect()
-                ->route('organisator.login')
+                ->guest(route('organisator.login'))
                 ->with('warning', 'Sessie verlopen. Log opnieuw in.');
+        });
+
+        // Also catch the Symfony HttpException for 419
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Page expired'], 419);
+                }
+                return redirect()
+                    ->guest(route('organisator.login'))
+                    ->with('warning', 'Sessie verlopen. Log opnieuw in.');
+            }
         });
     })->create();
