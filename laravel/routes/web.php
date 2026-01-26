@@ -41,40 +41,57 @@ Route::get('/help', fn() => view('pages.help'))->name('help');
 
 /*
 |--------------------------------------------------------------------------
-| Organisator Authentication
+| Authentication (root level)
 |--------------------------------------------------------------------------
 */
-Route::prefix('organisator')->name('organisator.')->group(function () {
-    // Login route without middleware - controller handles auth check and corrupt sessions
-    Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
-    Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
+// Login route without middleware - controller handles auth check and corrupt sessions
+Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
+Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
+Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
 
-    // Guest routes (only for users not logged in)
-    Route::middleware('guest:organisator')->group(function () {
-        Route::get('register', [OrganisatorAuthController::class, 'showRegister'])->name('register');
-        Route::post('register', [OrganisatorAuthController::class, 'register'])->name('register.submit');
-        Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
-        Route::post('wachtwoord-vergeten', [OrganisatorAuthController::class, 'sendResetLink'])->name('password.email');
-        Route::get('wachtwoord-reset/{token}', [OrganisatorAuthController::class, 'showResetPassword'])->name('password.reset');
-        Route::post('wachtwoord-reset', [OrganisatorAuthController::class, 'resetPassword'])->name('password.update');
-    });
-
-    // Authenticated routes
-    Route::middleware('auth:organisator')->group(function () {
-        Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
-        // Legacy dashboard route - redirects to new URL structure
-        Route::get('dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->name('dashboard.legacy');
-
-        // Gewichtsklassen presets
-        Route::get('presets', [GewichtsklassenPresetController::class, 'index'])->name('presets.index');
-        Route::post('presets', [GewichtsklassenPresetController::class, 'store'])->name('presets.store');
-        Route::delete('presets/{preset}', [GewichtsklassenPresetController::class, 'destroy'])->name('presets.destroy');
-    });
+// Guest routes (only for users not logged in)
+Route::middleware('guest:organisator')->group(function () {
+    Route::get('registreren', [OrganisatorAuthController::class, 'showRegister'])->name('register');
+    Route::post('registreren', [OrganisatorAuthController::class, 'register'])->name('register.submit');
+    Route::get('wachtwoord-vergeten', [OrganisatorAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('wachtwoord-vergeten', [OrganisatorAuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('wachtwoord-reset/{token}', [OrganisatorAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('wachtwoord-reset', [OrganisatorAuthController::class, 'resetPassword'])->name('password.update');
 });
 
-// New URL structure: /{organisator-slug}/...
+// Authenticated routes
+Route::middleware('auth:organisator')->group(function () {
+    Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
+});
+
+// Legacy auth routes - redirect to new URLs
+Route::prefix('organisator')->name('organisator.legacy.')->group(function () {
+    Route::get('login', fn() => redirect()->route('login'))->name('login');
+    Route::get('register', fn() => redirect()->route('register'))->name('register');
+    Route::get('dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->name('dashboard');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sitebeheerder (superadmin only)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:organisator')->group(function () {
+    Route::get('admin', [ToernooiController::class, 'index'])->name('admin.index');
+    // Legacy redirect
+    Route::get('toernooi', fn() => redirect()->route('admin.index'))->name('toernooi.index.legacy');
+});
+
+// Dashboard - redirect to organisator dashboard (new URL structure)
+Route::get('/dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->middleware('auth:organisator');
+
+/*
+|--------------------------------------------------------------------------
+| Organisator Beheer: /{org}/...
+|--------------------------------------------------------------------------
+*/
 Route::prefix('{organisator}')->middleware('auth:organisator')->group(function () {
+    // Dashboard
     Route::get('dashboard', [ToernooiController::class, 'organisatorDashboard'])->name('organisator.dashboard');
 
     // Club management (organisator level - clubs persist across toernooien)
@@ -82,56 +99,62 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::post('clubs', [ClubController::class, 'storeOrganisator'])->name('organisator.clubs.store');
     Route::put('clubs/{club}', [ClubController::class, 'updateOrganisator'])->name('organisator.clubs.update');
     Route::delete('clubs/{club}', [ClubController::class, 'destroyOrganisator'])->name('organisator.clubs.destroy');
-});
 
-// Dashboard - redirect to organisator dashboard (new URL structure)
-Route::get('/dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->middleware('auth:organisator');
+    // Templates (organisator level)
+    Route::get('templates', [\App\Http\Controllers\ToernooiTemplateController::class, 'index'])->name('organisator.templates.index');
+    Route::delete('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'destroy'])->name('organisator.templates.destroy');
+    Route::get('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'show'])->name('organisator.templates.show');
 
-// Toernooi management - protected routes (require organisator login)
-Route::middleware('auth:organisator')->group(function () {
-    Route::get('toernooi', [ToernooiController::class, 'index'])->name('toernooi.index');
-    Route::get('toernooi/create', [ToernooiController::class, 'create'])->name('toernooi.create');
+    // Gewichtsklassen presets (organisator level)
+    Route::get('presets', [GewichtsklassenPresetController::class, 'index'])->name('organisator.presets.index');
+    Route::post('presets', [GewichtsklassenPresetController::class, 'store'])->name('organisator.presets.store');
+    Route::delete('presets/{preset}', [GewichtsklassenPresetController::class, 'destroy'])->name('organisator.presets.destroy');
+
+    // Toernooi aanmaken
+    Route::get('toernooi/nieuw', [ToernooiController::class, 'create'])->name('toernooi.create');
     Route::post('toernooi', [ToernooiController::class, 'store'])->name('toernooi.store');
-    Route::delete('toernooi/{toernooi}', [ToernooiController::class, 'destroy'])->name('toernooi.destroy');
-
-    // Toernooi Templates
-    Route::get('templates', [\App\Http\Controllers\ToernooiTemplateController::class, 'index'])->name('templates.index');
-    Route::post('toernooi/{toernooi}/template', [\App\Http\Controllers\ToernooiTemplateController::class, 'store'])->name('templates.store');
-    Route::put('templates/{template}/toernooi/{toernooi}', [\App\Http\Controllers\ToernooiTemplateController::class, 'update'])->name('templates.update');
-    Route::delete('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'destroy'])->name('templates.destroy');
-    Route::get('templates/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'show'])->name('templates.show');
 });
 
-// Toernooi management - public routes (accessible via role password)
-Route::get('toernooi/{toernooi}', [ToernooiController::class, 'show'])->name('toernooi.show');
-Route::get('toernooi/{toernooi}/edit', [ToernooiController::class, 'edit'])->name('toernooi.edit');
-Route::put('toernooi/{toernooi}', [ToernooiController::class, 'update'])->name('toernooi.update');
-Route::put('toernooi/{toernooi}/wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('toernooi.wachtwoorden');
-Route::put('toernooi/{toernooi}/bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('toernooi.bloktijden');
-Route::put('toernooi/{toernooi}/betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('toernooi.betalingen.instellingen');
-Route::put('toernooi/{toernooi}/portaal', [ToernooiController::class, 'updatePortaalInstellingen'])->name('toernooi.portaal.instellingen');
-Route::post('toernooi/{toernooi}/heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('toernooi.heropen-voorbereiding');
-
-// Mollie OAuth & Payments
-Route::get('toernooi/{toernooi}/mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
+// Mollie webhooks & callbacks (no auth, called by Mollie)
 Route::get('mollie/callback', [MollieController::class, 'callback'])->name('mollie.callback');
-Route::post('toernooi/{toernooi}/mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
 Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
 Route::post('mollie/webhook/toernooi', [MollieController::class, 'webhookToernooi'])->name('mollie.webhook.toernooi');
 Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
 Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
 
-// Toernooi upgrade routes (freemium)
-Route::middleware('auth:organisator')->prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
+/*
+|--------------------------------------------------------------------------
+| Toernooi Beheer: /{org}/toernooi/{toernooi}/...
+| Auth: Organisator login vereist
+|--------------------------------------------------------------------------
+*/
+Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator')->name('toernooi.')->group(function () {
+    // Toernooi basis routes
+    Route::get('/', [ToernooiController::class, 'show'])->name('show');
+    Route::get('edit', [ToernooiController::class, 'edit'])->name('edit');
+    Route::put('/', [ToernooiController::class, 'update'])->name('update');
+    Route::delete('/', [ToernooiController::class, 'destroy'])->name('destroy');
+    Route::put('wachtwoorden', [ToernooiController::class, 'updateWachtwoorden'])->name('wachtwoorden');
+    Route::put('bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('bloktijden');
+    Route::put('betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
+    Route::put('portaal', [ToernooiController::class, 'updatePortaalInstellingen'])->name('portaal.instellingen');
+    Route::post('heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('heropen-voorbereiding');
+
+    // Mollie OAuth
+    Route::get('mollie/authorize', [MollieController::class, 'authorize'])->name('mollie.authorize');
+    Route::post('mollie/disconnect', [MollieController::class, 'disconnect'])->name('mollie.disconnect');
+
+    // Upgrade routes (freemium)
     Route::get('upgrade', [ToernooiBetalingController::class, 'showUpgrade'])->name('upgrade');
     Route::post('upgrade/kyc', [ToernooiBetalingController::class, 'saveKyc'])->name('upgrade.kyc');
     Route::post('upgrade', [ToernooiBetalingController::class, 'startPayment'])->name('upgrade.start');
     Route::get('upgrade/succes/{betaling}', [ToernooiBetalingController::class, 'success'])->name('upgrade.succes');
     Route::get('upgrade/geannuleerd', [ToernooiBetalingController::class, 'cancelled'])->name('upgrade.geannuleerd');
-});
 
-// Toernooi sub-routes
-Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
+    // Template opslaan vanuit toernooi
+    Route::post('template', [\App\Http\Controllers\ToernooiTemplateController::class, 'store'])->name('template.store');
+    Route::put('template/{template}', [\App\Http\Controllers\ToernooiTemplateController::class, 'update'])->name('template.update');
+
     // Reset route
     Route::post('reset', [ToernooiController::class, 'reset'])->name('reset');
 
@@ -140,14 +163,14 @@ Route::prefix('toernooi/{toernooi}')->name('toernooi.')->group(function () {
     Route::post('afsluiten', [ToernooiController::class, 'bevestigAfsluiten'])->name('afsluiten.bevestig');
     Route::post('heropenen', [ToernooiController::class, 'heropenen'])->name('heropenen');
 
-    // Auth routes (public) - redirects naar organisator login
-    Route::get('login', fn() => redirect()->route('organisator.login'))->name('auth.login');
-    Route::post('login', fn() => redirect()->route('organisator.login')
+    // Auth routes (public) - redirects naar login
+    Route::get('login', fn() => redirect()->route('login'))->name('auth.login');
+    Route::post('login', fn() => redirect()->route('login')
         ->with('info', 'Gebruik je persoonlijke toegangslink of log in als organisator.'))->name('auth.login.post');
     Route::post('logout', function (\Illuminate\Http\Request $request, \App\Models\Toernooi $toernooi) {
         $request->session()->forget("toernooi_{$toernooi->id}_rol");
         $request->session()->forget("toernooi_{$toernooi->id}_mat");
-        return redirect()->route('organisator.login')->with('success', 'Je bent uitgelogd');
+        return redirect()->route('login')->with('success', 'Je bent uitgelogd');
     })->name('auth.logout');
 
     // Device Toegang Beheer API routes (Vrijwilligers)
@@ -435,30 +458,34 @@ Route::middleware('rol.sessie')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Public Pages (no authentication required)
+| Public Pages: /{org}/{toernooi}/...
+| No authentication required - vrij toegankelijk voor bezoekers
 | IMPORTANT: These routes must be LAST to avoid conflicts with other routes
 |--------------------------------------------------------------------------
 */
-// Short public URL: /toernooi-naam
-// Note: zoeken and favorieten must come BEFORE the single slug route
-Route::get('/publiek/{toernooi}/zoeken', [PubliekController::class, 'zoeken'])
-    ->name('publiek.zoeken');
+Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
+    // Main public page (PWA)
+    Route::get('/', [PubliekController::class, 'index'])->name('index');
 
-Route::post('/publiek/{toernooi}/scan-qr', [PubliekController::class, 'scanQR'])
-    ->name('publiek.scan-qr');
+    // API routes for public page
+    Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
+    Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
+    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
+    Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
+    Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
+})
+->where('organisator', '^(?!admin|login|logout|registreren|weegkaart|coach-kaart|mollie|betaling|help|dashboard).*$')
+->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');
 
-Route::post('/publiek/{toernooi}/weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])
-    ->name('publiek.weging.registreer');
+// Legacy public routes - redirect to new URL structure
+Route::get('/publiek/{toernooi}/zoeken', fn($toernooi) => redirect()->route('publiek.index', [
+    'organisator' => $toernooi->organisator->slug ?? 'unknown',
+    'toernooi' => $toernooi->slug
+]))->name('publiek.zoeken.legacy');
 
-Route::post('/publiek/{toernooi}/favorieten', [PubliekController::class, 'favorieten'])
-    ->name('publiek.favorieten');
-
-Route::get('/publiek/{toernooi}/manifest.json', [PubliekController::class, 'manifest'])
-    ->name('publiek.manifest');
-
-Route::get('/publiek/{toernooi}/uitslagen.csv', [PubliekController::class, 'exportUitslagen'])
-    ->name('publiek.export-uitslagen');
-
-Route::get('/{toernooi}', [PubliekController::class, 'index'])
-    ->name('publiek.index')
-    ->where('toernooi', '^(?!admin|login|logout|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek).*$');
+Route::get('/{toernooi}', fn($toernooi) => redirect()->route('publiek.index', [
+    'organisator' => $toernooi->organisator->slug ?? 'unknown',
+    'toernooi' => $toernooi->slug
+]))
+->name('publiek.index.legacy')
+->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard).*$');

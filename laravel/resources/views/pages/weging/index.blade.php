@@ -18,7 +18,7 @@
             <span class="text-orange-600">{{ $nietGewogen }} niet gewogen</span>
         </p>
     </div>
-    <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+    <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
         ⚖️ Weging Interface
     </a>
 </div>

@@ -71,11 +71,11 @@ class BlokController extends Controller
                 // Check if there's an error (e.g., 25% limit exceeded)
                 if (isset($result['error'])) {
                     return redirect()
-                        ->route('toernooi.blok.index', $toernooi)
+                        ->route('toernooi.blok.index', $toernooi->routeParams())
                         ->with('error', $result['error']);
                 }
                 return redirect()
-                    ->route('toernooi.blok.index', $toernooi)
+                    ->route('toernooi.blok.index', $toernooi->routeParams())
                     ->with('info', $result['message'] ?? 'Geen varianten gegenereerd');
             }
 
@@ -94,7 +94,7 @@ class BlokController extends Controller
         } catch (\Exception $e) {
             \Log::error('genereerVerdeling failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return redirect()
-                ->route('toernooi.blok.index', $toernooi)
+                ->route('toernooi.blok.index', $toernooi->routeParams())
                 ->with('error', 'Verdeling mislukt: ' . $e->getMessage());
         }
     }
@@ -117,7 +117,7 @@ class BlokController extends Controller
                     return response()->json(['success' => false, 'error' => 'Variant niet gevonden'], 404);
                 }
                 return redirect()
-                    ->route('toernooi.blok.index', $toernooi)
+                    ->route('toernooi.blok.index', $toernooi->routeParams())
                     ->with('error', 'Variant niet gevonden');
             }
 
@@ -135,7 +135,7 @@ class BlokController extends Controller
             }
 
             return redirect()
-                ->route('toernooi.blok.index', $toernooi)
+                ->route('toernooi.blok.index', $toernooi->routeParams())
                 ->with('success', 'Variant ' . ($variantIndex + 1) . ' toegepast');
 
         } catch (\Exception $e) {
@@ -144,7 +144,7 @@ class BlokController extends Controller
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
             }
             return redirect()
-                ->route('toernooi.blok.index', $toernooi)
+                ->route('toernooi.blok.index', $toernooi->routeParams())
                 ->with('error', 'Variant toepassen mislukt: ' . $e->getMessage());
         }
     }
@@ -175,7 +175,7 @@ class BlokController extends Controller
                     return response()->json(['success' => false, 'message' => $message]);
                 }
                 return redirect()
-                    ->route('toernooi.blok.index', $toernooi)
+                    ->route('toernooi.blok.index', $toernooi->routeParams())
                     ->with('info', $message);
             }
 
@@ -195,7 +195,7 @@ class BlokController extends Controller
             }
 
             return redirect()
-                ->route('toernooi.blok.index', $toernooi)
+                ->route('toernooi.blok.index', $toernooi->routeParams())
                 ->with('success', "Verdeling toegepast: {$result['stats']['gebruikte_blokken']} blokken gebruikt");
 
         } catch (\Exception $e) {
@@ -204,7 +204,7 @@ class BlokController extends Controller
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
             }
             return redirect()
-                ->route('toernooi.blok.index', $toernooi)
+                ->route('toernooi.blok.index', $toernooi->routeParams())
                 ->with('error', 'Verdeling mislukt: ' . $e->getMessage());
         }
     }
@@ -262,7 +262,7 @@ class BlokController extends Controller
         $this->verdelingService->verdeelOverMatten($toernooi);
 
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', 'Poules verdeeld over matten. Controleer en pas aan indien nodig, klik dan "Maak weegkaarten".');
     }
 
@@ -271,7 +271,7 @@ class BlokController extends Controller
         $blok->sluitWeging();
 
         return redirect()
-            ->route('toernooi.weging.interface', $toernooi)
+            ->route('toernooi.weging.interface', $toernooi->routeParams())
             ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");
     }
 
@@ -295,7 +295,7 @@ class BlokController extends Controller
         $poulesZonderMat = $toernooi->poules()->whereNull('mat_id')->count();
         if ($poulesZonderMat > 0) {
             return redirect()
-                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
                 ->with('error', "Nog {$poulesZonderMat} poules zonder mat. Wijs eerst alle poules aan een mat toe.");
         }
 
@@ -303,7 +303,7 @@ class BlokController extends Controller
         $toernooi->update(['weegkaarten_gemaakt_op' => now()]);
 
         // No flash message needed - indicator next to title is sufficient
-        return redirect()->route('toernooi.blok.zaaloverzicht', $toernooi);
+        return redirect()->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams());
     }
 
     /**
@@ -342,7 +342,7 @@ class BlokController extends Controller
 
         if (!empty($errors)) {
             return redirect()
-                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
                 ->with('error', 'Voorbereiding niet compleet: ' . implode(', ', $errors));
         }
 
@@ -394,7 +394,7 @@ class BlokController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', $message);
     }
 
@@ -449,7 +449,7 @@ class BlokController extends Controller
         // Stay on zaaloverzicht (chip turns green to indicate activation)
         $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poules';
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} geactiveerd - {$typeLabel}" .
                 ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden)" : ""));
     }
@@ -493,7 +493,7 @@ class BlokController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', "✓ {$leeftijdsklasse} {$gewichtsklasse} gereset - {$totaalVerwijderd} wedstrijden verwijderd, klaar voor nieuwe ronde");
     }
 
@@ -511,7 +511,7 @@ class BlokController extends Controller
         // Verify poule belongs to this tournament
         if ($poule->toernooi_id !== $toernooi->id) {
             return redirect()
-                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
                 ->with('error', 'Poule niet gevonden');
         }
 
@@ -540,7 +540,7 @@ class BlokController extends Controller
 
         $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poule';
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', "✓ {$poule->titel} geactiveerd - {$typeLabel}" .
                 ($totaalWedstrijden > 0 ? " ({$totaalWedstrijden} wedstrijden)" : ""));
     }
@@ -559,7 +559,7 @@ class BlokController extends Controller
         // Verify poule belongs to this tournament
         if ($poule->toernooi_id !== $toernooi->id) {
             return redirect()
-                ->route('toernooi.blok.zaaloverzicht', $toernooi)
+                ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
                 ->with('error', 'Poule niet gevonden');
         }
 
@@ -574,7 +574,7 @@ class BlokController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.blok.zaaloverzicht', $toernooi)
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
             ->with('success', "✓ Poule {$poule->nummer} gereset - {$verwijderd} wedstrijden verwijderd");
     }
 
@@ -602,7 +602,7 @@ class BlokController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.edit', $toernooi)
+            ->route('toernooi.edit', $toernooi->routeParams())
             ->with('success', "💥 ALLES GERESET - {$totaalVerwijderd} wedstrijden verwijderd, alle matten leeg, klaar voor nieuwe ronde!");
     }
 

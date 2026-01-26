@@ -13,7 +13,7 @@
             <p class="text-gray-600">Nieuw wachtwoord instellen</p>
         </div>
 
-        <form action="{{ route('organisator.password.update') }}" method="POST">
+        <form action="{{ route('password.update') }}" method="POST">
             @csrf
 
             <input type="hidden" name="token" value="{{ $token }}">

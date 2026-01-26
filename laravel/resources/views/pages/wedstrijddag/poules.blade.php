@@ -720,10 +720,10 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
-const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
-const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
-const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
+const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['format' => ':id'])) }}';
 
 async function updateKruisfinale(pouleId, plaatsen) {
     try {

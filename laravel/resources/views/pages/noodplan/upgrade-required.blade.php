@@ -59,10 +59,10 @@
         </ul>
 
         <div class="flex justify-center space-x-4">
-            <a href="{{ route('toernooi.upgrade', $toernooi) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+            <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
                 Upgrade Nu
             </a>
-            <a href="{{ route('toernooi.show', $toernooi) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
+            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
                 Terug naar Dashboard
             </a>
         </div>

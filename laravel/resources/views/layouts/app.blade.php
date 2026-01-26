@@ -64,20 +64,20 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
-                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi) : route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
+                    <a href="{{ isset($toernooi) ? route('toernooi.show', $toernooi->routeParams()) : route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-xl font-bold">{{ isset($toernooi) ? $toernooi->naam : 'Judo Toernooi' }}</a>
                     @if(isset($toernooi))
                     @php
                         $currentRoute = Route::currentRouteName();
                     @endphp
                     <div class="hidden md:flex space-x-4">
-                        <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Judoka's</a>
-                        <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Poules</a>
-                        <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.index' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Blokken</a>
-                        <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.weging') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Weging</a>
-                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.wedstrijddag') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Wedstrijddag</a>
-                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.zaaloverzicht' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Zaaloverzicht</a>
-                        <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.mat') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Matten</a>
-                        <a href="{{ route('toernooi.spreker.interface', $toernooi) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.spreker') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Spreker</a>
+                        <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Judoka's</a>
+                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Poules</a>
+                        <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.index' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Blokken</a>
+                        <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.weging') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Weging</a>
+                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.wedstrijddag') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Wedstrijddag</a>
+                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.zaaloverzicht' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Zaaloverzicht</a>
+                        <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.mat') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Matten</a>
+                        <a href="{{ route('toernooi.spreker.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.spreker') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Spreker</a>
                     </div>
                     @endif
                 </div>
@@ -98,12 +98,12 @@
                         </button>
                         <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
-                            <a href="{{ route('toernooi.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Alle Toernooien</a>
+                            <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Alle Toernooien</a>
                             @endif
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mijn Toernooien</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding ↗</a>
                             <hr class="my-1">
-                            <form action="{{ route('organisator.logout') }}" method="POST">
+                            <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Uitloggen</button>
                             </form>
@@ -121,15 +121,15 @@
                             @case('spreker') 🎙️ Spreker @break
                         @endswitch
                     </span>
-                    <form action="{{ route('toernooi.auth.logout', $toernooi) }}" method="POST" class="inline">
+                    <form action="{{ route('toernooi.auth.logout', $toernooi->routeParams()) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
                     </form>
                     @else
                     @if(isset($toernooi) && !app()->environment('production'))
-                    <a href="{{ route('toernooi.auth.login', $toernooi) }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    <a href="{{ route('toernooi.auth.login', $toernooi->routeParams()) }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
                     @elseif(!Auth::guard('organisator')->check())
-                    <a href="{{ route('organisator.login') }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    <a href="{{ route('login') }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
                     @endif
                     @endif
                 </div>
@@ -250,7 +250,7 @@
     <script>
         (function() {
             const originalFetch = window.fetch;
-            const loginUrl = '{{ route("organisator.login") }}';
+            const loginUrl = '{{ route("login") }}';
             window.fetch = async function(...args) {
                 const response = await originalFetch.apply(this, args);
                 // 401 = Unauthorized, 419 = Session Expired (CSRF)

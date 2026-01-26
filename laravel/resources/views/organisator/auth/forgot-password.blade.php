@@ -23,7 +23,7 @@
         </div>
         @endif
 
-        <form action="{{ route('organisator.password.email') }}" method="POST">
+        <form action="{{ route('password.email') }}" method="POST">
             @csrf
 
             <div class="mb-6">
@@ -49,7 +49,7 @@
         </form>
 
         <div class="mt-6 text-center">
-            <a href="{{ route('organisator.login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
+            <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
                 Terug naar inloggen
             </a>
         </div>

@@ -94,7 +94,7 @@
 
     <div class="flex justify-between items-center">
         @php
-            $terugUrl = route('toernooi.judoka.index', $toernooi);
+            $terugUrl = route('toernooi.judoka.index', $toernooi->routeParams());
             if (request('filter') === 'onvolledig') {
                 $terugUrl .= '#onvolledig';
             }
@@ -109,7 +109,7 @@
                 Weegkaart
             </a>
             @endif
-            <a href="{{ route('toernooi.judoka.edit', [$toernooi, $judoka]) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            <a href="{{ route('toernooi.judoka.edit', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
                 Bewerken
             </a>
         </div>

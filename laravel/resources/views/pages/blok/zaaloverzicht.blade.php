@@ -14,7 +14,7 @@
     </div>
     <div class="flex items-center gap-4">
         @if(!$toernooi->voorbereiding_klaar_op)
-        <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi) }}" method="POST" class="inline">
+        <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                     onclick="return confirm('Voorbereiding afronden?\n\nDit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.')">
@@ -22,10 +22,10 @@
             </button>
         </form>
         @endif
-        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="text-blue-600 hover:underline">
+        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
         </a>
-        <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-blue-600 hover:underline">
+        <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             ← Terug naar Blokkenverdeling
         </a>
     </div>
@@ -145,11 +145,11 @@
                     ✓ {{ $chipNaam }} ▾
                 </button>
                 <div x-show="dropdown" @click.away="dropdown = false" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
-                    <a href="{{ route('toernooi.mat.interface', ['toernooi' => $toernooi, 'blok' => $blok['nummer']]) }}"
+                    <a href="{{ route('toernooi.mat.interface', $toernooi->routeParamsWith(['blok' => $blok['nummer']])) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         🖥️ Mat Interface
                     </a>
-                    <form action="{{ route('toernooi.blok.reset-poule', $toernooi) }}" method="POST">
+                    <form action="{{ route('toernooi.blok.reset-poule', $toernooi->routeParams()) }}" method="POST">
                         @csrf
                         <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                         <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -161,7 +161,7 @@
             </div>
             @elseif($isSent)
             {{-- Wit: klaar voor activatie, klik genereert wedstrijdschema --}}
-            <form action="{{ route('toernooi.blok.activeer-poule', $toernooi) }}" method="POST" class="inline">
+            <form action="{{ route('toernooi.blok.activeer-poule', $toernooi->routeParams()) }}" method="POST" class="inline">
                 @csrf
                 <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                 <button type="submit" class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80">
@@ -170,7 +170,7 @@
             </form>
             @else
             {{-- Grijs: wacht op doorsturen, link naar wedstrijddag --}}
-            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}"
+            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}"
                class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
             >
                 {{ $chipNaam }}
@@ -227,7 +227,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi) }}';
+const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi->routeParams()) }}';
 
 document.querySelectorAll('.mat-container').forEach(container => {
     new Sortable(container, {

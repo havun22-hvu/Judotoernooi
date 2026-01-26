@@ -26,7 +26,7 @@
                class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
                 Preview
             </a>
-            <a href="{{ route('toernooi.edit', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
                 &larr; Terug naar Instellingen
             </a>
         </div>

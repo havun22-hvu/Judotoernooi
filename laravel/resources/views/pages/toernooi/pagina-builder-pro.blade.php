@@ -98,7 +98,7 @@
     <!-- Top Toolbar -->
     <div class="bg-white border-b px-4 py-2 flex items-center justify-between shadow-sm z-20">
         <div class="flex items-center gap-4">
-            <a href="{{ route('toernooi.edit', $toernooi) }}" class="text-gray-500 hover:text-gray-700">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}" class="text-gray-500 hover:text-gray-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>

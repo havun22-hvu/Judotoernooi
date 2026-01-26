@@ -22,10 +22,10 @@
             <p class="text-gray-600 mt-3">De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.</p>
             <p class="text-gray-700 font-medium mt-4">Gebruik op de wedstrijddag:</p>
             <div class="flex flex-col gap-2 mt-3">
-                <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
                     Wedstrijddag Poules
                 </a>
-                <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
                     Zaaloverzicht
                 </a>
             </div>
@@ -212,7 +212,7 @@
     <div class="flex items-center gap-2">
         @if($heeftVariabeleCategorieen)
         {{-- Variabele categorieën: simpele verdeling --}}
-        <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi) }}" method="POST" class="inline">
+        <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                 Verdeel variabel
@@ -220,7 +220,7 @@
         </form>
         @else
         {{-- Vaste categorieën: solver met balans slider --}}
-        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline flex items-center gap-2" id="bereken-form">
+        <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline flex items-center gap-2" id="bereken-form">
             @csrf
             <input type="hidden" name="balans" id="balans-input" value="{{ session('blok_balans', 50) }}">
             <div class="flex items-center gap-2 text-xs bg-gray-100 px-3 py-1.5 rounded">
@@ -242,7 +242,7 @@
             </button>
         </form>
         @endif
-        <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi) }}" method="POST" class="inline" id="zet-op-mat-form">
+        <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi->routeParams()) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="Verdeel poules over matten en ga naar zaaloverzicht">
                 Verdeel over matten →
@@ -356,7 +356,7 @@
                 <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
                     ✓ Toepassen
                 </button>
-                <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+                <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
             </div>
             @endif
 
@@ -492,7 +492,7 @@ function updateBalansSlider(value) {
 
 function updateGewenst(input) {
     const blokId = input.dataset.blokId;
-    fetch('{{ route('toernooi.blok.update-gewenst', $toernooi) }}', {
+    fetch('{{ route('toernooi.blok.update-gewenst', $toernooi->routeParams()) }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ blok_id: blokId, gewenst: input.value || null })
@@ -514,7 +514,7 @@ function pasVariantToe() {
         }
     });
 
-    fetch('{{ route('toernooi.blok.kies-variant', $toernooi) }}', {
+    fetch('{{ route('toernooi.blok.kies-variant', $toernooi->routeParams()) }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
         body: JSON.stringify({ toewijzingen: toewijzingen })
@@ -585,7 +585,7 @@ document.getElementById('zet-op-mat-form')?.addEventListener('submit', function(
     if (variantenData && variantenData[huidigeVariant]) {
         e.preventDefault();
         // Apply variant to DB then submit
-        fetch('{{ route('toernooi.blok.kies-variant', $toernooi) }}', {
+        fetch('{{ route('toernooi.blok.kies-variant', $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             body: JSON.stringify({ variant: huidigeVariant })
@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Save to server (vast: false for drag, true only when pinned)
-            fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi) }}', {
+            fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi->routeParams()) }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                 body: JSON.stringify({ key: draggedChip.dataset.key, blok: blok, vast: false })
@@ -935,7 +935,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Save to server
-        fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi) }}', {
+        fetch('{{ route('toernooi.blok.verplaats-categorie', $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             body: JSON.stringify({ key: chip.dataset.key, blok: blokZone.dataset.blok, vast: newVast })

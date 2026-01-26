@@ -195,7 +195,7 @@ class PouleController extends Controller
         }
 
         if (!empty($errors)) {
-            return redirect()->route('toernooi.edit', $toernooi)
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('error', 'Kan geen poule-indeling genereren: ' . implode(' ', $errors) . ' Pas eerst de categorie-instellingen aan.');
         }
 
@@ -205,7 +205,7 @@ class PouleController extends Controller
         $message = "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, " .
                    "{$statistieken['totaal_wedstrijden']} wedstrijden.";
 
-        $redirect = redirect()->route('toernooi.poule.index', $toernooi);
+        $redirect = redirect()->route('toernooi.poule.index', $toernooi->routeParams());
 
         // Check for warnings about elimination participant counts
         $waarschuwingen = $statistieken['waarschuwingen'] ?? [];

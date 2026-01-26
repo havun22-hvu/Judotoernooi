@@ -163,7 +163,7 @@
                     {{ $toernooi->updated_at?->diffForHumans() ?? '-' }}
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
-                    <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
+                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
                     <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>
@@ -223,7 +223,7 @@
                 <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->poules_count }}</td>
                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->updated_at?->diffForHumans() ?? '-' }}</td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
-                    <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
+                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
                     <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>

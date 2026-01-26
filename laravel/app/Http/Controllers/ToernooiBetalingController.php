@@ -25,7 +25,7 @@ class ToernooiBetalingController extends Controller
     {
         // Already paid - redirect to toernooi
         if ($toernooi->isPaidTier()) {
-            return redirect()->route('toernooi.show', $toernooi)
+            return redirect()->route('toernooi.show', $toernooi->routeParams())
                 ->with('info', 'Dit toernooi heeft al een betaald abonnement.');
         }
 
@@ -68,7 +68,7 @@ class ToernooiBetalingController extends Controller
         $organisator->update($validated);
         $organisator->markKycCompleet();
 
-        return redirect()->route('toernooi.upgrade', $toernooi)
+        return redirect()->route('toernooi.upgrade', $toernooi->routeParams())
             ->with('success', 'Facturatiegegevens opgeslagen. Je kunt nu een staffel kiezen.');
     }
 
@@ -81,7 +81,7 @@ class ToernooiBetalingController extends Controller
 
         // KYC must be complete before payment
         if (!$organisator->isKycCompleet()) {
-            return redirect()->route('toernooi.upgrade', $toernooi)
+            return redirect()->route('toernooi.upgrade', $toernooi->routeParams())
                 ->with('error', 'Vul eerst je facturatiegegevens in voordat je kunt betalen.');
         }
 
@@ -195,7 +195,7 @@ class ToernooiBetalingController extends Controller
      */
     public function cancelled(Toernooi $toernooi): RedirectResponse
     {
-        return redirect()->route('toernooi.upgrade', $toernooi)
+        return redirect()->route('toernooi.upgrade', $toernooi->routeParams())
             ->with('warning', 'Betaling geannuleerd. Je kunt het opnieuw proberen.');
     }
 }

@@ -13,7 +13,7 @@
 <div class="max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Toernooi Afsluiten</h1>
-        <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:underline">
+        <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             ← Terug naar overzicht
         </a>
     </div>
@@ -108,7 +108,7 @@
         @endif
 
         @if($magAfsluiten)
-        <form action="{{ route('toernooi.heropenen', $toernooi) }}" method="POST" class="mt-4">
+        <form action="{{ route('toernooi.heropenen', $toernooi->routeParams()) }}" method="POST" class="mt-4">
             @csrf
             <button type="submit"
                     onclick="return confirm('Weet je zeker dat je het toernooi wilt heropenen?')"
@@ -292,7 +292,7 @@
                 Door het toernooi af te sluiten wordt het in alleen-lezen modus gezet.
                 Je ontvangt automatisch een herinnering 3 maanden voor de datum van volgend jaar.
             </p>
-            <form action="{{ route('toernooi.afsluiten.bevestig', $toernooi) }}" method="POST">
+            <form action="{{ route('toernooi.afsluiten.bevestig', $toernooi->routeParams()) }}" method="POST">
                 @csrf
                 <button type="submit"
                         onclick="return confirm('Weet je zeker dat je dit toernooi wilt afsluiten?\n\nJe kunt het later nog heropenen indien nodig.')"

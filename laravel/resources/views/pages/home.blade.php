@@ -17,7 +17,7 @@
     <header class="absolute top-0 left-0 right-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
             <div class="text-white font-bold text-xl">JudoToernooi</div>
-            <a href="{{ route('organisator.login') }}" class="text-white hover:text-blue-200 transition">
+            <a href="{{ route('login') }}" class="text-white hover:text-blue-200 transition">
                 Inloggen
             </a>
         </div>
@@ -40,11 +40,11 @@
 
         <!-- CTA Buttons -->
         <div class="flex flex-col sm:flex-row gap-4 mb-16">
-            <a href="{{ route('organisator.login') }}"
+            <a href="{{ route('login') }}"
                class="bg-white text-blue-800 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition shadow-lg">
                 Inloggen als Organisator
             </a>
-            <a href="{{ route('organisator.register') }}"
+            <a href="{{ route('register') }}"
                class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition">
                 Account Aanmaken
             </a>

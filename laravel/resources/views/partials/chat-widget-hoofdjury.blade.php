@@ -175,7 +175,7 @@
         type: 'hoofdjury',
         id: null,
         toernooiId: {{ $toernooiId ?? 'null' }},
-        apiBase: '{{ route('toernooi.chat.index', $toernooi) }}'
+        apiBase: '{{ route('toernooi.chat.index', $toernooi->routeParams()) }}'
     };
 
     let chatOpen = false;

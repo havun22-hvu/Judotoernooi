@@ -72,7 +72,7 @@
         <h1 class="text-2xl font-bold text-gray-800">Import Preview</h1>
         <p class="text-gray-600">Controleer de kolom toewijzing voordat je importeert</p>
     </div>
-    <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
+    <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
         ← Ander bestand
     </a>
 </div>
@@ -82,7 +82,7 @@
     <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded">
         <p class="text-red-800 font-medium">⚠️ Configuratiefout: de volgende categorieën hebben Δkg=0 maar geen gewichtsklassen ingevuld:</p>
         <p class="text-red-700 mt-1">{{ implode(', ', $foutiefGeconfigureerdeCategorieen) }}</p>
-        <p class="text-red-600 text-sm mt-2">Ga naar <a href="{{ route('toernooi.edit', $toernooi) }}#categorieën" class="underline font-medium">toernooi instellingen</a> om dit te corrigeren.</p>
+        <p class="text-red-600 text-sm mt-2">Ga naar <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#categorieën" class="underline font-medium">toernooi instellingen</a> om dit te corrigeren.</p>
     </div>
 @endif
 
@@ -97,7 +97,7 @@
     </div>
 @endif
 
-    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi) }}" method="POST" id="import-form" data-loading="Judoka's importeren...">
+    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi->routeParams()) }}" method="POST" id="import-form" data-loading="Judoka's importeren...">
         @csrf
 
         {{-- Kolom Mapping Tabel --}}

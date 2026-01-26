@@ -10,7 +10,7 @@
             <p class="text-gray-600">{{ $toernooi->datum->format('d-m-Y') }}{{ $toernooi->organisatie ? ' - ' . $toernooi->organisatie : '' }}</p>
         </div>
         <div class="flex items-center space-x-2">
-            <a href="{{ route('toernooi.edit', $toernooi) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -92,16 +92,16 @@
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">Voorbereiding</h2>
         <div class="space-y-3">
-            <a href="{{ route('toernooi.edit', $toernooi) }}" class="block bg-gray-100 hover:bg-gray-200 p-3 rounded">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}" class="block bg-gray-100 hover:bg-gray-200 p-3 rounded">
                 ⚙️ Toernooi Instellingen
             </a>
-            <a href="{{ route('toernooi.club.index', $toernooi) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
+            <a href="{{ route('toernooi.club.index', $toernooi->routeParams()) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
                 🏢 Clubs & Uitnodigingen
             </a>
-            <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
+            <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
                 📥 Deelnemers Importeren
             </a>
-            <a href="{{ route('toernooi.judoka.index', $toernooi) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
+            <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}" class="block bg-blue-100 hover:bg-blue-200 p-3 rounded">
                 👥 Deelnemerslijst ({{ $statistieken['totaal_judokas'] }})
             </a>
             @if($statistieken['totaal_judokas'] > 0)
@@ -122,7 +122,7 @@
                     </p>
                 </div>
                 @else
-                <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST">
+                <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST">
                     @csrf
                     <button type="submit" class="w-full text-left bg-green-100 hover:bg-green-200 p-3 rounded">
                         🎯 Genereer Poule-indeling
@@ -137,17 +137,17 @@
         <h2 class="text-xl font-bold mb-4">Blok/Mat Indeling</h2>
         <div class="space-y-3">
             @if($statistieken['totaal_poules'] > 0)
-            <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi) }}" method="POST" class="inline">
+            <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline">
                 @csrf
                 <button type="submit" class="w-full text-left bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
                     📋 Genereer Blok/Mat Verdeling
                 </button>
             </form>
             @endif
-            <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
+            <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
                 🏟️ Zaaloverzicht
             </a>
-            <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
+            <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
                 ⏱️ Blokken Beheer
             </a>
         </div>
@@ -158,13 +158,13 @@
     <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-bold mb-4">Toernooidag</h2>
         <div class="space-y-3">
-            <a href="{{ route('toernooi.weging.interface', $toernooi) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
+            <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
                 ⚖️ Weging Interface
             </a>
-            <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
+            <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
                 🥋 Mat Interface
             </a>
-            <a href="{{ route('toernooi.afsluiten', $toernooi) }}"
+            <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
                class="block {{ $toernooi->isAfgesloten() ? 'bg-green-100 hover:bg-green-200' : 'bg-red-100 hover:bg-red-200' }} p-3 rounded">
                 {{ $toernooi->isAfgesloten() ? '🏆 Afgesloten - Bekijk Resultaten' : '🔒 Toernooi Afsluiten' }}
             </a>

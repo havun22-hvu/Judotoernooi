@@ -26,7 +26,8 @@ docs/
 - [Gebruikershandleiding](./2-FEATURES/GEBRUIKERSHANDLEIDING.md) - Handleiding
 - [Import](./2-FEATURES/IMPORT.md) - CSV/Excel import met warnings
 - [Classificatie & Poule Indeling](./2-FEATURES/CLASSIFICATIE.md) - Algoritme voor poule-indeling
-- [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie (Connect + Platform)
+- [Freemium Model](./2-FEATURES/FREEMIUM.md) - Gratis tier, betaalde staffels, upgrade flow
+- [Betalingen](./2-FEATURES/BETALINGEN.md) - Mollie integratie voor inschrijfgeld
 - [Blokverdeling](./2-FEATURES/BLOKVERDELING.md) - Categorieën → blokken
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
 - [Chat](./2-FEATURES/CHAT.md) - Realtime chat met Laravel Reverb
@@ -37,6 +38,7 @@ docs/
   - [Test Matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md)
 
 ### 3. Technical
+- [URL Structuur](./URL-STRUCTUUR.md) - Routes en authenticatie schema
 - [API Documentatie](./3-TECHNICAL/API.md) - REST endpoints
 - [Database Schema](./3-TECHNICAL/DATABASE.md) - Tabelstructuur
 - [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info

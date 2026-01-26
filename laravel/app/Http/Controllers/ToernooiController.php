@@ -49,31 +49,30 @@ class ToernooiController extends Controller
         return view('pages.toernooi.index', compact('organisatoren', 'toernooienZonderOrganisator'));
     }
 
-    public function create(): View
+    public function create(Organisator $organisator): View
     {
-        $organisator = auth('organisator')->user();
-        $templates = $organisator ? $organisator->toernooiTemplates()->orderBy('naam')->get() : collect();
+        $templates = $organisator->toernooiTemplates()->orderBy('naam')->get();
 
-        return view('pages.toernooi.create', compact('templates'));
+        return view('pages.toernooi.create', compact('organisator', 'templates'));
     }
 
-    public function store(ToernooiRequest $request): RedirectResponse
+    public function store(Organisator $organisator, ToernooiRequest $request): RedirectResponse
     {
         $toernooi = $this->toernooiService->initialiseerToernooi($request->validated());
 
         return redirect()
-            ->route('toernooi.show', $toernooi)
+            ->route('toernooi.show', $toernooi->routeParams())
             ->with('success', 'Toernooi succesvol aangemaakt');
     }
 
-    public function show(Toernooi $toernooi): View
+    public function show(Organisator $organisator, Toernooi $toernooi): View
     {
         $statistieken = $this->toernooiService->getStatistieken($toernooi);
 
         return view('pages.toernooi.show', compact('toernooi', 'statistieken'));
     }
 
-    public function edit(Toernooi $toernooi): View
+    public function edit(Organisator $organisator, Toernooi $toernooi): View
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
 
@@ -87,7 +86,7 @@ class ToernooiController extends Controller
         return view('pages.toernooi.edit', compact('toernooi', 'blokken', 'overlapWarning'));
     }
 
-    public function update(ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
+    public function update(Organisator $organisator, ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
     {
         $data = $request->validated();
 
@@ -197,7 +196,7 @@ class ToernooiController extends Controller
             ]);
         }
 
-        $redirect = redirect()->route('toernooi.edit', $toernooi);
+        $redirect = redirect()->route('toernooi.edit', $toernooi->routeParams());
 
         if ($overlapWarning) {
             return $redirect->with('warning', $overlapWarning);
@@ -206,14 +205,14 @@ class ToernooiController extends Controller
         return $redirect->with('success', 'Toernooi bijgewerkt');
     }
 
-    public function destroy(Request $request, Toernooi $toernooi): RedirectResponse
+    public function destroy(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
-        $organisator = auth('organisator')->user();
+        $loggedIn = auth('organisator')->user();
 
         // Eigenaar of sitebeheerder mag verwijderen
-        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->ownsToernooi($toernooi))) {
+        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->ownsToernooi($toernooi))) {
             return redirect()
-                ->route('organisator.dashboard', ['organisator' => $organisator->slug])
+                ->route('organisator.dashboard', $organisator)
                 ->with('error', 'Je hebt geen rechten om dit toernooi te verwijderen');
         }
 
@@ -231,7 +230,7 @@ class ToernooiController extends Controller
 
         // Presets alleen verwijderen als gebruiker dat wil
         if (!$bewaarPresets) {
-            \App\Models\GewichtsklassenPreset::where('organisator_id', $organisator->id)->delete();
+            \App\Models\GewichtsklassenPreset::where('organisator_id', $loggedIn->id)->delete();
         }
 
         $toernooi->delete();
@@ -242,17 +241,19 @@ class ToernooiController extends Controller
         }
 
         // Sitebeheerder terug naar overzicht, organisator naar dashboard
-        $route = $organisator->isSitebeheerder() ? 'toernooi.index' : 'organisator.dashboard';
+        if ($loggedIn->isSitebeheerder()) {
+            return redirect()->route('admin.index')->with('success', $message);
+        }
 
         return redirect()
-            ->route($route)
+            ->route('organisator.dashboard', $organisator)
             ->with('success', $message);
     }
 
     /**
      * Reset tournament - keeps settings and judokas, clears poules/wedstrijden
      */
-    public function reset(Toernooi $toernooi): RedirectResponse
+    public function reset(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         // Delete wedstrijden and poules
         $pouleIds = $toernooi->poules()->pluck('id');
@@ -289,7 +290,7 @@ class ToernooiController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.show', $toernooi)
+            ->route('toernooi.show', $toernooi->routeParams())
             ->with('success', "Toernooi gereset: {$pouleCount} poules, {$wedstrijdCount} wedstrijden verwijderd. Judoka's behouden.");
     }
 
@@ -341,7 +342,7 @@ class ToernooiController extends Controller
         return view('organisator.dashboard', compact('organisator', 'toernooien'));
     }
 
-    public function updateWachtwoorden(Request $request, Toernooi $toernooi): RedirectResponse
+    public function updateWachtwoorden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $rollen = ['admin', 'jury', 'weging', 'mat', 'spreker'];
         $updated = [];
@@ -356,16 +357,16 @@ class ToernooiController extends Controller
 
         if (empty($updated)) {
             return redirect()
-                ->route('toernooi.edit', $toernooi)
+                ->route('toernooi.edit', $toernooi->routeParams())
                 ->with('info', 'Geen wachtwoorden gewijzigd');
         }
 
         return redirect()
-            ->route('toernooi.edit', $toernooi)
+            ->route('toernooi.edit', $toernooi->routeParams())
             ->with('success', 'Wachtwoorden bijgewerkt voor: ' . implode(', ', $updated));
     }
 
-    public function updateBloktijden(Request $request, Toernooi $toernooi): RedirectResponse
+    public function updateBloktijden(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $bloktijden = $request->input('blokken', []);
 
@@ -381,11 +382,11 @@ class ToernooiController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
             ->with('success', 'Bloktijden bijgewerkt');
     }
 
-    public function updateBetalingInstellingen(Request $request, Toernooi $toernooi): RedirectResponse
+    public function updateBetalingInstellingen(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'betaling_actief' => 'boolean',
@@ -398,11 +399,11 @@ class ToernooiController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
             ->with('success', 'Betalingsinstellingen bijgewerkt');
     }
 
-    public function updatePortaalInstellingen(Request $request, Toernooi $toernooi): RedirectResponse
+    public function updatePortaalInstellingen(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'portaal_modus' => 'required|in:uit,mutaties,volledig',
@@ -413,14 +414,14 @@ class ToernooiController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
             ->with('success', 'Portaalinstellingen bijgewerkt');
     }
 
     /**
      * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
      */
-    public function heropenVoorbereiding(Request $request, Toernooi $toernooi): RedirectResponse
+    public function heropenVoorbereiding(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $request->validate([
             'wachtwoord' => 'required|string',
@@ -429,7 +430,7 @@ class ToernooiController extends Controller
         // Verify password against admin password
         if (!Hash::check($request->wachtwoord, $toernooi->wachtwoord_admin)) {
             return redirect()
-                ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+                ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
                 ->with('error', 'Onjuist wachtwoord. Voorbereiding niet heropend.');
         }
 
@@ -437,14 +438,14 @@ class ToernooiController extends Controller
         $toernooi->update(['weegkaarten_gemaakt_op' => null]);
 
         return redirect()
-            ->route('toernooi.edit', ['toernooi' => $toernooi, 'tab' => 'organisatie'])
+            ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
             ->with('success', '⚠️ Voorbereiding heropend! Vergeet niet om "Maak weegkaarten" opnieuw te klikken na wijzigingen.');
     }
 
     /**
      * Show tournament closing page with statistics
      */
-    public function afsluiten(Toernooi $toernooi): View
+    public function afsluiten(Organisator $organisator, Toernooi $toernooi): View
     {
         $statistieken = $this->getAfsluitStatistieken($toernooi);
         $clubRanking = $this->getClubRanking($toernooi);
@@ -455,19 +456,19 @@ class ToernooiController extends Controller
     /**
      * Confirm closing of tournament
      */
-    public function bevestigAfsluiten(Request $request, Toernooi $toernooi): RedirectResponse
+    public function bevestigAfsluiten(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         // Check permissions: only organisator of this tournament or sitebeheerder
-        $organisator = auth('organisator')->user();
-        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->toernooien->contains($toernooi))) {
+        $loggedIn = auth('organisator')->user();
+        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->toernooien->contains($toernooi))) {
             return redirect()
-                ->route('toernooi.afsluiten', $toernooi)
+                ->route('toernooi.afsluiten', $toernooi->routeParams())
                 ->with('error', 'Je hebt geen rechten om dit toernooi af te sluiten');
         }
 
         if ($toernooi->isAfgesloten()) {
             return redirect()
-                ->route('toernooi.afsluiten', $toernooi)
+                ->route('toernooi.afsluiten', $toernooi->routeParams())
                 ->with('error', 'Dit toernooi is al afgesloten');
         }
 
@@ -497,20 +498,20 @@ class ToernooiController extends Controller
             ]);
 
         return redirect()
-            ->route('toernooi.afsluiten', $toernooi)
+            ->route('toernooi.afsluiten', $toernooi->routeParams())
             ->with('success', 'Toernooi succesvol afgesloten! Alle device bindings zijn gereset.');
     }
 
     /**
      * Reopen a closed tournament
      */
-    public function heropenen(Toernooi $toernooi): RedirectResponse
+    public function heropenen(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
         // Check permissions: only organisator of this tournament or sitebeheerder
-        $organisator = auth('organisator')->user();
-        if (!$organisator || (!$organisator->isSitebeheerder() && !$organisator->toernooien->contains($toernooi))) {
+        $loggedIn = auth('organisator')->user();
+        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->toernooien->contains($toernooi))) {
             return redirect()
-                ->route('toernooi.afsluiten', $toernooi)
+                ->route('toernooi.afsluiten', $toernooi->routeParams())
                 ->with('error', 'Je hebt geen rechten om dit toernooi te heropenen');
         }
 
@@ -521,7 +522,7 @@ class ToernooiController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.show', $toernooi)
+            ->route('toernooi.show', $toernooi->routeParams())
             ->with('success', 'Toernooi heropend. Je kunt nu weer wijzigingen aanbrengen.');
     }
 

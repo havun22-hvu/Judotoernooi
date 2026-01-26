@@ -13,7 +13,7 @@
             <p class="text-gray-600">Organisator Registratie</p>
         </div>
 
-        <form action="{{ route('organisator.register.submit') }}" method="POST">
+        <form action="{{ route('register.submit') }}" method="POST">
             @csrf
 
             <div class="mb-4">
@@ -131,7 +131,7 @@
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Al een account?
-                <a href="{{ route('organisator.login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
                     Log hier in
                 </a>
             </p>
