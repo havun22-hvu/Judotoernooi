@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class Organisator extends Authenticatable
 {
@@ -16,6 +17,7 @@ class Organisator extends Authenticatable
 
     protected $fillable = [
         'naam',
+        'slug',
         'email',
         'telefoon',
         'is_sitebeheerder',
@@ -23,6 +25,49 @@ class Organisator extends Authenticatable
         'email_verified_at',
         'laatste_login',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Organisator $organisator) {
+            if (empty($organisator->slug) && !empty($organisator->naam)) {
+                $organisator->slug = static::generateUniqueSlug($organisator->naam);
+            }
+        });
+
+        static::updating(function (Organisator $organisator) {
+            if ($organisator->isDirty('naam') && !$organisator->isDirty('slug')) {
+                $organisator->slug = static::generateUniqueSlug($organisator->naam, $organisator->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $naam, ?int $excludeId = null): string
+    {
+        $baseSlug = Str::slug($naam);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        $query = static::where('slug', $slug);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        while ($query->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+            $query = static::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+        }
+
+        return $slug;
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     protected $hidden = [
         'password',

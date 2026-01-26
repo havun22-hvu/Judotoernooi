@@ -20,9 +20,13 @@ class ToernooiService
             // Note: Multiple tournaments can now be active simultaneously
             // is_actief is kept for backward compatibility but no longer enforces single-active
 
+            // Get the owner organisator
+            $organisator = auth('organisator')->user();
+
             $toernooi = Toernooi::create([
+                'organisator_id' => $organisator?->id,
                 'naam' => $data['naam'],
-                'organisatie' => $data['organisatie'] ?? 'Judoschool Cees Veen',
+                'organisatie' => $data['organisatie'] ?? $organisator?->naam ?? 'Judoschool Cees Veen',
                 'datum' => $data['datum'],
                 'locatie' => $data['locatie'] ?? null,
                 'verwacht_aantal_judokas' => $data['verwacht_aantal_judokas'] ?? null,
@@ -69,8 +73,7 @@ class ToernooiService
             // Create default device toegangen
             $this->maakStandaardToegangen($toernooi);
 
-            // Link organisator to tournament as owner
-            $organisator = auth('organisator')->user();
+            // Link organisator to tournament as owner (pivot for access control)
             if ($organisator) {
                 $organisator->toernooien()->attach($toernooi->id, ['rol' => 'eigenaar']);
             }
