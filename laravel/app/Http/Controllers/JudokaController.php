@@ -135,7 +135,7 @@ class JudokaController extends Controller
 
         // Return to filtered list if came from filter
         $redirectRoute = $request->input('filter') === 'onvolledig'
-            ? route('toernooi.judoka.index', $toernooi) . '?filter=onvolledig'
+            ? route('toernooi.judoka.index', $toernooi->routeParams()) . '?filter=onvolledig'
             : route('toernooi.judoka.show', [$toernooi, $judoka]);
 
         return redirect($redirectRoute)->with('success', 'Judoka bijgewerkt');
@@ -145,7 +145,7 @@ class JudokaController extends Controller
     {
         // Check freemium judoka limit
         if (!$toernooi->canAddMoreJudokas()) {
-            return redirect()->route('toernooi.judoka.index', $toernooi)
+            return redirect()->route('toernooi.judoka.index', $toernooi->routeParams())
                 ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt. Upgrade naar een betaald abonnement voor meer ruimte.');
         }
 
@@ -210,7 +210,7 @@ class JudokaController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.judoka.index', $toernooi)
+            ->route('toernooi.judoka.index', $toernooi->routeParams())
             ->with('success', 'Judoka toegevoegd');
     }
 
@@ -219,14 +219,14 @@ class JudokaController extends Controller
         // Free tier: judokas cannot be deleted
         if ($toernooi->isFreeTier()) {
             return redirect()
-                ->route('toernooi.judoka.index', $toernooi)
+                ->route('toernooi.judoka.index', $toernooi->routeParams())
                 ->with('error', 'In de gratis versie kunnen judoka\'s niet verwijderd worden.');
         }
 
         $judoka->delete();
 
         return redirect()
-            ->route('toernooi.judoka.index', $toernooi)
+            ->route('toernooi.judoka.index', $toernooi->routeParams())
             ->with('success', 'Judoka verwijderd');
     }
 
@@ -282,7 +282,7 @@ class JudokaController extends Controller
 
         if (!$data || !$header) {
             return redirect()
-                ->route('toernooi.judoka.import', $toernooi)
+                ->route('toernooi.judoka.import', $toernooi->routeParams())
                 ->with('error', 'Geen import data gevonden. Upload opnieuw.');
         }
 
@@ -291,7 +291,7 @@ class JudokaController extends Controller
         if (!$toernooi->canAddMoreJudokas($aantalTeImporteren)) {
             $remaining = $toernooi->getRemainingJudokaSlots();
             return redirect()
-                ->route('toernooi.judoka.import', $toernooi)
+                ->route('toernooi.judoka.import', $toernooi->routeParams())
                 ->with('error', "Je probeert {$aantalTeImporteren} judoka's te importeren, maar er is alleen ruimte voor {$remaining}. Upgrade naar een betaald abonnement voor meer ruimte.");
         }
 
@@ -331,7 +331,7 @@ class JudokaController extends Controller
         // Check for uncategorized judokas
         $nietGecategoriseerd = $toernooi->countNietGecategoriseerd();
 
-        $redirect = redirect()->route('toernooi.judoka.index', $toernooi)->with('success', $message);
+        $redirect = redirect()->route('toernooi.judoka.index', $toernooi->routeParams())->with('success', $message);
 
         // Store import errors in session for display
         if (!empty($resultaat['fouten'])) {
@@ -491,7 +491,7 @@ class JudokaController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.judoka.index', $toernooi)
+            ->route('toernooi.judoka.index', $toernooi->routeParams())
             ->with('success', $message);
     }
 

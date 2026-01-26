@@ -9,7 +9,7 @@
         <p class="text-gray-600 mt-1">Toegangsbewijzen voor begeleiders tot de Dojo (1 per {{ $toernooi->judokas_per_coach ?? 5 }} judoka's)</p>
     </div>
     <div class="flex items-center gap-3">
-        <form action="{{ route('toernooi.coach-kaart.toggle-incheck', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.coach-kaart.toggle-incheck', $toernooi->routeParams()) }}" method="POST">
             @csrf
             <button type="submit"
                     class="font-bold py-2 px-4 rounded flex items-center gap-2 {{ $toernooi->coach_incheck_actief ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700' }}">
@@ -19,7 +19,7 @@
                 Check-in {{ $toernooi->coach_incheck_actief ? 'Actief' : 'Inactief' }}
             </button>
         </form>
-        <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi->routeParams()) }}" method="POST">
             @csrf
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,7 +47,7 @@
         <p class="text-gray-600">Gescand (aanwezig)</p>
     </div>
     @if($toernooi->coach_incheck_actief)
-    <a href="{{ route('toernooi.coach-kaart.ingecheckt', $toernooi) }}"
+    <a href="{{ route('toernooi.coach-kaart.ingecheckt', $toernooi->routeParams()) }}"
        class="bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 transition">
         <p class="text-3xl font-bold text-blue-600">{{ $ingecheckt }}</p>
         <p class="text-gray-600">Ingecheckt (dojo)</p>

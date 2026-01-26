@@ -232,7 +232,7 @@ function weeglijst() {
 
         async refresh() {
             try {
-                const response = await fetch('{{ route('toernooi.weging.lijst-json', $toernooi) }}');
+                const response = await fetch('{{ route('toernooi.weging.lijst-json', $toernooi->routeParams()) }}');
                 const data = await response.json();
                 this.judokas = data;
                 this.berekenStats();

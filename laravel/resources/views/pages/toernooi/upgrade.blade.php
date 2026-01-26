@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-4xl mx-auto">
     <div class="mb-6">
-        <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:underline">&larr; Terug naar toernooi</a>
+        <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">&larr; Terug naar toernooi</a>
     </div>
 
     <h1 class="text-3xl font-bold text-gray-800 mb-2">Upgrade naar Betaald</h1>
@@ -57,7 +57,7 @@
         <h2 class="text-xl font-bold text-gray-800 mb-4">Stap 1: Facturatiegegevens</h2>
         <p class="text-gray-600 mb-6">Vul je organisatiegegevens in. Deze worden gebruikt voor de factuur.</p>
 
-        <form action="{{ route('toernooi.upgrade.kyc', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.upgrade.kyc', $toernooi->routeParams()) }}" method="POST">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -190,7 +190,7 @@
                     <p>{{ $organisator->factuur_email }}</p>
                 </div>
             </div>
-            <a href="{{ route('toernooi.upgrade', $toernooi) }}?edit=1" class="text-green-600 hover:underline text-sm">Wijzigen</a>
+            <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}?edit=1" class="text-green-600 hover:underline text-sm">Wijzigen</a>
         </div>
     </div>
 
@@ -247,7 +247,7 @@
         </div>
 
         {{-- Payment form --}}
-        <form id="upgrade-form" action="{{ route('toernooi.upgrade.start', $toernooi) }}" method="POST" class="hidden">
+        <form id="upgrade-form" action="{{ route('toernooi.upgrade.start', $toernooi->routeParams()) }}" method="POST" class="hidden">
             @csrf
             <input type="hidden" name="tier" id="selected-tier" value="">
         </form>

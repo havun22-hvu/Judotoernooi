@@ -53,7 +53,7 @@ class MollieController extends Controller
 
         // Handle error from Mollie
         if ($error) {
-            return redirect()->route('toernooi.edit', $toernooi)
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('error', 'Mollie koppeling geannuleerd: ' . $request->get('error_description', $error));
         }
 
@@ -62,10 +62,10 @@ class MollieController extends Controller
             $tokens = $this->mollieService->exchangeCodeForTokens($code);
             $this->mollieService->saveTokensToToernooi($toernooi, $tokens);
 
-            return redirect()->route('toernooi.edit', $toernooi)
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('success', 'Mollie account succesvol gekoppeld!');
         } catch (\Exception $e) {
-            return redirect()->route('toernooi.edit', $toernooi)
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('error', 'Fout bij koppelen: ' . $e->getMessage());
         }
     }
@@ -77,7 +77,7 @@ class MollieController extends Controller
     {
         $this->mollieService->disconnectFromToernooi($toernooi);
 
-        return redirect()->route('toernooi.edit', $toernooi)
+        return redirect()->route('toernooi.edit', $toernooi->routeParams())
             ->with('success', 'Mollie account ontkoppeld');
     }
 

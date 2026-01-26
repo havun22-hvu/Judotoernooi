@@ -47,11 +47,11 @@
         @endif
 
         <div class="flex justify-center space-x-4">
-            <a href="{{ route('toernooi.show', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
                 Naar Toernooi Dashboard
             </a>
             @if($toernooi->isPaidTier())
-            <a href="{{ route('toernooi.noodplan.index', $toernooi) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
+            <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg">
                 Naar Print/Noodplan
             </a>
             @endif

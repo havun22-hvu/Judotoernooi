@@ -6,7 +6,7 @@
 <div class="mb-6">
     <div class="flex justify-between items-center">
         <div>
-            <a href="{{ route('toernooi.poule.index', $toernooi) }}" class="text-blue-600 hover:underline text-sm">&larr; Terug naar poules</a>
+            <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline text-sm">&larr; Terug naar poules</a>
             <h1 class="text-3xl font-bold text-gray-800">Eliminatie Bracket ({{ $poule->judokas->count() }} judoka's)</h1>
             <p class="text-gray-600">#{{ $poule->nummer }} {{ $poule->leeftijdsklasse }} / {{ $poule->gewichtsklasse }} kg</p>
         </div>
@@ -231,8 +231,8 @@
 
 <script>
 const csrfToken = '{{ csrf_token() }}';
-const genereerUrl = '{{ route('toernooi.poule.eliminatie.genereer', [$toernooi, $poule]) }}';
-const uitslagUrl = '{{ route('toernooi.poule.eliminatie.uitslag', [$toernooi, $poule]) }}';
+const genereerUrl = '{{ route('toernooi.poule.eliminatie.genereer', $toernooi->routeParamsWith(['poule' => $poule])) }}';
+const uitslagUrl = '{{ route('toernooi.poule.eliminatie.uitslag', $toernooi->routeParamsWith(['poule' => $poule])) }}';
 
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');

@@ -2,6 +2,9 @@
 
 > Online betalingen voor judoscholen bij inschrijving van judoka's.
 
+> **Let op:** Dit document gaat over **inschrijfgeld** (coach betaalt aan organisator).
+> Voor **toernooi upgrades** (organisator betaalt aan JudoToernooi), zie [FREEMIUM.md](./FREEMIUM.md).
+
 ## Overzicht
 
 JudoToernooi ondersteunt twee betalingsmodi:

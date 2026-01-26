@@ -392,7 +392,7 @@
         'chatType' => 'dojo',
         'chatId' => null,
         'toernooiId' => $toernooi->id,
-        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+        'chatApiBase' => route('toernooi.chat.index', $toernooi->routeParams()),
     ])
 </body>
 </html>

@@ -11,7 +11,7 @@
         </div>
         <div class="text-right text-sm text-gray-500">
             <p>Momentopname: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
-            <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
                 &larr; Terug naar Dashboard
             </a>
         </div>
@@ -30,11 +30,11 @@
                 <div class="flex items-center justify-between">
                     <h3 class="font-medium text-green-800">Volledige poule-indeling</h3>
                     <div class="flex gap-2">
-                        <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'xlsx']) }}"
+                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
                             Excel
                         </a>
-                        <a href="{{ route('toernooi.noodplan.export-poules', [$toernooi, 'csv']) }}"
+                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
                             CSV
                         </a>
@@ -54,12 +54,12 @@
                     <p class="text-sm text-gray-500">Alfabetisch per blok, met invulvak</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.weeglijst', [$toernooi, $blok->nummer]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
@@ -74,7 +74,7 @@
                     <p class="text-sm text-gray-500">Per judoka (QR + gegevens)</p>
                 </div>
                 <div class="flex gap-2 relative">
-                    <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
@@ -86,7 +86,7 @@
                         <div x-show="open" @click.away="open = false" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
-                            <a href="{{ route('toernooi.noodplan.weegkaarten.club', [$toernooi, $club]) }}" target="_blank"
+                            <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
                                class="block px-4 py-2 text-sm hover:bg-gray-100">
                                 {{ $club->naam }}
                             </a>
@@ -103,7 +103,7 @@
                     <p class="text-sm text-gray-500">Toegang dojo</p>
                 </div>
                 <div class="flex gap-2 relative">
-                    <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
@@ -115,7 +115,7 @@
                         <div x-show="open" @click.away="open = false" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs as $club)
-                            <a href="{{ route('toernooi.noodplan.coachkaarten.club', [$toernooi, $club]) }}" target="_blank"
+                            <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
                                class="block px-4 py-2 text-sm hover:bg-gray-100">
                                 {{ $club->naam }}
                             </a>
@@ -131,7 +131,7 @@
                     <h3 class="font-medium">Contactlijst</h3>
                     <p class="text-sm text-gray-500">Coach contactgegevens per club</p>
                 </div>
-                <a href="{{ route('toernooi.noodplan.contactlijst', $toernooi) }}" target="_blank"
+                <a href="{{ route('toernooi.noodplan.contactlijst', $toernooi->routeParams()) }}" target="_blank"
                    class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                     Bekijken
                 </a>
@@ -145,7 +145,7 @@
                 </div>
                 <div class="flex gap-2">
                     @for($i = 2; $i <= 7; $i++)
-                    <a href="{{ route('toernooi.noodplan.leeg-schema', [$toernooi, $i]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.leeg-schema', $toernooi->routeParamsWith(['aantal' => $i])) }}" target="_blank"
                        class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $i }}
                     </a>
@@ -170,12 +170,12 @@
                     <p class="text-sm text-yellow-600">1 poule per A4, zoals mat interface</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', [$toernooi, $blok->nummer]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">
                         {{ $blok->nummer }}
                     </a>
@@ -190,12 +190,12 @@
                     <p class="text-sm text-gray-500">Alle wedstrijden met scores</p>
                 </div>
                 <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', [$toernooi, $blok->nummer]) }}" target="_blank"
+                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>

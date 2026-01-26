@@ -50,7 +50,7 @@
 </div>
 @endforelse
 
-<a href="{{ route('toernooi.mat.index', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+<a href="{{ route('toernooi.mat.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
     ← Terug naar matten
 </a>
 @endsection

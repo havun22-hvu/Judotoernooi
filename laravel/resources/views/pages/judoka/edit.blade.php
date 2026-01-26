@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 mb-8">Judoka Bewerken</h1>
 
-    <form action="{{ route('toernooi.judoka.update', [$toernooi, $judoka]) }}" method="POST" class="bg-white rounded-lg shadow p-6">
+    <form action="{{ route('toernooi.judoka.update', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" method="POST" class="bg-white rounded-lg shadow p-6">
         @csrf
         @method('PUT')
         @if(request('filter'))
@@ -51,7 +51,7 @@
         </div>
 
         @php
-            $terugUrl = route('toernooi.judoka.index', $toernooi);
+            $terugUrl = route('toernooi.judoka.index', $toernooi->routeParams());
             if (request('filter') === 'onvolledig') {
                 $terugUrl .= '#onvolledig';
             }

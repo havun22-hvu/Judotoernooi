@@ -36,7 +36,7 @@
                     <p class="text-sm text-red-700">Pas de categorie-instellingen aan voordat je poules genereert.</p>
                 </div>
             </div>
-            <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                 Naar instellingen
             </a>
         </div>
@@ -52,7 +52,7 @@
                     <p class="text-sm text-orange-700">Categorieën mogen niet overlappen.</p>
                 </div>
             </div>
-            <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi" class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-medium">
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi" class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-medium">
                 Naar instellingen
             </a>
         </div>
@@ -71,10 +71,10 @@
             <p class="text-gray-600 mt-3">De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.</p>
             <p class="text-gray-700 font-medium mt-4">Gebruik op de wedstrijddag:</p>
             <div class="flex flex-col gap-2 mt-3">
-                <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
+                <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
                     Wedstrijddag Poules
                 </a>
-                <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
+                <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
                     Zaaloverzicht
                 </a>
             </div>
@@ -131,7 +131,7 @@
                 <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
             </div>
         </div>
-        <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi#categorieen"
+        <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
             Naar Instellingen
         </a>
@@ -170,7 +170,7 @@
             (her)Verdelen
         </span>
         @else
-        <form action="{{ route('toernooi.poule.genereer', $toernooi) }}" method="POST" class="inline"
+        <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST" class="inline"
               data-loading="Poule-indeling genereren..."
               onsubmit="return {{ $poules->count() }} === 0 || confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
             @csrf
@@ -497,14 +497,14 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi) }}';
-const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi) }}';
-const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', [$toernooi, '__JUDOKA_ID__']) }}';
-const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi) }}';
-const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', [$toernooi, ':id']) }}';
-const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', [$toernooi, ':id']) }}';
-const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi) }}';
-const wijzigPouleTypeUrl = '{{ route('toernooi.wedstrijddag.wijzigPouleType', $toernooi) }}';
+const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
+const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi->routeParams()) }}';
+const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', $toernooi->routeParamsWith(['format' => '__JUDOKA_ID__'])) }}';
+const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi->routeParams()) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
+const wijzigPouleTypeUrl = '{{ route('toernooi.wedstrijddag.wijzigPouleType', $toernooi->routeParams()) }}';
 
 // Gewichtsklassen per leeftijdsklasse
 const gewichtsklassen = @json($toernooi->getAlleGewichtsklassen());

@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold text-gray-800">Ingecheckte Coaches</h1>
         <p class="text-gray-600 mt-1">Coaches die momenteel in de dojo zijn</p>
     </div>
-    <a href="{{ route('toernooi.coach-kaart.index', $toernooi) }}"
+    <a href="{{ route('toernooi.coach-kaart.index', $toernooi->routeParams()) }}"
        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -83,7 +83,7 @@
                     <p class="text-xs text-gray-500">{{ $kaart->ingecheckt_op->diffForHumans() }}</p>
                 </td>
                 <td class="px-4 py-3 text-center">
-                    <form action="{{ route('toernooi.coach-kaart.force-checkout', [$toernooi, $kaart]) }}" method="POST"
+                    <form action="{{ route('toernooi.coach-kaart.force-checkout', $toernooi->routeParamsWith(['coachKaart' => $kaart])) }}" method="POST"
                           onsubmit="return confirm('Weet je zeker dat je {{ $kaart->naam }} geforceerd wilt uitchecken?');">
                         @csrf
                         <button type="submit"

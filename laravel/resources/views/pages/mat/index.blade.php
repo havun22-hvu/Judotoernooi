@@ -5,7 +5,7 @@
 @section('content')
 <div class="flex justify-between items-center mb-8">
     <h1 class="text-3xl font-bold text-gray-800">Matten</h1>
-    <a href="{{ route('toernooi.mat.interface', $toernooi) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+    <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
         🥋 Mat Interface
     </a>
 </div>
@@ -17,7 +17,7 @@
 
         <div class="space-y-2">
             @foreach($blokken as $blok)
-            <a href="{{ route('toernooi.mat.show', [$toernooi, $mat, $blok]) }}"
+            <a href="{{ route('toernooi.mat.show', $toernooi->routeParamsWith(['mat' => $mat, 'blok' => $blok])) }}"
                class="block p-3 bg-gray-100 hover:bg-gray-200 rounded">
                 Blok {{ $blok->nummer }}
                 @if($blok->weging_gesloten)

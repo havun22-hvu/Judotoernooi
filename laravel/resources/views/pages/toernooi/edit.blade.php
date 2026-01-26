@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('toernooi.judoka.index', $toernooi) }}?filter=niet_gecategoriseerd"
+                <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}?filter=niet_gecategoriseerd"
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     Bekijk lijst
                 </a>
@@ -65,7 +65,7 @@
             <!-- Verplaatst naar fixed toast -->
         </div>
         <div class="flex items-center gap-4">
-            <a href="{{ route('toernooi.show', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
                 &larr; Terug naar Dashboard
             </a>
         </div>
@@ -97,7 +97,7 @@
 
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
-    <form action="{{ route('toernooi.update', $toernooi) }}" method="POST" id="toernooi-form" data-loading="Instellingen opslaan...">
+    <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="Instellingen opslaan...">
         @csrf
         @method('PUT')
 
@@ -1570,7 +1570,7 @@
 
         <!-- ACTIES -->
         <div class="flex justify-between items-center">
-            <a href="{{ route('toernooi.show', $toernooi) }}" class="text-gray-600 hover:text-gray-800">
+            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-gray-600 hover:text-gray-800">
                 Annuleren
             </a>
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
@@ -1671,13 +1671,13 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Snelkoppelingen</h2>
         <div class="flex flex-wrap gap-4">
-            <a href="{{ route('toernooi.pagina-builder.index', $toernooi) }}" target="_blank" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2">
+            <a href="{{ route('toernooi.pagina-builder.index', $toernooi->routeParams()) }}" target="_blank" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
                 Pagina Builder
             </a>
-            <a href="{{ route('toernooi.noodplan.index', $toernooi) }}" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2" title="In Case of Emergency - Break Glass">
+            <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2" title="In Case of Emergency - Break Glass">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
@@ -1785,7 +1785,7 @@
             Bepaal hoe judoka's in het systeem komen en wat budoscholen zelf kunnen doen via het portaal.
         </p>
 
-        <form action="{{ route('toernooi.portaal.instellingen', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.portaal.instellingen', $toernooi->routeParams()) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -1862,7 +1862,7 @@
             Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka's definitief ingeschreven zijn.
         </p>
 
-        <form action="{{ route('toernooi.betalingen.instellingen', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.betalingen.instellingen', $toernooi->routeParams()) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -1976,7 +1976,7 @@
             Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.
         </p>
 
-        <form action="{{ route('toernooi.bloktijden', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.bloktijden', $toernooi->routeParams()) }}" method="POST">
             @csrf
             @method('PUT')
 
@@ -2058,7 +2058,7 @@
 
         <div x-show="showConfirm" x-cloak class="bg-white border border-red-300 rounded-lg p-4 mt-4">
             <p class="font-medium text-red-800 mb-3">Bevestig met het organisator wachtwoord:</p>
-            <form action="{{ route('toernooi.heropen-voorbereiding', $toernooi) }}" method="POST" class="flex items-end gap-3">
+            <form action="{{ route('toernooi.heropen-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="flex items-end gap-3">
                 @csrf
                 <div class="flex-1">
                     <label class="block text-sm text-gray-600 mb-1">Wachtwoord</label>
@@ -2093,7 +2093,7 @@
             Verwijder ALLE wedstrijden van ALLE categorieën en haal alles van de matten. Terug naar start!
         </p>
 
-        <form action="{{ route('toernooi.blok.reset-alles', $toernooi) }}" method="POST"
+        <form action="{{ route('toernooi.blok.reset-alles', $toernooi->routeParams()) }}" method="POST"
               onsubmit="return confirm('🚨 WEET JE HET ZEKER?\n\nDit verwijdert ALLE wedstrijden van ALLE categorieën!\n\nJudoka\'s blijven behouden.')">
             @csrf
             <button type="submit" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white text-xl font-bold rounded-lg shadow-lg transition-all hover:scale-105">
@@ -2148,7 +2148,7 @@
             Verwijder dit toernooi permanent. <strong class="text-red-600">Dit kan niet ongedaan gemaakt worden!</strong>
         </p>
 
-        <form action="{{ route('toernooi.destroy', $toernooi) }}" method="POST"
+        <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST"
               onsubmit="return confirm('🚨 WEET JE HET ABSOLUUT ZEKER?\n\nDit verwijdert het GEHELE toernooi:\n- Alle judoka\'s\n- Alle clubs\n- Alle poules\n- Alle wedstrijden\n- Alle resultaten\n\nDit kan NIET ongedaan worden!')">
             @csrf
             @method('DELETE')

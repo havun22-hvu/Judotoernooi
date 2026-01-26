@@ -54,7 +54,7 @@ class NoodplanController extends Controller
     public function printPoules(Toernooi $toernooi, ?int $blokNummer = null)
     {
         // Redirect naar de reguliere poules pagina (heeft print CSS)
-        return redirect()->route('toernooi.poule.index', $toernooi);
+        return redirect()->route('toernooi.poule.index', $toernooi->routeParams());
     }
 
     /**

@@ -15,14 +15,14 @@
            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded flex items-center gap-2">
             Clubs Beheren
         </a>
-        <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi) }}" method="POST" class="inline"
+        <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi->routeParams()) }}" method="POST" class="inline"
               onsubmit="return confirm('Coachkaarten genereren voor alle geselecteerde clubs?')">
             @csrf
             <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
                 Genereer Coachkaarten
             </button>
         </form>
-        <form action="{{ route('toernooi.club.verstuur-alle', $toernooi) }}" method="POST" class="inline"
+        <form action="{{ route('toernooi.club.verstuur-alle', $toernooi->routeParams()) }}" method="POST" class="inline"
               onsubmit="return confirm('Alle geselecteerde clubs met email uitnodigen?')">
             @csrf
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
@@ -89,7 +89,7 @@
             @endphp
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
-                    <form action="{{ route('toernooi.club.toggle', [$toernooi, $club]) }}" method="POST">
+                    <form action="{{ route('toernooi.club.toggle', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST">
                         @csrf
                         <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors
                             {{ $isUitgenodigd ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400' }}">
@@ -141,7 +141,7 @@
                 </td>
                 <td class="px-4 py-3 text-right">
                     @if($isUitgenodigd && $club->email)
-                    <form action="{{ route('toernooi.club.verstuur', [$toernooi, $club]) }}" method="POST" class="inline">
+                    <form action="{{ route('toernooi.club.verstuur', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="px-3 py-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded">
                             Verstuur

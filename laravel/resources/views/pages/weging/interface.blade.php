@@ -59,7 +59,7 @@
         'chatType' => 'weging',
         'chatId' => null,
         'toernooiId' => $toernooi->id,
-        'chatApiBase' => route('toernooi.chat.index', $toernooi),
+        'chatApiBase' => route('toernooi.chat.index', $toernooi->routeParams()),
     ])
 
 <!-- Weegtijd voorbij alert -->

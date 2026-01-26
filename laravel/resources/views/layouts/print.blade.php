@@ -80,7 +80,7 @@
     <div class="no-print bg-blue-800 text-white p-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <a href="{{ route('toernooi.noodplan.index', $toernooi) }}" class="text-blue-200 hover:text-white">
+                <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="text-blue-200 hover:text-white">
                     &larr; Terug naar Case of Emergency
                 </a>
                 <span class="text-blue-200">|</span>

@@ -31,7 +31,7 @@
         </div>
         @endif
 
-        <form action="{{ route('organisator.login.submit') }}" method="POST">
+        <form action="{{ route('login.submit') }}" method="POST">
             @csrf
 
             <div class="mb-4">
@@ -96,7 +96,7 @@
                     <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                     <span class="ml-2 text-sm text-gray-600">Onthoud mij</span>
                 </label>
-                <a href="{{ route('organisator.password.request') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:text-blue-800">
                     Wachtwoord vergeten?
                 </a>
             </div>
@@ -110,7 +110,7 @@
         <div class="mt-6 text-center">
             <p class="text-gray-600">
                 Nog geen account?
-                <a href="{{ route('organisator.register') }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-medium">
                     Registreer hier
                 </a>
             </p>
@@ -119,7 +119,7 @@
         @if($showPinLogin ?? false)
         <div class="mt-6 pt-6 border-t">
             <p class="text-xs text-gray-500 mb-3 text-center">Superadmin (alleen local/staging)</p>
-            <form action="{{ route('organisator.pin-login') }}" method="POST" class="flex gap-2">
+            <form action="{{ route('pin-login') }}" method="POST" class="flex gap-2">
                 @csrf
                 <input type="text"
                        name="pin"

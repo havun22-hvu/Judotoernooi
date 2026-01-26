@@ -308,7 +308,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     // Verwijder uit huidige wedstrijd
     if (data.wedstrijdId && data.positie) {
         try {
-            const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi) }}`, {
+            const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -582,7 +582,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             // Verwijder judoka uit oude plek (MOVE, niet COPY)
             if (data.wedstrijdId && data.positie && !data.fromSwap) {
                 console.log('SEEDING: Verwijder uit oude plek:', data.wedstrijdId, data.positie);
-                await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi) }}`, {
+                await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -611,7 +611,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         };
         console.log('=== FETCH REQUEST ===', requestBody);
 
-        const response = await fetch(`{{ route('toernooi.mat.plaats-judoka', $toernooi) }}`, {
+        const response = await fetch(`{{ route('toernooi.mat.plaats-judoka', $toernooi->routeParams()) }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -662,7 +662,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     const winnaarId = medaille === 'goud' ? data.judokaId : null;
 
     try {
-        const response = await fetch(`{{ route('toernooi.mat.finale-uitslag', $toernooi) }}`, {
+        const response = await fetch(`{{ route('toernooi.mat.finale-uitslag', $toernooi->routeParams()) }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -719,7 +719,7 @@ window.verwijderJudoka = async function(event) {
     }
 
     try {
-        const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi) }}`, {
+        const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -778,7 +778,7 @@ function matInterface() {
                 return;
             }
 
-            const response = await fetch(`{{ route('toernooi.mat.wedstrijden', $toernooi) }}`, {
+            const response = await fetch(`{{ route('toernooi.mat.wedstrijden', $toernooi->routeParams()) }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -899,7 +899,7 @@ function matInterface() {
             }
 
             // Save to backend
-            await fetch(`{{ route('toernooi.mat.uitslag', $toernooi) }}`, {
+            await fetch(`{{ route('toernooi.mat.uitslag', $toernooi->routeParams()) }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1029,7 +1029,7 @@ function matInterface() {
 
         async markeerKlaar(poule) {
             try {
-                const response = await fetch(`{{ route('toernooi.mat.poule-klaar', $toernooi) }}`, {
+                const response = await fetch(`{{ route('toernooi.mat.poule-klaar', $toernooi->routeParams()) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1141,7 +1141,7 @@ function matInterface() {
             if (!confirm(`Barrage maken voor: ${namen}?`)) return;
 
             try {
-                const response = await fetch(`{{ route('toernooi.mat.barrage', $toernooi) }}`, {
+                const response = await fetch(`{{ route('toernooi.mat.barrage', $toernooi->routeParams()) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1267,7 +1267,7 @@ function matInterface() {
         // Helper: update actieve en/of huidige wedstrijd
         async setWedstrijdStatus(poule, actieveId, huidigeId) {
             try {
-                const url = `{{ route('toernooi.mat.huidige-wedstrijd', $toernooi) }}`;
+                const url = `{{ route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams()) }}`;
 
                 // Update actieve (groen)
                 const response1 = await fetch(url, {
@@ -2041,7 +2041,7 @@ function matInterface() {
                 const fromWedstrijd = poule.wedstrijden.find(w => w.id === fromWedstrijdId);
                 if (fromWedstrijd && fromWedstrijd.volgende_wedstrijd_id === targetSlot.wedstrijdId) {
                     // Dit is een winnaar die doorschuift
-                    const response = await fetch(`{{ route('toernooi.mat.uitslag', $toernooi) }}`, {
+                    const response = await fetch(`{{ route('toernooi.mat.uitslag', $toernooi->routeParams()) }}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

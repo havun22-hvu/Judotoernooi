@@ -26,17 +26,17 @@
                 @if($percentage >= 80)
                     <p class="mt-2 text-sm text-orange-700">
                         <strong>Let op:</strong> Je nadert de limiet van {{ $max }} judoka's.
-                        <a href="{{ route('toernooi.upgrade', $toernooi) }}" class="underline font-medium">Upgrade nu</a> voor meer ruimte.
+                        <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="underline font-medium">Upgrade nu</a> voor meer ruimte.
                     </p>
                 @endif
 
                 <p class="mt-2 text-xs text-gray-500">
                     Print/Noodplan functies zijn geblokkeerd.
-                    <a href="{{ route('toernooi.upgrade', $toernooi) }}" class="text-blue-600 hover:underline">Bekijk upgrade opties</a>
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">Bekijk upgrade opties</a>
                 </p>
             </div>
 
-            <a href="{{ route('toernooi.upgrade', $toernooi) }}"
+            <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
                class="ml-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 Upgrade
             </a>

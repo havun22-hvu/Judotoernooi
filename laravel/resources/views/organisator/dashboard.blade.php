@@ -17,13 +17,13 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     @if($organisator->isSitebeheerder())
-                    <a href="{{ route('toernooi.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">Alle Organisatoren</a>
+                    <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">Alle Organisatoren</a>
                     @endif
                     <span class="text-gray-600">{{ $organisator->naam }}</span>
                     @if($organisator->isSitebeheerder())
                     <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">Sitebeheerder</span>
                     @endif
-                    <form action="{{ route('organisator.logout') }}" method="POST" class="inline">
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-gray-600 hover:text-gray-800">
                             Uitloggen
@@ -54,7 +54,7 @@
                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
                     Mijn Clubs
                 </a>
-                <a href="{{ route('toernooi.create') }}"
+                <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     Nieuw Toernooi
                 </a>
@@ -117,7 +117,7 @@
         @if($toernooien->isEmpty())
         <div class="bg-white rounded-lg shadow p-8 text-center">
             <p class="text-gray-600 mb-4">Je hebt nog geen toernooien aangemaakt.</p>
-            <a href="{{ route('toernooi.create') }}"
+            <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors inline-block">
                 Maak je eerste toernooi aan
             </a>
@@ -192,12 +192,12 @@
 
                 {{-- Actions --}}
                 <div class="flex items-center justify-between mt-4 pt-3 border-t">
-                    <a href="{{ route('toernooi.show', $toernooi) }}"
+                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}"
                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
                         Start
                     </a>
                     @if($organisator->isSitebeheerder() || ($toernooi->pivot && $toernooi->pivot->rol === 'eigenaar'))
-                    <form action="{{ route('toernooi.destroy', $toernooi) }}" method="POST" class="inline"
+                    <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
                           onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
                         @csrf
                         @method('DELETE')
@@ -260,7 +260,7 @@
                 if (logoutForm) {
                     logoutForm.submit();
                 } else {
-                    window.location.href = '{{ route("organisator.login") }}';
+                    window.location.href = '{{ route("login") }}';
                 }
             }
 

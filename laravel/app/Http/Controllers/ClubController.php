@@ -196,7 +196,7 @@ class ClubController extends Controller
             // Check if club has judokas - can't remove if has judokas
             if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
                 return redirect()
-                    ->route('toernooi.club.index', $toernooi)
+                    ->route('toernooi.club.index', $toernooi->routeParams())
                     ->with('error', "Kan {$club->naam} niet verwijderen: er zijn nog judoka's ingeschreven");
             }
             $toernooi->clubs()->detach($club->id);
@@ -211,7 +211,7 @@ class ClubController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', $message);
     }
 
@@ -231,7 +231,7 @@ class ClubController extends Controller
         $club = Club::create($validated);
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Club toegevoegd (PIN: ' . $club->pincode . ')');
     }
 
@@ -250,7 +250,7 @@ class ClubController extends Controller
         $club->update($validated);
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Club bijgewerkt');
     }
 
@@ -259,14 +259,14 @@ class ClubController extends Controller
         // Check if club has judokas in this tournament
         if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Kan club niet verwijderen: er zijn nog judoka\'s gekoppeld');
         }
 
         $club->delete();
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Club verwijderd');
     }
 
@@ -274,7 +274,7 @@ class ClubController extends Controller
     {
         if (!$club->email) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Club heeft geen emailadres');
         }
 
@@ -292,7 +292,7 @@ class ClubController extends Controller
         Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', "Uitnodiging verstuurd naar {$club->email}");
     }
 
@@ -303,7 +303,7 @@ class ClubController extends Controller
 
         if ($clubs->isEmpty()) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Geen clubs geselecteerd met emailadres');
         }
 
@@ -334,7 +334,7 @@ class ClubController extends Controller
         }
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', $message);
     }
 
@@ -349,7 +349,7 @@ class ClubController extends Controller
         );
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('coach_url', route('coach.portal', $uitnodiging->token))
             ->with('coach_url_club', $club->naam);
     }
@@ -366,7 +366,7 @@ class ClubController extends Controller
 
         if ($existingCount >= 3) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Maximum 3 coaches per club bereikt');
         }
 
@@ -385,7 +385,7 @@ class ClubController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', "Coach {$coach->naam} toegevoegd (PIN: {$coach->pincode})")
             ->with('new_coach_id', $coach->id)
             ->with('new_coach_pin', $coach->pincode)
@@ -410,7 +410,7 @@ class ClubController extends Controller
         $coach->update($validated);
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Coach bijgewerkt');
     }
 
@@ -427,7 +427,7 @@ class ClubController extends Controller
         $coach->delete();
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', "Coach {$naam} verwijderd");
     }
 
@@ -443,7 +443,7 @@ class ClubController extends Controller
         $newPin = $coach->regeneratePincode();
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', "Nieuwe PIN voor {$coach->naam}: {$newPin}")
             ->with('new_coach_id', $coach->id)
             ->with('new_coach_pin', $newPin)
@@ -461,7 +461,7 @@ class ClubController extends Controller
         ]);
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Extra coachkaart toegevoegd voor ' . $club->naam);
     }
 
@@ -480,7 +480,7 @@ class ClubController extends Controller
 
         if (!$kaart) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Geen ongebruikte coachkaart om te verwijderen');
         }
 
@@ -491,14 +491,14 @@ class ClubController extends Controller
 
         if ($totaal <= 1) {
             return redirect()
-                ->route('toernooi.club.index', $toernooi)
+                ->route('toernooi.club.index', $toernooi->routeParams())
                 ->with('error', 'Minimaal 1 coachkaart vereist');
         }
 
         $kaart->delete();
 
         return redirect()
-            ->route('toernooi.club.index', $toernooi)
+            ->route('toernooi.club.index', $toernooi->routeParams())
             ->with('success', 'Coachkaart verwijderd voor ' . $club->naam);
     }
 

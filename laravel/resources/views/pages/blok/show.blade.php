@@ -12,7 +12,7 @@
     </div>
     <div class="space-x-2">
         @if(!$blok->weging_gesloten)
-        <form action="{{ route('toernooi.blok.sluit-weging', [$toernooi, $blok]) }}" method="POST" class="inline">
+        <form action="{{ route('toernooi.blok.sluit-weging', $toernooi->routeParamsWith(['blok' => $blok])) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
                     onclick="return confirm('Weging sluiten?')">
@@ -20,7 +20,7 @@
             </button>
         </form>
         @endif
-        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
+        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
             Naar Zaaloverzicht
         </a>
     </div>
@@ -41,7 +41,7 @@
             <tr class="hover:bg-gray-50">
                 <td class="px-4 py-3 font-medium">Mat {{ $poule->mat?->nummer }}</td>
                 <td class="px-4 py-3">
-                    <a href="{{ route('toernooi.poule.show', [$toernooi, $poule]) }}" class="text-blue-600 hover:text-blue-800">
+                    <a href="{{ route('toernooi.poule.show', $toernooi->routeParamsWith(['poule' => $poule])) }}" class="text-blue-600 hover:text-blue-800">
                         {{ $poule->getDisplayTitel() }}
                     </a>
                 </td>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="mt-6">
-    <a href="{{ route('toernooi.blok.index', $toernooi) }}" class="text-blue-600 hover:text-blue-800">
+    <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
         ← Terug naar blokken
     </a>
 </div>

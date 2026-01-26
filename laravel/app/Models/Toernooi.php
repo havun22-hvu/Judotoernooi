@@ -85,6 +85,27 @@ class Toernooi extends Model
         return 'slug';
     }
 
+    /**
+     * Get route parameters for this toernooi (includes organisator)
+     * Usage: route('toernooi.show', $toernooi->routeParams())
+     */
+    public function routeParams(): array
+    {
+        return [
+            'organisator' => $this->organisator?->slug ?? $this->organisator_id,
+            'toernooi' => $this->slug,
+        ];
+    }
+
+    /**
+     * Get route parameters with additional params
+     * Usage: route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka]))
+     */
+    public function routeParamsWith(array $params): array
+    {
+        return array_merge($this->routeParams(), $params);
+    }
+
     protected $table = 'toernooien';
 
     protected $fillable = [

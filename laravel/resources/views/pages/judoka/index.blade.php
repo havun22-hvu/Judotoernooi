@@ -42,11 +42,11 @@
                     <td class="py-1">{{ $judoka->club?->naam ?? '-' }}</td>
                     <td class="py-1 text-red-600">{{ $judoka->import_warnings ?: 'Onbekende categorie' }}</td>
                     <td class="py-1 text-right whitespace-nowrap">
-                        <a href="{{ route('toernooi.judoka.show', [$toernooi, $judoka]) }}"
+                        <a href="{{ route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka])) }}"
                            class="text-blue-600 hover:text-blue-800 text-xs mr-2">
                             Bekijken
                         </a>
-                        <form action="{{ route('toernooi.judoka.destroy', [$toernooi, $judoka]) }}" method="POST" class="inline"
+                        <form action="{{ route('toernooi.judoka.destroy', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je {{ $judoka->naam }} wilt verwijderen?')">
                             @csrf
                             @method('DELETE')
@@ -78,7 +78,7 @@
                 <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
             </div>
         </div>
-        <a href="{{ route('toernooi.edit', $toernooi) }}?tab=toernooi#categorieen"
+        <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
             Naar Instellingen
         </a>
@@ -94,14 +94,14 @@
         @endif
     </div>
     <div class="flex space-x-2">
-        <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Importeren
         </a>
         <button onclick="document.getElementById('addJudokaModal').classList.remove('hidden')"
                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             + Judoka toevoegen
         </button>
-        <form action="{{ route('toernooi.judoka.valideer', $toernooi) }}" method="POST" class="inline">
+        <form action="{{ route('toernooi.judoka.valideer', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 Valideren
@@ -482,7 +482,7 @@ function judokaTable() {
 </script>
 @else
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-    Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi) }}" class="text-blue-600">Importeer deelnemers</a>.
+    Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="text-blue-600">Importeer deelnemers</a>.
 </div>
 @endif
 
@@ -495,7 +495,7 @@ function judokaTable() {
                     class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
 
-        <form action="{{ route('toernooi.judoka.store', $toernooi) }}" method="POST">
+        <form action="{{ route('toernooi.judoka.store', $toernooi->routeParams()) }}" method="POST">
             @csrf
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
