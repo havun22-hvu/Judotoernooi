@@ -1801,13 +1801,13 @@
                     <select name="portaal_modus" id="portaal_modus"
                             class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onchange="toggleMollieOptie()">
-                        <option value="uit" {{ ($toernooi->portaal_modus ?? 'uit') === 'uit' ? 'selected' : '' }}>
+                        <option value="uit" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'uit' ? 'selected' : '' }}>
                             Uit - Alleen bekijken (organisator beheert alles)
                         </option>
-                        <option value="mutaties" {{ ($toernooi->portaal_modus ?? 'uit') === 'mutaties' ? 'selected' : '' }}>
+                        <option value="mutaties" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'mutaties' ? 'selected' : '' }}>
                             Alleen mutaties - Budoscholen kunnen wijzigen, niet inschrijven
                         </option>
-                        <option value="volledig" {{ ($toernooi->portaal_modus ?? 'uit') === 'volledig' ? 'selected' : '' }}>
+                        <option value="volledig" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'selected' : '' }}>
                             Volledig - Budoscholen kunnen inschrijven én wijzigen
                         </option>
                     </select>
@@ -1856,7 +1856,7 @@
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Online Betalingen</h2>
 
         <!-- Hint als portaal niet op volledig staat -->
-        <div class="mollie-hint p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4 {{ ($toernooi->portaal_modus ?? 'uit') === 'volledig' ? 'hidden' : '' }}">
+        <div class="mollie-hint p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4 {{ ($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'hidden' : '' }}">
             <p class="text-yellow-800 text-sm">
                 <strong>Let op:</strong> Online betalingen zijn alleen zinvol als het portaal op "Volledig" staat (nieuwe inschrijvingen).
                 Bij "Uit" of "Alleen mutaties" regel je de betaling extern.
