@@ -36,6 +36,15 @@
                                     <span class="font-bold text-gray-800" x-text="toegang.label"></span>
                                     <span class="block text-xs" :class="toegang.is_gebonden ? 'text-green-600' : 'text-gray-400'" x-text="toegang.status"></span>
                                 </div>
+                                {{-- Naam (editable) --}}
+                                <div class="flex-1 max-w-xs" x-show="rol.key !== 'mat'">
+                                    <input type="text"
+                                           :value="toegang.naam"
+                                           @blur="updateNaam(toegang, $event.target.value)"
+                                           @keydown.enter="$event.target.blur()"
+                                           placeholder="Naam vrijwilliger..."
+                                           class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
                                 {{-- PIN --}}
                                 <div class="text-center">
                                     <span class="text-xs text-gray-500 block">PIN</span>
@@ -179,6 +188,28 @@ function deviceToegangen() {
                 }
             } catch (e) {
                 console.error('Failed to add toegang:', e);
+            }
+        },
+
+        async updateNaam(toegang, naam) {
+            if (toegang.naam === naam) return;
+            try {
+                const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}`, {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ ...toegang, naam }),
+                });
+                if (response.ok) {
+                    const updated = await response.json();
+                    Object.assign(toegang, updated);
+                }
+            } catch (e) {
+                console.error('Failed to update naam:', e);
             }
         },
 
