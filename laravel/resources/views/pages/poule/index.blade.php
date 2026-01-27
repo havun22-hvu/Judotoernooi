@@ -182,9 +182,6 @@
         <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
             Verifieer poules
         </button>
-        <button onclick="openNieuwePouleModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            + Nieuwe poule
-        </button>
     </div>
 </div>
 
@@ -241,13 +238,25 @@
 
 <!-- Per leeftijdsklasse -->
 @forelse($poulesPerKlasse as $leeftijdsklasse => $klassePoules)
+@php
+    // Bepaal of deze categorie vaste gewichtsklassen heeft
+    $categorieKey = $toernooi->getCategorieKeyByLabel($leeftijdsklasse);
+    $categorieGewichten = $categorieKey ? ($toernooi->getAlleGewichtsklassen()[$categorieKey]['gewichten'] ?? []) : [];
+    $heeftVasteGewichten = !empty($categorieGewichten);
+@endphp
 <div class="mb-8 w-full" x-data="{ open: true }">
-    <button @click="open = !open" class="w-full flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg hover:bg-blue-700">
-        <span class="text-lg font-bold">{{ $leeftijdsklasseLabels[$leeftijdsklasse] ?? $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
-        <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </button>
+    <div class="flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg">
+        <button @click="open = !open" class="flex-1 flex justify-between items-center hover:bg-blue-700 -m-3 p-3 rounded-tl-lg">
+            <span class="text-lg font-bold">{{ $leeftijdsklasseLabels[$leeftijdsklasse] ?? $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
+            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <button onclick="openNieuwePouleModal('{{ $categorieKey }}', '{{ $leeftijdsklasse }}', {{ $heeftVasteGewichten ? 'true' : 'false' }})"
+                class="ml-3 bg-white text-blue-800 hover:bg-blue-100 text-sm font-bold py-1.5 px-3 rounded">
+            + Nieuwe poule
+        </button>
+    </div>
 
     <div x-show="open" x-collapse class="bg-gray-50 rounded-b-lg shadow p-4">
         @php
@@ -452,9 +461,9 @@
                     @endforeach
                 </select>
             </div>
-            <div class="mb-4">
+            <div class="mb-4" id="gewichtsklasse-container">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gewichtsklasse</label>
-                <select id="gewichtsklasse" class="w-full border rounded px-3 py-2" required disabled>
+                <select id="gewichtsklasse" class="w-full border rounded px-3 py-2" disabled>
                     <option value="">Selecteer eerst leeftijdsklasse</option>
                 </select>
             </div>
@@ -529,11 +538,38 @@ document.addEventListener('click', function(e) {
     }
 });
 
-function openNieuwePouleModal() {
+function openNieuwePouleModal(categorieKey = null, categorieLabel = null, heeftVasteGewichten = true) {
     document.getElementById('nieuwe-poule-modal').classList.remove('hidden');
-    document.getElementById('leeftijdsklasse').value = '';
-    document.getElementById('gewichtsklasse').innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
-    document.getElementById('gewichtsklasse').disabled = true;
+
+    const leeftijdsSelect = document.getElementById('leeftijdsklasse');
+    const gewichtsSelect = document.getElementById('gewichtsklasse');
+    const gewichtsContainer = document.getElementById('gewichtsklasse-container');
+
+    if (categorieKey && categorieLabel) {
+        // Voorgeselecteerde categorie
+        leeftijdsSelect.value = categorieKey;
+
+        if (heeftVasteGewichten && gewichtsklassen[categorieKey]?.gewichten?.length > 0) {
+            // Toon gewichtsklasse dropdown
+            gewichtsContainer.classList.remove('hidden');
+            const gewichten = gewichtsklassen[categorieKey].gewichten;
+            gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
+                gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
+            gewichtsSelect.disabled = false;
+        } else {
+            // Verberg gewichtsklasse dropdown (variabele gewichten)
+            gewichtsContainer.classList.add('hidden');
+            gewichtsSelect.innerHTML = '<option value="">Variabel</option>';
+            gewichtsSelect.value = '';
+            gewichtsSelect.disabled = true;
+        }
+    } else {
+        // Geen voorgeselecteerde categorie
+        leeftijdsSelect.value = '';
+        gewichtsContainer.classList.remove('hidden');
+        gewichtsSelect.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+        gewichtsSelect.disabled = true;
+    }
 }
 
 function closeNieuwePouleModal() {
@@ -704,6 +740,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const gewichtsSelect = document.getElementById('gewichtsklasse');
     const form = document.getElementById('nieuwe-poule-form');
 
+    const gewichtsContainer = document.getElementById('gewichtsklasse-container');
+
     if (leeftijdsSelect) {
         leeftijdsSelect.addEventListener('change', function() {
             const key = this.value;
@@ -711,13 +749,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!key || !gewichtsklassen[key]) {
                 gewichtsSelect.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
                 gewichtsSelect.disabled = true;
+                gewichtsContainer.classList.remove('hidden');
                 return;
             }
 
-            const gewichten = gewichtsklassen[key].gewichten;
-            gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
-                gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
-            gewichtsSelect.disabled = false;
+            const gewichten = gewichtsklassen[key].gewichten || [];
+
+            // Bij variabele gewichten (lege array): verberg gewichtsklasse veld
+            if (gewichten.length === 0) {
+                gewichtsContainer.classList.add('hidden');
+                gewichtsSelect.innerHTML = '<option value="">Variabel</option>';
+                gewichtsSelect.value = '';
+                gewichtsSelect.disabled = true;
+            } else {
+                gewichtsContainer.classList.remove('hidden');
+                gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
+                    gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
+                gewichtsSelect.disabled = false;
+            }
         });
     }
 
@@ -728,8 +777,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const leeftijdsklasseKey = leeftijdsSelect.value;
             const leeftijdsklasseLabel = leeftijdsSelect.selectedOptions[0]?.dataset?.label;
             const gewichtsklasse = gewichtsSelect.value;
+            const gewichten = gewichtsklassen[leeftijdsklasseKey]?.gewichten || [];
+            const heeftVasteGewichten = gewichten.length > 0;
 
-            if (!leeftijdsklasseKey || !gewichtsklasse) return;
+            // Alleen gewichtsklasse verplicht als categorie vaste gewichten heeft
+            if (!leeftijdsklasseKey) return;
+            if (heeftVasteGewichten && !gewichtsklasse) return;
 
             try {
                 const response = await fetch(nieuwePouleUrl, {
@@ -741,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({
                         leeftijdsklasse: leeftijdsklasseLabel,
-                        gewichtsklasse: gewichtsklasse
+                        gewichtsklasse: gewichtsklasse || null
                     })
                 });
 

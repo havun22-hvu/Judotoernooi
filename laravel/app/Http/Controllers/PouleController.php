@@ -150,7 +150,7 @@ class PouleController extends Controller
     {
         $validated = $request->validate([
             'leeftijdsklasse' => 'required|string',
-            'gewichtsklasse' => 'required|string',
+            'gewichtsklasse' => 'nullable|string',
         ]);
 
         // Get next nummer for this tournament
@@ -158,11 +158,16 @@ class PouleController extends Controller
         $nieuweNummer = $maxNummer + 1;
 
         // Create the poule
+        $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
+        $titel = $gewichtsklasse
+            ? $validated['leeftijdsklasse'] . ' ' . $gewichtsklasse
+            : $validated['leeftijdsklasse'];
+
         $poule = $toernooi->poules()->create([
             'nummer' => $nieuweNummer,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
-            'gewichtsklasse' => $validated['gewichtsklasse'],
-            'titel' => $validated['leeftijdsklasse'] . ' ' . $validated['gewichtsklasse'],
+            'gewichtsklasse' => $gewichtsklasse,
+            'titel' => $titel,
             'aantal_judokas' => 0,
             'aantal_wedstrijden' => 0,
         ]);
