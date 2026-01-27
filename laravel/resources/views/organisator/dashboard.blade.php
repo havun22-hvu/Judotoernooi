@@ -99,7 +99,7 @@
                     templates: @json($organisator->toernooiTemplates ?? []),
                     async deleteTemplate(id) {
                         if (!confirm('Weet je zeker dat je deze template wilt verwijderen?')) return;
-                        const response = await fetch(`/templates/${id}`, {
+                        const response = await fetch(`/{{ $organisator->slug }}/templates/${id}`, {
                             method: 'DELETE',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',

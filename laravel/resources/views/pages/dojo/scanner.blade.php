@@ -165,7 +165,8 @@
     </div>
 
     <script>
-        const toernooiId = {{ $toernooi->id }};
+        const organisatorSlug = '{{ $toernooi->organisator->slug }}';
+        const toernooiSlug = '{{ $toernooi->slug }}';
         let html5QrCode = null;
         let scanCount = 0;
         let isProcessing = false;
@@ -194,7 +195,7 @@
         // Load clubs
         async function loadClubs() {
             try {
-                const response = await fetch(`/dojo/${toernooiId}/clubs`);
+                const response = await fetch(`/${organisatorSlug}/${toernooiSlug}/dojo/clubs`);
                 allClubs = await response.json();
                 renderClubs(allClubs);
             } catch (error) {
@@ -237,7 +238,7 @@
             document.getElementById('club-detail').classList.remove('hidden');
 
             try {
-                const response = await fetch(`/dojo/${toernooiId}/club/${clubId}`);
+                const response = await fetch(`/${organisatorSlug}/${toernooiSlug}/dojo/club/${clubId}`);
                 const data = await response.json();
 
                 document.getElementById('club-detail-naam').textContent = data.club.naam;

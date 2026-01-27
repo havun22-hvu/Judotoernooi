@@ -409,9 +409,9 @@ Route::post('coach-kaart/{qrCode}/checkin', [CoachKaartController::class, 'check
 Route::post('coach-kaart/{qrCode}/checkout', [CoachKaartController::class, 'checkout'])->name('coach-kaart.checkout');
 Route::get('coach-kaart/{qrCode}/geschiedenis', [CoachKaartController::class, 'geschiedenis'])->name('coach-kaart.geschiedenis');
 
-// Dojo overzicht API (voor dojo scanner tab)
-Route::get('dojo/{toernooi}/clubs', [CoachKaartController::class, 'dojoClubs'])->name('dojo.clubs');
-Route::get('dojo/{toernooi}/club/{club}', [CoachKaartController::class, 'dojoClubDetail'])->name('dojo.club.detail');
+// Dojo overzicht API (voor dojo scanner tab) - NEW URL structure
+Route::get('{organisator}/{toernooi}/dojo/clubs', [CoachKaartController::class, 'dojoClubs'])->name('dojo.clubs');
+Route::get('{organisator}/{toernooi}/dojo/club/{club}', [CoachKaartController::class, 'dojoClubDetail'])->name('dojo.club.detail');
 
 // Role access via secret code (vrijwilligers) - LEGACY
 Route::get('team/{code}', [RoleToegang::class, 'access'])->name('rol.toegang');
