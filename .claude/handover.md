@@ -1,14 +1,18 @@
 # Handover
 
-## Laatste Sessie: 27 januari 2026
+## Laatste Sessie: 27 januari 2026 (avond)
 
 ### Wat is gedaan:
-- **URL Restructuring VOLTOOID**: Grote refactor van URL structuur
-  - Oud: `/toernooi/{slug}`, `/mat/12`, etc.
-  - Nieuw: `/{organisator}/toernooi/{toernooi}/...`
-- **Controller updates**: Alle 15+ controllers krijgen `Organisator $organisator` als eerste parameter
-- **View route fixes**: Alle `$toernooi` → `$toernooi->routeParams()` in 9 blade files
-- **Documentatie**: FREEMIUM.md aangemaakt, URL-STRUCTUUR.md bijgewerkt
+- **URL fixes na restructuring**:
+  - Dashboard template delete: `/templates/${id}` → `/${org}/templates/${id}`
+  - Dojo API routes gemigreerd: `/dojo/{toernooi}/...` → `/{org}/{toernooi}/dojo/...`
+  - Scanner.blade.php JavaScript aangepast voor nieuwe URLs
+  - URL-STRUCTUUR.md bijgewerkt met sectie 9 (Dojo Scanner API)
+
+### Nog te testen:
+- [ ] Dashboard: template verwijderen werkt
+- [ ] Dojo scanner: overzicht tab laadt clubs
+- [ ] Dojo scanner: club detail laadt kaarten
 
 ### Openstaande items:
 
