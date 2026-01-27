@@ -148,6 +148,28 @@
 
 ---
 
+## Sessie: 27 januari 2026
+
+### Refactor: URL Structuur met Organisator Context
+- **Type:** Major refactor
+- **Wat:** Alle URLs nu met organisator context: `/{organisator}/toernooi/{toernooi}/...`
+- **Bestanden:** 15+ controllers, 20+ views, routes/web.php
+- **Docs:** `docs/URL-STRUCTUUR.md`, `docs/2-FEATURES/FREEMIUM.md`
+
+### Fix: Route parameters in views
+- **Type:** Bug fix
+- **Wat:** Alle `route(..., $toernooi)` vervangen door `route(..., $toernooi->routeParams())`
+- **Bestanden:** 9 blade files (layouts, publiek, spreker, toernooi, wedstrijddag)
+- **Reden:** Nieuwe URL structuur vereist organisator+toernooi in routes
+
+### Fix: Controller Organisator parameter
+- **Type:** Bug fix
+- **Wat:** Alle controller methods krijgen `Organisator $organisator` als eerste parameter
+- **Bestanden:** 15 controllers via batch script
+- **Oplossing:** Laravel route model binding verwacht organisator parameter
+
+---
+
 <!--
 TEMPLATE:
 

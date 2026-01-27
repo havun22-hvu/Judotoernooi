@@ -169,12 +169,12 @@
                 </button>
             </form>
             @else
-            {{-- Grijs: wacht op doorsturen, link naar wedstrijddag --}}
-            <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}"
-               class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
-            >
+            {{-- Grijs: wacht op doorsturen, waarschuwing + link naar wedstrijddag --}}
+            <button type="button"
+                    class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
+                    onclick="if(confirm('⚠️ Poule {{ $pouleInfo['nummer'] }} is nog niet doorgestuurd naar de mat.\n\nGa naar Wedstrijddag om de poule eerst door te sturen.')) { window.location.href='{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}'; }">
                 {{ $chipNaam }}
-            </a>
+            </button>
             @endif
             @endforeach
         </div>
