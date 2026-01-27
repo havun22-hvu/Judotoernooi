@@ -364,9 +364,9 @@ function judokaTable() {
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 club: @json($judoka->club?->naam),
                 incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewicht) ? 'true' : 'false' }},
-                url: '{{ route("toernooi.judoka.show", [$toernooi, $judoka]) }}',
-                editUrl: '{{ route("toernooi.judoka.edit", [$toernooi, $judoka]) }}',
-                deleteUrl: '{{ route("toernooi.judoka.destroy", [$toernooi, $judoka]) }}'
+                url: '{{ route("toernooi.judoka.show", $toernooi->routeParamsWith(["judoka" => $judoka])) }}',
+                editUrl: '{{ route("toernooi.judoka.edit", $toernooi->routeParamsWith(["judoka" => $judoka])) }}',
+                deleteUrl: '{{ route("toernooi.judoka.destroy", $toernooi->routeParamsWith(["judoka" => $judoka])) }}'
             },
             @endforeach
         ],
