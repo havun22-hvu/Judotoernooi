@@ -359,21 +359,49 @@ function setupDragDrop() {
             // Waar komt de gedropte chip vandaan?
             const bronVeld = kolomMapping[droppedIndex];
 
-            // Multi-veld logica (naam): toevoegen aan lijst
+            // Multi-veld logica (naam): toevoegen aan lijst of herordenen
             if (isMulti) {
+                // Als chip al in DIT veld zit -> herordenen
+                if (bronVeld === targetVeld) {
+                    // Bepaal nieuwe positie op basis van drop locatie
+                    const dropX = e.clientX;
+                    const chips = Array.from(this.querySelectorAll('.kolom-chip'));
+                    const draggedChip = this.querySelector(`.kolom-chip[data-index="${droppedIndex}"]`);
+
+                    // Vind insert positie
+                    let insertBefore = null;
+                    for (const chip of chips) {
+                        if (chip === draggedChip) continue;
+                        const rect = chip.getBoundingClientRect();
+                        if (dropX < rect.left + rect.width / 2) {
+                            insertBefore = chip;
+                            break;
+                        }
+                    }
+
+                    // Verplaats chip visueel
+                    if (insertBefore) {
+                        this.insertBefore(draggedChip, insertBefore);
+                    } else {
+                        this.insertBefore(draggedChip, this.querySelector('input'));
+                    }
+
+                    // Update array volgorde
+                    const newOrder = Array.from(this.querySelectorAll('.kolom-chip'))
+                        .map(c => parseInt(c.dataset.index));
+                    multiVeldKolommen[targetVeld] = newOrder;
+
+                    updateAlleInputs();
+                    updateAlleVoorbeelden();
+                    return;
+                }
+
                 // Verwijder uit oude locatie als nodig
                 if (bronVeld && bronVeld !== targetVeld) {
                     removeFromMultiVeld(bronVeld, droppedIndex);
                     const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
                     const oldChip = bronZone?.querySelector(`.kolom-chip[data-index="${droppedIndex}"]`);
                     if (oldChip) oldChip.remove();
-                }
-
-                // Als chip al in dit veld zit, negeer
-                if (bronVeld === targetVeld) {
-                    updateAlleInputs();
-                    updateAlleVoorbeelden();
-                    return;
                 }
 
                 // Voeg toe aan multi veld

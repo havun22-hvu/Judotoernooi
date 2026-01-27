@@ -33,9 +33,9 @@ class ImportService
     public function analyseerCsvData(array $header, array $data, bool $heeftVasteGewichtsklassen = true): array
     {
         $verwachteVelden = [
-            'naam' => ['naam', 'name', 'volledige naam', 'judoka', 'deelnemer'],
+            'naam' => ['naam', 'name', 'volledige naam', 'judoka', 'deelnemer', 'voornaam', 'achternaam', 'first name', 'last name'],
             'club' => ['club', 'vereniging', 'sportclub', 'judoclub', 'judoschool', 'school', 'dojo'],
-            'geboortejaar' => ['geboortejaar', 'jaar', 'geb.jaar', 'birth year', 'geb'],
+            'geboortejaar' => ['geboortejaar', 'geboortedatum', 'jaar', 'geb.jaar', 'birth year', 'geb', 'birthdate', 'dob'],
             'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
             'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
             'band' => ['band', 'gordel', 'belt', 'kyu', 'graad'],
