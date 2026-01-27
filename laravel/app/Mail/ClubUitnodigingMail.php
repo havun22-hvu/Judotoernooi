@@ -35,7 +35,7 @@ class ClubUitnodigingMail extends Mailable
                 'toernooi' => $this->uitnodiging->toernooi,
                 'club' => $club,
                 'portalUrl' => $club->getPortalUrl($this->uitnodiging->toernooi),
-                'pincode' => $club->pincode,
+                'pincode' => $club->getPincodeForToernooi($this->uitnodiging->toernooi),
             ],
         );
     }
