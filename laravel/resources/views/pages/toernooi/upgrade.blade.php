@@ -194,118 +194,111 @@
         </div>
     </div>
 
-    {{-- Free tier limitations --}}
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-        <h3 class="font-semibold text-yellow-800 mb-2">Gratis tier beperkingen:</h3>
-        <ul class="list-disc list-inside text-sm text-yellow-700 space-y-1">
-            <li>Maximaal 50 judoka's</li>
-            <li>Beperkte toegang tot Print/Noodplan functies</li>
-            <li>Judoka's kunnen niet verwijderd worden</li>
-        </ul>
-    </div>
-
     {{-- Upgrade options --}}
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">Stap 2: Kies je staffel</h2>
-    <p class="text-gray-600 mb-6">Selecteer het aantal judoka's dat je nodig hebt. Na betaling wordt je toernooi direct ontgrendeld.</p>
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Stap 2: Kies je aantal judoka's</h2>
 
     @if(count($upgradeOptions) === 0)
         <div class="bg-gray-100 rounded-lg p-6 text-center">
             <p class="text-gray-600">Er zijn geen upgrade opties beschikbaar. Het maximum aantal judoka's is bereikt.</p>
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            @foreach($upgradeOptions as $option)
-            <div class="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-blue-500 transition-colors cursor-pointer upgrade-option"
-                 data-tier="{{ $option['tier'] }}" data-prijs="{{ $option['prijs'] }}">
-                <div class="text-center">
-                    <h3 class="text-xl font-bold text-gray-800">{{ $option['label'] }}</h3>
-                    <p class="text-3xl font-bold text-blue-600 mt-2">&euro;{{ number_format($option['prijs'], 2, ',', '.') }}</p>
-                    <p class="text-sm text-gray-500 mt-1">eenmalig per toernooi</p>
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            {{-- Simple selector --}}
+            <div class="flex flex-col md:flex-row md:items-end gap-6">
+                <div class="flex-1">
+                    <label for="tier-select" class="block text-gray-700 font-medium mb-2">Hoeveel judoka's heb je nodig?</label>
+                    <select id="tier-select" class="w-full md:w-64 border-2 border-gray-300 rounded-lg px-4 py-3 text-lg focus:border-blue-500 focus:outline-none">
+                        <option value="">-- Kies aantal --</option>
+                        @foreach($upgradeOptions as $option)
+                        <option value="{{ $option['tier'] }}" data-prijs="{{ $option['prijs'] }}" data-max="{{ $option['max'] }}">
+                            Tot {{ $option['max'] }} judoka's
+                        </option>
+                        @endforeach
+                    </select>
                 </div>
-                <ul class="mt-4 text-sm text-gray-600 space-y-2">
-                    <li class="flex items-center">
-                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+
+                <div id="price-display" class="hidden">
+                    <p class="text-gray-600 text-sm mb-1">Eenmalige kosten</p>
+                    <p class="text-4xl font-bold text-blue-600">&euro;<span id="prijs-amount">0</span></p>
+                </div>
+            </div>
+
+            {{-- What you get (shown once) --}}
+            <div id="features-section" class="hidden mt-6 pt-6 border-t">
+                <p class="text-gray-700 font-medium mb-3">Dit krijg je:</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <div class="flex items-center text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
-                        Tot {{ $option['max'] }} judoka's
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        Tot <span id="max-judokas" class="font-semibold mx-1">0</span> judoka's
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
-                        Volledige Print/Noodplan toegang
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-4 h-4 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        Volledige Print/Noodplan
+                    </div>
+                    <div class="flex items-center text-gray-600">
+                        <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
                         Judoka's verwijderen/wijzigen
-                    </li>
-                </ul>
-            </div>
-            @endforeach
-        </div>
-
-        {{-- Payment form --}}
-        <form id="upgrade-form" action="{{ route('toernooi.upgrade.start', $toernooi->routeParams()) }}" method="POST" class="hidden">
-            @csrf
-            <input type="hidden" name="tier" id="selected-tier" value="">
-        </form>
-
-        <div id="selected-summary" class="hidden bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h3 class="font-semibold text-green-800">Geselecteerd: <span id="selected-label"></span></h3>
-                    <p class="text-green-700">Prijs: &euro;<span id="selected-prijs"></span></p>
+                    </div>
                 </div>
-                <button type="button" id="pay-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
-                    Betalen via Mollie
-                </button>
+            </div>
+
+            {{-- Pay button --}}
+            <div id="pay-section" class="hidden mt-6">
+                <form id="upgrade-form" action="{{ route('toernooi.upgrade.start', $toernooi->routeParams()) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="tier" id="selected-tier" value="">
+                    <button type="submit" class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                        Betalen via Mollie
+                    </button>
+                </form>
             </div>
         </div>
+
+        {{-- Pricing info --}}
+        <p class="text-sm text-gray-500 text-center">Prijzen: &euro;10 per 50 judoka's (boven de gratis 50)</p>
     @endif
     @endif
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const options = document.querySelectorAll('.upgrade-option');
-    const form = document.getElementById('upgrade-form');
+    const select = document.getElementById('tier-select');
     const tierInput = document.getElementById('selected-tier');
-    const summary = document.getElementById('selected-summary');
-    const labelSpan = document.getElementById('selected-label');
-    const prijsSpan = document.getElementById('selected-prijs');
-    const payButton = document.getElementById('pay-button');
+    const priceDisplay = document.getElementById('price-display');
+    const prijsAmount = document.getElementById('prijs-amount');
+    const maxJudokas = document.getElementById('max-judokas');
+    const featuresSection = document.getElementById('features-section');
+    const paySection = document.getElementById('pay-section');
 
-    if (!options.length) return;
+    if (!select) return;
 
-    options.forEach(option => {
-        option.addEventListener('click', function() {
-            // Remove selection from all
-            options.forEach(o => o.classList.remove('border-blue-500', 'bg-blue-50'));
+    select.addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
 
-            // Add selection to clicked
-            this.classList.add('border-blue-500', 'bg-blue-50');
+        if (this.value) {
+            const prijs = selected.dataset.prijs;
+            const max = selected.dataset.max;
 
-            // Update form
-            const tier = this.dataset.tier;
-            const prijs = this.dataset.prijs;
-            tierInput.value = tier;
-            labelSpan.textContent = tier + " judoka's";
-            prijsSpan.textContent = parseFloat(prijs).toFixed(2).replace('.', ',');
+            tierInput.value = this.value;
+            prijsAmount.textContent = parseInt(prijs);
+            maxJudokas.textContent = max;
 
-            // Show summary
-            summary.classList.remove('hidden');
-        });
+            priceDisplay.classList.remove('hidden');
+            featuresSection.classList.remove('hidden');
+            paySection.classList.remove('hidden');
+        } else {
+            priceDisplay.classList.add('hidden');
+            featuresSection.classList.add('hidden');
+            paySection.classList.add('hidden');
+            tierInput.value = '';
+        }
     });
-
-    if (payButton) {
-        payButton.addEventListener('click', function() {
-            if (tierInput.value) {
-                form.submit();
-            }
-        });
-    }
 });
 </script>
 @endsection
