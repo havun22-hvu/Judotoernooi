@@ -100,6 +100,29 @@ class ToernooiBetalingController extends Controller
 
         $organisator = Auth::guard('organisator')->user();
 
+        // Test organisator: bypass payment, direct upgrade
+        if ($organisator->isTest()) {
+            $betaling = ToernooiBetaling::create([
+                'toernooi_id' => $toernooi->id,
+                'organisator_id' => $organisator->id,
+                'mollie_payment_id' => 'test_' . uniqid(),
+                'bedrag' => 0, // No fees for test organisators
+                'tier' => $validated['tier'],
+                'max_judokas' => $maxJudokas,
+                'status' => ToernooiBetaling::STATUS_PAID,
+                'betaald_op' => now(),
+            ]);
+
+            // Direct upgrade toernooi
+            $toernooi->update([
+                'plan_type' => $validated['tier'],
+                'max_judokas' => $maxJudokas,
+            ]);
+
+            return redirect()->route('toernooi.upgrade.succes', $toernooi->routeParamsWith(['betaling' => $betaling]))
+                ->with('success', '✓ Test upgrade succesvol - geen betaling nodig');
+        }
+
         // Create betaling record
         $betaling = ToernooiBetaling::create([
             'toernooi_id' => $toernooi->id,

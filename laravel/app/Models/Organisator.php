@@ -21,6 +21,7 @@ class Organisator extends Authenticatable
         'email',
         'telefoon',
         'is_sitebeheerder',
+        'is_test',
         'password',
         'email_verified_at',
         'laatste_login',
@@ -43,6 +44,7 @@ class Organisator extends Authenticatable
     protected $casts = [
         'is_premium' => 'boolean',
         'is_sitebeheerder' => 'boolean',
+        'is_test' => 'boolean',
         'kyc_compleet' => 'boolean',
     ];
 
@@ -112,6 +114,14 @@ class Organisator extends Authenticatable
     public function isSitebeheerder(): bool
     {
         return $this->is_sitebeheerder === true;
+    }
+
+    /**
+     * Check if this is a test organisator (bypasses payments)
+     */
+    public function isTest(): bool
+    {
+        return $this->is_test === true;
     }
 
     /**
