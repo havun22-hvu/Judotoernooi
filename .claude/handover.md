@@ -1,6 +1,37 @@
 # Handover
 
-## Laatste Sessie: 27 januari 2026 (avond)
+## Laatste Sessie: 27 januari 2026 (late avond)
+
+### Wat is gedaan:
+- **is_premium veld** toegevoegd aan organisatoren tabel
+- **Freemium preset limiet**: Gratis = 2 presets, Premium = onbeperkt
+- **Cees Veen** ingesteld als premium (production)
+- **Device toegangen URL fix**: `url()` calls in device-toegangen.blade.php gecorrigeerd
+- **Barrage integratie spreker**: Originele poule met gecombineerde punten naar spreker
+
+### ⚠️ OPENSTAAND BUG: Preset Opslaan (fix in weekend)
+
+**Probleem:**
+Na opslaan van een preset (bijv. "Wimpeltoernooi"):
+1. ~~Focus springt naar top van pagina~~ (mogelijk gefixed met `type="button"` + `blur()`)
+2. **Verkeerde preset wordt geselecteerd** - bijv. "wkjls" i.p.v. "Wimpeltoernooi"
+
+**Vermoedelijke oorzaak:**
+Race condition tussen page load `loadEigenPresets()` en `savePreset()`. Ondanks request counter (`presetRequestId`) lijkt er nog steeds een timing issue.
+
+**Relevante code:**
+- `edit.blade.php` regels 1167-1210: `loadEigenPresets()` functie
+- `edit.blade.php` regels 1319-1365: `savePreset()` functie
+- Request counter op regel 1170: `let presetRequestId = 0;`
+
+**Te onderzoeken:**
+1. Check of `data.id` van server correct is na opslaan
+2. Check of `String(p.id) === String(presetIdToSelect)` correct matcht
+3. Mogelijk: vervang hele aanpak door pagina reload na preset opslaan (simpelste fix)
+
+---
+
+## Sessie: 27 januari 2026 (avond)
 
 ### Wat is gedaan:
 - **URL fixes na restructuring**:
