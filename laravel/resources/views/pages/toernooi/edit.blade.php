@@ -1164,13 +1164,21 @@
             // Opgeslagen eigen preset ID (uit gewichtsklassen JSON)
             const opgeslagenEigenPresetId = {{ $eigenPresetId ?? 'null' }};
 
+            // Request counter om race conditions te voorkomen
+            let presetRequestId = 0;
+
             // Load presets. Optional selectPresetId to select after loading (used after saving new preset)
             async function loadEigenPresets(selectPresetId = null) {
                 @if(Auth::guard('organisator')->check())
+                const thisRequestId = ++presetRequestId;
                 try {
                     const response = await fetch('{{ route("organisator.presets.index", ["organisator" => $toernooi->organisator]) }}', {
                         credentials: 'same-origin'
                     });
+
+                    // Als er een nieuwere request is, negeer deze response
+                    if (thisRequestId !== presetRequestId) return;
+
                     if (response.ok) {
                         const contentType = response.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
@@ -1186,7 +1194,6 @@
                             // Determine which preset to select: passed parameter, or initial saved preset
                             const presetIdToSelect = selectPresetId || opgeslagenEigenPresetId;
                             if (presetIdToSelect) {
-                                // Gebruik == voor loose comparison (int vs string)
                                 const presetToSelect = eigenPresets.find(p => String(p.id) === String(presetIdToSelect));
                                 if (presetToSelect) {
                                     huidigePresetId = presetToSelect.id;
@@ -1336,28 +1343,14 @@
                         // 2. Toon success
                         showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
 
-                        // 3. Voeg nieuwe preset toe aan dropdown (of update bestaande)
-                        let option = presetsDropdown.querySelector(`option[value="${data.id}"]`);
-                        if (!option) {
-                            option = document.createElement('option');
-                            option.value = data.id;
-                            presetsDropdown.appendChild(option);
-                        }
-                        option.textContent = data.naam;
-
-                        // 4. Selecteer de preset in dropdown
-                        presetsDropdown.value = String(data.id);
-
-                        // 5. Update huidige preset tracking
+                        // 3. Update tracking VOORDAT we presets laden
                         huidigePresetId = data.id;
                         huidigePresetNaam = data.naam;
 
-                        // 6. Update radio button label
-                        eigenPresetNaamDisplay.textContent = data.naam;
-                        eigenPresetRadioLabel.style.display = '';
-                        eigenPresetRadio.checked = true;
+                        // 4. Laad presets opnieuw van server (met nieuwe preset) en selecteer
+                        await loadEigenPresets(data.id);
 
-                        // 7. Update delete button
+                        // 5. Update delete button
                         updateDeleteButton();
                     } else {
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
