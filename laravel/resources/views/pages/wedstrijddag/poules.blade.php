@@ -721,9 +721,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
-const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
-const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['format' => ':id'])) }}';
+const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 
 async function updateKruisfinale(pouleId, plaatsen) {
     try {
