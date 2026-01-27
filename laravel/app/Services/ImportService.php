@@ -370,9 +370,23 @@ class ImportService
 
     /**
      * Get value from row by column name (case-insensitive)
+     * Supports comma-separated indices for multi-column fields (e.g., "0,1,2" for combining voornaam, tussenvoegsel, achternaam)
      */
     private function getWaarde(array $rij, string $kolom): mixed
     {
+        // Check for comma-separated indices (multi-column)
+        if (str_contains($kolom, ',')) {
+            $indices = array_map('intval', explode(',', $kolom));
+            $parts = [];
+            foreach ($indices as $idx) {
+                $val = $rij[$idx] ?? null;
+                if ($val !== null && trim((string)$val) !== '') {
+                    $parts[] = trim((string)$val);
+                }
+            }
+            return $parts ? implode(' ', $parts) : null;
+        }
+
         // If column is numeric index
         if (is_numeric($kolom)) {
             return $rij[(int)$kolom] ?? null;
