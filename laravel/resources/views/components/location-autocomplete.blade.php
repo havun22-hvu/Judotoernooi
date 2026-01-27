@@ -4,7 +4,7 @@
 --}}
 @props(['name' => 'locatie', 'value' => '', 'placeholder' => 'Zoek adres...'])
 
-<div x-data="locationAutocomplete('{{ $value }}')" class="relative">
+<div x-data="locationAutocomplete_{{ $name }}()" class="relative">
     <div class="flex gap-2">
         <div class="flex-1 relative">
             <input type="text"
@@ -27,6 +27,7 @@
         </div>
         {{-- Route button --}}
         <a x-show="query && query.length > 3"
+           x-cloak
            :href="'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(query)"
            target="_blank"
            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center gap-1 text-sm whitespace-nowrap"
@@ -60,12 +61,10 @@
     </div>
 </div>
 
-@once
-@push('scripts')
 <script>
-function locationAutocomplete(initialValue) {
+function locationAutocomplete_{{ $name }}() {
     return {
-        query: initialValue || '',
+        query: '{{ addslashes($value) }}',
         results: [],
         showResults: false,
         loading: false,
@@ -104,5 +103,3 @@ function locationAutocomplete(initialValue) {
     };
 }
 </script>
-@endpush
-@endonce
