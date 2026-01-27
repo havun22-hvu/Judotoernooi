@@ -156,10 +156,12 @@ class WedstrijdSchemaService
      */
     public function getSchemaVoorMat(Blok $blok, Mat $mat): array
     {
-        // Alleen poules die doorgestuurd zijn vanuit zaaloverzicht
+        // Alleen poules die doorgestuurd zijn EN wedstrijden hebben
+        // Poules zonder wedstrijden mogen niet op mat interface verschijnen
         $poules = Poule::where('blok_id', $blok->id)
             ->where('mat_id', $mat->id)
             ->whereNotNull('doorgestuurd_op')
+            ->whereHas('wedstrijden')  // Moet minimaal 1 wedstrijd hebben
             ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar', 'mat'])
             ->get();
 

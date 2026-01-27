@@ -155,7 +155,7 @@ class EliminatieService
             $huidigeAantal = $n / 2;  // Na eerste ronde
             while ($huidigeAantal > 1) {
                 $volgendeAantal = $huidigeAantal / 2;
-                $volgendeRonde = $this->getRondeNaam($huidigeAantal);
+                $volgendeRonde = $this->getRondeNaam($huidigeAantal, true);
 
                 for ($i = 0; $i < $volgendeAantal; $i++) {
                     $bracketPositie = $i + 1;
@@ -188,7 +188,7 @@ class EliminatieService
         $totaalEersteRonde = $d;              // Totaal wedstrijden in eerste ronde
         $echteWedstrijden = $n - $d;          // Wedstrijden met 2 judoka's
         $byeWedstrijden = 2 * $d - $n;        // Wedstrijden met 1 judoka (bye)
-        $eersteRonde = $this->getEersteRondeNaam($n);
+        $eersteRonde = $this->getRondeNaam($n);
 
         // Verdeel judoka's: eerst voor echte wedstrijden, dan byes
         $wedstrijdJudokas = array_slice($judokaIds, 0, $echteWedstrijden * 2);
@@ -231,7 +231,7 @@ class EliminatieService
 
         while ($huidigeAantal > 1) {
             $volgendeAantal = $huidigeAantal / 2;
-            $volgendeRonde = $this->getRondeNaam($huidigeAantal);
+            $volgendeRonde = $this->getRondeNaam($huidigeAantal, true);
 
             for ($i = 0; $i < $volgendeAantal; $i++) {
                 $bracketPositie = $i + 1;
