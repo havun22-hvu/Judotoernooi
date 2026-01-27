@@ -37,6 +37,13 @@ class Organisator extends Authenticatable
         'website',
         'kyc_compleet',
         'kyc_ingevuld_op',
+        'is_premium',
+    ];
+
+    protected $casts = [
+        'is_premium' => 'boolean',
+        'is_sitebeheerder' => 'boolean',
+        'kyc_compleet' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -180,6 +187,10 @@ class Organisator extends Authenticatable
      */
     public function canAddMorePresets(): bool
     {
+        // Premium users have no limit
+        if ($this->is_premium) {
+            return true;
+        }
         // Free tier: max 1 preset
         return $this->gewichtsklassenPresets()->count() < 1;
     }
