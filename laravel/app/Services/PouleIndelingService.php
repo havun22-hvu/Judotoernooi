@@ -30,7 +30,7 @@ class PouleIndelingService
         // Min/max are derived from preference list
         $this->minJudokas = $toernooi->min_judokas_poule;
         $this->maxJudokas = $toernooi->max_judokas_poule;
-        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
+        $this->prioriteiten = $toernooi->verdeling_prioriteiten ?? ['band', 'gewicht', 'leeftijd'];
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
         $this->classifier = new CategorieClassifier(
             $this->gewichtsklassenConfig,

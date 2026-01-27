@@ -783,7 +783,7 @@
                     </button>
                     <div id="prioriteit-container" class="flex gap-2">
                         @php
-                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['leeftijd', 'gewicht', 'band'];
+                            $prioriteiten = $toernooi->verdeling_prioriteiten ?? ['band', 'gewicht', 'leeftijd'];
                             // Backwards compatibility: filter old keys, keep only valid ones
                             $validKeys = ['leeftijd', 'gewicht', 'band'];
                             $prioriteiten = array_values(array_filter($prioriteiten, fn($k) => in_array($k, $validKeys)));
