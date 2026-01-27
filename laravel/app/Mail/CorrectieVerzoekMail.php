@@ -37,7 +37,7 @@ class CorrectieVerzoekMail extends Mailable
                 'club' => $this->club,
                 'judokas' => $this->judokas,
                 'portalUrl' => $this->club->getPortalUrl($this->toernooi),
-                'pincode' => $this->club->pincode,
+                'pincode' => $this->club->getPincodeForToernooi($this->toernooi),
             ],
         );
     }
