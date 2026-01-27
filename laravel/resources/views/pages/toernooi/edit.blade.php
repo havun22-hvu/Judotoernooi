@@ -1270,6 +1270,10 @@
 
             function hidePresetModal() {
                 presetModal.classList.add('hidden');
+                // Voorkom dat browser naar een element scrollt door focus weg te halen
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
             }
 
             // Close modal on backdrop click
