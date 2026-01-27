@@ -175,7 +175,20 @@ Korte URLs voor QR codes (token = authenticatie).
 
 ---
 
-### 9. Legacy Redirects
+### 9. Dojo Scanner API
+
+**Auth: Geen (interne API voor dojo scanner interface)**
+
+| URL | Doel |
+|-----|------|
+| `/{org}/{toernooi}/dojo/clubs` | Lijst clubs met coach kaarten |
+| `/{org}/{toernooi}/dojo/club/{club}` | Detail van club coach kaarten |
+
+> **Gebruikt door:** Dojo scanner interface (vrijwilligers device)
+
+---
+
+### 10. Legacy Redirects
 
 Oude URLs die doorverwijzen naar nieuwe structuur.
 
