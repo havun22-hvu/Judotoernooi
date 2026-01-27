@@ -52,8 +52,8 @@
 
         <div class="mb-6">
             <label for="locatie" class="block text-gray-700 font-bold mb-2">Locatie</label>
-            <input type="text" name="locatie" id="locatie" value="{{ old('locatie') }}"
-                   class="w-full border rounded px-3 py-2">
+            <x-location-autocomplete name="locatie" :value="old('locatie')" placeholder="Zoek sporthal of adres..." />
+            <p class="text-gray-500 text-sm mt-1">Typ om te zoeken, klik op Route voor navigatie</p>
         </div>
 
         <div class="flex justify-end space-x-4">

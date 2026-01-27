@@ -132,8 +132,7 @@
 
                 <div>
                     <label for="locatie" class="block text-gray-700 font-medium mb-1">Locatie</label>
-                    <input type="text" name="locatie" id="locatie" value="{{ old('locatie', $toernooi->locatie) }}"
-                           placeholder="Adres of naam sporthal" class="w-full border rounded px-3 py-2">
+                    <x-location-autocomplete name="locatie" :value="old('locatie', $toernooi->locatie)" placeholder="Zoek sporthal of adres..." />
                 </div>
             </div>
         </div>
@@ -1169,7 +1168,7 @@
             async function loadEigenPresets(selectPresetId = null) {
                 @if(Auth::guard('organisator')->check())
                 try {
-                    const response = await fetch('{{ route("organisator.presets.index") }}', {
+                    const response = await fetch('{{ route("organisator.presets.index", ["organisator" => $toernooi->organisator]) }}', {
                         credentials: 'same-origin'
                     });
                     if (response.ok) {
@@ -1317,7 +1316,7 @@
             async function savePreset(naam, overschrijven = false) {
                 const configuratie = collectConfiguratie();
                 try {
-                    const response = await fetch('{{ route("organisator.presets.store") }}', {
+                    const response = await fetch('{{ route("organisator.presets.store", ["organisator" => $toernooi->organisator]) }}', {
                         method: 'POST',
                         credentials: 'same-origin',
                         headers: {
@@ -1636,7 +1635,7 @@
                 this.loading = true;
                 this.message = '';
                 try {
-                    const res = await fetch('{{ route("templates.store", $toernooi->routeParams()) }}', {
+                    const res = await fetch('{{ route("toernooi.template.store", $toernooi->routeParams()) }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
