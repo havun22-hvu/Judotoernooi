@@ -81,7 +81,7 @@
                             <p class="font-medium text-gray-800">{{ $judoka->naam }}</p>
                             <p class="text-sm text-gray-600">
                                 {{ $judoka->gewichtsklasse }} kg |
-                                {{ ucfirst($judoka->band) }} |
+                                {{ ucfirst(\App\Enums\Band::stripKyu($judoka->band ?? '')) }} |
                                 {{ $judoka->leeftijdsklasse }}
                             </p>
                             @if($blok)

@@ -41,7 +41,7 @@
                     </tr>
                     <tr>
                         <td class="text-gray-600 py-1.5">Band</td>
-                        <td class="font-medium text-right py-1.5">{{ ucfirst($judoka->band) }}</td>
+                        <td class="font-medium text-right py-1.5">{{ ucfirst(\App\Enums\Band::stripKyu($judoka->band ?? '')) }}</td>
                     </tr>
                 </tbody>
             </table>

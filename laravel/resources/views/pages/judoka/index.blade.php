@@ -360,7 +360,7 @@ function judokaTable() {
                 gewicht: {{ $judoka->gewicht ?? 'null' }},
                 geboortejaar: {{ $judoka->geboortejaar ?? 'null' }},
                 geslacht: '{{ $judoka->geslacht == "M" ? "Jongen" : "Meisje" }}',
-                band: @json($judoka->band ? ucfirst($judoka->band) : null),
+                band: @json($judoka->band ? ucfirst(\App\Enums\Band::stripKyu($judoka->band)) : null),
                 bandOrder: {{ array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) !== false ? array_search(strtolower($judoka->band ?? ''), ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart']) : 99 }},
                 club: @json($judoka->club?->naam),
                 incompleet: {{ ($judoka->is_onvolledig || !$judoka->club_id || !$judoka->band || !$judoka->geboortejaar || !$judoka->gewicht) ? 'true' : 'false' }},

@@ -296,22 +296,31 @@ class JudokaController extends Controller
                 ->with('error', "Je probeert {$aantalTeImporteren} judoka's te importeren, maar er is alleen ruimte voor {$remaining}. Upgrade naar een betaald abonnement voor meer ruimte.");
         }
 
-        // Build column mapping: field name => header column name
+        // Build column mapping: field name => header column name OR numeric indices for multi-column
         $kolomMapping = [];
         foreach ($mapping as $veld => $kolomIndex) {
-            if ($kolomIndex !== null && $kolomIndex !== '' && isset($header[$kolomIndex])) {
-                $kolomMapping[$veld] = $header[$kolomIndex];
+            if ($kolomIndex !== null && $kolomIndex !== '') {
+                // Multi-column: keep as comma-separated indices (e.g., "0,1,2" for naam)
+                if (str_contains((string)$kolomIndex, ',')) {
+                    $kolomMapping[$veld] = $kolomIndex; // Pass indices directly
+                } elseif (isset($header[$kolomIndex])) {
+                    $kolomMapping[$veld] = $header[$kolomIndex];
+                }
             }
         }
 
         // Convert to associative array (pad rows to match header length)
+        // Also keep numeric indices for multi-column fields
         $headerCount = count($header);
         $rows = array_map(function($row) use ($header, $headerCount) {
             // Pad row with empty values if shorter than header
             $row = array_pad($row, $headerCount, '');
             // Truncate if longer than header
             $row = array_slice($row, 0, $headerCount);
-            return array_combine($header, $row);
+            // Combine with headers BUT also keep numeric indices
+            $assoc = array_combine($header, $row);
+            // Merge: numeric indices + named keys (numeric first for multi-column access)
+            return $row + $assoc;
         }, $data);
 
         $resultaat = $this->importService->importeerDeelnemers($toernooi, $rows, $kolomMapping);
