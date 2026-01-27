@@ -194,7 +194,7 @@ function deviceToegangen() {
         async updateNaam(toegang, naam) {
             if (toegang.naam === naam) return;
             try {
-                const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}`, {
+                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
                     method: 'PUT',
                     credentials: 'same-origin',
                     headers: {
@@ -216,7 +216,7 @@ function deviceToegangen() {
         async resetToegang(toegang) {
             if (!confirm('Device binding resetten? Het device moet opnieuw de PIN invoeren.')) return;
             try {
-                const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}/reset`, {
+                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}/reset`, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
@@ -233,7 +233,7 @@ function deviceToegangen() {
         async deleteToegang(toegang) {
             if (!confirm('Deze toegang verwijderen?')) return;
             try {
-                const response = await fetch(`{{ url("toernooi/{$toernooi->id}/api/device-toegang") }}/${toegang.id}`, {
+                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
                     method: 'DELETE',
                     credentials: 'same-origin',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
