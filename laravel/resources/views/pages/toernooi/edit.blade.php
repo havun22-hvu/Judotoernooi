@@ -1270,10 +1270,6 @@
 
             function hidePresetModal() {
                 presetModal.classList.add('hidden');
-                // Voorkom dat browser naar een element scrollt door focus weg te halen
-                if (document.activeElement) {
-                    document.activeElement.blur();
-                }
             }
 
             // Close modal on backdrop click
@@ -1316,10 +1312,8 @@
                 }
             }
 
-            // Save preset to server
+            // Save preset to server - SIMPEL
             async function savePreset(naam, overschrijven = false) {
-                // Bewaar scroll positie VOORDAT we iets doen
-                const scrollY = window.scrollY;
                 const configuratie = collectConfiguratie();
 
                 try {
@@ -1333,32 +1327,39 @@
                         body: JSON.stringify({ naam, configuratie, overschrijven })
                     });
 
+                    const data = await response.json();
+
                     if (response.ok) {
-                        const data = await response.json();
+                        // 1. Sluit modal
                         hidePresetModal();
+
+                        // 2. Toon success
                         showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
 
-                        // Direct de huidige preset instellen (voordat loadEigenPresets klaar is)
+                        // 3. Voeg nieuwe preset toe aan dropdown (of update bestaande)
+                        let option = presetsDropdown.querySelector(`option[value="${data.id}"]`);
+                        if (!option) {
+                            option = document.createElement('option');
+                            option.value = data.id;
+                            presetsDropdown.appendChild(option);
+                        }
+                        option.textContent = data.naam;
+
+                        // 4. Selecteer de preset in dropdown
+                        presetsDropdown.value = String(data.id);
+
+                        // 5. Update huidige preset tracking
                         huidigePresetId = data.id;
                         huidigePresetNaam = data.naam;
 
-                        // Update radio button DIRECT met de naam
-                        updateEigenPresetRadio(data.naam, true);
+                        // 6. Update radio button label
+                        eigenPresetNaamDisplay.textContent = data.naam;
+                        eigenPresetRadioLabel.style.display = '';
+                        eigenPresetRadio.checked = true;
 
-                        // Load presets in achtergrond en selecteer de juiste
-                        await loadEigenPresets(data.id);
+                        // 7. Update delete button
                         updateDeleteButton();
-
-                        // Herstel scroll - meerdere pogingen om browser reflows te overwinnen
-                        const restoreScroll = () => window.scrollTo({ top: scrollY, behavior: 'instant' });
-                        restoreScroll();
-                        requestAnimationFrame(restoreScroll);
-                        setTimeout(restoreScroll, 0);
-                        setTimeout(restoreScroll, 50);
-                        setTimeout(restoreScroll, 100);
-                        setTimeout(restoreScroll, 200);
                     } else {
-                        const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
                     }
                 } catch (e) {
