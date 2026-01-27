@@ -115,8 +115,11 @@ class ToernooiBetalingController extends Controller
 
             // Direct upgrade toernooi
             $toernooi->update([
-                'plan_type' => $validated['tier'],
-                'max_judokas' => $maxJudokas,
+                'plan_type' => 'paid',
+                'paid_tier' => $validated['tier'],
+                'paid_max_judokas' => $maxJudokas,
+                'paid_at' => now(),
+                'toernooi_betaling_id' => $betaling->id,
             ]);
 
             return redirect()->route('toernooi.upgrade.succes', $toernooi->routeParamsWith(['betaling' => $betaling]))

@@ -126,7 +126,7 @@
                                 <br>
                                 <span class="text-xs text-gray-500">{{ $info['uitleg'] }}</span>
                             </td>
-                            <td class="px-3 py-2 border drop-zone">
+                            <td class="px-3 py-2 border drop-zone {{ $veld === 'naam' ? 'multi-drop' : '' }}" data-multi="{{ $veld === 'naam' ? 'true' : 'false' }}">
                                 @if($detectie['csv_index'] !== null)
                                     <div class="kolom-chip cursor-move bg-blue-500 text-white px-3 py-1 rounded inline-flex items-center gap-2"
                                          draggable="true"
@@ -136,6 +136,9 @@
                                     </div>
                                 @endif
                                 <input type="hidden" name="mapping[{{ $veld }}]" value="{{ $detectie['csv_index'] }}" class="mapping-input">
+                                @if($veld === 'naam')
+                                <span class="text-xs text-gray-400 ml-2 multi-hint">(sleep meerdere kolommen)</span>
+                                @endif
                             </td>
                             <td class="px-3 py-2 border font-mono text-xs">
                                 <span class="voorbeeld-data">-</span>
@@ -244,6 +247,18 @@
     background-color: #f3f4f6;
     outline: 2px dashed #6b7280;
 }
+.drop-zone.multi-drop {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+.drop-zone.multi-drop .kolom-chip {
+    margin-right: 0;
+}
+.multi-hint {
+    flex-shrink: 0;
+}
 
 /* Preview tabel - professioneel */
 .preview-header.highlighted {
@@ -271,7 +286,13 @@ const veldLabels = @json(collect($veldInfo)->mapWithKeys(fn($v, $k) => [$k => $v
 const initDetectie = @json($analyse['detectie']);
 
 // Track welke kolom waar staat: kolomIndex -> veld (of null)
+// Voor multi-velden (naam): meerdere kolommen kunnen naar hetzelfde veld wijzen
 const kolomMapping = {};
+
+// Track volgorde van kolommen voor multi-velden
+const multiVeldKolommen = {
+    'naam': [] // Array van kolomIndexen in volgorde
+};
 
 // Init
 document.addEventListener('DOMContentLoaded', function() {
@@ -279,6 +300,9 @@ document.addEventListener('DOMContentLoaded', function() {
     for (const [veld, info] of Object.entries(initDetectie)) {
         if (info.csv_index !== null) {
             kolomMapping[info.csv_index] = veld;
+            if (veld === 'naam') {
+                multiVeldKolommen['naam'].push(info.csv_index);
+            }
         }
     }
 
@@ -330,13 +354,47 @@ function setupDragDrop() {
 
             const droppedIndex = parseInt(e.dataTransfer.getData('text/plain'));
             const targetVeld = this.closest('tr').dataset.veld;
-
-            // Welke chip zit hier al?
-            const bestaandeChip = this.querySelector('.kolom-chip');
-            const bestaandeIndex = bestaandeChip ? parseInt(bestaandeChip.dataset.index) : null;
+            const isMulti = this.dataset.multi === 'true';
 
             // Waar komt de gedropte chip vandaan?
             const bronVeld = kolomMapping[droppedIndex];
+
+            // Multi-veld logica (naam): toevoegen aan lijst
+            if (isMulti) {
+                // Verwijder uit oude locatie als nodig
+                if (bronVeld && bronVeld !== targetVeld) {
+                    removeFromMultiVeld(bronVeld, droppedIndex);
+                    const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
+                    const oldChip = bronZone?.querySelector(`.kolom-chip[data-index="${droppedIndex}"]`);
+                    if (oldChip) oldChip.remove();
+                }
+
+                // Als chip al in dit veld zit, negeer
+                if (bronVeld === targetVeld) {
+                    updateAlleInputs();
+                    updateAlleVoorbeelden();
+                    return;
+                }
+
+                // Voeg toe aan multi veld
+                kolomMapping[droppedIndex] = targetVeld;
+                if (!multiVeldKolommen[targetVeld]) multiVeldKolommen[targetVeld] = [];
+                multiVeldKolommen[targetVeld].push(droppedIndex);
+
+                // Maak chip
+                const newChip = createChip(droppedIndex);
+                this.insertBefore(newChip, this.querySelector('input'));
+                setupChipDrag(newChip);
+
+                updateUnclaimedChips();
+                updateAlleInputs();
+                updateAlleVoorbeelden();
+                return;
+            }
+
+            // Standaard single-veld logica
+            const bestaandeChip = this.querySelector('.kolom-chip');
+            const bestaandeIndex = bestaandeChip ? parseInt(bestaandeChip.dataset.index) : null;
 
             // Swap logica
             if (bestaandeIndex !== null && bronVeld) {
@@ -398,9 +456,12 @@ function setupDragDrop() {
         const bronVeld = kolomMapping[droppedIndex];
 
         if (bronVeld) {
+            // Verwijder uit multi-veld tracking
+            removeFromMultiVeld(bronVeld, droppedIndex);
             delete kolomMapping[droppedIndex];
+
             const bronZone = document.querySelector(`tr[data-veld="${bronVeld}"] .drop-zone`);
-            const chip = bronZone.querySelector('.kolom-chip');
+            const chip = bronZone?.querySelector(`.kolom-chip[data-index="${droppedIndex}"]`);
             if (chip) chip.remove();
 
             updateUnclaimedChips();
@@ -408,6 +469,13 @@ function setupDragDrop() {
             updateAlleVoorbeelden();
         }
     });
+}
+
+function removeFromMultiVeld(veld, kolomIndex) {
+    if (multiVeldKolommen[veld]) {
+        const idx = multiVeldKolommen[veld].indexOf(kolomIndex);
+        if (idx > -1) multiVeldKolommen[veld].splice(idx, 1);
+    }
 }
 
 function setupChipDrag(chip) {
@@ -426,16 +494,22 @@ function updateAlleInputs() {
     document.querySelectorAll('.mapping-row').forEach(row => {
         const veld = row.dataset.veld;
         const input = row.querySelector('.mapping-input');
+        const isMulti = row.querySelector('.drop-zone')?.dataset.multi === 'true';
 
-        // Vind welke kolom bij dit veld hoort
-        let kolomIndex = null;
-        for (const [idx, v] of Object.entries(kolomMapping)) {
-            if (v === veld) {
-                kolomIndex = idx;
-                break;
+        if (isMulti && multiVeldKolommen[veld]?.length > 0) {
+            // Multi-veld: stuur komma-gescheiden lijst van kolom indices
+            input.value = multiVeldKolommen[veld].join(',');
+        } else {
+            // Single veld: vind welke kolom bij dit veld hoort
+            let kolomIndex = null;
+            for (const [idx, v] of Object.entries(kolomMapping)) {
+                if (v === veld) {
+                    kolomIndex = idx;
+                    break;
+                }
             }
+            input.value = kolomIndex ?? '';
         }
-        input.value = kolomIndex ?? '';
     });
 }
 
@@ -444,8 +518,31 @@ function updateAlleVoorbeelden() {
         const veld = row.dataset.veld;
         const voorbeeldCell = row.querySelector('.voorbeeld-data');
         const statusCell = row.querySelector('.status-cell');
+        const isMulti = row.querySelector('.drop-zone')?.dataset.multi === 'true';
 
-        // Vind welke kolom bij dit veld hoort
+        // Multi-veld: combineer meerdere kolommen
+        if (isMulti && multiVeldKolommen[veld]?.length > 0) {
+            const indices = multiVeldKolommen[veld];
+            const waarden = [];
+            for (let i = 0; i < Math.min(3, previewData.length); i++) {
+                // Combineer kolommen met spatie
+                const parts = indices.map(idx => previewData[i][idx]).filter(v => v);
+                if (parts.length > 0) waarden.push(parts.join(' '));
+            }
+            voorbeeldCell.textContent = waarden.length > 0 ? waarden.join(', ') : '-';
+
+            const waarschuwing = valideerData(veld, waarden);
+            if (waarschuwing) {
+                statusCell.innerHTML = `<span class="text-yellow-600 font-bold text-xs">${waarschuwing}</span>`;
+                row.classList.add('bg-yellow-50');
+            } else {
+                statusCell.innerHTML = '<span class="text-green-600">OK</span>';
+                row.classList.remove('bg-yellow-50');
+            }
+            return;
+        }
+
+        // Single veld logica
         let kolomIndex = null;
         for (const [idx, v] of Object.entries(kolomMapping)) {
             if (v === veld) {
