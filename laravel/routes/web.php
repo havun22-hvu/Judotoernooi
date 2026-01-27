@@ -241,6 +241,8 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         // Clubs management
         Route::get('club', [ClubController::class, 'index'])->name('club.index');
         Route::post('club/{club}/toggle', [ClubController::class, 'toggleClub'])->name('club.toggle');
+        Route::post('club/select-all', [ClubController::class, 'selectAllClubs'])->name('club.select-all');
+        Route::post('club/deselect-all', [ClubController::class, 'deselectAllClubs'])->name('club.deselect-all');
         Route::post('club/{club}/verstuur', [ClubController::class, 'verstuurUitnodiging'])->name('club.verstuur');
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
         Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');

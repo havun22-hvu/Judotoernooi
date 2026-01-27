@@ -9,6 +9,20 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-800">Clubs Uitnodigen</h1>
         <p class="text-gray-600 mt-1">Selecteer welke clubs je wilt uitnodigen voor dit toernooi</p>
+        <div class="flex gap-2 mt-2">
+            <form action="{{ route('toernooi.club.select-all', $toernooi->routeParams()) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded">
+                    ✓ Alles aan
+                </button>
+            </form>
+            <form action="{{ route('toernooi.club.deselect-all', $toernooi->routeParams()) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded">
+                    ✗ Alles uit
+                </button>
+            </form>
+        </div>
     </div>
     <div class="flex gap-2">
         <a href="{{ route('organisator.clubs.index', $organisator) }}"

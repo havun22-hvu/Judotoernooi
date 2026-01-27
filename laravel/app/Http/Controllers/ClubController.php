@@ -216,6 +216,56 @@ class ClubController extends Controller
             ->with('success', $message);
     }
 
+    /**
+     * Select all clubs for this toernooi
+     */
+    public function selectAllClubs(Organisator $organisator, Toernooi $toernooi): RedirectResponse
+    {
+        $clubs = Club::where('organisator_id', $toernooi->organisator_id)->get();
+        $added = 0;
+
+        foreach ($clubs as $club) {
+            if (!$toernooi->clubs()->where('clubs.id', $club->id)->exists()) {
+                $toernooi->clubs()->attach($club->id, [
+                    'portal_code' => $club->portal_code,
+                    'pincode' => $club->pincode,
+                ]);
+                $added++;
+            }
+        }
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi->routeParams())
+            ->with('success', "{$added} clubs toegevoegd");
+    }
+
+    /**
+     * Deselect all clubs for this toernooi (only those without judokas)
+     */
+    public function deselectAllClubs(Organisator $organisator, Toernooi $toernooi): RedirectResponse
+    {
+        $removed = 0;
+        $skipped = 0;
+
+        foreach ($toernooi->clubs as $club) {
+            if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
+                $skipped++;
+            } else {
+                $toernooi->clubs()->detach($club->id);
+                $removed++;
+            }
+        }
+
+        $message = "{$removed} clubs verwijderd";
+        if ($skipped > 0) {
+            $message .= " ({$skipped} overgeslagen wegens judoka's)";
+        }
+
+        return redirect()
+            ->route('toernooi.club.index', $toernooi->routeParams())
+            ->with('success', $message);
+    }
+
     public function store(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
