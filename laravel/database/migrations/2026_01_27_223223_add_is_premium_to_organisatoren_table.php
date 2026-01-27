@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organisators', function (Blueprint $table) {
-            $table->boolean('is_premium')->default(false)->after('wachtwoord');
+            $table->boolean('is_premium')->default(false);
         });
     }
 
