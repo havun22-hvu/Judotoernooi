@@ -1912,7 +1912,7 @@
                         </div>
                         <div>
                             @if($toernooi->mollie_onboarded)
-                            <form action="{{ route('mollie.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
+                            <form action="{{ route('toernooi.mollie.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Weet je zeker dat je de Mollie koppeling wilt verbreken?')">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
@@ -1920,7 +1920,7 @@
                                 </button>
                             </form>
                             @else
-                            <a href="{{ route('mollie.authorize', $toernooi->routeParams()) }}" target="_blank"
+                            <a href="{{ route('toernooi.mollie.authorize', $toernooi->routeParams()) }}" target="_blank"
                                class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
                                 <span>Koppel Mollie</span>
                             </a>
