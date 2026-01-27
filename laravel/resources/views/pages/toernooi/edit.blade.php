@@ -1277,6 +1277,8 @@
 
             function hidePresetModal() {
                 presetModal.classList.add('hidden');
+                // Blur focus om scroll naar andere elementen te voorkomen
+                document.activeElement?.blur();
             }
 
             // Close modal on backdrop click
@@ -1368,13 +1370,13 @@
                     showPresetModal('Preset opslaan', `
                         <p class="mb-4 text-gray-600">Je hebt <strong>"${huidigePresetNaam}"</strong> geladen. Wat wil je doen?</p>
                         <div class="flex flex-col gap-2">
-                            <button onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                            <button type="button" onclick="savePreset('${huidigePresetNaam}', true)" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                                 📝 "${huidigePresetNaam}" overschrijven
                             </button>
-                            <button onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                            <button type="button" onclick="showNewPresetInput()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                                 ➕ Nieuwe preset maken
                             </button>
-                            <button onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                            <button type="button" onclick="hidePresetModal()" class="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
                                 Annuleren
                             </button>
                         </div>
@@ -1393,10 +1395,10 @@
                         <input type="text" id="new-preset-naam" class="w-full border rounded px-3 py-2" placeholder="Bijv. Mijn toernooi preset" autofocus>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                        <button type="button" onclick="saveNewPreset()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
                             💾 Opslaan
                         </button>
-                        <button onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
+                        <button type="button" onclick="hidePresetModal()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded">
                             Annuleren
                         </button>
                     </div>
