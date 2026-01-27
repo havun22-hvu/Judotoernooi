@@ -22,6 +22,17 @@
         'spreker' => 'Spreker',
         'dojo' => 'Dojo',
     ];
+
+    // Bepaal display naam voor chat header
+    // Mat toont nummer, anderen tonen type of toegang naam
+    $chatDisplayName = $typeLabels[$chatType] ?? $chatType;
+    if ($chatType === 'mat' && isset($matNummer)) {
+        $chatDisplayName = "Mat {$matNummer}";
+    } elseif (isset($toegang) && $toegang->naam) {
+        $chatDisplayName = $toegang->naam;
+    } elseif ($chatType === 'mat' && $chatId) {
+        $chatDisplayName = "Mat {$chatId}";
+    }
 @endphp
 
 {{-- Chat Icon Button (fixed position) --}}
@@ -51,7 +62,7 @@
     <div class="bg-blue-800 text-white p-4 flex items-center justify-between">
         <div>
             <h2 class="font-bold text-lg">Chat</h2>
-            <p class="text-blue-200 text-sm">{{ $typeLabels[$chatType] ?? $chatType }}@if($chatId) {{ $chatId }}@endif</p>
+            <p class="text-blue-200 text-sm">{{ $chatDisplayName }}</p>
         </div>
         <button onclick="toggleChat()" class="p-2 hover:bg-blue-700 rounded-full">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -28,15 +28,31 @@ class ChatMessage extends Model
 
     /**
      * Get human-readable sender name
+     * Uses DeviceToegang naam if available, otherwise falls back to type + ID
      */
     public function getAfzenderNaamAttribute(): string
     {
+        // Try to get name from DeviceToegang if we have an ID
+        if ($this->van_id && $this->van_type !== 'hoofdjury') {
+            $toegang = DeviceToegang::find($this->van_id);
+            if ($toegang) {
+                // Mat uses mat_nummer, others use toegang naam or type + ID
+                if ($this->van_type === 'mat' && $toegang->mat_nummer) {
+                    return "Mat {$toegang->mat_nummer}";
+                }
+                if ($toegang->naam) {
+                    return $toegang->naam;
+                }
+            }
+        }
+
+        // Fallback to type-based naming
         return match($this->van_type) {
             'hoofdjury' => 'Hoofdjury',
-            'mat' => "Mat {$this->van_id}",
-            'weging' => 'Weging',
-            'spreker' => 'Spreker',
-            'dojo' => 'Dojo',
+            'mat' => $this->van_id ? "Mat {$this->van_id}" : 'Mat',
+            'weging' => $this->van_id ? "Weging #{$this->van_id}" : 'Weging',
+            'spreker' => $this->van_id ? "Spreker #{$this->van_id}" : 'Spreker',
+            'dojo' => $this->van_id ? "Dojo #{$this->van_id}" : 'Dojo',
             default => 'Onbekend',
         };
     }
@@ -46,12 +62,25 @@ class ChatMessage extends Model
      */
     public function getOntvangerNaamAttribute(): string
     {
+        // Try to get name from DeviceToegang if we have an ID
+        if ($this->naar_id && !in_array($this->naar_type, ['hoofdjury', 'alle_matten', 'iedereen'])) {
+            $toegang = DeviceToegang::find($this->naar_id);
+            if ($toegang) {
+                if ($this->naar_type === 'mat' && $toegang->mat_nummer) {
+                    return "Mat {$toegang->mat_nummer}";
+                }
+                if ($toegang->naam) {
+                    return $toegang->naam;
+                }
+            }
+        }
+
         return match($this->naar_type) {
             'hoofdjury' => 'Hoofdjury',
-            'mat' => "Mat {$this->naar_id}",
-            'weging' => 'Weging',
-            'spreker' => 'Spreker',
-            'dojo' => 'Dojo',
+            'mat' => $this->naar_id ? "Mat {$this->naar_id}" : 'Alle matten',
+            'weging' => $this->naar_id ? "Weging #{$this->naar_id}" : 'Weging',
+            'spreker' => $this->naar_id ? "Spreker #{$this->naar_id}" : 'Spreker',
+            'dojo' => $this->naar_id ? "Dojo #{$this->naar_id}" : 'Dojo',
             'alle_matten' => 'Alle matten',
             'iedereen' => 'Iedereen',
             default => 'Onbekend',
