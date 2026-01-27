@@ -648,13 +648,15 @@ class BlokController extends Controller
         $overzicht = $this->verdelingService->getZaalOverzicht($toernooi);
 
         // Get poules that are ready for spreker (with results) but not yet announced
+        // EXCLUDE barrage poules - they are only used to determine standings in original poule
         $klarePoules = $toernooi->poules()
             ->whereNotNull('spreker_klaar')
             ->whereNull('afgeroepen_at')
+            ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
             ->orderBy('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
-            ->map(function ($poule) {
+            ->map(function ($poule) use ($toernooi) {
                 // ELIMINATIE: Haal medaille winnaars direct uit bracket
                 if ($poule->type === 'eliminatie') {
                     $poule->standings = $this->getEliminatieStandings($poule);
@@ -662,19 +664,39 @@ class BlokController extends Controller
                     return $poule;
                 }
 
-                // POULE: Calculate WP and JP from wedstrijden for each judoka
-                $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                // Check if there's a completed barrage for this poule
+                $barrage = $toernooi->poules()
+                    ->where('barrage_van_poule_id', $poule->id)
+                    ->whereNotNull('spreker_klaar')
+                    ->with(['wedstrijden', 'judokas'])
+                    ->first();
+
+                // POULE: Calculate WP and JP from wedstrijden + barrage for each judoka
+                $standings = $poule->judokas->map(function ($judoka) use ($poule, $barrage) {
                     $wp = 0;
                     $jp = 0;
 
+                    // Points from original poule
                     foreach ($poule->wedstrijden as $wedstrijd) {
                         if ($wedstrijd->judoka_wit_id === $judoka->id) {
                             $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
-                            // Parse score as integer (handles "10", "7", or empty strings)
                             $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_wit ?? '');
                         } elseif ($wedstrijd->judoka_blauw_id === $judoka->id) {
                             $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
                             $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_blauw ?? '');
+                        }
+                    }
+
+                    // ADD barrage points if judoka participated in barrage
+                    if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
+                        foreach ($barrage->wedstrijden as $w) {
+                            if ($w->judoka_wit_id === $judoka->id) {
+                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                            } elseif ($w->judoka_blauw_id === $judoka->id) {
+                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                            }
                         }
                     }
 
@@ -712,6 +734,7 @@ class BlokController extends Controller
                 })->values();
 
                 $poule->is_eliminatie = false;
+                $poule->has_barrage = $barrage !== null;
                 return $poule;
             });
 

@@ -116,15 +116,21 @@
                 <!-- Header -->
                 <div class="{{ $poule->is_eliminatie ? 'bg-purple-700' : 'bg-green-700' }} text-white px-4 py-3 flex justify-between items-center">
                     <div>
-                        <div class="font-bold text-lg">
+                        <div class="font-bold text-lg flex items-center gap-2">
                             @if($poule->is_eliminatie)
                                 Eliminatie - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @else
                                 Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @endif
+                            @if(!empty($poule->has_barrage))
+                                <span class="bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">⚔️ BARRAGE</span>
+                            @endif
                         </div>
                         <div class="{{ $poule->is_eliminatie ? 'text-purple-200' : 'text-green-200' }} text-sm">
                             Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }} | Klaar: {{ $poule->spreker_klaar->format('H:i') }}
+                            @if(!empty($poule->has_barrage))
+                                <span class="text-yellow-300">• Incl. barrage punten</span>
+                            @endif
                         </div>
                     </div>
                     @php

@@ -221,33 +221,58 @@ class RoleToegang extends Controller
         $toernooi = $toegang->toernooi;
 
         // Klare poules (spreker_klaar gezet, nog niet afgeroepen)
+        // EXCLUDE barrage poules - they are only used to determine standings in original poule
         $klarePoules = $toernooi->poules()
             ->whereNotNull('spreker_klaar')
             ->whereNull('afgeroepen_at')
+            ->where('type', '!=', 'barrage')  // Don't show barrage poules separately
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
             ->orderBy('spreker_klaar', 'asc')
             ->get()
-            ->map(function ($poule) {
+            ->map(function ($poule) use ($toernooi) {
                 if ($poule->type === 'eliminatie') {
                     $poule->standings = $this->getEliminatieStandings($poule);
                     $poule->is_eliminatie = true;
                     return $poule;
                 }
 
-                // Calculate standings for regular poule
-                $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                // Check if there's a completed barrage for this poule
+                $barrage = $toernooi->poules()
+                    ->where('barrage_van_poule_id', $poule->id)
+                    ->whereNotNull('spreker_klaar')
+                    ->with(['wedstrijden', 'judokas'])
+                    ->first();
+
+                // Calculate standings for regular poule + barrage points
+                $standings = $poule->judokas->map(function ($judoka) use ($poule, $barrage) {
                     $wp = 0;
                     $jp = 0;
+
+                    // Points from original poule
                     foreach ($poule->wedstrijden as $w) {
                         if (!$w->is_gespeeld) continue;
                         if ($w->judoka_wit_id === $judoka->id) {
                             $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                            if ($w->winnaar_id === $judoka->id) $wp++;
+                            if ($w->winnaar_id === $judoka->id) $wp += 2;
                         } elseif ($w->judoka_blauw_id === $judoka->id) {
                             $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                            if ($w->winnaar_id === $judoka->id) $wp++;
+                            if ($w->winnaar_id === $judoka->id) $wp += 2;
                         }
                     }
+
+                    // ADD barrage points if judoka participated in barrage
+                    if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
+                        foreach ($barrage->wedstrijden as $w) {
+                            if ($w->judoka_wit_id === $judoka->id) {
+                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                            } elseif ($w->judoka_blauw_id === $judoka->id) {
+                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                            }
+                        }
+                    }
+
                     return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
                 });
 
@@ -270,6 +295,7 @@ class RoleToegang extends Controller
                 })->values();
 
                 $poule->is_eliminatie = false;
+                $poule->has_barrage = $barrage !== null;
                 return $poule;
             });
 

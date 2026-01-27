@@ -182,6 +182,9 @@ class MatController extends Controller
 
     /**
      * Mark poule as ready for spreker (results announcement)
+     *
+     * For barrage poules: sends the ORIGINAL poule to spreker (with all judokas),
+     * not the barrage itself. Barrage results determine final standings of tied judokas.
      */
     public function pouleKlaar(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
@@ -194,6 +197,28 @@ class MatController extends Controller
         // Verify poule belongs to this toernooi
         if ($poule->toernooi_id !== $toernooi->id) {
             return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        }
+
+        // BARRAGE: Send original poule to spreker, not the barrage itself
+        if ($poule->isBarrage()) {
+            $originelePoule = $poule->originelePoule;
+
+            if (!$originelePoule) {
+                return response()->json(['success' => false, 'error' => 'Originele poule niet gevonden'], 404);
+            }
+
+            // Mark barrage as completed
+            $poule->update(['spreker_klaar' => now()]);
+
+            // Send ORIGINAL poule to spreker (includes all judokas)
+            $originelePoule->update(['spreker_klaar' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'barrage' => true,
+                'message' => 'Barrage afgerond, originele poule naar spreker gestuurd',
+                'originele_poule_id' => $originelePoule->id,
+            ]);
         }
 
         $poule->update(['spreker_klaar' => now()]);

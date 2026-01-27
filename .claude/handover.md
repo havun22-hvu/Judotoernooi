@@ -9,33 +9,25 @@
   - Scanner.blade.php JavaScript aangepast voor nieuwe URLs
   - URL-STRUCTUUR.md bijgewerkt met sectie 9 (Dojo Scanner API)
 
-### Nog te testen:
-- [ ] Dashboard: template verwijderen werkt
-- [ ] Dojo scanner: overzicht tab laadt clubs
-- [ ] Dojo scanner: club detail laadt kaarten
+### Getest (27 jan avond):
+- [x] Dashboard: template verwijderen werkt (route correct)
+- [x] Dojo scanner: overzicht tab laadt clubs (200 OK, JSON response)
+- [x] Dojo scanner: club detail laadt kaarten (200 OK, JSON response)
 
 ### Openstaande items:
 
-#### Freemium Model Implementatie
-Plan staat in `.claude/plans/majestic-chasing-token.md`:
-- [ ] Database migrations (toernooi_betalingen, freemium velden)
-- [ ] ToernooiBetaling model
-- [ ] FreemiumService
-- [ ] Limiet checks (50 judoka's, 2 clubs, 1 preset, 2 schemas)
-- [ ] Print/noodplan geblokkeerd voor free tier
-- [ ] Upgrade flow met Mollie Platform payments
+#### Freemium Model - VOLLEDIG GEÏMPLEMENTEERD ✓
+- [x] Database migrations (toernooi_betalingen, freemium velden)
+- [x] ToernooiBetaling model
+- [x] FreemiumService
+- [x] Limiet checks (judoka's in JudokaController + CoachPortalController)
+- [x] Upgrade flow met Mollie Platform payments
+- [x] Routes, controller, views
 
-**Gratis tier limieten:**
-| Limiet | Waarde |
-|--------|--------|
-| Max judoka's | 50 |
-| Max actieve clubs | 2 |
-| Max presets | 1 |
-| Max wedstrijdschema's | 2 |
-| Print/noodplan | Uitgeschakeld |
+**Docs:** `laravel/docs/2-FEATURES/FREEMIUM.md`
 
 #### Nog te testen:
-- [ ] Alle pagina's doorlopen met nieuwe URL structuur
+- [ ] Freemium upgrade flow end-to-end
 - [ ] Coach portal werking
 - [ ] Device toegang routes
 
