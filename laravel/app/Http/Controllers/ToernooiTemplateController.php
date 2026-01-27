@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Models\ToernooiTemplate;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +27,7 @@ class ToernooiTemplateController extends Controller
     /**
      * Save current toernooi settings as a new template
      */
-    public function store(Request $request, Toernooi $toernooi): JsonResponse
+    public function store(Request $request, Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         $organisator = auth('organisator')->user();
 
@@ -66,7 +67,7 @@ class ToernooiTemplateController extends Controller
     /**
      * Update an existing template from current toernooi settings
      */
-    public function update(Request $request, ToernooiTemplate $template, Toernooi $toernooi): JsonResponse
+    public function update(Request $request, Organisator $organisator, Toernooi $toernooi, ToernooiTemplate $template): JsonResponse
     {
         $organisator = auth('organisator')->user();
 
