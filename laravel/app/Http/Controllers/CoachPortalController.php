@@ -750,8 +750,8 @@ class CoachPortalController extends Controller
         }
 
         $publiekController = new PubliekController();
-        $clubResultaten = $publiekController->getClubResultaten($toernooiModel, $club->id);
-        $clubRanking = $publiekController->getClubRanking($toernooiModel);
+        $clubResultaten = $publiekController->getClubResultaten($toernooiModel->organisator, $toernooiModel, $club->id);
+        $clubRanking = $publiekController->getClubRanking($toernooiModel->organisator, $toernooiModel);
 
         $clubPositieAbsoluut = null;
         $clubPositieRelatief = null;
