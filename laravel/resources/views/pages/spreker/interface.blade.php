@@ -37,7 +37,7 @@
     {{-- Chat Widget --}}
     @include('partials.chat-widget', [
         'chatType' => 'spreker',
-        'chatId' => null,
+        'chatId' => $toegang->id ?? null,
         'toernooiId' => $toernooi->id,
         'chatApiBase' => route('toernooi.chat.index', $toernooi->routeParams()),
     ])
