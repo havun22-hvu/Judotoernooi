@@ -6,7 +6,7 @@
 <div class="max-w-2xl mx-auto">
     <h1 class="text-3xl font-bold text-gray-800 mb-8">Nieuw Toernooi Aanmaken</h1>
 
-    <form action="{{ route('toernooi.store') }}" method="POST" class="bg-white rounded-lg shadow p-6">
+    <form action="{{ route('toernooi.store', ['organisator' => $organisator]) }}" method="POST" class="bg-white rounded-lg shadow p-6">
         @csrf
 
         @if($templates->isNotEmpty())
