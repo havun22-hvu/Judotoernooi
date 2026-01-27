@@ -746,19 +746,37 @@ function matInterface() {
     const mattenData = @json($matten->map(fn($m) => ['id' => $m->id, 'nummer' => $m->nummer]));
     const voorgeselecteerdBlok = blokNummer ? blokkenData.find(b => b.nummer == blokNummer) : null;
 
+    // LocalStorage key voor dit toernooi
+    const storageKey = 'mat_interface_{{ $toernooi->id }}';
+
+    // Laad laatst geselecteerde blok/mat uit localStorage
+    const opgeslagen = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
     return {
-        blokId: voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : '',
-        matId: '',
+        blokId: opgeslagen.blokId || (voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : ''),
+        matId: opgeslagen.matId || '',
         poules: [],
         blokkenData,
         mattenData,
         debugSlots: false,  // Toggle om slot nummers te tonen
 
         init() {
-            if (this.blokId && @json($matten->count()) > 0) {
+            // Als we opgeslagen waardes hebben, gebruik die
+            if (this.blokId && this.matId) {
+                this.laadWedstrijden();
+            } else if (this.blokId && @json($matten->count()) > 0) {
+                // Fallback: eerste mat selecteren
                 this.matId = '{{ $matten->first()?->id }}';
                 this.laadWedstrijden();
             }
+        },
+
+        // Sla selectie op in localStorage
+        opslaanSelectie() {
+            localStorage.setItem(storageKey, JSON.stringify({
+                blokId: this.blokId,
+                matId: this.matId
+            }));
         },
 
         // Helper voor swap ruimte - haalt judoka's uit window.swapRuimte
@@ -777,6 +795,9 @@ function matInterface() {
                 this.poules = [];
                 return;
             }
+
+            // Sla selectie op voor volgende keer
+            this.opslaanSelectie();
 
             const response = await fetch(`{{ route('toernooi.mat.wedstrijden', $toernooi->routeParams()) }}`, {
                 method: 'POST',
@@ -2068,9 +2089,10 @@ function matInterface() {
 
 // Clock
 function updateClock() {
+    const clockEl = document.getElementById('clock');
+    if (!clockEl) return;
     const now = new Date();
-    document.getElementById('clock').textContent =
-        now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    clockEl.textContent = now.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
 }
 updateClock();
 setInterval(updateClock, 1000);
