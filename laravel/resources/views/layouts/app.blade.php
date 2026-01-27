@@ -228,7 +228,7 @@
                     logoutForm.submit();
                 } else {
                     // Fallback: redirect to login
-                    window.location.href = '{{ route("toernooi.auth.login", $toernooi) }}';
+                    window.location.href = '{{ route("toernooi.auth.login", $toernooi->routeParams()) }}';
                 }
             }
 

@@ -905,7 +905,7 @@ async function verwijderUitPoule(judokaId, pouleId) {
     if (!confirm('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?')) return;
 
     try {
-        const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi) }}', {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.verwijder-uit-poule", $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -938,7 +938,7 @@ async function naarZaaloverzichtPoule(pouleId, btn) {
     btn.innerHTML = '⏳';
 
     try {
-        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi) }}', {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.naar-zaaloverzicht-poule", $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -992,7 +992,7 @@ document.getElementById('nieuwe-poule-form').addEventListener('submit', async fu
 
 async function nieuwePoule(leeftijdsklasse, gewichtsklasse, blokNummer) {
     try {
-        const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi) }}', {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-poule", $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1015,7 +1015,7 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse, blokNummer) {
 }
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi) }}';
+const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi->routeParams()) }}';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Helper: bereken wedstrijden voor round-robin (n*(n-1)/2)

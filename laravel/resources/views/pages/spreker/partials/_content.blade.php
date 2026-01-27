@@ -438,7 +438,7 @@ async function zetTerug(pouleId, button) {
         button.disabled = true;
         button.innerHTML = '⏳ Bezig...';
 
-        const response = await fetch('{{ isset($toegang) ? route("spreker.terug", $toegang) : route("toernooi.spreker.terug", $toernooi) }}', {
+        const response = await fetch('{{ isset($toegang) ? route("spreker.terug", $toegang) : route("toernooi.spreker.terug", $toernooi->routeParams()) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -524,7 +524,7 @@ function sprekerInterface() {
 
         async loadNotities() {
             try {
-                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.get", $toegang) : route("toernooi.spreker.notities.get", $toernooi) }}');
+                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.get", $toegang) : route("toernooi.spreker.notities.get", $toernooi->routeParams()) }}');
                 const data = await response.json();
                 if (data.success && data.notities) {
                     this.notities = data.notities;
@@ -548,7 +548,7 @@ function sprekerInterface() {
 
         async markeerAfgeroepen(pouleId, pouleNaam, pouleType) {
             try {
-                const response = await fetch('{{ isset($toegang) ? route("spreker.afgeroepen", $toegang) : route("toernooi.spreker.afgeroepen", $toernooi) }}', {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.afgeroepen", $toegang) : route("toernooi.spreker.afgeroepen", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -585,7 +585,7 @@ function sprekerInterface() {
 
         async saveNotities() {
             try {
-                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.save", $toegang) : route("toernooi.spreker.notities.save", $toernooi) }}', {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.notities.save", $toegang) : route("toernooi.spreker.notities.save", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -621,7 +621,7 @@ function sprekerInterface() {
             this.showPouleModal = true;
 
             try {
-                const response = await fetch('{{ isset($toegang) ? route("spreker.standings", $toegang) : route("toernooi.spreker.standings", $toernooi) }}', {
+                const response = await fetch('{{ isset($toegang) ? route("spreker.standings", $toegang) : route("toernooi.spreker.standings", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

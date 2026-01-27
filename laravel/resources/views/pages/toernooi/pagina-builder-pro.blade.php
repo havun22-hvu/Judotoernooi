@@ -151,7 +151,7 @@
 
             <div class="h-6 w-px bg-gray-300"></div>
 
-            <a href="{{ route('publiek.index', $toernooi) }}" target="_blank"
+            <a href="{{ route('publiek.index', $toernooi->routeParams()) }}" target="_blank"
                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -2492,7 +2492,7 @@ function paginaBuilderPro() {
             formData.append('afbeelding', file);
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
@@ -2538,7 +2538,7 @@ function paginaBuilderPro() {
             formData.append('afbeelding', file);
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
@@ -2700,7 +2700,7 @@ function paginaBuilderPro() {
             formData.append('afbeelding', file);
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: formData
@@ -2723,7 +2723,7 @@ function paginaBuilderPro() {
             this.saved = false;
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.opslaan", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.opslaan", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

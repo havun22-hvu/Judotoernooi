@@ -267,7 +267,7 @@
         </div>
         <div class="p-4">
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('publiek.export-uitslagen', $toernooi) }}"
+                <a href="{{ route('publiek.export-uitslagen', $toernooi->routeParams()) }}"
                    class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2">
                     <span>📊</span> Uitslagen CSV
                 </a>
