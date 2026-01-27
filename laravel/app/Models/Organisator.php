@@ -191,8 +191,16 @@ class Organisator extends Authenticatable
         if ($this->is_premium) {
             return true;
         }
-        // Free tier: max 1 preset
-        return $this->gewichtsklassenPresets()->count() < 1;
+        // Free tier: max 2 presets
+        return $this->gewichtsklassenPresets()->count() < 2;
+    }
+
+    /**
+     * Get the maximum number of presets allowed
+     */
+    public function getMaxPresets(): int
+    {
+        return $this->is_premium ? PHP_INT_MAX : 2;
     }
 
     /**

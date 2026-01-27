@@ -41,7 +41,8 @@ class GewichtsklassenPresetController extends Controller
 
         if (!$existingPreset && !$organisator->canAddMorePresets()) {
             return response()->json([
-                'error' => 'Maximum aantal presets bereikt. Je mag maximaal 1 preset opslaan in de gratis versie.',
+                'success' => false,
+                'message' => 'Maximum aantal presets bereikt (2 in gratis versie). Verwijder eerst een bestaande preset of upgrade naar premium.',
             ], 422);
         }
 
