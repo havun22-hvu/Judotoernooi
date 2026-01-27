@@ -22,7 +22,7 @@
             <span x-show="saved" x-transition class="text-sm text-green-600">Opgeslagen!</span>
         </div>
         <div class="flex gap-3">
-            <a href="{{ route('publiek.index', $toernooi) }}" target="_blank"
+            <a href="{{ route('publiek.index', $toernooi->routeParams()) }}" target="_blank"
                class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
                 Preview
             </a>
@@ -345,7 +345,7 @@ function paginaBuilder() {
             formData.append('afbeelding', file);
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -372,7 +372,7 @@ function paginaBuilder() {
             formData.append('afbeelding', file);
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.upload", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -401,7 +401,7 @@ function paginaBuilder() {
             this.saved = false;
 
             try {
-                const response = await fetch('{{ route("toernooi.pagina-builder.opslaan", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.pagina-builder.opslaan", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

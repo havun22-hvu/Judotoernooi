@@ -141,7 +141,7 @@ function deviceToegangen() {
 
         async loadToegangen() {
             try {
-                const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.device-toegang.index", $toernooi->routeParams()) }}', {
                     credentials: 'same-origin',
                     headers: { 'Accept': 'application/json' },
                 });
@@ -162,7 +162,7 @@ function deviceToegangen() {
             }
 
             try {
-                const response = await fetch('{{ route("toernooi.device-toegang.store", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.device-toegang.store", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -217,7 +217,7 @@ function deviceToegangen() {
         async resetAll() {
             if (!confirm('ALLE device bindings resetten?')) return;
             try {
-                const response = await fetch('{{ route("toernooi.device-toegang.reset-all", $toernooi) }}', {
+                const response = await fetch('{{ route("toernooi.device-toegang.reset-all", $toernooi->routeParams()) }}', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },

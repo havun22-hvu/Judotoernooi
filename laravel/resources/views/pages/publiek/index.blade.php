@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ $toernooi->naam }}">
     <title>{{ $toernooi->naam }} - Live</title>
-    <link rel="manifest" href="{{ route('publiek.manifest', $toernooi) }}">
+    <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
@@ -773,7 +773,7 @@
         <div x-show="activeTab === 'uitslagen'" x-cloak>
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-800">🏆 Uitslagen</h2>
-                <a href="{{ route('publiek.export-uitslagen', $toernooi) }}"
+                <a href="{{ route('publiek.export-uitslagen', $toernooi->routeParams()) }}"
                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                     📥 Download CSV
                 </a>

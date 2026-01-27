@@ -1636,7 +1636,7 @@
                 this.loading = true;
                 this.message = '';
                 try {
-                    const res = await fetch('{{ route("templates.store", $toernooi) }}', {
+                    const res = await fetch('{{ route("templates.store", $toernooi->routeParams()) }}', {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -1734,7 +1734,7 @@
             },
             async checkStatus() {
                 try {
-                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi) }}', {
+                    const res = await fetch('{{ route("toernooi.reverb.status", $toernooi->routeParams()) }}', {
                         headers: { 'Accept': 'application/json' }
                     });
                     const data = await res.json();
@@ -1747,7 +1747,7 @@
             async start() {
                 this.loading = true;
                 try {
-                    const res = await fetch('{{ route("toernooi.reverb.start", $toernooi) }}', {
+                    const res = await fetch('{{ route("toernooi.reverb.start", $toernooi->routeParams()) }}', {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                     });
@@ -1762,7 +1762,7 @@
             async stop() {
                 this.loading = true;
                 try {
-                    const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi) }}', {
+                    const res = await fetch('{{ route("toernooi.reverb.stop", $toernooi->routeParams()) }}', {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                     });
@@ -1913,7 +1913,7 @@
                         </div>
                         <div>
                             @if($toernooi->mollie_onboarded)
-                            <form action="{{ route('mollie.disconnect', $toernooi) }}" method="POST" class="inline"
+                            <form action="{{ route('mollie.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Weet je zeker dat je de Mollie koppeling wilt verbreken?')">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
@@ -1921,7 +1921,7 @@
                                 </button>
                             </form>
                             @else
-                            <a href="{{ route('mollie.authorize', $toernooi) }}" target="_blank"
+                            <a href="{{ route('mollie.authorize', $toernooi->routeParams()) }}" target="_blank"
                                class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
                                 <span>Koppel Mollie</span>
                             </a>
