@@ -160,8 +160,9 @@ class ClubController extends Controller
             ->orderBy('naam')
             ->get();
 
-        // Get clubs that are linked to this toernooi (uitgenodigd)
-        $uitgenodigdeClubIds = $toernooi->clubs()->pluck('clubs.id')->toArray();
+        // Get clubs that are linked to this toernooi (uitgenodigd) with pivot data
+        $uitgenodigdeClubs = $toernooi->clubs()->get()->keyBy('id');
+        $uitgenodigdeClubIds = $uitgenodigdeClubs->keys()->toArray();
 
         $uitnodigingen = $toernooi->clubUitnodigingen()
             ->with('club')
@@ -177,7 +178,7 @@ class ClubController extends Controller
         // Ensure clubs have portal access
         $this->ensureClubsHavePortalAccess($toernooi);
 
-        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten', 'uitgenodigdeClubIds', 'organisator'));
+        return view('pages.club.index', compact('toernooi', 'clubs', 'uitnodigingen', 'benodigdeKaarten', 'uitgenodigdeClubIds', 'uitgenodigdeClubs', 'organisator'));
     }
 
     /**
@@ -389,7 +390,7 @@ class ClubController extends Controller
             ->with('success', "Coach {$coach->naam} toegevoegd (PIN: {$coach->pincode})")
             ->with('new_coach_id', $coach->id)
             ->with('new_coach_pin', $coach->pincode)
-            ->with('new_coach_url', $coach->getPortalUrl());
+            ->with('new_coach_url', $coach->club->getPortalUrl($toernooi));
     }
 
     /**
@@ -447,7 +448,7 @@ class ClubController extends Controller
             ->with('success', "Nieuwe PIN voor {$coach->naam}: {$newPin}")
             ->with('new_coach_id', $coach->id)
             ->with('new_coach_pin', $newPin)
-            ->with('new_coach_url', $coach->getPortalUrl());
+            ->with('new_coach_url', $coach->club->getPortalUrl($toernooi));
     }
 
     /**

@@ -8,10 +8,11 @@ Import van judoka's via CSV/Excel bestand door de organisator.
 
 ### Organisator workflow
 1. Organisator uploadt CSV/Excel bestand
-2. Systeem analyseert kolommen en toont preview
-3. Organisator bevestigt kolom-mapping
-4. Systeem importeert judoka's
-5. Bij problemen: clubs krijgen melding
+2. Systeem analyseert kolommen en toont preview met drag & drop mapping
+3. Organisator past kolom-mapping aan indien nodig (incl. multi-column voor naam)
+4. Organisator bevestigt import
+5. Systeem importeert judoka's
+6. Bij problemen: clubs krijgen melding
 
 ### Club correctie workflow
 1. Import detecteert problemen (ontbrekend/ongeldig geboortejaar, gewicht, etc.)
@@ -55,6 +56,31 @@ Import van judoka's via CSV/Excel bestand door de organisator.
 - Leeftijd < 4 of > 50 jaar → "erg jong/hoog"
 - Geboortejaar ontbreekt
 - Gewicht ontbreekt
+
+## Kolom detectie
+
+### Automatische detectie
+Het systeem herkent automatisch kolommen op basis van headers (case-insensitive):
+- **naam**: naam, name, volledige naam, judoka, deelnemer, voornaam, achternaam
+- **club**: club, vereniging, sportclub, judoclub, judoschool, school, dojo
+- **geboortejaar**: geboortejaar, geboortedatum, jaar, geb.jaar, birthdate, dob
+- **geslacht**: geslacht, gender, sex, m/v
+- **gewicht**: gewicht, weight, kg
+- **band**: band, gordel, belt, kyu, graad
+- **telefoon**: telefoon, tel, phone, mobiel, gsm
+
+### Multi-column velden (naam)
+Als een bestand `voornaam` en `achternaam` als aparte kolommen heeft:
+1. `voornaam` wordt automatisch gedetecteerd als "naam"
+2. Gebruiker kan `achternaam` (en evt. `tussenvoegsel`) erbij slepen
+3. Kolommen worden gecombineerd met spatie: "Jan de Vries"
+4. Volgorde is aan te passen door chips te herschikken
+
+### Geboortedatum → Geboortejaar
+Formaten worden automatisch geparsed:
+- `2015` → 2015
+- `2015-03-15` → 2015
+- `15-03-2015` → 2015
 
 ## Belangrijke regels
 

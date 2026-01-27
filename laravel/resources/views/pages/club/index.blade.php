@@ -85,7 +85,8 @@
             @foreach($clubs->sortBy('naam') as $club)
             @php
                 $isUitgenodigd = in_array($club->id, $uitgenodigdeClubIds);
-                $portalUrl = $club->getPortalUrl();
+                $portalUrl = $club->getPortalUrl($toernooi);
+                $pivotPincode = $uitgenodigdeClubs[$club->id]->pivot->pincode ?? null;
             @endphp
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
@@ -126,8 +127,8 @@
                             </button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $club->pincode }}</span>
-                            <button @click="navigator.clipboard.writeText('{{ $club->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $pivotPincode }}</span>
+                            <button @click="navigator.clipboard.writeText('{{ $pivotPincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
                                     class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
                                     :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'"
                                     title="Kopieer PIN">
