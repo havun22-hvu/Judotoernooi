@@ -1178,27 +1178,27 @@
                             presetsDropdown.innerHTML = '<option value="">Eigen preset...</option>';
                             eigenPresets.forEach(preset => {
                                 const option = document.createElement('option');
-                                option.value = preset.id;
+                                option.value = String(preset.id);
                                 option.textContent = preset.naam;
                                 presetsDropdown.appendChild(option);
                             });
+
                             // Determine which preset to select: passed parameter, or initial saved preset
                             const presetIdToSelect = selectPresetId || opgeslagenEigenPresetId;
                             if (presetIdToSelect) {
-                                const presetToSelect = eigenPresets.find(p => p.id == presetIdToSelect);
+                                // Gebruik == voor loose comparison (int vs string)
+                                const presetToSelect = eigenPresets.find(p => String(p.id) === String(presetIdToSelect));
                                 if (presetToSelect) {
                                     huidigePresetId = presetToSelect.id;
                                     huidigePresetNaam = presetToSelect.naam;
-                                    // Force string comparison for dropdown value
                                     presetsDropdown.value = String(presetToSelect.id);
-                                    // Direct call - no setTimeout needed
                                     updateEigenPresetRadio(presetToSelect.naam, true);
                                 }
                             }
                         }
                     }
                 } catch (e) {
-                    // Silently fail - presets are optional
+                    console.error('loadEigenPresets error:', e);
                 }
                 @endif
             }
@@ -1314,7 +1314,10 @@
 
             // Save preset to server
             async function savePreset(naam, overschrijven = false) {
+                // Bewaar scroll positie VOORDAT we iets doen
+                const scrollY = window.scrollY;
                 const configuratie = collectConfiguratie();
+
                 try {
                     const response = await fetch('{{ route("organisator.presets.store", ["organisator" => $toernooi->organisator]) }}', {
                         method: 'POST',
@@ -1330,20 +1333,26 @@
                         const data = await response.json();
                         hidePresetModal();
                         showAppToast(overschrijven ? '✓ Preset bijgewerkt' : '✓ Preset opgeslagen', 'success');
-                        // Load presets en selecteer direct de nieuwe/bijgewerkte preset
+
+                        // Direct de huidige preset instellen (voordat loadEigenPresets klaar is)
+                        huidigePresetId = data.id;
+                        huidigePresetNaam = data.naam;
+
+                        // Update radio button DIRECT met de naam
+                        updateEigenPresetRadio(data.naam, true);
+
+                        // Load presets in achtergrond en selecteer de juiste
                         await loadEigenPresets(data.id);
                         updateDeleteButton();
-                        // Herstel scroll positie vanuit sessionStorage
-                        const scrollPos = sessionStorage.getItem('preset_scroll_restore');
-                        if (scrollPos) {
-                            sessionStorage.removeItem('preset_scroll_restore');
-                            // Gebruik meerdere pogingen met toenemende delays
-                            const restore = () => window.scrollTo(0, parseInt(scrollPos));
-                            restore();
-                            setTimeout(restore, 50);
-                            setTimeout(restore, 150);
-                            setTimeout(restore, 300);
-                        }
+
+                        // Herstel scroll - meerdere pogingen om browser reflows te overwinnen
+                        const restoreScroll = () => window.scrollTo({ top: scrollY, behavior: 'instant' });
+                        restoreScroll();
+                        requestAnimationFrame(restoreScroll);
+                        setTimeout(restoreScroll, 0);
+                        setTimeout(restoreScroll, 50);
+                        setTimeout(restoreScroll, 100);
+                        setTimeout(restoreScroll, 200);
                     } else {
                         const data = await response.json();
                         showAppToast('✗ ' + (data.message || 'Kon preset niet opslaan'), 'error');
@@ -1356,9 +1365,6 @@
 
             // Save current config as preset
             document.getElementById('btn-save-preset').addEventListener('click', () => {
-                // Bewaar scroll positie in sessionStorage VOORDAT modal opent
-                sessionStorage.setItem('preset_scroll_restore', window.scrollY);
-
                 if (huidigePresetId && huidigePresetNaam) {
                     // Show 3-button modal
                     showPresetModal('Preset opslaan', `
