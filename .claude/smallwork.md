@@ -224,6 +224,13 @@
 - **Oplossing:** Functie update nu altijd titel, met kg-range als aanwezig, zonder als poule leeg
 - **Note:** Bug zat er al vanaf originele implementatie (bf37db5), was geen edge case voor lege poule
 
+### Fix: Wedstrijdschema generatie filterde judoka's te streng
+- **Type:** Bug fix
+- **Wat:** Bij dynamische categorieën werden judoka's onterecht gefilterd op gewichtsklasse
+- **Bestanden:** WedstrijdSchemaService.php
+- **Oorzaak:** `isGewichtBinnenKlasse()` check keek naar judoka's eigen gewichtsklasse, irrelevant bij dynamisch
+- **Oplossing:** Skip gewichtsklasse check voor dynamische categorieën (`$poule->isDynamisch()`)
+
 ---
 
 <!--

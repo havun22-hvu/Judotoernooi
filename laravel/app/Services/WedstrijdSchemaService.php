@@ -12,7 +12,8 @@ class WedstrijdSchemaService
 {
     /**
      * Generate matches for a single pool
-     * Only includes active judokas (not absent, weight within class)
+     * Only includes active judokas (not absent)
+     * Note: For dynamic categories, weight class check is skipped (poule determines range)
      */
     public function genereerWedstrijdenVoorPoule(Poule $poule): array
     {
@@ -22,14 +23,19 @@ class WedstrijdSchemaService
         // Get tolerance from toernooi settings
         $tolerantie = $poule->toernooi?->gewicht_tolerantie ?? 0.5;
 
-        // Filter: only active judokas (not absent, weight within class)
-        $actieveJudokas = $poule->judokas->filter(function ($judoka) use ($tolerantie) {
+        // Check if this is a dynamic category (variable weight range)
+        $isDynamisch = $poule->isDynamisch();
+
+        // Filter: only active judokas (not absent)
+        // For dynamic categories: skip weight class check (poule determines who's in it)
+        // For fixed categories: also check weight class
+        $actieveJudokas = $poule->judokas->filter(function ($judoka) use ($tolerantie, $isDynamisch) {
             // Skip if absent
             if ($judoka->aanwezigheid === 'afwezig') {
                 return false;
             }
-            // Skip if weighed and outside weight class
-            if ($judoka->gewicht_gewogen !== null && !$judoka->isGewichtBinnenKlasse(null, $tolerantie)) {
+            // For fixed categories: skip if weighed and outside weight class
+            if (!$isDynamisch && $judoka->gewicht_gewogen !== null && !$judoka->isGewichtBinnenKlasse(null, $tolerantie)) {
                 return false;
             }
             return true;
