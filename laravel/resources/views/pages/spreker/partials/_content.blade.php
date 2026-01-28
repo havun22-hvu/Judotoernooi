@@ -80,7 +80,7 @@
         @if($afgeroepen->isNotEmpty())
         <div class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
             <div class="flex items-center gap-2 mb-3">
-                <span class="text-orange-700 font-bold">⚠️ AL AFGEROEPEN - per ongeluk? Klik om terug te zetten:</span>
+                <span class="text-orange-700 font-bold">⚠️ AL AFGEROEPEN - Klik om nog een keer te zien:</span>
             </div>
             <div class="flex flex-wrap gap-2">
                 @foreach($afgeroepen as $poule)
