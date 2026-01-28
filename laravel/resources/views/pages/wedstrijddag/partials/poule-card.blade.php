@@ -2,6 +2,8 @@
     // Calculate active judokas and problems
     $isEliminatie = $poule->type === 'eliminatie';
     $aantalActief = $poule->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
+    // Total judokas (excluding absent) - for button logic
+    $aantalTotaal = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
     $aantalWedstrijden = $isEliminatie
         ? $poule->berekenAantalWedstrijden($aantalActief)
         : ($aantalActief >= 2 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0);
@@ -90,7 +92,7 @@
                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
                 </div>
             </div>
-            @elseif($aantalActief > 0)
+            @elseif($aantalTotaal > 0)
             @php $isDoorgestuurd = $poule->doorgestuurd_op !== null; @endphp
             <button
                 onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
