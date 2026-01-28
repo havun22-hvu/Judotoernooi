@@ -101,7 +101,7 @@
                         <div class="px-4 py-3 hover:bg-blue-50 border-b flex justify-between items-center">
                             <div>
                                 <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
-                                <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full" :class="'band-' + judoka.band"></span><span class="text-gray-400">)</span>
+                                <span class="text-gray-400 text-sm" x-text="'(' + (judoka.leeftijd || '-') + 'j, ' + (judoka.gewicht || '-') + 'kg)'"></span>
                                 <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
                                 <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse || '-'"></span>
                             </div>
@@ -542,42 +542,90 @@
                 @endforeach
             </div>
 
-            <p class="text-center text-gray-500 text-sm mt-4">
-                🔄 Pagina wordt elke 30 seconden ververst
-            </p>
+            <div class="text-center mt-4">
+                <button @click="refreshLive()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium inline-flex items-center gap-2 active:scale-95 transition"
+                        :disabled="liveLoading">
+                    <svg x-show="!liveLoading" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <svg x-show="liveLoading" x-cloak class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="liveLoading ? 'Laden...' : 'Ververs'"></span>
+                </button>
+            </div>
         </div>
         @endif
 
         <!-- Deelnemers Tab -->
         <div x-show="activeTab === 'deelnemers'" x-cloak>
             @forelse($categorien as $leeftijdsklasse => $gewichtsklassen)
-            @php $leeftijdId = Str::slug($leeftijdsklasse); @endphp
+            @php
+                $leeftijdId = Str::slug($leeftijdsklasse);
+                // Check of dit een dynamische categorie is (alleen "Alle" key)
+                $isDynamisch = $gewichtsklassen->count() === 1 && $gewichtsklassen->has('Alle');
+                $alleJudokas = $gewichtsklassen->flatten();
+            @endphp
             <div class="mb-6" x-data="{ openGewicht: null }">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
-                    <span class="text-gray-400 text-sm font-normal">{{ $gewichtsklassen->flatten()->count() }} judoka's</span>
+                    <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} judoka's</span>
                 </h2>
 
-                <!-- Gewichtsklasse knoppen -->
+                @if($isDynamisch)
+                {{-- Dynamische categorie: toon direct alle judoka's zonder knoppen --}}
+                @php $dynamischJudokas = $gewichtsklassen->get('Alle', collect()); @endphp
+                <div class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md">
+                    <div class="divide-y">
+                        @foreach($dynamischJudokas as $judoka)
+                        @php
+                            $judokaPoule = $judoka->poules->first();
+                            $judokaBlok = $judokaPoule?->blok;
+                            $judokaMat = $judokaPoule?->mat;
+                            $gewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht;
+                        @endphp
+                        <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100">
+                            <div class="flex-1 min-w-0">
+                                <span class="text-gray-800">{{ $judoka->naam }}</span>
+                                <span class="text-gray-400">({{ $judoka->leeftijd }}j, {{ $gewicht ? $gewicht . 'kg' : '-' }})</span>
+                                <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
+                                @if($toernooi->voorbereiding_klaar_op && $judokaBlok)
+                                <div class="text-xs text-blue-600 mt-1">
+                                    <span class="font-medium">Blok {{ $judokaBlok->nummer }}</span>
+                                    @if($judokaMat) | Mat {{ $judokaMat->nummer }} @endif
+                                </div>
+                                @endif
+                            </div>
+                            <button @click="toggleFavoriet({{ $judoka->id }})"
+                                    class="favorite-star text-2xl flex-shrink-0"
+                                    :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                {{-- Vaste gewichtsklassen: knoppen per klasse --}}
                 <div class="flex flex-wrap gap-2 mb-3">
                     @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                     @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                     <button @click="openGewicht = openGewicht === '{{ $gewichtId }}' ? null : '{{ $gewichtId }}'"
                             class="px-3 py-2.5 sm:py-2 rounded-lg shadow transition flex items-center gap-2 active:scale-95"
                             :class="openGewicht === '{{ $gewichtId }}' ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700'">
-                        <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse === 'onbekend' ? 'Onbekend gewicht' : $gewichtsklasse }}</span>
+                        <span class="font-medium text-sm sm:text-base">{{ $gewichtsklasse }}</span>
                         <span class="text-xs bg-opacity-20 px-1.5 py-0.5 rounded" :class="openGewicht === '{{ $gewichtId }}' ? 'text-blue-200 bg-blue-400' : 'text-gray-500 bg-gray-200'">{{ $judokas->count() }}</span>
                     </button>
                     @endforeach
                 </div>
 
-                <!-- Geselecteerde gewichtsklasse inhoud -->
+                {{-- Gewichtsklassen panels --}}
                 @foreach($gewichtsklassen as $gewichtsklasse => $judokas)
                 @php $gewichtId = str_replace(['-', '+'], ['min', 'plus'], $gewichtsklasse); @endphp
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
-                     class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md">
+                     class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-                        <span class="font-medium text-gray-700">{{ $gewichtsklasse === 'onbekend' ? 'Onbekend gewicht' : $gewichtsklasse }} - {{ $judokas->count() }} judoka's</span>
+                        <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} judoka's</span>
                         <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
@@ -586,36 +634,29 @@
                             $judokaPoule = $judoka->poules->first();
                             $judokaBlok = $judokaPoule?->blok;
                             $judokaMat = $judokaPoule?->mat;
+                            $gewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht;
                         @endphp
                         <div class="px-4 py-3 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100">
                             <div class="flex-1 min-w-0">
                                 <span class="text-gray-800">{{ $judoka->naam }}</span>
-                                <span class="text-gray-400">(</span><span class="w-3 h-3 inline-block rounded-full band-{{ $judoka->band }}"></span><span class="text-gray-400">)</span>
+                                <span class="text-gray-400">({{ $judoka->leeftijd }}j{{ $gewicht ? ', ' . $gewicht . 'kg' : '' }})</span>
                                 <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
                                 @if($toernooi->voorbereiding_klaar_op && $judokaBlok)
                                 <div class="text-xs text-blue-600 mt-1">
                                     <span class="font-medium">Blok {{ $judokaBlok->nummer }}</span>
-                                    @if($judokaMat)
-                                    <span class="text-gray-400">|</span>
-                                    <span>Mat {{ $judokaMat->nummer }}</span>
-                                    @endif
-                                    @if($judokaBlok->weging_start && $judokaBlok->weging_einde)
-                                    <span class="text-gray-400">|</span>
-                                    <span class="text-green-600">Weging {{ \Carbon\Carbon::parse($judokaBlok->weging_start)->format('H:i') }}-{{ \Carbon\Carbon::parse($judokaBlok->weging_einde)->format('H:i') }}</span>
-                                    @endif
+                                    @if($judokaMat) | Mat {{ $judokaMat->nummer }} @endif
                                 </div>
                                 @endif
                             </div>
                             <button @click="toggleFavoriet({{ $judoka->id }})"
                                     class="favorite-star text-2xl flex-shrink-0"
-                                    :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">
-                                &#9733;
-                            </button>
+                                    :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
                         </div>
                         @endforeach
                     </div>
                 </div>
                 @endforeach
+                @endif {{-- einde isDynamisch --}}
             </div>
             @empty
             <div class="text-center py-12 text-gray-500">
@@ -909,8 +950,19 @@
                 zoekLoading: false,
                 heeftGezocht: false,
                 poulesGegenereerd: poulesGegenereerd,
+                liveLoading: false,
 
                 init() {
+                    // Restore active tab from sessionStorage (for refresh)
+                    const savedTab = sessionStorage.getItem('publiek_active_tab_{{ $toernooi->id }}');
+                    if (savedTab && ['info', 'deelnemers', 'favorieten', 'live', 'uitslagen'].includes(savedTab)) {
+                        this.activeTab = savedTab;
+                    }
+
+                    // Save active tab when it changes
+                    this.$watch('activeTab', (tab) => {
+                        sessionStorage.setItem('publiek_active_tab_{{ $toernooi->id }}', tab);
+                    });
                     // Load favorites from localStorage
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
@@ -930,12 +982,6 @@
                             }
                         }, 15000);
 
-                        // Live matten: page reload elke 30 sec
-                        setInterval(() => {
-                            if (this.activeTab === 'live') {
-                                window.location.reload();
-                            }
-                        }, 30000);
                     }
                 },
 
@@ -975,7 +1021,7 @@
                     this.loadingPoules = true;
 
                     try {
-                        const response = await fetch('/publiek/{{ $toernooi->slug }}/favorieten', {
+                        const response = await fetch('{{ route('publiek.favorieten', $toernooi->routeParams()) }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1017,6 +1063,12 @@
                     });
                 },
 
+                refreshLive() {
+                    this.liveLoading = true;
+                    // Session storage already saves activeTab, so just reload
+                    window.location.reload();
+                },
+
                 async zoekJudokas() {
                     if (this.zoekterm.length < 2) {
                         this.zoekResultaten = [];
@@ -1026,7 +1078,7 @@
                     }
 
                     this.zoekLoading = true;
-                    const url = `/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(this.zoekterm)}`;
+                    const url = `{{ route('publiek.zoeken', $toernooi->routeParams()) }}?q=${encodeURIComponent(this.zoekterm)}`;
 
                     try {
                         const response = await fetch(url);
