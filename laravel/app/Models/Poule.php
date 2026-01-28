@@ -216,6 +216,8 @@ class Poule extends Model
         $baseTitel = $this->leeftijdsklasse ?? '';
 
         if ($range && $range['min_kg'] !== null && $range['max_kg'] !== null) {
+            // Formaat: "leeftijdsklasse min-maxkg" (simpel, zonder slashes)
+            // Slashes worden toegevoegd in display/view layer
             $this->titel = $baseTitel . ' ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
         } else {
             // Geen gewogen judoka's - titel zonder kg range
@@ -282,6 +284,8 @@ class Poule extends Model
             if ($range) {
                 // Strip existing kg range from title if present
                 $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $titel);
+                // Strip trailing slashes and whitespace
+                $titelZonderKg = preg_replace('/\s*\/\s*$/', '', $titelZonderKg);
                 // Also strip "Poule X" from title if present
                 $titelZonderPoule = preg_replace('/\s*Poule\s+\d+\s*$/i', '', $titelZonderKg);
 
