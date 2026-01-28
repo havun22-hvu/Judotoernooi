@@ -196,13 +196,15 @@ class WedstrijdSchemaService
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
                 'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id, // yellow (next)
                 'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id, // green (current)
-                'judokas' => $poule->judokas->map(fn($j) => [
-                    'id' => $j->id,
-                    'naam' => $j->naam,
-                    'gewichtsklasse' => $j->gewichtsklasse,
-                    'club' => $j->club?->naam,
-                    'band' => $j->band,
-                ])->toArray(),
+                'judokas' => $poule->judokas
+                    ->filter(fn($j) => $j->aanwezigheid !== 'afwezig')
+                    ->map(fn($j) => [
+                        'id' => $j->id,
+                        'naam' => $j->naam,
+                        'gewichtsklasse' => $j->gewichtsklasse,
+                        'club' => $j->club?->naam,
+                        'band' => $j->band,
+                    ])->values()->toArray(),
                 'wedstrijden' => $poule->wedstrijden->map(function ($w) use ($isEliminatie) {
                     $wedstrijd = [
                         'id' => $w->id,
