@@ -157,6 +157,13 @@ class PouleController extends Controller
         $maxNummer = $toernooi->poules()->max('nummer') ?? 0;
         $nieuweNummer = $maxNummer + 1;
 
+        // Find blok_id from existing poule with same leeftijdsklasse (category)
+        $existingPoule = $toernooi->poules()
+            ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
+            ->whereNotNull('blok_id')
+            ->first();
+        $blokId = $existingPoule?->blok_id;
+
         // Create the poule
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
         $titel = $gewichtsklasse
@@ -165,6 +172,7 @@ class PouleController extends Controller
 
         $poule = $toernooi->poules()->create([
             'nummer' => $nieuweNummer,
+            'blok_id' => $blokId,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $gewichtsklasse,
             'titel' => $titel,
