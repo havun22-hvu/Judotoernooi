@@ -231,6 +231,14 @@
 - **Oorzaak:** `isGewichtBinnenKlasse()` check keek naar judoka's eigen gewichtsklasse, irrelevant bij dynamisch
 - **Oplossing:** Skip gewichtsklasse check voor dynamische categorieën (`$poule->isDynamisch()`)
 
+### UI: Zaaloverzicht navigatie en per-blok reset
+- **Type:** UI improvement
+- **Wat:**
+  - "Terug naar Blokkenverdeling" link verborgen als voorbereiding klaar
+  - Per-blok "Reset Blok" knop toegevoegd (alleen zichtbaar als er wedstrijden zijn)
+- **Bestanden:** zaaloverzicht.blade.php, BlokController.php, web.php
+- **Reset gedrag:** Verwijdert wedstrijden, reset doorgestuurd_op, behoudt mat toewijzingen
+
 ---
 
 <!--
