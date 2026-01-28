@@ -1368,8 +1368,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update poule titel met nieuwe gewichtsrange (variabele categorieën)
     function updatePouleTitel(pouleCard, pouleData) {
-        if (!pouleData.gewichts_range) return;
-
         const titelEl = pouleCard.querySelector('.poule-header .font-bold');
         if (!titelEl) return;
 
@@ -1377,13 +1375,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const titel = pouleData.titel || '';
         const titelZonderKg = titel.replace(/\s*\([\d.]+-[\d.]+kg\)\s*$/, '').replace(/\s*[\d.]+-[\d.]+kg\s*$/, '');
 
-        // Bouw nieuwe titel met actuele range (null-safe)
-        const minKg = pouleData.gewichts_range.min_kg;
-        const maxKg = pouleData.gewichts_range.max_kg;
-
+        // Bouw nieuwe titel - met kg range als aanwezig, zonder als geen judoka's meer
         let nieuweTitel = `#${pouleCard.dataset.pouleNummer} ${titelZonderKg}`;
-        if (minKg !== null && maxKg !== null) {
-            nieuweTitel += ` (${parseFloat(minKg).toFixed(1)}-${parseFloat(maxKg).toFixed(1)}kg)`;
+        if (pouleData.gewichts_range && pouleData.gewichts_range.min_kg !== null && pouleData.gewichts_range.max_kg !== null) {
+            nieuweTitel += ` (${parseFloat(pouleData.gewichts_range.min_kg).toFixed(1)}-${parseFloat(pouleData.gewichts_range.max_kg).toFixed(1)}kg)`;
         }
 
         titelEl.textContent = nieuweTitel;
