@@ -239,6 +239,14 @@
 - **Bestanden:** zaaloverzicht.blade.php, edit.blade.php, BlokController.php, web.php
 - **Reset gedrag:** Verwijdert wedstrijden, reset doorgestuurd_op, behoudt mat toewijzingen
 
+### Fix: Poule titel niet bijgewerkt bij judoka toevoegen/verwijderen
+- **Type:** Bug fix
+- **Wat:** Poule titel in database werd niet bijgewerkt met gewichtsrange bij verplaatsen judoka's
+- **Bestanden:** Poule.php
+- **Oorzaak:** `updateStatistieken()` updatet alleen aantal_judokas/wedstrijden, niet de titel
+- **Oplossing:** `updateTitel()` method toegevoegd, aangeroepen in `updateStatistieken()`
+- **Gedrag:** Titel wordt automatisch bijgewerkt met actuele gewichtsrange (alleen voor dynamische poules)
+
 ---
 
 <!--
