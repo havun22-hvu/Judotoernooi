@@ -88,7 +88,7 @@ Route: `/toernooi` (alleen voor sitebeheerder)
 
 ### Auto-start servers (bij lokaal testen)
 ```bash
-cd laravel && php artisan serve --port=8007
+cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 ```
 
 ### Forbidden without permission
