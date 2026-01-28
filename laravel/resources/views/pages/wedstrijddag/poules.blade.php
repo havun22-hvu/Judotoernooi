@@ -1068,10 +1068,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (statsDiv) statsDiv.classList.add('text-blue-200');
         }
 
-        // Update category status
-        const categoryKey = pouleCard.dataset.pouleLeeftijdsklasse + '|' + pouleCard.dataset.pouleGewichtsklasse;
-        updateCategoryStatus(categoryKey);
-
         // Update problematische poules lijsten bovenaan
         updateProblematischePoules(
             { id: pouleId, aantal_judokas: aantalJudokas },
