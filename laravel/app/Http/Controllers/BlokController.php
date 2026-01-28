@@ -580,6 +580,48 @@ class BlokController extends Controller
     }
 
     /**
+     * Reset entire blok to end-of-preparation state
+     * Deletes all matches, resets doorgestuurd_op, keeps mat assignments
+     */
+    public function resetBlok(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'blok_nummer' => 'required|integer',
+        ]);
+
+        $blokNummer = $validated['blok_nummer'];
+
+        // Find all poules in this blok
+        $poules = $toernooi->poules()
+            ->whereHas('blok', fn($q) => $q->where('nummer', $blokNummer))
+            ->get();
+
+        $totaalWedstrijden = 0;
+        $totaalPoules = 0;
+
+        foreach ($poules as $poule) {
+            // Delete all matches
+            $verwijderd = $poule->wedstrijden()->delete();
+            $totaalWedstrijden += $verwijderd;
+            $totaalPoules++;
+
+            // Reset poule status to end-of-preparation (keep mat_id!)
+            $poule->update([
+                'doorgestuurd_op' => null,
+                'spreker_klaar' => null,
+                'afgeroepen_at' => null,
+                'huidige_wedstrijd_id' => null,
+                'actieve_wedstrijd_id' => null,
+                'aantal_wedstrijden' => 0,
+            ]);
+        }
+
+        return redirect()
+            ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
+            ->with('success', "✓ Blok {$blokNummer} gereset - {$totaalWedstrijden} wedstrijden verwijderd, {$totaalPoules} poules terug naar eind voorbereiding");
+    }
+
+    /**
      * NUCLEAR OPTION: Reset ALLES - alle wedstrijden, alle matten, alle blokken
      */
     public function resetAlles(Organisator $organisator, Toernooi $toernooi): RedirectResponse

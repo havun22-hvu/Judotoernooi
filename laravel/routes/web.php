@@ -235,6 +235,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('blok/activeer-poule', [BlokController::class, 'activeerPoule'])->name('blok.activeer-poule');
         Route::post('blok/reset-poule', [BlokController::class, 'resetPoule'])->name('blok.reset-poule');
         Route::post('blok/reset-alles', [BlokController::class, 'resetAlles'])->name('blok.reset-alles');
+        Route::post('blok/reset-blok', [BlokController::class, 'resetBlok'])->name('blok.reset-blok');
         Route::post('blok/verplaats-poule', [BlokController::class, 'verplaatsPoule'])->name('blok.verplaats-poule');
         Route::resource('blok', BlokController::class)->only(['index', 'show']);
 

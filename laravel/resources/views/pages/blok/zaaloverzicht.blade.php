@@ -25,9 +25,11 @@
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
         </a>
+        @if(!$toernooi->voorbereiding_klaar_op)
         <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             ← Terug naar Blokkenverdeling
         </a>
+        @endif
     </div>
 </div>
 
@@ -112,9 +114,21 @@
                 <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
                 @endif
             </div>
-            <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <div class="flex items-center gap-2">
+                @if($blokWedstrijden > 0)
+                <form action="{{ route('toernooi.blok.reset-blok', $toernooi->routeParams()) }}" method="POST" class="inline" @click.stop>
+                    @csrf
+                    <input type="hidden" name="blok_nummer" value="{{ $blok['nummer'] }}">
+                    <button type="submit" class="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 rounded"
+                            onclick="return confirm('Reset Blok {{ $blok['nummer'] }}?\n\nAlle wedstrijden worden verwijderd.\nPoules blijven op hun mat.\nStatus wordt teruggezet naar eind voorbereiding.')">
+                        🔄 Reset Blok
+                    </button>
+                </form>
+                @endif
+                <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </div>
         </button>
         @if($blokPoulesList->isNotEmpty())
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
