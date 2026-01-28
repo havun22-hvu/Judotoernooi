@@ -170,6 +170,54 @@
 
 ---
 
+## Sessie: 28 januari 2026
+
+### Fix: Upgrade pagina vereenvoudigd
+- **Type:** UI improvement
+- **Wat:** Dropdown selector i.p.v. meerdere kaarten, prijs per 50 judokas
+- **Bestanden:** upgrade.blade.php
+
+### Fix: Default sortering prioriteit
+- **Type:** Config change
+- **Wat:** Gewijzigd naar band → gewicht → leeftijd (was leeftijd → gewicht → band)
+- **Bestanden:** PouleIndelingService.php, DynamischeIndelingService.php, edit.blade.php
+
+### Fix: Default portal modus
+- **Type:** Config change
+- **Wat:** Default portal modus nu 'mutaties' (was 'uit')
+- **Bestanden:** edit.blade.php
+
+### Fix: Paid tier upgrade velden
+- **Type:** Bug fix
+- **Wat:** ToernooiBetalingController zette verkeerde velden na upgrade
+- **Bestanden:** ToernooiBetalingController.php
+- **Oplossing:** `plan_type => 'paid'`, `paid_tier => $tier`, `paid_max_judokas => $max`
+
+### Fix: Kyu notatie verwijderd
+- **Type:** UI fix
+- **Wat:** Band toont nu alleen kleur (bijv. "Wit" i.p.v. "Wit (6e kyu)")
+- **Bestanden:** judoka/index.blade.php, judoka/show.blade.php, coach/weegkaarten.blade.php
+
+### Fix: Club portal pincode
+- **Type:** Bug fix
+- **Wat:** Gebruikte globale `$club->pincode` i.p.v. toernooi-specifieke `pivot->pincode`
+- **Bestanden:** club/index.blade.php, ClubUitnodigingMail.php, CorrectieVerzoekMail.php, ClubController.php
+- **Oplossing:** `$club->getPincodeForToernooi($toernooi)` en pivot data laden
+
+### Feat: Bulk club selectie
+- **Type:** Feature
+- **Wat:** "Alles aan" en "Alles uit" knoppen voor clubs
+- **Bestanden:** club/index.blade.php, ClubController.php, routes/web.php
+- **Routes:** `club.select-all`, `club.deselect-all`
+
+### Fix: Template save 500 error
+- **Type:** Bug fix
+- **Wat:** (1) Organisator parameter ontbrak in controller, (2) NULL constraint op portal_modus
+- **Bestanden:** ToernooiTemplateController.php, ToernooiTemplate.php
+- **Oplossing:** Default values voor portal_modus ('mutaties') en betaling_actief (false)
+
+---
+
 <!--
 TEMPLATE:
 
