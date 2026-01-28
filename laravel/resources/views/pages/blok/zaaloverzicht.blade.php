@@ -122,9 +122,8 @@
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
             @foreach($blokPoulesList as $pouleInfo)
             @php
-                // Korte chip naam: #nummer + 1e letter leeftijd + gewicht
-                $leeftijdKort = mb_substr($pouleInfo['leeftijdsklasse'], 0, 1) . '.';
-                $chipNaam = '#' . $pouleInfo['nummer'] . ' ' . $leeftijdKort . ' ' . $pouleInfo['gewichtsklasse'];
+                // Korte chip naam: #nummer + titel
+                $chipNaam = '#' . $pouleInfo['nummer'] . ' ' . $pouleInfo['titel'];
                 $isSent = $pouleInfo['is_sent'];
                 $isActivated = $pouleInfo['is_activated'];
 
@@ -203,15 +202,13 @@
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
                         @forelse($allePoules as $poule)
                         @php
-                            // Consistent formaat: #nummer L. gewicht (Xw/Xj)
-                            $leeftijdKort = mb_substr($poule['leeftijdsklasse'], 0, 1) . '.';
                             $heeftWedstrijden = $poule['wedstrijden'] > 0;
                             $stats = $heeftWedstrijden ? $poule['wedstrijden'] . 'w' : $poule['judokas'] . 'j';
                         @endphp
                         <div class="poule-item text-xs border rounded p-1 {{ $heeftWedstrijden ? 'bg-gray-50' : 'bg-gray-100' }} cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
-                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }} {{ $leeftijdKort }} {{ $poule['gewichtsklasse'] }}</div>
+                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }} {{ $poule['titel'] }}</div>
                             <div class="text-gray-500">({{ $stats }})</div>
                         </div>
                         @empty
