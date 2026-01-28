@@ -1,6 +1,40 @@
 # Handover
 
-## Laatste Sessie: 27 januari 2026 (late avond)
+## Laatste Sessie: 28 januari 2026
+
+### Wat is gedaan:
+- **Upgrade pagina vereenvoudigd**: Dropdown i.p.v. meerdere kaarten, prijs per 50 judokas
+- **Default sortering**: Gewijzigd naar band → gewicht → leeftijd (was leeftijd → gewicht → band)
+- **Default portal modus**: Gewijzigd naar 'mutaties' (was 'uit')
+- **Paid tier upgrade fix**: ToernooiBetalingController zette verkeerde velden, nu correct:
+  - `plan_type => 'paid'`, `paid_tier => $tier`, `paid_max_judokas => $max`, `paid_at => now()`
+- **Kyu notatie verwijderd**: Band toont nu alleen kleur (bijv. "Wit" i.p.v. "Wit (6e kyu)")
+- **Club portal pincode fix**: Gebruikte globale `$club->pincode` i.p.v. toernooi-specifieke `pivot->pincode`
+- **Bulk club selectie**: "Alles aan" en "Alles uit" knoppen toegevoegd
+- **Template save 500 fix**:
+  1. Organisator parameter toegevoegd aan controller methods
+  2. NULL constraint fix: `portal_modus` en `betaling_actief` krijgen nu default values
+
+### ⚠️ NOG TE TESTEN: Template Opslaan
+De fix voor template opslaan is toegepast maar nog niet getest:
+- `ToernooiTemplate::createFromToernooi()` gebruikt nu defaults voor NULL waarden
+- Test door een template op te slaan in edit pagina
+
+### Gewijzigde bestanden:
+- `upgrade.blade.php` - Vereenvoudigde pricing UI
+- `PouleIndelingService.php`, `DynamischeIndelingService.php`, `edit.blade.php` - Sorteer prioriteit
+- `ToernooiBetalingController.php` - Paid tier velden
+- `judoka/index.blade.php`, `judoka/show.blade.php`, `coach/weegkaarten.blade.php` - Kyu verwijderd
+- `ClubController.php` - Bulk select, pivot data
+- `club/index.blade.php` - Pivot pincode display
+- `ClubUitnodigingMail.php`, `CorrectieVerzoekMail.php` - Toernooi-specifieke pincode
+- `ToernooiTemplateController.php` - Organisator parameter
+- `ToernooiTemplate.php` - NULL default values
+- `routes/web.php` - Bulk select routes
+
+---
+
+## Sessie: 27 januari 2026 (late avond)
 
 ### Wat is gedaan:
 - **is_premium veld** toegevoegd aan organisatoren tabel
