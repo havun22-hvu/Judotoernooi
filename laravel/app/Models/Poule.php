@@ -256,13 +256,14 @@ class Poule extends Model
      */
     public function getGewichtsRange(): ?array
     {
+        // Use gewicht_gewogen if available, otherwise fall back to gewicht (ingeschreven)
         $gewichten = $this->judokas()
-            ->whereNotNull('gewicht_gewogen')
             ->where(function ($q) {
                 $q->whereNull('aanwezigheid')
                   ->orWhere('aanwezigheid', '!=', 'afwezig');
             })
-            ->pluck('gewicht_gewogen')
+            ->get()
+            ->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)
             ->filter()
             ->values();
 
