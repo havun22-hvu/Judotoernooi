@@ -88,7 +88,7 @@
                 'is_activated' => $pouleStatus['is_activated'] ?? false,
             ];
         })
-        ->sortBy([['leeftijd_sort', 'asc'], ['gewicht_sort', 'asc'], ['nummer', 'asc']])
+        ->sortBy('nummer')
         ->values();
 @endphp
 <div class="mb-6 w-full" x-data="{
