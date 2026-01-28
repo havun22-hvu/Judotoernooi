@@ -216,6 +216,14 @@
 - **Bestanden:** ToernooiTemplateController.php, ToernooiTemplate.php
 - **Oplossing:** Default values voor portal_modus ('mutaties') en betaling_actief (false)
 
+### Fix: Poule titel gewichtsrange niet bijgewerkt
+- **Type:** Bug fix
+- **Wat:** Poule titel behield oude gewichtsrange wanneer judoka uit poule werd gehaald
+- **Bestanden:** poules.blade.php
+- **Oorzaak:** `updatePouleTitel()` deed `return` bij null gewichts_range, waardoor titel niet werd geüpdatet
+- **Oplossing:** Functie update nu altijd titel, met kg-range als aanwezig, zonder als poule leeg
+- **Note:** Bug zat er al vanaf originele implementatie (bf37db5), was geen edge case voor lege poule
+
 ---
 
 <!--
