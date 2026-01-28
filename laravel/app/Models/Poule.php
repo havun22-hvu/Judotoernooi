@@ -194,7 +194,33 @@ class Poule extends Model
         }
 
         $this->aantal_wedstrijden = $this->berekenAantalWedstrijden($aantalJudokas);
+
+        // Update titel met actuele gewichtsrange (voor dynamische categorieën)
+        $this->updateTitel();
+
         $this->save();
+    }
+
+    /**
+     * Update poule titel met actuele gewichtsrange
+     * Alleen voor poules zonder vaste gewichtsklasse (dynamisch)
+     */
+    public function updateTitel(): void
+    {
+        // Skip voor vaste gewichtsklassen (die hebben al een correcte titel)
+        if (!empty($this->gewichtsklasse)) {
+            return;
+        }
+
+        $range = $this->getGewichtsRange();
+        $baseTitel = $this->leeftijdsklasse ?? '';
+
+        if ($range && $range['min_kg'] !== null && $range['max_kg'] !== null) {
+            $this->titel = $baseTitel . ' ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+        } else {
+            // Geen gewogen judoka's - titel zonder kg range
+            $this->titel = $baseTitel;
+        }
     }
 
     /**
@@ -242,12 +268,48 @@ class Poule extends Model
     }
 
     /**
-     * Get display titel
-     * Gebruikt opgeslagen titel (wordt correct gezet bij aanmaken poule)
+     * Get display titel met dynamische gewichtsrange
+     * Format: "Label / leeftijd / gewicht" voor alle poules
      */
     public function getDisplayTitel(): string
     {
-        return $this->titel ?? $this->leeftijdsklasse . ' ' . $this->gewichtsklasse;
+        $titel = $this->titel ?? '';
+        $heeftGeenGewichtsklasse = empty($this->gewichtsklasse);
+
+        // Voor dynamische poules of poules zonder gewichtsklasse: bereken range live
+        if ($this->isDynamisch() || $heeftGeenGewichtsklasse) {
+            $range = $this->getGewichtsRange();
+            if ($range) {
+                // Strip existing kg range from title if present
+                $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $titel);
+                // Also strip "Poule X" from title if present
+                $titelZonderPoule = preg_replace('/\s*Poule\s+\d+\s*$/i', '', $titelZonderKg);
+
+                // Try to extract age range from title (without Poule nummer)
+                if (preg_match('/^(.+?)\s+(\d+-\d+j)$/', trim($titelZonderPoule), $matches)) {
+                    return $matches[1] . ' / ' . $matches[2] . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+                }
+
+                // Fallback: try to get age range from leeftijdsklasse
+                if ($this->leeftijdsklasse && preg_match('/(\d+-\d+j)/', $this->leeftijdsklasse, $leeftijdMatch)) {
+                    $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $this->leeftijdsklasse));
+                    return $label . ' / ' . $leeftijdMatch[1] . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+                }
+
+                // Last fallback: use leeftijdsklasse as label + kg range (no age)
+                $label = trim($titelZonderPoule) ?: $this->leeftijdsklasse;
+                return $label . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+            }
+        }
+
+        // Voor alle poules: formatteer titel met slashes
+        // Match: "label leeftijd gewicht" (bijv. "jeugd 9-11j 24.2-27.0kg")
+        if (preg_match('/^(.+?)\s+(\d+-\d+j)\s+(.+)$/', $titel, $matches)) {
+            return $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
+        }
+
+        // Fallback: return titel as-is
+        return $titel ?: $this->leeftijdsklasse . ' ' . $this->gewichtsklasse;
     }
 
     /**
