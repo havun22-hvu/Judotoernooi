@@ -2083,6 +2083,50 @@
     </div>
     @endif
 
+    <!-- NOODKNOP: RESET BLOK -->
+    @if($toernooi->blokken->isNotEmpty())
+    <div class="bg-orange-50 border-2 border-orange-300 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-orange-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">🔄</span> Noodknop: Reset Blok naar Eind Voorbereiding
+        </h2>
+        <p class="text-orange-700 mb-4">
+            Reset een blok naar de status aan het einde van de voorbereiding. Handig als er iets mis is gegaan tijdens de wedstrijddag.
+        </p>
+
+        <div class="bg-orange-100 border border-orange-300 rounded p-3 mb-4 text-sm text-orange-800">
+            <strong>Dit doet de reset:</strong>
+            <ul class="list-disc list-inside mt-2">
+                <li>Verwijdert alle wedstrijden van poules in dit blok</li>
+                <li>Reset doorstuur-status (poules worden weer grijs)</li>
+                <li><strong>Behoudt</strong> zaalindeling (mat toewijzingen)</li>
+                <li>Judoka's en poule-indelingen blijven intact</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            @foreach($toernooi->blokken->sortBy('nummer') as $blok)
+            @php
+                $blokWedstrijden = $toernooi->poules()
+                    ->where('blok_id', $blok->id)
+                    ->withCount('wedstrijden')
+                    ->get()
+                    ->sum('wedstrijden_count');
+            @endphp
+            <form action="{{ route('toernooi.blok.reset-blok', $toernooi->routeParams()) }}" method="POST" class="inline">
+                @csrf
+                <input type="hidden" name="blok_nummer" value="{{ $blok->nummer }}">
+                <button type="submit"
+                        class="px-4 py-2 {{ $blokWedstrijden > 0 ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-400 cursor-not-allowed' }} text-white font-bold rounded-lg"
+                        {{ $blokWedstrijden == 0 ? 'disabled' : '' }}
+                        onclick="return confirm('Reset Blok {{ $blok->nummer }}?\n\n{{ $blokWedstrijden }} wedstrijden worden verwijderd.\nPoules blijven op hun mat.\nStatus wordt teruggezet naar eind voorbereiding.')">
+                    Blok {{ $blok->nummer }} {{ $blokWedstrijden > 0 ? "({$blokWedstrijden}w)" : '(geen wed.)' }}
+                </button>
+            </form>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     </div><!-- End TAB: ORGANISATIE -->
 
     <!-- TAB: TEST (alleen voor admin) -->
