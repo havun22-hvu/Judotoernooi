@@ -83,8 +83,8 @@ class ToernooiTemplate extends Model
             'instellingen' => $instellingen,
             'max_judokas' => $toernooi->max_judokas,
             'inschrijfgeld' => $toernooi->inschrijfgeld,
-            'betaling_actief' => $toernooi->betaling_actief,
-            'portal_modus' => $toernooi->portal_modus,
+            'betaling_actief' => $toernooi->betaling_actief ?? false,
+            'portal_modus' => $toernooi->portal_modus ?? 'mutaties',
         ]);
     }
 
