@@ -26,6 +26,9 @@ class WedstrijdSchemaService
         // Check if this is a dynamic category (variable weight range)
         $isDynamisch = $poule->isDynamisch();
 
+        // Refresh judokas from database to get current aanwezigheid status
+        $poule->load('judokas');
+
         // Filter: only active judokas (not absent)
         // For dynamic categories: skip weight class check (poule determines who's in it)
         // For fixed categories: also check weight class
@@ -187,7 +190,7 @@ class WedstrijdSchemaService
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'blok_nummer' => $blok->nummer,
                 'mat_nummer' => $mat->nummer,
-                'titel' => $poule->titel,
+                'titel' => $poule->getDisplayTitel(),
                 'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
