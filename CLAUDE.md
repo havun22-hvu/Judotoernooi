@@ -72,12 +72,23 @@ Route: `/toernooi` (alleen voor sitebeheerder)
 - Bij twijfel: VRAAG en WACHT op antwoord
 - Nooit aannemen, altijd verifiëren
 - Als gebruiker iets herhaalt: direct opslaan in docs
+- **Max 2 pogingen** bij bug fix - daarna STOP en verslag uitbrengen aan gebruiker
 
 **Documentatie discipline:**
 - **Oriënteer** via hoofd docs: `CLAUDE.md` → `laravel/docs/README.md`
 - **Hiërarchisch**: hoofd docs verwijzen naar detail docs → lees die EERST
 - **GEEN** dubbele documentatie - check of info al ergens staat
 - **ONDERHOUD** bestaande docs, maak niet steeds nieuwe files
+
+**Bug fix werkwijze (max 2 pogingen):**
+1. **Poging 1:** Analyseer probleem, check VIEW eerst (waar komt data vandaan?), fix
+2. **Poging 2:** Als 1 faalt, heranalyseer, probeer andere aanpak
+3. **STOP na 2 pogingen:** Breng verslag uit aan gebruiker:
+   - Wat is het symptoom?
+   - Waar heb je gezocht?
+   - Wat heb je geprobeerd?
+   - Wat denk je dat het probleem is?
+   - Gebruiker kan dan meedenken
 
 **Hoofd docs → Detail docs:**
 | Onderwerp | Hoofd | Detail |
