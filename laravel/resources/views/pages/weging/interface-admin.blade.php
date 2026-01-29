@@ -40,12 +40,14 @@
                         <span class="text-gray-400">/</span>
                         <span class="text-gray-600" x-text="stats.blok{{ $blok->nummer }}?.totaal || 0"></span>
                     </div>
-                    @if($blok->weging_einde && !$blok->weging_gesloten)
+                    @if($blok->weging_einde && !$blok->weging_gesloten && $toernooi->datum?->isToday())
                     <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
                          class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
                          x-text="display"></div>
                     @elseif($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">Gesloten</div>
+                    @elseif($blok->weging_einde)
+                    <div class="text-xs text-gray-400">{{ $blok->weging_einde->format('H:i') }}</div>
                     @endif
                 </div>
                 @endforeach
