@@ -326,7 +326,7 @@
     <script>
         (function() {
             const toernooiId = {{ $toernooi->id }};
-            const streamUrl = '{{ route("noodplan.stream", [$organisator ?? $toernooi->organisator, $toernooi]) }}';
+            const streamUrl = '{{ route("toernooi.noodplan.stream", $toernooi->routeParams()) }}';
             const storageKey = `noodplan_${toernooiId}_poules`;
             const syncKey = `noodplan_${toernooiId}_laatste_sync`;
             const countKey = `noodplan_${toernooiId}_count`;
