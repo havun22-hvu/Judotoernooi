@@ -237,13 +237,13 @@
                                     if ($judokaNr === $witNr) {
                                         // This judoka is white
                                         $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_wit ?? '';
+                                        $jp = $match->score_wit !== null ? $match->score_wit : '0';
                                         $totaalWP += (int)$wp;
                                         $totaalJP += (int)$jp;
                                     } else {
                                         // This judoka is blue
                                         $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_blauw ?? '';
+                                        $jp = $match->score_blauw !== null ? $match->score_blauw : '0';
                                         $totaalWP += (int)$wp;
                                         $totaalJP += (int)$jp;
                                     }
