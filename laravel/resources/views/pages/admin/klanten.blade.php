@@ -51,16 +51,13 @@
                 </td>
                 <td class="px-6 py-4 text-center">
                     <div class="flex justify-center gap-1">
-                        @if($klant->is_premium)
-                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Premium</span>
-                        @endif
                         @if($klant->is_test)
                             <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Test</span>
                         @endif
                         @if($klant->kyc_compleet)
                             <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">KYC</span>
                         @endif
-                        @if(!$klant->is_premium && !$klant->is_test && !$klant->kyc_compleet)
+                        @if(!$klant->is_test && !$klant->kyc_compleet)
                             <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </div>

@@ -78,12 +78,10 @@ class AdminController extends Controller
             'contactpersoon' => 'nullable|string|max:255',
             'factuur_email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
-            'is_premium' => 'boolean',
             'is_test' => 'boolean',
         ]);
 
-        // Handle boolean checkboxes
-        $validated['is_premium'] = $request->has('is_premium');
+        // Handle boolean checkbox
         $validated['is_test'] = $request->has('is_test');
 
         $klant->update($validated);
