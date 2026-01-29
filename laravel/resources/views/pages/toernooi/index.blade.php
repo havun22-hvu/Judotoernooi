@@ -149,16 +149,9 @@
                         @elseif($toernooi->datum->isFuture())
                             @php
                                 $totalDagen = (int) now()->diffInDays($toernooi->datum);
-                                $maanden = (int) floor($totalDagen / 30);
-                                $rest = $totalDagen % 30;
-                                $weken = (int) floor($rest / 7);
-                                $dagen = $rest % 7;
-
-                                $parts = [];
-                                if ($maanden > 0) $parts[] = $maanden . 'm';
-                                if ($weken > 0 || $maanden > 0) $parts[] = $weken . 'w';
-                                $parts[] = $dagen . 'd';
-                                $countdown = implode(' ', $parts);
+                                $weken = (int) floor($totalDagen / 7);
+                                $dagen = $totalDagen % 7;
+                                $countdown = $weken . 'w ' . $dagen . 'd';
 
                                 $urgentClass = $totalDagen <= 7
                                     ? 'px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded'
