@@ -591,34 +591,61 @@ class BlokController extends Controller
 
         $blokNummer = $validated['blok_nummer'];
 
+        // Find the blok
+        $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+        if (!$blok) {
+            return redirect()->back()->with('error', "Blok {$blokNummer} niet gevonden");
+        }
+
         // Find all poules in this blok
         $poules = $toernooi->poules()
-            ->whereHas('blok', fn($q) => $q->where('nummer', $blokNummer))
+            ->where('blok_id', $blok->id)
             ->get();
 
         $totaalWedstrijden = 0;
         $totaalPoules = 0;
+        $verwijderdePoules = 0;
 
         foreach ($poules as $poule) {
             // Delete all matches
             $verwijderd = $poule->wedstrijden()->delete();
             $totaalWedstrijden += $verwijderd;
-            $totaalPoules++;
 
-            // Reset poule status to end-of-preparation (keep mat_id!)
-            $poule->update([
-                'doorgestuurd_op' => null,
-                'spreker_klaar' => null,
-                'afgeroepen_at' => null,
-                'huidige_wedstrijd_id' => null,
-                'actieve_wedstrijd_id' => null,
-                'aantal_wedstrijden' => 0,
-            ]);
+            // Check if poule was created AFTER weging was closed (wedstrijddag poule)
+            // These should be deleted entirely, not just reset
+            if ($blok->weging_gesloten_op && $poule->created_at > $blok->weging_gesloten_op) {
+                // Move judokas back to wachtruimte (remove poule_id)
+                $poule->judokas()->update(['poule_id' => null]);
+                $poule->delete();
+                $verwijderdePoules++;
+            } else {
+                // Reset voorbereiding poule status (keep mat_id!)
+                $totaalPoules++;
+                $poule->update([
+                    'doorgestuurd_op' => null,
+                    'spreker_klaar' => null,
+                    'afgeroepen_at' => null,
+                    'huidige_wedstrijd_id' => null,
+                    'actieve_wedstrijd_id' => null,
+                    'aantal_wedstrijden' => 0,
+                ]);
+            }
+        }
+
+        // Reset blok weging status
+        $blok->update([
+            'weging_gesloten' => false,
+            'weging_gesloten_op' => null,
+        ]);
+
+        $message = "✓ Blok {$blokNummer} gereset - {$totaalWedstrijden} wedstrijden verwijderd, {$totaalPoules} poules terug naar eind voorbereiding";
+        if ($verwijderdePoules > 0) {
+            $message .= ", {$verwijderdePoules} wedstrijddag-poules verwijderd";
         }
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
-            ->with('success', "✓ Blok {$blokNummer} gereset - {$totaalWedstrijden} wedstrijden verwijderd, {$totaalPoules} poules terug naar eind voorbereiding");
+            ->with('success', $message);
     }
 
     /**

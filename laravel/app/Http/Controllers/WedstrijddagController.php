@@ -339,7 +339,11 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
         }
 
-        $poule->update(['doorgestuurd_op' => now()]);
+        // Update titel met dynamisch berekende display titel (incl. gewichtsrange)
+        $poule->update([
+            'doorgestuurd_op' => now(),
+            'titel' => $poule->getDisplayTitel(),
+        ]);
 
         return response()->json(['success' => true, 'poule_id' => $poule->id]);
     }

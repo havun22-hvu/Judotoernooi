@@ -4,6 +4,8 @@
 
 @section('content')
 @php
+    // Check of wedstrijddag is gestart (pagina wordt dan readonly)
+    $isLocked = $toernooi->isWedstrijddagGestart();
     // Toegestane poule groottes uit instellingen (default [5, 4, 6, 3])
     $toegestaneGroottes = $toernooi->poule_grootte_voorkeur ?? [5, 4, 6, 3];
     // Een poule is problematisch als grootte > 0 EN niet in toegestane groottes
@@ -23,8 +25,21 @@
     $heeftCategorieProbleem = $nietGecategoriseerdAantal > 0 || $overlapWarning;
 @endphp
 
+{{-- Lockdown banner --}}
+@if($isLocked)
+<div class="mb-4 p-4 bg-gray-100 border-l-4 border-gray-500 rounded no-print">
+    <div class="flex items-center gap-3">
+        <span class="text-2xl">🔒</span>
+        <div>
+            <p class="font-bold text-gray-800">Voorbereiding afgesloten</p>
+            <p class="text-sm text-gray-600">De wedstrijddag is gestart. Wijzigingen aan poules kunnen alleen via <strong>Wedstrijddag > Poules</strong>.</p>
+        </div>
+    </div>
+</div>
+@endif
+
 {{-- Categorie waarschuwingen --}}
-@if($heeftCategorieProbleem)
+@if($heeftCategorieProbleem && !$isLocked)
 <div class="mb-4 no-print">
     @if($nietGecategoriseerdAantal > 0)
     <div class="p-3 bg-red-100 border-l-4 border-red-500 rounded mb-2">
@@ -163,6 +178,7 @@
 
 <div class="flex justify-between items-center mb-6 no-print">
     <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
+    @if(!$isLocked)
     <div class="flex items-center space-x-4">
         <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
         @if($heeftCategorieProbleem)
@@ -183,6 +199,7 @@
             Verifieer poules
         </button>
     </div>
+    @endif
 </div>
 
 <!-- Verificatie resultaat -->
@@ -505,6 +522,7 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+const isLocked = {{ $isLocked ? 'true' : 'false' }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi->routeParams()) }}';
@@ -871,6 +889,20 @@ async function verifieerPoules() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    // Don't initialize sortable if page is locked
+    if (isLocked) {
+        // Remove draggable cursors
+        document.querySelectorAll('.sortable-poule [draggable]').forEach(el => {
+            el.removeAttribute('draggable');
+            el.classList.remove('cursor-move');
+        });
+        // Hide delete buttons
+        document.querySelectorAll('.delete-empty-btn').forEach(el => el.remove());
+        // Hide "nieuwe poule" buttons
+        document.querySelectorAll('[onclick*="openNieuwePoule"]').forEach(el => el.remove());
+        return;
+    }
 
     // Initialize sortable on all poule containers
     document.querySelectorAll('.sortable-poule').forEach(container => {

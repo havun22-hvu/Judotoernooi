@@ -278,42 +278,54 @@ class Poule extends Model
         $titel = $this->titel ?? '';
         $heeftGeenGewichtsklasse = empty($this->gewichtsklasse);
 
+        // Extract components from various sources
+        $label = null;
+        $leeftijd = null;
+        $gewicht = null;
+
+        // Try to extract leeftijd from titel or leeftijdsklasse
+        if (preg_match('/(\d+-\d+j)/', $titel, $m)) {
+            $leeftijd = $m[1];
+        } elseif ($this->leeftijdsklasse && preg_match('/(\d+-\d+j)/', $this->leeftijdsklasse, $m)) {
+            $leeftijd = $m[1];
+        }
+
+        // Try to extract label (first word/name before age or weight)
+        // Strip slashes, kg values, age values, and "Poule X" from titel
+        $cleanTitel = preg_replace('/\s*\/\s*/', ' ', $titel); // Remove slashes
+        $cleanTitel = preg_replace('/\s*[\d.]+-[\d.]+kg\s*/i', ' ', $cleanTitel); // Remove kg values
+        $cleanTitel = preg_replace('/\s*\d+-\d+j\s*/', ' ', $cleanTitel); // Remove age values
+        $cleanTitel = preg_replace('/\s*Poule\s+\d+\s*/i', ' ', $cleanTitel); // Remove "Poule X"
+        $cleanTitel = trim(preg_replace('/\s+/', ' ', $cleanTitel)); // Clean up whitespace
+
+        if (!empty($cleanTitel)) {
+            $label = $cleanTitel;
+        } elseif ($this->leeftijdsklasse) {
+            // Extract label from leeftijdsklasse
+            $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $this->leeftijdsklasse));
+        }
+
         // Voor dynamische poules of poules zonder gewichtsklasse: bereken range live
         if ($this->isDynamisch() || $heeftGeenGewichtsklasse) {
             $range = $this->getGewichtsRange();
             if ($range) {
-                // Strip existing kg range from title if present
-                $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $titel);
-                // Strip trailing slashes and whitespace
-                $titelZonderKg = preg_replace('/\s*\/\s*$/', '', $titelZonderKg);
-                // Also strip "Poule X" from title if present
-                $titelZonderPoule = preg_replace('/\s*Poule\s+\d+\s*$/i', '', $titelZonderKg);
-
-                // Try to extract age range from title (without Poule nummer)
-                if (preg_match('/^(.+?)\s+(\d+-\d+j)$/', trim($titelZonderPoule), $matches)) {
-                    return $matches[1] . ' / ' . $matches[2] . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
-                }
-
-                // Fallback: try to get age range from leeftijdsklasse
-                if ($this->leeftijdsklasse && preg_match('/(\d+-\d+j)/', $this->leeftijdsklasse, $leeftijdMatch)) {
-                    $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $this->leeftijdsklasse));
-                    return $label . ' / ' . $leeftijdMatch[1] . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
-                }
-
-                // Last fallback: use leeftijdsklasse as label + kg range (no age)
-                $label = trim($titelZonderPoule) ?: $this->leeftijdsklasse;
-                return $label . ' / ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+                $gewicht = round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
             }
         }
 
-        // Voor alle poules: formatteer titel met slashes
-        // Match: "label leeftijd gewicht" (bijv. "jeugd 9-11j 24.2-27.0kg")
-        if (preg_match('/^(.+?)\s+(\d+-\d+j)\s+(.+)$/', $titel, $matches)) {
-            return $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
+        // If no dynamic weight, use gewichtsklasse
+        if (!$gewicht && $this->gewichtsklasse) {
+            $gewicht = $this->gewichtsklasse;
         }
 
-        // Fallback: return titel as-is
-        return $titel ?: $this->leeftijdsklasse . ' ' . $this->gewichtsklasse;
+        // Build the formatted title
+        $parts = array_filter([$label, $leeftijd, $gewicht]);
+        if (count($parts) >= 2) {
+            return implode(' / ', $parts);
+        }
+
+        // Fallback: return titel as-is or construct from fields
+        return $titel ?: trim($this->leeftijdsklasse . ' ' . $this->gewichtsklasse);
     }
 
     /**

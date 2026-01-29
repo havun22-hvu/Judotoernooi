@@ -989,6 +989,46 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 | **Live Matten** | Wedstrijddag | Per mat wie speelt/klaar maakt |
 | **Uitslagen** | Na afloop | Eindstanden per poule |
 
+### Deelnemers Tab - Categorie Weergave
+
+De deelnemers worden gegroepeerd op basis van de **toernooi-instellingen** (`$toernooi->gewichtsklassen`), NIET op basis van het `gewichtsklasse` veld in de judoka database.
+
+**Logica per categorie:**
+
+| `max_kg_verschil` | Type | Weergave |
+|-------------------|------|----------|
+| `0` (of leeg) | **Vaste klassen** | Buttons per gewichtsklasse (-24kg, -27kg, etc.) |
+| `> 0` | **Dynamisch** | Alle judoka's in één lijst gesorteerd op leeftijd + gewicht |
+
+**Controller bepaalt:**
+1. Lees `$toernooi->gewichtsklassen` (categorie-instellingen)
+2. Per leeftijdscategorie: check `max_kg_verschil`
+3. Als `max_kg_verschil > 0` → dynamische indeling → geen gewichtsklasse-groepering
+4. Als `max_kg_verschil == 0` → vaste klassen → groepeer op `gewichten` array uit config
+
+**View toont:**
+- **Dynamische categorie**: Alle judoka's direct zichtbaar, gesorteerd op leeftijd + gewicht
+- **Vaste categorie**: Knoppen per gewichtsklasse (uit config), klik voor judoka lijst
+
+**Voorbeeld configuratie:**
+```php
+// Toernooi instelling voor "jeugd" categorie
+'jeugd' => [
+    'label' => 'Jeugd',
+    'max_leeftijd' => 11,
+    'max_kg_verschil' => 3,  // > 0 = dynamisch
+    'gewichten' => [],        // Leeg bij dynamisch
+]
+
+// Toernooi instelling voor "pupillen" categorie
+'pupillen' => [
+    'label' => 'Pupillen',
+    'max_leeftijd' => 9,
+    'max_kg_verschil' => 0,   // 0 = vaste klassen
+    'gewichten' => ['-24', '-27', '-30', '+30'],
+]
+```
+
 ### Live Matten Tab - Groen/Geel Weergave
 
 Per mat worden getoond:

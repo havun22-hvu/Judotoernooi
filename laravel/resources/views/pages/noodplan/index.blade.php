@@ -183,25 +183,6 @@
                 </div>
             </div>
 
-            <!-- Wedstrijdschema's (lijst) -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <div>
-                    <h3 class="font-medium">Wedstrijdschema's (lijst)</h3>
-                    <p class="text-sm text-gray-500">Alle wedstrijden met scores</p>
-                </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                        Alle
-                    </a>
-                    @foreach($blokken as $blok)
-                    <a href="{{ route('toernooi.noodplan.wedstrijdschemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
-                        {{ $blok->nummer }}
-                    </a>
-                    @endforeach
-                </div>
-            </div>
         </div>
     </div>
 
