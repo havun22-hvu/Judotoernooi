@@ -9,6 +9,15 @@
             max-width: none !important;
             padding: 0 !important;
         }
+        /* Hide elements with no-print class */
+        .no-print,
+        .print-toolbar {
+            display: none !important;
+        }
+        /* Hide unchecked poules */
+        .poule-page.print-exclude {
+            display: none !important;
+        }
         /* Override layout print styles voor schema */
         .schema-table,
         .schema-table * {
@@ -38,10 +47,10 @@
             color: #000 !important;
         }
         /* Page breaks between poules */
-        .poule-page {
+        .poule-page:not(.print-exclude) {
             page-break-after: always;
         }
-        .poule-page:last-child {
+        .poule-page:not(.print-exclude):last-of-type {
             page-break-after: avoid;
         }
         /* Landscape pages for 6+ judokas */
@@ -152,7 +161,24 @@
 <p class="text-gray-500 text-center py-8">Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.</p>
 @else
 
-@foreach($poulesMetSchema as $item)
+<!-- Print toolbar (niet printen) -->
+<div class="print-toolbar no-print mb-6 p-4 bg-gray-100 rounded-lg">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-4">
+            <span class="font-medium text-gray-700">Selecteer schema's om te printen:</span>
+            <button onclick="selectAllPoules(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">Alles aan</button>
+            <button onclick="selectAllPoules(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">Alles uit</button>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="text-sm text-gray-500" id="print-counter">{{ $poulesMetSchema->count() }} van {{ $poulesMetSchema->count() }} geselecteerd</span>
+            <button onclick="window.print()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
+                Print geselecteerde
+            </button>
+        </div>
+    </div>
+</div>
+
+@foreach($poulesMetSchema as $index => $item)
 @php
     $poule = $item['poule'];
     $schema = $item['schema'];
@@ -164,11 +190,19 @@
     });
 @endphp
 
-<div class="poule-page {{ $isLandscape ? 'landscape' : '' }}">
+<div class="poule-page {{ $isLandscape ? 'landscape' : '' }}"
+     x-data="{ printInclude: true }"
+     x-init="$watch('printInclude', (val) => { if(!val) $el.classList.add('print-exclude'); else $el.classList.remove('print-exclude'); updatePrintCounter(); })"
+     :class="{ 'opacity-50': !printInclude }"
+     data-poule-id="{{ $poule->id }}">
     <!-- Poule header -->
     <div class="poule-header">
         <div class="flex justify-between items-center">
-            <div>
+            <div class="flex items-center gap-3">
+                <!-- Print checkbox -->
+                <label class="no-print flex items-center cursor-pointer">
+                    <input type="checkbox" x-model="printInclude" class="w-5 h-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500">
+                </label>
                 <span class="font-bold text-lg">
                     Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                 </span>
@@ -207,6 +241,7 @@
                 $judokaNr = $idx + 1;
                 $totaalWP = 0;
                 $totaalJP = 0;
+                $heeftGespeeld = false;
             @endphp
             <tr class="judoka-row">
                 <td class="px-1 text-center font-bold nr-cel">{{ $judokaNr }}</td>
@@ -234,16 +269,17 @@
                                 $match = $wedstrijden->get($key);
 
                                 if ($match && $match->is_gespeeld) {
+                                    $heeftGespeeld = true;
                                     if ($judokaNr === $witNr) {
                                         // This judoka is white
                                         $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_wit !== null ? $match->score_wit : '0';
+                                        $jp = $match->score_wit !== null ? (string)$match->score_wit : '0';
                                         $totaalWP += (int)$wp;
                                         $totaalJP += (int)$jp;
                                     } else {
                                         // This judoka is blue
                                         $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_blauw !== null ? $match->score_blauw : '0';
+                                        $jp = $match->score_blauw !== null ? (string)$match->score_blauw : '0';
                                         $totaalWP += (int)$wp;
                                         $totaalJP += (int)$jp;
                                     }
@@ -252,15 +288,15 @@
                         }
                     @endphp
                     @if($participates)
-                    <td class="score-cel w-cel">{{ $wp }}</td>
-                    <td class="score-cel j-cel">{{ $jp }}</td>
+                    <td class="score-cel w-cel">{{ $wp !== '' ? $wp : '' }}</td>
+                    <td class="score-cel j-cel">{{ $jp !== '' ? $jp : '' }}</td>
                     @else
                     <td class="score-cel w-cel inactief"></td>
                     <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
-                <td class="totaal-cel">{{ $totaalWP ?: '' }}</td>
-                <td class="totaal-cel">{{ $totaalJP ?: '' }}</td>
+                <td class="totaal-cel">{{ $heeftGespeeld ? $totaalWP : '' }}</td>
+                <td class="totaal-cel">{{ $heeftGespeeld ? $totaalJP : '' }}</td>
                 <td class="plts-cel"></td>
             </tr>
             @endforeach
@@ -285,4 +321,25 @@
         @endif
     </p>
 </div>
+
+<script>
+function selectAllPoules(checked) {
+    document.querySelectorAll('.poule-page').forEach(el => {
+        // Get Alpine component and update data
+        if (el._x_dataStack) {
+            el._x_dataStack[0].printInclude = checked;
+        }
+    });
+    setTimeout(updatePrintCounter, 100);
+}
+
+function updatePrintCounter() {
+    const total = {{ $poulesMetSchema->count() }};
+    const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
+    document.getElementById('print-counter').textContent = selected + ' van ' + total + ' geselecteerd';
+}
+
+// Initial counter update after Alpine init
+document.addEventListener('alpine:initialized', () => setTimeout(updatePrintCounter, 100));
+</script>
 @endsection
