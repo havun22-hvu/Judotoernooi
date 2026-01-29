@@ -638,9 +638,21 @@ class Toernooi extends Model
 
     /**
      * Check if this tournament is on the free tier
+     * Testfase: Cees Veen en sitebeheerder hebben altijd volledige toegang
      */
     public function isFreeTier(): bool
     {
+        // Testfase: bepaalde organisatoren hebben gratis volledige toegang
+        $freeAccessSlugs = ['cees-veen', 'judoschool-cees-veen'];
+        if ($this->organisator && in_array($this->organisator->slug, $freeAccessSlugs)) {
+            return false;
+        }
+
+        // Sitebeheerder (henkvu) heeft altijd volledige toegang
+        if (auth()->check() && auth()->user()->is_sitebeheerder) {
+            return false;
+        }
+
         return ($this->plan_type ?? 'free') === 'free';
     }
 

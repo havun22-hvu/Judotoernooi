@@ -290,6 +290,7 @@ class NoodplanController extends Controller
     /**
      * Print ingevulde wedstrijdschema's in matrix-formaat (zoals mat interface)
      * 1 poule per A4, landscape voor ≥6 judoka's
+     * Met checkboxes om te selecteren welke schema's geprint worden
      */
     public function printIngevuldSchemas(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
@@ -302,6 +303,9 @@ class NoodplanController extends Controller
         }
 
         $blok = null;
+        // Filter afwezige judoka's uit de poules
+        $judokasConstraint = fn($q) => $q->where('aanwezigheid', '!=', 'afwezig')->with('club');
+
         if ($blokNummer) {
             $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
             if (!$blok) {
@@ -310,14 +314,14 @@ class NoodplanController extends Controller
             $poules = $blok->poules()
                 ->whereNotNull('mat_id')
                 ->whereHas('wedstrijden')
-                ->with(['judokas.club', 'wedstrijden', 'mat', 'blok'])
+                ->with(['judokas' => $judokasConstraint, 'wedstrijden', 'mat', 'blok'])
                 ->get();
             $titel = "Wedstrijdschema's (Matrix) - Blok {$blok->nummer}";
         } else {
             $poules = Poule::where('toernooi_id', $toernooi->id)
                 ->whereNotNull('mat_id')
                 ->whereHas('wedstrijden')
-                ->with(['judokas.club', 'wedstrijden', 'mat', 'blok'])
+                ->with(['judokas' => $judokasConstraint, 'wedstrijden', 'mat', 'blok'])
                 ->orderBy('blok_id')
                 ->get();
             $titel = "Alle Wedstrijdschema's (Matrix)";
