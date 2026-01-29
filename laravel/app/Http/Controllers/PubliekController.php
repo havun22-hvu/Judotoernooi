@@ -31,30 +31,80 @@ class PubliekController extends Controller
         // Include poules.blok and poules.mat for showing blok/mat info after voorbereiding
         $judokas = Judoka::where('toernooi_id', $toernooi->id)
             ->whereNotNull('leeftijdsklasse')
-            ->whereNotNull('gewichtsklasse')
             ->with(['club', 'poules.blok', 'poules.mat'])
             ->orderBy('leeftijdsklasse')
-            ->orderBy('gewichtsklasse')
             ->orderBy('naam')
             ->get();
 
-        // Group by leeftijdsklasse, then by gewichtsklasse
-        $categorien = $judokas->groupBy('leeftijdsklasse')->map(function ($groep) {
-            return $groep->groupBy('gewichtsklasse')
-                ->sortBy(function ($judokas, $gewichtsklasse) {
-                    // Sort weight classes numerically (light to heavy)
-                    // Handle formats like "-27", "+55", "27"
-                    $numericValue = (float) preg_replace('/[^0-9.]/', '', $gewichtsklasse);
-                    // Put "+" classes at the end
-                    if (str_starts_with($gewichtsklasse, '+')) {
-                        $numericValue += 1000;
+        // Get toernooi category settings
+        $categorieSettings = $toernooi->getAlleGewichtsklassen();
+
+        // Build mapping: label -> settings (for quick lookup)
+        $settingsPerLabel = [];
+        foreach ($categorieSettings as $key => $settings) {
+            $label = $settings['label'] ?? $key;
+            $settingsPerLabel[$label] = $settings;
+        }
+
+        // Group by leeftijdsklasse, then apply correct grouping based on category type
+        $categorien = $judokas->groupBy('leeftijdsklasse')->map(function ($groep, $leeftijdsklasse) use ($settingsPerLabel) {
+            $settings = $settingsPerLabel[$leeftijdsklasse] ?? null;
+            $maxKgVerschil = $settings['max_kg_verschil'] ?? 0;
+            $vasteGewichten = $settings['gewichten'] ?? [];
+
+            // Dynamische indeling (max_kg_verschil > 0): geen groepering op gewicht
+            if ($maxKgVerschil > 0 || empty($vasteGewichten)) {
+                // Return all judokas under one key, sorted by age then weight
+                return collect([
+                    'Alle' => $groep->sortBy([
+                        fn($a, $b) => $a->leeftijd <=> $b->leeftijd,
+                        fn($a, $b) => ($a->gewicht_gewogen ?? $a->gewicht ?? 0) <=> ($b->gewicht_gewogen ?? $b->gewicht ?? 0),
+                    ])->values(),
+                ]);
+            }
+
+            // Vaste gewichtsklassen: groepeer judoka's op basis van hun gewicht in de vaste klassen
+            $grouped = collect();
+            foreach ($vasteGewichten as $gewichtsklasse) {
+                $grouped[$gewichtsklasse] = collect();
+            }
+
+            foreach ($groep as $judoka) {
+                $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
+                $geplaatst = false;
+
+                // Find the correct weight class for this judoka
+                foreach ($vasteGewichten as $gewichtsklasse) {
+                    $isPlusKlasse = str_starts_with($gewichtsklasse, '+');
+                    $limiet = (float) preg_replace('/[^0-9.]/', '', $gewichtsklasse);
+
+                    if ($isPlusKlasse) {
+                        // +XX: judoka moet >= limiet zijn
+                        if ($judokaGewicht >= $limiet) {
+                            $grouped[$gewichtsklasse]->push($judoka);
+                            $geplaatst = true;
+                            break;
+                        }
+                    } else {
+                        // -XX of XX: judoka moet <= limiet zijn
+                        if ($judokaGewicht <= $limiet) {
+                            $grouped[$gewichtsklasse]->push($judoka);
+                            $geplaatst = true;
+                            break;
+                        }
                     }
-                    return $numericValue;
-                })
-                ->map(function ($judokas) {
-                    // Sort judokas alphabetically within each weight class
-                    return $judokas->sortBy('naam')->values();
-                });
+                }
+
+                // Fallback: if not placed, put in last (heaviest) class
+                if (!$geplaatst && $vasteGewichten) {
+                    $lastClass = end($vasteGewichten);
+                    $grouped[$lastClass]->push($judoka);
+                }
+            }
+
+            // Sort each group by name and filter empty groups
+            return $grouped->filter(fn($g) => $g->isNotEmpty())
+                ->map(fn($g) => $g->sortBy('naam')->values());
         });
 
         // Sort leeftijdsklassen based on preset config
@@ -356,8 +406,9 @@ class PubliekController extends Controller
                     'id' => $j->id,
                     'naam' => $j->naam,
                     'club' => $j->club?->naam,
+                    'leeftijd' => $j->leeftijd,
+                    'gewicht' => $j->gewicht_gewogen ?? $j->gewicht,
                     'leeftijdsklasse' => $j->leeftijdsklasse ?? '-',
-                    'gewichtsklasse' => $j->gewichtsklasse ?? '-',
                     'band' => $j->band ?? '-',
                 ];
             });
@@ -517,67 +568,108 @@ class PubliekController extends Controller
     }
 
     /**
-     * Calculate club ranking with medals (absolute and relative)
+     * Calculate club ranking based on average WP and JP per judoka
+     * Sort by: avg WP desc, then avg JP desc (tiebreaker)
+     *
+     * WP/JP wordt direct berekend uit wedstrijden tabel (niet via poule standings)
+     * om dubbeltelling te voorkomen bij judoka's in meerdere poules.
      */
-    public function getClubRanking(Organisator $organisator, Toernooi $toernooi): array
+    public function getClubRanking(Toernooi $toernooi): array
     {
-        $uitslagen = $this->getUitslagen($toernooi);
-        $clubs = [];
+        // Get all judokas with their clubs
+        $judokas = Judoka::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('club_id')
+            ->with('club')
+            ->get()
+            ->keyBy('id');
 
-        // Count medals per club
+        // Get all wedstrijden for this toernooi
+        $wedstrijden = \App\Models\Wedstrijd::whereHas('poule', function ($q) use ($toernooi) {
+            $q->where('toernooi_id', $toernooi->id);
+        })->get();
+
+        // Calculate WP and JP per judoka directly from wedstrijden
+        $wpPerJudoka = [];
+        $jpPerJudoka = [];
+
+        foreach ($wedstrijden as $w) {
+            // WP: 2 punten voor winnaar
+            if ($w->winnaar_id) {
+                $wpPerJudoka[$w->winnaar_id] = ($wpPerJudoka[$w->winnaar_id] ?? 0) + 2;
+            }
+
+            // JP: uit scores
+            if ($w->judoka_wit_id) {
+                $jpWit = (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                $jpPerJudoka[$w->judoka_wit_id] = ($jpPerJudoka[$w->judoka_wit_id] ?? 0) + $jpWit;
+            }
+            if ($w->judoka_blauw_id) {
+                $jpBlauw = (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                $jpPerJudoka[$w->judoka_blauw_id] = ($jpPerJudoka[$w->judoka_blauw_id] ?? 0) + $jpBlauw;
+            }
+        }
+
+        // Aggregate per club
+        $clubs = [];
+        foreach ($judokas as $judoka) {
+            $clubId = $judoka->club_id;
+            $clubNaam = $judoka->club?->naam ?? 'Geen club';
+
+            if (!isset($clubs[$clubId])) {
+                $clubs[$clubId] = [
+                    'naam' => $clubNaam,
+                    'goud' => 0,
+                    'zilver' => 0,
+                    'brons' => 0,
+                    'totaal_wp' => 0,
+                    'totaal_jp' => 0,
+                    'totaal_judokas' => 0,
+                ];
+            }
+
+            $clubs[$clubId]['totaal_wp'] += $wpPerJudoka[$judoka->id] ?? 0;
+            $clubs[$clubId]['totaal_jp'] += $jpPerJudoka[$judoka->id] ?? 0;
+            $clubs[$clubId]['totaal_judokas']++;
+        }
+
+        // Count medals from uitslagen (plaats 1/2/3 in afgesloten poules)
+        $uitslagen = $this->getUitslagen($toernooi);
         foreach ($uitslagen as $leeftijdsklasse => $poules) {
             foreach ($poules as $poule) {
                 foreach ($poule->standings as $index => $standing) {
                     $plaats = $index + 1;
-                    $clubNaam = $standing['judoka']->club?->naam ?? 'Geen club';
                     $clubId = $standing['judoka']->club_id ?? 0;
 
-                    if (!isset($clubs[$clubId])) {
-                        $clubs[$clubId] = [
-                            'naam' => $clubNaam,
-                            'goud' => 0,
-                            'zilver' => 0,
-                            'brons' => 0,
-                            'totaal_medailles' => 0,
-                            'totaal_judokas' => 0,
-                        ];
+                    if (isset($clubs[$clubId])) {
+                        if ($plaats === 1) $clubs[$clubId]['goud']++;
+                        if ($plaats === 2) $clubs[$clubId]['zilver']++;
+                        if ($plaats === 3) $clubs[$clubId]['brons']++;
                     }
-
-                    if ($plaats === 1) $clubs[$clubId]['goud']++;
-                    if ($plaats === 2) $clubs[$clubId]['zilver']++;
-                    if ($plaats === 3) $clubs[$clubId]['brons']++;
                 }
             }
         }
 
-        // Get total judokas per club (for relative ranking)
-        $judokasPerClub = Judoka::where('toernooi_id', $toernooi->id)
-            ->whereNotNull('club_id')
-            ->selectRaw('club_id, COUNT(*) as aantal')
-            ->groupBy('club_id')
-            ->pluck('aantal', 'club_id');
-
+        // Calculate averages per ingeschreven judoka
         foreach ($clubs as $clubId => &$club) {
             $club['totaal_medailles'] = $club['goud'] + $club['zilver'] + $club['brons'];
-            $club['totaal_judokas'] = $judokasPerClub[$clubId] ?? 1;
-            // Weighted score (gold=3, silver=2, bronze=1)
-            $club['punten'] = ($club['goud'] * 3) + ($club['zilver'] * 2) + ($club['brons'] * 1);
-            // Relative score: weighted points per judoka
-            $club['relatief'] = $club['totaal_judokas'] > 0
-                ? round($club['punten'] / $club['totaal_judokas'], 2)
-                : 0;
+            $aantalJudokas = $club['totaal_judokas'] ?: 1;
+
+            $club['gem_wp'] = round($club['totaal_wp'] / $aantalJudokas, 2);
+            $club['gem_jp'] = round($club['totaal_jp'] / $aantalJudokas, 2);
         }
 
-        // Sort by weighted points (descending)
-        uasort($clubs, fn($a, $b) => $b['punten'] <=> $a['punten']);
+        // Sort by average WP desc, then average JP desc (tiebreaker)
+        uasort($clubs, function ($a, $b) {
+            if ($a['gem_wp'] !== $b['gem_wp']) {
+                return $b['gem_wp'] <=> $a['gem_wp'];
+            }
+            return $b['gem_jp'] <=> $a['gem_jp'];
+        });
 
-        // Create relative ranking (sorted by relative score)
-        $clubsRelatief = $clubs;
-        uasort($clubsRelatief, fn($a, $b) => $b['relatief'] <=> $a['relatief']);
-
+        $rankedClubs = array_values($clubs);
         return [
-            'absoluut' => array_values($clubs),
-            'relatief' => array_values($clubsRelatief),
+            'absoluut' => $rankedClubs,
+            'relatief' => $rankedClubs,
         ];
     }
 

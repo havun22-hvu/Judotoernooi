@@ -85,26 +85,14 @@
             </div>
 
             <!-- Club Ranking Position -->
-            @if($clubPositieAbsoluut || $clubPositieRelatief)
-            <div class="grid grid-cols-2 gap-4">
-                @if($clubPositieAbsoluut)
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div class="text-sm text-blue-600 mb-1">Absoluut Klassement</div>
-                    <div class="text-2xl font-bold text-blue-800">
-                        #{{ $clubPositieAbsoluut }}
-                        <span class="text-sm font-normal text-blue-600">van {{ count($clubRanking['absoluut']) }} clubs</span>
-                    </div>
+            @if($clubPositieAbsoluut)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="text-sm text-blue-600 mb-1">Club Klassement</div>
+                <div class="text-2xl font-bold text-blue-800">
+                    #{{ $clubPositieAbsoluut }}
+                    <span class="text-sm font-normal text-blue-600">van {{ count($clubRanking['absoluut']) }} clubs</span>
                 </div>
-                @endif
-                @if($clubPositieRelatief)
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div class="text-sm text-green-600 mb-1">Relatief Klassement</div>
-                    <div class="text-2xl font-bold text-green-800">
-                        #{{ $clubPositieRelatief }}
-                        <span class="text-sm font-normal text-green-600">van {{ count($clubRanking['relatief']) }} clubs</span>
-                    </div>
-                </div>
-                @endif
+                <div class="text-xs text-blue-500 mt-1">Gesorteerd op gemiddelde WP/JP per judoka</div>
             </div>
             @endif
         </div>
@@ -124,18 +112,17 @@
                     @elseif($r['plaats'] === 3) bg-orange-50
                     @endif">
                     <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold
-                            @if($r['plaats'] === 1) bg-yellow-400 text-yellow-900
-                            @elseif($r['plaats'] === 2) bg-gray-300 text-gray-800
-                            @elseif($r['plaats'] === 3) bg-orange-300 text-orange-900
-                            @else bg-gray-200 text-gray-600
-                            @endif">
-                            @if($r['plaats'] === 1) 🥇
-                            @elseif($r['plaats'] === 2) 🥈
-                            @elseif($r['plaats'] === 3) 🥉
-                            @else {{ $r['plaats'] }}
+                        <div class="flex items-center gap-1">
+                            @if($r['plaats'] === 1)
+                                <span class="text-2xl">🥇</span>
+                            @elseif($r['plaats'] === 2)
+                                <span class="text-2xl">🥈</span>
+                            @elseif($r['plaats'] === 3)
+                                <span class="text-2xl">🥉</span>
+                            @else
+                                <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-gray-200 text-gray-600">{{ $r['plaats'] }}</span>
                             @endif
-                        </span>
+                        </div>
                         <div>
                             <span class="font-medium text-gray-800">{{ $r['judoka']->naam }}</span>
                             <span class="text-gray-500 text-sm block">
