@@ -156,8 +156,8 @@
 
                                 $parts = [];
                                 if ($maanden > 0) $parts[] = $maanden . 'm';
-                                if ($weken > 0) $parts[] = $weken . 'w';
-                                if ($dagen > 0 || empty($parts)) $parts[] = $dagen . 'd';
+                                if ($weken > 0 || $maanden > 0) $parts[] = $weken . 'w';
+                                $parts[] = $dagen . 'd';
                                 $countdown = implode(' ', $parts);
 
                                 $urgentClass = $totalDagen <= 7
