@@ -59,6 +59,7 @@ class ToernooiBetaling extends Model
             'plan_type' => 'paid',
             'paid_tier' => $this->tier,
             'paid_max_judokas' => $this->max_judokas,
+            'max_judokas' => $this->max_judokas, // Also set the visible max_judokas field
             'paid_at' => now(),
             'toernooi_betaling_id' => $this->id,
         ]);
