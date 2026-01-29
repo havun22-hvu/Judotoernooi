@@ -1,6 +1,26 @@
 # Handover
 
-## Laatste Sessie: 28 januari 2026
+## Laatste Sessie: 28 januari 2026 (avond)
+
+### Wat is gedaan:
+- **Tekst "AL AFGEROEPEN" aangepast**: Nu "Klik om nog een keer te zien" i.p.v. "per ongeluk? Klik om terug te zetten"
+- **Production + staging gesynchroniseerd**: Beide nu op commit `5210dc0`
+- **Live pagina fix**: Auto-refresh (30s) vervangen door handmatige "Ververs" knop met tab persistence
+
+### ⚠️ Chrome MCP extensie - NIET WERKEND
+Geprobeerd Chrome in Chrome MCP te configureren:
+- Registry key aangemaakt: `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.anthropic.claude_browser_extension`
+- JSON config aangemaakt: `C:\Users\henkv\.claude\chrome\com.anthropic.claude_browser_extension.json`
+- Native host bestaat: `C:\Users\henkv\.claude\chrome\chrome-native-host.bat`
+- **Status:** Nog steeds "Browser extension is not connected" - mogelijk conflict met Claude Desktop app
+
+### Nog te testen (morgen):
+- [ ] Live pagina "Ververs" knop op staging
+- [ ] Tab persistence na refresh (live tab moet behouden blijven)
+
+---
+
+## Sessie: 28 januari 2026 (overdag)
 
 ### Wat is gedaan:
 - **Upgrade pagina vereenvoudigd**: Dropdown i.p.v. meerdere kaarten, prijs per 50 judokas

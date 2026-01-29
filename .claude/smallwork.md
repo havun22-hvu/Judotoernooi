@@ -251,6 +251,20 @@
 - Eerst: check waar data in VIEW vandaan komt
 - Niet meteen backend/services aanpassen
 
+### Fix: Spreker tekst "AL AFGEROEPEN"
+- **Type:** UI fix
+- **Wat:** Tekst aangepast van "per ongeluk? Klik om terug te zetten" naar "Klik om nog een keer te zien"
+- **Bestanden:** spreker/partials/_content.blade.php
+
+### Fix: Live pagina auto-refresh probleem
+- **Type:** Bug fix
+- **Wat:** Auto-refresh (30s) resettte tab naar 'info', vervangen door handmatige "Ververs" knop
+- **Bestanden:** publiek/index.blade.php
+- **Oplossing:**
+  - setInterval voor live tab verwijderd
+  - "Ververs" knop toegevoegd met loading state
+  - activeTab opgeslagen in sessionStorage voor tab persistence bij refresh
+
 ---
 
 <!--
