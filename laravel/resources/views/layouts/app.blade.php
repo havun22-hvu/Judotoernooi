@@ -320,22 +320,22 @@
         }
     </script>
 
-    {{-- Noodplan SSE Live Backup Sync --}}
+    {{-- Noodplan Live Backup Sync --}}
     {{-- Automatisch actief op elke toernooi pagina --}}
     @if(isset($toernooi) && $toernooi)
     <script>
         (function() {
             const toernooiId = {{ $toernooi->id }};
-            const streamUrl = '{{ route("toernooi.noodplan.stream", $toernooi->routeParams()) }}';
+            const syncUrl = '{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}';
             const storageKey = `noodplan_${toernooiId}_poules`;
             const syncKey = `noodplan_${toernooiId}_laatste_sync`;
             const countKey = `noodplan_${toernooiId}_count`;
 
-            let eventSource = null;
-            let reconnectTimer = null;
             let uitslagCount = 0;
+            let lastSyncTime = null;
+            let syncInterval = null;
 
-            // Status indicator element (wordt later toegevoegd aan DOM)
+            // Status indicator element
             function getOrCreateIndicator() {
                 let indicator = document.getElementById('noodplan-sync-indicator');
                 if (!indicator) {
@@ -354,7 +354,7 @@
 
                 if (status === 'connected') {
                     indicator.className = 'fixed bottom-4 right-4 px-3 py-2 rounded-lg shadow-lg text-xs font-medium z-50 bg-green-100 text-green-800 border border-green-300';
-                    indicator.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>${message}`;
+                    indicator.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>${message}`;
                 } else if (status === 'disconnected') {
                     indicator.className = 'fixed bottom-4 right-4 px-3 py-2 rounded-lg shadow-lg text-xs font-medium z-50 bg-red-100 text-red-800 border border-red-300';
                     indicator.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>${message}`;
@@ -369,13 +369,13 @@
                     localStorage.setItem(storageKey, JSON.stringify(data));
                     localStorage.setItem(syncKey, new Date().toISOString());
 
-                    // Tel uitslagen
+                    // Tel uitslagen (wedstrijden met is_gespeeld = true)
                     let count = 0;
                     if (data.poules) {
                         data.poules.forEach(p => {
                             if (p.wedstrijden) {
                                 p.wedstrijden.forEach(w => {
-                                    if (w.uitslag) count++;
+                                    if (w.is_gespeeld) count++;
                                 });
                             }
                         });
@@ -387,85 +387,47 @@
                 }
             }
 
-            function connect() {
-                if (eventSource) {
-                    eventSource.close();
-                }
+            async function sync() {
+                try {
+                    const response = await fetch(syncUrl);
+                    if (!response.ok) throw new Error('Sync failed');
 
-                updateIndicator('syncing', 'Verbinden...');
-
-                eventSource = new EventSource(streamUrl);
-
-                eventSource.addEventListener('sync', function(e) {
-                    const data = JSON.parse(e.data);
+                    const data = await response.json();
                     saveToStorage(data);
-                    const time = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-                    updateIndicator('connected', `Live backup actief | ${uitslagCount} uitslagen | ${time}`);
-                });
+                    lastSyncTime = new Date();
 
-                eventSource.addEventListener('uitslag', function(e) {
-                    // Update specifieke uitslag in localStorage
-                    const update = JSON.parse(e.data);
-                    try {
-                        const stored = localStorage.getItem(storageKey);
-                        if (stored) {
-                            const data = JSON.parse(stored);
-                            // Zoek de poule en update de wedstrijd
-                            if (data.poules) {
-                                const poule = data.poules.find(p => p.id === update.poule_id);
-                                if (poule && poule.wedstrijden) {
-                                    const wed = poule.wedstrijden.find(w => w.id === update.wedstrijd_id);
-                                    if (wed) {
-                                        wed.is_gespeeld = true;
-                                        wed.score_wit = update.score_wit;
-                                        wed.score_blauw = update.score_blauw;
-                                        wed.winnaar_id = update.winnaar_id;
-                                        uitslagCount++;
-                                    }
-                                }
-                            }
-                            saveToStorage(data);
-                        }
-                    } catch (e) {
-                        console.error('Noodplan: update error', e);
+                    const time = lastSyncTime.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
+                    updateIndicator('connected', `Backup actief | ${uitslagCount} uitslagen | ${time}`);
+                } catch (e) {
+                    console.error('Noodplan: sync error', e);
+                    // Toon alleen offline als we langer dan 2 minuten geen sync hebben
+                    if (!lastSyncTime || (new Date() - lastSyncTime) > 120000) {
+                        updateIndicator('disconnected', 'Offline - backup beschikbaar');
                     }
-                    const time = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
-                    updateIndicator('connected', `Live backup actief | ${uitslagCount} uitslagen | ${time}`);
-                });
+                }
+            }
 
-                eventSource.addEventListener('heartbeat', function(e) {
-                    // Server is nog bereikbaar, niets doen
-                });
+            function startSync() {
+                // Stop bestaande interval
+                if (syncInterval) clearInterval(syncInterval);
 
-                eventSource.onerror = function() {
-                    updateIndicator('disconnected', 'Offline - backup beschikbaar');
-                    eventSource.close();
+                // Direct sync
+                updateIndicator('syncing', 'Synchroniseren...');
+                sync();
 
-                    // Probeer opnieuw na 5 seconden
-                    if (reconnectTimer) clearTimeout(reconnectTimer);
-                    reconnectTimer = setTimeout(connect, 5000);
-                };
-
-                eventSource.onopen = function() {
-                    if (reconnectTimer) {
-                        clearTimeout(reconnectTimer);
-                        reconnectTimer = null;
-                    }
-                };
+                // Daarna elke 30 seconden
+                syncInterval = setInterval(sync, 30000);
             }
 
             // Herstel na slaapstand/visibility change
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') {
-                    // Controleer of SSE nog actief is
-                    if (!eventSource || eventSource.readyState === EventSource.CLOSED) {
-                        connect();
-                    }
+                    startSync();
                 }
             });
 
-            // Start verbinding
-            connect();
+            // Start sync
+            startSync();
 
             // Laad laatste telling uit storage
             const savedCount = localStorage.getItem(countKey);
