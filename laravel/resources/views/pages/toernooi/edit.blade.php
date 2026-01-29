@@ -240,23 +240,34 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
+                            @php
+                                $modus2 = 'enkel';
+                                if (old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false)) {
+                                    $modus2 = 'best3';
+                                } elseif (old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true)) {
+                                    $modus2 = 'dubbel';
+                                }
+                            @endphp
                             <tr>
                                 <td class="py-2 font-medium">2 judoka's</td>
                                 <td class="py-2 text-gray-400">1w</td>
                                 <td class="py-2">
-                                    <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }">
+                                        <input type="hidden" name="dubbel_bij_2_judokas" :value="modus === 'dubbel' ? 1 : 0">
+                                        <input type="hidden" name="best_of_three_bij_2" :value="modus === 'best3' ? 1 : 0">
                                         <label class="flex items-center cursor-pointer">
-                                            <input type="hidden" name="dubbel_bij_2_judokas" value="0">
-                                            <input type="checkbox" name="dubbel_bij_2_judokas" value="1"
-                                                   {{ old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true) ? 'checked' : '' }}
-                                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <input type="radio" x-model="modus" value="enkel"
+                                                   class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500">
+                                            <span class="ml-2 text-gray-600">Enkel <span class="text-gray-400">(1w)</span></span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="radio" x-model="modus" value="dubbel"
+                                                   class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                                             <span class="ml-2">Dubbel <span class="text-gray-400">(2w)</span></span>
                                         </label>
                                         <label class="flex items-center cursor-pointer">
-                                            <input type="hidden" name="best_of_three_bij_2" value="0">
-                                            <input type="checkbox" name="best_of_three_bij_2" value="1"
-                                                   {{ old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false) ? 'checked' : '' }}
-                                                   class="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500">
+                                            <input type="radio" x-model="modus" value="best3"
+                                                   class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
                                             <span class="ml-2 text-yellow-700">Best of 3 <span class="text-yellow-500">(3w)</span></span>
                                         </label>
                                     </div>
