@@ -367,4 +367,118 @@ class NoodplanController extends Controller
             default => []
         };
     }
+
+    /**
+     * SSE Stream voor live backup sync
+     * Stuurt alle wedstrijduitslagen naar verbonden clients
+     */
+    public function stream(Organisator $organisator, Toernooi $toernooi)
+    {
+        // Disable output buffering
+        if (ob_get_level()) ob_end_clean();
+
+        return response()->stream(function () use ($toernooi) {
+            // Send initial sync with all current data
+            $data = $this->getAllePouleData($toernooi);
+            echo "event: sync\n";
+            echo "data: " . json_encode($data) . "\n\n";
+
+            if (ob_get_level()) ob_flush();
+            flush();
+
+            // Keep connection open and check for updates
+            $lastCheck = now();
+            $lastWedstrijdUpdate = $toernooi->wedstrijden()
+                ->whereNotNull('gespeeld_op')
+                ->max('gespeeld_op');
+
+            while (true) {
+                // Check every 2 seconds for new updates
+                sleep(2);
+
+                // Check if there are new wedstrijd updates
+                $nieuwsteUpdate = $toernooi->wedstrijden()
+                    ->whereNotNull('gespeeld_op')
+                    ->max('gespeeld_op');
+
+                if ($nieuwsteUpdate && $nieuwsteUpdate != $lastWedstrijdUpdate) {
+                    // Send updated data
+                    $data = $this->getAllePouleData($toernooi);
+                    echo "event: update\n";
+                    echo "data: " . json_encode($data) . "\n\n";
+
+                    $lastWedstrijdUpdate = $nieuwsteUpdate;
+                }
+
+                // Send heartbeat every 30 seconds to keep connection alive
+                if (now()->diffInSeconds($lastCheck) >= 30) {
+                    echo "event: heartbeat\n";
+                    echo "data: " . json_encode(['time' => now()->format('H:i:s')]) . "\n\n";
+                    $lastCheck = now();
+                }
+
+                if (ob_get_level()) ob_flush();
+                flush();
+
+                // Check if client disconnected
+                if (connection_aborted()) {
+                    break;
+                }
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no', // Disable nginx buffering
+        ]);
+    }
+
+    /**
+     * Get alle poule data voor sync (API endpoint)
+     */
+    public function syncData(Organisator $organisator, Toernooi $toernooi)
+    {
+        return response()->json($this->getAllePouleData($toernooi));
+    }
+
+    /**
+     * Haal alle poule data op met wedstrijden en uitslagen
+     */
+    private function getAllePouleData(Toernooi $toernooi): array
+    {
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->whereNotNull('mat_id')
+            ->with(['judokas.club', 'wedstrijden', 'mat', 'blok'])
+            ->get();
+
+        return [
+            'toernooi_id' => $toernooi->id,
+            'toernooi_naam' => $toernooi->naam,
+            'timestamp' => now()->format('Y-m-d H:i:s'),
+            'poules' => $poules->map(function ($poule) {
+                return [
+                    'id' => $poule->id,
+                    'nummer' => $poule->nummer,
+                    'titel' => $poule->getDisplayTitel(),
+                    'mat_nummer' => $poule->mat?->nummer,
+                    'blok_nummer' => $poule->blok?->nummer,
+                    'judokas' => $poule->judokas->map(fn($j) => [
+                        'id' => $j->id,
+                        'naam' => $j->naam,
+                        'club' => $j->club?->naam,
+                    ])->values(),
+                    'wedstrijden' => $poule->wedstrijden->map(fn($w) => [
+                        'id' => $w->id,
+                        'volgorde' => $w->volgorde,
+                        'judoka_wit_id' => $w->judoka_wit_id,
+                        'judoka_blauw_id' => $w->judoka_blauw_id,
+                        'is_gespeeld' => $w->is_gespeeld,
+                        'winnaar_id' => $w->winnaar_id,
+                        'score_wit' => $w->score_wit,
+                        'score_blauw' => $w->score_blauw,
+                    ])->values(),
+                ];
+            })->values(),
+        ];
+    }
 }
