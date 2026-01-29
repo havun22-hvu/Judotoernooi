@@ -261,10 +261,13 @@
                         this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
                     }
 
-                    // Check indicator status
-                    const indicator = document.getElementById('noodplan-sync-indicator');
-                    if (indicator && indicator.innerHTML.includes('Live backup actief')) {
-                        this.syncStatus = 'connected';
+                    // Check of sync recent is (binnen 2 minuten)
+                    if (sync) {
+                        const syncDate = new Date(sync);
+                        const now = new Date();
+                        const diffMs = now - syncDate;
+                        // Als laatste sync binnen 2 minuten is, zijn we "connected"
+                        this.syncStatus = diffMs < 120000 ? 'connected' : 'disconnected';
                     } else {
                         this.syncStatus = 'disconnected';
                     }
