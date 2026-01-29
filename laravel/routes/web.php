@@ -313,6 +313,10 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 
         // Export
         Route::get('/export-poules/{format?}', [NoodplanController::class, 'exportPoules'])->name('export-poules');
+
+        // Live backup sync (SSE)
+        Route::get('/stream', [NoodplanController::class, 'stream'])->name('stream');
+        Route::get('/sync-data', [NoodplanController::class, 'syncData'])->name('sync-data');
     });
 
     // Jury + Admin routes

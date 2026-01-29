@@ -186,6 +186,192 @@
         </div>
     </div>
 
+    <!-- OFFLINE BACKUP -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="offlineBackup()" x-init="init()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">💾</span>
+            OFFLINE BACKUP
+            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Live verbonden
+            </span>
+            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+                Offline
+            </span>
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Status info -->
+            <div class="p-4 rounded" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium" :class="syncStatus === 'connected' ? 'text-green-800' : 'text-orange-800'">
+                            <span x-text="uitslagCount"></span> uitslagen opgeslagen
+                        </p>
+                        <p class="text-sm" :class="syncStatus === 'connected' ? 'text-green-600' : 'text-orange-600'">
+                            Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+                        </p>
+                    </div>
+                    <button @click="printOffline()"
+                            class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-medium"
+                            :disabled="!hasData"
+                            :class="!hasData ? 'opacity-50 cursor-not-allowed' : ''">
+                        🖨️ Print vanuit backup
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-500">
+                De live backup synchroniseert automatisch zolang je een toernooi-pagina open hebt.
+                Bij internet uitval kun je de laatste bekende stand printen vanuit de browser cache.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function offlineBackup() {
+            return {
+                syncStatus: 'disconnected',
+                uitslagCount: 0,
+                laatsteSync: null,
+                hasData: false,
+                toernooiId: {{ $toernooi->id }},
+
+                init() {
+                    this.loadFromStorage();
+                    // Update status elke seconde
+                    setInterval(() => this.loadFromStorage(), 1000);
+                },
+
+                loadFromStorage() {
+                    const storageKey = `noodplan_${this.toernooiId}_poules`;
+                    const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                    const countKey = `noodplan_${this.toernooiId}_count`;
+
+                    const data = localStorage.getItem(storageKey);
+                    this.hasData = !!data;
+
+                    const count = localStorage.getItem(countKey);
+                    this.uitslagCount = count ? parseInt(count) : 0;
+
+                    const sync = localStorage.getItem(syncKey);
+                    if (sync) {
+                        const date = new Date(sync);
+                        this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+                    }
+
+                    // Check indicator status
+                    const indicator = document.getElementById('noodplan-sync-indicator');
+                    if (indicator && indicator.innerHTML.includes('Live backup actief')) {
+                        this.syncStatus = 'connected';
+                    } else {
+                        this.syncStatus = 'disconnected';
+                    }
+                },
+
+                printOffline() {
+                    const storageKey = `noodplan_${this.toernooiId}_poules`;
+                    const data = localStorage.getItem(storageKey);
+                    if (!data) {
+                        alert('Geen backup data beschikbaar');
+                        return;
+                    }
+
+                    const parsed = JSON.parse(data);
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(this.generatePrintHTML(parsed));
+                    printWindow.document.close();
+                    printWindow.print();
+                },
+
+                generatePrintHTML(data) {
+                    let html = `<!DOCTYPE html>
+                    <html><head><title>Noodplan Backup Print</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 12px; }
+                        .poule { page-break-after: always; margin-bottom: 20px; }
+                        .poule:last-child { page-break-after: avoid; }
+                        h2 { font-size: 16px; border-bottom: 2px solid #333; padding-bottom: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #333; padding: 4px 8px; text-align: left; }
+                        th { background: #f0f0f0; }
+                        .uitslag { font-weight: bold; }
+                        .gespeeld { background: #d4edda; }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                    </head><body>
+                    <div class="no-print" style="padding: 10px; background: #fef3c7; margin-bottom: 20px;">
+                        <strong>⚠️ OFFLINE BACKUP</strong> - Afgedrukt: ${new Date().toLocaleString('nl-NL')}
+                    </div>`;
+
+                    if (data.poules) {
+                        data.poules.forEach(poule => {
+                            html += `<div class="poule">
+                                <h2>${poule.titel || 'Poule #' + poule.nummer} | Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</h2>
+                                <table>
+                                    <thead>
+                                        <tr><th>#</th><th>Judoka</th><th>Club</th></tr>
+                                    </thead>
+                                    <tbody>`;
+
+                            if (poule.judokas) {
+                                poule.judokas.forEach((j, i) => {
+                                    html += `<tr><td>${i+1}</td><td>${j.naam || 'Onbekend'}</td><td>${j.club || ''}</td></tr>`;
+                                });
+                            }
+
+                            html += `</tbody></table>`;
+
+                            if (poule.wedstrijden && poule.wedstrijden.length > 0) {
+                                // Maak lookup voor judoka namen
+                                const judokaMap = {};
+                                if (poule.judokas) {
+                                    poule.judokas.forEach((j, i) => {
+                                        judokaMap[j.id] = j.naam || 'Judoka ' + (i+1);
+                                    });
+                                }
+
+                                html += `<h3 style="margin-top: 15px;">Wedstrijden</h3>
+                                    <table>
+                                        <thead>
+                                            <tr><th>Wed</th><th>Wit</th><th>Blauw</th><th>Uitslag</th></tr>
+                                        </thead>
+                                        <tbody>`;
+
+                                poule.wedstrijden.forEach((w, i) => {
+                                    let uitslagTxt = '-';
+                                    let rowClass = '';
+                                    if (w.is_gespeeld) {
+                                        uitslagTxt = (w.score_wit || 0) + ' - ' + (w.score_blauw || 0);
+                                        rowClass = 'gespeeld';
+                                    }
+                                    const witNaam = judokaMap[w.judoka_wit_id] || 'Wit';
+                                    const blauwNaam = judokaMap[w.judoka_blauw_id] || 'Blauw';
+                                    html += `<tr class="${rowClass}">
+                                        <td>${w.volgorde || i+1}</td>
+                                        <td>${witNaam}</td>
+                                        <td>${blauwNaam}</td>
+                                        <td class="uitslag">${uitslagTxt}</td>
+                                    </tr>`;
+                                });
+
+                                html += `</tbody></table>`;
+                            }
+
+                            html += `</div>`;
+                        });
+                    }
+
+                    html += `</body></html>`;
+                    return html;
+                }
+            };
+        }
+    </script>
+
     <!-- Info box -->
     <div class="p-4 bg-blue-50 rounded-lg">
         <h3 class="font-bold text-blue-800 mb-2">Tip voor noodgevallen</h3>

@@ -276,7 +276,58 @@ GET /noodplan/ingevuld-schemas/{blok?}
 
 ---
 
-## 8. Notities
+## 8. Live Backup Sync (Offline Noodplan)
+
+### Probleem
+Bij internet uitval tijdens wedstrijddag kan de server niet bereikt worden en zijn de laatste uitslagen niet printbaar.
+
+### Oplossing: SSE Live Sync
+Elke toernooi-pagina maakt automatisch een Server-Sent Events (SSE) verbinding. Alle uitslagen worden gepusht naar de browser en opgeslagen in localStorage.
+
+### Werking
+```
+Mat tablet slaat uitslag op → Server ontvangt
+                                    ↓
+                            Server broadcast via SSE
+                                    ↓
+                            Alle open toernooi-pagina's ontvangen
+                                    ↓
+                            localStorage wordt bijgewerkt
+                                    ↓
+                            Bij internet uitval: print vanuit localStorage
+```
+
+### Implementatie
+
+**SSE Endpoint:**
+- `GET /{organisator}/toernooi/{toernooi}/noodplan/stream` - SSE stream
+
+**Events:**
+- `uitslag` - Nieuwe wedstrijduitslag (bevat poule_id, wedstrijd_id, scores, winnaar)
+- `sync` - Volledige sync bij reconnect (alle actuele data)
+
+**localStorage keys:**
+- `noodplan_{toernooi_id}_poules` - Alle poule data met uitslagen
+- `noodplan_{toernooi_id}_laatste_sync` - Timestamp laatste update
+
+**JavaScript (in layouts/app.blade.php):**
+- Start SSE verbinding automatisch op elke toernooi-pagina
+- Auto-reconnect bij verbinding verlies (5 sec delay)
+- Bij reconnect: volledige sync om gemiste updates op te halen
+
+**UI:**
+- Kleine indicator in header: "🟢" (verbonden) / "🔴" (offline)
+- Op noodplan pagina: "Offline Print Alle Matten" knop
+- Status: "X uitslagen opgeslagen | Laatste sync: HH:MM:SS"
+
+### Gebruiker hoeft NIETS te doen
+- SSE start automatisch bij openen toernooi
+- Backup loopt op achtergrond
+- Auto-reconnect na slaapstand/netwerk hickup
+
+---
+
+## 9. Notities
 
 - Toegang alleen voor admin, organisator en hoofdjury
 - Alle prints moeten werken zonder JavaScript
