@@ -8,9 +8,14 @@
         <h1 class="text-3xl font-bold text-gray-800">Havun Admin Dashboard</h1>
         <p class="text-gray-500 mt-1">Overzicht van alle klanten (organisatoren) en hun toernooien</p>
     </div>
-    <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-blue-600 hover:text-blue-800">
-        &larr; Terug naar Dashboard
-    </a>
+    <div class="flex gap-4">
+        <a href="{{ route('admin.klanten') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Klantenbeheer
+        </a>
+        <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+            &larr; Terug naar Dashboard
+        </a>
+    </div>
 </div>
 
 {{-- KPI's voor Havun --}}
@@ -43,7 +48,10 @@
     <div class="bg-gray-50 px-6 py-4 border-b">
         <div class="flex justify-between items-start">
             <div>
-                <h2 class="text-xl font-bold text-gray-800">{{ $organisator->naam }}</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-bold text-gray-800">{{ $organisator->naam }}</h2>
+                    <a href="{{ route('organisator.dashboard', ['organisator' => $organisator->slug]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">→ Open dashboard</a>
+                </div>
                 <div class="text-sm text-gray-500 mt-1">
                     <span class="inline-flex items-center">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

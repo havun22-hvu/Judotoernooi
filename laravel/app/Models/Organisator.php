@@ -193,6 +193,14 @@ class Organisator extends Authenticatable
     }
 
     /**
+     * Get all toernooi betalingen for this organisator
+     */
+    public function toernooiBetalingen(): HasMany
+    {
+        return $this->hasMany(ToernooiBetaling::class);
+    }
+
+    /**
      * Check if organisator can add more presets (freemium limit)
      */
     public function canAddMorePresets(): bool
