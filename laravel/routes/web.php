@@ -23,6 +23,7 @@ use App\Http\Controllers\GewichtsklassenPresetController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
 use App\Http\Controllers\ToernooiBetalingController;
+use App\Http\Controllers\AdminController;
 use App\Http\Middleware\CheckToernooiRol;
 use App\Http\Middleware\CheckFreemiumPrint;
 use Illuminate\Support\Facades\Route;
@@ -64,9 +65,11 @@ Route::middleware('auth:organisator')->group(function () {
     Route::post('logout', [OrganisatorAuthController::class, 'logout'])->name('logout');
 });
 
+// Alias for organisator.login (used in bootstrap/app.php and controllers)
+Route::get('organisator/login', fn() => redirect()->route('login'))->name('organisator.login');
+
 // Legacy auth routes - redirect to new URLs
 Route::prefix('organisator')->name('organisator.legacy.')->group(function () {
-    Route::get('login', fn() => redirect()->route('login'))->name('login');
     Route::get('register', fn() => redirect()->route('register'))->name('register');
     Route::get('dashboard', [ToernooiController::class, 'redirectToOrganisatorDashboard'])->name('dashboard');
 });
@@ -80,6 +83,11 @@ Route::middleware('auth:organisator')->group(function () {
     Route::get('admin', [ToernooiController::class, 'index'])->name('admin.index');
     // Legacy redirect
     Route::get('toernooi', fn() => redirect()->route('admin.index'))->name('toernooi.index.legacy');
+
+    // Klantenbeheer (sitebeheerder only)
+    Route::get('admin/klanten', [AdminController::class, 'klanten'])->name('admin.klanten');
+    Route::get('admin/klanten/{klant}', [AdminController::class, 'editKlant'])->name('admin.klanten.edit');
+    Route::put('admin/klanten/{klant}', [AdminController::class, 'updateKlant'])->name('admin.klanten.update');
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)

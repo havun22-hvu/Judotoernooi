@@ -54,6 +54,11 @@ class OrganisatorAuthController extends Controller
             $organisator = Auth::guard('organisator')->user();
             $organisator->updateLaatsteLogin();
 
+            // Sitebeheerder goes to admin dashboard, regular organisator to their dashboard
+            if ($organisator->isSitebeheerder()) {
+                return redirect()->intended(route('admin.index'));
+            }
+
             return redirect()->intended(route('organisator.dashboard', ['organisator' => $organisator->slug]));
         }
 
@@ -94,7 +99,8 @@ class OrganisatorAuthController extends Controller
         $request->session()->regenerate();
         $superadmin->updateLaatsteLogin();
 
-        return redirect()->intended(route('organisator.dashboard', ['organisator' => $superadmin->slug]));
+        // Superadmin always goes to admin dashboard
+        return redirect()->intended(route('admin.index'));
     }
 
     /**
