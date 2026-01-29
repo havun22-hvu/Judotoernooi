@@ -144,10 +144,13 @@ class Poule extends Model
         $enkelRonde = intval(($aantal * ($aantal - 1)) / 2);
 
         // Get toernooi settings
+        $bestOfThreeBij2 = $this->toernooi?->best_of_three_bij_2 ?? false;
         $dubbelBij2 = $this->toernooi?->dubbel_bij_2_judokas ?? true;
         $dubbelBij3 = $this->toernooi?->dubbel_bij_3_judokas ?? true;
         $dubbelBij4 = $this->toernooi?->dubbel_bij_4_judokas ?? false;
 
+        // Best of Three overrides dubbel for 2 judokas
+        if ($aantal === 2 && $bestOfThreeBij2) return 3;
         if ($aantal === 2 && $dubbelBij2) return $enkelRonde * 2; // 2
         if ($aantal === 3 && $dubbelBij3) return $enkelRonde * 2; // 6
         if ($aantal === 4 && $dubbelBij4) return $enkelRonde * 2; // 12
