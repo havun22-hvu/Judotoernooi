@@ -370,66 +370,27 @@ class NoodplanController extends Controller
 
     /**
      * SSE Stream voor live backup sync
-     * Stuurt alle wedstrijduitslagen naar verbonden clients
+     * Stuurt alle wedstrijduitslagen en sluit dan (client reconnect elke 30s)
      */
     public function stream(Organisator $organisator, Toernooi $toernooi)
     {
         // Disable output buffering
-        if (ob_get_level()) ob_end_clean();
+        while (ob_get_level()) ob_end_clean();
 
         return response()->stream(function () use ($toernooi) {
-            // Send initial sync with all current data
+            // Send sync with all current data
             $data = $this->getAllePouleData($toernooi);
             echo "event: sync\n";
             echo "data: " . json_encode($data) . "\n\n";
+            echo "retry: 30000\n\n"; // Tell client to reconnect after 30 seconds
 
-            if (ob_get_level()) ob_flush();
             flush();
-
-            // Keep connection open and check for updates
-            $lastCheck = now();
-            $lastWedstrijdUpdate = $toernooi->wedstrijden()
-                ->whereNotNull('gespeeld_op')
-                ->max('gespeeld_op');
-
-            while (true) {
-                // Check every 2 seconds for new updates
-                sleep(2);
-
-                // Check if there are new wedstrijd updates
-                $nieuwsteUpdate = $toernooi->wedstrijden()
-                    ->whereNotNull('gespeeld_op')
-                    ->max('gespeeld_op');
-
-                if ($nieuwsteUpdate && $nieuwsteUpdate != $lastWedstrijdUpdate) {
-                    // Send updated data
-                    $data = $this->getAllePouleData($toernooi);
-                    echo "event: update\n";
-                    echo "data: " . json_encode($data) . "\n\n";
-
-                    $lastWedstrijdUpdate = $nieuwsteUpdate;
-                }
-
-                // Send heartbeat every 30 seconds to keep connection alive
-                if (now()->diffInSeconds($lastCheck) >= 30) {
-                    echo "event: heartbeat\n";
-                    echo "data: " . json_encode(['time' => now()->format('H:i:s')]) . "\n\n";
-                    $lastCheck = now();
-                }
-
-                if (ob_get_level()) ob_flush();
-                flush();
-
-                // Check if client disconnected
-                if (connection_aborted()) {
-                    break;
-                }
-            }
+            // Connection closes after this - client will reconnect based on retry
         }, 200, [
             'Content-Type' => 'text/event-stream',
             'Cache-Control' => 'no-cache',
             'Connection' => 'keep-alive',
-            'X-Accel-Buffering' => 'no', // Disable nginx buffering
+            'X-Accel-Buffering' => 'no',
         ]);
     }
 
