@@ -147,19 +147,23 @@
                             <span class="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs animate-pulse">VANDAAG</span>
                         @elseif($toernooi->datum->isFuture())
                             @php
-                                $dagen = (int) now()->diffInDays($toernooi->datum);
+                                $totalDagen = (int) now()->diffInDays($toernooi->datum);
+                                $maanden = (int) floor($totalDagen / 30);
+                                $rest = $totalDagen % 30;
+                                $weken = (int) floor($rest / 7);
+                                $dagen = $rest % 7;
+
+                                $parts = [];
+                                if ($maanden > 0) $parts[] = $maanden . 'm';
+                                if ($weken > 0) $parts[] = $weken . 'w';
+                                if ($dagen > 0 || empty($parts)) $parts[] = $dagen . 'd';
+                                $countdown = implode(' ', $parts);
+
+                                $urgentClass = $totalDagen <= 7
+                                    ? 'px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded'
+                                    : ($totalDagen <= 30 ? 'text-orange-600' : 'text-gray-500');
                             @endphp
-                            @if($dagen <= 7)
-                                <span class="ml-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">{{ $dagen }}d</span>
-                            @elseif($dagen <= 30)
-                                <span class="ml-1 text-orange-600 text-xs">{{ $dagen }}d</span>
-                            @elseif($dagen <= 90)
-                                @php $weken = (int) ceil($dagen / 7); @endphp
-                                <span class="ml-1 text-gray-500 text-xs">{{ $weken }}w</span>
-                            @else
-                                @php $maanden = (int) ceil($dagen / 30); @endphp
-                                <span class="ml-1 text-gray-400 text-xs">{{ $maanden }}m</span>
-                            @endif
+                            <span class="ml-1 text-xs {{ $urgentClass }}">{{ $countdown }}</span>
                         @endif
                     @else
                         <span class="text-gray-400">-</span>
