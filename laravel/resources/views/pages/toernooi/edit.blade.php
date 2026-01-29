@@ -745,10 +745,13 @@
             }
             $categorieType = $gewichtsklassenData['_preset_type'] ?? 'geen_standaard';
             $eigenPresetId = $gewichtsklassenData['_eigen_preset_id'] ?? null;
+            $eigenPresetNaam = null;
 
-            // Als er een eigen preset is opgeslagen, gebruik 'eigen' als type
+            // Als er een eigen preset is opgeslagen, gebruik 'eigen' als type en haal de naam op
             if ($eigenPresetId) {
                 $categorieType = 'eigen';
+                $eigenPreset = \App\Models\GewichtsklassenPreset::find($eigenPresetId);
+                $eigenPresetNaam = $eigenPreset?->naam;
             }
 
             // Backwards compatibility
@@ -783,13 +786,13 @@
                                 JBN 2026
                             </span>
                         </label>
-                        <label class="cursor-pointer" id="eigen-preset-radio-label">
+                        <label class="cursor-pointer" id="eigen-preset-radio-label" @if(!$eigenPresetNaam) style="display:none" @endif>
                             <input type="radio" name="categorie_type" value="eigen"
                                    x-model="categorieType"
                                    @change="if($event.target.checked) loadEigenPreset()"
                                    class="sr-only peer">
                             <span class="block px-3 py-2 rounded text-sm text-gray-400 peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
-                                Eigen preset...
+                                {{ $eigenPresetNaam ?? 'Eigen preset...' }}
                             </span>
                         </label>
                     </div>
