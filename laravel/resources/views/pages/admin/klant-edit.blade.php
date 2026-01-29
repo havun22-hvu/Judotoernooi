@@ -109,12 +109,31 @@
                 </div>
             </div>
 
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 mt-6">Status</h2>
-            <div class="flex gap-6 mb-6">
-                <label class="flex items-center">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 mt-6">Status & Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50">
                     <input type="checkbox" name="is_test" value="1" {{ old('is_test', $klant->is_test) ? 'checked' : '' }}
-                           class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <span class="text-sm text-gray-700">Test account (geen betalingen)</span>
+                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Test account</span>
+                        <p class="text-xs text-gray-500">Geen betalingen vereist</p>
+                    </div>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50">
+                    <input type="checkbox" name="herdenkingsportaal" value="1" {{ old('herdenkingsportaal', $klant->herdenkingsportaal) ? 'checked' : '' }}
+                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Herdenkingsportaal</span>
+                        <p class="text-xs text-gray-500">Toegang tot herdenkingsfeatures</p>
+                    </div>
+                </label>
+                <label class="flex items-center p-3 border rounded hover:bg-gray-50">
+                    <input type="checkbox" name="kortingsregeling" value="1" {{ old('kortingsregeling', $klant->kortingsregeling) ? 'checked' : '' }}
+                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <div>
+                        <span class="text-sm font-medium text-gray-700">Kortingsregeling</span>
+                        <p class="text-xs text-gray-500">Speciale kortingstarieven</p>
+                    </div>
                 </label>
             </div>
 

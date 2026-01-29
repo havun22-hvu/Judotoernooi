@@ -79,10 +79,14 @@ class AdminController extends Controller
             'factuur_email' => 'nullable|email|max:255',
             'website' => 'nullable|url|max:255',
             'is_test' => 'boolean',
+            'herdenkingsportaal' => 'boolean',
+            'kortingsregeling' => 'boolean',
         ]);
 
-        // Handle boolean checkbox
+        // Handle boolean checkboxes
         $validated['is_test'] = $request->has('is_test');
+        $validated['herdenkingsportaal'] = $request->has('herdenkingsportaal');
+        $validated['kortingsregeling'] = $request->has('kortingsregeling');
 
         $klant->update($validated);
 
