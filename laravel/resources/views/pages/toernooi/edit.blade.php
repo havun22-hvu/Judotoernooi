@@ -253,6 +253,18 @@
                         <span class="ml-2 text-gray-700">4 judoka's <span class="text-gray-400 text-sm">(12w)</span></span>
                     </label>
                 </div>
+
+                <!-- Best of Three bij 2 judoka's -->
+                <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="hidden" name="best_of_three_bij_2" value="0">
+                        <input type="checkbox" name="best_of_three_bij_2" value="1"
+                               {{ old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false) ? 'checked' : '' }}
+                               class="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500">
+                        <span class="ml-2 font-medium text-yellow-800">Best of Three bij 2 judoka's <span class="text-yellow-600 text-sm">(3w)</span></span>
+                    </label>
+                    <p class="text-xs text-yellow-700 mt-1 ml-6">3x tegen elkaar judoën. Overschrijft "dubbel" instelling hierboven.</p>
+                </div>
             </div>
 
             <!-- Eliminatie Type (KO systeem) -->
@@ -336,8 +348,10 @@
             </p>
 
             @php
+                // Best of Three overschrijft dubbel voor 2 judoka's
+                $bestOfThree = old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false);
                 $standaardSchemas = [
-                    2 => [[1,2], [2,1]],
+                    2 => $bestOfThree ? [[1,2], [2,1], [1,2]] : [[1,2], [2,1]],
                     3 => [[1,2], [1,3], [2,3], [2,1], [3,2], [3,1]],
                     4 => [[1,2], [3,4], [2,3], [1,4], [2,4], [1,3]],
                     5 => [[1,2], [3,4], [1,5], [2,3], [4,5], [1,3], [2,4], [3,5], [1,4], [2,5]],
@@ -1587,6 +1601,102 @@
 
     <!-- TAB: ORGANISATIE -->
     <div x-show="activeTab === 'organisatie'" x-cloak>
+
+    <!-- TOERNOOI PAKKET -->
+    @auth('organisator')
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Toernooi Pakket</h2>
+
+        @if($toernooi->isPaidTier())
+            {{-- Betaald pakket info --}}
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-green-600 text-xl">✓</span>
+                    <span class="font-bold text-green-800">Betaald Pakket</span>
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">{{ $toernooi->paid_tier }}</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Maximum judoka's</span>
+                        <p class="text-xl font-bold text-green-700">{{ $toernooi->paid_max_judokas }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Huidige judoka's</span>
+                        <p class="text-xl font-bold text-gray-700">{{ $toernooi->judokas()->count() }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Betaald op</span>
+                        <p class="text-xl font-bold text-gray-700">{{ $toernooi->paid_at?->format('d-m-Y') ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Print/Noodplan</span>
+                        <p class="text-xl font-bold text-green-600">Beschikbaar</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Upgrade naar hoger pakket --}}
+            @php
+                $freemiumService = app(\App\Services\FreemiumService::class);
+                $upgradeOptions = collect($freemiumService->getUpgradeOptions($toernooi))
+                    ->filter(fn($opt) => $opt['max'] > $toernooi->paid_max_judokas);
+            @endphp
+
+            @if($upgradeOptions->isNotEmpty())
+            <div class="mt-4 pt-4 border-t">
+                <p class="text-gray-600 mb-3">Meer judoka's nodig? Upgrade naar een hoger pakket:</p>
+                <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                    </svg>
+                    Upgraden
+                </a>
+            </div>
+            @endif
+
+        @else
+            {{-- Gratis pakket info --}}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-blue-600 text-xl">ℹ</span>
+                    <span class="font-bold text-blue-800">Gratis Pakket</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Maximum judoka's</span>
+                        <p class="text-xl font-bold text-blue-700">{{ \App\Services\FreemiumService::FREE_MAX_JUDOKAS }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Huidige judoka's</span>
+                        <p class="text-xl font-bold text-gray-700">{{ $toernooi->judokas()->count() }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Plaatsen over</span>
+                        @php $remaining = \App\Services\FreemiumService::FREE_MAX_JUDOKAS - $toernooi->judokas()->count(); @endphp
+                        <p class="text-xl font-bold {{ $remaining <= 10 ? 'text-orange-600' : 'text-gray-700' }}">{{ max(0, $remaining) }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Print/Noodplan</span>
+                        <p class="text-xl font-bold text-red-600">Geblokkeerd</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Upgrade call-to-action --}}
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-lg">Meer judoka's nodig?</p>
+                        <p class="text-blue-100 text-sm">Upgrade naar een betaald pakket vanaf €20</p>
+                    </div>
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="px-4 py-2 bg-white text-blue-600 rounded font-bold hover:bg-blue-50">
+                        Upgraden
+                    </a>
+                </div>
+            </div>
+        @endif
+    </div>
+    @endauth
 
     <!-- VRIJWILLIGERS (device toegangen met binding) -->
     @include('pages.toernooi.partials.device-toegangen')
