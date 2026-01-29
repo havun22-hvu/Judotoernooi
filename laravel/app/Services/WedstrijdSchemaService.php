@@ -112,11 +112,13 @@ class WedstrijdSchemaService
 
         // Check if we need double matches (2 or 3 judokas)
         $dubbelBij2 = $toernooi?->dubbel_bij_2_judokas ?? true;
+        $bestOfThreeBij2 = $toernooi?->best_of_three_bij_2 ?? false;
         $dubbelBij3 = $toernooi?->dubbel_bij_3_judokas ?? true;
 
         // Default optimized schemas
+        // For 2 judokas: Best of Three (3 matches) > Dubbel (2 matches) > Single (1 match)
         return match ($aantal) {
-            2 => $dubbelBij2 ? [[1, 2], [2, 1]] : [[1, 2]],
+            2 => $bestOfThreeBij2 ? [[1, 2], [2, 1], [1, 2]] : ($dubbelBij2 ? [[1, 2], [2, 1]] : [[1, 2]]),
             3 => $dubbelBij3 ? [[1, 2], [1, 3], [2, 3], [2, 1], [3, 2], [3, 1]] : [[1, 2], [1, 3], [2, 3]],
             4 => [[1, 2], [3, 4], [2, 3], [1, 4], [2, 4], [1, 3]],
             5 => [[1, 2], [3, 4], [1, 5], [2, 3], [4, 5], [1, 3], [2, 4], [3, 5], [1, 4], [2, 5]],

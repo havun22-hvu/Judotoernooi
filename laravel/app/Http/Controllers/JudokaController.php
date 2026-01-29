@@ -492,7 +492,7 @@ class JudokaController extends Controller
 
     public function valideer(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
-        $result = $this->voerValidatieUit($toernooi);
+        $result = $this->voerValidatieUit($organisator, $toernooi);
 
         $message = "Validatie voltooid: {$result['gecorrigeerd']} judoka's gecorrigeerd.";
         if (!empty($result['fouten'])) {
