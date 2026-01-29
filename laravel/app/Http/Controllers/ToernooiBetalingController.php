@@ -122,7 +122,7 @@ class ToernooiBetalingController extends Controller
                 'toernooi_betaling_id' => $betaling->id,
             ]);
 
-            return redirect()->route('toernooi.upgrade.succes', $toernooi->routeParamsWith(['betaling' => $betaling]))
+            return redirect()->route('toernooi.upgrade.succes', ['organisator' => $organisator, 'toernooi' => $toernooi, 'betaling' => $betaling])
                 ->with('success', '✓ Test upgrade succesvol - geen betaling nodig');
         }
 
@@ -138,7 +138,7 @@ class ToernooiBetalingController extends Controller
         ]);
 
         $description = "JudoToernooi Upgrade: {$toernooi->naam} - {$validated['tier']} judoka's";
-        $redirectUrl = route('toernooi.upgrade.succes', ['toernooi' => $toernooi, 'betaling' => $betaling]);
+        $redirectUrl = route('toernooi.upgrade.succes', ['organisator' => $organisator, 'toernooi' => $toernooi, 'betaling' => $betaling]);
 
         // Simulation mode for staging
         if ($this->mollieService->isSimulationMode()) {
