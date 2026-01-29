@@ -74,10 +74,24 @@ Judoka B: 4 WP, 20 JP
 
 Om judoka's voldoende rust te geven, worden wedstrijden in een optimale volgorde gepland. Elke judoka krijgt minimaal één wedstrijd rust tussen zijn/haar wedstrijden.
 
-### 2 Judoka's (Dubbele Poule)
+### 2 Judoka's (Configureerbaar)
+
+| Modus | Wedstrijden | Beschrijving |
+|-------|-------------|--------------|
+| Standaard | 2 | 1x tegen elkaar (heen + terug) |
+| Best of Three | 3 | 3x tegen elkaar |
+
+**Instelling:** Toernooi → Instellingen → "Best of Three bij 2 deelnemers"
+
 ```
+Standaard:
 Wed 1: 1 vs 2
-Wed 2: 1 vs 2  (herhaling)
+Wed 2: 2 vs 1
+
+Best of Three:
+Wed 1: 1 vs 2
+Wed 2: 2 vs 1
+Wed 3: 1 vs 2
 ```
 
 ### 3 Judoka's (Dubbele Poule)
@@ -214,7 +228,8 @@ Toegepast bij 2 of 3 judoka's
 ### Voorbeelden
 | Judoka's | Type | Wedstrijden |
 |----------|------|-------------|
-| 2 | Dubbel | 2 |
+| 2 | Standaard | 2 |
+| 2 | Best of Three | 3 |
 | 3 | Dubbel | 6 |
 | 4 | Enkel | 6 |
 | 5 | Enkel | 10 |

@@ -211,7 +211,8 @@ class NoodplanController extends Controller
 
         // Haal wedstrijdvolgorde uit toernooi instellingen
         $schemas = $toernooi->wedstrijd_schemas ?? [];
-        $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal);
+        $bestOfThree = $toernooi->best_of_three_bij_2 ?? false;
+        $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal, $bestOfThree && $aantal === 2);
 
         $isFreeTier = $toernooi->isFreeTier();
 
@@ -324,9 +325,10 @@ class NoodplanController extends Controller
 
         // Build schema for each poule
         $schemas = $toernooi->wedstrijd_schemas ?? [];
-        $poulesMetSchema = $poules->map(function ($poule) use ($schemas) {
+        $bestOfThree = $toernooi->best_of_three_bij_2 ?? false;
+        $poulesMetSchema = $poules->map(function ($poule) use ($schemas, $bestOfThree) {
             $aantal = $poule->judokas->count();
-            $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal);
+            $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal, $bestOfThree && $aantal === 2);
             return [
                 'poule' => $poule,
                 'schema' => $schema,
@@ -353,10 +355,10 @@ class NoodplanController extends Controller
     /**
      * Standaard wedstrijdschema's
      */
-    private function getStandaardSchema(int $aantal): array
+    private function getStandaardSchema(int $aantal, ?bool $bestOfThree = false): array
     {
         return match($aantal) {
-            2 => [[1,2], [2,1]],
+            2 => $bestOfThree ? [[1,2], [2,1], [1,2]] : [[1,2], [2,1]],
             3 => [[1,2], [1,3], [2,3], [2,1], [3,2], [3,1]],
             4 => [[1,2], [3,4], [2,3], [1,4], [2,4], [1,3]],
             5 => [[1,2], [3,4], [1,5], [2,3], [4,5], [1,3], [2,4], [3,5], [1,4], [2,5]],

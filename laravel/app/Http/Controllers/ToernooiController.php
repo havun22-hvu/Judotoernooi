@@ -168,7 +168,7 @@ class ToernooiController extends Controller
 
         // Auto-valideer judoka's als categorieën gewijzigd zijn
         if ($categorieenGewijzigd && $toernooi->judokas()->count() > 0) {
-            app(JudokaController::class)->voerValidatieUit($toernooi);
+            app(JudokaController::class)->voerValidatieUit($organisator, $toernooi);
         }
 
         // Sync blokken and matten to match settings
