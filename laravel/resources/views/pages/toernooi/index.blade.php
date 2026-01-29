@@ -145,8 +145,21 @@
                         </span>
                         @if($toernooi->datum->isToday())
                             <span class="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs animate-pulse">VANDAAG</span>
-                        @elseif($toernooi->datum->isFuture() && $toernooi->datum->diffInDays() <= 7)
-                            <span class="ml-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">{{ $toernooi->datum->diffInDays() }}d</span>
+                        @elseif($toernooi->datum->isFuture())
+                            @php
+                                $dagen = (int) now()->diffInDays($toernooi->datum);
+                            @endphp
+                            @if($dagen <= 7)
+                                <span class="ml-1 px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-xs">{{ $dagen }}d</span>
+                            @elseif($dagen <= 30)
+                                <span class="ml-1 text-orange-600 text-xs">{{ $dagen }}d</span>
+                            @elseif($dagen <= 90)
+                                @php $weken = (int) ceil($dagen / 7); @endphp
+                                <span class="ml-1 text-gray-500 text-xs">{{ $weken }}w</span>
+                            @else
+                                @php $maanden = (int) ceil($dagen / 30); @endphp
+                                <span class="ml-1 text-gray-400 text-xs">{{ $maanden }}m</span>
+                            @endif
                         @endif
                     @else
                         <span class="text-gray-400">-</span>
