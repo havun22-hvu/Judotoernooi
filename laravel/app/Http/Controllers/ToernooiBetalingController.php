@@ -118,6 +118,7 @@ class ToernooiBetalingController extends Controller
                 'plan_type' => 'paid',
                 'paid_tier' => $validated['tier'],
                 'paid_max_judokas' => $maxJudokas,
+                'max_judokas' => $maxJudokas, // Also set the visible max_judokas field
                 'paid_at' => now(),
                 'toernooi_betaling_id' => $betaling->id,
             ]);
