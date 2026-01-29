@@ -32,10 +32,15 @@
         <div class="flex items-center gap-2">
             <!-- Countdown voor actief blok -->
             @php $actieveBlok = $toernooi->blokken->where('weging_gesloten', false)->first(); @endphp
-            @if($actieveBlok && $actieveBlok->weging_einde)
+            @if($actieveBlok && $actieveBlok->weging_einde && $toernooi->datum?->isToday())
             <div x-data="countdown('{{ $actieveBlok->weging_start?->toISOString() }}', '{{ $actieveBlok->weging_einde->toISOString() }}', {{ $actieveBlok->nummer }})" x-init="start()" class="text-right">
                 <div class="text-[10px] text-blue-300">Blok {{ $actieveBlok->nummer }}</div>
                 <div class="text-sm font-mono font-bold" :class="expired ? 'text-red-400 animate-pulse' : (warning ? 'text-yellow-400' : 'text-white')" x-text="display"></div>
+            </div>
+            @elseif($actieveBlok && $actieveBlok->weging_einde)
+            <div class="text-right">
+                <div class="text-[10px] text-blue-300">Blok {{ $actieveBlok->nummer }}</div>
+                <div class="text-sm font-mono text-blue-200">{{ $actieveBlok->weging_einde->format('H:i') }}</div>
             </div>
             @endif
             <div class="text-xl font-mono" id="clock"></div>
