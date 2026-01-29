@@ -227,43 +227,74 @@
                 </div>
             </div>
 
-            <!-- Dubbel spel instellingen -->
+            <!-- Wedstrijden per poulegrootte -->
             <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-2">Dubbel spel (2x tegen elkaar)</h3>
-                <div class="flex flex-wrap gap-4">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="hidden" name="dubbel_bij_2_judokas" value="0">
-                        <input type="checkbox" name="dubbel_bij_2_judokas" value="1"
-                               {{ old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-2 text-gray-700">2 judoka's <span class="text-gray-400 text-sm">(2w)</span></span>
-                    </label>
-                    <label class="flex items-center cursor-pointer">
-                        <input type="hidden" name="dubbel_bij_3_judokas" value="0">
-                        <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
-                               {{ old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-2 text-gray-700">3 judoka's <span class="text-gray-400 text-sm">(6w)</span></span>
-                    </label>
-                    <label class="flex items-center cursor-pointer">
-                        <input type="hidden" name="dubbel_bij_4_judokas" value="0">
-                        <input type="checkbox" name="dubbel_bij_4_judokas" value="1"
-                               {{ old('dubbel_bij_4_judokas', $toernooi->dubbel_bij_4_judokas ?? false) ? 'checked' : '' }}
-                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                        <span class="ml-2 text-gray-700">4 judoka's <span class="text-gray-400 text-sm">(12w)</span></span>
-                    </label>
-                </div>
-
-                <!-- Best of Three bij 2 judoka's -->
-                <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="hidden" name="best_of_three_bij_2" value="0">
-                        <input type="checkbox" name="best_of_three_bij_2" value="1"
-                               {{ old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false) ? 'checked' : '' }}
-                               class="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500">
-                        <span class="ml-2 font-medium text-yellow-800">Best of Three bij 2 judoka's <span class="text-yellow-600 text-sm">(3w)</span></span>
-                    </label>
-                    <p class="text-xs text-yellow-700 mt-1 ml-6">3x tegen elkaar judoën. Overschrijft "dubbel" instelling hierboven.</p>
+                <h3 class="font-medium text-gray-700 mb-3">Wedstrijden per poulegrootte</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 text-xs uppercase">
+                                <th class="pb-2 w-24">Poule</th>
+                                <th class="pb-2 w-20">Enkel</th>
+                                <th class="pb-2">Instelling</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr>
+                                <td class="py-2 font-medium">2 judoka's</td>
+                                <td class="py-2 text-gray-400">1w</td>
+                                <td class="py-2">
+                                    <div class="flex items-center gap-4">
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="hidden" name="dubbel_bij_2_judokas" value="0">
+                                            <input type="checkbox" name="dubbel_bij_2_judokas" value="1"
+                                                   {{ old('dubbel_bij_2_judokas', $toernooi->dubbel_bij_2_judokas ?? true) ? 'checked' : '' }}
+                                                   class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <span class="ml-2">Dubbel <span class="text-gray-400">(2w)</span></span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer">
+                                            <input type="hidden" name="best_of_three_bij_2" value="0">
+                                            <input type="checkbox" name="best_of_three_bij_2" value="1"
+                                                   {{ old('best_of_three_bij_2', $toernooi->best_of_three_bij_2 ?? false) ? 'checked' : '' }}
+                                                   class="w-4 h-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500">
+                                            <span class="ml-2 text-yellow-700">Best of 3 <span class="text-yellow-500">(3w)</span></span>
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium">3 judoka's</td>
+                                <td class="py-2 text-gray-400">3w</td>
+                                <td class="py-2">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="hidden" name="dubbel_bij_3_judokas" value="0">
+                                        <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
+                                               {{ old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : '' }}
+                                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2">Dubbel <span class="text-gray-400">(6w)</span></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium">4 judoka's</td>
+                                <td class="py-2 text-gray-400">6w</td>
+                                <td class="py-2">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="hidden" name="dubbel_bij_4_judokas" value="0">
+                                        <input type="checkbox" name="dubbel_bij_4_judokas" value="1"
+                                               {{ old('dubbel_bij_4_judokas', $toernooi->dubbel_bij_4_judokas ?? false) ? 'checked' : '' }}
+                                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2">Dubbel <span class="text-gray-400">(12w)</span></span>
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 font-medium text-gray-400">5+ judoka's</td>
+                                <td class="py-2 text-gray-400">10w+</td>
+                                <td class="py-2 text-gray-400 text-xs">Altijd enkel (round-robin)</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
