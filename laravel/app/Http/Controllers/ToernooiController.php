@@ -159,6 +159,20 @@ class ToernooiController extends Controller
         // Handle coach_incheck_actief checkbox
         $data['coach_incheck_actief'] = (bool) ($data['coach_incheck_actief'] ?? false);
 
+        // Handle poule match settings checkboxes
+        if (array_key_exists('dubbel_bij_2_judokas', $data)) {
+            $data['dubbel_bij_2_judokas'] = (bool) $data['dubbel_bij_2_judokas'];
+        }
+        if (array_key_exists('best_of_three_bij_2', $data)) {
+            $data['best_of_three_bij_2'] = (bool) $data['best_of_three_bij_2'];
+        }
+        if (array_key_exists('dubbel_bij_3_judokas', $data)) {
+            $data['dubbel_bij_3_judokas'] = (bool) $data['dubbel_bij_3_judokas'];
+        }
+        if (array_key_exists('dubbel_bij_4_judokas', $data)) {
+            $data['dubbel_bij_4_judokas'] = (bool) $data['dubbel_bij_4_judokas'];
+        }
+
         // Check of categorieën zijn gewijzigd
         $oudeGewichtsklassen = $toernooi->gewichtsklassen ?? [];
         $nieuweGewichtsklassen = $data['gewichtsklassen'] ?? [];
