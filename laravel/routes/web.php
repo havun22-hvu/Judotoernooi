@@ -471,6 +471,7 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
     Route::get('/', [PubliekController::class, 'index'])->name('index');
 
     // API routes for public page
+    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
     Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
     Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
     Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');

@@ -76,32 +76,6 @@
             </template>
         </div>
 
-        <!-- TERUG SECTIE: Recent afgeroepen poules -->
-        @if($afgeroepen->isNotEmpty())
-        <div class="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-orange-700 font-bold">⚠️ AL AFGEROEPEN - Klik om nog een keer te zien:</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                @foreach($afgeroepen as $poule)
-                <button
-                    onclick="zetTerug({{ $poule->id }}, this)"
-                    class="bg-orange-100 hover:bg-green-200 text-orange-800 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors border border-orange-300"
-                >
-                    <span>↩️</span>
-                    <span class="line-through opacity-70">
-                        @if($poule->type === 'eliminatie')
-                            Elim. {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
-                        @else
-                            Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
-                        @endif
-                    </span>
-                    <span class="text-orange-500 text-xs">({{ $poule->afgeroepen_at->format('H:i') }})</span>
-                </button>
-                @endforeach
-            </div>
-        </div>
-        @endif
 
         @if($klarePoules->isEmpty())
         <div class="bg-white rounded-lg shadow p-12 text-center">

@@ -434,6 +434,26 @@ class Toernooi extends Model
         return $this->afgesloten_at !== null;
     }
 
+    /**
+     * Check of wedstrijddag is gestart (minimaal één blok heeft weging gesloten)
+     * Na dit punt zijn Poules/Blokken pagina's LOCKED
+     */
+    public function isWedstrijddagGestart(): bool
+    {
+        return $this->blokken()->where('weging_gesloten', true)->exists();
+    }
+
+    /**
+     * Get timestamp van eerste gesloten weging (start wedstrijddag)
+     */
+    public function getWedstrijddagStartTijd(): ?\Carbon\Carbon
+    {
+        return $this->blokken()
+            ->whereNotNull('weging_gesloten_op')
+            ->orderBy('weging_gesloten_op')
+            ->value('weging_gesloten_op');
+    }
+
     public function getPlaatsenOverAttribute(): ?int
     {
         if (!$this->max_judokas) {

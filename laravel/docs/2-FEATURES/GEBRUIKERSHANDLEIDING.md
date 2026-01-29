@@ -44,6 +44,24 @@ Het JudoToernooi Management Systeem ondersteunt het complete proces van een judo
 - Weegkaarten zijn dynamisch en tonen altijd actuele blok + mat info
 - Wedstrijdschema's worden PAS gegenereerd bij activatie op toernooidag (chip klikken)
 
+### Lockdown na Start Wedstrijddag
+
+**Zodra de weging van een blok wordt gesloten** (`weging_gesloten = true`):
+
+| Pagina | Status | Reden |
+|--------|--------|-------|
+| **Poules** (voorbereiding) | LOCKED | Weegkaarten zijn uitgedeeld met mat-nummers |
+| **Blokken** | LOCKED | Blokverdeling bepaalt coachkaarten |
+| **Zaaloverzicht** | LOCKED | Schema's zijn geprint/zichtbaar |
+| **Wedstrijddag Poules** | EDITABLE | Live aanpassingen voor overpoulers |
+
+**Poules aangemaakt op wedstrijddag:**
+- Zijn ECHTE poules (worden gewoon gespeeld)
+- Verschijnen NIET op de Poules pagina (andere context)
+- Worden verwijderd bij blok-reset
+
+**Enige manier om voorbereiding te heropenen:** Reset via Instellingen > Organisatie
+
 ## Voorbereiding
 
 ### Nieuw Toernooi Aanmaken

@@ -2035,6 +2035,30 @@
         </form>
     </div>
 
+    <!-- TOERNOOI AFRONDEN -->
+    <div class="bg-green-50 border-2 border-green-300 rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
+            <span class="text-2xl">🏆</span> Toernooi Afronden
+        </h2>
+        @if($toernooi->isAfgesloten())
+        <p class="text-green-700 mb-4">
+            Dit toernooi is afgesloten op <strong>{{ $toernooi->afgesloten_at->format('d-m-Y H:i') }}</strong>.
+        </p>
+        <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
+           class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
+            🏆 Bekijk Resultaten & Statistieken
+        </a>
+        @else
+        <p class="text-green-700 mb-4">
+            Na afloop van het toernooi kun je hier alles afronden. Je krijgt een overzicht van alle resultaten, statistieken en club rankings.
+        </p>
+        <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
+           class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
+            🔒 Toernooi Afronden & Resultaten Bekijken
+        </a>
+        @endif
+    </div>
+
     <!-- NOODKNOP: HEROPEN VOORBEREIDING -->
     @if($toernooi->weegkaarten_gemaakt_op)
     <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">

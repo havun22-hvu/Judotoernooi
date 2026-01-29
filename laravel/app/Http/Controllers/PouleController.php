@@ -51,9 +51,16 @@ class PouleController extends Controller
             $leeftijdsklasseLabels[$label] = $label;
         }
 
+        // Filter out poules created on wedstrijddag (after weging_gesloten_op)
+        // These should only appear on wedstrijddag interface, not voorbereiding
         $poules = $toernooi->poules()
             ->with(['blok', 'mat', 'judokas.club'])
             ->withCount('judokas')
+            ->whereDoesntHave('blok', function ($q) {
+                // Exclude poules where: blok has weging_gesloten_op AND poule was created after that
+                $q->whereNotNull('weging_gesloten_op')
+                  ->whereColumn('poules.created_at', '>', 'blokken.weging_gesloten_op');
+            })
             ->get();
 
         // Sort by: age class (youngest first), then weight class (lightest first)
@@ -157,12 +164,13 @@ class PouleController extends Controller
         $maxNummer = $toernooi->poules()->max('nummer') ?? 0;
         $nieuweNummer = $maxNummer + 1;
 
-        // Find blok_id from existing poule with same leeftijdsklasse (category)
+        // Find blok_id and categorie_key from existing poule with same leeftijdsklasse (category)
         $existingPoule = $toernooi->poules()
             ->where('leeftijdsklasse', $validated['leeftijdsklasse'])
             ->whereNotNull('blok_id')
             ->first();
         $blokId = $existingPoule?->blok_id;
+        $categorieKey = $existingPoule?->categorie_key;
 
         // Create the poule
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
@@ -173,6 +181,7 @@ class PouleController extends Controller
         $poule = $toernooi->poules()->create([
             'nummer' => $nieuweNummer,
             'blok_id' => $blokId,
+            'categorie_key' => $categorieKey,
             'leeftijdsklasse' => $validated['leeftijdsklasse'],
             'gewichtsklasse' => $gewichtsklasse,
             'titel' => $titel,
