@@ -22,7 +22,6 @@ class Organisator extends Authenticatable
         'telefoon',
         'is_sitebeheerder',
         'is_test',
-        'herdenkingsportaal',
         'kortingsregeling',
         'password',
         'email_verified_at',
@@ -47,7 +46,6 @@ class Organisator extends Authenticatable
         'is_premium' => 'boolean',
         'is_sitebeheerder' => 'boolean',
         'is_test' => 'boolean',
-        'herdenkingsportaal' => 'boolean',
         'kortingsregeling' => 'boolean',
         'kyc_compleet' => 'boolean',
     ];
