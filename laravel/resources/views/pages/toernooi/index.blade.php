@@ -125,6 +125,7 @@
                 <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
                 <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poules</th>
                 <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Pakket</th>
                 <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Laatst actief</th>
                 <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
             </tr>
@@ -182,6 +183,16 @@
                         <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Voorbereiding</span>
                     @else
                         <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Nieuw</span>
+                    @endif
+                </td>
+                <td class="px-6 py-3 whitespace-nowrap text-center">
+                    @if($toernooi->isPaidTier())
+                        <div class="inline-flex flex-col items-center">
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">€{{ $toernooi->toernooiBetaling?->bedrag ?? '?' }}</span>
+                            <span class="text-xs text-gray-500">max {{ $toernooi->paid_max_judokas }}</span>
+                        </div>
+                    @else
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Gratis</span>
                     @endif
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
