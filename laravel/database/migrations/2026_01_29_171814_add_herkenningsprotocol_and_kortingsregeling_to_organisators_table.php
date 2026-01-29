@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('organisators', function (Blueprint $table) {
-            $table->boolean('herdenkingsportaal')->default(false)->after('is_test');
-            $table->boolean('kortingsregeling')->default(false)->after('herdenkingsportaal');
+            $table->boolean('kortingsregeling')->default(false)->after('is_test');
         });
     }
 
@@ -23,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('organisators', function (Blueprint $table) {
-            $table->dropColumn(['herdenkingsportaal', 'kortingsregeling']);
+            $table->dropColumn('kortingsregeling');
         });
     }
 };

@@ -120,14 +120,6 @@
                     </div>
                 </label>
                 <label class="flex items-center p-3 border rounded hover:bg-gray-50">
-                    <input type="checkbox" name="herdenkingsportaal" value="1" {{ old('herdenkingsportaal', $klant->herdenkingsportaal) ? 'checked' : '' }}
-                           class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <div>
-                        <span class="text-sm font-medium text-gray-700">Herdenkingsportaal</span>
-                        <p class="text-xs text-gray-500">Toegang tot herdenkingsfeatures</p>
-                    </div>
-                </label>
-                <label class="flex items-center p-3 border rounded hover:bg-gray-50">
                     <input type="checkbox" name="kortingsregeling" value="1" {{ old('kortingsregeling', $klant->kortingsregeling) ? 'checked' : '' }}
                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                     <div>
