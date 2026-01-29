@@ -112,11 +112,6 @@
             <h2 class="text-lg font-semibold text-gray-800 mb-4 mt-6">Status</h2>
             <div class="flex gap-6 mb-6">
                 <label class="flex items-center">
-                    <input type="checkbox" name="is_premium" value="1" {{ old('is_premium', $klant->is_premium) ? 'checked' : '' }}
-                           class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <span class="text-sm text-gray-700">Premium klant</span>
-                </label>
-                <label class="flex items-center">
                     <input type="checkbox" name="is_test" value="1" {{ old('is_test', $klant->is_test) ? 'checked' : '' }}
                            class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                     <span class="text-sm text-gray-700">Test account (geen betalingen)</span>
