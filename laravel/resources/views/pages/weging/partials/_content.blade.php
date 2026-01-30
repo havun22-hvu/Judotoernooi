@@ -337,23 +337,19 @@ async function registreerGewicht() {
             body: JSON.stringify({ gewicht: parseFloat(weightInput) })
         });
 
-        // Check HTTP status first
+        const data = await response.json();
+
+        // Check HTTP status - but also read error message from response
         if (!response.ok) {
-            let errorMsg = `HTTP ${response.status}`;
+            let errorMsg = data.message || `HTTP ${response.status}`;
             if (response.status === 419) {
                 errorMsg = 'Sessie verlopen - herlaad pagina';
-            } else if (response.status === 404) {
-                errorMsg = 'Route niet gevonden';
-            } else if (response.status === 500) {
-                errorMsg = 'Server fout';
             }
             feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
             feedback.textContent = errorMsg;
             feedback.classList.remove('hidden');
             return;
         }
-
-        const data = await response.json();
 
         if (data.success) {
             // Add to history
