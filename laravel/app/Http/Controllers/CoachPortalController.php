@@ -749,7 +749,7 @@ class CoachPortalController extends Controller
             return redirect()->route('coach.portal.code', $this->routeParams($organisator, $toernooi, $code));
         }
 
-        $publiekController = new PubliekController();
+        $publiekController = app(PubliekController::class);
         $clubResultaten = $publiekController->getClubResultaten($toernooiModel->organisator, $toernooiModel, $club->id);
         $clubRanking = $publiekController->getClubRanking($toernooiModel);
 
