@@ -112,6 +112,9 @@
 </div>
 
 <script>
+// Base URL for API calls (new URL structure: /organisator/toernooi)
+const apiBaseUrl = '{{ url("/{$toernooi->organisator->slug}/{$toernooi->slug}") }}';
+
 // State
 let selectedJudoka = null;
 let weightInput = '';
@@ -191,7 +194,7 @@ async function onScanSuccess(text) {
     if (navigator.vibrate) navigator.vibrate(100);
 
     try {
-        const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/scan-qr`, {
+        const response = await fetch(`${apiBaseUrl}/scan-qr`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -224,7 +227,7 @@ async function searchJudoka(query) {
 
     searchTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`${window.location.origin}/publiek/{{ $toernooi->slug }}/zoeken?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`${apiBaseUrl}/zoeken?q=${encodeURIComponent(query)}`);
             const data = await response.json();
 
             if (data.judokas && data.judokas.length > 0) {
@@ -303,7 +306,7 @@ async function registreerGewicht() {
     btn.textContent = 'Bezig...';
 
     const feedback = document.getElementById('feedback');
-    const url = `${window.location.origin}/publiek/{{ $toernooi->slug }}/weging/${selectedJudoka.id}/registreer`;
+    const url = `${apiBaseUrl}/weging/${selectedJudoka.id}/registreer`;
 
     try {
         const response = await fetch(url, {
