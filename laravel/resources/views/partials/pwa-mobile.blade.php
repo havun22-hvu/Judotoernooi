@@ -219,15 +219,17 @@
                 });
             });
 
-            // Get current SW version and force update on mismatch
+            // Get current SW version and update once if needed
             if (reg.active) {
                 const channel = new MessageChannel();
                 channel.port1.onmessage = (event) => {
                     const swVersion = event.data.version;
                     document.getElementById('pwa-sw-version').textContent = `SW: v${swVersion}`;
-                    // Version mismatch - FORCE immediate refresh
-                    if (swVersion !== APP_VERSION) {
-                        console.log('[PWA] Version mismatch! App:', APP_VERSION, 'SW:', swVersion, '- FORCING UPDATE');
+                    // Version mismatch - update ONCE (use sessionStorage to prevent loop)
+                    const updateKey = 'pwa-updated-' + APP_VERSION;
+                    if (swVersion !== APP_VERSION && !sessionStorage.getItem(updateKey)) {
+                        console.log('[PWA] Version mismatch - updating once. App:', APP_VERSION, 'SW:', swVersion);
+                        sessionStorage.setItem(updateKey, 'true');
                         document.getElementById('pwa-update-banner').classList.remove('hidden');
                         setTimeout(() => forceRefresh(), 500);
                     }
