@@ -206,6 +206,8 @@ class Judoka extends Model
 
     /**
      * Check if weight is within allowed range for weight class
+     * Only applies to fixed weight classes (-30, +70)
+     * Variable weight classes always return true
      */
     public function isGewichtBinnenKlasse(?float $gewicht = null, float $tolerantie = 0.5): bool
     {
@@ -214,6 +216,13 @@ class Judoka extends Model
 
         $klasse = $this->gewichtsklasse;
         if (!$klasse) return true;
+
+        // Only check fixed weight classes (start with - or +)
+        $isVasteKlasse = str_starts_with($klasse, '-') || str_starts_with($klasse, '+');
+        if (!$isVasteKlasse) {
+            // Variable weight class - no limits to check
+            return true;
+        }
 
         $isPlusKlasse = str_starts_with($klasse, '+');
         $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
