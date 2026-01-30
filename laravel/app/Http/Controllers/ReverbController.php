@@ -21,6 +21,15 @@ class ReverbController extends Controller
             ]);
         }
 
+        // Staging heeft geen eigen Reverb server
+        if (app()->environment('staging')) {
+            return response()->json([
+                'running' => false,
+                'message' => 'Reverb niet beschikbaar op staging',
+                'staging' => true,
+            ]);
+        }
+
         $result = Process::run('supervisorctl status reverb');
         $output = $result->output();
 
