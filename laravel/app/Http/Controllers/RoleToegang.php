@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Toernooi;
 use App\Models\Mat;
 use App\Services\ToernooiService;
-use App\Services\WedstrijdService;
+use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,7 +14,7 @@ class RoleToegang extends Controller
 {
     public function __construct(
         private ToernooiService $toernooiService,
-        private WedstrijdService $wedstrijdService
+        private WedstrijdSchemaService $wedstrijdSchemaService
     ) {}
 
     /**
@@ -95,7 +95,7 @@ class RoleToegang extends Controller
             ->first();
 
         $schema = $blok
-            ? $this->wedstrijdService->getSchemaVoorMat($blok, $matModel)
+            ? $this->wedstrijdSchemaService->getSchemaVoorMat($blok, $matModel)
             : [];
 
         return view('pages.mat.show', [
