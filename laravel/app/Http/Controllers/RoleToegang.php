@@ -198,6 +198,37 @@ class RoleToegang extends Controller
     }
 
     /**
+     * Mat show (device-bound) - show specific mat with wedstrijdschema
+     */
+    public function matShowDeviceBound(Request $request, string $organisator, string $toernooiSlug, string $toegangId, int $mat): View
+    {
+        $toegang = $request->get('device_toegang');
+        $toernooi = $toegang->toernooi;
+
+        $matModel = Mat::where('toernooi_id', $toernooi->id)
+            ->where('nummer', $mat)
+            ->firstOrFail();
+
+        // Get first non-closed block
+        $blok = $toernooi->blokken()
+            ->where('weging_gesloten', true)
+            ->orderBy('nummer')
+            ->first();
+
+        $schema = $blok
+            ? $this->wedstrijdSchemaService->getSchemaVoorMat($blok, $matModel)
+            : [];
+
+        return view('pages.mat.show', [
+            'toernooi' => $toernooi,
+            'mat' => $matModel,
+            'blok' => $blok,
+            'schema' => $schema,
+            'toegang' => $toegang,
+        ]);
+    }
+
+    /**
      * Jury/Hoofdjury interface (device-bound)
      */
     public function juryDeviceBound(Request $request): View

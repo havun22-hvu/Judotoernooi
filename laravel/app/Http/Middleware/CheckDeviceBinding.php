@@ -38,7 +38,11 @@ class CheckDeviceBinding
 
         if (!$deviceToken || $toegang->device_token !== $deviceToken) {
             // Not bound or wrong device, redirect to PIN entry
-            return redirect()->route('toegang.show', $toegang->code);
+            return redirect()->route('toegang.show', [
+                'organisator' => $toegang->toernooi->organisator->slug,
+                'toernooi' => $toegang->toernooi->slug,
+                'code' => $toegang->code,
+            ]);
         }
 
         // Update last active

@@ -57,6 +57,19 @@ class MatController extends Controller
 
     public function getWedstrijden(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
+        return $this->doGetWedstrijden($request);
+    }
+
+    /**
+     * Device-bound version - toernooi comes from device_toegang
+     */
+    public function getWedstrijdenDevice(Request $request): JsonResponse
+    {
+        return $this->doGetWedstrijden($request);
+    }
+
+    private function doGetWedstrijden(Request $request): JsonResponse
+    {
         $validated = $request->validate([
             'blok_id' => 'required|exists:blokken,id',
             'mat_id' => 'required|exists:matten,id',
@@ -71,6 +84,19 @@ class MatController extends Controller
     }
 
     public function registreerUitslag(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doRegistreerUitslag($request);
+    }
+
+    /**
+     * Device-bound version - toernooi comes from device_toegang
+     */
+    public function registreerUitslagDevice(Request $request): JsonResponse
+    {
+        return $this->doRegistreerUitslag($request);
+    }
+
+    private function doRegistreerUitslag(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -97,6 +123,8 @@ class MatController extends Controller
             // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
             $correcties = [];
             if ($validated['winnaar_id']) {
+                // Get toernooi via wedstrijd->poule relationship
+                $toernooi = $wedstrijd->poule->blok->toernooi;
                 $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
                 $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
             }
