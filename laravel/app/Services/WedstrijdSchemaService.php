@@ -106,8 +106,9 @@ class WedstrijdSchemaService
         $toernooi = $poule->toernooi()->first();
         $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
 
-        if (!empty($customSchemas[$aantal])) {
-            return $customSchemas[$aantal];
+        // JSON decode can return string keys, so check both int and string
+        if (!empty($customSchemas[$aantal]) || !empty($customSchemas[(string) $aantal])) {
+            return $customSchemas[$aantal] ?? $customSchemas[(string) $aantal];
         }
 
         // Check if we need double matches (2 or 3 judokas)
