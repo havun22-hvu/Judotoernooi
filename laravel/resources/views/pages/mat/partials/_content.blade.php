@@ -12,9 +12,15 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $huidigeWedstrijdUrl = route('mat.huidige-wedstrijd.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
+            $huidigeWedstrijdUrl = route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams());
         }
     @endphp
 <div x-data="matInterface()" x-init="init()">
@@ -1326,7 +1332,7 @@ function matInterface() {
         // Helper: update actieve en/of huidige wedstrijd
         async setWedstrijdStatus(poule, actieveId, huidigeId) {
             try {
-                const url = `{{ route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams()) }}`;
+                const url = `{{ $huidigeWedstrijdUrl }}`;
 
                 // Update actieve (groen)
                 const response1 = await fetch(url, {
