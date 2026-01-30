@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Toernooi;
 use App\Models\Mat;
 use App\Services\ToernooiService;
+use App\Services\WedstrijdService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,7 +13,8 @@ use Illuminate\View\View;
 class RoleToegang extends Controller
 {
     public function __construct(
-        private ToernooiService $toernooiService
+        private ToernooiService $toernooiService,
+        private WedstrijdService $wedstrijdService
     ) {}
 
     /**
@@ -86,9 +88,21 @@ class RoleToegang extends Controller
             ->where('nummer', $mat)
             ->firstOrFail();
 
+        // Get first non-closed block (same logic as MatController::show)
+        $blok = $toernooi->blokken()
+            ->where('weging_gesloten', true)
+            ->orderBy('nummer')
+            ->first();
+
+        $schema = $blok
+            ? $this->wedstrijdService->getSchemaVoorMat($blok, $matModel)
+            : [];
+
         return view('pages.mat.show', [
             'toernooi' => $toernooi,
             'mat' => $matModel,
+            'blok' => $blok,
+            'schema' => $schema,
         ]);
     }
 
