@@ -954,17 +954,7 @@
                 liveLoading: false,
 
                 init() {
-                    // Restore active tab from sessionStorage (for refresh)
-                    const savedTab = sessionStorage.getItem('publiek_active_tab_{{ $toernooi->id }}');
-                    if (savedTab && ['info', 'deelnemers', 'favorieten', 'live', 'uitslagen'].includes(savedTab)) {
-                        this.activeTab = savedTab;
-                    }
-
-                    // Save active tab when it changes
-                    this.$watch('activeTab', (tab) => {
-                        sessionStorage.setItem('publiek_active_tab_{{ $toernooi->id }}', tab);
-                    });
-                    // Load favorites from localStorage
+                    // Load favorites from localStorage first
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
                         try {
@@ -974,15 +964,29 @@
                         }
                     }
 
-                    // Auto-refresh: favorieten elke 15 sec, live page elke 60 sec
+                    // Restore active tab from sessionStorage (for refresh)
+                    const savedTab = sessionStorage.getItem('publiek_active_tab_{{ $toernooi->id }}');
+                    if (savedTab && ['info', 'deelnemers', 'favorieten', 'live', 'uitslagen'].includes(savedTab)) {
+                        this.activeTab = savedTab;
+
+                        // If restoring to favorieten tab, load the data
+                        if (savedTab === 'favorieten' && this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                    }
+
+                    // Save active tab when it changes
+                    this.$watch('activeTab', (tab) => {
+                        sessionStorage.setItem('publiek_active_tab_{{ $toernooi->id }}', tab);
+                    });
+
+                    // Auto-refresh: favorieten elke 15 sec
                     if (poulesGegenereerd) {
-                        // Favorieten: snelle refresh voor live updates
                         setInterval(() => {
                             if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
                                 this.loadFavorieten();
                             }
                         }, 15000);
-
                     }
                 },
 
