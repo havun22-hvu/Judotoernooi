@@ -442,6 +442,9 @@ Route::prefix('{organisator}/{toernooi}')->group(function () {
     Route::middleware('device.binding')->group(function () {
         Route::get('weging/{toegang}', [RoleToegang::class, 'wegingDeviceBound'])->name('weging.interface');
         Route::get('mat/{toegang}', [RoleToegang::class, 'matDeviceBound'])->name('mat.interface');
+        Route::get('mat/{toegang}/{mat}', [RoleToegang::class, 'matShowDeviceBound'])->name('mat.show');
+        Route::post('mat/{toegang}/wedstrijden', [MatController::class, 'getWedstrijdenDevice'])->name('mat.wedstrijden.device');
+        Route::post('mat/{toegang}/uitslag', [MatController::class, 'registreerUitslagDevice'])->name('mat.uitslag.device');
         Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
         Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
         Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');

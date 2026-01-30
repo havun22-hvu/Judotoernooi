@@ -1,5 +1,8 @@
-@if(request()->routeIs('rol.*'))
-{{-- Standalone layout for role-based access --}}
+@php
+    $isStandalone = request()->routeIs('rol.*') || request()->routeIs('mat.show') || isset($toegang);
+@endphp
+@if($isStandalone)
+{{-- Standalone layout for role-based and device-bound access --}}
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -69,10 +72,16 @@
 </div>
 @endforelse
 
-@if(request()->routeIs('rol.*'))
+@if($isStandalone)
+@if(isset($toegang))
+<a href="{{ route('mat.interface', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'toegang' => $toegang->id]) }}" class="text-blue-600 hover:text-blue-800">
+    ← Terug naar matten
+</a>
+@else
 <a href="{{ route('rol.mat') }}" class="text-blue-600 hover:text-blue-800">
     ← Terug naar matten
 </a>
+@endif
     </main>
 </body>
 </html>

@@ -1,4 +1,22 @@
-    @php $pwaApp = 'mat'; @endphp
+    @php
+        $pwaApp = 'mat';
+        // API URLs - different for device-bound vs admin access
+        if (isset($toegang)) {
+            $wedstrijdenUrl = route('mat.wedstrijden.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
+            $uitslagUrl = route('mat.uitslag.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
+        } else {
+            $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
+            $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
+        }
+    @endphp
 <div x-data="matInterface()" x-init="init()">
     <!-- Huidige selectie -->
     <div class="flex items-center justify-end mb-1" x-show="blokId && matId">
@@ -799,19 +817,34 @@ function matInterface() {
             // Sla selectie op voor volgende keer
             this.opslaanSelectie();
 
-            const response = await fetch(`{{ route('toernooi.mat.wedstrijden', $toernooi->routeParams()) }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    blok_id: this.blokId,
-                    mat_id: this.matId
-                })
-            });
+            try {
+                const apiUrl = `{{ $wedstrijdenUrl }}`;
+                console.log('[Mat] API URL:', apiUrl);
+                console.log('[Mat] Loading wedstrijden for blok:', this.blokId, 'mat:', this.matId);
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        blok_id: this.blokId,
+                        mat_id: this.matId
+                    })
+                });
 
-            const data = await response.json();
+                console.log('[Mat] Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('[Mat] Error response:', errorText);
+                    alert('Fout bij laden wedstrijden: ' + response.status);
+                    this.poules = [];
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('[Mat] Loaded', data.length, 'poules');
 
             // Swap ruimte wordt NIET meer automatisch gecleared
             // Admin kan judoka's in swap houden ook na lock
@@ -842,6 +875,11 @@ function matInterface() {
                 });
                 return poule;
             });
+            } catch (err) {
+                console.error('[Mat] Exception loading wedstrijden:', err);
+                alert('Fout bij laden: ' + err.message);
+                this.poules = [];
+            }
         },
 
         // Check of judoka in deze wedstrijd speelt (== voor type-onafhankelijk)
@@ -920,7 +958,7 @@ function matInterface() {
             }
 
             // Save to backend
-            await fetch(`{{ route('toernooi.mat.uitslag', $toernooi->routeParams()) }}`, {
+            await fetch(`{{ $uitslagUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2062,7 +2100,7 @@ function matInterface() {
                 const fromWedstrijd = poule.wedstrijden.find(w => w.id === fromWedstrijdId);
                 if (fromWedstrijd && fromWedstrijd.volgende_wedstrijd_id === targetSlot.wedstrijdId) {
                     // Dit is een winnaar die doorschuift
-                    const response = await fetch(`{{ route('toernooi.mat.uitslag', $toernooi->routeParams()) }}`, {
+                    const response = await fetch(`{{ $uitslagUrl }}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
