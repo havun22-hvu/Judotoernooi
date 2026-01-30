@@ -211,7 +211,12 @@ De Weging heeft **2 totaal verschillende versies**:
 - Filter per blok en status (gewogen/niet gewogen)
 - Live updates (auto-refresh elke 10 seconden)
 - Statistieken: gewogen/totaal per blok (vaste breedte, altijd zichtbaar)
-- Countdown timer naar eindtijd weging per blok
+- Countdown timer naar eindtijd weging per blok (uu:mm:ss format)
+- **Knop "Blok X: Einde weegtijd"** - verschijnt naast blok-filter als een blok geselecteerd is:
+  - Sluit de weegtijd voor dat blok
+  - Markeert alle niet-gewogen judoka's als afwezig
+  - Bevestigingsdialog voordat actie uitgevoerd wordt
+  - Knop toont "Gesloten" als blok al gesloten is
 
 ### Versie 2: Weging vrijwilliger - Scanner PWA (standalone)
 
