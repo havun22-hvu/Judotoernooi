@@ -254,22 +254,17 @@
                         </div>
                         <div class="divide-y divide-gray-100">
                             @foreach($matData['poules'] as $poule)
-                            <div class="px-4 py-3 hover:bg-gray-50">
-                                <div class="flex justify-between items-start">
+                            <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer" @click="togglePouleDetail({{ $poule->id }})">
+                                <div class="flex justify-between items-center">
                                     <div>
                                         <div class="font-bold text-gray-800">
+                                            <span x-text="openPoules.includes({{ $poule->id }}) ? '▼' : '▶'" class="mr-1"></span>
                                             {{ $poule->titel ?: "Poule {$poule->nummer}" }}
                                         </div>
-                                        <div class="text-sm text-gray-500">
+                                        <div class="text-sm text-gray-500 ml-4">
                                             {{ $poule->judokas->count() }} judoka's
                                         </div>
                                     </div>
-                                    <button
-                                        @click="togglePouleDetail({{ $poule->id }})"
-                                        class="text-blue-600 hover:text-blue-800 text-sm"
-                                    >
-                                        <span x-text="openPoules.includes({{ $poule->id }}) ? '▼ Verberg' : '▶ Toon namen'"></span>
-                                    </button>
                                 </div>
                                 <!-- Judoka namen (inklapbaar) -->
                                 <div x-show="openPoules.includes({{ $poule->id }})" class="mt-2 pl-4 border-l-2 border-blue-200">
