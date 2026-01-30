@@ -108,6 +108,10 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 - Laatste blok = oudste/zwaarste categorieën
 - (Dit wordt al geregeld door de blokverdeling zelf)
 
+#### Poule Weergave Volgorde (Wedstrijddag)
+
+**Binnen een blok:** Poules worden gesorteerd van **licht naar zwaar** (makkelijker te vinden voor ouders/coaches).
+
 ---
 
 ## Drag & Drop Gedrag
