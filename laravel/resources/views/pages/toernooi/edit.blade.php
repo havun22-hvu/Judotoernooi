@@ -2277,7 +2277,7 @@
             <ul class="list-disc list-inside mt-2">
                 <li>Verwijdert alle wedstrijden van poules in dit blok</li>
                 <li>Reset doorstuur-status (poules worden weer grijs)</li>
-                <li><strong>Behoudt</strong> zaalindeling (mat toewijzingen)</li>
+                <li>Reset zaalindeling (zaaloverzicht wordt leeg)</li>
                 <li>Judoka's en poule-indelingen blijven intact</li>
             </ul>
         </div>
