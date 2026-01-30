@@ -334,11 +334,16 @@ class PubliekController extends Controller
                         'judoka2_id' => $volgendeWedstrijd->judoka2_id,
                     ] : null,
                     'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds) {
+                        // Extract band color for colored dot display
+                        $bandKleur = $this->getBandKleur($j->band);
+
                         return [
                             'id' => $j->id,
                             'naam' => $j->naam,
                             'club' => $j->club?->naam,
                             'band' => $j->band,
+                            'band_kleur' => $bandKleur,
+                            'leeftijd' => $j->geboortejaar ? (date('Y') - $j->geboortejaar) : null,
                             'gewicht' => $j->gewicht,
                             'is_favoriet' => in_array($j->id, $judokaIds),
                             'is_afwezig' => $j->aanwezigheid === 'afwezig',
@@ -704,5 +709,36 @@ class PubliekController extends Controller
         usort($resultaten, fn($a, $b) => $a['plaats'] <=> $b['plaats']);
 
         return $resultaten;
+    }
+
+    /**
+     * Extract band color from band string for colored dot display.
+     * Returns CSS color value.
+     */
+    private function getBandKleur(?string $band): ?string
+    {
+        if (empty($band)) {
+            return null;
+        }
+
+        $bandLower = strtolower($band);
+
+        $kleuren = [
+            'wit' => '#ffffff',
+            'geel' => '#fbbf24',
+            'oranje' => '#f97316',
+            'groen' => '#22c55e',
+            'blauw' => '#3b82f6',
+            'bruin' => '#92400e',
+            'zwart' => '#1f2937',
+        ];
+
+        foreach ($kleuren as $kleur => $hex) {
+            if (str_contains($bandLower, $kleur)) {
+                return $hex;
+            }
+        }
+
+        return null;
     }
 }

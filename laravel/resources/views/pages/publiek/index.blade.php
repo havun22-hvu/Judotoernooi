@@ -788,8 +788,9 @@
                                             <div class="flex items-center gap-2 text-xs">
                                                 <span x-show="judoka.is_aan_de_beurt" class="bg-green-500 text-white px-1.5 py-0.5 rounded font-bold">NU</span>
                                                 <span x-show="judoka.is_volgende && !judoka.is_aan_de_beurt" class="bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded font-bold">KLAAR</span>
+                                                <span x-show="judoka.leeftijd" class="text-gray-400" x-text="judoka.leeftijd + 'j'"></span>
                                                 <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
-                                                <span class="w-3 h-3 rounded-full" :class="'band-' + judoka.band"></span>
+                                                <span x-show="judoka.band_kleur" class="w-3 h-3 rounded-full border border-gray-300" :style="'background-color: ' + judoka.band_kleur"></span>
                                                 <span x-show="judoka.punten > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.punten + 'pt'"></span>
                                             </div>
                                         </div>
