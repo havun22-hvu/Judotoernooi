@@ -90,11 +90,23 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 
 ### Naar Zaaloverzicht → (ook: "Verdeel over matten")
 - Sla huidige blokverdeling op in database
-- **Wijs matten toe** aan poules (gebalanceerde verdeling)
+- **Wijs matten toe** aan poules volgens sorteerlogica (zie hieronder)
 - **Weegkaarten worden nu beschikbaar** (QR-code + bloknaam + weging tijden)
   - Vereist: eerst "Valideer judoka's" uitgevoerd (QR-codes aangemaakt)
 - Ga naar zaaloverzicht (preview met matverdeling)
 - Matten kunnen na overpoelen nog aangepast worden
+
+#### Mat-toewijzing Logica
+
+**Per blok:**
+1. Sorteer alle poules op **gewicht oplopend** (lichtste eerst)
+2. Verdeel over matten met **load balancing**: poule gaat naar mat met minste wedstrijden
+3. Resultaat: lichtste poules tendensen naar mat 1, zwaarste naar laatste mat
+
+**Tussen blokken:**
+- Blok 1 = jongste/lichtste categorieën
+- Laatste blok = oudste/zwaarste categorieën
+- (Dit wordt al geregeld door de blokverdeling zelf)
 
 ---
 
