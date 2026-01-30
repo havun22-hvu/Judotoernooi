@@ -87,17 +87,25 @@ class DeviceToegangBeheerController extends Controller
             'naam' => 'nullable|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
-            'rol' => 'required|in:hoofdjury,mat,weging,spreker,dojo',
+            'rol' => 'sometimes|in:hoofdjury,mat,weging,spreker,dojo',
             'mat_nummer' => 'nullable|integer|min:1',
         ]);
 
-        $toegang->update([
-            'naam' => $request->naam ?? '',
-            'telefoon' => $request->telefoon,
-            'email' => $request->email,
-            'rol' => $request->rol,
-            'mat_nummer' => $request->rol === 'mat' ? $request->mat_nummer : null,
-        ]);
+        // Only update fields that are provided
+        $data = ['naam' => $request->naam ?? ''];
+
+        if ($request->has('telefoon')) {
+            $data['telefoon'] = $request->telefoon;
+        }
+        if ($request->has('email')) {
+            $data['email'] = $request->email;
+        }
+        if ($request->has('rol')) {
+            $data['rol'] = $request->rol;
+            $data['mat_nummer'] = $request->rol === 'mat' ? $request->mat_nummer : null;
+        }
+
+        $toegang->update($data);
 
         return response()->json([
             'id' => $toegang->id,

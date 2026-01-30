@@ -202,11 +202,13 @@ function deviceToegangen() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ ...toegang, naam }),
+                    body: JSON.stringify({ naam }),
                 });
                 if (response.ok) {
                     const updated = await response.json();
                     Object.assign(toegang, updated);
+                } else {
+                    console.error('Failed to update naam:', response.status, await response.text());
                 }
             } catch (e) {
                 console.error('Failed to update naam:', e);
