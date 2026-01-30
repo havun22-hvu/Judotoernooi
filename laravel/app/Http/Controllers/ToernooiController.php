@@ -285,11 +285,6 @@ class ToernooiController extends Controller
             'weging_gesloten_op' => null,
         ]);
 
-        // Reset matten (clear poule assignments)
-        $toernooi->matten()->update([
-            'huidige_poule_id' => null,
-        ]);
-
         return redirect()
             ->route('organisator.dashboard', $organisator)
             ->with('success', "Toernooi '{$toernooi->naam}' gereset: {$judokaCount} judoka's, {$pouleCount} poules, {$wedstrijdCount} wedstrijden verwijderd.");
