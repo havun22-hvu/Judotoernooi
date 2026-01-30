@@ -160,6 +160,59 @@ herberekenPouleStatistieken()
 
 ---
 
+## Reset Toernooi
+
+**UI Locatie:** Organisator Dashboard → 🔄 knop bij toernooi
+
+**Toegang:** Eigenaar of sitebeheerder
+
+### Trigger
+
+| Bestand | Methode |
+|---------|---------|
+| `ToernooiController.php` | `reset()` |
+| Route | `POST /{organisator}/toernooi/{toernooi}/reset` |
+
+### Wat gebeurt er?
+
+```php
+// ToernooiController.php -> reset()
+
+1. Delete alle wedstrijden van dit toernooi
+2. Delete alle poule_judoka pivot records
+3. Delete alle poules
+4. Delete alle judoka's
+5. Reset blokken weging status
+6. Reset matten poule toewijzingen
+```
+
+### Database wijzigingen
+
+| Tabel | Wijziging |
+|-------|-----------|
+| `wedstrijden` | DELETE (alle van toernooi) |
+| `poule_judoka` | DELETE (alle van toernooi) |
+| `poules` | DELETE (alle van toernooi) |
+| `judokas` | DELETE (alle van toernooi) |
+| `blokken` | weging_gesloten = false, weging_gesloten_op = null |
+| `matten` | huidige_poule_id = null |
+
+### Wat blijft bewaard?
+
+- Toernooi naam en datum
+- Alle instellingen (gewichtsklassen, regels, etc.)
+- Blokken structuur
+- Matten configuratie
+- Uitgenodigde clubs
+
+### Gevolgen
+
+1. **Toernooi is leeg** - Geen judoka's, poules of wedstrijden
+2. **Klaar voor nieuwe inschrijvingen** - Clubs kunnen opnieuw inschrijven
+3. **Weging gereset** - Alle blokken staan weer open voor weging
+
+---
+
 ## Meer functies toevoegen
 
 Voeg hier technische documentatie toe voor andere belangrijke functies zoals:

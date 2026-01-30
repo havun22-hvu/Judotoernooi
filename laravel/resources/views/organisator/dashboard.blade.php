@@ -197,14 +197,23 @@
                         Start
                     </a>
                     @if($organisator->isSitebeheerder() || ($toernooi->pivot && $toernooi->pivot->rol === 'eigenaar'))
-                    <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
-                          onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-red-400 hover:text-red-600" title="Verwijder toernooi">
-                            🗑️
-                        </button>
-                    </form>
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('toernooi.reset', $toernooi->routeParams()) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt resetten?\n\nDit verwijdert:\n- Alle judoka\'s\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.')">
+                            @csrf
+                            <button type="submit" class="text-orange-400 hover:text-orange-600" title="Reset toernooi (verwijder judoka's en poules)">
+                                🔄
+                            </button>
+                        </form>
+                        <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
+                              onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-400 hover:text-red-600" title="Verwijder toernooi">
+                                🗑️
+                            </button>
+                        </form>
+                    </div>
                     @endif
                 </div>
             </div>

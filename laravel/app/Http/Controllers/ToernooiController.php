@@ -265,47 +265,42 @@ class ToernooiController extends Controller
     }
 
     /**
-     * Reset tournament - keeps settings and judokas, clears poules/wedstrijden
+     * Reset tournament - keeps settings, deletes judokas/poules/wedstrijden
      */
     public function reset(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
+        $loggedIn = auth('organisator')->user();
+
+        // Eigenaar of sitebeheerder mag resetten
+        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->ownsToernooi($toernooi))) {
+            return redirect()
+                ->route('organisator.dashboard', $organisator)
+                ->with('error', 'Je hebt geen rechten om dit toernooi te resetten');
+        }
+
         // Delete wedstrijden and poules
         $pouleIds = $toernooi->poules()->pluck('id');
         $wedstrijdCount = \App\Models\Wedstrijd::whereIn('poule_id', $pouleIds)->delete();
-        $pivotCount = \DB::table('poule_judoka')->whereIn('poule_id', $pouleIds)->delete();
+        \DB::table('poule_judoka')->whereIn('poule_id', $pouleIds)->delete();
         $pouleCount = $toernooi->poules()->delete();
 
-        // Reset judoka status
-        $toernooi->judokas()->update([
-            'gewicht_gewogen' => null,
-            'aanwezigheid' => 'onbekend',
-            'aantal_wegingen' => 0,
-        ]);
+        // Delete all judokas
+        $judokaCount = $toernooi->judokas()->delete();
 
-        // Reset blokken
+        // Reset blokken weging status
         $toernooi->blokken()->update([
             'weging_gesloten' => false,
+            'weging_gesloten_op' => null,
         ]);
 
-        // Reset SQLite sequences if applicable
-        if (\DB::getDriverName() === 'sqlite') {
-            $minPouleId = \App\Models\Poule::min('id') ?? 0;
-            $minWedstrijdId = \App\Models\Wedstrijd::min('id') ?? 0;
-            if ($minPouleId > 0) {
-                \DB::statement("UPDATE sqlite_sequence SET seq = ? WHERE name = 'poules'", [$minPouleId - 1]);
-            } else {
-                \DB::statement("DELETE FROM sqlite_sequence WHERE name = 'poules'");
-            }
-            if ($minWedstrijdId > 0) {
-                \DB::statement("UPDATE sqlite_sequence SET seq = ? WHERE name = 'wedstrijden'", [$minWedstrijdId - 1]);
-            } else {
-                \DB::statement("DELETE FROM sqlite_sequence WHERE name = 'wedstrijden'");
-            }
-        }
+        // Reset matten (clear poule assignments)
+        $toernooi->matten()->update([
+            'huidige_poule_id' => null,
+        ]);
 
         return redirect()
-            ->route('toernooi.show', $toernooi->routeParams())
-            ->with('success', "Toernooi gereset: {$pouleCount} poules, {$wedstrijdCount} wedstrijden verwijderd. Judoka's behouden.");
+            ->route('organisator.dashboard', $organisator)
+            ->with('success', "Toernooi '{$toernooi->naam}' gereset: {$judokaCount} judoka's, {$pouleCount} poules, {$wedstrijdCount} wedstrijden verwijderd.");
     }
 
     public function dashboard(): View
