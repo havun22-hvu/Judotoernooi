@@ -289,18 +289,6 @@ function selectJudoka(judoka) {
         ` : ''}
     `;
 
-    // Disable register button if max reached
-    const registerBtn = document.getElementById('register-btn');
-    if (maxBereikt) {
-        registerBtn.disabled = true;
-        registerBtn.textContent = '⛔ Max bereikt';
-        registerBtn.className = 'w-full bg-gray-400 text-white font-bold py-3 rounded-lg text-lg cursor-not-allowed';
-    } else {
-        registerBtn.disabled = false;
-        registerBtn.textContent = '✓ Registreer';
-        registerBtn.className = 'w-full bg-green-600 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg';
-    }
-
     updateWeightDisplay();
 }
 
