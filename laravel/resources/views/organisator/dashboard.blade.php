@@ -196,8 +196,8 @@
                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
                         Start
                     </a>
-                    @if($organisator->isSitebeheerder() || ($toernooi->pivot && $toernooi->pivot->rol === 'eigenaar'))
                     <div class="flex items-center gap-2">
+                        {{-- Reset knop - voor alle gebruikers --}}
                         <form action="{{ route('toernooi.reset', $toernooi->routeParams()) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt resetten?\n\nDit verwijdert:\n- Alle judoka\'s\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.')">
                             @csrf
@@ -205,6 +205,8 @@
                                 🔄
                             </button>
                         </form>
+                        {{-- Delete knop - alleen eigenaar/sitebeheerder --}}
+                        @if($organisator->isSitebeheerder() || ($toernooi->pivot && $toernooi->pivot->rol === 'eigenaar'))
                         <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
                             @csrf
@@ -213,8 +215,8 @@
                                 🗑️
                             </button>
                         </form>
+                        @endif
                     </div>
-                    @endif
                 </div>
             </div>
             @endforeach
