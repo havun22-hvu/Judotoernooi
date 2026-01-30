@@ -23,7 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Exclude public API routes from CSRF verification
         $middleware->validateCsrfTokens(except: [
-            'publiek/*/favorieten',
+            '*/*/favorieten',  // Public favorites API: /{organisator}/{toernooi}/favorieten
+            '*/*/scan-qr',     // Public QR scan API
             'mollie/webhook',
             'mollie/webhook/toernooi',
         ]);
