@@ -252,7 +252,7 @@ async function searchJudoka(query) {
 // Select judoka
 function selectJudoka(judoka) {
     selectedJudoka = judoka;
-    weightInput = judoka.gewicht_gewogen ? String(judoka.gewicht_gewogen) : '';
+    weightInput = ''; // Always start with empty input field
 
     document.getElementById('search-results').classList.add('hidden');
     document.getElementById('search-input').value = '';
