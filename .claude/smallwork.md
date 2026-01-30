@@ -288,6 +288,17 @@
 - **Bestanden:** BlokController.php, edit.blade.php
 - **Was:** Behield mat toewijzingen, nu volledig reset
 
+### Feat: "Einde weegtijd" knop in hoofdjury weeglijst
+- **Type:** Feature
+- **Wat:** Knop om weegtijd te sluiten, gekoppeld aan geselecteerd blok in dropdown
+- **Bestanden:** interface-admin.blade.php
+- **Details:**
+  - Knop verschijnt naast blok-filter als een blok geselecteerd is
+  - Sluit weegtijd → markeert niet-gewogen judoka's als afwezig
+  - Countdown timer en knop altijd zichtbaar (niet alleen wedstrijddag)
+  - Toont "Gesloten" als blok al gesloten is
+- **Docs:** INTERFACES.md bijgewerkt
+
 ---
 
 <!--

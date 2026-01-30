@@ -1,24 +1,19 @@
-# Session Handover: 30 januari 2026
+# Session Handover: 30 januari 2026 (middag)
 
 ## Wat is gedaan
 
-### Offline Backup Sync voor Noodplan
-- Automatische sync van poule data naar localStorage elke 30 seconden
-- Status indicator rechtsonder: "Backup actief | X uitslagen | HH:MM"
-- "OFFLINE BACKUP" sectie op noodplan pagina met "Print vanuit backup" knop
-- Werkt ook als server offline is (print uit localStorage)
-- **Bestanden:** NoodplanController.php, app.blade.php, noodplan/index.blade.php
-- **Docs:** PLANNING_NOODPLAN.md sectie 8 bijgewerkt
+### "Einde weegtijd" knop in hoofdjury weeglijst
+- Knop toegevoegd aan Weging → Weging Interface (hoofdjury versie)
+- Knop verschijnt naast blok-filter dropdown als een blok geselecteerd is
+- Bij klik: sluit weegtijd → markeert niet-gewogen judoka's als afwezig
+- Countdown timer en knop altijd zichtbaar (niet alleen op wedstrijddag)
+- Toont "Gesloten" als blok al gesloten is
+- **Bestanden:** interface-admin.blade.php
+- **Docs:** INTERFACES.md bijgewerkt
 
-### Free Tier Testfase
-- Cees Veen en sitebeheerder hebben gratis volledige toegang
-- `isFreeTier()` retourneert false voor deze gebruikers
-- Alle "upgrade required" pagina's zijn onzichtbaar voor hen
-
-### Noodknop Reset Verbeterd
-- "Reset Blok naar Eind Voorbereiding" reset nu ook mat toewijzingen
-- Zaaloverzicht wordt volledig leeg na reset
-- UI tekst aangepast om dit te reflecteren
+### Verwijderd
+- Individuele "Einde weegtijd" knoppen per blok in de stats sectie (was te druk)
+- `isToday()` check voor countdown/knop (belemmerde testen op staging)
 
 ## Openstaande items
 
@@ -27,22 +22,24 @@
 
 ## Belangrijke context voor volgende keer
 
-### Offline Backup Architectuur
-- Oorspronkelijk SSE (Server-Sent Events), maar PHP dev server had problemen
-- Nu: simple fetch polling elke 30 seconden naar `/noodplan/sync-data`
-- Data opgeslagen in localStorage met keys: `noodplan_{toernooi_id}_poules`, `_laatste_sync`, `_count`
-- Auto-restart na visibility change (slaapstand/tab switch)
+### Weegtijd sluiten architectuur
+- Route: `POST /blok/{blok}/sluit-weging`
+- Controller: `BlokController::sluitWeging()`
+- Model: `Blok::sluitWeging()` doet:
+  1. Zet `weging_gesloten = true` + timestamp
+  2. Markeert niet-gewogen judoka's als afwezig
+  3. Herberekent poule statistieken
+  4. Bij eliminatie: verwijdert afwezige judoka's uit bracket
 
-### Testfase Configuratie
+### Testfase Configuratie (eerder vandaag)
 - `Toernooi::isFreeTier()` heeft hardcoded slugs voor gratis toegang
-- Na testfase: verwijder deze check of maak configureerbaar
+- Cees Veen en sitebeheerder hebben volledige toegang zonder betaling
 
 ## Bekende issues/bugs
 
-- Noodplan index pagina status indicator kan even "Offline" tonen bij page load (sync duurt 1-2 sec)
-- Dit is cosmetisch en corrigeert zichzelf na eerste sync
+- Geen nieuwe bugs gevonden deze sessie
 
 ## Git Status
 - Alles gepusht naar main
-- Staging en production up-to-date
-- Laatste commit: `b02c1db` - docs: Update PLANNING_NOODPLAN.md
+- Staging up-to-date
+- Laatste commit: `9880e4e` - docs: Document 'Einde weegtijd' button
