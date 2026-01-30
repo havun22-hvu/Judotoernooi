@@ -165,6 +165,17 @@ class ToernooiController extends Controller
         }
         if (array_key_exists('best_of_three_bij_2', $data)) {
             $data['best_of_three_bij_2'] = (bool) $data['best_of_three_bij_2'];
+
+            // Auto-update wedstrijd_schemas[2] based on best_of_three setting
+            $schemas = $data['wedstrijd_schemas'] ?? $toernooi->wedstrijd_schemas ?? [];
+            if ($data['best_of_three_bij_2']) {
+                $schemas[2] = [[1, 2], [2, 1], [1, 2]]; // 3 wedstrijden
+            } else {
+                $schemas[2] = $data['dubbel_bij_2_judokas'] ?? true
+                    ? [[1, 2], [2, 1]]  // 2 wedstrijden (dubbel)
+                    : [[1, 2]];          // 1 wedstrijd (enkel)
+            }
+            $data['wedstrijd_schemas'] = $schemas;
         }
         if (array_key_exists('dubbel_bij_3_judokas', $data)) {
             $data['dubbel_bij_3_judokas'] = (bool) $data['dubbel_bij_3_judokas'];
