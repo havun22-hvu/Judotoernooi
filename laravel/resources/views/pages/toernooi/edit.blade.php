@@ -252,9 +252,9 @@
                                 <td class="py-2 font-medium">2 judoka's</td>
                                 <td class="py-2 text-gray-400">1w</td>
                                 <td class="py-2">
-                                    <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }">
-                                        <input type="hidden" name="dubbel_bij_2_judokas" :value="modus === 'dubbel' ? 1 : 0">
-                                        <input type="hidden" name="best_of_three_bij_2" :value="modus === 'best3' ? 1 : 0">
+                                    <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }" x-init="$watch('modus', value => { $refs.dubbel2.value = value === 'dubbel' ? '1' : '0'; $refs.best3.value = value === 'best3' ? '1' : '0'; })">
+                                        <input type="hidden" name="dubbel_bij_2_judokas" x-ref="dubbel2" value="{{ $modus2 === 'dubbel' ? '1' : '0' }}">
+                                        <input type="hidden" name="best_of_three_bij_2" x-ref="best3" value="{{ $modus2 === 'best3' ? '1' : '0' }}">
                                         <label class="flex items-center cursor-pointer">
                                             <input type="radio" x-model="modus" value="enkel"
                                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500">
