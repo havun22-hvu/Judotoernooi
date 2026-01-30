@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
 // v1.2.13 - 2026-01-30: Add error handling and logging for mat wedstrijden
-const VERSION = '1.2.14';
+const VERSION = '1.2.15';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

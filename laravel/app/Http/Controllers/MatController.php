@@ -216,6 +216,17 @@ class MatController extends Controller
      */
     public function pouleKlaar(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
+        return $this->doPouleKlaar($request, $toernooi->id);
+    }
+
+    public function pouleKlaarDevice(Request $request): JsonResponse
+    {
+        $toegang = $request->get('device_toegang');
+        return $this->doPouleKlaar($request, $toegang->toernooi_id);
+    }
+
+    private function doPouleKlaar(Request $request, int $toernooiId): JsonResponse
+    {
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
         ]);
@@ -223,7 +234,7 @@ class MatController extends Controller
         $poule = Poule::findOrFail($validated['poule_id']);
 
         // Verify poule belongs to this toernooi
-        if ($poule->toernooi_id !== $toernooi->id) {
+        if ($poule->toernooi_id !== $toernooiId) {
             return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
         }
 
