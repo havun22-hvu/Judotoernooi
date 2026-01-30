@@ -227,7 +227,7 @@ class WedstrijddagController extends Controller
 
         if (!$alreadyInPoule) {
             // Add to new poule
-            $nieuwePoule->judokas()->attach($judoka->id, ['positie' => 999]);
+            $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $nieuwePoule->judokas()->count() + 1]);
         }
 
         // Update positions if provided
