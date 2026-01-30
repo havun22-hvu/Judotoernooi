@@ -269,23 +269,21 @@ function selectJudoka(judoka) {
     const maxWegingen = judoka.max_wegingen;
 
     // Compact header info
+    // Show max 3 previous weighings as green numbers (no labels, no time)
+    const vorigeGewichten = vorigeWegingen.slice(0, 3).map(w => w.gewicht).join(', ');
+
     document.getElementById('judoka-info-compact').innerHTML = `
         <div class="font-bold text-lg truncate">${judoka.naam}</div>
         <div class="text-sm text-gray-600 flex flex-wrap gap-1">
             <span>${judoka.club || 'Geen club'}</span>
             <span>•</span>
             <span>${judoka.gewichtsklasse || '?'} kg</span>
-            ${isGewogen ? `<span class="text-green-600 font-medium">✓ ${judoka.gewicht_gewogen} kg</span>` : ''}
         </div>
+        ${isGewogen ? `<div class="text-green-600 font-medium">✓ ${judoka.gewicht_gewogen} kg</div>` : ''}
+        ${vorigeWegingen.length > 0 ? `<div class="text-green-600 text-sm">${vorigeGewichten}</div>` : ''}
         ${maxBereikt ? `
         <div class="mt-1 p-2 bg-red-100 text-red-800 rounded text-xs font-medium">
             ⚠️ Maximum wegingen bereikt (${aantalWegingen}/${maxWegingen})
-        </div>
-        ` : ''}
-        ${vorigeWegingen.length > 0 ? `
-        <div class="mt-1 pt-1 border-t border-gray-200 text-xs text-gray-500">
-            <span class="font-medium">Vorige (${aantalWegingen}x${maxWegingen ? '/' + maxWegingen : ''}):</span>
-            ${vorigeWegingen.map(w => `<span class="ml-1">${w.gewicht}kg <span class="text-gray-400">(${w.tijd})</span></span>`).join(',')}
         </div>
         ` : ''}
     `;
