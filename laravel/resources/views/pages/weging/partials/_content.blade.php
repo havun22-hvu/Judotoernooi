@@ -191,8 +191,6 @@ async function onScanSuccess(text) {
         qrCode = text.split('/weegkaart/').pop();
     }
 
-    if (navigator.vibrate) navigator.vibrate(100);
-
     try {
         const response = await fetch(`${apiBaseUrl}/scan-qr`, {
             method: 'POST',
