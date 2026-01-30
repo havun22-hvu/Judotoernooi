@@ -267,6 +267,29 @@
 
 ---
 
+## Sessie: 30 januari 2026
+
+### Feat: Offline backup sync voor noodplan
+- **Type:** Feature
+- **Wat:** Automatische sync van poule data naar localStorage voor offline printen
+- **Bestanden:** NoodplanController.php, app.blade.php, noodplan/index.blade.php
+- **Werking:** Fetch polling elke 30 sec, status indicator rechtsonder
+- **UI:** "OFFLINE BACKUP" sectie met "Print vanuit backup" knop
+
+### Fix: Free tier toegang testfase
+- **Type:** Config change
+- **Wat:** Cees Veen en sitebeheerder hebben gratis volledige toegang tijdens testfase
+- **Bestanden:** Toernooi.php (isFreeTier methode)
+- **Slugs:** 'cees-veen', 'judoschool-cees-veen'
+
+### Fix: Noodknop reset ook zaalindeling
+- **Type:** Bug fix
+- **Wat:** "Reset Blok naar Eind Voorbereiding" reset nu ook mat_id (zaaloverzicht wordt leeg)
+- **Bestanden:** BlokController.php, edit.blade.php
+- **Was:** Behield mat toewijzingen, nu volledig reset
+
+---
+
 <!--
 TEMPLATE:
 
