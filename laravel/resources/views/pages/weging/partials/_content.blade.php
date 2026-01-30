@@ -184,12 +184,22 @@ async function stopScanner() {
     document.getElementById('scan-button').style.display = 'flex';
 }
 
-// Handle successful scan
+// Handle successful scan (with debounce to prevent double processing)
+let lastScannedCode = null;
+let scanLock = false;
+
 async function onScanSuccess(text) {
+    // Prevent double scans
+    if (scanLock || text === lastScannedCode) return;
+    scanLock = true;
+    lastScannedCode = text;
+
     let qrCode = text;
     if (text.includes('/weegkaart/')) {
         qrCode = text.split('/weegkaart/').pop();
     }
+
+    if (navigator.vibrate) navigator.vibrate(100);
 
     try {
         const response = await fetch(`${apiBaseUrl}/scan-qr`, {
@@ -209,6 +219,9 @@ async function onScanSuccess(text) {
         }
     } catch (e) {
         console.error('Scan error:', e);
+    } finally {
+        // Reset lock after short delay
+        setTimeout(() => { scanLock = false; }, 500);
     }
 }
 
@@ -293,6 +306,7 @@ function selectJudoka(judoka) {
 function clearSelection() {
     selectedJudoka = null;
     weightInput = '';
+    lastScannedCode = null; // Allow re-scan of same judoka
     document.getElementById('judoka-section').classList.add('hidden');
     document.getElementById('feedback').classList.add('hidden');
 }
@@ -361,8 +375,6 @@ async function registreerGewicht() {
                 feedback.textContent = `⚠️ ${data.opmerking}`;
             }
             feedback.classList.remove('hidden');
-
-            if (navigator.vibrate) navigator.vibrate(100);
 
             // Clear after 2 seconds
             setTimeout(() => {
