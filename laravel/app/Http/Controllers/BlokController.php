@@ -581,7 +581,7 @@ class BlokController extends Controller
 
     /**
      * Reset entire blok to end-of-preparation state
-     * Deletes all matches, resets doorgestuurd_op, keeps mat assignments
+     * Deletes all matches, resets doorgestuurd_op AND mat assignments (zaaloverzicht leeg)
      */
     public function resetBlok(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
@@ -619,7 +619,7 @@ class BlokController extends Controller
                 $poule->delete();
                 $verwijderdePoules++;
             } else {
-                // Reset voorbereiding poule status (keep mat_id!)
+                // Reset voorbereiding poule status - including mat assignment (zaaloverzicht leeg)
                 $totaalPoules++;
                 $poule->update([
                     'doorgestuurd_op' => null,
@@ -628,6 +628,7 @@ class BlokController extends Controller
                     'huidige_wedstrijd_id' => null,
                     'actieve_wedstrijd_id' => null,
                     'aantal_wedstrijden' => 0,
+                    'mat_id' => null,  // Reset mat toewijzing - zaaloverzicht wordt leeg
                 ]);
             }
         }

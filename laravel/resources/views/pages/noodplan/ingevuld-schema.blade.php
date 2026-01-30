@@ -191,9 +191,8 @@
 @endphp
 
 <div class="poule-page {{ $isLandscape ? 'landscape' : '' }}"
-     x-data="{ printInclude: true }"
-     x-init="$watch('printInclude', (val) => { if(!val) $el.classList.add('print-exclude'); else $el.classList.remove('print-exclude'); updatePrintCounter(); })"
-     :class="{ 'opacity-50': !printInclude }"
+     x-data="pouleSelect()"
+     :class="{ 'print-exclude': !printInclude, 'opacity-50': !printInclude }"
      data-poule-id="{{ $poule->id }}">
     <!-- Poule header -->
     <div class="poule-header">
@@ -323,23 +322,37 @@
 </div>
 
 <script>
+const totalPoules = {{ $poulesMetSchema->count() }};
+
+function pouleSelect() {
+    return {
+        printInclude: true,
+        init() {
+            this.$watch('printInclude', () => {
+                this.$nextTick(() => updatePrintCounter());
+            });
+        }
+    };
+}
+
 function selectAllPoules(checked) {
     document.querySelectorAll('.poule-page').forEach(el => {
-        // Get Alpine component and update data
-        if (el._x_dataStack) {
-            el._x_dataStack[0].printInclude = checked;
+        const checkbox = el.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            checkbox.checked = checked;
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
         }
     });
-    setTimeout(updatePrintCounter, 100);
 }
 
 function updatePrintCounter() {
-    const total = {{ $poulesMetSchema->count() }};
     const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
-    document.getElementById('print-counter').textContent = selected + ' van ' + total + ' geselecteerd';
+    const counter = document.getElementById('print-counter');
+    if (counter) {
+        counter.textContent = selected + ' van ' + totalPoules + ' geselecteerd';
+    }
 }
 
-// Initial counter update after Alpine init
-document.addEventListener('alpine:initialized', () => setTimeout(updatePrintCounter, 100));
+document.addEventListener('DOMContentLoaded', () => setTimeout(updatePrintCounter, 200));
 </script>
 @endsection
