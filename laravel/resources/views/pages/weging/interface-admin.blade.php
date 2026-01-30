@@ -19,7 +19,7 @@
                 <select x-model="blokFilter" @change="filterJudokas()" class="border-2 border-gray-300 rounded px-3 py-2 font-medium">
                     <option value="">Alle blokken</option>
                     @foreach($toernooi->blokken as $blok)
-                    <option value="{{ $blok->nummer }}">Blok {{ $blok->nummer }}</option>
+                    <option value="{{ $blok->nummer }}" data-gesloten="{{ $blok->weging_gesloten ? '1' : '0' }}">Blok {{ $blok->nummer }}</option>
                     @endforeach
                 </select>
                 <select x-model="statusFilter" @change="filterJudokas()" class="border-2 border-gray-300 rounded px-3 py-2">
@@ -27,6 +27,18 @@
                     <option value="gewogen">Gewogen</option>
                     <option value="niet_gewogen">Niet gewogen</option>
                 </select>
+
+                <!-- Einde weegtijd knop - alleen zichtbaar als blok geselecteerd en niet gesloten -->
+                <template x-if="blokFilter !== '' && !blokGesloten[blokFilter]">
+                    <button type="button"
+                            @click="sluitWeegtijd()"
+                            class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded">
+                        Blok <span x-text="blokFilter"></span>: Einde weegtijd
+                    </button>
+                </template>
+                <template x-if="blokFilter !== '' && blokGesloten[blokFilter]">
+                    <span class="text-gray-500 px-4 py-2">Blok <span x-text="blokFilter"></span>: Gesloten</span>
+                </template>
             </div>
 
             <!-- Stats per blok (vaste breedte, highlight actieve) -->
@@ -42,19 +54,10 @@
                     </div>
                     @if($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">Gesloten</div>
-                    @else
-                        @if($blok->weging_einde)
-                        <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
-                             class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
-                             x-text="display"></div>
-                        @endif
-                        <form action="{{ route('toernooi.blok.sluit-weging', $toernooi->routeParamsWith(['blok' => $blok])) }}" method="POST" class="mt-1">
-                            @csrf
-                            <button type="submit" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded"
-                                    onclick="return confirm('Weegtijd Blok {{ $blok->nummer }} sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')">
-                                Einde weegtijd
-                            </button>
-                        </form>
+                    @elseif($blok->weging_einde)
+                    <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
+                         class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
+                         x-text="display"></div>
                     @endif
                 </div>
                 @endforeach
@@ -174,6 +177,16 @@ function weeglijst() {
         zoekterm: '',
         blokFilter: '',
         statusFilter: '',
+        blokGesloten: {
+            @foreach($toernooi->blokken as $blok)
+            {{ $blok->nummer }}: {{ $blok->weging_gesloten ? 'true' : 'false' }},
+            @endforeach
+        },
+        blokIds: {
+            @foreach($toernooi->blokken as $blok)
+            {{ $blok->nummer }}: {{ $blok->id }},
+            @endforeach
+        },
         stats: {
             totaal: 0,
             totaalGewogen: 0,
@@ -189,6 +202,25 @@ function weeglijst() {
 
             // Auto-refresh elke 10 seconden
             setInterval(() => this.refresh(), 10000);
+        },
+
+        sluitWeegtijd() {
+            if (!this.blokFilter) return;
+            if (!confirm('Weegtijd Blok ' + this.blokFilter + ' sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')) return;
+
+            const blokId = this.blokIds[this.blokFilter];
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url()->current() }}'.replace('/weging/interface', '/blok/' + blokId + '/sluit-weging');
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+
+            document.body.appendChild(form);
+            form.submit();
         },
 
         berekenStats() {
