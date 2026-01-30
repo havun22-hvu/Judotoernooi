@@ -32,7 +32,7 @@
             <!-- Stats per blok (vaste breedte, highlight actieve) -->
             <div class="flex items-center gap-4">
                 @foreach($toernooi->blokken as $blok)
-                <div class="text-center w-20 transition-opacity"
+                <div class="text-center w-28 transition-opacity"
                      :class="blokFilter !== '' && blokFilter != '{{ $blok->nummer }}' ? 'opacity-40' : ''">
                     <div class="text-xs text-gray-500">Blok {{ $blok->nummer }}</div>
                     <div class="text-lg font-bold">
@@ -40,12 +40,21 @@
                         <span class="text-gray-400">/</span>
                         <span class="text-gray-600" x-text="stats.blok{{ $blok->nummer }}?.totaal || 0"></span>
                     </div>
-                    @if($blok->weging_einde && !$blok->weging_gesloten && $toernooi->datum?->isToday())
-                    <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
-                         class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
-                         x-text="display"></div>
-                    @elseif($blok->weging_gesloten)
+                    @if($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">Gesloten</div>
+                    @elseif($toernooi->datum?->isToday())
+                        @if($blok->weging_einde)
+                        <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
+                             class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
+                             x-text="display"></div>
+                        @endif
+                        <form action="{{ route('toernooi.blok.sluit-weging', $toernooi->routeParamsWith(['blok' => $blok])) }}" method="POST" class="mt-1">
+                            @csrf
+                            <button type="submit" class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded"
+                                    onclick="return confirm('Weegtijd Blok {{ $blok->nummer }} sluiten? Niet-gewogen judoka\'s worden als afwezig gemarkeerd.')">
+                                Einde weegtijd
+                            </button>
+                        </form>
                     @elseif($blok->weging_einde)
                     <div class="text-xs text-gray-400">{{ $blok->weging_einde->format('H:i') }}</div>
                     @endif
