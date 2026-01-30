@@ -202,6 +202,19 @@ Print van poules die op de mat staan, in matrix-formaat zoals de mat interface.
 - **Matrix layout** zoals leeg-schema, maar met namen ingevuld
 - **Oriëntatie:** Portrait (≤5 judoka's) / Landscape (≥6 judoka's)
 - **Scores optioneel:** als wedstrijden gespeeld zijn, toon W/J scores
+- **Selectie checkboxes:** per poule aanvinken welke mee geprint moeten worden
+- **Afwezige judoka's:** worden automatisch gefilterd (niet getoond)
+
+### Selectie Toolbar
+
+Bovenaan de pagina staat een toolbar (niet meegeprint):
+- **Alles aan / Alles uit** - snel alle poules (de)selecteren
+- **Teller** - "X van Y geselecteerd"
+- **Print knop** - print alleen geselecteerde poules
+
+Elke poule heeft een checkbox links van de titel. Uitgevinkte poules worden:
+- 50% transparant getoond (opacity-50)
+- Niet meegenomen in de print (display: none via CSS)
 
 ### Header per poule
 
