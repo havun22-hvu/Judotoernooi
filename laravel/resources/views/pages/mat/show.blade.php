@@ -50,7 +50,13 @@
 </div>
 @endforelse
 
+@if(request()->routeIs('rol.*'))
+<a href="{{ route('rol.mat') }}" class="text-blue-600 hover:text-blue-800">
+    ← Terug naar matten
+</a>
+@else
 <a href="{{ route('toernooi.mat.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
     ← Terug naar matten
 </a>
+@endif
 @endsection
