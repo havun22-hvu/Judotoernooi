@@ -461,6 +461,7 @@ class PubliekController extends Controller
                 'club' => $judoka->club?->naam,
                 'leeftijdsklasse' => $judoka->leeftijdsklasse,
                 'gewichtsklasse' => $judoka->gewichtsklasse,
+                'gewicht' => $judoka->gewicht, // opgegeven gewicht bij aanmelding
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,

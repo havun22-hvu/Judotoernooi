@@ -272,13 +272,14 @@ function selectJudoka(judoka) {
     // Show max 3 previous weighings as green numbers (no labels, no time)
     const vorigeGewichten = vorigeWegingen.slice(0, 3).map(w => w.gewicht).join(', ');
 
+    // Determine weight display: fixed class (-30, +70) or registration weight
+    const gewichtsklasse = judoka.gewichtsklasse || '';
+    const isVasteKlasse = gewichtsklasse.startsWith('-') || gewichtsklasse.startsWith('+');
+    const gewichtDisplay = isVasteKlasse ? gewichtsklasse : (judoka.gewicht ? `${judoka.gewicht} kg` : '');
+
     document.getElementById('judoka-info-compact').innerHTML = `
-        <div class="font-bold text-lg truncate">${judoka.naam}</div>
-        <div class="text-sm text-gray-600 flex flex-wrap gap-1">
-            <span>${judoka.club || 'Geen club'}</span>
-            <span>•</span>
-            <span>${judoka.gewichtsklasse || '?'} kg</span>
-        </div>
+        <div class="font-bold text-lg truncate">${judoka.naam}${gewichtDisplay ? ` • ${gewichtDisplay}` : ''}</div>
+        <div class="text-sm text-gray-600">${judoka.club || 'Geen club'}</div>
         ${isGewogen ? `<div class="text-green-600 font-medium">✓ ${judoka.gewicht_gewogen} kg</div>` : ''}
         ${vorigeWegingen.length > 0 ? `<div class="text-green-600 text-sm">${vorigeGewichten}</div>` : ''}
         ${maxBereikt ? `

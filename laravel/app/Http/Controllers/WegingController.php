@@ -92,6 +92,7 @@ class WegingController extends Controller
                 'club' => $judoka->club?->naam,
                 'leeftijdsklasse' => $judoka->leeftijdsklasse,
                 'gewichtsklasse' => $judoka->gewichtsklasse,
+                'gewicht' => $judoka->gewicht, // opgegeven gewicht bij aanmelding
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'mat' => $judoka->poules->first()?->mat?->nummer,
                 'aanwezig' => $judoka->isAanwezig(),
