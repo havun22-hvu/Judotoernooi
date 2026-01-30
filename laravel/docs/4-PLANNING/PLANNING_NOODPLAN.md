@@ -291,52 +291,50 @@ GET /noodplan/ingevuld-schemas/{blok?}
 
 ## 8. Live Backup Sync (Offline Noodplan)
 
+> **Status:** Geïmplementeerd (2026-01-30)
+
 ### Probleem
 Bij internet uitval tijdens wedstrijddag kan de server niet bereikt worden en zijn de laatste uitslagen niet printbaar.
 
-### Oplossing: SSE Live Sync
-Elke toernooi-pagina maakt automatisch een Server-Sent Events (SSE) verbinding. Alle uitslagen worden gepusht naar de browser en opgeslagen in localStorage.
+### Oplossing: Fetch Polling
+Elke toernooi-pagina synchroniseert automatisch elke 30 seconden alle poule data naar localStorage.
 
 ### Werking
 ```
-Mat tablet slaat uitslag op → Server ontvangt
-                                    ↓
-                            Server broadcast via SSE
-                                    ↓
-                            Alle open toernooi-pagina's ontvangen
-                                    ↓
-                            localStorage wordt bijgewerkt
-                                    ↓
-                            Bij internet uitval: print vanuit localStorage
+Toernooi pagina open → Fetch elke 30 sec
+                              ↓
+                       Server retourneert alle poule data
+                              ↓
+                       localStorage wordt bijgewerkt
+                              ↓
+                       Bij internet uitval: print vanuit localStorage
 ```
 
 ### Implementatie
 
-**SSE Endpoint:**
-- `GET /{organisator}/toernooi/{toernooi}/noodplan/stream` - SSE stream
-
-**Events:**
-- `uitslag` - Nieuwe wedstrijduitslag (bevat poule_id, wedstrijd_id, scores, winnaar)
-- `sync` - Volledige sync bij reconnect (alle actuele data)
+**API Endpoint:**
+- `GET /{organisator}/toernooi/{toernooi}/noodplan/sync-data` - JSON response
 
 **localStorage keys:**
 - `noodplan_{toernooi_id}_poules` - Alle poule data met uitslagen
 - `noodplan_{toernooi_id}_laatste_sync` - Timestamp laatste update
+- `noodplan_{toernooi_id}_count` - Aantal gespeelde wedstrijden
 
 **JavaScript (in layouts/app.blade.php):**
-- Start SSE verbinding automatisch op elke toernooi-pagina
-- Auto-reconnect bij verbinding verlies (5 sec delay)
-- Bij reconnect: volledige sync om gemiste updates op te halen
+- Start fetch polling automatisch op elke toernooi-pagina
+- Sync elke 30 seconden
+- Auto-restart na visibility change (slaapstand/tab switch)
+- Status indicator rechtsonder: "Backup actief | X uitslagen | HH:MM"
 
-**UI:**
-- Kleine indicator in header: "🟢" (verbonden) / "🔴" (offline)
-- Op noodplan pagina: "Offline Print Alle Matten" knop
-- Status: "X uitslagen opgeslagen | Laatste sync: HH:MM:SS"
+**Noodplan pagina:**
+- OFFLINE BACKUP sectie toont sync status
+- "Print vanuit backup" knop genereert print-ready HTML uit localStorage
+- Werkt ook als server offline is
 
 ### Gebruiker hoeft NIETS te doen
-- SSE start automatisch bij openen toernooi
+- Sync start automatisch bij openen toernooi pagina
 - Backup loopt op achtergrond
-- Auto-reconnect na slaapstand/netwerk hickup
+- Auto-restart na slaapstand/tab switch
 
 ---
 
