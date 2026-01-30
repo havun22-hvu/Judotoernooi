@@ -266,18 +266,10 @@ class ToernooiController extends Controller
 
     /**
      * Reset tournament - keeps settings, deletes judokas/poules/wedstrijden
+     * Access is controlled by route middleware - all organisators with access can reset
      */
     public function reset(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
-        $loggedIn = auth('organisator')->user();
-
-        // Eigenaar of sitebeheerder mag resetten
-        if (!$loggedIn || (!$loggedIn->isSitebeheerder() && !$loggedIn->ownsToernooi($toernooi))) {
-            return redirect()
-                ->route('organisator.dashboard', $organisator)
-                ->with('error', 'Je hebt geen rechten om dit toernooi te resetten');
-        }
-
         // Delete wedstrijden and poules
         $pouleIds = $toernooi->poules()->pluck('id');
         $wedstrijdCount = \App\Models\Wedstrijd::whereIn('poule_id', $pouleIds)->delete();
