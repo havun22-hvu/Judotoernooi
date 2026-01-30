@@ -7,6 +7,7 @@ use App\Models\Blok;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\WegingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,6 +15,10 @@ use Illuminate\View\View;
 
 class PubliekController extends Controller
 {
+    public function __construct(
+        private WegingService $wegingService
+    ) {}
+
     /**
      * Show public tournament page with all judokas
      */
@@ -472,6 +477,7 @@ class PubliekController extends Controller
 
     /**
      * Register weight for judoka (public route for PWA)
+     * Uses WegingService to properly save weging records
      */
     public function registreerGewicht(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
@@ -484,41 +490,25 @@ class PubliekController extends Controller
             'gewicht' => 'required|numeric|min:10|max:200',
         ]);
 
-        $gewicht = $validated['gewicht'];
-        $tolerantie = config('toernooi.gewicht_tolerantie', 0.5);
+        // Use WegingService to register weight (creates Weging record + updates judoka)
+        $resultaat = $this->wegingService->registreerGewicht(
+            $judoka,
+            $validated['gewicht'],
+            $request->user()?->name ?? 'PWA'
+        );
 
-        // Get weight class limits
-        $gewichtsklasse = $judoka->gewichtsklasse;
-        $binnenKlasse = true;
-        $opmerking = null;
-
-        if ($gewichtsklasse) {
-            // Parse weight class (e.g., "-30" or "30" for +30)
-            if (str_starts_with($gewichtsklasse, '-')) {
-                $maxGewicht = abs((float) $gewichtsklasse) + $tolerantie;
-                if ($gewicht > $maxGewicht) {
-                    $binnenKlasse = false;
-                    $opmerking = "Te zwaar voor klasse {$gewichtsklasse} kg (max {$maxGewicht} kg)";
-                }
-            } else {
-                $minGewicht = (float) $gewichtsklasse - $tolerantie;
-                if ($gewicht < $minGewicht) {
-                    $binnenKlasse = false;
-                    $opmerking = "Te licht voor klasse +{$gewichtsklasse} kg (min {$minGewicht} kg)";
-                }
-            }
+        if (!($resultaat['success'] ?? true)) {
+            return response()->json([
+                'success' => false,
+                'message' => $resultaat['error'] ?? 'Weging niet toegestaan',
+            ], 400);
         }
-
-        // Save weight
-        $judoka->update([
-            'gewicht_gewogen' => $gewicht,
-            'gewogen_op' => now(),
-        ]);
 
         return response()->json([
             'success' => true,
-            'binnen_klasse' => $binnenKlasse,
-            'opmerking' => $opmerking,
+            'binnen_klasse' => $resultaat['binnen_klasse'],
+            'alternatieve_poule' => $resultaat['alternatieve_poule'],
+            'opmerking' => $resultaat['opmerking'],
         ]);
     }
 
