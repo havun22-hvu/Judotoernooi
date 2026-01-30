@@ -606,6 +606,9 @@ class BlokMatVerdelingService
 
     /**
      * Distribute poules over mats within each block
+     *
+     * Sorting: poules sorted by weight (ascending), then distributed with load balancing.
+     * Result: lighter weight classes tend to end up on mat 1, heavier on last mat.
      */
     public function verdeelOverMatten(Toernooi $toernooi): void
     {
@@ -614,7 +617,12 @@ class BlokMatVerdelingService
 
         foreach ($toernooi->blokken as $blok) {
             $wedstrijdenPerMat = array_fill_keys($matIds, 0);
-            $poules = $blok->poules()->orderByDesc('aantal_wedstrijden')->get();
+
+            // Sort poules by weight ascending (light to heavy)
+            // gewichtsklasse format: "-24" or "24-27kg" - extract numeric value for sorting
+            $poules = $blok->poules()->get()->sortBy(function ($poule) {
+                return $this->extractGewichtVoorSortering($poule->gewichtsklasse);
+            });
 
             foreach ($poules as $poule) {
                 $besteMat = $this->vindMinsteWedstrijdenMat($matIds, $wedstrijdenPerMat);
@@ -624,6 +632,43 @@ class BlokMatVerdelingService
         }
 
         $this->fixKruisfinaleMatten($toernooi);
+    }
+
+    /**
+     * Extract numeric weight value for sorting
+     * Handles formats: "-24", "-24kg", "24-27kg", "24-27", etc.
+     */
+    private function extractGewichtVoorSortering(?string $gewichtsklasse): float
+    {
+        if (empty($gewichtsklasse)) {
+            return 0;
+        }
+
+        // Remove "kg" suffix
+        $cleaned = str_replace('kg', '', $gewichtsklasse);
+
+        // Handle range format "24-27" - take the first (min) value
+        if (str_contains($cleaned, '-') && !str_starts_with($cleaned, '-')) {
+            $parts = explode('-', $cleaned);
+            return (float) trim($parts[0]);
+        }
+
+        // Handle "-24" format (single weight class)
+        if (str_starts_with($cleaned, '-')) {
+            return (float) substr($cleaned, 1);
+        }
+
+        // Handle "+90" format
+        if (str_starts_with($cleaned, '+')) {
+            return (float) substr($cleaned, 1) + 1000; // Put + classes at the end
+        }
+
+        // Fallback: try to extract any number
+        if (preg_match('/(\d+(?:\.\d+)?)/', $cleaned, $matches)) {
+            return (float) $matches[1];
+        }
+
+        return 0;
     }
 
     /**
