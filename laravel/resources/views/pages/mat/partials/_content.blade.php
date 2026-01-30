@@ -17,10 +17,16 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $pouleKlaarUrl = route('mat.poule-klaar.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
             $huidigeWedstrijdUrl = route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams());
+            $pouleKlaarUrl = route('toernooi.mat.poule-klaar', $toernooi->routeParams());
         }
     @endphp
 <div x-data="matInterface()" x-init="init()">
@@ -1094,7 +1100,7 @@ function matInterface() {
 
         async markeerKlaar(poule) {
             try {
-                const response = await fetch(`{{ route('toernooi.mat.poule-klaar', $toernooi->routeParams()) }}`, {
+                const response = await fetch(`{{ $pouleKlaarUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
