@@ -217,6 +217,7 @@ De Weging heeft **2 totaal verschillende versies**:
   - Markeert alle niet-gewogen judoka's als afwezig
   - Bevestigingsdialog voordat actie uitgevoerd wordt
   - Knop toont "Gesloten" als blok al gesloten is
+  - **Technische werking:** Zie `3-TECHNICAL/FUNCTIES.md` → "Sluit Weegtijd"
 
 ### Versie 2: Weging vrijwilliger - Scanner PWA (standalone)
 
