@@ -102,8 +102,8 @@ class WedstrijdSchemaService
             };
         }
 
-        // Check if tournament has custom schemas
-        $toernooi = $poule->toernooi;
+        // Check if tournament has custom schemas (fresh load to avoid stale cache)
+        $toernooi = $poule->toernooi()->first();
         $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
 
         if (!empty($customSchemas[$aantal])) {
