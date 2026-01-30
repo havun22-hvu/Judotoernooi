@@ -1,8 +1,27 @@
+@if(request()->routeIs('rol.*'))
+{{-- Standalone layout for role-based access --}}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e40af">
+    <title>Mat {{ $mat->nummer }} - {{ $toernooi->naam }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-blue-800 text-white px-4 py-3 shadow-lg">
+        <h1 class="text-lg font-bold">🥋 Mat {{ $mat->nummer }}</h1>
+        <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
+    </header>
+    <main class="p-4 max-w-4xl mx-auto">
+@else
 @extends('layouts.app')
 
 @section('title', 'Mat ' . $mat->nummer)
 
 @section('content')
+@endif
 <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-800">Mat {{ $mat->nummer }} - Blok {{ $blok?->nummer ?? '?' }}</h1>
 </div>
@@ -54,9 +73,12 @@
 <a href="{{ route('rol.mat') }}" class="text-blue-600 hover:text-blue-800">
     ← Terug naar matten
 </a>
+    </main>
+</body>
+</html>
 @else
 <a href="{{ route('toernooi.mat.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
     ← Terug naar matten
 </a>
-@endif
 @endsection
+@endif
