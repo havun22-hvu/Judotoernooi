@@ -4,9 +4,25 @@
     $aantalActief = $poule->judokas->filter(fn($j) => $j->isActief($wegingGesloten))->count();
     // Total judokas (excluding absent) - for button logic
     $aantalTotaal = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
-    $aantalWedstrijden = $isEliminatie
-        ? $poule->berekenAantalWedstrijden($aantalActief)
-        : ($aantalActief >= 2 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0);
+    // Use actual count if poule has wedstrijden, otherwise estimate
+    if ($poule->wedstrijden->count() > 0) {
+        $aantalWedstrijden = $poule->wedstrijden->count();
+    } elseif ($isEliminatie) {
+        $aantalWedstrijden = $poule->berekenAantalWedstrijden($aantalActief);
+    } else {
+        // Estimate based on toernooi settings
+        $toernooi = $poule->toernooi;
+        $baseWedstrijden = $aantalActief >= 2 ? ($aantalActief * ($aantalActief - 1)) / 2 : 0;
+        if ($aantalActief == 2 && $toernooi?->best_of_three_bij_2) {
+            $aantalWedstrijden = 3;
+        } elseif ($aantalActief == 2 && ($toernooi?->dubbel_bij_2_judokas ?? true)) {
+            $aantalWedstrijden = 2;
+        } elseif ($aantalActief == 3 && ($toernooi?->dubbel_bij_3_judokas ?? true)) {
+            $aantalWedstrijden = 6;
+        } else {
+            $aantalWedstrijden = $baseWedstrijden;
+        }
+    }
     // Problematisch: normale poule <3 judoka's OF eliminatie <8 judoka's
     $isProblematisch = $aantalActief > 0 && $aantalActief < ($isEliminatie ? 8 : 3);
 
