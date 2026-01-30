@@ -445,6 +445,9 @@ class PubliekController extends Controller
             return response()->json(['success' => false, 'message' => 'Judoka niet gevonden']);
         }
 
+        $maxWegingen = $toernooi->max_wegingen;
+        $aantalWegingen = $judoka->wegingen->count();
+
         return response()->json([
             'success' => true,
             'judoka' => [
@@ -456,10 +459,13 @@ class PubliekController extends Controller
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
-                'vorige_wegingen' => $judoka->wegingen->map(fn($w) => [
+                'vorige_wegingen' => $judoka->wegingen->take(5)->map(fn($w) => [
                     'gewicht' => $w->gewicht,
                     'tijd' => $w->created_at->format('H:i'),
                 ])->toArray(),
+                'aantal_wegingen' => $aantalWegingen,
+                'max_wegingen' => $maxWegingen,
+                'max_bereikt' => $maxWegingen && $aantalWegingen >= $maxWegingen,
             ],
         ]);
     }

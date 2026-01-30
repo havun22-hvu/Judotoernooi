@@ -81,6 +81,9 @@ class WegingController extends Controller
 
         $judoka->load(['club', 'poules.blok', 'poules.mat', 'wegingen']);
 
+        $maxWegingen = $toernooi->max_wegingen;
+        $aantalWegingen = $judoka->wegingen->count();
+
         return response()->json([
             'success' => true,
             'judoka' => [
@@ -94,11 +97,13 @@ class WegingController extends Controller
                 'aanwezig' => $judoka->isAanwezig(),
                 'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
-                'aantal_wegingen' => $judoka->wegingen->count(),
-                'vorige_wegingen' => $judoka->wegingen->map(fn($w) => [
+                'aantal_wegingen' => $aantalWegingen,
+                'vorige_wegingen' => $judoka->wegingen->take(5)->map(fn($w) => [
                     'gewicht' => $w->gewicht,
                     'tijd' => $w->created_at->format('H:i'),
                 ])->toArray(),
+                'max_wegingen' => $maxWegingen,
+                'max_bereikt' => $maxWegingen && $aantalWegingen >= $maxWegingen,
             ],
         ]);
     }
