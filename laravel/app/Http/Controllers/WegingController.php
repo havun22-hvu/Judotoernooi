@@ -79,7 +79,7 @@ class WegingController extends Controller
             ], 404);
         }
 
-        $judoka->load(['club', 'poules.blok', 'poules.mat']);
+        $judoka->load(['club', 'poules.blok', 'poules.mat', 'wegingen']);
 
         return response()->json([
             'success' => true,
@@ -94,7 +94,11 @@ class WegingController extends Controller
                 'aanwezig' => $judoka->isAanwezig(),
                 'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
-                'aantal_wegingen' => $judoka->wegingen()->count(),
+                'aantal_wegingen' => $judoka->wegingen->count(),
+                'vorige_wegingen' => $judoka->wegingen->map(fn($w) => [
+                    'gewicht' => $w->gewicht,
+                    'tijd' => $w->created_at->format('H:i'),
+                ])->toArray(),
             ],
         ]);
     }

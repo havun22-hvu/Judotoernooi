@@ -260,8 +260,8 @@ function selectJudoka(judoka) {
 
     const isGewogen = judoka.gewogen || judoka.gewicht_gewogen;
 
-    // Find previous weighings for this judoka from local history
-    const vorigeWegingen = history.filter(h => h.naam === judoka.naam);
+    // Use previous weighings from server (all weigh stations) if available
+    const vorigeWegingen = judoka.vorige_wegingen || [];
 
     // Compact header info
     document.getElementById('judoka-info-compact').innerHTML = `
@@ -274,8 +274,8 @@ function selectJudoka(judoka) {
         </div>
         ${vorigeWegingen.length > 0 ? `
         <div class="mt-1 pt-1 border-t border-gray-200 text-xs text-gray-500">
-            <span class="font-medium">Vorige:</span>
-            ${vorigeWegingen.map(w => `<span class="ml-1 ${w.binnenKlasse ? 'text-gray-600' : 'text-yellow-600'}">${w.gewicht}kg</span>`).join(',')}
+            <span class="font-medium">Vorige (${vorigeWegingen.length}x):</span>
+            ${vorigeWegingen.map(w => `<span class="ml-1">${w.gewicht}kg <span class="text-gray-400">(${w.tijd})</span></span>`).join(',')}
         </div>
         ` : ''}
     `;

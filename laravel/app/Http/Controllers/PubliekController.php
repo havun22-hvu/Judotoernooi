@@ -438,7 +438,7 @@ class PubliekController extends Controller
 
         $judoka = Judoka::where('toernooi_id', $toernooi->id)
             ->where('qr_code', $qrCode)
-            ->with(['club', 'poules.blok'])
+            ->with(['club', 'poules.blok', 'wegingen'])
             ->first();
 
         if (!$judoka) {
@@ -456,6 +456,10 @@ class PubliekController extends Controller
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'gewogen' => $judoka->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
+                'vorige_wegingen' => $judoka->wegingen->map(fn($w) => [
+                    'gewicht' => $w->gewicht,
+                    'tijd' => $w->created_at->format('H:i'),
+                ])->toArray(),
             ],
         ]);
     }
