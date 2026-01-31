@@ -160,7 +160,7 @@
 @else
 
 <!-- Print toolbar (niet printen) -->
-<div class="print-toolbar no-print mb-6 p-4 bg-gray-100 rounded-lg sticky top-0 z-50 shadow">
+<div class="print-toolbar no-print mb-6 p-4 bg-gray-100 rounded-lg sticky top-0 z-50">
     <div class="flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
             <span class="font-medium text-gray-700">Selecteer schema's om te printen:</span>
