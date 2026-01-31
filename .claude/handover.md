@@ -33,27 +33,31 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
 
 ## Implementatie Roadmap (TODO)
 
-### Fase 1a: Database Download + Offline Print (MVP - snel waarde)
-1. **Database download/export functie**
-   - Download toernooi data naar lokale SQLite
-   - Moet werken vóór wedstrijddag (met internet)
-   - Geen PHP nodig op client
+### Fase 1a: Database Download + Offline Print (MVP - snel waarde) ✅ KLAAR
+1. **Database download/export functie** ✅
+   - JSON download van server of localStorage
+   - JSON bestand laden voor offline gebruik
+   - Offline detectie banner
 
-2. **Offline matrix print vanuit localStorage**
-   - Bestaande Live backup al in localStorage
-   - Matrix print moet ook offline werken
+2. **Offline matrix print vanuit localStorage** ✅
+   - Live wedstrijd schema's werkt offline
+   - JSON backup kan worden ingeladen
 
-### Fase 1b: Lokale Server Launcher
-1. **Laravel Herd installatie**
-   - Gratis, cross-platform (Windows + Mac)
-   - Makkelijkste optie voor leken
-   - Installeert PHP/nginx automatisch
+### Fase 1b: Lokale Server Launcher ✅ KLAAR
+1. **Laravel Herd installatie** ✅
+   - Instructies in NOODPLAN-HANDLEIDING.md
+   - start-server.bat (Windows)
+   - start-server.command (Mac)
 
-2. **Server rol configuratie scherm**
-   - Bij eerste start: keuze Primary of Standby
-   - Opslaan in `config/local-server.php`
-   - IP validatie bij elke start
-   - Zie REDUNDANTIE.md sectie 10 voor mockup
+2. **Server rol configuratie scherm** ✅
+   - `/local-server/setup` - Rol kiezen (Primary/Standby)
+   - `/local-server` - Dashboard met status
+   - Config opslag in `.env`
+
+3. **Sync API** ✅
+   - `/local-server/sync` - Alle toernooi data
+   - `/local-server/heartbeat` - Heartbeat endpoint
+   - `/local-server/health` - Health check
 
 ### Fase 2: Hot Standby
 1. **Sync API tussen Primary en Standby**
