@@ -17,6 +17,43 @@
         </div>
     </div>
 
+    <!-- OFFLINE MODUS BANNER -->
+    <div x-data="offlineDetector()" x-init="init()" x-show="isOffline" x-cloak
+         class="bg-orange-100 border-l-4 border-orange-500 p-4 mb-6 rounded">
+        <div class="flex items-center">
+            <span class="text-2xl mr-3">⚠️</span>
+            <div>
+                <h3 class="font-bold text-orange-800">Offline Modus</h3>
+                <p class="text-orange-700 text-sm">Server niet bereikbaar. Je kunt nog steeds printen vanuit de lokale backup (localStorage).</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function offlineDetector() {
+            return {
+                isOffline: false,
+                init() {
+                    this.checkConnection();
+                    setInterval(() => this.checkConnection(), 10000);
+                    window.addEventListener('online', () => this.isOffline = false);
+                    window.addEventListener('offline', () => this.isOffline = true);
+                },
+                async checkConnection() {
+                    try {
+                        const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}', {
+                            method: 'HEAD',
+                            cache: 'no-store'
+                        });
+                        this.isOffline = !response.ok;
+                    } catch (e) {
+                        this.isOffline = true;
+                    }
+                }
+            };
+        }
+    </script>
+
     <!-- POULE EXPORT -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
@@ -46,6 +83,88 @@
                     <li>Met leeftijds-/gewichtsklasse</li>
                 </ul>
             </div>
+
+            <!-- JSON Download voor offline gebruik -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="jsonDownloader()">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
+                        <p class="text-sm text-purple-600">Download alle wedstrijddata voor offline gebruik</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="downloadFromServer()" type="button"
+                                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
+                            Download van server
+                        </button>
+                        <button @click="downloadFromStorage()" type="button"
+                                class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium"
+                                :disabled="!hasLocalData" :class="{ 'opacity-50 cursor-not-allowed': !hasLocalData }">
+                            Download uit browser
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-purple-500" x-show="hasLocalData">
+                    Lokale data beschikbaar (<span x-text="localDataCount"></span> uitslagen)
+                </p>
+            </div>
+
+            <script>
+                function jsonDownloader() {
+                    return {
+                        toernooiId: {{ $toernooi->id }},
+                        toernooiNaam: '{{ $toernooi->slug }}',
+                        hasLocalData: false,
+                        localDataCount: 0,
+
+                        init() {
+                            this.checkLocalData();
+                        },
+
+                        checkLocalData() {
+                            const storageKey = `noodplan_${this.toernooiId}_poules`;
+                            const countKey = `noodplan_${this.toernooiId}_count`;
+                            const data = localStorage.getItem(storageKey);
+                            this.hasLocalData = !!data;
+                            this.localDataCount = parseInt(localStorage.getItem(countKey) || '0');
+                        },
+
+                        async downloadFromServer() {
+                            try {
+                                const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
+                                if (!response.ok) throw new Error('Server error');
+                                const data = await response.json();
+                                this.saveAsFile(data);
+                            } catch (e) {
+                                alert('Server niet bereikbaar. Probeer "Download uit browser" als je lokale data hebt.');
+                            }
+                        },
+
+                        downloadFromStorage() {
+                            const storageKey = `noodplan_${this.toernooiId}_poules`;
+                            const data = localStorage.getItem(storageKey);
+                            if (!data) {
+                                alert('Geen lokale data beschikbaar.');
+                                return;
+                            }
+                            this.saveAsFile(JSON.parse(data));
+                        },
+
+                        saveAsFile(data) {
+                            const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+                            const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
+                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                        }
+                    };
+                }
+            </script>
 
             <!-- Weeglijsten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -171,9 +290,17 @@
         </h2>
 
         <div class="space-y-4">
-            <!-- Status info -->
-            <div class="p-3 rounded text-sm" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
-                <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+            <!-- Status info + laden van JSON backup -->
+            <div class="p-3 rounded text-sm flex items-center justify-between" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
+                <div>
+                    <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+                </div>
+                <div class="flex gap-2">
+                    <label class="px-3 py-1 bg-white border rounded text-xs cursor-pointer hover:bg-gray-50">
+                        📁 Laad JSON backup
+                        <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
+                    </label>
+                </div>
             </div>
 
             <!-- Ingevulde schema's (matrix) - judoka's ingevuld, uitslagen leeg -->
@@ -505,6 +632,54 @@ function abbreviateClub(name) {
                     return html;
                 },
 
+                loadJsonBackup(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+
+                            // Valideer dat het juiste toernooi is
+                            if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
+                                if (!confirm(`Dit backup bestand is van een ander toernooi (ID: ${data.toernooi_id}). Toch laden?`)) {
+                                    return;
+                                }
+                            }
+
+                            // Sla op in localStorage
+                            const storageKey = `noodplan_${this.toernooiId}_poules`;
+                            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                            const countKey = `noodplan_${this.toernooiId}_count`;
+
+                            localStorage.setItem(storageKey, JSON.stringify(data));
+                            localStorage.setItem(syncKey, new Date().toISOString());
+
+                            // Tel uitslagen
+                            let count = 0;
+                            if (data.poules) {
+                                data.poules.forEach(p => {
+                                    if (p.wedstrijden) {
+                                        p.wedstrijden.forEach(w => {
+                                            if (w.is_gespeeld) count++;
+                                        });
+                                    }
+                                });
+                            }
+                            localStorage.setItem(countKey, count.toString());
+
+                            // Update UI
+                            this.loadFromStorage();
+                            alert(`Backup geladen: ${data.poules?.length || 0} poules, ${count} uitslagen`);
+                        } catch (err) {
+                            alert('Ongeldig JSON bestand: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                    event.target.value = ''; // Reset input
+                },
+
                 generateSchema(n) {
                     // Standard round-robin algorithm
                     const schema = [];
@@ -536,8 +711,9 @@ function abbreviateClub(name) {
     <div class="p-4 bg-blue-50 rounded-lg">
         <h3 class="font-bold text-blue-800 mb-2">Tip voor noodgevallen</h3>
         <ul class="text-sm text-blue-700 space-y-1">
-            <li>• Download de Excel backup <strong>voor</strong> het toernooi begint</li>
-            <li>• Open in Google Sheets of Excel op je telefoon/tablet</li>
+            <li>• Download de <strong>Excel backup</strong> en <strong>JSON backup</strong> vóór het toernooi begint</li>
+            <li>• De JSON backup bevat alle wedstrijddata en kan offline worden ingelezen</li>
+            <li>• "Live wedstrijd schema's" werkt ook offline via de browser backup (localStorage)</li>
             <li>• Lege wedstrijdschema's: vul handmatig in bij stroomuitval</li>
             <li>• Contactlijst: bel coaches bij problemen</li>
         </ul>
