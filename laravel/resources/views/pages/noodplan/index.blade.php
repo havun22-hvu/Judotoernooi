@@ -308,7 +308,8 @@
         .plts-cel { background: #fef9c3 !important; color: #000 !important; }
         .gespeeld { background: #d1fae5 !important; }
         .poule-page.landscape { page: landscape; }
-        .poule-title { background: #1f2937 !important; color: white !important; }
+        .title-row td { background: #1f2937 !important; color: white !important; }
+        .info-row td { background: #f3f4f6 !important; }
     }
     @page { size: A4 portrait; margin: 0.5cm; }
     @page landscape { size: A4 landscape; margin: 0.5cm; }
@@ -316,9 +317,8 @@
     .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .toolbar-controls { display: flex; align-items: center; gap: 15px; }
-    .poule-header { border: 2px solid #333; border-bottom: none; width: fit-content; }
-    .poule-title { background: #1f2937; color: white; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; }
-    .poule-info { background: #f3f4f6; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; }
+    .title-row td { background: #1f2937; color: white; padding: 6px 12px; font-size: 11px; border: none; }
+    .info-row td { background: #f3f4f6; padding: 6px 12px; font-size: 12px; border: none; border-bottom: 2px solid #333; }
     .poule-checkbox { display: flex; align-items: center; gap: 8px; }
     .poule-checkbox input { width: 18px; height: 18px; cursor: pointer; }
     .schema-table { width: auto; border-collapse: collapse; }
@@ -420,24 +420,34 @@ function abbreviateClub(name) {
                             wedstrijdByPositie[idx] = w;
                         });
 
+                        // Bereken totaal kolommen: Nr + Naam + (wedstrijden * 2) + WP + JP + Plts
+                        const totalCols = 5 + (schema.length * 2);
+
                         html += `<div class="poule-page ${isLandscape ? 'landscape' : ''}">
-                            <div class="poule-header">
-                                <div class="poule-title">
-                                    <span>${data.toernooi_naam || 'Toernooi'}</span>
-                                    <span>${data.toernooi_datum || ''}</span>
-                                </div>
-                                <div class="poule-info">
-                                    <div class="poule-checkbox no-print">
-                                        <input type="checkbox" checked onchange="togglePoule(this)">
-                                        <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
-                                    </div>
-                                    <span style="margin-left:16px">Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
-                                </div>
-                            </div>
                             <table class="schema-table">
-                                <thead><tr class="header-row">
-                                    <th class="nr-cel">Nr</th>
-                                    <th class="naam-cel" style="text-align:left">Naam</th>`;
+                                <thead>
+                                    <tr class="title-row">
+                                        <td colspan="${totalCols}">
+                                            <div style="display:flex;justify-content:space-between;">
+                                                <span>${data.toernooi_naam || 'Toernooi'}</span>
+                                                <span>${data.toernooi_datum || ''}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="info-row">
+                                        <td colspan="${totalCols}">
+                                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                                <div class="poule-checkbox no-print">
+                                                    <input type="checkbox" checked onchange="togglePoule(this)">
+                                                    <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
+                                                </div>
+                                                <span>Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="header-row">
+                                        <th class="nr-cel">Nr</th>
+                                        <th class="naam-cel" style="text-align:left">Naam</th>`;
 
                         schema.forEach((_, idx) => {
                             html += `<th colspan="2" style="min-width:48px;text-align:center"><div style="font-weight:bold">${idx + 1}</div><div class="sub-header">W &nbsp; J</div></th>`;

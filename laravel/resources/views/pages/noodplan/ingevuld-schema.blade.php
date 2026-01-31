@@ -46,9 +46,12 @@
             background: #fef9c3 !important;
             color: #000 !important;
         }
-        .poule-title {
+        .title-row td {
             background: #1f2937 !important;
             color: white !important;
+        }
+        .info-row td {
+            background: #f3f4f6 !important;
         }
         /* Page breaks between poules */
         .poule-page:not(.print-exclude) {
@@ -149,24 +152,19 @@
         text-align: center;
         font-size: 12px;
     }
-    .poule-header {
-        border: 2px solid #333;
-        border-bottom: none;
-    }
-    .poule-title {
+    .title-row td {
         background: #1f2937;
         color: white;
         padding: 6px 12px;
         font-size: 11px;
-        display: flex;
-        justify-content: space-between;
+        border: none;
     }
-    .poule-info {
+    .info-row td {
         background: #f3f4f6;
         padding: 6px 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        font-size: 12px;
+        border: none;
+        border-bottom: 2px solid #333;
     }
 </style>
 @endpush
@@ -234,42 +232,45 @@ function abbreviateClubName($name, $maxLength = 15) {
     $judokas = $poule->judokas->values();
 @endphp
 
+@php
+    // Bereken totaal aantal kolommen: Nr + Naam + (wedstrijden * 2) + WP + JP + Plts = 2 + (n*2) + 3 = 5 + (n*2)
+    $totalCols = 5 + (count($schema) * 2);
+@endphp
 <div class="poule-page {{ $isLandscape ? 'landscape' : '' }}"
      x-data="pouleSelect()"
      :class="{ 'print-exclude': !printInclude, 'opacity-50': !printInclude }"
      data-poule-id="{{ $poule->id }}">
-    <!-- Poule header -->
-    <div class="poule-header" style="width: fit-content;">
-        <!-- Toernooi titel -->
-        <div class="poule-title">
-            <span>{{ $toernooi->naam }}</span>
-            <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
-        </div>
-        <!-- Poule info -->
-        <div class="poule-info">
-            <div class="flex items-center gap-3">
-                <!-- Print checkbox -->
-                <label class="no-print flex items-center cursor-pointer">
-                    <input type="checkbox" x-model="printInclude" checked class="w-5 h-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500">
-                </label>
-                <span class="font-bold">
-                    Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
-                </span>
-            </div>
-            <div class="text-sm text-gray-600 ml-4">
-                @if($poule->mat)
-                <span class="font-bold">Mat {{ $poule->mat->nummer }}</span> |
-                @endif
-                @if($poule->blok)
-                Blok {{ $poule->blok->nummer }}
-                @endif
-            </div>
-        </div>
-    </div>
 
-    <!-- Matrix tabel -->
+    <!-- Matrix tabel met header rows -->
     <table class="schema-table text-sm">
         <thead>
+            <!-- Toernooi titel row -->
+            <tr class="title-row">
+                <td colspan="{{ $totalCols }}">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>{{ $toernooi->naam }}</span>
+                        <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- Poule info row -->
+            <tr class="info-row">
+                <td colspan="{{ $totalCols }}">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <label class="no-print" style="cursor: pointer;">
+                                <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
+                            </label>
+                            <strong>Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</strong>
+                        </div>
+                        <span>
+                            @if($poule->mat)<strong>Mat {{ $poule->mat->nummer }}</strong> | @endif
+                            @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
+                        </span>
+                    </div>
+                </td>
+            </tr>
+            <!-- Column headers -->
             <tr class="header-row">
                 <th class="px-1 py-1 text-center nr-cel">Nr</th>
                 <th class="px-2 py-1 text-left naam-cel">Naam</th>
