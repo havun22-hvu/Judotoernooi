@@ -782,9 +782,27 @@ function matInterface() {
     // Laad laatst geselecteerde blok/mat uit localStorage
     const opgeslagen = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
+    // Validate saved blok/mat still exist (may have been deleted)
+    let savedBlokId = opgeslagen.blokId;
+    let savedMatId = opgeslagen.matId;
+
+    // Check if saved blok still exists
+    if (savedBlokId && !blokkenData.find(b => b.id == savedBlokId)) {
+        console.log('[Mat] Saved blok', savedBlokId, 'no longer exists, clearing');
+        savedBlokId = '';
+        savedMatId = '';
+        localStorage.removeItem(storageKey);
+    }
+    // Check if saved mat still exists
+    if (savedMatId && !mattenData.find(m => m.id == savedMatId)) {
+        console.log('[Mat] Saved mat', savedMatId, 'no longer exists, clearing');
+        savedMatId = '';
+        localStorage.removeItem(storageKey);
+    }
+
     return {
-        blokId: opgeslagen.blokId || (voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : ''),
-        matId: opgeslagen.matId || '',
+        blokId: savedBlokId || (voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : ''),
+        matId: savedMatId || '',
         poules: [],
         blokkenData,
         mattenData,
@@ -848,9 +866,21 @@ function matInterface() {
                 console.log('[Mat] Response status:', response.status);
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('[Mat] Error response:', errorText);
-                    alert('Fout bij laden wedstrijden: ' + response.status);
+                    let errorMsg = 'Fout bij laden wedstrijden: ' + response.status;
+                    try {
+                        const errorData = await response.json();
+                        errorMsg = errorData.error || errorMsg;
+                        // If blok/mat no longer exists, clear selection
+                        if (errorData.invalid_blok || errorData.invalid_mat) {
+                            console.log('[Mat] Invalid blok/mat, clearing selection');
+                            this.blokId = '';
+                            this.matId = '';
+                            localStorage.removeItem(storageKey);
+                        }
+                    } catch (e) {
+                        console.error('[Mat] Error response:', await response.text());
+                    }
+                    alert(errorMsg);
                     this.poules = [];
                     return;
                 }
