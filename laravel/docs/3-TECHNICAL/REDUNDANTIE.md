@@ -542,5 +542,5 @@ Maximaal 5 seconden aan wedstrijdresultaten. Dit zijn typisch 0-1 wedstrijden.
 ## 14. Contact
 
 Bij vragen over dit veiligheidsplan:
-- **Technisch:** Havun (henkvu@gmail.com)
+- **Technisch:** Havun (havun22@gmail.com)
 - **Platform:** judotournament.org
