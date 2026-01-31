@@ -119,6 +119,30 @@ Met dit noodplan blijft je toernooi **altijd** doorlopen.
 **Wat is het?**
 Een set van 3 kleine witte kastjes die samen een wifi netwerk maken.
 
+**Belangrijk:** De Deco's worden **alleen op stroom** aangesloten, NIET op de laptops! Ze maken hun eigen wifi netwerk waar laptops en tablets draadloos mee verbinden.
+
+**Hoeveel Deco's heb je nodig?**
+
+| Aantal | Dekking | Geschikt voor |
+|--------|---------|---------------|
+| 2 | ~260m² | Kleine sporthal |
+| 3 | ~400m² | Normale sporthal (standaard) |
+| 5 | ~650m² | Grote sporthal |
+| 10 | ~1300m² | Evenementenhal |
+
+> Je kunt tot 10 Deco's combineren in één netwerk.
+
+**Fysieke aansluiting:**
+```
+Stopcontact        Stopcontact        Stopcontact
+     │                  │                  │
+ ┌───┴───┐          ┌───┴───┐          ┌───┴───┐
+ │ Deco 1│ ~~~~~~~~ │ Deco 2│ ~~~~~~~~ │ Deco 3│
+ └───────┘  (wifi)  └───────┘  (wifi)  └───────┘
+
+Dat is alles! Alleen stroom, geen kabels tussen Deco's nodig.
+```
+
 **Hoe werkt het?**
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -459,13 +483,21 @@ TOTAAL:            6 stopcontacten
 1. Ga naar Laptop B
 2. Dubbelklik "Activeer als Hoofdserver"
 3. Wacht 30 seconden
-4. Meld aan mat-vrijwilligers:
-   "Nieuw IP: 192.168.1.101"
-   OF
-   "Refresh de pagina"
-5. Test 1 tablet
-6. Als het werkt: doorgaan
+4. Open Deco app op je telefoon:
+   - Ga naar "Apparaten" of "Clients"
+   - Zoek Laptop B
+   - Wijzig IP-adres naar: 192.168.1.100
+     (dit was het IP van Laptop A)
+5. Zet wifi uit/aan op Laptop B
+   (om nieuw IP te krijgen)
+6. Test 1 tablet - deze hoeft NIKS te wijzigen!
+7. Als het werkt: doorgaan
 ```
+
+**Waarom dit werkt:**
+- Tablets waren verbonden met 192.168.1.100
+- Laptop B krijgt nu dat IP via Deco
+- Tablets merken niks, verbinden automatisch opnieuw
 
 **Hoelang duurt dit?**
 - 2-3 minuten maximaal
