@@ -137,7 +137,7 @@ class JudokaController extends Controller
         // Return to filtered list if came from filter
         $redirectRoute = $request->input('filter') === 'onvolledig'
             ? route('toernooi.judoka.index', $toernooi->routeParams()) . '?filter=onvolledig'
-            : route('toernooi.judoka.show', [$toernooi, $judoka]);
+            : route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka]));
 
         return redirect($redirectRoute)->with('success', 'Judoka bijgewerkt');
     }
