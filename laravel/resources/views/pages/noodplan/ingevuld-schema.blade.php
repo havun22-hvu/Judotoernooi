@@ -38,6 +38,9 @@
         .score-cel.inactief {
             background: #1f2937 !important;
         }
+        .score-cel.gespeeld {
+            background: #d1fae5 !important;
+        }
         .totaal-cel {
             background: #f3f4f6 !important;
             color: #000 !important;
@@ -137,6 +140,9 @@
     .score-cel.inactief {
         background: #1f2937;
     }
+    .score-cel.gespeeld {
+        background: #d1fae5;
+    }
     .totaal-cel {
         width: 30px;
         background: #f3f4f6;
@@ -221,6 +227,11 @@ function abbreviateClubName($name, $maxLength = 15) {
 }
 @endphp
 
+@php
+    // showScores = true voor live versie, false voor lege versie
+    $showScores = $showScores ?? false;
+@endphp
+
 @foreach($poulesMetSchema as $index => $item)
 @php
     $poule = $item['poule'];
@@ -230,6 +241,14 @@ function abbreviateClubName($name, $maxLength = 15) {
     // Landscape als meer dan 6 wedstrijden (kolommen)
     $isLandscape = $aantalWedstrijden > 6;
     $judokas = $poule->judokas->values();
+
+    // Maak wedstrijd lookup op positie als we scores tonen
+    $wedstrijdByPositie = [];
+    if ($showScores) {
+        foreach ($poule->wedstrijden as $w) {
+            $wedstrijdByPositie[$w->volgorde ?? $w->id] = $w;
+        }
+    }
 @endphp
 
 @php
@@ -289,6 +308,8 @@ function abbreviateClubName($name, $maxLength = 15) {
             @foreach($judokas as $idx => $judoka)
             @php
                 $judokaNr = $idx + 1;
+                $totaalWP = 0;
+                $totaalJP = 0;
             @endphp
             <tr class="judoka-row">
                 <td class="px-1 text-center font-bold nr-cel">{{ $judokaNr }}</td>
@@ -296,24 +317,49 @@ function abbreviateClubName($name, $maxLength = 15) {
                     {{ $judoka->naam }}
                     <span class="text-gray-400 text-xs">({{ abbreviateClubName($judoka->club?->naam) }})</span>
                 </td>
-                @foreach($schema as $schemaWedstrijd)
+                @foreach($schema as $wedstrijdIdx => $schemaWedstrijd)
                     @php
                         // Check if this judoka participates in this match
                         $witNr = $schemaWedstrijd[0];
                         $blauwNr = $schemaWedstrijd[1];
                         $participates = in_array($judokaNr, $schemaWedstrijd);
+
+                        $wp = '';
+                        $jp = '';
+                        $gespeeld = false;
+
+                        if ($showScores && $participates) {
+                            // Zoek de wedstrijd in de database wedstrijden
+                            $witJudoka = $judokas[$witNr - 1] ?? null;
+                            $blauwJudoka = $judokas[$blauwNr - 1] ?? null;
+
+                            $wedstrijd = $poule->wedstrijden->first(function($w) use ($witJudoka, $blauwJudoka) {
+                                return ($w->judoka_wit_id == $witJudoka?->id && $w->judoka_blauw_id == $blauwJudoka?->id)
+                                    || ($w->judoka_blauw_id == $witJudoka?->id && $w->judoka_wit_id == $blauwJudoka?->id);
+                            });
+
+                            if ($wedstrijd && $wedstrijd->is_gespeeld) {
+                                $gespeeld = true;
+                                // Is deze judoka wit of blauw in de wedstrijd?
+                                $isWit = $wedstrijd->judoka_wit_id == $judoka->id;
+                                $wp = $isWit ? ($wedstrijd->score_wit ?? 0) : ($wedstrijd->score_blauw ?? 0);
+                                $jp = $isWit ? ($wedstrijd->judopunten_wit ?? 0) : ($wedstrijd->judopunten_blauw ?? 0);
+
+                                $totaalWP += (int)$wp;
+                                $totaalJP += (int)$jp;
+                            }
+                        }
                     @endphp
                     @if($participates)
-                    {{-- Lege cellen voor handmatig invullen --}}
-                    <td class="score-cel w-cel"></td>
-                    <td class="score-cel j-cel"></td>
+                    <td class="score-cel w-cel {{ $gespeeld ? 'gespeeld' : '' }}">{{ $showScores && $gespeeld ? $wp : '' }}</td>
+                    <td class="score-cel j-cel {{ $gespeeld ? 'gespeeld' : '' }}">{{ $showScores && $gespeeld ? $jp : '' }}</td>
                     @else
                     <td class="score-cel w-cel inactief"></td>
                     <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
-                <td class="totaal-cel"></td>
-                <td class="totaal-cel"></td>
+                <td class="totaal-cel">{{ $showScores && $totaalWP > 0 ? $totaalWP : '' }}</td>
+                <td class="totaal-cel">{{ $showScores && $totaalJP > 0 ? $totaalJP : '' }}</td>
                 <td class="plts-cel"></td>
             </tr>
             @endforeach

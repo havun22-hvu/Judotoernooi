@@ -21,6 +21,28 @@
             </div>
         </div>
 
+        <!-- This Server Identity -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6 border-2 {{ config('local-server.role') === 'primary' ? 'border-blue-500' : 'border-orange-500' }}">
+            <div class="flex justify-between items-center">
+                <div>
+                    <div class="text-sm text-gray-400">Deze laptop</div>
+                    <div class="text-2xl font-bold">{{ config('local-server.device_name') ?: gethostname() }}</div>
+                </div>
+                <div class="text-right">
+                    @if(config('local-server.role') === 'primary')
+                        <span class="px-4 py-2 bg-blue-600 text-white text-xl font-bold rounded">PRIMARY</span>
+                    @elseif(config('local-server.role') === 'standby')
+                        <span class="px-4 py-2 bg-orange-600 text-white text-xl font-bold rounded">STANDBY</span>
+                    @else
+                        <span class="px-4 py-2 bg-gray-600 text-white font-bold rounded">NIET INGESTELD</span>
+                    @endif
+                </div>
+            </div>
+            <div class="mt-2 text-sm text-gray-400 font-mono">
+                IP: {{ config('local-server.ip') ?? 'Niet geconfigureerd' }}
+            </div>
+        </div>
+
         <!-- Main Status Grid -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <!-- Cloud Sync -->

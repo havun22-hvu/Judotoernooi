@@ -11,8 +11,22 @@
     <div class="max-w-2xl mx-auto">
         <!-- Header -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Pre-Flight Check</h1>
-            <p class="text-gray-600">Controleer alle systemen voor de wedstrijddag</p>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 mb-2">Pre-Flight Check</h1>
+                    <p class="text-gray-600">Controleer alle systemen voor de wedstrijddag</p>
+                </div>
+                <div class="text-right">
+                    @if(config('local-server.role') === 'primary')
+                        <span class="px-3 py-1 bg-blue-100 text-blue-800 font-bold rounded">PRIMARY</span>
+                    @elseif(config('local-server.role') === 'standby')
+                        <span class="px-3 py-1 bg-orange-100 text-orange-800 font-bold rounded">STANDBY</span>
+                    @else
+                        <span class="px-3 py-1 bg-gray-100 text-gray-800 font-bold rounded">NIET INGESTELD</span>
+                    @endif
+                    <div class="text-sm text-gray-500 mt-1 font-mono">{{ config('local-server.device_name') ?: gethostname() }}</div>
+                </div>
+            </div>
         </div>
 
         <!-- Progress -->

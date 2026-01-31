@@ -344,6 +344,64 @@ class NoodplanController extends Controller
     }
 
     /**
+     * Print live wedstrijdschema's in matrix-formaat MET scores
+     * Zelfde layout als ingevuld-schema, maar met actuele uitslagen
+     */
+    public function printLiveSchemas(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
+    {
+        // Free tier: not available
+        if ($toernooi->isFreeTier()) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => 'Live wedstrijdschema\'s',
+            ]);
+        }
+
+        $blok = null;
+        // Filter afwezige judoka's uit de poules
+        $judokasConstraint = fn($q) => $q->where('aanwezigheid', '!=', 'afwezig')->with('club');
+
+        if ($blokNummer) {
+            $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
+            if (!$blok) {
+                abort(404, 'Blok niet gevonden');
+            }
+            $poules = $blok->poules()
+                ->whereNotNull('mat_id')
+                ->whereHas('wedstrijden')
+                ->with(['judokas' => $judokasConstraint, 'wedstrijden', 'mat', 'blok'])
+                ->get();
+            $titel = "Live Schema's - Blok {$blok->nummer}";
+        } else {
+            $poules = Poule::where('toernooi_id', $toernooi->id)
+                ->whereNotNull('mat_id')
+                ->whereHas('wedstrijden')
+                ->with(['judokas' => $judokasConstraint, 'wedstrijden', 'mat', 'blok'])
+                ->orderBy('blok_id')
+                ->get();
+            $titel = "Alle Live Schema's";
+        }
+
+        // Build schema for each poule
+        $schemas = $toernooi->wedstrijd_schemas ?? [];
+        $bestOfThree = $toernooi->best_of_three_bij_2 ?? false;
+        $poulesMetSchema = $poules->map(function ($poule) use ($schemas, $bestOfThree) {
+            $aantal = $poule->judokas->count();
+            $schema = $schemas[$aantal] ?? $this->getStandaardSchema($aantal, $bestOfThree && $aantal === 2);
+            return [
+                'poule' => $poule,
+                'schema' => $schema,
+                'aantal' => $aantal,
+            ];
+        });
+
+        // Show scores = true for live version
+        $showScores = true;
+
+        return view('pages.noodplan.ingevuld-schema', compact('toernooi', 'poulesMetSchema', 'titel', 'blok', 'showScores'));
+    }
+
+    /**
      * Export poules naar Excel/CSV (1 sheet per blok)
      */
     public function exportPoules(Organisator $organisator, Toernooi $toernooi, string $format = 'xlsx')
