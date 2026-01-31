@@ -77,7 +77,7 @@
         }
     }
     .schema-table {
-        width: auto;
+        width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
     }
@@ -91,33 +91,32 @@
     }
     .header-row th {
         border-color: #374151;
-        font-size: 13px;
-        padding: 6px 4px;
+        font-size: 11px;
+        padding: 4px 2px;
     }
     .sub-header {
-        font-size: 11px;
+        font-size: 9px;
         font-weight: normal;
         color: #9ca3af;
     }
     .judoka-row td {
-        height: 36px;
+        height: 32px;
     }
     .nr-cel {
-        width: 32px;
-        font-size: 14px;
+        width: 24px;
+        font-size: 12px;
     }
     .naam-cel {
-        width: 280px;
-        max-width: 280px;
+        font-size: 11px;
+        padding: 2px 4px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 13px;
     }
     .score-cel {
-        width: 28px;
+        width: 18px;
         text-align: center;
-        font-size: 13px;
+        font-size: 11px;
     }
     .score-cel.w-cel {
         border-right: 1px solid #ccc;
@@ -133,25 +132,25 @@
         background: #1f2937;
     }
     .totaal-cel {
-        width: 40px;
+        width: 26px;
         background: #f3f4f6;
         color: #000;
         text-align: center;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: bold;
     }
     .plts-cel {
-        width: 36px;
+        width: 26px;
         background: #fef9c3;
         color: #000;
         text-align: center;
-        font-size: 13px;
+        font-size: 11px;
     }
     .poule-header {
         background: #f3f4f6;
         border: 2px solid #333;
-        padding: 12px 16px;
-        margin-bottom: 12px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
     }
 </style>
 @endpush
@@ -183,7 +182,9 @@
     $poule = $item['poule'];
     $schema = $item['schema'];
     $aantal = $item['aantal'];
-    $isLandscape = $aantal >= 6;
+    $aantalWedstrijden = count($schema);
+    // Landscape als meer dan 6 wedstrijden (kolommen)
+    $isLandscape = $aantalWedstrijden > 6;
     $judokas = $poule->judokas->values();
 @endphp
 

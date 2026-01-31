@@ -307,31 +307,34 @@
         .totaal-cel { background: #f3f4f6 !important; color: #000 !important; }
         .plts-cel { background: #fef9c3 !important; color: #000 !important; }
         .gespeeld { background: #d1fae5 !important; }
+        .poule-page.landscape { page: landscape; }
     }
     @page { size: A4 portrait; margin: 0.5cm; }
-    body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 10px; }
+    @page landscape { size: A4 landscape; margin: 0.5cm; }
+    body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 10px; }
     .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; }
     .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .toolbar-controls { display: flex; align-items: center; gap: 15px; }
-    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .poule-checkbox { display: flex; align-items: center; gap: 8px; }
     .poule-checkbox input { width: 18px; height: 18px; cursor: pointer; }
-    .schema-table { width: auto; border-collapse: collapse; table-layout: fixed; }
+    .schema-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     .schema-table th, .schema-table td { border: 1px solid #333; }
     .header-row { background: #1f2937; color: white; }
-    .header-row th { border-color: #374151; font-size: 12px; padding: 5px 3px; }
-    .sub-header { font-size: 10px; font-weight: normal; color: #9ca3af; }
-    .nr-cel { width: 28px; font-size: 13px; text-align: center; }
-    .naam-cel { width: 260px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; padding: 4px 6px; }
-    .score-cel { width: 24px; text-align: center; font-size: 12px; height: 28px; }
+    .header-row th { border-color: #374151; font-size: 11px; padding: 4px 2px; }
+    .sub-header { font-size: 9px; font-weight: normal; color: #9ca3af; }
+    .nr-cel { width: 24px; font-size: 12px; text-align: center; }
+    .naam-cel { font-size: 11px; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .score-cel { width: 18px; text-align: center; font-size: 11px; height: 32px; }
     .score-cel.inactief { background: #1f2937; }
     .score-cel.w-cel { border-right: 1px solid #ccc; }
     .score-cel.j-cel { border-left: none; border-right: 2px solid #333; }
-    .totaal-cel { width: 36px; background: #f3f4f6; text-align: center; font-size: 12px; font-weight: bold; }
-    .plts-cel { width: 32px; background: #fef9c3; text-align: center; font-size: 12px; }
+    .totaal-cel { width: 26px; background: #f3f4f6; text-align: center; font-size: 11px; font-weight: bold; }
+    .plts-cel { width: 26px; background: #fef9c3; text-align: center; font-size: 11px; }
     .gespeeld { background: #d1fae5; }
     .poule-page.print-exclude { opacity: 0.5; }
     .poule-page { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px dashed #ccc; }
+    .poule-page.landscape { page: landscape; }
 </style>
 </head><body>
 <div class="print-toolbar no-print">
@@ -393,13 +396,16 @@ function updateCounter() {
                             judokaIdToNr[w.judoka_blauw_id]
                         ]).filter(s => s[0] && s[1]);
 
+                        // Landscape als meer dan 6 wedstrijden
+                        const isLandscape = schema.length > 6;
+
                         // Create wedstrijd lookup by positie for correct column mapping
                         const wedstrijdByPositie = {};
                         wedstrijden.forEach((w, idx) => {
                             wedstrijdByPositie[idx] = w;
                         });
 
-                        html += `<div class="poule-page">
+                        html += `<div class="poule-page ${isLandscape ? 'landscape' : ''}">
                             <div class="poule-header">
                                 <div class="poule-checkbox no-print">
                                     <input type="checkbox" checked onchange="togglePoule(this)">
