@@ -22,9 +22,9 @@
                             Server Niet Geconfigureerd
                         @endif
                     </h1>
-                    @if($config['device_name'])
-                        <p class="text-gray-600">{{ $config['device_name'] }}</p>
-                    @endif
+                    <p class="text-gray-600">
+                        <span class="font-mono font-bold text-lg">{{ $config['device_name'] ?: gethostname() }}</span>
+                    </p>
                 </div>
                 <div class="text-right text-sm text-gray-500">
                     <p>IP: <span class="font-mono">{{ $config['ip'] ?? 'Niet ingesteld' }}</span></p>

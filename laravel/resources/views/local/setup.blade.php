@@ -52,12 +52,19 @@
                 <!-- Device Name -->
                 <div>
                     <label for="device_name" class="block text-sm font-medium text-gray-700 mb-1">
-                        Apparaat naam (optioneel)
+                        Apparaat naam <span class="text-gray-400">(voor herkenning in Deco app)</span>
                     </label>
+                    @php
+                        $hostname = gethostname();
+                        $defaultName = old('device_name', $currentDeviceName) ?: $hostname;
+                    @endphp
                     <input type="text" name="device_name" id="device_name"
-                           value="{{ old('device_name', $currentDeviceName) }}"
+                           value="{{ $defaultName }}"
                            placeholder="bijv. Laptop Jurytafel"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">
+                        Computer: <span class="font-mono font-bold">{{ $hostname }}</span>
+                    </p>
                 </div>
 
                 <!-- Warning -->

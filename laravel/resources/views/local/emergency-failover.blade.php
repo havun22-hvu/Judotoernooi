@@ -21,8 +21,9 @@
         <div class="bg-red-800 rounded-lg p-4 mb-8 text-left">
             <div class="text-red-300 text-sm mb-2">Huidige situatie:</div>
             <div class="text-white">
-                <strong>Deze laptop:</strong> {{ config('local-server.role') ?? 'Niet geconfigureerd' }}<br>
-                <strong>IP:</strong> {{ config('local-server.ip') ?? 'Niet ingesteld' }}
+                <div class="text-2xl font-bold mb-2">{{ config('local-server.device_name') ?: gethostname() }}</div>
+                <strong>Huidige rol:</strong> {{ strtoupper(config('local-server.role')) ?? 'Niet geconfigureerd' }}<br>
+                <strong>Huidige IP:</strong> <span class="font-mono">{{ config('local-server.ip') ?? 'Niet ingesteld' }}</span>
             </div>
         </div>
 
@@ -42,11 +43,20 @@
             <ol class="text-red-200 space-y-2 list-decimal list-inside">
                 <li>Deze laptop wordt Primary server</li>
                 <li>Open de <strong>Deco app</strong> op je telefoon</li>
-                <li>Ga naar <strong>Apparaten</strong> → vind deze laptop</li>
-                <li>Wijzig IP naar: <strong class="text-white">192.168.1.100</strong></li>
-                <li>Zet wifi uit/aan op deze laptop</li>
+                <li>Ga naar <strong>Apparaten</strong> → zoek: <strong class="text-white text-lg">{{ config('local-server.device_name') ?: gethostname() }}</strong></li>
+                <li>Tik op het apparaat → <strong>IP Reserveren</strong></li>
+                <li>Wijzig IP naar: <strong class="text-white text-lg font-mono">{{ config('local-server.primary_ip') }}</strong></li>
+                <li>Sla op en wacht 10 seconden</li>
                 <li>Tablets werken automatisch weer!</li>
             </ol>
+        </div>
+
+        <!-- Visual Guide -->
+        <div class="mt-4 bg-red-800 rounded-lg p-4 text-left">
+            <div class="text-red-300 text-sm mb-2">Samenvatting:</div>
+            <div class="text-white font-mono text-center text-lg">
+                {{ config('local-server.device_name') ?: gethostname() }} → IP {{ config('local-server.primary_ip') }}
+            </div>
         </div>
 
         <!-- Back Button -->
