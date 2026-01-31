@@ -72,6 +72,14 @@ class LocalSyncController extends Controller
     }
 
     /**
+     * Pre-flight check wizard
+     */
+    public function preflight(): View
+    {
+        return view('local.preflight');
+    }
+
+    /**
      * Health dashboard - shows system status
      */
     public function healthDashboard(): View

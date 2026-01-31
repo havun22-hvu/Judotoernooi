@@ -79,10 +79,10 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
    - `/local-server/health-dashboard` - Systeem overzicht
    - Cloud status, standby status, devices
 
-### Fase 3: Enterprise Features
-- Automatic failover
-- Health dashboard
-- Pre-flight check wizard
+### Fase 3: Enterprise Features ✅ KLAAR
+- Health dashboard ✅ `/local-server/health-dashboard`
+- Pre-flight check wizard ✅ `/local-server/preflight`
+- Automatic failover ✅ "Activeer als Primary" knop in standby-sync
 
 ## Architectuurbeslissingen (31 jan 2026)
 
