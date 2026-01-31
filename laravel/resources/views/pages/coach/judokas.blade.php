@@ -430,7 +430,7 @@
 
                     <!-- Edit mode -->
                     @if($inschrijvingOpen && ($magWijzigen ?? true))
-                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }})" class="mt-3">
+                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }}, '{{ $judoka->band ?? '' }}')" class="mt-3">
                         <form action="{{ route('coach.portal.judoka.update', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST">
                             @csrf @method('PUT')
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -439,11 +439,15 @@
                                 <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="border rounded px-3 py-2">
                                     <option value="">Geslacht</option><option value="M">Man</option><option value="V">Vrouw</option>
                                 </select>
-                                <select name="band" class="border rounded px-3 py-2">
+                                <select name="band" x-model="band" class="border rounded px-3 py-2">
                                     <option value="">Band</option>
-                                    @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $band)
-                                    <option value="{{ $band }}" {{ ($judoka->band ?? '') === $band ? 'selected' : '' }}>{{ ucfirst($band) }}</option>
-                                    @endforeach
+                                    <option value="wit">Wit</option>
+                                    <option value="geel">Geel</option>
+                                    <option value="oranje">Oranje</option>
+                                    <option value="groen">Groen</option>
+                                    <option value="blauw">Blauw</option>
+                                    <option value="bruin">Bruin</option>
+                                    <option value="zwart">Zwart</option>
                                 </select>
                                 <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" class="border rounded px-3 py-2" placeholder="Gewicht (kg)">
                                 <select name="gewichtsklasse" x-model="gewichtsklasse" class="border rounded px-3 py-2">
@@ -603,12 +607,13 @@
         }
 
         // Alpine.js component voor bewerk formulier
-        function judokaEditForm(geboortejaar, geslacht, gewichtsklasse, gewicht) {
+        function judokaEditForm(geboortejaar, geslacht, gewichtsklasse, gewicht, band) {
             return {
                 geboortejaar: geboortejaar,
                 geslacht: geslacht,
                 gewicht: gewicht,
                 gewichtsklasse: gewichtsklasse,
+                band: band,
                 leeftijdsklasse: '',
                 leeftijdsklasseKey: '',
                 gewichtsopties: [],
