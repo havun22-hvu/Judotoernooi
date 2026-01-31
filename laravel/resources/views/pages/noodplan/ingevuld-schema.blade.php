@@ -197,7 +197,7 @@
             <div class="flex items-center gap-3">
                 <!-- Print checkbox -->
                 <label class="no-print flex items-center cursor-pointer">
-                    <input type="checkbox" x-model="printInclude" class="w-5 h-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500">
+                    <input type="checkbox" x-model="printInclude" checked class="w-5 h-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500">
                 </label>
                 <span class="font-bold text-lg">
                     Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
