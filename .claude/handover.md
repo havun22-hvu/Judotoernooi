@@ -33,25 +33,27 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
 
 ## Implementatie Roadmap (TODO)
 
-### Fase 1: Basis Lokale Modus (MVP)
-1. **Lokale server launcher voor Windows/Mac**
-   - Dubbelklik-start, geen CLI kennis nodig
-   - PHP bundlen of portable versie
-   - Start Laravel op poort 8000
+### Fase 1a: Database Download + Offline Print (MVP - snel waarde)
+1. **Database download/export functie**
+   - Download toernooi data naar lokale SQLite
+   - Moet werken vóór wedstrijddag (met internet)
+   - Geen PHP nodig op client
+
+2. **Offline matrix print vanuit localStorage**
+   - Bestaande Live backup al in localStorage
+   - Matrix print moet ook offline werken
+
+### Fase 1b: Lokale Server Launcher
+1. **Laravel Herd installatie**
+   - Gratis, cross-platform (Windows + Mac)
+   - Makkelijkste optie voor leken
+   - Installeert PHP/nginx automatisch
 
 2. **Server rol configuratie scherm**
    - Bij eerste start: keuze Primary of Standby
    - Opslaan in `config/local-server.php`
    - IP validatie bij elke start
    - Zie REDUNDANTIE.md sectie 10 voor mockup
-
-3. **Database download/export functie**
-   - Download toernooi data naar lokale SQLite
-   - Moet werken vóór wedstrijddag (met internet)
-
-4. **Offline matrix print vanuit localStorage**
-   - Bestaande Live backup al in localStorage
-   - Matrix print moet ook offline werken
 
 ### Fase 2: Hot Standby
 1. **Sync API tussen Primary en Standby**
@@ -70,6 +72,16 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
 - Automatic failover
 - Health dashboard
 - Pre-flight check wizard
+
+## Architectuurbeslissingen (31 jan 2026)
+
+| Vraag | Beslissing | Reden |
+|-------|------------|-------|
+| **PHP bundelen** | Laravel Herd | Gratis, cross-platform, makkelijkste voor leken |
+| **IP failover** | Deco IP reservation switch | Standby krijgt IP van Primary via Deco app, tablets hoeven niks te wijzigen |
+| **Database** | SQLite lokaal, MySQL cloud | Code is al database-agnostic (Eloquent) |
+| **Conflict resolution** | Last-write-wins | Wedstrijden worden lokaal ingevoerd, cloud sync is alleen backup |
+| **MVP scope** | Splitsen in 1a en 1b | Fase 1a (download+print) geeft snel waarde zonder PHP op client |
 
 ## Technische Details
 

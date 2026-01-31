@@ -201,7 +201,7 @@ Dit document beschrijft de technische architectuur voor een fail-safe toernooi s
 |------|-------|----------|
 | Detectie | Heartbeat timeout (15 sec) | 15 sec |
 | Reactie | Organisator start Standby server | ~60 sec |
-| Devices | Handmatig IP wijzigen of Deco IP switch | ~120 sec |
+| Devices | Deco IP switch: Standby krijgt IP van Primary | ~60 sec |
 | Herstel | Standby wordt Primary | 0 sec |
 
 **Impact:** Max 2-3 minuten, max 5 sec data verlies
@@ -294,10 +294,11 @@ Voor elk toernooi moet de volgende checklist doorlopen worden:
 3. Ga naar Laptop B
 4. Dubbelklik "Start Server" shortcut
 5. Wacht 30 seconden
-6. Meld aan mat-vrijwilligers: "Nieuw IP: 192.168.1.101"
-7. Of: Wijzig Deco reservering zodat B het IP van A krijgt
-8. Test verbinding vanaf 1 mat tablet
-9. Doorgaan met toernooi
+6. Open Deco app → Wijzig IP reservering:
+   - Geef Laptop B het IP van Laptop A (192.168.1.100)
+   - Tablets hoeven NIKS te wijzigen
+7. Test verbinding vanaf 1 mat tablet
+8. Doorgaan met toernooi
 ```
 
 ### 8.2 Bij Beide Laptops Crash
@@ -412,13 +413,19 @@ Via het instellingen menu kan de rol gewijzigd worden:
 
 ## 11. Implementatie Roadmap
 
-### Fase 1: Basis Lokale Modus (MVP)
+### Fase 1a: Database Download + Offline Print (MVP)
 
-- [ ] Lokale server launcher voor Windows/Mac
-- [ ] Server rol configuratie scherm
 - [ ] Database download/export functie
 - [ ] Offline matrix print vanuit localStorage
 - [ ] Handleiding voor organisatoren
+
+> **Voordeel:** Snel waarde, geen PHP installatie nodig op client
+
+### Fase 1b: Lokale Server Launcher
+
+- [ ] Laravel Herd installatie (Windows + Mac)
+- [ ] Server rol configuratie scherm
+- [ ] Dubbelklik-start launcher
 
 ### Fase 2: Hot Standby
 
@@ -471,7 +478,7 @@ Via het instellingen menu kan de rol gewijzigd worden:
 - Browser: Chrome 90+ (aanbevolen)
 ```
 
-> **Let op:** De lokale server launcher installeert PHP automatisch - geen handmatige installatie nodig.
+> **Let op:** Gebruik Laravel Herd voor lokale server - gratis, cross-platform, installeert PHP automatisch.
 
 ### 12.4 Netwerk Vereisten
 
@@ -495,7 +502,19 @@ Via het instellingen menu kan de rol gewijzigd worden:
 
 ---
 
-## 12. FAQ
+## 12. Architectuurbeslissingen
+
+| Vraag | Beslissing | Reden |
+|-------|------------|-------|
+| **PHP bundelen** | Laravel Herd | Gratis, cross-platform, makkelijkste voor leken |
+| **IP failover** | Deco IP reservation switch | Standby krijgt IP van Primary via Deco app, tablets hoeven niks te wijzigen |
+| **Database** | SQLite lokaal, MySQL cloud | Code is al database-agnostic (Eloquent) |
+| **Conflict resolution** | Last-write-wins | Wedstrijden worden lokaal ingevoerd, cloud sync is alleen backup |
+| **MVP scope** | Splitsen in 1a en 1b | Fase 1a (download+print) geeft snel waarde zonder PHP op client |
+
+---
+
+## 13. FAQ
 
 ### Kan ik ook alleen online werken?
 
@@ -520,7 +539,7 @@ Maximaal 5 seconden aan wedstrijdresultaten. Dit zijn typisch 0-1 wedstrijden.
 
 ---
 
-## 13. Contact
+## 14. Contact
 
 Bij vragen over dit veiligheidsplan:
 - **Technisch:** Havun (henkvu@gmail.com)
