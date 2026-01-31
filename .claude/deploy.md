@@ -54,3 +54,23 @@ php artisan view:cache
 ```
 
 > **Let op:** Zonder cache:clear kunnen gebruikers in redirect loop komen bij login!
+
+## Backup Systeem (Automatisch)
+
+| Type | Frequentie | Locatie | Retentie |
+|------|-----------|---------|----------|
+| **Hot backup** | Elke 5 min | `/var/backups/havun/hot/` | 2 uur |
+| **Dagelijks** | 03:00 | Hetzner Storage Box | Onbeperkt |
+
+**Databases in backup:**
+- `judo_toernooi` (production)
+- `staging_judo_toernooi` (staging)
+
+**Herstellen:**
+```bash
+# Laatste hot backup
+gunzip < /var/backups/havun/hot/judo_toernooi_TIMESTAMP.sql.gz | mysql judo_toernooi
+
+# Dagelijkse backup (van Hetzner)
+# Download eerst via sftp van u510616.your-storagebox.de
+```

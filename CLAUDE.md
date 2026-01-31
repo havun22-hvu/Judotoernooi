@@ -107,23 +107,25 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 - Database migrations op production
 - Composer/npm packages installeren
 
-### ⛔ HANDS OFF TEST DATA
-**NOOIT zonder expliciete vraag:**
-- Toernooien aanmaken via tinker/code
-- Judoka's, clubs, of andere data toevoegen
-- Bestaande data wijzigen of verplaatsen
-- `migrate:fresh` uitvoeren (wist ALLE data!)
+### ⛔ TEST DATA REGELS
+**Testdata aanmaken/wijzigen:**
+- Als gebruiker vraagt → gewoon doen
 
-**WEL toegestaan:**
-- Code lezen en analyseren
-- Code verbeteren/fixen
-- Browser gebruiken om te BEKIJKEN (niet wijzigen)
-- Vragen stellen over wat je ziet
+**NIET DOEN - Bugs maskeren:**
+- Als code niet werkt (bijv. gewicht updaten faalt), NIET de data handmatig "goed" zetten
+- De CODE moet werken, niet de data "toevallig goed staan"
+- Fix altijd de code, niet de symptomen
 
-**Bij testen:**
-- Gebruik ALLEEN data die de gebruiker aanlevert
-- Als je data nodig hebt: VRAAG de gebruiker om het aan te maken
-- Los geen "testdata problemen" zelf op
+### Database & Migraties
+**Local/Staging:**
+- `migrate:fresh` alleen voor volledige database reset
+- Na gewone migratie: ALTIJD gegevens terugzetten
+
+**Production (KRITIEK - geen minuut data mag verloren gaan):**
+- ALTIJD backup maken TIJDENS werken aan de app (continu!)
+- ALTIJD backup maken VOOR migratie
+- Dagelijkse backup: server → Hetzner backup (elke avond)
+- Bij crash: direct kunnen herstellen naar laatste backup
 
 ### Communication
 - Antwoord max 20-30 regels
