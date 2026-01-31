@@ -99,23 +99,23 @@
         color: #9ca3af;
     }
     .judoka-row td {
-        height: 32px;
+        height: 36px;
     }
     .nr-cel {
-        width: 24px;
-        font-size: 12px;
+        width: 28px;
+        font-size: 13px;
     }
     .naam-cel {
-        font-size: 11px;
-        padding: 2px 4px;
+        font-size: 12px;
+        padding: 4px 6px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .score-cel {
-        width: 18px;
+        width: 22px;
         text-align: center;
-        font-size: 11px;
+        font-size: 12px;
     }
     .score-cel.w-cel {
         border-right: 1px solid #ccc;
@@ -131,19 +131,19 @@
         background: #1f2937;
     }
     .totaal-cel {
-        width: 26px;
+        width: 30px;
         background: #f3f4f6;
         color: #000;
         text-align: center;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: bold;
     }
     .plts-cel {
-        width: 26px;
+        width: 30px;
         background: #fef9c3;
         color: #000;
         text-align: center;
-        font-size: 11px;
+        font-size: 12px;
     }
     .poule-header {
         background: #f3f4f6;
@@ -175,6 +175,33 @@
         </div>
     </div>
 </div>
+
+@php
+// Helper functie voor slimme club afkorting
+function abbreviateClubName($name, $maxLength = 15) {
+    if (!$name || strlen($name) <= $maxLength) {
+        return $name ?? '-';
+    }
+    // Vervang veelvoorkomende woorden met afkortingen
+    $replacements = [
+        'Judoschool' => 'J.S.',
+        'judoschool' => 'J.S.',
+        'Sportcentrum' => 'S.C.',
+        'sportcentrum' => 'S.C.',
+        'Sportvereniging' => 'S.V.',
+        'sportvereniging' => 'S.V.',
+        'Judo Vereniging' => 'J.V.',
+        'Judovereniging' => 'J.V.',
+        'judovereniging' => 'J.V.',
+    ];
+    $abbreviated = str_replace(array_keys($replacements), array_values($replacements), $name);
+    // Als nog steeds te lang, truncate
+    if (strlen($abbreviated) > $maxLength) {
+        return Str::limit($abbreviated, $maxLength);
+    }
+    return $abbreviated;
+}
+@endphp
 
 @foreach($poulesMetSchema as $index => $item)
 @php
@@ -240,7 +267,7 @@
                 <td class="px-1 text-center font-bold nr-cel">{{ $judokaNr }}</td>
                 <td class="px-2 naam-cel" title="{{ $judoka->naam }} ({{ $judoka->club?->naam ?? '-' }})">
                     {{ $judoka->naam }}
-                    <span class="text-gray-400 text-xs">({{ Str::limit($judoka->club?->naam ?? '-', 10) }})</span>
+                    <span class="text-gray-400 text-xs">({{ abbreviateClubName($judoka->club?->naam) }})</span>
                 </td>
                 @foreach($schema as $schemaWedstrijd)
                     @php
