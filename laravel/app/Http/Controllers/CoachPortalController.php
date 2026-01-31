@@ -552,6 +552,16 @@ class CoachPortalController extends Controller
             return redirect()->route('coach.portal.code', $this->routeParams($organisator, $toernooi, $code));
         }
 
+        if (!$toernooiModel->portaalMagWijzigen()) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'Sync is niet toegestaan via het portaal');
+        }
+
+        if (!$toernooiModel->isInschrijvingOpen()) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'De inschrijving is gesloten');
+        }
+
         $judokas = Judoka::where('toernooi_id', $toernooiModel->id)
             ->where('club_id', $club->id)
             ->get();
