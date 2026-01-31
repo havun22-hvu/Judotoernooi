@@ -46,6 +46,10 @@
             background: #fef9c3 !important;
             color: #000 !important;
         }
+        .poule-title {
+            background: #1f2937 !important;
+            color: white !important;
+        }
         /* Page breaks between poules */
         .poule-page:not(.print-exclude) {
             page-break-after: always;
@@ -146,10 +150,23 @@
         font-size: 12px;
     }
     .poule-header {
-        background: #f3f4f6;
         border: 2px solid #333;
-        padding: 8px 12px;
-        margin-bottom: 8px;
+        border-bottom: none;
+    }
+    .poule-title {
+        background: #1f2937;
+        color: white;
+        padding: 6px 12px;
+        font-size: 11px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .poule-info {
+        background: #f3f4f6;
+        padding: 6px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 </style>
 @endpush
@@ -222,18 +239,24 @@ function abbreviateClubName($name, $maxLength = 15) {
      :class="{ 'print-exclude': !printInclude, 'opacity-50': !printInclude }"
      data-poule-id="{{ $poule->id }}">
     <!-- Poule header -->
-    <div class="poule-header">
-        <div class="flex justify-between items-center">
+    <div class="poule-header" style="width: fit-content;">
+        <!-- Toernooi titel -->
+        <div class="poule-title">
+            <span>{{ $toernooi->naam }}</span>
+            <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
+        </div>
+        <!-- Poule info -->
+        <div class="poule-info">
             <div class="flex items-center gap-3">
                 <!-- Print checkbox -->
                 <label class="no-print flex items-center cursor-pointer">
                     <input type="checkbox" x-model="printInclude" checked class="w-5 h-5 text-yellow-600 rounded border-gray-300 focus:ring-yellow-500">
                 </label>
-                <span class="font-bold text-lg">
+                <span class="font-bold">
                     Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                 </span>
             </div>
-            <div class="text-sm text-gray-600">
+            <div class="text-sm text-gray-600 ml-4">
                 @if($poule->mat)
                 <span class="font-bold">Mat {{ $poule->mat->nummer }}</span> |
                 @endif

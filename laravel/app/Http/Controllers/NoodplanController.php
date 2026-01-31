@@ -419,6 +419,7 @@ class NoodplanController extends Controller
         return [
             'toernooi_id' => $toernooi->id,
             'toernooi_naam' => $toernooi->naam,
+            'toernooi_datum' => $toernooi->datum->format('d-m-Y'),
             'timestamp' => now()->format('Y-m-d H:i:s'),
             'poules' => $poules->map(function ($poule) {
                 return [

@@ -308,6 +308,7 @@
         .plts-cel { background: #fef9c3 !important; color: #000 !important; }
         .gespeeld { background: #d1fae5 !important; }
         .poule-page.landscape { page: landscape; }
+        .poule-title { background: #1f2937 !important; color: white !important; }
     }
     @page { size: A4 portrait; margin: 0.5cm; }
     @page landscape { size: A4 landscape; margin: 0.5cm; }
@@ -315,7 +316,9 @@
     .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .toolbar-controls { display: flex; align-items: center; gap: 15px; }
-    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .poule-header { border: 2px solid #333; border-bottom: none; width: fit-content; }
+    .poule-title { background: #1f2937; color: white; padding: 6px 12px; font-size: 11px; display: flex; justify-content: space-between; }
+    .poule-info { background: #f3f4f6; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; }
     .poule-checkbox { display: flex; align-items: center; gap: 8px; }
     .poule-checkbox input { width: 18px; height: 18px; cursor: pointer; }
     .schema-table { width: auto; border-collapse: collapse; }
@@ -419,11 +422,17 @@ function abbreviateClub(name) {
 
                         html += `<div class="poule-page ${isLandscape ? 'landscape' : ''}">
                             <div class="poule-header">
-                                <div class="poule-checkbox no-print">
-                                    <input type="checkbox" checked onchange="togglePoule(this)">
-                                    <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
+                                <div class="poule-title">
+                                    <span>${data.toernooi_naam || 'Toernooi'}</span>
+                                    <span>${data.toernooi_datum || ''}</span>
                                 </div>
-                                <span>Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
+                                <div class="poule-info">
+                                    <div class="poule-checkbox no-print">
+                                        <input type="checkbox" checked onchange="togglePoule(this)">
+                                        <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
+                                    </div>
+                                    <span style="margin-left:16px">Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
+                                </div>
                             </div>
                             <table class="schema-table">
                                 <thead><tr class="header-row">
