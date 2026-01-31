@@ -1,5 +1,25 @@
 # Session Handover: 31 januari 2026 (avond)
 
+## 🚀 Startinstructies voor nieuwe sessie
+
+**Lees deze docs in volgorde:**
+
+1. `.claude/handover.md` ← Dit bestand (startpunt + roadmap)
+2. `laravel/docs/3-TECHNICAL/REDUNDANTIE.md` ← Technische specs, architectuur, mockups
+3. `laravel/docs/2-FEATURES/NOODPLAN-HANDLEIDING.md` ← Hoe het voor eindgebruiker moet werken
+
+**Optioneel (als context nodig):**
+- `laravel/docs/4-PLANNING/PLANNING_NOODPLAN.md` - Bestaande noodplan features
+- `CLAUDE.md` - Project regels en conventies
+
+**Start implementatie:**
+```
+Lees eerst .claude/handover.md, dan laravel/docs/3-TECHNICAL/REDUNDANTIE.md,
+en begin met Fase 1 van de implementatie.
+```
+
+---
+
 ## Context
 Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Documentatie is COMPLEET, implementatie moet nog gebeuren.
 
