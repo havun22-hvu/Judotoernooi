@@ -436,20 +436,44 @@ Via het instellingen menu kan de rol gewijzigd worden:
 
 ---
 
-## 11. Technische Specificaties
+## 12. Technische Specificaties
 
-### 11.1 Lokale Server Vereisten
+### 12.1 Hardware Vereisten (Primary & Standby Laptops)
+
+| Component | Minimum | Aanbevolen |
+|-----------|---------|------------|
+| **Besturingssysteem** | Windows 10 / macOS 10.15 | Windows 11 / macOS 13+ |
+| **Processor** | Dual-core 2.0 GHz | Quad-core 2.5 GHz+ |
+| **Werkgeheugen** | 4 GB RAM | 8 GB RAM |
+| **Opslag** | 10 GB vrij (HDD) | 20 GB vrij (SSD) |
+| **Wifi** | 2.4 GHz 802.11n | 5 GHz 802.11ac |
+| **Accuduur** | 2 uur | 4+ uur |
+
+**Praktisch:**
+- Elke laptop van na 2018 voldoet
+- Chromebooks werken NIET (geen PHP ondersteuning)
+- Tablets werken NIET als server (alleen als client)
+
+**Geschikte laptops (voorbeelden):**
+- HP ProBook / EliteBook
+- Lenovo ThinkPad
+- Dell Latitude
+- MacBook Air / Pro
+- Acer Aspire (zakelijke versies)
+
+### 12.2 Software Vereisten
 
 ```
 - PHP 8.2 of hoger
 - Composer
 - Node.js 18+ (voor assets)
 - SQLite 3
-- Min. 4GB RAM
-- SSD aanbevolen
+- Browser: Chrome 90+ (aanbevolen)
 ```
 
-### 11.2 Netwerk Vereisten
+> **Let op:** De lokale server launcher installeert PHP automatisch - geen handmatige installatie nodig.
+
+### 12.4 Netwerk Vereisten
 
 ```
 - Deco M4 of vergelijkbaar mesh systeem
@@ -458,14 +482,16 @@ Via het instellingen menu kan de rol gewijzigd worden:
 - Geen internet vereist voor lokale werking
 ```
 
-### 11.3 Browser Compatibiliteit
+### 12.5 Browser Compatibiliteit
 
-```
-- Chrome 90+ (aanbevolen)
-- Safari 14+
-- Edge 90+
-- Firefox 90+
-```
+| Browser | Minimum | Aanbevolen |
+|---------|---------|------------|
+| Chrome | 90+ | Latest |
+| Safari | 14+ | Latest |
+| Edge | 90+ | Latest |
+| Firefox | 90+ | Latest |
+
+> **Aanbeveling:** Gebruik Chrome voor beste compatibiliteit met print functies.
 
 ---
 
