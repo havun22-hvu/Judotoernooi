@@ -97,11 +97,13 @@ class ToernooiService
 
     /**
      * Sync blocks to match aantal_blokken setting
+     * Returns array with info about moved poules (for warning message)
      */
-    public function syncBlokken(Toernooi $toernooi): void
+    public function syncBlokken(Toernooi $toernooi): array
     {
         $huidigAantal = $toernooi->blokken()->count();
         $gewenstAantal = $toernooi->aantal_blokken ?? 6;
+        $verplaatstePoules = 0;
 
         if ($huidigAantal < $gewenstAantal) {
             // Add missing blocks
@@ -112,12 +114,27 @@ class ToernooiService
                 ]);
             }
         } elseif ($huidigAantal > $gewenstAantal) {
-            // Remove excess blocks (only if they have no poules assigned)
-            $toernooi->blokken()
+            // Get blocks to remove
+            $blokkenTeVerwijderen = $toernooi->blokken()
                 ->where('nummer', '>', $gewenstAantal)
-                ->whereDoesntHave('poules')
-                ->delete();
+                ->get();
+
+            foreach ($blokkenTeVerwijderen as $blok) {
+                // Move poules from this block to sleepvak (blok_id = null)
+                $aantalPoules = $blok->poules()->count();
+                if ($aantalPoules > 0) {
+                    $blok->poules()->update(['blok_id' => null]);
+                    $verplaatstePoules += $aantalPoules;
+                }
+
+                // Now safe to delete the block
+                $blok->delete();
+            }
         }
+
+        return [
+            'verplaatste_poules' => $verplaatstePoules,
+        ];
     }
 
     /**
