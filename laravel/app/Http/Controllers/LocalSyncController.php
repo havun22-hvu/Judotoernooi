@@ -80,6 +80,14 @@ class LocalSyncController extends Controller
     }
 
     /**
+     * Startup wizard - step-by-step guide for tournament day
+     */
+    public function startupWizard(): View
+    {
+        return view('local.startup-wizard');
+    }
+
+    /**
      * Emergency failover page
      */
     public function emergencyFailover(): View
