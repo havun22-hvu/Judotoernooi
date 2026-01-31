@@ -32,6 +32,7 @@ docs/
 - [Wedstrijdschema](./2-FEATURES/WEDSTRIJDSCHEMA.md) - Punten en kruisfinales
 - [Chat](./2-FEATURES/CHAT.md) - Realtime chat met Laravel Reverb
 - [Interfaces](./2-FEATURES/INTERFACES.md) - PWA's en device binding
+- [Noodplan Handleiding](./2-FEATURES/NOODPLAN-HANDLEIDING.md) - Praktische gids voor organisatoren
 - [Eliminatie Systeem](./2-FEATURES/ELIMINATIE/README.md) - Double elimination
   - [Formules](./2-FEATURES/ELIMINATIE/FORMULES.md)
   - [Slot Systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md)
@@ -42,6 +43,7 @@ docs/
 - [API Documentatie](./3-TECHNICAL/API.md) - REST endpoints
 - [Database Schema](./3-TECHNICAL/DATABASE.md) - Tabelstructuur
 - [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info
+- [Redundantie & Veiligheid](./3-TECHNICAL/REDUNDANTIE.md) - Enterprise fail-safe architectuur
 
 ### 4. Planning
 - [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding

@@ -338,7 +338,29 @@ Toernooi pagina open → Fetch elke 30 sec
 
 ---
 
-## 9. Notities
+## 9. Enterprise Redundantie (Nieuw)
+
+> **Status:** Planning
+> **Documentatie:** Zie [REDUNDANTIE.md](../3-TECHNICAL/REDUNDANTIE.md) voor technische details
+
+Voor grote toernooien is een uitgebreid noodplan beschikbaar met:
+
+- **Hot Standby Server** - Tweede laptop als backup
+- **Lokaal Mesh Netwerk** - Werkt zonder internet (Deco M4)
+- **Real-time Replicatie** - Max 5 sec data verlies
+- **Automatic Failover** - <10 sec recovery time
+- **Health Dashboard** - Live status monitoring
+
+### Gerelateerde Documentatie
+
+| Document | Beschrijving |
+|----------|--------------|
+| [REDUNDANTIE.md](../3-TECHNICAL/REDUNDANTIE.md) | Technisch veiligheidsplan met architectuur |
+| [NOODPLAN-HANDLEIDING.md](../2-FEATURES/NOODPLAN-HANDLEIDING.md) | Praktische gids voor organisatoren |
+
+---
+
+## 10. Notities
 
 - Toegang alleen voor admin, organisator en hoofdjury
 - Alle prints moeten werken zonder JavaScript

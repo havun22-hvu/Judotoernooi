@@ -59,6 +59,7 @@ php artisan view:cache
 
 | Type | Frequentie | Locatie | Retentie |
 |------|-----------|---------|----------|
+| **Wedstrijddag** | Elke 1 min | `/var/backups/havun/wedstrijddag/` | 60 min |
 | **Hot backup** | Elke 5 min | `/var/backups/havun/hot/` | 2 uur |
 | **Dagelijks** | 03:00 | Hetzner Storage Box | Onbeperkt |
 
