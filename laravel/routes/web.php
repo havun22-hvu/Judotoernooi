@@ -539,6 +539,9 @@ Route::prefix('local-server')->name('local.')->group(function () {
     // Health dashboard (monitoring)
     Route::get('/health-dashboard', [LocalSyncController::class, 'healthDashboard'])->name('health-dashboard');
 
+    // Pre-flight check wizard
+    Route::get('/preflight', [LocalSyncController::class, 'preflight'])->name('preflight');
+
     // Dashboard
     Route::get('/', [LocalSyncController::class, 'dashboard'])->name('dashboard');
 });
