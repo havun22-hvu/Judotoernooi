@@ -357,6 +357,67 @@
 
 ---
 
+## Sessie: 31 januari 2026 (deel 2)
+
+### Fix: JudokaController route missing organisator
+- **Type:** Bug fix
+- **Wat:** `route('toernooi.judoka.show', [$toernooi, $judoka])` miste organisator param
+- **Bestanden:** JudokaController.php
+- **Oplossing:** Gebruik `$toernooi->routeParamsWith(['judoka' => $judoka])`
+
+### Fix: Coach portal band select reset
+- **Type:** Bug fix
+- **Wat:** Band werd gereset naar "Band" bij openen edit form
+- **Bestanden:** coach/judokas.blade.php
+- **Oorzaak:** Band was niet doorgegeven aan `judokaEditForm()` Alpine component
+- **Oplossing:** Band parameter toegevoegd + `x-model="band"` op select
+
+### Fix: Band kyu cleanup
+- **Type:** Data cleanup
+- **Wat:** Alle kyu suffixen verwijderd uit band kolom
+- **Databases:** Local (SQLite), staging, production (MySQL)
+- **SQL:** `UPDATE judokas SET band = LOWER(SUBSTRING_INDEX(band, ' ', 1))`
+
+### Fix: Sync deadline check ontbrak
+- **Type:** Bug fix
+- **Wat:** `syncJudokasCode()` had geen checks voor portal modus en deadline
+- **Bestanden:** CoachPortalController.php
+- **Oplossing:** Checks toegevoegd voor `portaalMagWijzigen()` en `isInschrijvingOpen()`
+
+### Fix: Toast overlapt menu
+- **Type:** UI fix
+- **Wat:** Success toast stond te hoog (`top-4`) en overlapte navigatie
+- **Bestanden:** layouts/app.blade.php
+- **Oplossing:** `top-4` → `top-20`
+
+### Fix: BlokController route missing organisator
+- **Type:** Bug fix
+- **Wat:** Route naar `toernooi.blok.index` met `kies` param miste organisator
+- **Bestanden:** BlokController.php
+- **Oplossing:** `array_merge($toernooi->routeParams(), ['kies' => 1])`
+
+### Fix: CheckToernooiRol middleware routes
+- **Type:** Bug fix
+- **Wat:** Login redirects in middleware misten organisator param
+- **Bestanden:** CheckToernooiRol.php
+- **Oplossing:** `$toernooi->routeParams()` gebruiken
+
+### Fix: Noodplan script tag escape
+- **Type:** Bug fix
+- **Wat:** `<script>` en `</script>` in JS template literal werden door browser geïnterpreteerd
+- **Bestanden:** noodplan/index.blade.php
+- **Symptoom:** Raw JS code zichtbaar op pagina
+- **Oplossing:** `<scr` + `ipt>` en `<\/script>` escape
+
+### Fix: Noodplan live schema dubbele potjes
+- **Type:** Bug fix
+- **Wat:** Live wedstrijd schema's toonden 3 i.p.v. 6 wedstrijden bij dubbele potjes
+- **Bestanden:** noodplan/index.blade.php
+- **Oorzaak:** `generateSchema()` maakte standaard round-robin, negeerde instellingen
+- **Oplossing:** Gebruik echte wedstrijden uit backup i.p.v. gegenereerd schema
+
+---
+
 <!--
 TEMPLATE:
 
