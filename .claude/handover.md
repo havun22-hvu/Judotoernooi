@@ -1,45 +1,46 @@
-# Session Handover: 30 januari 2026 (middag)
+# Handover: 31 januari 2026
 
 ## Wat is gedaan
 
-### "Einde weegtijd" knop in hoofdjury weeglijst
-- Knop toegevoegd aan Weging → Weging Interface (hoofdjury versie)
-- Knop verschijnt naast blok-filter dropdown als een blok geselecteerd is
-- Bij klik: sluit weegtijd → markeert niet-gewogen judoka's als afwezig
-- Countdown timer en knop altijd zichtbaar (niet alleen op wedstrijddag)
-- Toont "Gesloten" als blok al gesloten is
-- **Bestanden:** interface-admin.blade.php
-- **Docs:** INTERFACES.md bijgewerkt
+### Device-bound PWA fixes
+- Mat, spreker, dojo interfaces werken nu op iPad/tablet
+- Nieuwe device-bound API routes toegevoegd die `device.binding` middleware gebruiken
+- Oplost: "missing parameters" errors en "doctype is not valid json" errors
 
-### Verwijderd
-- Individuele "Einde weegtijd" knoppen per blok in de stats sectie (was te druk)
-- `isToday()` check voor countdown/knop (belemmerde testen op staging)
+### Best of three wedstrijdschema fix (GROOT)
+Meerdere bugs opgelost die ervoor zorgden dat "best of three" bij 2 judoka's niet werkte:
+
+1. **Form saving** - Alpine.js `:value` binding werkte niet → `x-ref` + `x-watch`
+2. **Service caching** - Toernooi relatie was gecached → `->toernooi()->first()`
+3. **JSON string keys** - "2" vs 2 mismatch → check beide keys
+4. **Custom schema override** - Formulier updatet nu automatisch `wedstrijd_schemas[2]`
+5. **View count** - Poule-card toont nu echte wedstrijd count
+
+### Database fix
+- `positie => 999` was te groot voor `tinyint` (max 255)
+- Nu: berekent echte volgende positie
 
 ## Openstaande items
 
-- [ ] Offline backup testen tijdens echte wedstrijddag
-- [ ] Best of Three bij 2 judoka's testen op wedstrijddag (code is klaar)
+- [ ] Chat widget gebruikt admin routes - zal falen op device-bound interfaces (niet kritiek)
+- [ ] Poule #2 (Mini's 20-21kg) heeft 5 judokas maar 0 wedstrijden (niet doorgestuurd)
 
 ## Belangrijke context voor volgende keer
 
-### Weegtijd sluiten architectuur
-- Route: `POST /blok/{blok}/sluit-weging`
-- Controller: `BlokController::sluitWeging()`
-- Model: `Blok::sluitWeging()` doet:
-  1. Zet `weging_gesloten = true` + timestamp
-  2. Markeert niet-gewogen judoka's als afwezig
-  3. Herberekent poule statistieken
-  4. Bij eliminatie: verwijdert afwezige judoka's uit bracket
+### Best of three flow
+1. Gebruiker selecteert "Best of 3" in toernooi edit
+2. Controller update `best_of_three_bij_2 = true` EN `wedstrijd_schemas[2] = [[1,2],[2,1],[1,2]]`
+3. Bij doorsturen: `WedstrijdSchemaService` leest custom schema en maakt 3 wedstrijden
+4. Views tonen echte wedstrijd count, niet formule
 
-### Testfase Configuratie (eerder vandaag)
-- `Toernooi::isFreeTier()` heeft hardcoded slugs voor gratis toegang
-- Cees Veen en sitebeheerder hebben volledige toegang zonder betaling
+### Device-bound routes
+- Admin routes: `/organisator/toernooi/mat/...` - vereisen `auth:organisator`
+- Device routes: `/organisator/toernooi/toegang/mat/...` - gebruiken `device.binding` middleware
+- Views checken `isset($toegang)` om juiste URL te gebruiken
+
+## Git status
+- Laatste commit: `99123a4` - fix: Use proper positie value instead of 999
+- Alle omgevingen (local, staging, production) zijn gesynchroniseerd
 
 ## Bekende issues/bugs
-
-- Geen nieuwe bugs gevonden deze sessie
-
-## Git Status
-- Alles gepusht naar main
-- Staging up-to-date
-- Laatste commit: `9880e4e` - docs: Document 'Einde weegtijd' button
+- Geen kritieke bugs bekend

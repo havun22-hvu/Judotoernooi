@@ -301,6 +301,52 @@
 
 ---
 
+## Sessie: 31 januari 2026
+
+### Fix: Device-bound PWA routes voor iPad/tablet
+- **Type:** Bug fix
+- **Wat:** Mat, spreker, dojo interfaces werkten niet op iPad - admin API routes vereisten auth
+- **Bestanden:** MatController.php, SprekerController.php, DojoController.php, routes/web.php, views
+- **Oplossing:** Device-bound API routes toegevoegd met `device.binding` middleware
+
+### Fix: Best of three instelling niet opgeslagen
+- **Type:** Bug fix
+- **Wat:** Alpine.js `:value` binding werkte niet correct met form serialization
+- **Bestanden:** edit.blade.php
+- **Oplossing:** Hidden inputs gebruiken nu `x-ref` + `x-watch` i.p.v. `:value`
+
+### Fix: Toernooi relatie caching in WedstrijdSchemaService
+- **Type:** Bug fix
+- **Wat:** Service gebruikte gecachte toernooi data, best_of_three werd niet gelezen
+- **Bestanden:** WedstrijdSchemaService.php
+- **Oplossing:** `$poule->toernooi()->first()` i.p.v. `$poule->toernooi`
+
+### Fix: String keys in wedstrijd_schemas JSON
+- **Type:** Bug fix
+- **Wat:** JSON decode behoudt string keys ("2"), maar code zocht met int key (2)
+- **Bestanden:** WedstrijdSchemaService.php
+- **Oplossing:** Check zowel int als string key: `$schemas[$aantal] ?? $schemas[(string) $aantal]`
+
+### Fix: Auto-update schema bij best_of_three toggle
+- **Type:** Bug fix
+- **Wat:** Custom schema werd niet aangepast wanneer best_of_three werd ingeschakeld
+- **Bestanden:** ToernooiController.php
+- **Oplossing:** Bij opslaan automatisch `wedstrijd_schemas[2]` updaten naar 3, 2, of 1 wedstrijden
+
+### Fix: Wedstrijddag toont verkeerd aantal wedstrijden
+- **Type:** Bug fix
+- **Wat:** Poule-card gebruikte formule `n*(n-1)/2` i.p.v. echte count + best_of_three
+- **Bestanden:** poule-card.blade.php
+- **Oplossing:** Gebruik `$poule->wedstrijden->count()` of schatting met toernooi settings
+
+### Fix: Positie waarde 999 te groot voor tinyint
+- **Type:** Bug fix
+- **Wat:** `positie => 999` overschreed tinyint max (255) bij judoka toevoegen aan poule
+- **Bestanden:** WedstrijddagController.php
+- **Oplossing:** Bereken echte volgende positie: `$nieuwePoule->judokas()->count() + 1`
+
+---
+
 <!--
 TEMPLATE:
 
