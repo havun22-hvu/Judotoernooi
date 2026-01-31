@@ -154,14 +154,10 @@
 </style>
 @endpush
 
-@section('content')
-@if($poulesMetSchema->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.</p>
-@else
-
-<!-- Print toolbar (niet printen) -->
-<div class="print-toolbar no-print mb-6 p-4 bg-gray-100 rounded-lg sticky top-0 z-50">
-    <div class="flex items-center justify-between flex-wrap gap-4">
+@section('toolbar')
+@if(!$poulesMetSchema->isEmpty())
+<div class="bg-gray-100 px-4 py-3 border-b">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
             <span class="font-medium text-gray-700">Selecteer schema's om te printen:</span>
             <button onclick="selectAllPoules(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">Alles aan</button>
@@ -175,6 +171,13 @@
         </div>
     </div>
 </div>
+@endif
+@endsection
+
+@section('content')
+@if($poulesMetSchema->isEmpty())
+<p class="text-gray-500 text-center py-8">Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.</p>
+@else
 
 @php
 // Helper functie voor slimme club afkorting
