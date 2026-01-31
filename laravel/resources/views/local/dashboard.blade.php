@@ -149,6 +149,14 @@
                 @endif
             </div>
 
+            <!-- Startup Wizard Button -->
+            <a href="{{ route('local.startup-wizard') }}"
+               class="block bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow p-6 mb-6 text-center hover:from-green-600 hover:to-green-700 transition-all">
+                <div class="text-4xl mb-2">🚀</div>
+                <div class="text-xl font-bold text-white">Wedstrijddag Opstarten</div>
+                <div class="text-green-100 text-sm mt-1">Stap-voor-stap handleiding</div>
+            </a>
+
             <!-- Quick Links -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Snelle Links</h2>
