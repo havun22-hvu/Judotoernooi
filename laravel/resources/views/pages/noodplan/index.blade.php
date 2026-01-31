@@ -323,14 +323,14 @@
     .header-row { background: #1f2937; color: white; }
     .header-row th { border-color: #374151; font-size: 11px; padding: 4px 2px; }
     .sub-header { font-size: 9px; font-weight: normal; color: #9ca3af; }
-    .nr-cel { width: 24px; font-size: 12px; text-align: center; }
-    .naam-cel { font-size: 11px; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .score-cel { width: 18px; text-align: center; font-size: 11px; height: 32px; }
+    .nr-cel { width: 28px; font-size: 13px; text-align: center; }
+    .naam-cel { font-size: 12px; padding: 4px 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .score-cel { width: 22px; text-align: center; font-size: 12px; height: 36px; }
     .score-cel.inactief { background: #1f2937; }
     .score-cel.w-cel { border-right: 1px solid #ccc; }
     .score-cel.j-cel { border-left: none; border-right: 2px solid #333; }
-    .totaal-cel { width: 26px; background: #f3f4f6; text-align: center; font-size: 11px; font-weight: bold; }
-    .plts-cel { width: 26px; background: #fef9c3; text-align: center; font-size: 11px; }
+    .totaal-cel { width: 30px; background: #f3f4f6; text-align: center; font-size: 12px; font-weight: bold; }
+    .plts-cel { width: 30px; background: #fef9c3; text-align: center; font-size: 12px; }
     .gespeeld { background: #d1fae5; }
     .poule-page.print-exclude { opacity: 0.5; }
     .poule-page { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px dashed #ccc; }
@@ -372,6 +372,18 @@ function updateCounter() {
     const total = document.querySelectorAll('.poule-page').length;
     const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
     document.getElementById('print-counter').textContent = selected + ' van ' + total + ' geselecteerd';
+}
+function abbreviateClub(name) {
+    if (!name) return '-';
+    // Vervang veelvoorkomende woorden met afkortingen
+    let abbr = name
+        .replace(/Judoschool/gi, 'J.S.')
+        .replace(/Sportcentrum/gi, 'S.C.')
+        .replace(/Sportvereniging/gi, 'S.V.')
+        .replace(/Judovereniging/gi, 'J.V.')
+        .replace(/Judo Vereniging/gi, 'J.V.');
+    // Max 15 karakters
+    return abbr.length > 15 ? abbr.substring(0, 14) + '…' : abbr;
 }
 <\/script>`;
 
@@ -429,7 +441,7 @@ function updateCounter() {
                             let totaalWP = 0, totaalJP = 0, heeftGespeeld = false;
 
                             html += `<tr><td class="nr-cel" style="font-weight:bold">${judokaNr}</td>
-                                <td class="naam-cel">${judoka.naam || 'Onbekend'} <span style="color:#999;font-size:10px">(${(judoka.club || '-').substring(0,12)})</span></td>`;
+                                <td class="naam-cel">${judoka.naam || 'Onbekend'} <span style="color:#999;font-size:10px">(${abbreviateClub(judoka.club)})</span></td>`;
 
                             schema.forEach((schemaWed, wedIdx) => {
                                 const witNr = schemaWed[0];
