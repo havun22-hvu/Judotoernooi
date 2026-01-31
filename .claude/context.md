@@ -44,6 +44,13 @@ php artisan serve --port=8007
 - **Mat Interface** - Wedstrijden en uitslagen
 - **Eliminatie** - Double elimination
 
+## Belangrijke Regels
+
+| Onderwerp | Regel |
+|-----------|-------|
+| **Band** | Alleen kleur opslaan (wit, geel, oranje, etc.) - GEEN kyu |
+| **Gewichtsklasse** | NIET invullen bij variabele gewichten in categorie |
+
 ## Gerelateerde Docs
 
 - `laravel/docs/` - Project documentatie
