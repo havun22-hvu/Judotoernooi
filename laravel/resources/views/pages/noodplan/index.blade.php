@@ -312,7 +312,7 @@
     @page { size: A4 portrait; margin: 0.5cm; }
     @page landscape { size: A4 landscape; margin: 0.5cm; }
     body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 10px; }
-    .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; }
+    .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
     .toolbar-controls { display: flex; align-items: center; gap: 15px; }
     .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
