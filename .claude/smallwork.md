@@ -345,6 +345,16 @@
 - **Bestanden:** WedstrijddagController.php
 - **Oplossing:** Bereken echte volgende positie: `$nieuwePoule->judokas()->count() + 1`
 
+### Feat: Noodplan print schema header rows
+- **Type:** UI improvement
+- **Wat:** Toernooinaam + datum als header boven elk wedstrijdschema, zelfde breedte als tabel
+- **Bestanden:** ingevuld-schema.blade.php, index.blade.php (Live), NoodplanController.php
+- **Details:**
+  - title-row (donker): toernooinaam + datum
+  - info-row (licht): poule nummer, categorie, mat, blok
+  - Beide rows als `<tr>` met `colspan` → automatisch zelfde breedte als tabel
+  - `toernooi_datum` toegevoegd aan sync-data API response
+
 ---
 
 <!--
