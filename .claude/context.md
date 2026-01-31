@@ -51,6 +51,24 @@ php artisan serve --port=8007
 | **Band** | Alleen kleur opslaan (wit, geel, oranje, etc.) - GEEN kyu |
 | **Gewichtsklasse** | NIET invullen bij variabele gewichten in categorie |
 
+## Coach Portal Logica
+
+**Instellingen (Toernooi → Organisatie tab):**
+- `portaal_modus`: `volledig` / `mutaties` / `bekijken`
+- `inschrijving_deadline`: datum waarna portal NIET meer kan wijzigen/syncen
+- `betaling_actief`: bij aanmelden moet betaald worden
+
+**Wat mag wanneer:**
+| Modus | Nieuwe judoka's | Wijzigen | Sync | Verwijderen |
+|-------|-----------------|----------|------|-------------|
+| `volledig` | ✓ | ✓ | ✓ | ✓ |
+| `mutaties` | ✗ | ✓ | ✓ | ✗ |
+| `bekijken` | ✗ | ✗ | ✗ | ✗ |
+
+**Deadline:** Na `inschrijving_deadline` is ALLES geblokkeerd (ongeacht modus)
+
+**Sync vereisten:** Judoka moet volledig zijn (naam, geboortejaar, geslacht, band, gewicht) EN passen in een categorie
+
 ## Gerelateerde Docs
 
 - `laravel/docs/` - Project documentatie
