@@ -340,24 +340,44 @@
                                 html += `<h3 style="margin-top: 15px;">Wedstrijden</h3>
                                     <table>
                                         <thead>
-                                            <tr><th>Wed</th><th>Wit</th><th>Blauw</th><th>Uitslag</th></tr>
+                                            <tr><th style="width:40px">Wed</th><th>Wit</th><th style="width:50px">WP</th><th style="width:50px">JP</th><th>Blauw</th><th style="width:50px">WP</th><th style="width:50px">JP</th><th>Winnaar</th></tr>
                                         </thead>
                                         <tbody>`;
 
                                 poule.wedstrijden.forEach((w, i) => {
-                                    let uitslagTxt = '-';
-                                    let rowClass = '';
-                                    if (w.is_gespeeld) {
-                                        uitslagTxt = (w.score_wit || 0) + ' - ' + (w.score_blauw || 0);
-                                        rowClass = 'gespeeld';
-                                    }
+                                    let rowClass = w.is_gespeeld ? 'gespeeld' : '';
                                     const witNaam = judokaMap[w.judoka_wit_id] || 'Wit';
                                     const blauwNaam = judokaMap[w.judoka_blauw_id] || 'Blauw';
+
+                                    // Determine WP/JP and winner
+                                    let witWP = '', witJP = '', blauwWP = '', blauwJP = '', winnaarNaam = '';
+                                    if (w.is_gespeeld) {
+                                        witJP = w.score_wit || '0';
+                                        blauwJP = w.score_blauw || '0';
+                                        if (w.winnaar_id) {
+                                            if (w.winnaar_id == w.judoka_wit_id) {
+                                                witWP = '2'; blauwWP = '0';
+                                                winnaarNaam = witNaam;
+                                            } else {
+                                                witWP = '0'; blauwWP = '2';
+                                                winnaarNaam = blauwNaam;
+                                            }
+                                        } else {
+                                            // Gelijkspel
+                                            witWP = '1'; blauwWP = '1';
+                                            winnaarNaam = 'Gelijk';
+                                        }
+                                    }
+
                                     html += `<tr class="${rowClass}">
-                                        <td>${w.volgorde || i+1}</td>
+                                        <td style="text-align:center">${w.volgorde || i+1}</td>
                                         <td>${witNaam}</td>
+                                        <td style="text-align:center">${witWP}</td>
+                                        <td style="text-align:center">${witJP}</td>
                                         <td>${blauwNaam}</td>
-                                        <td class="uitslag">${uitslagTxt}</td>
+                                        <td style="text-align:center">${blauwWP}</td>
+                                        <td style="text-align:center">${blauwJP}</td>
+                                        <td><strong>${winnaarNaam}</strong></td>
                                     </tr>`;
                                 });
 
