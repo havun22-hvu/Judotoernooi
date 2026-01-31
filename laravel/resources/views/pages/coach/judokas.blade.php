@@ -442,7 +442,7 @@
                                 <select name="band" class="border rounded px-3 py-2">
                                     <option value="">Band</option>
                                     @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $band)
-                                    <option value="{{ $band }}" {{ $judoka->band === $band ? 'selected' : '' }}>{{ ucfirst($band) }}</option>
+                                    <option value="{{ $band }}" {{ strtolower(\App\Enums\Band::stripKyu($judoka->band ?? '')) === $band ? 'selected' : '' }}>{{ ucfirst($band) }}</option>
                                     @endforeach
                                 </select>
                                 <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" class="border rounded px-3 py-2" placeholder="Gewicht (kg)">
