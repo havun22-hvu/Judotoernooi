@@ -1,40 +1,91 @@
-# Session Handover: 31 januari 2026 (deel 2)
+# Session Handover: 31 januari 2026 (avond)
 
-## Wat is gedaan:
+## Context
+Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Documentatie is COMPLEET, implementatie moet nog gebeuren.
 
-### Noodplan print schema's (eerder)
-- Toernooinaam + datum als table rows boven wedstrijdschema's
-- Zelfde breedte als tabel via colspan
+## Documentatie (KLAAR)
 
-### Deel 2 fixes (door gebruiker gedaan):
-- JudokaController route missing organisator
-- Coach portal band select reset
-- Band kyu cleanup (database)
-- Sync deadline check
-- Toast overlapt menu
-- BlokController route missing organisator
-- CheckToernooiRol middleware routes
-- Noodplan script tag escape
-- Noodplan live schema dubbele potjes
+| Document | Beschrijving |
+|----------|--------------|
+| `laravel/docs/3-TECHNICAL/REDUNDANTIE.md` | Technisch plan - architectuur, failover, specs |
+| `laravel/docs/2-FEATURES/NOODPLAN-HANDLEIDING.md` | Praktische gids voor leken |
+| `laravel/docs/4-PLANNING/PLANNING_NOODPLAN.md` | Sectie 9 verwijst naar beide docs |
 
-## Openstaand:
+## Implementatie Roadmap (TODO)
 
-**Noodplan print headers** - Gebruiker vroeg eerder "lukt het niet??" maar geen screenshot/beschrijving ontvangen. Mogelijk werkt de header niet zoals verwacht. Vraag bij volgende sessie om verduidelijking als nodig.
+### Fase 1: Basis Lokale Modus (MVP)
+1. **Lokale server launcher voor Windows/Mac**
+   - Dubbelklik-start, geen CLI kennis nodig
+   - PHP bundlen of portable versie
+   - Start Laravel op poort 8000
 
-## Code structuur noodplan print:
+2. **Server rol configuratie scherm**
+   - Bij eerste start: keuze Primary of Standby
+   - Opslaan in `config/local-server.php`
+   - IP validatie bij elke start
+   - Zie REDUNDANTIE.md sectie 10 voor mockup
+
+3. **Database download/export functie**
+   - Download toernooi data naar lokale SQLite
+   - Moet werken vóór wedstrijddag (met internet)
+
+4. **Offline matrix print vanuit localStorage**
+   - Bestaande Live backup al in localStorage
+   - Matrix print moet ook offline werken
+
+### Fase 2: Hot Standby
+1. **Sync API tussen Primary en Standby**
+   - Standby pollt elke 5 sec van Primary
+   - Endpoint: `GET /api/sync-data`
+
+2. **Heartbeat monitoring**
+   - Elke 5 sec ping
+   - 3 gemiste pings = alert
+
+3. **Standby status indicator**
+   - Toon op beide laptops wie Primary/Standby is
+   - Toon sync status
+
+### Fase 3: Enterprise Features
+- Automatic failover
+- Health dashboard
+- Pre-flight check wizard
+
+## Technische Details
+
+### Hardware vereisten (zie REDUNDANTIE.md sectie 12)
+- Windows 10+ of macOS 10.15+
+- 4GB RAM minimum
+- Elke laptop na 2018 voldoet
+- Chromebooks/tablets werken NIET als server
+
+### Netwerk setup
+- Deco M4 mesh (3 units)
+- Primary IP: 192.168.1.100
+- Standby IP: 192.168.1.101
+- Geen internet vereist voor lokale werking
+
+### Bestaande code om te gebruiken
+- `NoodplanController::syncData()` - JSON export van alle poule data
+- localStorage sync al actief in `layouts/app.blade.php`
+- Print layouts in `resources/views/pages/noodplan/`
+
+## Belangrijke punten
+
+1. **Gebruiker kiest rol expliciet** - geen automatische detectie
+2. **Online modus blijft werken** - lokaal is uitbreiding, geen vervanging
+3. **Documentatie is leidend** - implementeer volgens de specs in REDUNDANTIE.md
+4. **Leken-vriendelijk** - organisatoren zijn geen IT'ers
+
+## Files om te maken
 
 ```
-ingevuld-schema.blade.php (Matrix)
-└── <table class="schema-table">
-    └── <thead>
-        ├── <tr class="title-row"> - toernooinaam + datum (donker)
-        ├── <tr class="info-row"> - poule info + checkbox (licht)
-        └── <tr class="header-row"> - kolom headers
-
-index.blade.php (Live)
-└── generateLiveHTML() - zelfde structuur, JS generated
+app/Console/Commands/LocalServerCommand.php   - CLI launcher
+resources/views/local/setup.blade.php         - Rol configuratie UI
+config/local-server.php                       - Lokale configuratie
+app/Http/Controllers/LocalSyncController.php  - Sync API
 ```
 
-## Server paden:
-- Staging: `/var/www/staging.judotoernooi/laravel`
-- Production: `/var/www/judotoernooi/laravel`
+## Vraag aan gebruiker
+
+Start met Fase 1 item 1 (lokale server launcher) of wil je een andere volgorde?
