@@ -70,13 +70,23 @@ class MatController extends Controller
 
     private function doGetWedstrijden(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'blok_id' => 'required|exists:blokken,id',
-            'mat_id' => 'required|exists:matten,id',
-        ]);
+        $blokId = $request->input('blok_id');
+        $matId = $request->input('mat_id');
 
-        $blok = Blok::findOrFail($validated['blok_id']);
-        $mat = Mat::findOrFail($validated['mat_id']);
+        // Manual validation with JSON error response
+        if (!$blokId || !$matId) {
+            return response()->json(['error' => 'blok_id en mat_id zijn verplicht'], 400);
+        }
+
+        $blok = Blok::find($blokId);
+        $mat = Mat::find($matId);
+
+        if (!$blok) {
+            return response()->json(['error' => 'Blok niet gevonden - selecteer opnieuw', 'invalid_blok' => true], 404);
+        }
+        if (!$mat) {
+            return response()->json(['error' => 'Mat niet gevonden - selecteer opnieuw', 'invalid_mat' => true], 404);
+        }
 
         $schema = $this->wedstrijdService->getSchemaVoorMat($blok, $mat);
 
