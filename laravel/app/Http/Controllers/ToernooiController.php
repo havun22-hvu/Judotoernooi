@@ -197,8 +197,14 @@ class ToernooiController extends Controller
         }
 
         // Sync blokken and matten to match settings
-        $this->toernooiService->syncBlokken($toernooi);
+        $blokkenResult = $this->toernooiService->syncBlokken($toernooi);
         $this->toernooiService->syncMatten($toernooi);
+
+        // Build warning message for moved poules
+        $blokkenWarning = null;
+        if ($blokkenResult['verplaatste_poules'] > 0) {
+            $blokkenWarning = "Let op: {$blokkenResult['verplaatste_poules']} poule(s) zijn naar het sleepvak verplaatst omdat hun blok is verwijderd.";
+        }
 
         // Check for overlapping categories
         try {
@@ -217,14 +223,17 @@ class ToernooiController extends Controller
             return response()->json([
                 'success' => true,
                 'overlapWarning' => $overlapWarning,
+                'blokkenWarning' => $blokkenWarning,
                 'nietGecategoriseerd' => $nietGecategoriseerd,
             ]);
         }
 
         $redirect = redirect()->route('toernooi.edit', $toernooi->routeParams());
 
-        if ($overlapWarning) {
-            return $redirect->with('warning', $overlapWarning);
+        // Combine warnings
+        $warnings = array_filter([$overlapWarning, $blokkenWarning]);
+        if (!empty($warnings)) {
+            return $redirect->with('warning', implode(' ', $warnings));
         }
 
         return $redirect->with('success', 'Toernooi bijgewerkt');

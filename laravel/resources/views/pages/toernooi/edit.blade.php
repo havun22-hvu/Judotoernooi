@@ -2537,6 +2537,11 @@ window.triggerAutoSave = function() {};
                 } else if (overlapAlert) {
                     overlapAlert.classList.add('hidden');
                 }
+
+                // Show blokken warning if poules were moved to sleepvak
+                if (data.blokkenWarning) {
+                    alert(data.blokkenWarning);
+                }
             } else {
                 showStatus('✗ Fout bij opslaan', 'error');
             }
