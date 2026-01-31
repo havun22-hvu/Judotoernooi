@@ -405,7 +405,7 @@
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="font-medium {{ $pastNietInCategorie ? 'text-red-800' : ($isOnvolledig ? 'text-yellow-800' : 'text-gray-800') }}">{{ $judoka->naam }}</span>
-                                    <span class="text-sm text-gray-500">{{ $judoka->geboortejaar ?? '?' }} · {{ $judoka->geslacht === 'M' ? 'M' : ($judoka->geslacht === 'V' ? 'V' : '?') }} · {{ $judoka->band ? ucfirst(explode(' ', $judoka->band)[0]) : '?' }} · {{ $judoka->gewicht ? $judoka->gewicht . 'kg' : '?' }}@if($judoka->gewichtsklasse) ({{ $judoka->gewichtsklasse }})@endif</span>
+                                    <span class="text-sm text-gray-500">{{ $judoka->geboortejaar ?? '?' }} · {{ $judoka->geslacht === 'M' ? 'M' : ($judoka->geslacht === 'V' ? 'V' : '?') }} · {{ $judoka->band ? ucfirst(explode(' ', $judoka->band)[0]) : '?' }} · {{ $judoka->gewicht ? $judoka->gewicht . 'kg' : '?' }}@if($judoka->gewichtsklasse && $judoka->gewichtsklasse !== 'Variabel') ({{ $judoka->gewichtsklasse }})@endif</span>
                                     @if($judoka->leeftijdsklasse)<span class="text-sm text-blue-600">{{ $judoka->leeftijdsklasse }}@if($isEliminatie) <span class="text-orange-600">(E)</span>@endif</span>@endif
                                 </div>
                                 @if($pastNietInCategorie)<p class="text-sm text-red-700 mt-1 font-medium">🚫 {{ $categorieProbleem }}</p>@endif

@@ -53,8 +53,10 @@
                         <p class="font-medium text-gray-800">{{ $judoka->naam }}</p>
                         <p class="text-sm text-gray-600">
                             {{ $judoka->leeftijdsklasse ?? '' }}
-                            @if($judoka->gewichtsklasse)
+                            @if($judoka->gewichtsklasse && $judoka->gewichtsklasse !== 'Variabel')
                             - {{ $judoka->gewichtsklasse }} kg
+                            @elseif($judoka->gewicht)
+                            - {{ $judoka->gewicht }} kg
                             @endif
                         </p>
                     </div>
