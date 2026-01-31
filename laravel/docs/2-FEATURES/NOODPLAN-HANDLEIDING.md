@@ -69,6 +69,249 @@ Met dit noodplan blijft je toernooi **altijd** doorlopen.
 
 ---
 
+## Opstartprocedure voor Beginners
+
+> **Voor wie:** Iedereen die niet technisch is maar wel het systeem moet opzetten
+
+### Kan Ik de Wifi van de Sporthal Gebruiken?
+
+**Kort antwoord:** Liever niet voor de kritieke apparaten.
+
+| Situatie | Advies |
+|----------|--------|
+| Sporthal heeft betrouwbare wifi | Kan, maar eigen Deco is veiliger |
+| Sporthal wifi is traag/instabiel | Gebruik eigen Deco mesh |
+| Sporthal wifi valt vaak uit | Absoluut eigen Deco gebruiken |
+| Geen sporthal wifi beschikbaar | Eigen Deco is de enige optie |
+
+**Waarom eigen netwerk beter is:**
+- Je hebt 100% controle
+- Geen concurrentie met 500 telefoons van publiek
+- Werkt ook als sporthal internet uitvalt
+- Sneller en stabieler
+
+### De Deco M4 Mesh Uitgelegd
+
+**Wat is het?**
+Een set van 3 kleine witte kastjes die samen een wifi netwerk maken.
+
+**Hoe werkt het?**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   SPORTHAL PLATTEGROND                                          │
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │                                                         │   │
+│   │    [Deco 2]                              [Deco 3]       │   │
+│   │       ◯                                     ◯           │   │
+│   │                                                         │   │
+│   │                                                         │   │
+│   │     Mat 1         Mat 2         Mat 3        Mat 4      │   │
+│   │    ┌─────┐       ┌─────┐       ┌─────┐      ┌─────┐     │   │
+│   │    │     │       │     │       │     │      │     │     │   │
+│   │    └─────┘       └─────┘       └─────┘      └─────┘     │   │
+│   │                                                         │   │
+│   │                                                         │   │
+│   │                    [Deco 1]                             │   │
+│   │                       ◯                                 │   │
+│   │                  JURYTAFEL                              │   │
+│   │              ┌──────────────┐                           │   │
+│   │              │ Laptop A & B │                           │   │
+│   │              │   Printer    │                           │   │
+│   │              └──────────────┘                           │   │
+│   │                                                         │   │
+│   │   INGANG ════                                           │   │
+│   └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Plaatsing tips:**
+- Deco 1: Bij jurytafel (ALTIJD hier, dit is de hoofdunit)
+- Deco 2 en 3: Aan de zijkanten, ongeveer halverwege de zaal
+- Zet ze HOOG (op tafel/kast), niet op de grond
+- Niet achter metalen kasten of pilaren
+
+### Laptop Aansluiten - Stap voor Stap
+
+**Wat je nodig hebt:**
+- Laptop met oplader
+- Stroom (stopcontact of stekkerdoos)
+- Wifi (via Deco of sporthal)
+
+**Stap 1: Laptop opstarten**
+```
+1. Sluit de oplader aan op de laptop
+2. Sluit de oplader aan op het stopcontact
+3. Druk op de aan/uit knop van de laptop
+4. Wacht tot Windows/Mac volledig is opgestart
+   (je ziet het bureaublad)
+```
+
+**Stap 2: Verbinden met wifi**
+
+*Voor Windows:*
+```
+1. Klik rechtsonder op het wifi-icoon (📶)
+2. Zoek "Deco_Toernooi" (of je netwerknaam)
+3. Klik erop
+4. Klik "Verbinden"
+5. Voer het wachtwoord in
+6. Wacht tot er "Verbonden" staat
+```
+
+*Voor Mac:*
+```
+1. Klik rechtsboven op het wifi-icoon (📶)
+2. Zoek "Deco_Toernooi" (of je netwerknaam)
+3. Klik erop
+4. Voer het wachtwoord in
+5. Wacht tot het vinkje verschijnt
+```
+
+**Stap 3: Browser openen**
+```
+1. Dubbelklik op Chrome, Edge, of Safari icoon
+2. Of: klik op de taakbalk onderaan
+3. Typ in de adresbalk: judotournament.org
+4. Druk Enter
+```
+
+### Deco M4 Installeren - Eerste Keer
+
+> **Eenmalig:** Dit hoef je maar 1x te doen (thuis, voor het toernooi)
+
+**Wat je nodig hebt:**
+- De 3 Deco units
+- Stroom voor alle 3
+- Je telefoon
+- De Deco app (gratis in App Store / Play Store)
+
+**Stappen:**
+```
+1. Download de "TP-Link Deco" app op je telefoon
+2. Maak een account aan (of log in)
+3. Sluit Deco 1 aan op stroom
+4. Wacht tot lampje BLAUW knippert
+5. Volg instructies in de app
+6. Kies een netwerknaam, bijv: "Deco_Toernooi"
+7. Kies een wachtwoord (schrijf dit op!)
+8. Voeg Deco 2 en 3 toe via de app
+9. Test: verbind je telefoon met het nieuwe netwerk
+```
+
+**Lampjes betekenis:**
+| Kleur | Betekenis |
+|-------|-----------|
+| Blauw knipperend | Klaar om te installeren |
+| Blauw vast | Bezig met opstarten |
+| Groen/Wit | Alles werkt goed |
+| Geel/Oranje | Zwak signaal (verplaats unit) |
+| Rood | Geen verbinding (check stroom/andere units) |
+
+### Tablets/iPads Verbinden
+
+**Voor elke tablet:**
+```
+1. Ga naar Instellingen
+2. Tik op "Wifi" of "Draadloos"
+3. Zoek "Deco_Toernooi"
+4. Tik erop
+5. Voer wachtwoord in
+6. Wacht op verbinding
+
+7. Open de browser (Chrome of Safari)
+8. Typ: 192.168.1.100:8000
+9. Je ziet nu de toernooi app
+10. Log in met je mat-PIN
+```
+
+### Printer Aansluiten
+
+**Stap 1: Fysiek aansluiten**
+```
+1. Zet printer naast Laptop A
+2. Sluit USB-kabel aan:
+   - Ene kant in printer
+   - Andere kant in laptop
+3. Sluit stroomkabel aan
+4. Zet printer aan
+```
+
+**Stap 2: Test printen**
+```
+1. Open de browser op Laptop A
+2. Ga naar judotournament.org
+3. Log in
+4. Ga naar Noodplan
+5. Klik op "Weeglijst"
+6. Klik Ctrl+P (of Cmd+P op Mac)
+7. Kies je printer
+8. Klik "Afdrukken"
+```
+
+### Veelvoorkomende Problemen
+
+**"Ik zie geen wifi netwerken"**
+```
+Check:
+- Is de wifi aan op je laptop? (vaak een knopje of toetscombinatie)
+- Is de Deco aangesloten en lampje wit/groen?
+- Ben je dichtbij genoeg? (max 30 meter)
+```
+
+**"Wachtwoord wordt niet geaccepteerd"**
+```
+Check:
+- Hoofdletters/kleine letters goed?
+- Geen spaties aan het begin/eind?
+- Juiste netwerk geselecteerd?
+```
+
+**"Pagina laadt niet"**
+```
+Check:
+- Ben je verbonden met wifi? (kijk rechtsboven/rechtsonder)
+- Heb je het juiste adres getypt? (192.168.1.100:8000)
+- Draait de server op Laptop A?
+```
+
+**"Printer print niet"**
+```
+Check:
+- USB-kabel goed aangesloten (beide kanten)?
+- Printer aan?
+- Papier in de printer?
+- Inkt/toner niet leeg?
+```
+
+### Stroomvoorziening Tips
+
+**Hoeveel stopcontacten heb je nodig?**
+```
+- Laptop A:        1 stopcontact
+- Laptop B:        1 stopcontact
+- Printer:         1 stopcontact
+- Deco 1:          1 stopcontact
+- Deco 2:          1 stopcontact
+- Deco 3:          1 stopcontact
+────────────────────────────────
+TOTAAL:            6 stopcontacten
+```
+
+**Aanbevolen:**
+- Neem 2 stekkerdozen mee (4-6 aansluitingen elk)
+- Check of de sporthal genoeg stopcontacten heeft bij jurytafel
+- Neem een verlengkabel mee (5-10 meter)
+
+**Let op:**
+- Zorg dat kabels niet over looppaden liggen (struikelgevaar!)
+- Tape kabels vast met gaffertape als nodig
+- Zet Deco units niet direct naast magnetrons of andere apparaten
+
+---
+
 ## Voorbereiding (1 Dag Voor Toernooi)
 
 ### Stap 1: Laptops Voorbereiden
