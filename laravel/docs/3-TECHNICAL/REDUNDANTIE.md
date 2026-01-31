@@ -134,10 +134,35 @@ Dit document beschrijft de technische architectuur voor een fail-safe toernooi s
 
 | Aspect | Specificatie |
 |--------|--------------|
-| **Units** | 3 stuks |
-| **Dekking** | ~400m² |
+| **Units** | 3 stuks (max 10 per netwerk) |
+| **Dekking** | ~400m² (met 3 units) |
 | **Max devices** | 75-100 stabiel |
 | **Internet** | Niet vereist voor lokale werking |
+
+**Schalen naar grotere locaties:**
+
+| Aantal units | Dekking | Geschikt voor |
+|--------------|---------|---------------|
+| 2 | ~260m² | Kleine sporthal |
+| 3 | ~400m² | Normale sporthal |
+| 5 | ~650m² | Grote sporthal |
+| 10 | ~1300m² | Evenementenhal |
+
+**Fysieke setup:**
+```
+Stopcontact 1          Stopcontact 2          Stopcontact 3
+     │                      │                      │
+ ┌───┴───┐              ┌───┴───┐              ┌───┴───┐
+ │ Deco 1│ ~~~ wifi ~~~ │ Deco 2│ ~~~ wifi ~~~ │ Deco 3│
+ └───────┘    mesh      └───────┘    mesh      └───────┘
+     │
+     └── (optioneel: ethernet naar sporthal internet)
+```
+
+- Deco's worden **alleen op stroom** aangesloten
+- Onderling verbinden ze draadloos (mesh)
+- Laptops en tablets verbinden als wifi clients
+- Zonder internet: puur lokaal netwerk (aanbevolen voor redundantie)
 
 ---
 
