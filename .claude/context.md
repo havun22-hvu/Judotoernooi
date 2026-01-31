@@ -69,6 +69,8 @@ php artisan serve --port=8007
 
 **Sync vereisten:** Judoka moet volledig zijn (naam, geboortejaar, geslacht, band, gewicht) EN passen in een categorie
 
+**Met betaling:** Als `betaling_actief` → sync gebeurt automatisch via Mollie webhook na succesvolle betaling (niet handmatig)
+
 ## Gerelateerde Docs
 
 - `laravel/docs/` - Project documentatie
