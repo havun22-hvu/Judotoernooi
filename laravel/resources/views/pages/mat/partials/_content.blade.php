@@ -967,6 +967,10 @@ function matInterface() {
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 0 };
             } else if (wp === 0) {
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 2 };
+            } else if (wp === 1) {
+                // Gelijkspel: beide 1 WP, beide 0 JP
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 1 };
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0, [opponentId]: 0 };
             }
         },
 
