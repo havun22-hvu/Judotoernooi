@@ -120,15 +120,40 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
 3. **Documentatie is leidend** - implementeer volgens de specs in REDUNDANTIE.md
 4. **Leken-vriendelijk** - organisatoren zijn geen IT'ers
 
-## Files om te maken
+## Gemaakte Files
 
 ```
-app/Console/Commands/LocalServerCommand.php   - CLI launcher
+# Controllers
+app/Http/Controllers/LocalSyncController.php  - Alle sync en setup logica
+
+# Config
+config/local-server.php                       - Netwerk en sync instellingen
+
+# Views
 resources/views/local/setup.blade.php         - Rol configuratie UI
-config/local-server.php                       - Lokale configuratie
-app/Http/Controllers/LocalSyncController.php  - Sync API
+resources/views/local/dashboard.blade.php     - Server status dashboard
+resources/views/local/standby-sync.blade.php  - Standby sync monitor
+resources/views/local/health-dashboard.blade.php - Systeem health overzicht
+resources/views/local/preflight.blade.php     - Pre-flight check wizard
+
+# Launchers
+start-server.bat                              - Windows launcher
+start-server.command                          - Mac launcher
 ```
 
-## Vraag aan gebruiker
+## URLs
 
-Start met Fase 1 item 1 (lokale server launcher) of wil je een andere volgorde?
+| URL | Functie |
+|-----|---------|
+| `/local-server` | Dashboard |
+| `/local-server/setup` | Rol configureren |
+| `/local-server/preflight` | Pre-flight check |
+| `/local-server/standby-sync` | Standby sync monitor |
+| `/local-server/health-dashboard` | Health overzicht |
+| `/local-server/sync` | Sync data (JSON) |
+| `/local-server/heartbeat` | Heartbeat endpoint |
+| `/local-server/health` | Health check (JSON) |
+
+## Status
+
+**ALLE FASES COMPLEET** - Redundantie systeem is klaar voor gebruik.
