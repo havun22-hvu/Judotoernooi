@@ -77,9 +77,8 @@
         }
     }
     .schema-table {
-        width: 100%;
+        width: auto;
         border-collapse: collapse;
-        table-layout: fixed;
     }
     .schema-table th,
     .schema-table td {

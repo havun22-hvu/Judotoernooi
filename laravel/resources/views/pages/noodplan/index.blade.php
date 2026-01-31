@@ -318,7 +318,7 @@
     .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .poule-checkbox { display: flex; align-items: center; gap: 8px; }
     .poule-checkbox input { width: 18px; height: 18px; cursor: pointer; }
-    .schema-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .schema-table { width: auto; border-collapse: collapse; }
     .schema-table th, .schema-table td { border: 1px solid #333; }
     .header-row { background: #1f2937; color: white; }
     .header-row th { border-color: #374151; font-size: 11px; padding: 4px 2px; }
