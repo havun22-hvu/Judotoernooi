@@ -203,11 +203,18 @@
                     <p class="text-sm text-yellow-600">Met alle al gespeelde wedstrijden + punten uit backup</p>
                 </div>
                 <div class="flex gap-2">
-                    <button @click="printLive()" type="button"
+                    <button @click="printLive(null)" type="button"
                        class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
                        :disabled="!hasData" :class="{ 'opacity-50 cursor-not-allowed': !hasData }">
-                        Print
+                        Alle
                     </button>
+                    @foreach($blokken as $blok)
+                    <button @click="printLive({{ $blok->nummer }})" type="button"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+                       :disabled="!hasData" :class="{ 'opacity-50 cursor-not-allowed': !hasData }">
+                        {{ $blok->nummer }}
+                    </button>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -254,7 +261,7 @@
                     }
                 },
 
-                printLive() {
+                printLive(blokNummer) {
                     const storageKey = `noodplan_${this.toernooiId}_poules`;
                     const data = localStorage.getItem(storageKey);
                     if (!data) {
@@ -263,26 +270,37 @@
                     }
 
                     const parsed = JSON.parse(data);
+                    // Filter by blok if specified
+                    if (blokNummer !== null && parsed.poules) {
+                        parsed.poules = parsed.poules.filter(p => p.blok_nummer == blokNummer);
+                    }
                     const printWindow = window.open('', '_blank');
-                    printWindow.document.write(this.generateLiveHTML(parsed));
+                    printWindow.document.write(this.generateLiveHTML(parsed, blokNummer));
                     printWindow.document.close();
                 },
 
-                generateLiveHTML(data) {
+                generateLiveHTML(data, blokNummer) {
                     const timestamp = new Date().toLocaleString('nl-NL');
+                    const blokLabel = blokNummer ? ` - Blok ${blokNummer}` : '';
+                    const totalPoules = data.poules ? data.poules.length : 0;
                     let html = `<!DOCTYPE html>
 <html><head>
-<title>Live Wedstrijd Schema's - ${timestamp}</title>
+<title>Live Wedstrijd Schema's${blokLabel} - ${timestamp}</title>
 <style>
     @media print {
         .no-print { display: none !important; }
         .poule-page { page-break-after: always; }
-        .poule-page:last-child { page-break-after: avoid; }
+        .poule-page:last-of-type { page-break-after: avoid; }
+        .poule-page.print-exclude { display: none !important; }
     }
     @page { size: A4 portrait; margin: 0.5cm; }
     body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 10px; }
-    .print-toolbar { padding: 10px; background: #fef3c7; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 10px 14px; margin-bottom: 10px; }
+    .print-toolbar { padding: 12px 16px; background: #fef3c7; margin-bottom: 15px; border-radius: 8px; }
+    .toolbar-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .toolbar-controls { display: flex; align-items: center; gap: 15px; }
+    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .poule-checkbox { display: flex; align-items: center; gap: 8px; }
+    .poule-checkbox input { width: 18px; height: 18px; cursor: pointer; }
     .schema-table { width: auto; border-collapse: collapse; table-layout: fixed; }
     .schema-table th, .schema-table td { border: 1px solid #333; }
     .header-row { background: #1f2937; color: white; }
@@ -297,12 +315,47 @@
     .totaal-cel { width: 36px; background: #f3f4f6; text-align: center; font-size: 12px; font-weight: bold; }
     .plts-cel { width: 32px; background: #fef9c3; text-align: center; font-size: 12px; }
     .gespeeld { background: #d1fae5; }
+    .poule-page.print-exclude { opacity: 0.5; }
+    .poule-page { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px dashed #ccc; }
 </style>
 </head><body>
 <div class="print-toolbar no-print">
-    <strong>LIVE BACKUP - ${timestamp}</strong>
-    <button onclick="window.print()" style="padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer;">Print</button>
-</div>`;
+    <div class="toolbar-row">
+        <div class="toolbar-controls">
+            <strong>LIVE BACKUP${blokLabel} - ${timestamp}</strong>
+            <span style="color:#666">|</span>
+            <button onclick="selectAll(true)" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;">Alles aan</button>
+            <button onclick="selectAll(false)" style="background:none;border:none;color:#666;cursor:pointer;font-size:13px;">Alles uit</button>
+            <span id="print-counter" style="color:#666;font-size:13px;">${totalPoules} van ${totalPoules} geselecteerd</span>
+        </div>
+        <button onclick="window.print()" style="padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Print geselecteerde</button>
+    </div>
+</div>
+<script>
+function selectAll(checked) {
+    document.querySelectorAll('.poule-page').forEach(el => {
+        const cb = el.querySelector('input[type=checkbox]');
+        if (cb) {
+            cb.checked = checked;
+            togglePoule(cb);
+        }
+    });
+}
+function togglePoule(cb) {
+    const page = cb.closest('.poule-page');
+    if (cb.checked) {
+        page.classList.remove('print-exclude');
+    } else {
+        page.classList.add('print-exclude');
+    }
+    updateCounter();
+}
+function updateCounter() {
+    const total = document.querySelectorAll('.poule-page').length;
+    const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
+    document.getElementById('print-counter').textContent = selected + ' van ' + total + ' geselecteerd';
+}
+</script>`;
 
                     if (!data.poules || data.poules.length === 0) {
                         html += '<p>Geen poules gevonden in backup.</p></body></html>';
@@ -327,8 +380,11 @@
 
                         html += `<div class="poule-page">
                             <div class="poule-header">
-                                <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
-                                <span style="float:right">Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
+                                <div class="poule-checkbox no-print">
+                                    <input type="checkbox" checked onchange="togglePoule(this)">
+                                    <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
+                                </div>
+                                <span>Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
                             </div>
                             <table class="schema-table">
                                 <thead><tr class="header-row">
