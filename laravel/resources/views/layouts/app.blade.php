@@ -138,7 +138,7 @@
     </nav>
 
     {{-- Centrale toast container (fixed bovenaan scherm) --}}
-    <div id="app-toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+    <div id="app-toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 hidden">
         <div id="app-toast-content" class="px-6 py-3 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2">
             <span id="app-toast-message"></span>
             <button onclick="hideAppToast()" class="ml-2 text-current opacity-70 hover:opacity-100">&times;</button>
