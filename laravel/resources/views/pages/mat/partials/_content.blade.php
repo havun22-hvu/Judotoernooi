@@ -962,13 +962,17 @@ function matInterface() {
             // Reassign objects voor Alpine reactivity
             wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
 
-            // Auto-set opponent WP
+            // Auto-set opponent WP en JP waar mogelijk
             if (wp === 2) {
+                // Winnaar: tegenstander WP=0 en JP=0, winnaar JP moet nog ingevuld worden
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 0 };
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
             } else if (wp === 0) {
+                // Verliezer: tegenstander is winnaar (WP=2), eigen JP=0
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 2 };
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0 };
             } else if (wp === 1) {
-                // Gelijkspel: beide 1 WP, beide 0 JP
+                // Gelijkspel: beide WP=1, beide JP=0
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 1 };
                 wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0, [opponentId]: 0 };
             }
