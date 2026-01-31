@@ -292,6 +292,21 @@
         .poule-page { page-break-after: always; }
         .poule-page:last-of-type { page-break-after: avoid; }
         .poule-page.print-exclude { display: none !important; }
+        /* Force colors to print */
+        .schema-table, .schema-table * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+        .header-row, .header-row th, .header-row th div, .header-row th * {
+            background: #1f2937 !important;
+            color: white !important;
+        }
+        .header-row .sub-header { color: #9ca3af !important; }
+        .score-cel.inactief { background: #1f2937 !important; }
+        .totaal-cel { background: #f3f4f6 !important; color: #000 !important; }
+        .plts-cel { background: #fef9c3 !important; color: #000 !important; }
+        .gespeeld { background: #d1fae5 !important; }
     }
     @page { size: A4 portrait; margin: 0.5cm; }
     body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 10px; }
