@@ -185,9 +185,6 @@
     $aantal = $item['aantal'];
     $isLandscape = $aantal >= 6;
     $judokas = $poule->judokas->values();
-    $wedstrijden = $poule->wedstrijden->keyBy(function($w) {
-        return $w->judoka_wit_id . '-' . $w->judoka_blauw_id;
-    });
 @endphp
 
 <div class="poule-page {{ $isLandscape ? 'landscape' : '' }}"
@@ -238,9 +235,6 @@
             @foreach($judokas as $idx => $judoka)
             @php
                 $judokaNr = $idx + 1;
-                $totaalWP = 0;
-                $totaalJP = 0;
-                $heeftGespeeld = false;
             @endphp
             <tr class="judoka-row">
                 <td class="px-1 text-center font-bold nr-cel">{{ $judokaNr }}</td>
@@ -254,48 +248,18 @@
                         $witNr = $schemaWedstrijd[0];
                         $blauwNr = $schemaWedstrijd[1];
                         $participates = in_array($judokaNr, $schemaWedstrijd);
-
-                        $wp = '';
-                        $jp = '';
-
-                        if ($participates) {
-                            // Find the actual match
-                            $witJudoka = $judokas[$witNr - 1] ?? null;
-                            $blauwJudoka = $judokas[$blauwNr - 1] ?? null;
-
-                            if ($witJudoka && $blauwJudoka) {
-                                $key = $witJudoka->id . '-' . $blauwJudoka->id;
-                                $match = $wedstrijden->get($key);
-
-                                if ($match && $match->is_gespeeld) {
-                                    $heeftGespeeld = true;
-                                    if ($judokaNr === $witNr) {
-                                        // This judoka is white
-                                        $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_wit !== null ? (string)$match->score_wit : '0';
-                                        $totaalWP += (int)$wp;
-                                        $totaalJP += (int)$jp;
-                                    } else {
-                                        // This judoka is blue
-                                        $wp = $match->winnaar_id === $judoka->id ? '2' : '0';
-                                        $jp = $match->score_blauw !== null ? (string)$match->score_blauw : '0';
-                                        $totaalWP += (int)$wp;
-                                        $totaalJP += (int)$jp;
-                                    }
-                                }
-                            }
-                        }
                     @endphp
                     @if($participates)
-                    <td class="score-cel w-cel">{{ $wp !== '' ? $wp : '' }}</td>
-                    <td class="score-cel j-cel">{{ $jp !== '' ? $jp : '' }}</td>
+                    {{-- Lege cellen voor handmatig invullen --}}
+                    <td class="score-cel w-cel"></td>
+                    <td class="score-cel j-cel"></td>
                     @else
                     <td class="score-cel w-cel inactief"></td>
                     <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
-                <td class="totaal-cel">{{ $heeftGespeeld ? $totaalWP : '' }}</td>
-                <td class="totaal-cel">{{ $heeftGespeeld ? $totaalJP : '' }}</td>
+                <td class="totaal-cel"></td>
+                <td class="totaal-cel"></td>
                 <td class="plts-cel"></td>
             </tr>
             @endforeach
