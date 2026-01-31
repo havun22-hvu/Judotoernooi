@@ -57,6 +57,56 @@ class LocalSyncController extends Controller
     }
 
     /**
+     * Standby sync UI - shows real-time sync status
+     */
+    public function standbySyncUI(): View
+    {
+        $role = config('local-server.role');
+
+        if ($role !== 'standby') {
+            return redirect()->route('local.dashboard')
+                ->with('error', 'Deze pagina is alleen voor standby servers');
+        }
+
+        return view('local.standby-sync');
+    }
+
+    /**
+     * Health dashboard - shows system status
+     */
+    public function healthDashboard(): View
+    {
+        $toernooien = Toernooi::where('datum', today())->get();
+
+        // Check cloud connectivity
+        $cloudOnline = false;
+        try {
+            $response = @file_get_contents('https://judotournament.org', false, stream_context_create([
+                'http' => ['timeout' => 3]
+            ]));
+            $cloudOnline = $response !== false;
+        } catch (\Exception $e) {
+            $cloudOnline = false;
+        }
+
+        // Check standby
+        $standbyOnline = Cache::has('standby_last_heartbeat') &&
+            now()->diffInSeconds(Cache::get('standby_last_heartbeat')) < 30;
+
+        // Simulated devices (in real implementation, these would be tracked)
+        $devices = [
+            ['name' => 'Mat 1', 'type' => 'Tablet', 'online' => true],
+            ['name' => 'Mat 2', 'type' => 'Tablet', 'online' => true],
+            ['name' => 'Mat 3', 'type' => 'Tablet', 'online' => true],
+            ['name' => 'Mat 4', 'type' => 'Tablet', 'online' => true],
+            ['name' => 'Weging', 'type' => 'Laptop', 'online' => true],
+            ['name' => 'Display 1', 'type' => 'Scherm', 'online' => true],
+        ];
+
+        return view('local.health-dashboard', compact('toernooien', 'cloudOnline', 'standbyOnline', 'devices'));
+    }
+
+    /**
      * Dashboard showing current status
      */
     public function dashboard(): View
