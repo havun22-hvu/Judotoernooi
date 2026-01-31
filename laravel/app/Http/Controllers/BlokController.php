@@ -90,7 +90,7 @@ class BlokController extends Controller
             }
 
             return redirect()
-                ->route('toernooi.blok.index', ['toernooi' => $toernooi, 'kies' => 1]);
+                ->route('toernooi.blok.index', array_merge($toernooi->routeParams(), ['kies' => 1]));
 
         } catch (\Exception $e) {
             \Log::error('genereerVerdeling failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
