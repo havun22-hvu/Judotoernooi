@@ -1,46 +1,74 @@
-# Handover: 31 januari 2026
+# Session Handover: 31 januari 2026 (avond)
 
-## Wat is gedaan
+## Wat is gedaan:
 
-### Device-bound PWA fixes
-- Mat, spreker, dojo interfaces werken nu op iPad/tablet
-- Nieuwe device-bound API routes toegevoegd die `device.binding` middleware gebruiken
-- Oplost: "missing parameters" errors en "doctype is not valid json" errors
+### Noodplan print schema's verbeterd
+- Toernooinaam + datum toegevoegd als donkere header boven elk wedstrijdschema
+- Poule info (nummer, categorie, mat, blok) als tweede lichte rij
+- Headers zijn nu table rows met `colspan` → automatisch zelfde breedte als tabel
+- Toegepast op:
+  - Matrix (ingevuld-schema.blade.php)
+  - Live (index.blade.php generateLiveHTML)
+- `toernooi_datum` toegevoegd aan sync-data API (NoodplanController.php)
 
-### Best of three wedstrijdschema fix (GROOT)
-Meerdere bugs opgelost die ervoor zorgden dat "best of three" bij 2 judoka's niet werkte:
+### Eerdere fixes vandaag
+- Device PWA routes (iPad/tablet)
+- Best of three instelling fixes
+- Wedstrijd count correcties
+- Positie waarde fix (999 → echte count)
 
-1. **Form saving** - Alpine.js `:value` binding werkte niet → `x-ref` + `x-watch`
-2. **Service caching** - Toernooi relatie was gecached → `->toernooi()->first()`
-3. **JSON string keys** - "2" vs 2 mismatch → check beide keys
-4. **Custom schema override** - Formulier updatet nu automatisch `wedstrijd_schemas[2]`
-5. **View count** - Poule-card toont nu echte wedstrijd count
+## Openstaand probleem:
 
-### Database fix
-- `positie => 999` was te groot voor `tinyint` (max 255)
-- Nu: berekent echte volgende positie
+**Gebruiker zegt "lukt het niet??"** - onduidelijk wat er mis gaat op staging.
 
-## Openstaande items
+Mogelijke oorzaken:
+1. Cache niet gecleared op staging
+2. De header rows worden wel gerenderd maar styling niet correct
+3. Colspan berekening klopt niet voor bepaalde poule groottes
 
-- [ ] Chat widget gebruikt admin routes - zal falen op device-bound interfaces (niet kritiek)
-- [ ] Poule #2 (Mini's 20-21kg) heeft 5 judokas maar 0 wedstrijden (niet doorgestuurd)
+**Nodig voor diagnose:**
+- Screenshot van wat gebruiker ziet
+- Of beschrijving van exact probleem
 
-## Belangrijke context voor volgende keer
+## Code structuur noodplan print:
 
-### Best of three flow
-1. Gebruiker selecteert "Best of 3" in toernooi edit
-2. Controller update `best_of_three_bij_2 = true` EN `wedstrijd_schemas[2] = [[1,2],[2,1],[1,2]]`
-3. Bij doorsturen: `WedstrijdSchemaService` leest custom schema en maakt 3 wedstrijden
-4. Views tonen echte wedstrijd count, niet formule
+```
+ingevuld-schema.blade.php
+├── @push('styles') - CSS voor title-row en info-row
+├── @section('toolbar') - selectie checkboxes
+└── @section('content')
+    └── @foreach poules
+        └── <table class="schema-table">
+            └── <thead>
+                ├── <tr class="title-row"> - toernooinaam + datum
+                ├── <tr class="info-row"> - poule info + checkbox
+                └── <tr class="header-row"> - kolom headers (Nr, Naam, 1, 2, ...)
 
-### Device-bound routes
-- Admin routes: `/organisator/toernooi/mat/...` - vereisen `auth:organisator`
-- Device routes: `/organisator/toernooi/toegang/mat/...` - gebruiken `device.binding` middleware
-- Views checken `isset($toegang)` om juiste URL te gebruiken
+index.blade.php (Live)
+└── generateLiveHTML()
+    └── Zelfde structuur als matrix, maar JavaScript generated
+```
 
-## Git status
-- Laatste commit: `99123a4` - fix: Use proper positie value instead of 999
-- Alle omgevingen (local, staging, production) zijn gesynchroniseerd
+## Commits vandaag:
 
-## Bekende issues/bugs
-- Geen kritieke bugs bekend
+1. `e0975a3` - Session handover 31 jan - best of three + device PWA fixes
+2. `a724c28` - feat: Add tournament title header to print schemas
+3. `9822547` - fix: Make schema header rows same width as table
+
+## Test instructies:
+
+1. Open staging noodplan: `/noodplan`
+2. Klik op "Ingevulde schema's (matrix)" → Alle
+3. Check of header boven tabel staat met:
+   - Donkere rij: toernooinaam links, datum rechts
+   - Lichte rij: checkbox + poule info links, mat/blok rechts
+4. Header moet zelfde breedte hebben als de tabel
+
+## Server commands (indien nodig):
+
+```bash
+ssh root@188.245.159.115
+cd /var/www/staging.judotoernooi/laravel
+git pull
+php artisan config:clear && php artisan cache:clear
+```
