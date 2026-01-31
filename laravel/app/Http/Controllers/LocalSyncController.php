@@ -80,6 +80,39 @@ class LocalSyncController extends Controller
     }
 
     /**
+     * Emergency failover page
+     */
+    public function emergencyFailover(): View
+    {
+        return view('local.emergency-failover');
+    }
+
+    /**
+     * Execute emergency failover - make this server Primary
+     */
+    public function executeEmergencyFailover()
+    {
+        // Update to Primary role
+        $this->updateEnvFile([
+            'LOCAL_SERVER_ROLE' => 'primary',
+            'LOCAL_SERVER_IP' => config('local-server.primary_ip'),
+            'LOCAL_SERVER_CONFIGURED_AT' => now()->toDateTimeString(),
+        ]);
+
+        // Clear config cache
+        \Artisan::call('config:clear');
+
+        // Log the failover
+        \Log::warning('EMERGENCY FAILOVER: Server activated as Primary', [
+            'previous_role' => config('local-server.role'),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+
+        return redirect()->route('local.dashboard')
+            ->with('success', '⚠️ NOOD OVERSCHAKELING VOLTOOID - Deze server is nu PRIMARY. Vergeet niet het IP te wijzigen in de Deco app!');
+    }
+
+    /**
      * Health dashboard - shows system status
      */
     public function healthDashboard(): View
