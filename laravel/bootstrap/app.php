@@ -3,11 +3,16 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
     )
+    ->withSchedule(function (Schedule $schedule) {
+        // Wedstrijddag backup: elke minuut (command checkt zelf of wedstrijddag actief is)
+        $schedule->command('backup:wedstrijddag')->everyMinute();
+    })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
