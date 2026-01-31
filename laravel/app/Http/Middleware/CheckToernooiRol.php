@@ -46,7 +46,7 @@ class CheckToernooiRol
                 return response()->json(['error' => 'Niet ingelogd'], 401);
             }
             return redirect()
-                ->route('toernooi.auth.login', $toernooi)
+                ->route('toernooi.auth.login', $toernooi->routeParams())
                 ->with('error', 'Je moet eerst inloggen');
         }
 
@@ -61,7 +61,7 @@ class CheckToernooiRol
                 return response()->json(['error' => 'Geen toegang'], 403);
             }
             return redirect()
-                ->route('toernooi.auth.login', $toernooi)
+                ->route('toernooi.auth.login', $toernooi->routeParams())
                 ->with('error', 'Je hebt geen toegang tot deze pagina');
         }
 
