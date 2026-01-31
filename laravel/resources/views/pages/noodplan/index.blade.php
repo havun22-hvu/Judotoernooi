@@ -156,81 +156,65 @@
     </div>
 
     <!-- TIJDENS DE WEDSTRIJD -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup()" x-init="init()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🏆</span>
-            TIJDENS DE WEDSTRIJD (live)
+            TIJDENS DE WEDSTRIJD
+            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Live
+            </span>
+            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
+                Backup modus
+            </span>
         </h2>
 
         <div class="space-y-4">
-            <!-- Ingevulde wedstrijdschema's (matrix) -->
-            <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <!-- Status info -->
+            <div class="p-3 rounded text-sm" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
+                <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+            </div>
+
+            <!-- Ingevulde schema's (matrix) - judoka's ingevuld, uitslagen leeg -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium text-yellow-800">Ingevulde schema's (matrix)</h3>
-                    <p class="text-sm text-yellow-600">1 poule per A4, zoals mat interface</p>
+                    <h3 class="font-medium">Ingevulde schema's (matrix)</h3>
+                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg - voor handmatig invullen</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
                     @endforeach
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <!-- OFFLINE BACKUP -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="offlineBackup()" x-init="init()">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">💾</span>
-            OFFLINE BACKUP
-            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Live verbonden
-            </span>
-            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
-                Offline
-            </span>
-        </h2>
-
-        <div class="space-y-4">
-            <!-- Status info -->
-            <div class="p-4 rounded" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="font-medium" :class="syncStatus === 'connected' ? 'text-green-800' : 'text-orange-800'">
-                            <span x-text="uitslagCount"></span> uitslagen opgeslagen
-                        </p>
-                        <p class="text-sm" :class="syncStatus === 'connected' ? 'text-green-600' : 'text-orange-600'">
-                            Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
-                        </p>
-                    </div>
-                    <button @click="printOffline()"
-                            class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 font-medium"
-                            :disabled="!hasData"
-                            :class="!hasData ? 'opacity-50 cursor-not-allowed' : ''">
-                        🖨️ Print vanuit backup
+            <!-- Live wedstrijd schema's - met uitslagen uit backup -->
+            <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div>
+                    <h3 class="font-medium text-yellow-800">Live wedstrijd schema's</h3>
+                    <p class="text-sm text-yellow-600">Met alle al gespeelde wedstrijden + punten uit backup</p>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="printLive()" type="button"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                       :disabled="!hasData" :class="{ 'opacity-50 cursor-not-allowed': !hasData }">
+                        Print
                     </button>
                 </div>
             </div>
-
-            <p class="text-sm text-gray-500">
-                De live backup synchroniseert automatisch zolang je een toernooi-pagina open hebt.
-                Bij internet uitval kun je de laatste bekende stand printen vanuit de browser cache.
-            </p>
         </div>
     </div>
 
     <script>
-        function offlineBackup() {
+        function liveBackup() {
             return {
                 syncStatus: 'disconnected',
                 uitslagCount: 0,
@@ -240,7 +224,6 @@
 
                 init() {
                     this.loadFromStorage();
-                    // Update status elke seconde
                     setInterval(() => this.loadFromStorage(), 1000);
                 },
 
@@ -261,135 +244,181 @@
                         this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
                     }
 
-                    // Check of sync recent is (binnen 2 minuten)
                     if (sync) {
                         const syncDate = new Date(sync);
                         const now = new Date();
                         const diffMs = now - syncDate;
-                        // Als laatste sync binnen 2 minuten is, zijn we "connected"
                         this.syncStatus = diffMs < 120000 ? 'connected' : 'disconnected';
                     } else {
                         this.syncStatus = 'disconnected';
                     }
                 },
 
-                printOffline() {
+                printLive() {
                     const storageKey = `noodplan_${this.toernooiId}_poules`;
                     const data = localStorage.getItem(storageKey);
                     if (!data) {
-                        alert('Geen backup data beschikbaar');
+                        alert('Geen backup data beschikbaar. Open eerst de mat interface om data te synchroniseren.');
                         return;
                     }
 
                     const parsed = JSON.parse(data);
                     const printWindow = window.open('', '_blank');
-                    printWindow.document.write(this.generatePrintHTML(parsed));
+                    printWindow.document.write(this.generateLiveHTML(parsed));
                     printWindow.document.close();
-                    printWindow.print();
                 },
 
-                generatePrintHTML(data) {
+                generateLiveHTML(data) {
+                    const timestamp = new Date().toLocaleString('nl-NL');
                     let html = `<!DOCTYPE html>
-                    <html><head><title>Noodplan Backup Print</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; font-size: 12px; }
-                        .poule { page-break-after: always; margin-bottom: 20px; }
-                        .poule:last-child { page-break-after: avoid; }
-                        h2 { font-size: 16px; border-bottom: 2px solid #333; padding-bottom: 5px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th, td { border: 1px solid #333; padding: 4px 8px; text-align: left; }
-                        th { background: #f0f0f0; }
-                        .uitslag { font-weight: bold; }
-                        .gespeeld { background: #d4edda; }
-                        @media print {
-                            .no-print { display: none; }
-                        }
-                    </style>
-                    </head><body>
-                    <div class="no-print" style="padding: 10px; background: #fef3c7; margin-bottom: 20px;">
-                        <strong>⚠️ OFFLINE BACKUP</strong> - Afgedrukt: ${new Date().toLocaleString('nl-NL')}
-                    </div>`;
+<html><head>
+<title>Live Wedstrijd Schema's - ${timestamp}</title>
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .poule-page { page-break-after: always; }
+        .poule-page:last-child { page-break-after: avoid; }
+    }
+    @page { size: A4 portrait; margin: 0.5cm; }
+    body { font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 10px; }
+    .print-toolbar { padding: 10px; background: #fef3c7; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .poule-header { background: #f3f4f6; border: 2px solid #333; padding: 10px 14px; margin-bottom: 10px; }
+    .schema-table { width: auto; border-collapse: collapse; table-layout: fixed; }
+    .schema-table th, .schema-table td { border: 1px solid #333; }
+    .header-row { background: #1f2937; color: white; }
+    .header-row th { border-color: #374151; font-size: 12px; padding: 5px 3px; }
+    .sub-header { font-size: 10px; font-weight: normal; color: #9ca3af; }
+    .nr-cel { width: 28px; font-size: 13px; text-align: center; }
+    .naam-cel { width: 260px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; padding: 4px 6px; }
+    .score-cel { width: 24px; text-align: center; font-size: 12px; height: 28px; }
+    .score-cel.inactief { background: #1f2937; }
+    .score-cel.w-cel { border-right: 1px solid #ccc; }
+    .score-cel.j-cel { border-left: none; border-right: 2px solid #333; }
+    .totaal-cel { width: 36px; background: #f3f4f6; text-align: center; font-size: 12px; font-weight: bold; }
+    .plts-cel { width: 32px; background: #fef9c3; text-align: center; font-size: 12px; }
+    .gespeeld { background: #d1fae5; }
+</style>
+</head><body>
+<div class="print-toolbar no-print">
+    <strong>LIVE BACKUP - ${timestamp}</strong>
+    <button onclick="window.print()" style="padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer;">Print</button>
+</div>`;
 
-                    if (data.poules) {
-                        data.poules.forEach(poule => {
-                            html += `<div class="poule">
-                                <h2>${poule.titel || 'Poule #' + poule.nummer} | Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</h2>
-                                <table>
-                                    <thead>
-                                        <tr><th>#</th><th>Judoka</th><th>Club</th></tr>
-                                    </thead>
-                                    <tbody>`;
-
-                            if (poule.judokas) {
-                                poule.judokas.forEach((j, i) => {
-                                    html += `<tr><td>${i+1}</td><td>${j.naam || 'Onbekend'}</td><td>${j.club || ''}</td></tr>`;
-                                });
-                            }
-
-                            html += `</tbody></table>`;
-
-                            if (poule.wedstrijden && poule.wedstrijden.length > 0) {
-                                // Maak lookup voor judoka namen
-                                const judokaMap = {};
-                                if (poule.judokas) {
-                                    poule.judokas.forEach((j, i) => {
-                                        judokaMap[j.id] = j.naam || 'Judoka ' + (i+1);
-                                    });
-                                }
-
-                                html += `<h3 style="margin-top: 15px;">Wedstrijden</h3>
-                                    <table>
-                                        <thead>
-                                            <tr><th style="width:40px">Wed</th><th>Wit</th><th style="width:50px">WP</th><th style="width:50px">JP</th><th>Blauw</th><th style="width:50px">WP</th><th style="width:50px">JP</th><th>Winnaar</th></tr>
-                                        </thead>
-                                        <tbody>`;
-
-                                poule.wedstrijden.forEach((w, i) => {
-                                    let rowClass = w.is_gespeeld ? 'gespeeld' : '';
-                                    const witNaam = judokaMap[w.judoka_wit_id] || 'Wit';
-                                    const blauwNaam = judokaMap[w.judoka_blauw_id] || 'Blauw';
-
-                                    // Determine WP/JP and winner
-                                    let witWP = '', witJP = '', blauwWP = '', blauwJP = '', winnaarNaam = '';
-                                    if (w.is_gespeeld) {
-                                        witJP = w.score_wit || '0';
-                                        blauwJP = w.score_blauw || '0';
-                                        if (w.winnaar_id) {
-                                            if (w.winnaar_id == w.judoka_wit_id) {
-                                                witWP = '2'; blauwWP = '0';
-                                                winnaarNaam = witNaam;
-                                            } else {
-                                                witWP = '0'; blauwWP = '2';
-                                                winnaarNaam = blauwNaam;
-                                            }
-                                        } else {
-                                            // Gelijkspel
-                                            witWP = '1'; blauwWP = '1';
-                                            winnaarNaam = 'Gelijk';
-                                        }
-                                    }
-
-                                    html += `<tr class="${rowClass}">
-                                        <td style="text-align:center">${w.volgorde || i+1}</td>
-                                        <td>${witNaam}</td>
-                                        <td style="text-align:center">${witWP}</td>
-                                        <td style="text-align:center">${witJP}</td>
-                                        <td>${blauwNaam}</td>
-                                        <td style="text-align:center">${blauwWP}</td>
-                                        <td style="text-align:center">${blauwJP}</td>
-                                        <td><strong>${winnaarNaam}</strong></td>
-                                    </tr>`;
-                                });
-
-                                html += `</tbody></table>`;
-                            }
-
-                            html += `</div>`;
-                        });
+                    if (!data.poules || data.poules.length === 0) {
+                        html += '<p>Geen poules gevonden in backup.</p></body></html>';
+                        return html;
                     }
 
-                    html += `</body></html>`;
+                    data.poules.forEach(poule => {
+                        const judokas = poule.judokas || [];
+                        const wedstrijden = poule.wedstrijden || [];
+                        const aantal = judokas.length;
+
+                        if (aantal < 2) return;
+
+                        // Generate round-robin schema
+                        const schema = this.generateSchema(aantal);
+
+                        // Create wedstrijd lookup
+                        const wedstrijdMap = {};
+                        wedstrijden.forEach(w => {
+                            wedstrijdMap[w.judoka_wit_id + '-' + w.judoka_blauw_id] = w;
+                        });
+
+                        html += `<div class="poule-page">
+                            <div class="poule-header">
+                                <strong>Poule #${poule.nummer} - ${poule.titel || ''}</strong>
+                                <span style="float:right">Mat ${poule.mat_nummer || '?'} | Blok ${poule.blok_nummer || '?'}</span>
+                            </div>
+                            <table class="schema-table">
+                                <thead><tr class="header-row">
+                                    <th class="nr-cel">Nr</th>
+                                    <th class="naam-cel" style="text-align:left">Naam</th>`;
+
+                        schema.forEach((_, idx) => {
+                            html += `<th colspan="2" style="min-width:48px;text-align:center"><div style="font-weight:bold">${idx + 1}</div><div class="sub-header">W &nbsp; J</div></th>`;
+                        });
+
+                        html += `<th class="totaal-cel">WP</th><th class="totaal-cel">JP</th><th class="plts-cel">Plts</th></tr></thead><tbody>`;
+
+                        judokas.forEach((judoka, idx) => {
+                            const judokaNr = idx + 1;
+                            let totaalWP = 0, totaalJP = 0, heeftGespeeld = false;
+
+                            html += `<tr><td class="nr-cel" style="font-weight:bold">${judokaNr}</td>
+                                <td class="naam-cel">${judoka.naam || 'Onbekend'} <span style="color:#999;font-size:10px">(${(judoka.club || '-').substring(0,12)})</span></td>`;
+
+                            schema.forEach(schemaWed => {
+                                const witNr = schemaWed[0];
+                                const blauwNr = schemaWed[1];
+                                const participates = (judokaNr === witNr || judokaNr === blauwNr);
+
+                                let wp = '', jp = '';
+
+                                if (participates) {
+                                    const witJudoka = judokas[witNr - 1];
+                                    const blauwJudoka = judokas[blauwNr - 1];
+
+                                    if (witJudoka && blauwJudoka) {
+                                        const key = witJudoka.id + '-' + blauwJudoka.id;
+                                        const match = wedstrijdMap[key];
+
+                                        if (match && match.is_gespeeld) {
+                                            heeftGespeeld = true;
+                                            if (judokaNr === witNr) {
+                                                wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
+                                                jp = match.score_wit !== null ? String(match.score_wit) : '0';
+                                            } else {
+                                                wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
+                                                jp = match.score_blauw !== null ? String(match.score_blauw) : '0';
+                                            }
+                                            totaalWP += parseInt(wp);
+                                            totaalJP += parseInt(jp);
+                                        }
+                                    }
+                                    const cellClass = (wp !== '') ? 'gespeeld' : '';
+                                    html += `<td class="score-cel w-cel ${cellClass}">${wp}</td><td class="score-cel j-cel ${cellClass}">${jp}</td>`;
+                                } else {
+                                    html += `<td class="score-cel w-cel inactief"></td><td class="score-cel j-cel inactief"></td>`;
+                                }
+                            });
+
+                            html += `<td class="totaal-cel">${heeftGespeeld ? totaalWP : ''}</td>
+                                <td class="totaal-cel">${heeftGespeeld ? totaalJP : ''}</td>
+                                <td class="plts-cel"></td></tr>`;
+                        });
+
+                        html += `</tbody></table>
+                            <div style="margin-top:6px;font-size:10px;color:#666"><strong>W</strong> = Wedstrijdpunten | <strong>J</strong> = Judopunten | Plts = handmatig</div>
+                        </div>`;
+                    });
+
+                    html += '</body></html>';
                     return html;
+                },
+
+                generateSchema(n) {
+                    // Standard round-robin algorithm
+                    const schema = [];
+                    const players = [];
+                    for (let i = 1; i <= n; i++) players.push(i);
+                    if (n % 2 === 1) players.push(null); // bye
+
+                    const numRounds = players.length - 1;
+                    const half = players.length / 2;
+
+                    for (let round = 0; round < numRounds; round++) {
+                        for (let i = 0; i < half; i++) {
+                            const p1 = players[i];
+                            const p2 = players[players.length - 1 - i];
+                            if (p1 !== null && p2 !== null) {
+                                schema.push([p1, p2]);
+                            }
+                        }
+                        // Rotate players (keep first fixed)
+                        players.splice(1, 0, players.pop());
+                    }
+                    return schema;
                 }
             };
         }
