@@ -982,8 +982,12 @@ function matInterface() {
             // Reassign objects voor Alpine reactivity
             wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: jp };
 
-            // Logica: als JP > 0, dan WP=2 voor winnaar, WP=0 en JP=0 voor verliezer
-            if (jp > 0) {
+            if (jp === 0) {
+                // JP=0 betekent gelijkspel: beide WP=1, beide JP=0
+                wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 1, [opponentId]: 1 };
+                wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
+            } else if (jp > 0) {
+                // JP > 0: winnaar krijgt WP=2, verliezer WP=0 en JP=0
                 wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: 2, [opponentId]: 0 };
                 wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
             }
