@@ -384,13 +384,19 @@ function updateCounter() {
 
                         if (aantal < 2) return;
 
-                        // Generate round-robin schema
-                        const schema = this.generateSchema(aantal);
+                        // Build schema from actual wedstrijden (supports dubbele potjes)
+                        const judokaIdToNr = {};
+                        judokas.forEach((j, idx) => judokaIdToNr[j.id] = idx + 1);
 
-                        // Create wedstrijd lookup
-                        const wedstrijdMap = {};
-                        wedstrijden.forEach(w => {
-                            wedstrijdMap[w.judoka_wit_id + '-' + w.judoka_blauw_id] = w;
+                        const schema = wedstrijden.map(w => [
+                            judokaIdToNr[w.judoka_wit_id],
+                            judokaIdToNr[w.judoka_blauw_id]
+                        ]).filter(s => s[0] && s[1]);
+
+                        // Create wedstrijd lookup by positie for correct column mapping
+                        const wedstrijdByPositie = {};
+                        wedstrijden.forEach((w, idx) => {
+                            wedstrijdByPositie[idx] = w;
                         });
 
                         html += `<div class="poule-page">
@@ -419,7 +425,7 @@ function updateCounter() {
                             html += `<tr><td class="nr-cel" style="font-weight:bold">${judokaNr}</td>
                                 <td class="naam-cel">${judoka.naam || 'Onbekend'} <span style="color:#999;font-size:10px">(${(judoka.club || '-').substring(0,12)})</span></td>`;
 
-                            schema.forEach(schemaWed => {
+                            schema.forEach((schemaWed, wedIdx) => {
                                 const witNr = schemaWed[0];
                                 const blauwNr = schemaWed[1];
                                 const participates = (judokaNr === witNr || judokaNr === blauwNr);
@@ -427,25 +433,19 @@ function updateCounter() {
                                 let wp = '', jp = '';
 
                                 if (participates) {
-                                    const witJudoka = judokas[witNr - 1];
-                                    const blauwJudoka = judokas[blauwNr - 1];
+                                    const match = wedstrijdByPositie[wedIdx];
 
-                                    if (witJudoka && blauwJudoka) {
-                                        const key = witJudoka.id + '-' + blauwJudoka.id;
-                                        const match = wedstrijdMap[key];
-
-                                        if (match && match.is_gespeeld) {
-                                            heeftGespeeld = true;
-                                            if (judokaNr === witNr) {
-                                                wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
-                                                jp = match.score_wit !== null ? String(match.score_wit) : '0';
-                                            } else {
-                                                wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
-                                                jp = match.score_blauw !== null ? String(match.score_blauw) : '0';
-                                            }
-                                            totaalWP += parseInt(wp);
-                                            totaalJP += parseInt(jp);
+                                    if (match && match.is_gespeeld) {
+                                        heeftGespeeld = true;
+                                        if (judokaNr === witNr) {
+                                            wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
+                                            jp = match.score_wit !== null ? String(match.score_wit) : '0';
+                                        } else {
+                                            wp = match.winnaar_id == judoka.id ? '2' : (match.winnaar_id ? '0' : '1');
+                                            jp = match.score_blauw !== null ? String(match.score_blauw) : '0';
                                         }
+                                        totaalWP += parseInt(wp);
+                                        totaalJP += parseInt(jp);
                                     }
                                     const cellClass = (wp !== '') ? 'gespeeld' : '';
                                     html += `<td class="score-cel w-cel ${cellClass}">${wp}</td><td class="score-cel j-cel ${cellClass}">${jp}</td>`;
