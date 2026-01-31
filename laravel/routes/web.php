@@ -542,6 +542,10 @@ Route::prefix('local-server')->name('local.')->group(function () {
     // Pre-flight check wizard
     Route::get('/preflight', [LocalSyncController::class, 'preflight'])->name('preflight');
 
+    // Emergency failover
+    Route::get('/emergency', [LocalSyncController::class, 'emergencyFailover'])->name('emergency-failover');
+    Route::post('/emergency', [LocalSyncController::class, 'executeEmergencyFailover'])->name('emergency-failover.execute');
+
     // Dashboard
     Route::get('/', [LocalSyncController::class, 'dashboard'])->name('dashboard');
 });

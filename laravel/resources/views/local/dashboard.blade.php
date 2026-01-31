@@ -153,21 +153,29 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-800 mb-4">Snelle Links</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <a href="{{ route('local.health') }}" target="_blank"
-                       class="p-3 bg-gray-50 rounded text-center hover:bg-gray-100">
-                        <div class="text-2xl mb-1">🏥</div>
-                        <div class="text-sm">Health Check</div>
+                    <a href="{{ route('local.preflight') }}"
+                       class="p-3 bg-green-50 rounded text-center hover:bg-green-100">
+                        <div class="text-2xl mb-1">✅</div>
+                        <div class="text-sm">Pre-flight Check</div>
                     </a>
-                    <a href="{{ route('local.status') }}" target="_blank"
+                    <a href="{{ route('local.health-dashboard') }}"
                        class="p-3 bg-gray-50 rounded text-center hover:bg-gray-100">
                         <div class="text-2xl mb-1">📊</div>
-                        <div class="text-sm">Status JSON</div>
+                        <div class="text-sm">Health Dashboard</div>
                     </a>
+                    @if($config['role'] === 'standby')
+                    <a href="{{ route('local.standby-sync') }}"
+                       class="p-3 bg-orange-50 rounded text-center hover:bg-orange-100">
+                        <div class="text-2xl mb-1">🔄</div>
+                        <div class="text-sm">Sync Status</div>
+                    </a>
+                    @else
                     <a href="{{ route('local.sync') }}" target="_blank"
                        class="p-3 bg-gray-50 rounded text-center hover:bg-gray-100">
                         <div class="text-2xl mb-1">🔄</div>
                         <div class="text-sm">Sync Data</div>
                     </a>
+                    @endif
                     <a href="{{ route('organisator.login') }}"
                        class="p-3 bg-blue-50 rounded text-center hover:bg-blue-100">
                         <div class="text-2xl mb-1">🔐</div>
@@ -175,6 +183,22 @@
                     </a>
                 </div>
             </div>
+
+            <!-- Emergency Button (only for standby) -->
+            @if($config['role'] === 'standby')
+            <div class="bg-red-50 border-2 border-red-200 rounded-lg shadow p-6 mt-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-red-800">Nood Overschakeling</h2>
+                        <p class="text-sm text-red-600">Alleen gebruiken als Primary niet meer werkt</p>
+                    </div>
+                    <a href="{{ route('local.emergency-failover') }}"
+                       class="px-6 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700">
+                        ⚠️ NOODKNOP
+                    </a>
+                </div>
+            </div>
+            @endif
         @endif
 
         <!-- Footer -->
