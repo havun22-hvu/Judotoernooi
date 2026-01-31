@@ -346,7 +346,7 @@
         <button onclick="window.print()" style="padding: 8px 16px; background: #ca8a04; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Print geselecteerde</button>
     </div>
 </div>
-<script>
+<scr` + `ipt>
 function selectAll(checked) {
     document.querySelectorAll('.poule-page').forEach(el => {
         const cb = el.querySelector('input[type=checkbox]');
@@ -370,7 +370,7 @@ function updateCounter() {
     const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
     document.getElementById('print-counter').textContent = selected + ' van ' + total + ' geselecteerd';
 }
-</script>`;
+<\/script>`;
 
                     if (!data.poules || data.poules.length === 0) {
                         html += '<p>Geen poules gevonden in backup.</p></body></html>';
