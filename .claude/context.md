@@ -69,7 +69,9 @@ php artisan serve --port=8007
 
 **Sync vereisten:** Judoka moet volledig zijn (naam, geboortejaar, geslacht, band, gewicht) EN passen in een categorie
 
-**Met betaling:** Als `betaling_actief` → sync gebeurt automatisch via Mollie webhook na succesvolle betaling (niet handmatig)
+**Sync flow:**
+- `betaling_actief = false` → handmatig syncen als gegevens volledig zijn
+- `betaling_actief = true` → sync via Mollie webhook na succesvolle betaling
 
 ## Gerelateerde Docs
 
