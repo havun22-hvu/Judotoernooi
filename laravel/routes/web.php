@@ -24,6 +24,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
 use App\Http\Controllers\ToernooiBetalingController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LocalSyncController;
 use App\Http\Middleware\CheckToernooiRol;
 use App\Http\Middleware\CheckFreemiumPrint;
 use Illuminate\Support\Facades\Route;
@@ -509,4 +510,29 @@ Route::get('/{toernooi}', fn($toernooi) => redirect()->route('publiek.index', [
     'toernooi' => $toernooi->slug
 ]))
 ->name('publiek.index.legacy')
-->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard).*$');
+->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
+
+/*
+|--------------------------------------------------------------------------
+| Local Server Sync Routes (Redundancy System)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('local-server')->name('local.')->group(function () {
+    // Setup
+    Route::get('/setup', [LocalSyncController::class, 'setup'])->name('setup');
+    Route::post('/setup', [LocalSyncController::class, 'saveSetup'])->name('setup.save');
+
+    // Status & Health
+    Route::get('/status', [LocalSyncController::class, 'status'])->name('status');
+    Route::get('/health', [LocalSyncController::class, 'health'])->name('health');
+    Route::get('/heartbeat', [LocalSyncController::class, 'heartbeat'])->name('heartbeat');
+
+    // Sync
+    Route::get('/sync', [LocalSyncController::class, 'syncData'])->name('sync');
+    Route::get('/sync/{toernooi}', [LocalSyncController::class, 'syncToernooi'])->name('sync.toernooi');
+    Route::post('/receive-sync', [LocalSyncController::class, 'receiveSync'])->name('receive-sync');
+    Route::get('/standby-status', [LocalSyncController::class, 'standbyStatus'])->name('standby-status');
+
+    // Dashboard
+    Route::get('/', [LocalSyncController::class, 'dashboard'])->name('dashboard');
+});
