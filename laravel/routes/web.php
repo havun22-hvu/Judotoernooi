@@ -533,6 +533,12 @@ Route::prefix('local-server')->name('local.')->group(function () {
     Route::post('/receive-sync', [LocalSyncController::class, 'receiveSync'])->name('receive-sync');
     Route::get('/standby-status', [LocalSyncController::class, 'standbyStatus'])->name('standby-status');
 
+    // Standby sync UI
+    Route::get('/standby-sync', [LocalSyncController::class, 'standbySyncUI'])->name('standby-sync');
+
+    // Health dashboard (monitoring)
+    Route::get('/health-dashboard', [LocalSyncController::class, 'healthDashboard'])->name('health-dashboard');
+
     // Dashboard
     Route::get('/', [LocalSyncController::class, 'dashboard'])->name('dashboard');
 });

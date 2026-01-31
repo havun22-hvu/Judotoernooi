@@ -59,18 +59,25 @@ Gebruiker wil Enterprise Redundantie implementeren voor grote toernooien. Docume
    - `/local-server/heartbeat` - Heartbeat endpoint
    - `/local-server/health` - Health check
 
-### Fase 2: Hot Standby
-1. **Sync API tussen Primary en Standby**
-   - Standby pollt elke 5 sec van Primary
-   - Endpoint: `GET /api/sync-data`
+### Fase 2: Hot Standby ✅ KLAAR
+1. **Sync API tussen Primary en Standby** ✅
+   - `/local-server/sync` - Alle toernooi data
+   - `/local-server/receive-sync` - Standby ontvangt data
+   - Elke 5 sec sync
 
-2. **Heartbeat monitoring**
-   - Elke 5 sec ping
+2. **Heartbeat monitoring** ✅
+   - `/local-server/heartbeat` - Heartbeat endpoint
    - 3 gemiste pings = alert
+   - Failover knop verschijnt
 
-3. **Standby status indicator**
-   - Toon op beide laptops wie Primary/Standby is
-   - Toon sync status
+3. **Standby sync UI** ✅
+   - `/local-server/standby-sync` - Real-time sync status
+   - Toont primary status, sync stats, log
+   - "Activeer als Primary" knop
+
+4. **Health dashboard** ✅
+   - `/local-server/health-dashboard` - Systeem overzicht
+   - Cloud status, standby status, devices
 
 ### Fase 3: Enterprise Features
 - Automatic failover
