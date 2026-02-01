@@ -6,8 +6,8 @@
 <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Case of Emergency</h1>
-            <p class="text-gray-600 mt-1 italic">Not in Vane - export your backup</p>
+            <h1 class="text-3xl font-bold text-gray-800">🆘 Noodplan</h1>
+            <p class="text-gray-600 mt-1">Exports, backups en prints voor als het mis gaat</p>
         </div>
         <div class="text-right text-sm text-gray-500">
             <p>Momentopname: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
@@ -15,6 +15,19 @@
                 &larr; Terug naar Dashboard
             </a>
         </div>
+    </div>
+
+    <!-- Uitleg -->
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+        <h2 class="font-bold text-amber-800 mb-2">Wat is dit?</h2>
+        <p class="text-sm text-amber-700 mb-2">
+            Dit is je vangnet bij stroomuitval, servercrash of internetstoring. Download vóór het toernooi begint
+            de belangrijkste exports en bewaar ze op een USB-stick of laptop.
+        </p>
+        <p class="text-sm text-amber-700">
+            <strong>Tip:</strong> De browser slaat automatisch uitslagen op in localStorage. Als de server crasht
+            maar je laptop nog werkt, kun je de "Live wedstrijd schema's" nog steeds printen met alle scores.
+        </p>
     </div>
 
     <!-- OFFLINE MODUS BANNER -->
@@ -89,7 +102,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
-                        <p class="text-sm text-purple-600">Download alle wedstrijddata voor offline gebruik</p>
+                        <p class="text-sm text-purple-600">Complete wedstrijddata voor noodgevallen - bewaar op USB of laptop</p>
                     </div>
                     <div class="flex gap-2">
                         <button @click="downloadFromServer()" type="button"
@@ -103,8 +116,15 @@
                         </button>
                     </div>
                 </div>
+                <ul class="mt-3 text-xs text-purple-600 space-y-1">
+                    <li><strong>Download van server:</strong> Haalt actuele data rechtstreeks van de server (vereist internetverbinding)</li>
+                    <li><strong>Download uit browser:</strong> Haalt data uit de browser cache (localStorage) - werkt ook offline</li>
+                </ul>
                 <p class="mt-2 text-xs text-purple-500" x-show="hasLocalData">
-                    Lokale data beschikbaar (<span x-text="localDataCount"></span> uitslagen)
+                    ✓ Lokale data beschikbaar (<span x-text="localDataCount"></span> uitslagen)
+                </p>
+                <p class="mt-2 text-xs text-purple-400" x-show="!hasLocalData">
+                    ⚠ Nog geen lokale data - open eerst de mat interface om data te synchroniseren
                 </p>
             </div>
 
