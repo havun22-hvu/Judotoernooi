@@ -683,4 +683,29 @@ class MatController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Scoreboard pagina - standalone of met wedstrijd
+     */
+    public function scoreboard(Organisator $organisator, Toernooi $toernooi, ?Wedstrijd $wedstrijd = null): View
+    {
+        return view('pages.mat.scoreboard', compact('toernooi', 'wedstrijd'));
+    }
+
+    /**
+     * Genereer wedstrijden voor een poule
+     */
+    public function genereerWedstrijden(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $poule = Poule::findOrFail($validated['poule_id']);
+
+        // Genereer wedstrijden
+        $this->wedstrijdService->genereerWedstrijden($poule);
+
+        return response()->json(['success' => true]);
+    }
 }

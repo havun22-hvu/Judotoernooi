@@ -375,6 +375,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('mat/finale-uitslag', [MatController::class, 'finaleUitslag'])->name('mat.finale-uitslag');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
         Route::post('mat/barrage', [BlokController::class, 'maakBarrage'])->name('mat.barrage');
+        Route::get('mat/scoreboard/{wedstrijd?}', [MatController::class, 'scoreboard'])->name('mat.scoreboard');
     });
 
     // Spreker routes (spreker + admin)
