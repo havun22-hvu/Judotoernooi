@@ -1355,15 +1355,17 @@ function matInterface() {
 
             const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
 
-            // Klik op GROENE wedstrijd = skip (geen punten), gele wordt groen
-            // Geen nieuwe gele - matjury moet dat zelf kiezen
+            // Klik op GROENE wedstrijd = bevestiging vragen, dan neutraal, gele wordt groen
             if (huidige && wedstrijd.id === huidige.id) {
+                if (!confirm('Weet je zeker dat je deze wedstrijd wilt stoppen?\n\nDe gele (volgende) wedstrijd wordt dan groen (speelt nu).')) {
+                    return;
+                }
                 const nieuweActieve = volgende ? volgende.id : null;
                 await this.setWedstrijdStatus(poule, nieuweActieve, null);
                 return;
             }
 
-            // Klik op GELE wedstrijd = deselecteren
+            // Klik op GELE wedstrijd = deselecteren (wordt neutraal)
             if (volgende && wedstrijd.id === volgende.id) {
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, null);
                 return;
@@ -1371,7 +1373,13 @@ function matInterface() {
 
             // Klik op andere wedstrijd
             if (huidige) {
-                // Er is al een groene, dus deze wordt geel
+                // Er is al een groene - check of er al een gele is
+                if (volgende) {
+                    // Er is al een gele, eerst die uitzetten
+                    alert('Er is al een volgende wedstrijd geselecteerd (geel).\n\nKlik eerst op de gele wedstrijd om die te deselecteren.');
+                    return;
+                }
+                // Geen gele, dus deze wordt geel
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, wedstrijd.id);
             } else {
                 // Geen groene, deze wordt groen (geen automatische gele)
