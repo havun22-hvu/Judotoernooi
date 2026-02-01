@@ -180,7 +180,7 @@ class VariabeleBlokVerdelingService
                     'id' => $poule->id,
                     'key' => $key,
                     'nummer' => $poule->nummer,
-                    'titel' => $poule->titel,
+                    'titel' => $poule->getDisplayTitel(),
                     'leeftijdsklasse' => $poule->leeftijdsklasse,
                     'gewichtsklasse' => $poule->gewichtsklasse,
                     'categorie_key' => $poule->categorie_key, // For grouping (e.g., "m_variabel", "beginners")
