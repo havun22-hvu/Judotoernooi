@@ -13,6 +13,9 @@
 ║  PAS DAARNA mag je code voorstellen.                             ║
 ║  Gebruiker moet EERST akkoord geven.                             ║
 ║                                                                   ║
+║  📖 VERPLICHTE LEESSTOF:                                         ║
+║     laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md               ║
+║                                                                   ║
 ║  ⚠️  Bij twijfel: /kb of vraag aan gebruiker                     ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
@@ -96,6 +99,7 @@ Route: `/toernooi` (alleen voor sitebeheerder)
 | Workflow toernooi | README.md | `GEBRUIKERSHANDLEIDING.md` |
 | Betalingen | CLAUDE.md | `BETALINGEN.md` |
 | Interfaces/PWA | README.md | `INTERFACES.md` |
+| **Code standaarden** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
 
 ### Workflow: Local → GitHub → Server
 ```

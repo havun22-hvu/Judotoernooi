@@ -2678,76 +2678,88 @@
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🔄</span> OVERSTAPPEN NAAR LOKALE SERVER
+            <span class="mr-2">🔄</span> BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER
         </h2>
-        <p class="text-sm text-gray-600 mb-4">Bij internetstoring kun je overstappen naar een lokale server. Volg onderstaande stappen.</p>
+        <p class="text-sm text-gray-600 mb-4">Alleen uitvoeren als internet uitvalt tijdens het toernooi.</p>
 
         <div class="space-y-4">
-            <!-- Stap 1: Download backup MET knop -->
-            <div class="p-4 bg-purple-50 border border-purple-200 rounded">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-purple-800">1. Download de JSON backup</h3>
-                    <button @click="downloadBackup()" type="button"
-                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
-                        Download backup
-                    </button>
-                </div>
-                <p class="text-sm text-purple-700">
-                    Download vóór het toernooi de JSON backup. Bewaar dit bestand op een USB-stick of laptop.
-                </p>
-            </div>
-
-            <!-- Stap 2: Primaire lokale server -->
+            <!-- Stap 1: Primaire lokale server -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-bold text-green-800 mb-2">2. Primaire lokale server starten</h3>
-                <p class="text-sm text-green-700 mb-2">Start de lokale server op je laptop (met Laravel/PHP geïnstalleerd):</p>
+                <h3 class="font-bold text-green-800 mb-2">1. Start de lokale server op je laptop</h3>
+                <p class="text-sm text-green-700 mb-2">Open een terminal en voer uit:</p>
                 <code class="block bg-green-100 p-2 rounded text-xs text-green-900 font-mono mb-2">
                     cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000
                 </code>
-                <p class="text-sm text-green-700">Open <strong>http://laptop-ip:8000</strong> op alle apparaten in het lokale netwerk.</p>
+                <p class="text-sm text-green-700">Open daarna <strong>http://[laptop-ip]:8000</strong> op alle tablets.</p>
             </div>
 
-            <!-- Stap 3: Standby server -->
-            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <h3 class="font-bold text-yellow-800 mb-2">3. Standby server (optioneel)</h3>
-                <p class="text-sm text-yellow-700 mb-2">Voor extra zekerheid kun je een tweede laptop als standby server klaarzetten:</p>
-                <ul class="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                    <li>Zelfde setup als primaire server</li>
-                    <li>Laad regelmatig de nieuwste JSON backup in</li>
-                    <li>Bij uitval primaire: schakel over naar standby IP-adres</li>
-                </ul>
-            </div>
-
-            <!-- Stap 4: JSON inladen MET knop -->
+            <!-- Stap 2: JSON inladen -->
             <div class="p-4 bg-blue-50 border border-blue-200 rounded">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-blue-800">4. JSON backup inladen</h3>
+                    <h3 class="font-bold text-blue-800">2. Laad de noodbackup in</h3>
                     <label class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 font-medium">
-                        Laad JSON backup
+                        📂 Selecteer backup bestand
                         <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
                     </label>
                 </div>
                 <p class="text-sm text-blue-700">
-                    Op de lokale server: klik de knop om de gedownloade JSON backup in te laden.
-                    De wedstrijddata wordt dan in de browser (localStorage) geladen.
+                    Selecteer het backup bestand dat je de avond ervoor hebt gedownload.
                 </p>
                 <p class="text-xs text-blue-600 mt-2" x-show="uitslagCount > 0">
-                    Status: <span x-text="uitslagCount"></span> uitslagen geladen | Laatste sync: <span x-text="laatsteSync || '-'"></span>
+                    ✓ <span x-text="uitslagCount"></span> wedstrijden geladen | Laatste sync: <span x-text="laatsteSync || '-'"></span>
+                </p>
+            </div>
+
+            <!-- Stap 3: Doorgaan -->
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded">
+                <h3 class="font-bold text-gray-800 mb-2">3. Klaar!</h3>
+                <p class="text-sm text-gray-700">
+                    De lokale server draait nu. Alle tablets kunnen via het lokale netwerk de wedstrijden invoeren.
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- Checklist -->
-    <div class="p-4 bg-gray-100 rounded-lg">
-        <h3 class="font-bold text-gray-800 mb-2">Checklist vóór het toernooi</h3>
-        <ul class="text-sm text-gray-700 space-y-1">
-            <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
-            <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
-            <li>☐ Test lokale server op laptop</li>
-            <li>☐ Noteer IP-adressen van primaire en standby server</li>
-            <li>☐ Zorg voor WiFi-router zonder internetverbinding als backup</li>
-        </ul>
+    <!-- Voorbereiding avond ervoor -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanBackup()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📦</span> VOORBEREIDING (avond ervoor)
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <!-- Noodbackup download -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-bold text-purple-800">Download noodbackup</h3>
+                        <p class="text-sm text-purple-600">Alle gegevens voor als internet uitvalt</p>
+                    </div>
+                    <button @click="downloadBackup()" type="button"
+                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium whitespace-nowrap">
+                        📥 Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Excel backup -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="font-bold text-green-800">Download poule-indeling</h3>
+                        <p class="text-sm text-green-600">Excel met alle poules (voor printen)</p>
+                    </div>
+                    <a href="{{ route('toernooi.poules.export-excel', $toernooi->routeParams()) }}"
+                       class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium whitespace-nowrap">
+                        📥 Download
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+            <strong class="text-yellow-800">💡 Tip:</strong>
+            <span class="text-yellow-700">Bewaar deze bestanden op een USB-stick én op de laptop die je meeneemt.</span>
+        </div>
     </div>
 
     <script>
@@ -2785,6 +2797,38 @@
                 navigator.clipboard.writeText(text);
                 this.copied = true;
                 setTimeout(() => this.copied = false, 2000);
+            }
+        };
+    }
+
+    function noodplanBackup() {
+        return {
+            toernooiId: {{ $toernooi->id }},
+            toernooiNaam: '{{ $toernooi->slug }}',
+
+            async downloadBackup() {
+                try {
+                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
+                    if (!response.ok) throw new Error('Server error');
+                    const data = await response.json();
+                    this.saveAsFile(data);
+                } catch (e) {
+                    alert('Fout bij downloaden: ' + e.message);
+                }
+            },
+
+            saveAsFile(data) {
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const filename = `noodbackup_${this.toernooiNaam}_${timestamp}.json`;
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
         };
     }
