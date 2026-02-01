@@ -2352,11 +2352,11 @@
                 </ul>
             </div>
 
-            <!-- Poules printen (wedstrijddag) -->
+            <!-- Poules printen (na voorbereidingen) -->
             <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
                 <div>
-                    <h3 class="font-medium text-blue-800">Poules printen (wedstrijddag)</h3>
-                    <p class="text-sm text-blue-600">Na indeling klaar - print per blok</p>
+                    <h3 class="font-medium text-blue-800">Poules printen (na voorbereidingen)</h3>
+                    <p class="text-sm text-blue-600">Indeling klaar, vóór wedstrijddag - print per blok</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
