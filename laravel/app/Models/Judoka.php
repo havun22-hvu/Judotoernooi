@@ -486,13 +486,25 @@ class Judoka extends Model
             }
         }
 
-        // Gewicht check
+        // Gewicht check (rekening houdend met leeftijd)
         if ($this->gewicht === null) {
             $problemen[] = 'Gewicht ontbreekt';
-        } elseif ($this->gewicht < 15) {
-            $problemen[] = "Gewicht {$this->gewicht} kg lijkt laag";
-        } elseif ($this->gewicht > 150) {
-            $problemen[] = "Gewicht {$this->gewicht} kg lijkt hoog";
+        } else {
+            // Minimum gewicht per leeftijd (ruwe inschatting)
+            // 4-6 jaar: 15kg, 7-9 jaar: 20kg, 10-12 jaar: 25kg, 13-15 jaar: 35kg, 16+ jaar: 45kg
+            $minGewicht = match (true) {
+                $leeftijd <= 6 => 12,
+                $leeftijd <= 9 => 18,
+                $leeftijd <= 12 => 22,
+                $leeftijd <= 15 => 30,
+                default => 40,
+            };
+
+            if ($this->gewicht < $minGewicht) {
+                $problemen[] = "Gewicht {$this->gewicht} kg lijkt laag";
+            } elseif ($this->gewicht > 150) {
+                $problemen[] = "Gewicht {$this->gewicht} kg lijkt hoog";
+            }
         }
 
         // Geslacht check
