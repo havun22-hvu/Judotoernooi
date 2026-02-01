@@ -110,7 +110,7 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <a href="#poule-{{ $pouleId }}" onclick="scrollToPoule(event, {{ $pouleId }})" class="font-bold text-orange-800 hover:underline cursor-pointer">
-                            #{{ $pouleInfo->nummer }} {{ $pouleInfo->titel ?? ($pouleInfo->leeftijdsklasse . ' ' . $pouleInfo->gewichtsklasse) }}
+                            #{{ $pouleInfo->nummer }} {{ $pouleInfo->getDisplayTitel() }}
                         </a>
                         <span class="text-orange-600 text-sm ml-2">Range: {{ number_format($probleem['range'], 1) }}kg (max: {{ number_format($probleem['max_toegestaan'], 1) }}kg)</span>
                     </div>
@@ -234,13 +234,8 @@
                             $verwijderdeTekstElim->push($j->naam . ' (afwijkend gewicht)');
                         }
 
-                        // Titel formaat met slashes
-                        $elimTitel = $elimPoule->titel ?? ($elimPoule->leeftijdsklasse . ' ' . $elimPoule->gewichtsklasse);
-                        if (preg_match('/^(.+?)\s+(\d+-?\d*j)\s+(.+)$/', $elimTitel, $matches)) {
-                            $elimTitelFormatted = $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
-                        } else {
-                            $elimTitelFormatted = $elimTitel;
-                        }
+                        // Titel via model methode
+                        $elimTitelFormatted = $elimPoule->getDisplayTitel();
 
                         $isDoorgestuurdElim = $elimPoule->doorgestuurd_op !== null;
                     @endphp
@@ -395,12 +390,13 @@
                     {{-- Normale poules - groepeer op gewichtsklasse voor aparte rijen --}}
                     @php
                         // Groepeer poules op gewicht (uit titel of gewichtsklasse)
-                        // Gebruik per-poule check of het dynamisch is
+                        // Groepeer poules per gewichtsklasse
                         $poulesPerGewicht = $category['poules']->groupBy(function($poule) {
-                            if ($poule->isDynamisch() && $poule->titel) {
-                                // Haal gewichtsbereik uit titel (bijv. "21.5-24.4kg" uit "Jeugd 7-9j 21.5-24.4kg")
-                                if (preg_match('/([\d.]+)-([\d.]+)kg/', $poule->titel, $m)) {
-                                    return $m[1] . '-' . $m[2] . 'kg';
+                            if ($poule->isDynamisch()) {
+                                // Haal gewichtsbereik uit live berekende range
+                                $range = $poule->getGewichtsRange();
+                                if ($range) {
+                                    return round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
                                 }
                             }
                             return $poule->gewichtsklasse ?: 'default';
@@ -511,18 +507,8 @@
                                 data-actief="{{ $aantalActief }}"
                             >
                                 @php
-                                    // Bij dynamische categorieën: toon actuele gewichtsrange (niet de oorspronkelijke)
-                                    $pouleIsDynamischTitel = $poule->isDynamisch();
-                                    $pouleRange = $pouleIsDynamischTitel ? $poule->getGewichtsRange() : null;
-                                    if ($pouleIsDynamischTitel && $pouleRange) {
-                                        // Haal leeftijdsdeel uit titel (bijv. "Jeugd 7-9j" uit "Jeugd 7-9j 21.5-24.4kg")
-                                        $titelZonderKg = preg_replace('/\s*[\d.]+-[\d.]+kg\s*$/', '', $poule->titel ?? '');
-                                        $pouleTitel = $titelZonderKg . ' (' . round($pouleRange['min_kg'], 1) . '-' . round($pouleRange['max_kg'], 1) . 'kg)';
-                                    } elseif ($pouleIsDynamischTitel && $poule->titel) {
-                                        $pouleTitel = $poule->titel;
-                                    } else {
-                                        $pouleTitel = $category['label'] . ' / ' . $poule->gewichtsklasse;
-                                    }
+                                    // Gebruik centrale getDisplayTitel() methode
+                                    $pouleTitel = $poule->getDisplayTitel();
                                 @endphp
                                 <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')) }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
                                     <div class="pointer-events-none flex-1">

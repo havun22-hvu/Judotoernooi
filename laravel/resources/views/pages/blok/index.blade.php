@@ -120,7 +120,7 @@
                 return [
                     'leeftijd' => $p->leeftijdsklasse,
                     'gewicht' => $p->gewichtsklasse,
-                    'titel' => $p->titel,
+                    'titel' => $p->getDisplayTitel(),
                     'nummer' => $p->nummer,
                     'poule_id' => $p->id,
                     'wedstrijden' => $p->aantal_wedstrijden,
@@ -148,7 +148,7 @@
                 return [
                     'leeftijd' => $p->leeftijdsklasse,
                     'gewicht' => $p->gewichtsklasse,
-                    'titel' => $p->titel,
+                    'titel' => $p->getDisplayTitel(),
                     'nummer' => $p->nummer,
                     'poule_id' => $p->id,
                     'wedstrijden' => $p->aantal_wedstrijden,
