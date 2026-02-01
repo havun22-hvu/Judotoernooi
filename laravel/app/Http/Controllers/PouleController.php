@@ -283,7 +283,7 @@ class PouleController extends Controller
                 // Eliminatie needs at least 8 judokas
                 if ($aantalJudokas > 0 && $aantalJudokas < 8) {
                     $problemen[] = [
-                        'poule' => $poule->titel,
+                        'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_weinig',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 8 voor eliminatie)",
                     ];
@@ -292,13 +292,13 @@ class PouleController extends Controller
                 // Regular poules: 3-6 judokas
                 if ($aantalJudokas > 0 && $aantalJudokas < 3) {
                     $problemen[] = [
-                        'poule' => $poule->titel,
+                        'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_weinig',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (min. 3)",
                     ];
                 } elseif ($aantalJudokas > 6) {
                     $problemen[] = [
-                        'poule' => $poule->titel,
+                        'poule' => $poule->getDisplayTitel(),
                         'type' => 'te_veel',
                         'message' => "#{$poule->nummer} {$poule->leeftijdsklasse} / {$poule->gewichtsklasse} kg: {$aantalJudokas} judoka's (max. 6)",
                     ];
@@ -497,7 +497,7 @@ class PouleController extends Controller
             $match = [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
-                'poule_titel' => $poule->titel ?? "Poule #{$poule->nummer}",
+                'poule_titel' => $poule->getDisplayTitel() ?: "Poule #{$poule->nummer}",
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'categorie_overschrijding' => $isCategorieOverschrijding,

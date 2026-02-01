@@ -279,6 +279,28 @@ class Judoka extends Model
     }
 
     /**
+     * Haal het effectieve gewicht op (voor sortering en indeling)
+     * Prioriteit: gewicht_gewogen > gewicht > gewichtsklasse limiet
+     */
+    public function getEffectiefGewicht(): ?float
+    {
+        if ($this->gewicht_gewogen !== null) {
+            return (float) $this->gewicht_gewogen;
+        }
+
+        if ($this->gewicht !== null) {
+            return (float) $this->gewicht;
+        }
+
+        // Fallback: haal getal uit gewichtsklasse (-30, +70, etc.)
+        if ($this->gewichtsklasse && preg_match('/(\d+)/', $this->gewichtsklasse, $m)) {
+            return (float) $m[1];
+        }
+
+        return null;
+    }
+
+    /**
      * Verwijder judoka uit alle poules als afwezig en update statistieken
      * Aanroepen bij elke mutatie (weging, aanwezigheid)
      */

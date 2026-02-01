@@ -319,7 +319,7 @@ class PubliekController extends Controller
                 return [
                     'id' => $poule->id,
                     'nummer' => $poule->nummer,
-                    'titel' => $poule->titel,
+                    'titel' => $poule->getDisplayTitel(),
                     'leeftijdsklasse' => $poule->leeftijdsklasse,
                     'gewichtsklasse' => $poule->gewichtsklasse,
                     'mat' => $poule->mat?->nummer,
