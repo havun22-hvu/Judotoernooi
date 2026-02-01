@@ -97,6 +97,12 @@ Route: `/toernooi` (alleen voor sitebeheerder)
 | Betalingen | CLAUDE.md | `BETALINGEN.md` |
 | Interfaces/PWA | README.md | `INTERFACES.md` |
 
+### Workflow: Local → GitHub → Server
+```
+ALTIJD: Edit lokaal → Push naar GitHub → Deploy naar staging/production
+NOOIT: Direct op server editen
+```
+
 ### Auto-start servers (bij lokaal testen)
 ```bash
 cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007

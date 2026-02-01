@@ -25,7 +25,7 @@
         </div>
     </div>
     <div class="flex gap-2">
-        <a href="{{ route('organisator.clubs.index', $organisator) }}"
+        <a href="{{ route('organisator.clubs.index', [$organisator, 'back' => url()->current()]) }}"
            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded flex items-center gap-2">
             Clubs Beheren
         </a>
@@ -74,7 +74,7 @@
 @if($clubs->isEmpty())
 <div class="bg-white rounded-lg shadow p-8 text-center">
     <p class="text-gray-500 mb-4">Je hebt nog geen clubs in je clublijst.</p>
-    <a href="{{ route('organisator.clubs.index', $organisator) }}"
+    <a href="{{ route('organisator.clubs.index', [$organisator, 'back' => url()->current()]) }}"
        class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded">
         Clubs Toevoegen
     </a>
