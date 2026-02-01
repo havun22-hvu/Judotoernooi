@@ -134,6 +134,9 @@ class JudokaController extends Controller
             }
         }
 
+        // Re-check import warnings (e.g. gewicht was too low, now fixed)
+        $judoka->checkImportStatus();
+
         // Return to filtered list if came from filter
         $redirectRoute = $request->input('filter') === 'onvolledig'
             ? route('toernooi.judoka.index', $toernooi->routeParams()) . '?filter=onvolledig'
@@ -434,6 +437,9 @@ class JudokaController extends Controller
                 $judoka->update(['gewichtsklasse' => $nieuweGewichtsklasse]);
             }
         }
+
+        // Re-check import warnings (e.g. gewicht was too low, now fixed)
+        $judoka->checkImportStatus();
 
         return response()->json([
             'success' => true,
