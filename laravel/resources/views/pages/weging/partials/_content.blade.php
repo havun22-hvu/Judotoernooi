@@ -89,6 +89,7 @@
                         class="w-full bg-green-600 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
                     ✓ Registreer
                 </button>
+                <p class="text-xs text-gray-400 text-center mt-1">Tip: 0 kg = kan niet deelnemen</p>
 
                 <!-- Feedback message -->
                 <div id="feedback" class="hidden mt-2 p-2 rounded-lg text-center text-sm font-medium"></div>
@@ -364,6 +365,16 @@ async function registreerGewicht() {
         }
 
         if (data.success) {
+            // Gewicht 0 = afwezig markeren
+            if (data.afwezig) {
+                addToHistory(selectedJudoka.naam, 'afwezig', false);
+                feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-gray-100 text-gray-800';
+                feedback.textContent = `✓ ${selectedJudoka.naam} is afgemeld`;
+                feedback.classList.remove('hidden');
+                setTimeout(() => { clearSelection(); }, 2000);
+                return;
+            }
+
             // Add to history
             addToHistory(selectedJudoka.naam, weightInput, data.binnen_klasse);
 
