@@ -545,30 +545,11 @@
                                         $isAfwezig = !$judoka->isActief($wegingGesloten);
 
                                         // Check of judoka past in DEZE POULE's gewichtsklasse
-                                        // ALLEEN voor VASTE categorieën (niet dynamisch)
+                                        // Gebruik centrale methode voor gewicht check
+                                        // isGewichtBinnenKlasse() werkt alleen voor vaste klassen
                                         // Dynamische categorieën: poule-level check via $problematischeGewichtsPoules
-                                        $pouleIsDynamisch = $poule->isDynamisch();
-                                        $isVerkeerdePoule = false;
-                                        if (!$pouleIsDynamisch && $poule->gewichtsklasse) {
-                                            $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
-                                            $isPlusKlasse = str_starts_with($poule->gewichtsklasse, '+');
-                                            $pouleLimiet = floatval(preg_replace('/[^0-9.]/', '', $poule->gewichtsklasse));
-
-                                            if ($isPlusKlasse) {
-                                                // +70 = minimaal 70kg (- tolerantie)
-                                                $isVerkeerdePoule = $judokaGewicht < ($pouleLimiet - $tolerantie);
-                                            } else {
-                                                // -24 = maximaal 24kg (+ tolerantie)
-                                                $isVerkeerdePoule = $judokaGewicht > ($pouleLimiet + $tolerantie);
-                                            }
-                                        }
-
-                                        // Afwijkend = eigen gewichtsklasse niet gehaald (overpouler)
-                                        // Alleen voor VASTE categorieën - dynamische gebruiken poule-level check
-                                        $isAfwijkendGewicht = !$pouleIsDynamisch && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
-
-                                        // Combineer: verkeerde poule OF afwijkend gewicht
-                                        $heeftProbleem = $isVerkeerdePoule || $isAfwijkendGewicht;
+                                        $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                        $heeftProbleem = $isAfwijkendGewicht;
                                     @endphp
                                     @if($isAfwezig)
                                         @continue

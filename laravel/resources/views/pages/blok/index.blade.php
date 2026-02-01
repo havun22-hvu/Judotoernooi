@@ -111,11 +111,11 @@
         $variabeleCats = $allePoules
             ->filter(fn($p) => isset($variabeleLeeftijdsklassen[$p->leeftijdsklasse]))
             ->map(function($p) {
-                // Extract min leeftijd en gewicht uit titel voor sortering
-                preg_match('/(\d+)-?\d*j/', $p->titel ?? '', $lftMatch);
-                preg_match('/([\d.]+)/', $p->gewichtsklasse ?? '', $kgMatch);
-                $minLft = (int)($lftMatch[1] ?? 99);
-                $minKg = (float)($kgMatch[1] ?? 999);
+                // Haal min leeftijd en gewicht uit live berekende ranges
+                $lftRange = $p->getLeeftijdsRange();
+                $kgRange = $p->getGewichtsRange();
+                $minLft = $lftRange['min_jaar'] ?? 99;
+                $minKg = $kgRange['min_kg'] ?? 999;
 
                 return [
                     'leeftijd' => $p->leeftijdsklasse,

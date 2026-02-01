@@ -139,7 +139,7 @@ function weeglijstTable() {
                 gewicht: {{ $judoka->gewicht ?? 'null' }},
                 gewicht_gewogen: {{ $judoka->gewicht_gewogen ?? 'null' }},
                 status: @json($judoka->aanwezigheid),
-                overpouler: {{ ($judoka->gewicht_gewogen && $judoka->gewichtsklasse && !str_starts_with($judoka->gewichtsklasse, '+') && $judoka->gewicht_gewogen > (float)preg_replace('/[^0-9.]/', '', $judoka->gewichtsklasse)) ? 'true' : 'false' }}
+                overpouler: {{ ($judoka->isVasteGewichtsklasse() && !$judoka->isGewichtBinnenKlasse()) ? 'true' : 'false' }}
             },
             @endforeach
         ],
