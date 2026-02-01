@@ -83,6 +83,8 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plaats</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefoon</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Website</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judoka's</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
                         </tr>
@@ -102,6 +104,18 @@
                                 </template>
                                 <template x-if="!editing">
                                     <td class="px-6 py-4 text-gray-600">{{ $club->email ?? '-' }}</td>
+                                </template>
+                                <template x-if="!editing">
+                                    <td class="px-6 py-4 text-gray-600">{{ $club->telefoon ?? '-' }}</td>
+                                </template>
+                                <template x-if="!editing">
+                                    <td class="px-6 py-4 text-gray-600">
+                                        @if($club->website)
+                                            <a href="{{ $club->website }}" target="_blank" class="text-blue-600 hover:underline">{{ Str::limit($club->website, 25) }}</a>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                 </template>
                                 <template x-if="!editing">
                                     <td class="px-6 py-4">
@@ -130,8 +144,8 @@
 
                                 {{-- Edit Mode --}}
                                 <template x-if="editing">
-                                    <td colspan="6" class="px-6 py-4">
-                                        <form action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+                                    <td colspan="8" class="px-6 py-4">
+                                        <form action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
                                             @csrf
                                             @method('PUT')
                                             <div>
@@ -154,7 +168,11 @@
                                                 <label class="block text-xs text-gray-500 mb-1">Telefoon</label>
                                                 <input type="text" name="telefoon" value="{{ $club->telefoon }}" class="w-full border rounded px-2 py-1 text-sm">
                                             </div>
-                                            <div class="flex space-x-2">
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Website</label>
+                                                <input type="url" name="website" value="{{ $club->website }}" class="w-full border rounded px-2 py-1 text-sm" placeholder="https://...">
+                                            </div>
+                                            <div class="flex space-x-2 md:col-span-2">
                                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded">
                                                     Opslaan
                                                 </button>
