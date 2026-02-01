@@ -207,7 +207,7 @@
             <ul class="text-sm text-red-700 space-y-1">
                 @foreach($clubJudokas as $judoka)
                 <li class="flex justify-between">
-                    <span>{{ $judoka->naam }}</span>
+                    <a href="{{ route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" class="hover:underline hover:text-red-900">{{ $judoka->naam }}</a>
                     <span class="text-red-500 text-xs">{{ $judoka->import_warnings }}</span>
                 </li>
                 @endforeach
