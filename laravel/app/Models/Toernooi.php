@@ -188,6 +188,7 @@ class Toernooi extends Model
         'eigen_router_wachtwoord',
         'hotspot_ssid',
         'hotspot_wachtwoord',
+        'hotspot_ip',
     ];
 
     protected $hidden = [

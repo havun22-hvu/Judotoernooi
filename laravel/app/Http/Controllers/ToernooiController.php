@@ -452,6 +452,7 @@ class ToernooiController extends Controller
             'eigen_router_wachtwoord' => 'nullable|string|max:100',
             'hotspot_ssid' => 'nullable|string|max:100',
             'hotspot_wachtwoord' => 'nullable|string|max:100',
+            'hotspot_ip' => 'nullable|ip',
         ]);
 
         // Ensure boolean is set correctly

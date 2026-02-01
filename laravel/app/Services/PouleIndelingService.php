@@ -791,11 +791,12 @@ class PouleIndelingService
         }
 
         // 3. Vaste categorie met gewichtsklassen: toon gewichtsklasse
-        $isValidGewichtsklasse = !empty($gewichtsklasse)
-            && $gewichtsklasse !== 'Onbekend'
-            && (str_starts_with($gewichtsklasse, '-') || str_starts_with($gewichtsklasse, '+'));
+        // Gebruik !$isDynamisch ipv string prefix check
+        $isVasteGewichtsklasse = !$isDynamisch
+            && !empty($gewichtsklasse)
+            && $gewichtsklasse !== 'Onbekend';
 
-        if ($isValidGewichtsklasse) {
+        if ($isVasteGewichtsklasse) {
             $gk = $gewichtsklasse;
             if (!str_contains($gk, 'kg')) {
                 $gk .= 'kg';
