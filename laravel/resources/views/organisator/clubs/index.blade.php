@@ -10,8 +10,8 @@
             <h1 class="text-2xl font-bold text-gray-800">Mijn Clubs</h1>
             <p class="text-gray-500">Clubs blijven bewaard en kunnen voor elk toernooi uitgenodigd worden</p>
         </div>
-        <a href="{{ route('organisator.dashboard', $organisator) }}" class="text-blue-600 hover:text-blue-800">
-            &larr; Terug naar Dashboard
+        <a href="{{ request('back') ?? url()->previous() }}" class="text-blue-600 hover:text-blue-800">
+            &larr; Terug
         </a>
     </div>
 
