@@ -2377,23 +2377,13 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
-                        <p class="text-sm text-purple-600">Download alle wedstrijddata voor offline gebruik</p>
+                        <p class="text-sm text-purple-600">Voor lokale server bij internetstoring</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button @click="downloadFromServer()" type="button"
-                                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
-                            Download van server
-                        </button>
-                        <button @click="downloadFromStorage()" type="button"
-                                class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium"
-                                :disabled="!hasLocalData" :class="{ 'opacity-50 cursor-not-allowed': !hasLocalData }">
-                            Download uit browser
-                        </button>
-                    </div>
+                    <button @click="download()" type="button"
+                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
+                        Download backup
+                    </button>
                 </div>
-                <p class="mt-2 text-xs text-purple-500" x-show="hasLocalData">
-                    Lokale data beschikbaar (<span x-text="localDataCount"></span> uitslagen)
-                </p>
             </div>
 
             <!-- Weeglijsten -->
@@ -2592,40 +2582,24 @@
         return {
             toernooiId: {{ $toernooi->id }},
             toernooiNaam: '{{ $toernooi->slug }}',
-            hasLocalData: false,
-            localDataCount: 0,
 
-            init() {
-                this.checkLocalData();
-            },
-
-            checkLocalData() {
-                const storageKey = `noodplan_${this.toernooiId}_poules`;
-                const countKey = `noodplan_${this.toernooiId}_count`;
-                const data = localStorage.getItem(storageKey);
-                this.hasLocalData = !!data;
-                this.localDataCount = parseInt(localStorage.getItem(countKey) || '0');
-            },
-
-            async downloadFromServer() {
+            async download() {
                 try {
+                    // Probeer eerst van server
                     const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
                     if (!response.ok) throw new Error('Server error');
                     const data = await response.json();
                     this.saveAsFile(data);
                 } catch (e) {
-                    alert('Server niet bereikbaar. Probeer "Download uit browser" als je lokale data hebt.');
+                    // Fallback naar localStorage
+                    const storageKey = `noodplan_${this.toernooiId}_poules`;
+                    const data = localStorage.getItem(storageKey);
+                    if (data) {
+                        this.saveAsFile(JSON.parse(data));
+                    } else {
+                        alert('Geen data beschikbaar (server offline en geen lokale cache).');
+                    }
                 }
-            },
-
-            downloadFromStorage() {
-                const storageKey = `noodplan_${this.toernooiId}_poules`;
-                const data = localStorage.getItem(storageKey);
-                if (!data) {
-                    alert('Geen lokale data beschikbaar.');
-                    return;
-                }
-                this.saveAsFile(JSON.parse(data));
             },
 
             saveAsFile(data) {
