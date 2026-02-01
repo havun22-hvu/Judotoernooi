@@ -183,6 +183,11 @@ class Toernooi extends Model
         'import_fouten',
         'local_server_primary_ip',
         'local_server_standby_ip',
+        'heeft_eigen_router',
+        'eigen_router_ssid',
+        'eigen_router_wachtwoord',
+        'hotspot_ssid',
+        'hotspot_wachtwoord',
     ];
 
     protected $hidden = [
