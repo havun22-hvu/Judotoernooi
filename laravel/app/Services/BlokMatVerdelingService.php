@@ -638,9 +638,7 @@ class BlokMatVerdelingService
             }
 
             // Dynamic target per mat based on what must remain for other mats
-            // Example: 196 total, 6 mats, avg=33
-            // Mat 1: must leave 5×33=165 → target = 196-165 = 31
-            // Mat 2 (if mat1 got 30): remaining=166, must leave 4×33=132 → target = 166-132 = 34
+            // Mini's get lower target (matches take full 2 min), round down
             $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
             $gemiddelde = $totaalWedstrijden / $aantalMatten;
 
@@ -650,17 +648,23 @@ class BlokMatVerdelingService
 
             foreach ($poules as $poule) {
                 $huidigeMat = $matIds[$huidigeMatIndex];
-                $resterendeMatten = $aantalMatten - $huidigeMatIndex - 1; // mats after current
+                $resterendeMatten = $aantalMatten - $huidigeMatIndex - 1;
+                $isMinisPoule = $this->getCategorieVolgorde($poule->leeftijdsklasse) == 1;
 
-                // Calculate target for this mat: remaining - what other mats need
+                // Calculate target for this mat
                 $moetOverblijven = $resterendeMatten * $gemiddelde;
                 $doelVoorDezeMat = $resterend - $moetOverblijven;
+
+                // Mini's: lower target (matches take full 2 min)
+                if ($isMinisPoule) {
+                    $doelVoorDezeMat = floor($doelVoorDezeMat * 0.85);
+                }
 
                 // Assign poule to current mat
                 $poule->update(['mat_id' => $huidigeMat]);
                 $wedstrijdenPerMat[$huidigeMat] += $poule->aantal_wedstrijden;
 
-                // Move to next mat when current mat reached its dynamic target
+                // Move to next mat when target reached
                 if ($wedstrijdenPerMat[$huidigeMat] >= $doelVoorDezeMat && $huidigeMatIndex < $aantalMatten - 1) {
                     $resterend -= $wedstrijdenPerMat[$huidigeMat];
                     $huidigeMatIndex++;
