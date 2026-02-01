@@ -2502,10 +2502,9 @@
         <div class="mb-6">
             <h3 class="font-bold text-gray-800 mb-3">Welke setup gebruik je?</h3>
             <div class="grid md:grid-cols-2 gap-4">
-                <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
-                       :class="heeftEigenRouter ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
-                    <input type="radio" name="netwerk_modus" value="1" x-model="heeftEigenRouter"
-                           @change="saveNetwerkConfig()" class="sr-only">
+                <div @click="heeftEigenRouter = true; saveNetwerkConfig()"
+                     class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                     :class="heeftEigenRouter === true ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">📡</span>
                         <div>
@@ -2513,11 +2512,10 @@
                             <p class="text-sm text-gray-600">Tablets blijven op eigen WiFi, alleen bron wisselt</p>
                         </div>
                     </div>
-                </label>
-                <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
-                       :class="!heeftEigenRouter ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'">
-                    <input type="radio" name="netwerk_modus" value="0" x-model="heeftEigenRouter"
-                           @change="saveNetwerkConfig()" class="sr-only">
+                </div>
+                <div @click="heeftEigenRouter = false; saveNetwerkConfig()"
+                     class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                     :class="heeftEigenRouter === false ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'">
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">📱</span>
                         <div>
@@ -2525,7 +2523,7 @@
                             <p class="text-sm text-gray-600">Sporthal WiFi + mobiele hotspot als backup</p>
                         </div>
                     </div>
-                </label>
+                </div>
             </div>
         </div>
 
