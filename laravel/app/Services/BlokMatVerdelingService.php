@@ -624,8 +624,9 @@ class BlokMatVerdelingService
 
         foreach ($toernooi->blokken as $blok) {
             // Get all poules sorted by leeftijd (jong→oud), then gewicht (licht→zwaar)
+            // Note: leeftijd staat in titel (bijv. "Mini's 6j 20-21kg"), niet in leeftijdsklasse
             $poules = $blok->poules()->with('judokas')->get()->sortBy([
-                fn($poule) => $this->extractLeeftijdVoorSortering($poule->leeftijdsklasse),
+                fn($poule) => $this->extractLeeftijdVoorSortering($poule->titel),
                 fn($poule) => $this->extractGewichtVoorSortering($poule->gewichtsklasse),
             ])->values();
 
