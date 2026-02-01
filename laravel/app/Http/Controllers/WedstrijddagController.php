@@ -262,25 +262,15 @@ class WedstrijddagController extends Controller
         }
 
         // Check of judoka past in de nieuwe poule (voor vaste gewichtsklassen)
-        $judokaPastInPoule = true;
-        if ($maxKgVerschil == 0 && $nieuwePoule->gewichtsklasse) {
-            $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
-            $isPlusKlasse = str_starts_with($nieuwePoule->gewichtsklasse, '+');
-            $pouleLimiet = floatval(preg_replace('/[^0-9.]/', '', $nieuwePoule->gewichtsklasse));
-
-            if ($isPlusKlasse) {
-                $judokaPastInPoule = $judokaGewicht >= ($pouleLimiet - $tolerantie);
-            } else {
-                $judokaPastInPoule = $judokaGewicht <= ($pouleLimiet + $tolerantie);
-            }
-        }
+        // Gebruik centrale methode isGewichtBinnenKlasse()
+        $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie);
 
         return response()->json([
             'success' => true,
             'van_poule' => $oudePouleData,
             'naar_poule' => [
                 'id' => $nieuwePoule->id,
-                'titel' => $nieuwePoule->titel,
+                'titel' => $nieuwePoule->getDisplayTitel(),
                 'aantal_judokas' => $actieveJudokasNieuw,
                 'aantal_wedstrijden' => $nieuwePoule->berekenAantalWedstrijden($actieveJudokasNieuw),
                 'gewichts_range' => $nieuweGewichtsRange,
