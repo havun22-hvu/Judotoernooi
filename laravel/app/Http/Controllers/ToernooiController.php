@@ -440,6 +440,23 @@ class ToernooiController extends Controller
     }
 
     /**
+     * Update local server IP addresses
+     */
+    public function updateLocalServerIps(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    {
+        $validated = $request->validate([
+            'local_server_primary_ip' => 'nullable|ip',
+            'local_server_standby_ip' => 'nullable|ip',
+        ]);
+
+        $toernooi->update($validated);
+
+        return redirect()
+            ->route('toernooi.noodplan.index', $toernooi->routeParams())
+            ->with('success', 'IP-adressen opgeslagen');
+    }
+
+    /**
      * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
      */
     public function heropenVoorbereiding(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
