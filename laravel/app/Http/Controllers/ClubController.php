@@ -67,8 +67,13 @@ class ClubController extends Controller
 
         $club = Club::create($validated);
 
+        $params = ['organisator' => $organisator];
+        if ($request->input('back')) {
+            $params['back'] = $request->input('back');
+        }
+
         return redirect()
-            ->route('organisator.clubs.index', $organisator)
+            ->route('organisator.clubs.index', $params)
             ->with('success', "Club '{$club->naam}' toegevoegd");
     }
 
@@ -100,8 +105,13 @@ class ClubController extends Controller
 
         $club->update($validated);
 
+        $params = ['organisator' => $organisator];
+        if ($request->input('back')) {
+            $params['back'] = $request->input('back');
+        }
+
         return redirect()
-            ->route('organisator.clubs.index', $organisator)
+            ->route('organisator.clubs.index', $params)
             ->with('success', 'Club bijgewerkt');
     }
 
@@ -122,16 +132,25 @@ class ClubController extends Controller
 
         // Check if club has judokas in any toernooi
         if ($club->judokas()->exists()) {
+            $params = ['organisator' => $organisator];
+            if (request('back')) {
+                $params['back'] = request('back');
+            }
             return redirect()
-                ->route('organisator.clubs.index', $organisator)
+                ->route('organisator.clubs.index', $params)
                 ->with('error', 'Kan club niet verwijderen: er zijn nog judoka\'s gekoppeld');
         }
 
         $naam = $club->naam;
         $club->delete();
 
+        $params = ['organisator' => $organisator];
+        if (request('back')) {
+            $params['back'] = request('back');
+        }
+
         return redirect()
-            ->route('organisator.clubs.index', $organisator)
+            ->route('organisator.clubs.index', $params)
             ->with('success', "Club '{$naam}' verwijderd");
     }
 
