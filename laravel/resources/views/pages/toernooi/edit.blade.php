@@ -2676,6 +2676,60 @@
     </div>
 
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
+    <!-- Live verbinding status -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="verbindingStatus()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📡</span> VERBINDING STATUS
+            <span class="ml-auto text-sm font-normal text-gray-500">Laatst gecontroleerd: <span x-text="laatsteCheck"></span></span>
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mb-4">
+            <!-- WiFi Status -->
+            <div class="p-4 rounded-lg border-2 transition-all"
+                 :class="wifiStatus === 'connected' ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl" x-text="wifiStatus === 'connected' ? '🟢' : '🔴'"></div>
+                    <div>
+                        <h3 class="font-bold" :class="wifiStatus === 'connected' ? 'text-green-800' : 'text-red-800'">
+                            WiFi (lokaal netwerk)
+                        </h3>
+                        <p class="text-sm" :class="wifiStatus === 'connected' ? 'text-green-600' : 'text-red-600'"
+                           x-text="wifiStatus === 'connected' ? 'Verbonden - tablets kunnen elkaar bereiken' : 'Niet verbonden'"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Internet Status -->
+            <div class="p-4 rounded-lg border-2 transition-all"
+                 :class="internetStatus === 'connected' ? 'bg-green-50 border-green-300' : (internetStatus === 'slow' ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300')">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl" x-text="internetStatus === 'connected' ? '🟢' : (internetStatus === 'slow' ? '🟡' : '🔴')"></div>
+                    <div>
+                        <h3 class="font-bold" :class="internetStatus === 'connected' ? 'text-green-800' : (internetStatus === 'slow' ? 'text-yellow-800' : 'text-red-800')">
+                            Internet (cloud)
+                        </h3>
+                        <p class="text-sm" :class="internetStatus === 'connected' ? 'text-green-600' : (internetStatus === 'slow' ? 'text-yellow-600' : 'text-red-600')">
+                            <span x-show="internetStatus === 'connected'">Verbonden met judotournament.org</span>
+                            <span x-show="internetStatus === 'slow'">Trage verbinding (<span x-text="latency"></span>ms)</span>
+                            <span x-show="internetStatus === 'offline'">Geen verbinding met cloud</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Waarschuwing bij problemen -->
+        <div x-show="internetStatus === 'offline'" class="p-4 bg-red-100 border border-red-300 rounded-lg">
+            <p class="text-red-800 font-medium">⚠️ Internet is offline! Overweeg over te schakelen naar de lokale server.</p>
+        </div>
+
+        <button @click="checkVerbinding()" type="button"
+                class="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
+            🔄 Opnieuw controleren
+        </button>
+    </div>
+
+    <!-- Bij storing -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🔄</span> BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER
@@ -2683,38 +2737,43 @@
         <p class="text-sm text-gray-600 mb-4">Alleen uitvoeren als internet uitvalt tijdens het toernooi.</p>
 
         <div class="space-y-4">
-            <!-- Stap 1: Primaire lokale server -->
+            <!-- Stap 1: Laptop starten -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-bold text-green-800 mb-2">1. Start de lokale server op je laptop</h3>
-                <p class="text-sm text-green-700 mb-2">Open een terminal en voer uit:</p>
-                <code class="block bg-green-100 p-2 rounded text-xs text-green-900 font-mono mb-2">
-                    cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000
-                </code>
-                <p class="text-sm text-green-700">Open daarna <strong>http://[laptop-ip]:8000</strong> op alle tablets.</p>
+                <h3 class="font-bold text-green-800 mb-2">1. Open de JudoToernooi app op je laptop</h3>
+                <p class="text-sm text-green-700">
+                    Dubbelklik op het <strong>JudoToernooi</strong> icoon op je bureaublad.
+                    De lokale server start automatisch.
+                </p>
             </div>
 
-            <!-- Stap 2: JSON inladen -->
+            <!-- Stap 2: Tablets verbinden -->
             <div class="p-4 bg-blue-50 border border-blue-200 rounded">
+                <h3 class="font-bold text-blue-800 mb-2">2. Verbind de tablets met de laptop</h3>
+                <p class="text-sm text-blue-700 mb-2">
+                    Open op elke tablet de browser en ga naar:
+                </p>
+                <div class="flex items-center gap-2 bg-blue-100 p-3 rounded">
+                    <code class="text-lg font-bold text-blue-900" x-text="'http://' + (primaryIp || '[laptop-ip]') + ':8000'"></code>
+                    <button @click="copyUrl()" type="button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        📋 Kopieer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stap 3: Backup inladen -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-blue-800">2. Laad de noodbackup in</h3>
-                    <label class="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 font-medium">
-                        📂 Selecteer backup bestand
+                    <h3 class="font-bold text-purple-800">3. Laad de noodbackup in (indien nodig)</h3>
+                    <label class="px-4 py-2 bg-purple-600 text-white rounded cursor-pointer hover:bg-purple-700 font-medium">
+                        📂 Selecteer bestand
                         <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
                     </label>
                 </div>
-                <p class="text-sm text-blue-700">
-                    Selecteer het backup bestand dat je de avond ervoor hebt gedownload.
+                <p class="text-sm text-purple-700">
+                    Alleen nodig als de laptop geen recente data heeft.
                 </p>
-                <p class="text-xs text-blue-600 mt-2" x-show="uitslagCount > 0">
-                    ✓ <span x-text="uitslagCount"></span> wedstrijden geladen | Laatste sync: <span x-text="laatsteSync || '-'"></span>
-                </p>
-            </div>
-
-            <!-- Stap 3: Doorgaan -->
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded">
-                <h3 class="font-bold text-gray-800 mb-2">3. Klaar!</h3>
-                <p class="text-sm text-gray-700">
-                    De lokale server draait nu. Alle tablets kunnen via het lokale netwerk de wedstrijden invoeren.
+                <p class="text-xs text-purple-600 mt-2" x-show="uitslagCount > 0">
+                    ✓ <span x-text="uitslagCount"></span> wedstrijden geladen
                 </p>
             </div>
         </div>
@@ -2763,6 +2822,48 @@
     </div>
 
     <script>
+    function verbindingStatus() {
+        return {
+            wifiStatus: 'checking',
+            internetStatus: 'checking',
+            latency: null,
+            laatsteCheck: '-',
+
+            init() {
+                this.checkVerbinding();
+                // Check elke 30 seconden
+                setInterval(() => this.checkVerbinding(), 30000);
+            },
+
+            async checkVerbinding() {
+                // WiFi check (altijd connected als pagina laadt)
+                this.wifiStatus = navigator.onLine ? 'connected' : 'offline';
+
+                // Internet check (ping naar cloud)
+                const startTime = Date.now();
+                try {
+                    const response = await fetch('/api/ping', {
+                        method: 'GET',
+                        cache: 'no-store',
+                        signal: AbortSignal.timeout(5000)
+                    });
+                    const endTime = Date.now();
+                    this.latency = endTime - startTime;
+
+                    if (response.ok) {
+                        this.internetStatus = this.latency > 2000 ? 'slow' : 'connected';
+                    } else {
+                        this.internetStatus = 'offline';
+                    }
+                } catch (e) {
+                    this.internetStatus = 'offline';
+                }
+
+                this.laatsteCheck = new Date().toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit'});
+            }
+        };
+    }
+
     function netwerkConfig() {
         return {
             toernooiId: {{ $toernooi->id }},
@@ -2837,12 +2938,19 @@
         return {
             toernooiId: {{ $toernooi->id }},
             toernooiNaam: '{{ $toernooi->slug }}',
+            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
             uitslagCount: 0,
             laatsteSync: null,
 
             init() {
                 this.loadFromStorage();
                 setInterval(() => this.loadFromStorage(), 1000);
+            },
+
+            copyUrl() {
+                const url = 'http://' + (this.primaryIp || 'laptop-ip') + ':8000';
+                navigator.clipboard.writeText(url);
+                alert('Gekopieerd: ' + url);
             },
 
             loadFromStorage() {
