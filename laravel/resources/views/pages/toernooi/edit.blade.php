@@ -2704,13 +2704,18 @@
                  :class="internetStatus === 'connected' ? 'bg-green-50 border-green-300' : (internetStatus === 'slow' ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300')">
                 <div class="flex items-center gap-3">
                     <div class="text-3xl" x-text="internetStatus === 'connected' ? '🟢' : (internetStatus === 'slow' ? '🟡' : '🔴')"></div>
-                    <div>
-                        <h3 class="font-bold" :class="internetStatus === 'connected' ? 'text-green-800' : (internetStatus === 'slow' ? 'text-yellow-800' : 'text-red-800')">
-                            Internet (cloud)
-                        </h3>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold" :class="internetStatus === 'connected' ? 'text-green-800' : (internetStatus === 'slow' ? 'text-yellow-800' : 'text-red-800')">
+                                Internet (cloud)
+                            </h3>
+                            <span x-show="latency" class="text-sm font-mono px-2 py-1 rounded"
+                                  :class="latency < 500 ? 'bg-green-200 text-green-800' : (latency < 2000 ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800')"
+                                  x-text="latency + ' ms'"></span>
+                        </div>
                         <p class="text-sm" :class="internetStatus === 'connected' ? 'text-green-600' : (internetStatus === 'slow' ? 'text-yellow-600' : 'text-red-600')">
                             <span x-show="internetStatus === 'connected'">Verbonden met judotournament.org</span>
-                            <span x-show="internetStatus === 'slow'">Trage verbinding (<span x-text="latency"></span>ms)</span>
+                            <span x-show="internetStatus === 'slow'">Trage verbinding</span>
                             <span x-show="internetStatus === 'offline'">Geen verbinding met cloud</span>
                         </p>
                     </div>
