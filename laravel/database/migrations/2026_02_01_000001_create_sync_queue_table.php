@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('sync_queue', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('toernooi_id')->constrained()->onDelete('cascade');
+            $table->foreignId('toernooi_id')->constrained('toernooien')->onDelete('cascade');
             $table->string('table_name'); // wedstrijden, judokas
             $table->unsignedBigInteger('record_id');
             $table->enum('action', ['create', 'update', 'delete']);

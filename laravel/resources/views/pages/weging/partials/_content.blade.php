@@ -283,9 +283,9 @@ function selectJudoka(judoka) {
     // Show max 3 previous weighings as green numbers (no labels, no time)
     const vorigeGewichten = vorigeWegingen.slice(0, 3).map(w => w.gewicht).join(', ');
 
-    // Determine weight display: fixed class (-30, +70) or registration weight
+    // Determine weight display: fixed class or registration weight
     const gewichtsklasse = judoka.gewichtsklasse || '';
-    const isVasteKlasse = gewichtsklasse.startsWith('-') || gewichtsklasse.startsWith('+');
+    const isVasteKlasse = judoka.is_vaste_klasse || false;
     const gewichtDisplay = isVasteKlasse ? gewichtsklasse : (judoka.gewicht ? `${judoka.gewicht} kg` : '');
 
     document.getElementById('judoka-info-compact').innerHTML = `
