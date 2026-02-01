@@ -178,10 +178,10 @@
                         <div class="text-sm">Sync Status</div>
                     </a>
                     @else
-                    <a href="{{ route('local.sync') }}" target="_blank"
-                       class="p-3 bg-gray-50 rounded text-center hover:bg-gray-100">
-                        <div class="text-2xl mb-1">🔄</div>
-                        <div class="text-sm">Sync Data</div>
+                    <a href="{{ route('local.auto-sync') }}"
+                       class="p-3 bg-blue-50 rounded text-center hover:bg-blue-100">
+                        <div class="text-2xl mb-1">☁️</div>
+                        <div class="text-sm">Cloud Sync</div>
                     </a>
                     @endif
                     <a href="{{ route('organisator.login') }}"
