@@ -135,7 +135,7 @@ class JudokaController extends Controller
         }
 
         // Re-check import warnings (e.g. gewicht was too low, now fixed)
-        $judoka->checkImportStatus();
+        $judoka->hervalideerImportStatus();
 
         // Return to filtered list if came from filter
         $redirectRoute = $request->input('filter') === 'onvolledig'
@@ -439,7 +439,7 @@ class JudokaController extends Controller
         }
 
         // Re-check import warnings (e.g. gewicht was too low, now fixed)
-        $judoka->checkImportStatus();
+        $judoka->hervalideerImportStatus();
 
         return response()->json([
             'success' => true,
