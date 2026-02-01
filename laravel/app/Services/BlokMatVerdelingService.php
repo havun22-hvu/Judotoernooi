@@ -636,29 +636,23 @@ class BlokMatVerdelingService
                 continue;
             }
 
-            // Sequential distribution with dynamic target recalculation
+            // Sequential distribution: fill each mat until just over average, then next mat
             $wedstrijdenPerMat = array_fill_keys($matIds, 0);
             $huidigeMatIndex = 0;
-            $resterendeWedstrijden = $poules->sum('aantal_wedstrijden');
-            $resterendeMatten = $aantalMatten;
+            $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
+            $gemiddelde = $totaalWedstrijden / $aantalMatten;
 
             foreach ($poules as $poule) {
                 $huidigeMat = $matIds[$huidigeMatIndex];
 
-                // Recalculate target: remaining matches / remaining mats
-                $doelVoorDezeMat = (int) ceil($resterendeWedstrijden / $resterendeMatten);
-
-                // Move to next mat if current reached its fair share (unless last mat)
-                if ($wedstrijdenPerMat[$huidigeMat] >= $doelVoorDezeMat && $huidigeMatIndex < $aantalMatten - 1) {
-                    // Update remaining for next mat calculation
-                    $resterendeWedstrijden -= $wedstrijdenPerMat[$huidigeMat];
-                    $resterendeMatten--;
-                    $huidigeMatIndex++;
-                    $huidigeMat = $matIds[$huidigeMatIndex];
-                }
-
+                // Assign poule to current mat
                 $poule->update(['mat_id' => $huidigeMat]);
                 $wedstrijdenPerMat[$huidigeMat] += $poule->aantal_wedstrijden;
+
+                // AFTER assigning: if we passed the average, move to next mat
+                if ($wedstrijdenPerMat[$huidigeMat] >= $gemiddelde && $huidigeMatIndex < $aantalMatten - 1) {
+                    $huidigeMatIndex++;
+                }
             }
         }
 
