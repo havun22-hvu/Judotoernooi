@@ -607,31 +607,140 @@ class BlokMatVerdelingService
     /**
      * Distribute poules over mats within each block
      *
-     * Sorting: poules sorted by weight (ascending), then distributed with load balancing.
-     * Result: lighter weight classes tend to end up on mat 1, heavier on last mat.
+     * Sorting strategy:
+     * 1. Sort by age class (young to old), then weight (light to heavy)
+     * 2. At highest weight classes: group ladies on 1-2 adjacent mats
+     * 3. Load balance while keeping similar categories together
      */
     public function verdeelOverMatten(Toernooi $toernooi): void
     {
         $matten = $toernooi->matten->sortBy('nummer');
         $matIds = $matten->pluck('id')->toArray();
+        $aantalMatten = count($matIds);
 
         foreach ($toernooi->blokken as $blok) {
             $wedstrijdenPerMat = array_fill_keys($matIds, 0);
 
-            // Sort poules by weight ascending (light to heavy)
-            // gewichtsklasse format: "-24" or "24-27kg" - extract numeric value for sorting
-            $poules = $blok->poules()->get()->sortBy(function ($poule) {
-                return $this->extractGewichtVoorSortering($poule->gewichtsklasse);
-            });
+            // Get all poules and sort by leeftijd (jong→oud), then gewicht (licht→zwaar)
+            $poules = $blok->poules()->with('judokas')->get()->sortBy([
+                fn($poule) => $this->extractLeeftijdVoorSortering($poule->leeftijdsklasse),
+                fn($poule) => $this->extractGewichtVoorSortering($poule->gewichtsklasse),
+            ])->values();
+
+            // Identify ladies at high weight classes (to group them on adjacent mats)
+            $zwaarGrens = $this->bepaalZwaarGewichtGrens($poules);
+            $damesZwaar = collect();
+            $overige = collect();
 
             foreach ($poules as $poule) {
+                $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse);
+                $isDames = $this->isPouleVoorDames($poule);
+
+                if ($isDames && $gewicht >= $zwaarGrens) {
+                    $damesZwaar->push($poule);
+                } else {
+                    $overige->push($poule);
+                }
+            }
+
+            // Distribute regular poules first (sorted light→heavy, young→old)
+            foreach ($overige as $poule) {
                 $besteMat = $this->vindMinsteWedstrijdenMat($matIds, $wedstrijdenPerMat);
                 $poule->update(['mat_id' => $besteMat]);
                 $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
             }
+
+            // Place ladies heavy weight on 1-2 adjacent mats (highest mat numbers)
+            if ($damesZwaar->isNotEmpty()) {
+                // Use last 1-2 mats for ladies heavy
+                $dameMattLen = min(2, $aantalMatten);
+                $dameMatIds = array_slice($matIds, -$dameMattLen);
+
+                foreach ($damesZwaar as $poule) {
+                    $besteMat = $this->vindMinsteWedstrijdenMat($dameMatIds, $wedstrijdenPerMat);
+                    $poule->update(['mat_id' => $besteMat]);
+                    $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
+                }
+            }
         }
 
         $this->fixKruisfinaleMatten($toernooi);
+    }
+
+    /**
+     * Extract age value for sorting (young to old)
+     * Handles formats: "Pupillen 10-12j", "Cadetten", "U10", etc.
+     */
+    private function extractLeeftijdVoorSortering(?string $leeftijdsklasse): int
+    {
+        if (empty($leeftijdsklasse)) {
+            return 999;
+        }
+
+        // Extract age from patterns like "10-12j", "U10", "12-14 jaar"
+        if (preg_match('/(\d+)/', $leeftijdsklasse, $matches)) {
+            return (int) $matches[1];
+        }
+
+        // Known category names sorted by age
+        $bekendeCategorien = [
+            'mini' => 5,
+            'pupil' => 8,
+            'aspirant' => 11,
+            'cadet' => 14,
+            'junior' => 17,
+            'senior' => 21,
+            'master' => 30,
+        ];
+
+        $lower = strtolower($leeftijdsklasse);
+        foreach ($bekendeCategorien as $naam => $leeftijd) {
+            if (str_contains($lower, $naam)) {
+                return $leeftijd;
+            }
+        }
+
+        return 999;
+    }
+
+    /**
+     * Determine heavy weight threshold (top 30% of weights)
+     */
+    private function bepaalZwaarGewichtGrens($poules): float
+    {
+        $gewichten = $poules->map(fn($p) => $this->extractGewichtVoorSortering($p->gewichtsklasse))
+            ->filter(fn($g) => $g > 0)
+            ->sort()
+            ->values();
+
+        if ($gewichten->isEmpty()) {
+            return 9999;
+        }
+
+        // Top 30% threshold
+        $index = (int) floor($gewichten->count() * 0.7);
+        return $gewichten->get($index, $gewichten->last());
+    }
+
+    /**
+     * Check if poule is for ladies based on judokas or leeftijdsklasse
+     */
+    private function isPouleVoorDames(Poule $poule): bool
+    {
+        // Check leeftijdsklasse for "dames" or "meisjes"
+        $lower = strtolower($poule->leeftijdsklasse ?? '');
+        if (str_contains($lower, 'dame') || str_contains($lower, 'meisje') || str_contains($lower, 'vrouw')) {
+            return true;
+        }
+
+        // Check judokas gender
+        $judokas = $poule->judokas;
+        if ($judokas->isEmpty()) {
+            return false;
+        }
+
+        $vrouwen = $judokas->filter(fn($j) => in_array(strtolower($j->geslacht ?? ''), ['v', 'vrouw', 'female', 'f']));
+        return $vrouwen->count() > ($judokas->count() / 2);
     }
 
     /**
