@@ -52,8 +52,15 @@ class LocalSyncController extends Controller
         // Clear config cache
         \Artisan::call('config:clear');
 
-        return redirect()->route('local.dashboard')
-            ->with('success', 'Server geconfigureerd als ' . strtoupper($role));
+        // If Primary, redirect to auto-sync to download latest data from cloud
+        if ($role === 'primary') {
+            return redirect()->route('local.auto-sync')
+                ->with('success', 'Server geconfigureerd als PRIMARY. Nu data synchroniseren van cloud...');
+        }
+
+        // If Standby, redirect to standby-sync page
+        return redirect()->route('local.standby-sync')
+            ->with('success', 'Server geconfigureerd als STANDBY. Synchronisatie met Primary wordt gestart...');
     }
 
     /**
@@ -397,5 +404,126 @@ class LocalSyncController extends Controller
 
         $diff = now()->diff($startTime);
         return $diff->format('%H:%I:%S');
+    }
+
+    /**
+     * Auto-sync page - downloads latest data from cloud
+     * This runs automatically when local server starts
+     */
+    public function autoSync()
+    {
+        $config = config('local-server');
+
+        // Check if server is configured
+        if (!$config['role']) {
+            return redirect()->route('local.setup')
+                ->with('warning', 'Configureer eerst de server rol voordat je kunt synchroniseren.');
+        }
+
+        return view('local.auto-sync', [
+            'role' => $config['role'],
+            'cloudUrl' => config('app.url', 'https://judotournament.org'),
+        ]);
+    }
+
+    /**
+     * Execute auto-sync - fetch data from cloud and store locally
+     */
+    public function executeAutoSync(Request $request): JsonResponse
+    {
+        $cloudUrl = config('app.url', 'https://judotournament.org');
+        $results = [
+            'success' => true,
+            'synced_at' => now()->toIso8601String(),
+            'items' => [],
+            'errors' => [],
+        ];
+
+        try {
+            // Get today's tournaments from cloud
+            $response = @file_get_contents("{$cloudUrl}/api/local-sync/toernooien-vandaag", false, stream_context_create([
+                'http' => [
+                    'timeout' => 10,
+                    'header' => "Accept: application/json\r\n",
+                ]
+            ]));
+
+            if ($response === false) {
+                $results['errors'][] = 'Kon geen verbinding maken met cloud server';
+                $results['success'] = false;
+            } else {
+                $data = json_decode($response, true);
+
+                if (isset($data['toernooien']) && is_array($data['toernooien'])) {
+                    foreach ($data['toernooien'] as $toernooiData) {
+                        $this->importToernooiData($toernooiData, $results);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            $results['errors'][] = 'Sync fout: ' . $e->getMessage();
+            $results['success'] = false;
+        }
+
+        // Store sync timestamp
+        Cache::put('last_cloud_sync', now()->toIso8601String(), 3600);
+
+        return response()->json($results);
+    }
+
+    /**
+     * Import tournament data from cloud
+     */
+    private function importToernooiData(array $data, array &$results): void
+    {
+        try {
+            // Find or create tournament
+            $toernooi = Toernooi::updateOrCreate(
+                ['id' => $data['id']],
+                [
+                    'naam' => $data['naam'] ?? 'Onbekend toernooi',
+                    'datum' => $data['datum'] ?? today(),
+                    'organisator_id' => $data['organisator_id'] ?? 1,
+                    // Add other fields as needed
+                ]
+            );
+
+            $results['items'][] = [
+                'type' => 'toernooi',
+                'name' => $toernooi->naam,
+                'status' => 'synced',
+            ];
+        } catch (\Exception $e) {
+            $results['errors'][] = "Toernooi import fout: {$e->getMessage()}";
+        }
+    }
+
+    /**
+     * Check sync status - used by JavaScript to poll
+     */
+    public function syncStatus(): JsonResponse
+    {
+        return response()->json([
+            'last_cloud_sync' => Cache::get('last_cloud_sync'),
+            'last_standby_sync' => Cache::get('standby_last_sync'),
+            'role' => config('local-server.role'),
+            'cloud_available' => $this->checkCloudAvailability(),
+        ]);
+    }
+
+    /**
+     * Check if cloud server is available
+     */
+    private function checkCloudAvailability(): bool
+    {
+        try {
+            $cloudUrl = config('app.url', 'https://judotournament.org');
+            $response = @file_get_contents("{$cloudUrl}/api/health", false, stream_context_create([
+                'http' => ['timeout' => 3]
+            ]));
+            return $response !== false;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }

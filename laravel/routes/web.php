@@ -547,6 +547,11 @@ Route::prefix('local-server')->name('local.')->group(function () {
     // Startup wizard (step-by-step guide for tournament day)
     Route::get('/opstarten', [LocalSyncController::class, 'startupWizard'])->name('startup-wizard');
 
+    // Auto-sync (downloads latest data from cloud)
+    Route::get('/auto-sync', [LocalSyncController::class, 'autoSync'])->name('auto-sync');
+    Route::post('/auto-sync', [LocalSyncController::class, 'executeAutoSync'])->name('auto-sync.execute');
+    Route::get('/sync-status', [LocalSyncController::class, 'syncStatus'])->name('sync-status');
+
     // Emergency failover
     Route::get('/emergency', [LocalSyncController::class, 'emergencyFailover'])->name('emergency-failover');
     Route::post('/emergency', [LocalSyncController::class, 'executeEmergencyFailover'])->name('emergency-failover.execute');
