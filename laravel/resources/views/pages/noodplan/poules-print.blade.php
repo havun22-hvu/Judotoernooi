@@ -5,30 +5,26 @@
 @section('content')
 @php
     $enkelBlok = $blokken->count() === 1;
+    $isFirst = true;
 @endphp
 
 @foreach($blokken as $blok)
-<div class="{{ !$loop->last ? 'page-break' : '' }}">
-    @if(!$enkelBlok)
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Blok {{ $blok->nummer }}{{ $blok->naam ? " - {$blok->naam}" : '' }}</h1>
-    @endif
-
     @foreach($matten as $mat)
         @php
             $matPoules = $blok->poules->where('mat_id', $mat->id)->sortBy(fn($p) => $p->nummer);
         @endphp
         @if($matPoules->isNotEmpty())
-        <div class="mb-6">
-            <h2 class="text-lg font-semibold text-blue-800 mb-2 border-b border-blue-300 pb-1">
-                Mat {{ $mat->nummer }}{{ $mat->label ? " - {$mat->label}" : '' }}
+        <div class="{{ !$isFirst ? 'page-break' : '' }}">
+            <h2 class="text-xl font-bold text-blue-800 mb-3 border-b-2 border-blue-300 pb-2">
+                @if(!$enkelBlok)Blok {{ $blok->nummer }} - @endifMat {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
             </h2>
 
             @foreach($matPoules as $poule)
-            <div class="mb-4 ml-2">
+            <div class="mb-4">
                 <h3 class="font-medium text-gray-700 mb-1">
                     Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                 </h3>
-                <table class="w-full text-sm border-collapse ml-2">
+                <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="bg-gray-100">
                             <th class="px-2 py-1 text-left w-8">#</th>
@@ -53,9 +49,9 @@
             </div>
             @endforeach
         </div>
+        @php $isFirst = false; @endphp
         @endif
     @endforeach
-</div>
 @endforeach
 
 @if($blokken->flatMap(fn($b) => $b->poules)->isEmpty())

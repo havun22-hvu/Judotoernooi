@@ -167,6 +167,18 @@
         </div>
         @endif
 
+        {{-- WAARSCHUWING: Te zwaar - melden bij jury (alleen bij vaste gewichtsklassen) --}}
+        @php
+            $isVasteKlasse = str_starts_with($judoka->gewichtsklasse ?? '', '-') || str_starts_with($judoka->gewichtsklasse ?? '', '+');
+            $moetMeldenBijJury = $isVasteKlasse && $judoka->opmerking && str_contains($judoka->opmerking, 'Te zwaar');
+        @endphp
+        @if($moetMeldenBijJury)
+        <div class="px-3 py-3 bg-red-600 text-white text-center">
+            <div class="text-lg font-bold">⚠️ {{ $judoka->opmerking }}</div>
+            <div class="text-sm mt-1 font-medium">→ MELDEN BIJ JURYTAFEL</div>
+        </div>
+        @endif
+
         {{-- QR CODE --}}
         <div class="p-4 flex flex-col items-center bg-white">
             <img
