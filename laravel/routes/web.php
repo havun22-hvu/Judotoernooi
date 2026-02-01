@@ -481,41 +481,6 @@ Route::middleware('rol.sessie')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Public Pages: /{org}/{toernooi}/...
-| No authentication required - vrij toegankelijk voor bezoekers
-| IMPORTANT: These routes must be LAST to avoid conflicts with other routes
-|--------------------------------------------------------------------------
-*/
-Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
-    // Main public page (PWA)
-    Route::get('/', [PubliekController::class, 'index'])->name('index');
-
-    // API routes for public page
-    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
-    Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
-    Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
-    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
-    Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
-    Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
-})
-->where('organisator', '^(?!admin|login|logout|registreren|weegkaart|coach-kaart|mollie|betaling|help|dashboard).*$')
-->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');
-
-// Legacy public routes - redirect to new URL structure
-Route::get('/publiek/{toernooi}/zoeken', fn($toernooi) => redirect()->route('publiek.index', [
-    'organisator' => $toernooi->organisator->slug ?? 'unknown',
-    'toernooi' => $toernooi->slug
-]))->name('publiek.zoeken.legacy');
-
-Route::get('/{toernooi}', fn($toernooi) => redirect()->route('publiek.index', [
-    'organisator' => $toernooi->organisator->slug ?? 'unknown',
-    'toernooi' => $toernooi->slug
-]))
-->name('publiek.index.legacy')
-->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
-
-/*
-|--------------------------------------------------------------------------
 | Local Server Sync Routes (Redundancy System)
 |--------------------------------------------------------------------------
 */
@@ -556,6 +521,49 @@ Route::prefix('local-server')->name('local.')->group(function () {
     Route::get('/emergency', [LocalSyncController::class, 'emergencyFailover'])->name('emergency-failover');
     Route::post('/emergency', [LocalSyncController::class, 'executeEmergencyFailover'])->name('emergency-failover.execute');
 
+    // Simple UI (for non-technical users)
+    Route::get('/simple', [LocalSyncController::class, 'simple'])->name('simple');
+    Route::get('/internet-status', [LocalSyncController::class, 'internetStatus'])->name('internet-status');
+    Route::get('/queue-status', [LocalSyncController::class, 'queueStatus'])->name('queue-status');
+    Route::post('/sync-now', [LocalSyncController::class, 'syncNow'])->name('sync-now');
+    Route::post('/push-sync', [LocalSyncController::class, 'pushSync'])->name('push-sync');
+    Route::get('/activate', [LocalSyncController::class, 'activate'])->name('activate');
+
     // Dashboard
     Route::get('/', [LocalSyncController::class, 'dashboard'])->name('dashboard');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public Pages: /{org}/{toernooi}/...
+| No authentication required - vrij toegankelijk voor bezoekers
+| IMPORTANT: These routes must be LAST to avoid conflicts with other routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
+    // Main public page (PWA)
+    Route::get('/', [PubliekController::class, 'index'])->name('index');
+
+    // API routes for public page
+    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
+    Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
+    Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
+    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
+    Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
+    Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
+})
+->where('organisator', '^(?!admin|login|logout|registreren|weegkaart|coach-kaart|mollie|betaling|help|dashboard|local-server).*$')
+->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');
+
+// Legacy public routes - redirect to new URL structure
+Route::get('/publiek/{toernooi}/zoeken', fn($toernooi) => redirect()->route('publiek.index', [
+    'organisator' => $toernooi->organisator->slug ?? 'unknown',
+    'toernooi' => $toernooi->slug
+]))->name('publiek.zoeken.legacy');
+
+Route::get('/{toernooi}', fn($toernooi) => redirect()->route('publiek.index', [
+    'organisator' => $toernooi->organisator->slug ?? 'unknown',
+    'toernooi' => $toernooi->slug
+]))
+->name('publiek.index.legacy')
+->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
