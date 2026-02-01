@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Simple ping for connection status check
+Route::get('ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]));
+
 Route::prefix('v1')->group(function () {
     // Public API endpoints
     Route::get('toernooi/actief', [ToernooiApiController::class, 'actief']);
