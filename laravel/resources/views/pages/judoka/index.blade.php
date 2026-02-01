@@ -75,15 +75,8 @@
 <!-- WAARSCHUWING: Niet-gecategoriseerde judoka's (oude stijl - voor backward compatibility) -->
 @if($nietGecategoriseerdAantal > 0 && $nietInCategorie->count() === 0)
 @php
-    // Haal de niet-gecategoriseerde judoka's op voor details
-    $nietGecatJudokas = $toernooi->judokas()
-        ->where(function($q) {
-            $q->whereNull('leeftijdsklasse')
-              ->orWhere('leeftijdsklasse', '')
-              ->orWhere('leeftijdsklasse', 'Onbekend');
-        })
-        ->with('club')
-        ->get();
+    // Haal de niet-gecategoriseerde judoka's op via dezelfde methode als de count
+    $nietGecatJudokas = $toernooi->getNietGecategoriseerdeJudokas()->load('club');
 @endphp
 <div id="niet-gecategoriseerd-alert"
      class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
