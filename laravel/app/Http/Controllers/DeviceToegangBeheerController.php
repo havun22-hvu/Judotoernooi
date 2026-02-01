@@ -81,7 +81,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Update a device toegang.
      */
-    public function update(Request $request, DeviceToegang $toegang): JsonResponse
+    public function update(Organisator $organisator, Toernooi $toernooi, Request $request, DeviceToegang $toegang): JsonResponse
     {
         $request->validate([
             'naam' => 'nullable|string|max:255',
@@ -127,7 +127,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Reset device binding.
      */
-    public function reset(Request $request, DeviceToegang $toegang): JsonResponse
+    public function reset(Organisator $organisator, Toernooi $toernooi, Request $request, DeviceToegang $toegang): JsonResponse
     {
         $toegang->reset();
 
@@ -140,7 +140,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Regenerate PIN.
      */
-    public function regeneratePin(Request $request, DeviceToegang $toegang): JsonResponse
+    public function regeneratePin(Organisator $organisator, Toernooi $toernooi, Request $request, DeviceToegang $toegang): JsonResponse
     {
         $toegang->update([
             'pincode' => DeviceToegang::generatePincode(),
@@ -156,7 +156,7 @@ class DeviceToegangBeheerController extends Controller
     /**
      * Delete a device toegang.
      */
-    public function destroy(DeviceToegang $toegang): JsonResponse
+    public function destroy(Organisator $organisator, Toernooi $toernooi, DeviceToegang $toegang): JsonResponse
     {
         $toegang->delete();
 
