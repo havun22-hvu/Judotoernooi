@@ -108,19 +108,9 @@
         @php
             $isGewogen = $judoka->gewicht_gewogen !== null;
             $isAfwezig = !$judoka->isActief($wegingGesloten);
-            $isVerkeerdePoule = false;
-            if (!$pouleIsDynamisch && $poule->gewichtsklasse) {
-                $judokaGewicht = $judoka->gewicht_gewogen ?? $judoka->gewicht ?? 0;
-                $isPlusKlasse = str_starts_with($poule->gewichtsklasse, '+');
-                $pouleLimiet = floatval(preg_replace('/[^0-9.]/', '', $poule->gewichtsklasse));
-                if ($isPlusKlasse) {
-                    $isVerkeerdePoule = $judokaGewicht < ($pouleLimiet - $tolerantie);
-                } else {
-                    $isVerkeerdePoule = $judokaGewicht > ($pouleLimiet + $tolerantie);
-                }
-            }
-            $isAfwijkendGewicht = !$pouleIsDynamisch && $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
-            $heeftProbleem = $isVerkeerdePoule || $isAfwijkendGewicht;
+            // Gebruik centrale methode voor gewicht check (werkt voor vaste klassen)
+            $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+            $heeftProbleem = $isAfwijkendGewicht;
         @endphp
         @if($isAfwezig)
             @continue
