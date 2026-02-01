@@ -2515,29 +2515,25 @@
     </div>
 
     <!-- TIJDENS DE WEDSTRIJD -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLiveBackup()" x-init="init()">
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🏆</span>
             TIJDENS DE WEDSTRIJD
-            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                Live
-            </span>
-            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                <span class="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
-                Backup modus
-            </span>
         </h2>
 
         <div class="space-y-4">
-            <!-- Status info -->
-            <div class="p-3 rounded text-sm flex items-center justify-between" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
-                <div>
-                    <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
-                </div>
-                <div class="flex gap-2">
-                    <label class="px-3 py-1 bg-white border rounded text-xs cursor-pointer hover:bg-gray-50">
-                        📁 Laad JSON backup
+            <!-- Laad JSON backup - altijd zichtbaar -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="noodplanLiveBackup()">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-purple-800">📁 Laad JSON backup</h3>
+                        <p class="text-sm text-purple-600">Laad eerder gedownloade backup in voor offline gebruik</p>
+                        <p class="text-xs text-purple-500 mt-1" x-show="uitslagCount > 0">
+                            <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || '-'"></span>
+                        </p>
+                    </div>
+                    <label class="px-4 py-2 bg-purple-600 text-white rounded cursor-pointer hover:bg-purple-700 font-medium">
+                        Kies bestand
                         <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
                     </label>
                 </div>
