@@ -26,8 +26,26 @@ class WegingController extends Controller
     public function registreer(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $validated = $request->validate([
-            'gewicht' => 'required|numeric|min:15|max:150',
+            'gewicht' => 'required|numeric|min:0|max:150',
         ]);
+
+        // Gewicht 0 = judoka kan niet deelnemen (afwezig markeren)
+        if ($validated['gewicht'] == 0) {
+            $this->wegingService->markeerAfwezig($judoka);
+            return response()->json([
+                'success' => true,
+                'afwezig' => true,
+                'message' => 'Judoka gemarkeerd als afwezig',
+            ]);
+        }
+
+        // Normale weging (min 15kg)
+        if ($validated['gewicht'] < 15) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gewicht moet minimaal 15kg zijn (of 0 voor afwezig)',
+            ], 400);
+        }
 
         $resultaat = $this->wegingService->registreerGewicht(
             $judoka,

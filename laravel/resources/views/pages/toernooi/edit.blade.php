@@ -2807,7 +2807,7 @@
                         <h3 class="font-bold text-green-800">Download poule-indeling</h3>
                         <p class="text-sm text-green-600">Excel met alle poules (voor printen)</p>
                     </div>
-                    <a href="{{ route('toernooi.poules.export-excel', $toernooi->routeParams()) }}"
+                    <a href="{{ route('toernooi.noodplan.export-poules', array_merge($toernooi->routeParams(), ['format' => 'excel'])) }}"
                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium whitespace-nowrap">
                         📥 Download
                     </a>
