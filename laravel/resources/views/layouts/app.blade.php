@@ -147,19 +147,19 @@
 
     @if(session('success'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => showAppToast('✓ {{ session('success') }}', 'success'));
+        document.addEventListener('DOMContentLoaded', () => showAppToast('✓ ' + @json(session('success')), 'success'));
     </script>
     @endif
 
     @if(session('error'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => showAppToast('⚠️ {{ session('error') }}', 'error', 10000));
+        document.addEventListener('DOMContentLoaded', () => showAppToast('⚠️ ' + @json(session('error')), 'error', 10000));
     </script>
     @endif
 
     @if(session('warning'))
     <script>
-        document.addEventListener('DOMContentLoaded', () => showAppToast('{{ session('warning') }}', 'warning'));
+        document.addEventListener('DOMContentLoaded', () => showAppToast(@json(session('warning')), 'warning'));
     </script>
     @endif
 
