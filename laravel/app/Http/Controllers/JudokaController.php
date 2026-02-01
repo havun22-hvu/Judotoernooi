@@ -550,6 +550,17 @@ class JudokaController extends Controller
                     $wijzigingen['leeftijdsklasse'] = $nieuweLeeftijdsklasse;
                 }
 
+                // Update import_status if judoka now fits in a category
+                $huidigeLeeftijdsklasse = $wijzigingen['leeftijdsklasse'] ?? $judoka->leeftijdsklasse;
+                if ($huidigeLeeftijdsklasse && $huidigeLeeftijdsklasse !== 'Onbekend' && $judoka->import_status === 'niet_in_categorie') {
+                    $wijzigingen['import_status'] = 'compleet';
+                    $wijzigingen['import_warnings'] = null;
+                }
+                // Also mark as niet_in_categorie if judoka no longer fits
+                if ((!$huidigeLeeftijdsklasse || $huidigeLeeftijdsklasse === 'Onbekend') && $judoka->import_status !== 'niet_in_categorie') {
+                    $wijzigingen['import_status'] = 'niet_in_categorie';
+                }
+
                 // Recalculate gewichtsklasse from toernooi config (only for fixed weight classes)
                 if (!empty($judoka->gewicht) && $judoka->gewicht > 0) {
                     $nieuweGewichtsklasse = $toernooi->bepaalGewichtsklasse(
