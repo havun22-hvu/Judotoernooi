@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SyncQueueItem;
+use App\Models\SyncStatus;
 use App\Models\Toernooi;
+use App\Services\InternetMonitorService;
+use App\Services\LocalSyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -525,5 +529,162 @@ class LocalSyncController extends Controller
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Simple sync UI for non-technical users
+     */
+    public function simple(): View
+    {
+        $toernooien = Toernooi::where('datum', today())->get();
+        $toernooi = $toernooien->first();
+
+        return view('local.simple', [
+            'toernooien' => $toernooien,
+            'toernooi' => $toernooi,
+        ]);
+    }
+
+    /**
+     * Get internet status for frontend polling
+     */
+    public function internetStatus(InternetMonitorService $monitor): JsonResponse
+    {
+        $status = $monitor->getFullStatus();
+
+        // Add queue count for display
+        $toernooiId = request('toernooi_id');
+        $queueCount = 0;
+
+        if ($toernooiId) {
+            $queueCount = SyncQueueItem::unsynced()
+                ->forToernooi($toernooiId)
+                ->count();
+        } else {
+            // Get from first today's tournament
+            $toernooi = Toernooi::where('datum', today())->first();
+            if ($toernooi) {
+                $queueCount = SyncQueueItem::unsynced()
+                    ->forToernooi($toernooi->id)
+                    ->count();
+            }
+        }
+
+        // Get last sync time
+        $lastSyncAt = null;
+        if ($toernooiId) {
+            $syncStatus = SyncStatus::where('toernooi_id', $toernooiId)
+                ->where('direction', 'cloud_to_local')
+                ->first();
+            $lastSyncAt = $syncStatus?->last_sync_at?->format('H:i');
+        }
+
+        return response()->json([
+            'status' => $status['status'],
+            'latency' => $status['latency'],
+            'checked_at' => $status['checked_at'],
+            'queue_count' => $queueCount,
+            'last_sync_at' => $lastSyncAt,
+        ]);
+    }
+
+    /**
+     * Get queue status for a toernooi
+     */
+    public function queueStatus(Request $request): JsonResponse
+    {
+        $toernooiId = $request->get('toernooi_id');
+
+        if (!$toernooiId) {
+            $toernooi = Toernooi::where('datum', today())->first();
+            $toernooiId = $toernooi?->id;
+        }
+
+        if (!$toernooiId) {
+            return response()->json(['pending' => 0, 'failed' => 0]);
+        }
+
+        return response()->json([
+            'pending' => SyncQueueItem::unsynced()->forToernooi($toernooiId)->count(),
+            'failed' => SyncQueueItem::failed()->forToernooi($toernooiId)->count(),
+        ]);
+    }
+
+    /**
+     * Execute sync now (cloud to local)
+     */
+    public function syncNow(Request $request, LocalSyncService $syncService): JsonResponse
+    {
+        $toernooiId = $request->get('toernooi_id');
+
+        if (!$toernooiId) {
+            $toernooi = Toernooi::where('datum', today())->first();
+        } else {
+            $toernooi = Toernooi::find($toernooiId);
+        }
+
+        if (!$toernooi) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['Geen toernooi gevonden voor vandaag'],
+            ]);
+        }
+
+        $result = $syncService->syncCloudToLocal($toernooi);
+
+        return response()->json([
+            'success' => $result->success,
+            'records_synced' => $result->records_synced,
+            'errors' => $result->errors,
+            'details' => $result->details,
+        ]);
+    }
+
+    /**
+     * Push local changes to cloud
+     */
+    public function pushSync(Request $request, LocalSyncService $syncService): JsonResponse
+    {
+        $toernooiId = $request->get('toernooi_id');
+
+        if (!$toernooiId) {
+            $toernooi = Toernooi::where('datum', today())->first();
+        } else {
+            $toernooi = Toernooi::find($toernooiId);
+        }
+
+        if (!$toernooi) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['Geen toernooi gevonden'],
+            ]);
+        }
+
+        $result = $syncService->syncLocalToCloud($toernooi);
+
+        return response()->json([
+            'success' => $result->success,
+            'records_synced' => $result->records_synced,
+            'errors' => $result->errors,
+        ]);
+    }
+
+    /**
+     * Activate local server mode
+     */
+    public function activate(): View
+    {
+        // Update config to local mode
+        $this->updateEnvFile([
+            'LOCAL_SERVER_ROLE' => 'primary',
+            'LOCAL_SERVER_CONFIGURED_AT' => now()->toDateTimeString(),
+        ]);
+
+        // Clear config cache
+        \Artisan::call('config:clear');
+
+        return view('local.activated', [
+            'ip' => request()->server('SERVER_ADDR') ?? gethostbyname(gethostname()),
+        ]);
     }
 }

@@ -34,3 +34,19 @@ Route::prefix('local-sync')->group(function () {
     // Health check for connectivity test
     Route::get('health', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]));
 });
+
+/*
+|--------------------------------------------------------------------------
+| Sync API Routes (cloud endpoints for receiving local changes)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('sync')->group(function () {
+    // Export full tournament data for local sync
+    Route::get('export/{toernooi}', [\App\Http\Controllers\Api\SyncApiController::class, 'export']);
+
+    // Receive changes from local server
+    Route::post('receive', [\App\Http\Controllers\Api\SyncApiController::class, 'receive']);
+});
+
+// Health check endpoint
+Route::get('health', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]));
