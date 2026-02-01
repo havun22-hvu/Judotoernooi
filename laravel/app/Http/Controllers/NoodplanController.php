@@ -50,12 +50,21 @@ class NoodplanController extends Controller
     }
 
     /**
-     * Print poules - redirect naar reguliere poules pagina
+     * Print poules - per blok, per mat
      */
-    public function printPoules(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null)
+    public function printPoules(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        // Redirect naar de reguliere poules pagina (heeft print CSS)
-        return redirect()->route('toernooi.poule.index', $toernooi->routeParams());
+        $query = $toernooi->blokken()->with(['poules' => fn($q) => $q->with(['judokas.club', 'mat'])])->orderBy('nummer');
+
+        if ($blokNummer) {
+            $query->where('nummer', $blokNummer);
+        }
+
+        $blokken = $query->get();
+        $matten = $toernooi->matten()->orderBy('nummer')->get();
+        $blok = $blokNummer ? $blokken->first() : null;
+
+        return view('pages.noodplan.poules-print', compact('toernooi', 'blokken', 'matten', 'blok'));
     }
 
     /**
@@ -126,7 +135,9 @@ class NoodplanController extends Controller
             ->orderBy('naam')
             ->get();
 
-        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas'));
+        $enkelBlok = $toernooi->blokken()->count() === 1;
+
+        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas', 'enkelBlok'));
     }
 
     /**
@@ -143,7 +154,9 @@ class NoodplanController extends Controller
             ->orderBy('naam')
             ->get();
 
-        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas', 'club'));
+        $enkelBlok = $toernooi->blokken()->count() === 1;
+
+        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas', 'club', 'enkelBlok'));
     }
 
     /**
@@ -152,8 +165,9 @@ class NoodplanController extends Controller
     public function printWeegkaart(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): View
     {
         $judokas = collect([$judoka->load(['club', 'poules.mat', 'poules.blok'])]);
+        $enkelBlok = $toernooi->blokken()->count() === 1;
 
-        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas'));
+        return view('pages.noodplan.weegkaarten', compact('toernooi', 'judokas', 'enkelBlok'));
     }
 
     /**

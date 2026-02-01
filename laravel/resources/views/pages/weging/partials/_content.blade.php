@@ -370,16 +370,32 @@ async function registreerGewicht() {
             if (data.binnen_klasse) {
                 feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-green-100 text-green-800';
                 feedback.textContent = `✓ ${weightInput} kg geregistreerd`;
+                feedback.classList.remove('hidden');
+                setTimeout(() => { clearSelection(); }, 2000);
             } else {
-                feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-yellow-100 text-yellow-800';
-                feedback.textContent = `⚠️ ${data.opmerking}`;
-            }
-            feedback.classList.remove('hidden');
+                // TE ZWAAR/TE LICHT - prominente rode waarschuwing
+                // Check of het vaste gewichtsklassen zijn (bijv. -30, +70)
+                const klasse = selectedJudoka.gewichtsklasse || '';
+                const isVasteKlasse = klasse.startsWith('-') || klasse.startsWith('+');
 
-            // Clear after 2 seconds
-            setTimeout(() => {
-                clearSelection();
-            }, 2000);
+                if (isVasteKlasse) {
+                    // Vaste gewichtsklassen: melden bij jurytafel voor overpoulen
+                    feedback.className = 'mt-3 p-4 rounded-lg text-center font-bold bg-red-600 text-white';
+                    feedback.innerHTML = `
+                        <div class="text-xl mb-2">⚠️ ${data.opmerking}</div>
+                        <div class="text-sm font-medium bg-red-700 rounded p-2 mt-2">
+                            → MELDEN BIJ JURYTAFEL
+                        </div>
+                    `;
+                } else {
+                    // Variabele klassen: alleen waarschuwing (overpoulen hangt af van poulesamenstelling)
+                    feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-yellow-100 text-yellow-800';
+                    feedback.innerHTML = `<div>⚠️ ${data.opmerking}</div>`;
+                }
+                feedback.classList.remove('hidden');
+                // Langer open houden bij rode waarschuwing
+                setTimeout(() => { clearSelection(); }, isVasteKlasse ? 5000 : 2000);
+            }
         } else {
             feedback.className = 'mt-3 p-3 rounded-lg text-center font-medium bg-red-100 text-red-800';
             feedback.textContent = data.message || 'Fout bij registreren';
