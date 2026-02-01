@@ -2610,9 +2610,8 @@
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
-                            <td class="border p-2">🔴 Router defect</td>
-                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
+                            <td class="border p-2 text-center" colspan="2">🔴 WiFi én internet uitgevallen</td>
                             <td class="border p-2">Print schema's, verder op papier</td>
                         </tr>
                     </tbody>
@@ -2661,9 +2660,8 @@
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
-                            <td class="border p-2">🔴 Geen WiFi</td>
-                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
+                            <td class="border p-2 text-center" colspan="2">🔴 WiFi én internet uitgevallen</td>
                             <td class="border p-2">Print schema's, verder op papier</td>
                         </tr>
                     </tbody>

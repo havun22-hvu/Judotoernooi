@@ -703,7 +703,7 @@ class BlokController extends Controller
                 'nummer' => $poule->nummer,
                 'leeftijdsklasse' => $poule->leeftijdsklasse,
                 'gewichtsklasse' => $poule->gewichtsklasse,
-                'titel' => $poule->titel,
+                'titel' => $poule->getDisplayTitel(),
                 'judokas_count' => $poule->judokas_count,
                 'is_activated' => $poule->wedstrijden_count > 0,
                 'is_sent' => $poule->doorgestuurd_op !== null,

@@ -34,7 +34,7 @@ class HerberekePouleStatistieken extends Command
             if ($poule->aantal_judokas != $werkelijkJudokas || $poule->aantal_wedstrijden != $werkelijkWedstrijden) {
                 $fouten[] = [
                     'poule' => $poule->nummer,
-                    'titel' => $poule->titel,
+                    'titel' => $poule->getDisplayTitel(),
                     'db_judokas' => $poule->aantal_judokas,
                     'werkelijk_judokas' => $werkelijkJudokas,
                     'db_wed' => $poule->aantal_wedstrijden,
