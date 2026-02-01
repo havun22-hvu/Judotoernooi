@@ -443,8 +443,9 @@ class ToernooiController extends Controller
             'wachtwoord' => 'required|string',
         ]);
 
-        // Verify password against admin password
-        if (!Hash::check($request->wachtwoord, $toernooi->wachtwoord_admin)) {
+        // Verify password against logged-in organisator's password
+        $loggedIn = auth('organisator')->user();
+        if (!$loggedIn || !Hash::check($request->wachtwoord, $loggedIn->password)) {
             return redirect()
                 ->route('toernooi.edit', $toernooi->routeParamsWith(['tab' => 'organisatie']))
                 ->with('error', 'Onjuist wachtwoord. Voorbereiding niet heropend.');
