@@ -607,10 +607,10 @@ class BlokMatVerdelingService
     /**
      * Distribute poules over mats within each block
      *
-     * Sorting strategy:
-     * 1. Sort by age class (young to old), then weight (light to heavy)
-     * 2. At highest weight classes: group ladies on 1-2 adjacent mats
-     * 3. Load balance while keeping similar categories together
+     * Strategy: Sequential distribution to keep similar categories together
+     * 1. Sort poules by age (young→old), then weight (light→heavy)
+     * 2. Distribute sequentially over mats until each mat reaches its target
+     * Result: Mini's on mat 1-2, Jeugd on mat 3-4, Dames/Heren on mat 5-6
      */
     public function verdeelOverMatten(Toernooi $toernooi): void
     {
@@ -618,49 +618,40 @@ class BlokMatVerdelingService
         $matIds = $matten->pluck('id')->toArray();
         $aantalMatten = count($matIds);
 
-        foreach ($toernooi->blokken as $blok) {
-            $wedstrijdenPerMat = array_fill_keys($matIds, 0);
+        if ($aantalMatten === 0) {
+            return;
+        }
 
-            // Get all poules and sort by leeftijd (jong→oud), then gewicht (licht→zwaar)
+        foreach ($toernooi->blokken as $blok) {
+            // Get all poules sorted by leeftijd (jong→oud), then gewicht (licht→zwaar)
             $poules = $blok->poules()->with('judokas')->get()->sortBy([
                 fn($poule) => $this->extractLeeftijdVoorSortering($poule->leeftijdsklasse),
                 fn($poule) => $this->extractGewichtVoorSortering($poule->gewichtsklasse),
             ])->values();
 
-            // Identify ladies at high weight classes (to group them on adjacent mats)
-            $zwaarGrens = $this->bepaalZwaarGewichtGrens($poules);
-            $damesZwaar = collect();
-            $overige = collect();
+            if ($poules->isEmpty()) {
+                continue;
+            }
+
+            // Calculate total matches and target per mat
+            $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
+            $doelPerMat = (int) ceil($totaalWedstrijden / $aantalMatten);
+
+            // Sequential distribution: fill each mat until it reaches target, then move to next
+            $wedstrijdenPerMat = array_fill_keys($matIds, 0);
+            $huidigeMatIndex = 0;
 
             foreach ($poules as $poule) {
-                $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse);
-                $isDames = $this->isPouleVoorDames($poule);
+                $huidigeMat = $matIds[$huidigeMatIndex];
 
-                if ($isDames && $gewicht >= $zwaarGrens) {
-                    $damesZwaar->push($poule);
-                } else {
-                    $overige->push($poule);
+                // Move to next mat if current is "full" (unless it's the last mat)
+                if ($wedstrijdenPerMat[$huidigeMat] >= $doelPerMat && $huidigeMatIndex < $aantalMatten - 1) {
+                    $huidigeMatIndex++;
+                    $huidigeMat = $matIds[$huidigeMatIndex];
                 }
-            }
 
-            // Distribute regular poules first (sorted light→heavy, young→old)
-            foreach ($overige as $poule) {
-                $besteMat = $this->vindMinsteWedstrijdenMat($matIds, $wedstrijdenPerMat);
-                $poule->update(['mat_id' => $besteMat]);
-                $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
-            }
-
-            // Place ladies heavy weight on 1-2 adjacent mats (highest mat numbers)
-            if ($damesZwaar->isNotEmpty()) {
-                // Use last 1-2 mats for ladies heavy
-                $dameMattLen = min(2, $aantalMatten);
-                $dameMatIds = array_slice($matIds, -$dameMattLen);
-
-                foreach ($damesZwaar as $poule) {
-                    $besteMat = $this->vindMinsteWedstrijdenMat($dameMatIds, $wedstrijdenPerMat);
-                    $poule->update(['mat_id' => $besteMat]);
-                    $wedstrijdenPerMat[$besteMat] += $poule->aantal_wedstrijden;
-                }
+                $poule->update(['mat_id' => $huidigeMat]);
+                $wedstrijdenPerMat[$huidigeMat] += $poule->aantal_wedstrijden;
             }
         }
 
