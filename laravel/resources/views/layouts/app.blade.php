@@ -31,10 +31,10 @@
             50% { opacity: 0.3; }
         }
         .animate-blink-10s {
-            animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
+            animation: blink 0.5s ease-in-out 3;
         }
         .animate-error-blink {
-            animation: blink 0.5s ease-in-out 20; /* 0.5s * 20 = 10 seconden */
+            animation: blink 0.5s ease-in-out 3;
         }
         /* Loading overlay */
         .loading-overlay {

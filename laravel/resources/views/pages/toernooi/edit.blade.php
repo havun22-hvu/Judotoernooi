@@ -16,7 +16,7 @@
     <div class="p-3 bg-red-100 border-b-2 border-red-500 animate-error-blink"
          x-data="{ show: true }"
          x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
@@ -40,7 +40,7 @@
     <div class="p-3 bg-orange-100 border-b-2 border-orange-500 animate-error-blink"
          x-data="{ show: true }"
          x-show="show"
-         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+         x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
         <div class="max-w-4xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
