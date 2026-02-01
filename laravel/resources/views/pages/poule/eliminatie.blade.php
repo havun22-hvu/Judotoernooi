@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Eliminatie - ' . $poule->titel)
+@section('title', 'Eliminatie - ' . $poule->getDisplayTitel())
 
 @section('content')
 <div class="mb-6">

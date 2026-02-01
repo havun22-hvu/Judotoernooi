@@ -259,7 +259,7 @@
                                     <div>
                                         <div class="font-bold text-gray-800">
                                             <span x-text="openPoules.includes({{ $poule->id }}) ? '▼' : '▶'" class="mr-1"></span>
-                                            {{ $poule->titel ?: "Poule {$poule->nummer}" }}
+                                            {{ $poule->getDisplayTitel() ?: "Poule {$poule->nummer}" }}
                                         </div>
                                         <div class="text-sm text-gray-500 ml-4">
                                             {{ $poule->judokas->count() }} judoka's

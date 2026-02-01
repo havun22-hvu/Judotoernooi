@@ -245,7 +245,7 @@
             $probleem = $isGewicht ? round($gVerschil, 1) . 'kg verschil' : $p->judokas_count . ' judoka\'s';
         @endphp
         <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 {{ $chipClass }} rounded-full text-sm cursor-pointer transition-colors">
-            #{{ $p->nummer }} {{ $p->titel }} ({{ $probleem }})
+            #{{ $p->nummer }} {{ $p->getDisplayTitel() }} ({{ $probleem }})
         </a>
         @endforeach
     </div>
@@ -334,28 +334,11 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
                             @if($isEliminatie)
-                                @php
-                                    $elimTitel = $poule->titel ?? ($poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse);
-                                    if (preg_match('/^(.+?)\s+(\d+-?\d*j)\s+(.+)$/', $elimTitel, $matches)) {
-                                        $elimTitelFormatted = $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
-                                    } else {
-                                        $elimTitelFormatted = $elimTitel;
-                                    }
-                                @endphp
-                                #{{ $poule->nummer }} ⚔️ {{ $elimTitelFormatted }} <span class="font-normal">(Eliminatie)</span>
+                                #{{ $poule->nummer }} ⚔️ {{ $poule->getDisplayTitel() }} <span class="font-normal">(Eliminatie)</span>
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
                             @else
-                                {{-- Gebruik opgeslagen titel met slashes: Label / leeftijd / gewicht --}}
-                                @php
-                                    $pouleTitel = $poule->titel ?? ($poule->leeftijdsklasse . ' / ' . $poule->gewichtsklasse);
-                                    if (preg_match('/^(.+?)\s+(\d+-?\d*j)\s+(.+)$/', $pouleTitel, $matches)) {
-                                        $pouleTitelFormatted = $matches[1] . ' / ' . $matches[2] . ' / ' . $matches[3];
-                                    } else {
-                                        $pouleTitelFormatted = $pouleTitel;
-                                    }
-                                @endphp
-                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $pouleTitelFormatted }}</span>
+                                <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->getDisplayTitel() }}</span>
                                 @if($heeftGewichtWaarschuwing)
                                 <span class="ml-1 text-orange-600" title="Gewichtsverschil te groot: {{ round($gewichtVerschil, 1) }}kg (max 4kg)">⚠️</span>
                                 @endif

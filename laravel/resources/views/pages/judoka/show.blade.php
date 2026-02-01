@@ -83,7 +83,7 @@
         <h2 class="text-xl font-bold mb-4">Poules</h2>
         @foreach($judoka->poules as $poule)
         <div class="border rounded p-4 mb-2">
-            <div class="font-medium">{{ $poule->titel }}</div>
+            <div class="font-medium">{{ $poule->getDisplayTitel() }}</div>
             <div class="text-gray-600 text-sm">
                 Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }}
             </div>
