@@ -666,31 +666,35 @@ class BlokMatVerdelingService
 
     /**
      * Extract age value for sorting (young to old)
-     * Handles formats: "Pupillen 10-12j", "Cadetten", "U10", etc.
+     * Handles formats: "Mini's 6j", "Jeugd 7-9j", "Dames V 12-13j", etc.
      */
-    private function extractLeeftijdVoorSortering(?string $leeftijdsklasse): int
+    private function extractLeeftijdVoorSortering(?string $titel): int
     {
-        if (empty($leeftijdsklasse)) {
+        if (empty($titel)) {
             return 999;
         }
 
-        // Extract age from patterns like "10-12j", "U10", "12-14 jaar"
-        if (preg_match('/(\d+)/', $leeftijdsklasse, $matches)) {
+        // First: look for age with "j" suffix (e.g., "6j", "7-9j", "10-12j")
+        // This is the most reliable indicator of age
+        if (preg_match('/(\d+)(?:-\d+)?j/', $titel, $matches)) {
             return (int) $matches[1];
         }
 
-        // Known category names sorted by age
+        // Known category names sorted by age (fallback)
         $bekendeCategorien = [
             'mini' => 5,
-            'pupil' => 8,
-            'aspirant' => 11,
-            'cadet' => 14,
+            'jeugd' => 8,
+            'pupil' => 10,
+            'aspirant' => 13,
+            'cadet' => 15,
             'junior' => 17,
+            'dame' => 18,
+            'heren' => 18,
             'senior' => 21,
             'master' => 30,
         ];
 
-        $lower = strtolower($leeftijdsklasse);
+        $lower = strtolower($titel);
         foreach ($bekendeCategorien as $naam => $leeftijd) {
             if (str_contains($lower, $naam)) {
                 return $leeftijd;
