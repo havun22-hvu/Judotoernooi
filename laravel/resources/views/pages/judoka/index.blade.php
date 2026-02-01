@@ -36,11 +36,20 @@
             </thead>
             <tbody class="text-orange-700">
                 @foreach($nietInCategorie as $judoka)
+                @php
+                    $leeftijd = $judoka->geboortejaar ? (date('Y') - $judoka->geboortejaar) : null;
+                    $reden = $judoka->import_warnings;
+                    if (!$reden && $leeftijd) {
+                        $reden = "Leeftijd {$leeftijd} jaar past niet in categorieën";
+                    } elseif (!$reden) {
+                        $reden = 'Onbekende categorie';
+                    }
+                @endphp
                 <tr class="border-t border-orange-100">
                     <td class="py-1">{{ $judoka->naam }}</td>
-                    <td class="py-1">{{ $judoka->geboortejaar }}</td>
+                    <td class="py-1">{{ $judoka->geboortejaar }} ({{ $leeftijd ?? '?' }} jr)</td>
                     <td class="py-1">{{ $judoka->club?->naam ?? '-' }}</td>
-                    <td class="py-1 text-red-600">{{ $judoka->import_warnings ?: 'Onbekende categorie' }}</td>
+                    <td class="py-1 text-red-600">{{ $reden }}</td>
                     <td class="py-1 text-right whitespace-nowrap">
                         <a href="{{ route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka])) }}"
                            class="text-blue-600 hover:text-blue-800 text-xs mr-2">
@@ -65,9 +74,20 @@
 
 <!-- WAARSCHUWING: Niet-gecategoriseerde judoka's (oude stijl - voor backward compatibility) -->
 @if($nietGecategoriseerdAantal > 0 && $nietInCategorie->count() === 0)
+@php
+    // Haal de niet-gecategoriseerde judoka's op voor details
+    $nietGecatJudokas = $toernooi->judokas()
+        ->where(function($q) {
+            $q->whereNull('leeftijdsklasse')
+              ->orWhere('leeftijdsklasse', '')
+              ->orWhere('leeftijdsklasse', 'Onbekend');
+        })
+        ->with('club')
+        ->get();
+@endphp
 <div id="niet-gecategoriseerd-alert"
      class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
-     x-data="{ show: true }"
+     x-data="{ show: true, open: false }"
      x-show="show"
      x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
     <div class="flex items-center justify-between">
@@ -78,10 +98,41 @@
                 <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
             </div>
         </div>
-        <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
-           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-            Naar Instellingen
-        </a>
+        <div class="flex gap-2">
+            <button @click="open = !open" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium">
+                <span x-text="open ? 'Verbergen' : 'Details'"></span>
+            </button>
+            <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
+               class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                Naar Instellingen
+            </a>
+        </div>
+    </div>
+    <div x-show="open" x-collapse class="mt-4 border-t border-red-200 pt-3">
+        <table class="w-full text-sm">
+            <thead class="text-red-800">
+                <tr>
+                    <th class="text-left py-1">Naam</th>
+                    <th class="text-left py-1">Leeftijd</th>
+                    <th class="text-left py-1">Geslacht</th>
+                    <th class="text-left py-1">Club</th>
+                </tr>
+            </thead>
+            <tbody class="text-red-700">
+                @foreach($nietGecatJudokas as $judoka)
+                <tr class="border-t border-red-100">
+                    <td class="py-1">
+                        <a href="{{ route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" class="hover:underline">
+                            {{ $judoka->naam }}
+                        </a>
+                    </td>
+                    <td class="py-1 font-medium">{{ $judoka->geboortejaar ? (date('Y') - $judoka->geboortejaar) . ' jaar' : '?' }}</td>
+                    <td class="py-1">{{ $judoka->geslacht ?? '?' }}</td>
+                    <td class="py-1">{{ $judoka->club?->naam ?? '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 </div>
 @endif
