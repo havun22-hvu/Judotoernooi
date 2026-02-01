@@ -623,13 +623,14 @@ class BlokMatVerdelingService
         }
 
         foreach ($toernooi->blokken as $blok) {
-            // Get all poules sorted by leeftijd (jong→oud), then gewicht (licht→zwaar)
-            // Use categorie_key (u7, u9, u11) for age, gewichtsklasse for weight
-            // Combined sort key: leeftijd * 1000 + gewicht (e.g., 7*1000+20 = 7020)
+            // Sort by category order: Mini's → Jeugd → Dames → Heren
+            // Within each category: sort by age (from categorie_key) then weight
+            // Combined sort key: categorie * 100000 + leeftijd * 1000 + gewicht
             $poules = $blok->poules()->with('judokas')->get()->sortBy(function ($poule) {
+                $categorie = $this->getCategorieVolgorde($poule->leeftijdsklasse);
                 $leeftijd = $this->extractLeeftijdUitCategorieKey($poule->categorie_key);
                 $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse);
-                return $leeftijd * 1000 + $gewicht;
+                return $categorie * 100000 + $leeftijd * 1000 + $gewicht;
             })->values();
 
             if ($poules->isEmpty()) {
@@ -668,6 +669,25 @@ class BlokMatVerdelingService
         }
 
         $this->fixKruisfinaleMatten($toernooi);
+    }
+
+    /**
+     * Get category order for sorting: Mini's=1, Jeugd=2, Dames=3, Heren=4
+     */
+    private function getCategorieVolgorde(?string $leeftijdsklasse): int
+    {
+        if (empty($leeftijdsklasse)) {
+            return 99;
+        }
+
+        $lower = strtolower($leeftijdsklasse);
+
+        if (str_contains($lower, 'mini')) return 1;
+        if (str_contains($lower, 'jeugd')) return 2;
+        if (str_contains($lower, 'dame')) return 3;
+        if (str_contains($lower, 'heren') || str_contains($lower, 'jongen')) return 4;
+
+        return 99;
     }
 
     /**
