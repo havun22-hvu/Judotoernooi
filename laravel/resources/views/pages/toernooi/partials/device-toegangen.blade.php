@@ -37,13 +37,17 @@
                                     <span class="block text-xs" :class="toegang.is_gebonden ? 'text-green-600' : 'text-gray-400'" x-text="toegang.status"></span>
                                 </div>
                                 {{-- Naam (editable) --}}
-                                <div class="flex-1 max-w-xs" x-show="rol.key !== 'mat'">
+                                <div class="flex-1 max-w-xs flex items-center gap-2" x-show="rol.key !== 'mat'">
                                     <input type="text"
                                            :value="toegang.naam"
                                            @blur="updateNaam(toegang, $event.target.value)"
                                            @keydown.enter="$event.target.blur()"
                                            placeholder="Naam vrijwilliger..."
                                            class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <span x-show="savedId === toegang.id" x-cloak
+                                          class="text-green-600 text-xs font-medium whitespace-nowrap">
+                                        ✓ Opgeslagen
+                                    </span>
                                 </div>
                                 {{-- PIN --}}
                                 <div class="text-center">
@@ -126,6 +130,7 @@ function deviceToegangen() {
     return {
         activeRol: 'mat',
         copiedId: null,
+        savedId: null,
         toegangen: [],
         rollen: [
             { key: 'hoofdjury', naam: 'Hoofdjury', icon: '⚖️' },
@@ -207,11 +212,16 @@ function deviceToegangen() {
                 if (response.ok) {
                     const updated = await response.json();
                     Object.assign(toegang, updated);
+                    // Show saved indicator
+                    this.savedId = toegang.id;
+                    setTimeout(() => this.savedId = null, 2000);
                 } else {
                     console.error('Failed to update naam:', response.status, await response.text());
+                    alert('Opslaan mislukt: ' + response.status);
                 }
             } catch (e) {
                 console.error('Failed to update naam:', e);
+                alert('Opslaan mislukt: ' + e.message);
             }
         },
 
