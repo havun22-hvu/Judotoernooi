@@ -82,7 +82,7 @@
      class="mb-4 p-4 bg-red-100 border-2 border-red-500 rounded-lg animate-error-blink"
      x-data="{ show: true, open: false }"
      x-show="show"
-     x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 10000)">
+     x-init="setTimeout(() => $el.classList.remove('animate-error-blink'), 1500)">
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
             <span class="text-2xl">⚠️</span>
