@@ -365,6 +365,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::middleware(CheckToernooiRol::class . ':mat')->group(function () {
         Route::get('mat', [MatController::class, 'index'])->name('mat.index');
         Route::get('mat/interface', [MatController::class, 'interface'])->name('mat.interface');
+        Route::get('mat/scoreboard/{wedstrijd?}', [MatController::class, 'scoreboard'])->name('mat.scoreboard');
         Route::get('mat/{mat}/{blok?}', [MatController::class, 'show'])->name('mat.show');
         Route::post('mat/wedstrijden', [MatController::class, 'getWedstrijden'])->name('mat.wedstrijden');
         Route::post('mat/uitslag', [MatController::class, 'registreerUitslag'])->name('mat.uitslag');
@@ -375,7 +376,6 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('mat/finale-uitslag', [MatController::class, 'finaleUitslag'])->name('mat.finale-uitslag');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
         Route::post('mat/barrage', [BlokController::class, 'maakBarrage'])->name('mat.barrage');
-        Route::get('mat/scoreboard/{wedstrijd?}', [MatController::class, 'scoreboard'])->name('mat.scoreboard');
     });
 
     // Spreker routes (spreker + admin)

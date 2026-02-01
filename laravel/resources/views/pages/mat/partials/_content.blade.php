@@ -956,26 +956,20 @@ function matInterface() {
 
         updateWP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
-            const wp = parseInt(value) || 0;
-            const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
-            // Reassign objects voor Alpine reactivity
-            wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
-
-            // Auto-set opponent WP en JP waar mogelijk
-            if (wp === 2) {
-                // Winnaar: tegenstander WP=0 en JP=0, winnaar JP moet nog ingevuld worden
-                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 0 };
-                wedstrijd.jpScores = { ...wedstrijd.jpScores, [opponentId]: 0 };
-            } else if (wp === 0) {
-                // Verliezer: tegenstander is winnaar (WP=2), eigen JP=0
-                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 2 };
-                wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0 };
-            } else if (wp === 1) {
-                // Gelijkspel: beide WP=1, beide JP=0
-                wedstrijd.wpScores = { ...wedstrijd.wpScores, [opponentId]: 1 };
-                wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: 0, [opponentId]: 0 };
+            // Leeg veld = verwijder waarde (voor delete/backspace)
+            if (value === '' || value === null || value === undefined) {
+                const newScores = { ...wedstrijd.wpScores };
+                delete newScores[judokaId];
+                wedstrijd.wpScores = newScores;
+                return;
             }
+
+            const wp = parseInt(value) || 0;
+
+            // Alleen de ingevulde waarde zetten, GEEN auto-fill van tegenstander
+            // Auto-fill gaat alleen via JP invoer
+            wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
         },
 
         updateJP(wedstrijd, judokaId, value) {
