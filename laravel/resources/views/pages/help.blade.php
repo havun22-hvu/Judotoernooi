@@ -665,7 +665,25 @@
                 <ul class="list-disc list-inside space-y-1">
                     <li><span class="text-green-600 font-bold">Groen</span> - Huidige wedstrijd (nu op de mat)</li>
                     <li><span class="text-yellow-600 font-bold">Geel</span> - Volgende wedstrijd (judoka's klaarzetten)</li>
+                    <li><span class="text-gray-600 font-bold">Grijs</span> - Nog niet aan de beurt</li>
                 </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Wedstrijd selecteren (klikken op nummer)</h4>
+                <table class="min-w-full text-sm mt-2">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-1">Klik op</th>
+                            <th class="text-left py-1">Resultaat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b"><td class="py-1"><span class="text-green-600 font-bold">Groen</span></td><td class="py-1">Bevestiging → geel wordt groen, oud-groen neutraal</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-yellow-600 font-bold">Geel</span></td><td class="py-1">Geel wordt neutraal (deselecteren)</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">Grijs</span> (geen groen)</td><td class="py-1">Wordt groen (eerste keuze)</td></tr>
+                        <tr class="border-b"><td class="py-1"><span class="text-gray-600 font-bold">Grijs</span> (wel groen, geen geel)</td><td class="py-1">Wordt geel</td></tr>
+                        <tr><td class="py-1"><span class="text-gray-600 font-bold">Grijs</span> (wel groen, wel geel)</td><td class="py-1">Melding: eerst gele uitzetten</td></tr>
+                    </tbody>
+                </table>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Puntensysteem</h4>
                 <table class="min-w-full text-sm mt-2">
@@ -676,12 +694,29 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="border-b"><td class="py-1"><strong>Winstpunten (WP)</strong></td><td class="py-1">Winst = 2, Verlies = 0</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>Winstpunten (WP)</strong></td><td class="py-1">Winst = 2, Gelijk = 1, Verlies = 0</td></tr>
                         <tr class="border-b"><td class="py-1">Ippon</td><td class="py-1">10 judopunten</td></tr>
                         <tr class="border-b"><td class="py-1">Waza-ari</td><td class="py-1">7 judopunten</td></tr>
                         <tr><td class="py-1">Yuko</td><td class="py-1">5 judopunten</td></tr>
                     </tbody>
                 </table>
+
+                <h4 class="font-semibold text-gray-800 mt-4">Score invoeren</h4>
+                <p>Via de matrix (WP en JP kolommen):</p>
+                <table class="min-w-full text-sm mt-2">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-1">Invoer JP</th>
+                            <th class="text-left py-1">Resultaat</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b"><td class="py-1"><strong>Leeg (blanco)</strong></td><td class="py-1">Reset alle scores (WP en JP) voor deze wedstrijd</td></tr>
+                        <tr class="border-b"><td class="py-1"><strong>0</strong></td><td class="py-1">Gelijkspel: beide WP=1, beide JP=0</td></tr>
+                        <tr><td class="py-1"><strong>5, 7, 10</strong></td><td class="py-1">Winnaar: deze judoka WP=2, tegenstander WP=0 en JP=0</td></tr>
+                    </tbody>
+                </table>
+                <p class="text-sm text-gray-500 mt-2"><strong>Tip:</strong> WP handmatig invoeren vult de tegenstander niet automatisch in.</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Ranking</h4>
                 <ol class="list-decimal list-inside space-y-1">
