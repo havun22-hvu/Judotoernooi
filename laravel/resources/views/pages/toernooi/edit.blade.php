@@ -2477,6 +2477,208 @@
         </div>
     </div>
 
+    <!-- ==================== NETWERK CONFIGURATIE ==================== -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="netwerkConfig()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🌐</span> NETWERK CONFIGURATIE
+        </h2>
+
+        <!-- Uitleg WiFi vs Internet -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 class="font-bold text-blue-800 mb-2">📡 WiFi vs Internet - wat is het verschil?</h3>
+            <div class="grid md:grid-cols-2 gap-4 text-sm">
+                <div class="bg-white p-3 rounded border">
+                    <strong class="text-blue-700">WiFi (lokaal netwerk)</strong>
+                    <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop in dezelfde ruimte. Werkt ook zonder internet!</p>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                    <strong class="text-green-700">Internet (cloud)</strong>
+                    <p class="text-gray-600 mt-1">Verbinding met judotournament.org voor live sync. Vereist werkend internet.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Netwerk modus keuze -->
+        <div class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3">Welke setup gebruik je?</h3>
+            <div class="grid md:grid-cols-2 gap-4">
+                <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                       :class="heeftEigenRouter ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                    <input type="radio" name="netwerk_modus" value="1" x-model="heeftEigenRouter"
+                           @change="saveNetwerkConfig()" class="sr-only">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📡</span>
+                        <div>
+                            <strong class="text-gray-800">MET eigen router (Deco)</strong>
+                            <p class="text-sm text-gray-600">Tablets blijven op eigen WiFi, alleen bron wisselt</p>
+                        </div>
+                    </div>
+                </label>
+                <label class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
+                       :class="!heeftEigenRouter ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-gray-300'">
+                    <input type="radio" name="netwerk_modus" value="0" x-model="heeftEigenRouter"
+                           @change="saveNetwerkConfig()" class="sr-only">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">📱</span>
+                        <div>
+                            <strong class="text-gray-800">ZONDER eigen router</strong>
+                            <p class="text-sm text-gray-600">Sporthal WiFi + mobiele hotspot als backup</p>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- IP Adressen configuratie -->
+        <div class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3">IP-adressen configureren</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Primaire laptop IP</label>
+                    <div class="flex">
+                        <input type="text" x-model="primaryIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.1.100"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(primaryIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Standby laptop IP</label>
+                    <div class="flex">
+                        <input type="text" x-model="standbyIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.1.101"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(standbyIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Hotspot IP (backup)</label>
+                    <div class="flex">
+                        <input type="text" x-model="hotspotIp" @change="saveNetwerkConfig()"
+                               placeholder="192.168.43.1"
+                               class="flex-1 rounded-l border-gray-300 text-sm">
+                        <button type="button" @click="copyToClipboard(hotspotIp)"
+                                class="px-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r hover:bg-gray-200">
+                            📋
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">💡 Tip: Noteer deze IP's ook op papier voor noodgevallen</p>
+        </div>
+
+        <!-- Scenario tabel: MET eigen router -->
+        <div x-show="heeftEigenRouter" class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3">📋 Wat te doen bij storingen (MET eigen router)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left">Situatie</th>
+                            <th class="border p-2 text-left">WiFi</th>
+                            <th class="border p-2 text-left">Internet</th>
+                            <th class="border p-2 text-left">Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium">✅ Alles werkt</td>
+                            <td class="border p-2">🟢 Eigen router</td>
+                            <td class="border p-2">🟢 Via sporthal</td>
+                            <td class="border p-2">Niets doen, cloud sync actief</td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2">🟢 Eigen router</td>
+                            <td class="border p-2">🔴 Uitgevallen</td>
+                            <td class="border p-2">
+                                <strong>Start lokale server</strong><br>
+                                <span class="text-xs text-gray-600">Tablets blijven op eigen WiFi!</span>
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium">⚠️ Internet weg + 4G backup</td>
+                            <td class="border p-2">🟢 Eigen router</td>
+                            <td class="border p-2">🟡 Via 4G hotspot</td>
+                            <td class="border p-2">
+                                Verbind router met hotspot<br>
+                                <span class="text-xs text-gray-600">Tablets hoeven niet te wisselen</span>
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2">🔴 Router defect</td>
+                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2">Print schema's, verder op papier</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scenario tabel: ZONDER eigen router -->
+        <div x-show="!heeftEigenRouter" class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3">📋 Wat te doen bij storingen (ZONDER eigen router)</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left">Situatie</th>
+                            <th class="border p-2 text-left">WiFi</th>
+                            <th class="border p-2 text-left">Internet</th>
+                            <th class="border p-2 text-left">Actie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium">✅ Alles werkt</td>
+                            <td class="border p-2">🟢 Sporthal WiFi</td>
+                            <td class="border p-2">🟢 Via sporthal</td>
+                            <td class="border p-2">Niets doen, cloud sync actief</td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2">🟢 Sporthal WiFi</td>
+                            <td class="border p-2">🔴 Uitgevallen</td>
+                            <td class="border p-2">
+                                <strong>1. Start lokale server</strong><br>
+                                <strong>2. Zet tablets op hotspot</strong><br>
+                                <span class="text-xs text-gray-600">Alle tablets moeten wisselen!</span>
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium">⚠️ Sporthal WiFi weg</td>
+                            <td class="border p-2">🔴 Uitgevallen</td>
+                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2">
+                                <strong>1. Start mobiele hotspot</strong><br>
+                                <strong>2. Zet tablets op hotspot</strong><br>
+                                <strong>3. Start lokale server</strong>
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2">🔴 Geen WiFi</td>
+                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2">Print schema's, verder op papier</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Gekopieerd feedback -->
+        <div x-show="copied" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
+            ✓ Gekopieerd!
+        </div>
+    </div>
+
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
@@ -2553,6 +2755,44 @@
     </div>
 
     <script>
+    function netwerkConfig() {
+        return {
+            toernooiId: {{ $toernooi->id }},
+            heeftEigenRouter: {{ $toernooi->heeft_eigen_router ? 'true' : 'false' }},
+            primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
+            standbyIp: '{{ $toernooi->local_server_standby_ip ?? "" }}',
+            hotspotIp: '{{ $toernooi->hotspot_ip ?? "" }}',
+            copied: false,
+
+            async saveNetwerkConfig() {
+                try {
+                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            heeft_eigen_router: this.heeftEigenRouter === true || this.heeftEigenRouter === '1',
+                            local_server_primary_ip: this.primaryIp,
+                            local_server_standby_ip: this.standbyIp,
+                            hotspot_ip: this.hotspotIp
+                        })
+                    });
+                } catch (e) {
+                    console.error('Fout bij opslaan netwerk config:', e);
+                }
+            },
+
+            copyToClipboard(text) {
+                if (!text) return;
+                navigator.clipboard.writeText(text);
+                this.copied = true;
+                setTimeout(() => this.copied = false, 2000);
+            }
+        };
+    }
+
     function noodplanLocalServer() {
         return {
             toernooiId: {{ $toernooi->id }},
