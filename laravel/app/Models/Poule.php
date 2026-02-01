@@ -205,7 +205,7 @@ class Poule extends Model
     }
 
     /**
-     * Update poule titel met actuele gewichtsrange
+     * Update poule titel met actuele leeftijds- en gewichtsrange
      * Alleen voor dynamische poules (max_kg_verschil > 0)
      * Vaste klassen (max_kg_verschil = 0) behouden hun titel
      */
@@ -216,17 +216,31 @@ class Poule extends Model
             return;
         }
 
-        $range = $this->getGewichtsRange();
-        $baseTitel = $this->leeftijdsklasse ?? '';
+        // Haal label uit leeftijdsklasse (bijv. "Mini's" uit "Mini's 4-5j")
+        $label = $this->leeftijdsklasse ?? '';
+        $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $label));
 
-        if ($range && $range['min_kg'] !== null && $range['max_kg'] !== null) {
-            // Formaat: "leeftijdsklasse min-maxkg" (simpel, zonder slashes)
-            // Slashes worden toegevoegd in display/view layer
-            $this->titel = $baseTitel . ' ' . round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
-        } else {
-            // Geen gewogen judoka's - titel zonder kg range
-            $this->titel = $baseTitel;
+        // Bereken leeftijdsrange uit judoka's
+        $leeftijdRange = $this->getLeeftijdsRange();
+        $leeftijdStr = '';
+        if ($leeftijdRange) {
+            if ($leeftijdRange['min_jaar'] === $leeftijdRange['max_jaar']) {
+                $leeftijdStr = $leeftijdRange['min_jaar'] . 'j';
+            } else {
+                $leeftijdStr = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
+            }
         }
+
+        // Bereken gewichtsrange uit judoka's
+        $gewichtRange = $this->getGewichtsRange();
+        $gewichtStr = '';
+        if ($gewichtRange && $gewichtRange['min_kg'] !== null && $gewichtRange['max_kg'] !== null) {
+            $gewichtStr = round($gewichtRange['min_kg'], 1) . '-' . round($gewichtRange['max_kg'], 1) . 'kg';
+        }
+
+        // Bouw titel: "Label leeftijdj gewichtkg"
+        $parts = array_filter([$label, $leeftijdStr, $gewichtStr]);
+        $this->titel = implode(' ', $parts);
     }
 
     /**
@@ -280,55 +294,53 @@ class Poule extends Model
     public function getDisplayTitel(): string
     {
         $titel = $this->titel ?? '';
-        $heeftGeenGewichtsklasse = empty($this->gewichtsklasse);
 
-        // Extract components from various sources
+        // Extract label from titel or leeftijdsklasse (e.g. "Mini's", "Jeugd")
         $label = null;
-        $leeftijd = null;
-        $gewicht = null;
-
-        // Try to extract leeftijd from titel or leeftijdsklasse
-        if (preg_match('/(\d+-\d+j)/', $titel, $m)) {
-            $leeftijd = $m[1];
-        } elseif ($this->leeftijdsklasse && preg_match('/(\d+-\d+j)/', $this->leeftijdsklasse, $m)) {
-            $leeftijd = $m[1];
-        }
-
-        // Try to extract label (first word/name before age or weight)
-        // Strip slashes, kg values, age values, and "Poule X" from titel
-        $cleanTitel = preg_replace('/\s*\/\s*/', ' ', $titel); // Remove slashes
-        $cleanTitel = preg_replace('/\s*[\d.]+-[\d.]+kg\s*/i', ' ', $cleanTitel); // Remove kg values
-        $cleanTitel = preg_replace('/\s*\d+-\d+j\s*/', ' ', $cleanTitel); // Remove age values
-        $cleanTitel = preg_replace('/\s*Poule\s+\d+\s*/i', ' ', $cleanTitel); // Remove "Poule X"
-        $cleanTitel = trim(preg_replace('/\s+/', ' ', $cleanTitel)); // Clean up whitespace
+        $cleanTitel = preg_replace('/\s*\/\s*/', ' ', $titel);
+        $cleanTitel = preg_replace('/\s*[\d.]+-[\d.]+kg\s*/i', ' ', $cleanTitel);
+        $cleanTitel = preg_replace('/\s*\d+-\d+j\s*/', ' ', $cleanTitel);
+        $cleanTitel = preg_replace('/\s*Poule\s+\d+\s*/i', ' ', $cleanTitel);
+        $cleanTitel = trim(preg_replace('/\s+/', ' ', $cleanTitel));
 
         if (!empty($cleanTitel)) {
             $label = $cleanTitel;
         } elseif ($this->leeftijdsklasse) {
-            // Extract label from leeftijdsklasse
             $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $this->leeftijdsklasse));
         }
 
-        // Voor dynamische poules of poules zonder gewichtsklasse: bereken range live
-        if ($this->isDynamisch() || $heeftGeenGewichtsklasse) {
-            $range = $this->getGewichtsRange();
-            if ($range) {
-                $gewicht = round($range['min_kg'], 1) . '-' . round($range['max_kg'], 1) . 'kg';
+        // Leeftijd: ALTIJD live berekenen uit judoka's
+        $leeftijd = null;
+        $leeftijdRange = $this->getLeeftijdsRange();
+        if ($leeftijdRange) {
+            if ($leeftijdRange['min_jaar'] === $leeftijdRange['max_jaar']) {
+                $leeftijd = $leeftijdRange['min_jaar'] . 'j';
+            } else {
+                $leeftijd = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
             }
         }
 
-        // If no dynamic weight, use gewichtsklasse
+        // Gewicht: live berekenen voor dynamische poules
+        $gewicht = null;
+        if ($this->isDynamisch()) {
+            $gewichtRange = $this->getGewichtsRange();
+            if ($gewichtRange) {
+                $gewicht = round($gewichtRange['min_kg'], 1) . '-' . round($gewichtRange['max_kg'], 1) . 'kg';
+            }
+        }
+
+        // Fallback: gebruik opgeslagen gewichtsklasse
         if (!$gewicht && $this->gewichtsklasse) {
             $gewicht = $this->gewichtsklasse;
         }
 
-        // Build the formatted title
+        // Build formatted title: Label / Leeftijd / Gewicht
         $parts = array_filter([$label, $leeftijd, $gewicht]);
         if (count($parts) >= 2) {
             return implode(' / ', $parts);
         }
 
-        // Fallback: return titel as-is or construct from fields
+        // Fallback
         return $titel ?: trim($this->leeftijdsklasse . ' ' . $this->gewichtsklasse);
     }
 
@@ -370,6 +382,45 @@ class Poule extends Model
         return [
             'min_kg' => $min,
             'max_kg' => $max,
+            'range' => $max - $min,
+        ];
+    }
+
+    /**
+     * Bereken de leeftijdsrange van actieve judoka's in de poule
+     * Retourneert [min_jaar, max_jaar, range] of null als geen judoka's
+     */
+    public function getLeeftijdsRange(): ?array
+    {
+        $blok = $this->blok;
+        $wegingGesloten = $blok?->weging_gesloten ?? false;
+
+        $query = $this->judokas()
+            ->where(function ($q) {
+                $q->whereNull('aanwezigheid')
+                  ->orWhere('aanwezigheid', '!=', 'afwezig');
+            });
+
+        // Na weging sluiten: alleen gewogen judoka's
+        if ($wegingGesloten) {
+            $query->whereNotNull('gewicht_gewogen');
+        }
+
+        $leeftijden = $query->get()
+            ->map(fn($j) => $j->leeftijd)
+            ->filter()
+            ->values();
+
+        if ($leeftijden->isEmpty()) {
+            return null;
+        }
+
+        $min = $leeftijden->min();
+        $max = $leeftijden->max();
+
+        return [
+            'min_jaar' => $min,
+            'max_jaar' => $max,
             'range' => $max - $min,
         ];
     }
