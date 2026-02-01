@@ -624,11 +624,11 @@ class BlokMatVerdelingService
 
         foreach ($toernooi->blokken as $blok) {
             // Get all poules sorted by leeftijd (jong→oud), then gewicht (licht→zwaar)
-            // Combined sort key: leeftijd * 1000 + gewicht (e.g., 6*1000+20 = 6020)
+            // Use categorie_key (u7, u9, u11) for age, gewichtsklasse for weight
+            // Combined sort key: leeftijd * 1000 + gewicht (e.g., 7*1000+20 = 7020)
             $poules = $blok->poules()->with('judokas')->get()->sortBy(function ($poule) {
-                $leeftijd = $this->extractLeeftijdVoorSortering($poule->titel);
-                $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse)
-                    ?: $this->extractGewichtVoorSortering($poule->titel);
+                $leeftijd = $this->extractLeeftijdUitCategorieKey($poule->categorie_key);
+                $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse);
                 return $leeftijd * 1000 + $gewicht;
             })->values();
 
@@ -666,42 +666,21 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Extract age value for sorting (young to old)
-     * Handles formats: "Mini's 6j", "Jeugd 7-9j", "Dames V 12-13j", etc.
+     * Extract age from categorie_key (u7, u9, u11, u13, etc.)
+     * This is the most reliable source for age sorting
      */
-    private function extractLeeftijdVoorSortering(?string $titel): int
+    private function extractLeeftijdUitCategorieKey(?string $categorieKey): int
     {
-        if (empty($titel)) {
+        if (empty($categorieKey)) {
             return 999;
         }
 
-        // First: look for age with "j" suffix (e.g., "6j", "7-9j", "10-12j")
-        // This is the most reliable indicator of age
-        if (preg_match('/(\d+)(?:-\d+)?j/', $titel, $matches)) {
+        // Extract number from patterns like "u7", "u9_geel_plus", "u11", "u13_d"
+        if (preg_match('/u(\d+)/', strtolower($categorieKey), $matches)) {
             return (int) $matches[1];
         }
 
-        // Known category names sorted by age (fallback)
-        $bekendeCategorien = [
-            'mini' => 5,
-            'jeugd' => 8,
-            'pupil' => 10,
-            'aspirant' => 13,
-            'cadet' => 15,
-            'junior' => 17,
-            'dame' => 18,
-            'heren' => 18,
-            'senior' => 21,
-            'master' => 30,
-        ];
-
-        $lower = strtolower($titel);
-        foreach ($bekendeCategorien as $naam => $leeftijd) {
-            if (str_contains($lower, $naam)) {
-                return $leeftijd;
-            }
-        }
-
+        // Fallback for non-standard keys
         return 999;
     }
 
