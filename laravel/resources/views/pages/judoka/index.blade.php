@@ -457,6 +457,10 @@ function judokaTable() {
                         const parts = filter.split('-');
                         minGewicht = parseFloat(parts[0]);
                         maxGewicht = parseFloat(parts[1]);
+                    } else {
+                        // 20 = exact 20 kg (eigenlijk 20-20)
+                        minGewicht = parseFloat(filter);
+                        maxGewicht = parseFloat(filter);
                     }
 
                     if (minGewicht !== null || maxGewicht !== null) {
