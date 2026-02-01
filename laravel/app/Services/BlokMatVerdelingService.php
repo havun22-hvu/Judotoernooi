@@ -624,12 +624,13 @@ class BlokMatVerdelingService
 
         foreach ($toernooi->blokken as $blok) {
             // Get all poules sorted by leeftijd (jong→oud), then gewicht (licht→zwaar)
-            // Note: leeftijd staat in titel (bijv. "Mini's 6j 20-21kg"), niet in leeftijdsklasse
-            // gewichtsklasse kan "0kg" zijn, dan fallback naar titel
-            $poules = $blok->poules()->with('judokas')->get()->sortBy([
-                fn($poule) => $this->extractLeeftijdVoorSortering($poule->titel),
-                fn($poule) => $this->extractGewichtVoorSortering($poule->gewichtsklasse) ?: $this->extractGewichtVoorSortering($poule->titel),
-            ])->values();
+            // Combined sort key: leeftijd * 1000 + gewicht (e.g., 6*1000+20 = 6020)
+            $poules = $blok->poules()->with('judokas')->get()->sortBy(function ($poule) {
+                $leeftijd = $this->extractLeeftijdVoorSortering($poule->titel);
+                $gewicht = $this->extractGewichtVoorSortering($poule->gewichtsklasse)
+                    ?: $this->extractGewichtVoorSortering($poule->titel);
+                return $leeftijd * 1000 + $gewicht;
+            })->values();
 
             if ($poules->isEmpty()) {
                 continue;
