@@ -974,8 +974,16 @@ function matInterface() {
 
         updateJP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
-            const jp = parseInt(value) || 0;
             const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
+
+            // Blanco = reset alles
+            if (value === '' || value === null || value === undefined) {
+                wedstrijd.wpScores = {};
+                wedstrijd.jpScores = {};
+                return;
+            }
+
+            const jp = parseInt(value);
 
             // Reassign objects voor Alpine reactivity
             wedstrijd.jpScores = { ...wedstrijd.jpScores, [judokaId]: jp };
