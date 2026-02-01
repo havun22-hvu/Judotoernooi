@@ -111,8 +111,8 @@
             </div>
         </div>
 
-        {{-- BLOK + MAT + TIJDEN --}}
-        @if($blok)
+        {{-- BLOK + MAT + TIJDEN (alleen tonen als voorbereiding klaar is) --}}
+        @if($judoka->toernooi->voorbereiding_klaar_op && $blok)
         @php
             // Kindvriendelijke heldere kleuren voor matten
             $matKleuren = [
@@ -128,10 +128,13 @@
                 'zwart' => 'bg-gray-900 !text-white',
             ];
             $matKleur = $mat?->kleur ? ($matKleuren[strtolower($mat->kleur)] ?? 'bg-gray-500') : 'bg-gray-500';
+            $aantalBlokken = $judoka->toernooi->blokken()->count();
         @endphp
         <div class="px-3 py-2 bg-amber-50 border-b flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
+                @if($aantalBlokken > 1)
                 <span class="bg-amber-500 text-white text-sm font-bold px-2 py-0.5 rounded">{{ $blok->naam }}</span>
+                @endif
                 @if($mat)
                 <span class="{{ $matKleur }} text-black text-lg font-black px-3 py-1 rounded-lg shadow-sm">
                     Mat {{ $mat->nummer }}
@@ -154,9 +157,13 @@
                 @endif
             </div>
         </div>
+        @elseif(!$judoka->toernooi->voorbereiding_klaar_op)
+        <div class="px-3 py-2 bg-blue-50 border-b text-center">
+            <span class="text-sm text-blue-600">Indeling wordt later bekendgemaakt</span>
+        </div>
         @else
         <div class="px-3 py-2 bg-gray-100 border-b text-center">
-            <span class="text-sm text-gray-500">⏳ Nog niet ingedeeld</span>
+            <span class="text-sm text-gray-500">Nog niet ingedeeld</span>
         </div>
         @endif
 

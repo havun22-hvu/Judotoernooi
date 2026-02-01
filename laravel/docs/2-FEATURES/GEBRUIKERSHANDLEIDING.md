@@ -451,21 +451,43 @@ Na "Verdeel over matten" gaat de organisator naar het **Zaaloverzicht**:
 
 **Let op:** Poules kunnen altijd verplaatst worden naar andere matten via drag & drop in Zaaloverzicht.
 
+### Einde Voorbereiding
+
+Na het verdelen van poules over matten kun je de knop **"Einde Voorbereiding"** klikken in het Zaaloverzicht.
+
+**Wat doet deze knop?**
+
+1. **Controleert** of alle judoka's een poule, blok en mat hebben
+2. **Herberekent coachkaarten** per club (op basis van grootste blok)
+3. **Publiceert blok/mat info** op weegkaarten in coach portals
+
+**Belangrijk over weegkaarten:**
+- **Vóór "Einde Voorbereiding"**: Weegkaarten tonen "Indeling wordt later bekendgemaakt"
+- **Na "Einde Voorbereiding"**: Weegkaarten tonen blok (als >1 blok) + mat + weegtijden
+
+Dit voorkomt verwarring bij coaches over voorlopige indelingen. Je kunt de indeling altijd nog wijzigen na het afronden - de knop blokkeert geen functionaliteit.
+
+**Na afronden kun je nog steeds:**
+- Poules verplaatsen naar andere matten (drag & drop)
+- Terug naar blokkenverdeling
+- Alle andere voorbereidingsacties
+
 ### Weegkaarten
 
 Weegkaarten zijn **dynamisch** en tonen altijd de actuele stand:
 - Naam en club
 - QR-code (voor scanner bij weging)
-- **Blok nummer** + weegtijden (zodra toegewezen)
-- **Mat nummer** (zodra toegewezen)
+- **Blok nummer** + weegtijden (alleen na "Einde Voorbereiding", en alleen als >1 blok)
+- **Mat nummer** (alleen na "Einde Voorbereiding")
 - Gewichtsklasse, geboortejaar, band, geslacht
 
 **Vereisten voor weegkaarten:**
 1. "Valideer judoka's" uitgevoerd → QR-codes aangemaakt
 2. Blokverdeling gedaan → blokken toegewezen
 3. "Verdeel over matten" gedaan → matten toegewezen
+4. **"Einde Voorbereiding"** → blok/mat info zichtbaar voor coaches
 
-**Belangrijk:** Weegkaarten worden NIET als bestanden opgeslagen. Ze worden live gegenereerd bij openen. Wijzigingen in blok/mat zijn direct zichtbaar.
+**Belangrijk:** Weegkaarten worden NIET als bestanden opgeslagen. Ze worden live gegenereerd bij openen. Wijzigingen in blok/mat zijn direct zichtbaar (na "Einde Voorbereiding").
 
 ### Zaaloverzicht
 
