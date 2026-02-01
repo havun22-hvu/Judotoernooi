@@ -206,16 +206,13 @@ class Poule extends Model
 
     /**
      * Update poule titel met actuele gewichtsrange
-     * Alleen voor dynamische poules (variabele gewichtsklassen)
-     * Vaste klassen (-30kg, +70kg) behouden hun titel
+     * Alleen voor dynamische poules (max_kg_verschil > 0)
+     * Vaste klassen (max_kg_verschil = 0) behouden hun titel
      */
     public function updateTitel(): void
     {
-        // Skip voor vaste gewichtsklassen (die beginnen met - of +)
-        $isVasteKlasse = !empty($this->gewichtsklasse) &&
-            (str_starts_with($this->gewichtsklasse, '-') || str_starts_with($this->gewichtsklasse, '+'));
-
-        if ($isVasteKlasse) {
+        // Skip voor vaste gewichtsklassen (max_kg_verschil = 0)
+        if (!$this->isDynamisch()) {
             return;
         }
 
