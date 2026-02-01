@@ -83,13 +83,15 @@
                                 @if($judoka->gewichtsklasse && $judoka->gewichtsklasse !== 'Variabel'){{ $judoka->gewichtsklasse }} kg | @elseif($judoka->gewicht){{ $judoka->gewicht }} kg | @endif{{ ucfirst(\App\Enums\Band::stripKyu($judoka->band ?? '')) }} |
                                 {{ $judoka->leeftijdsklasse }}
                             </p>
-                            @if($blok)
+                            @if($toernooi->voorbereiding_klaar_op && $blok)
                             <p class="text-sm text-amber-600 mt-1">
-                                {{ $blok->naam }}
+                                @if($toernooi->blokken()->count() > 1){{ $blok->naam }} - @endif
                                 @if($blok->weging_start && $blok->weging_einde)
-                                    - Weging: {{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}
+                                    Weging: {{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}
                                 @endif
                             </p>
+                            @elseif(!$toernooi->voorbereiding_klaar_op)
+                            <p class="text-sm text-gray-400 mt-1">Indeling wordt later bekendgemaakt</p>
                             @else
                             <p class="text-sm text-gray-400 mt-1">Nog niet ingedeeld</p>
                             @endif
