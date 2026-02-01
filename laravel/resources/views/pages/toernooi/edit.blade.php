@@ -2417,37 +2417,6 @@
             </div>
         </div>
 
-        <!-- Downloaden -->
-        <h3 class="font-semibold text-gray-700 mb-3 mt-6 pt-4 border-t">Downloaden</h3>
-        <div class="space-y-3">
-            <!-- 1. Judoka lijst -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <div>
-                    <h4 class="font-medium">1. Judoka lijst downloaden</h4>
-                    <p class="text-sm text-gray-500">Alle ingeschreven judoka's</p>
-                </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('toernooi.judoka.export', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
-                       class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">Excel</a>
-                    <a href="{{ route('toernooi.judoka.export', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
-                       class="px-3 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600">CSV</a>
-                </div>
-            </div>
-
-            <!-- 2. Poules downloaden -->
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                <div>
-                    <h4 class="font-medium">2. Poules downloaden</h4>
-                    <p class="text-sm text-gray-500">Volledige poule-indeling (na voorbereiding)</p>
-                </div>
-                <div class="flex gap-2">
-                    <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
-                       class="px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">Excel</a>
-                    <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
-                       class="px-3 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600">CSV</a>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- ==================== WEDSTRIJDDAG ==================== -->
