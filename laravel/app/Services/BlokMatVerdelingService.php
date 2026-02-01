@@ -636,13 +636,13 @@ class BlokMatVerdelingService
                 continue;
             }
 
-            // Sequential distribution based on what must REMAIN for other mats
-            // 196 total, 6 mats, avg=33 → mat 1 done when remaining ≤ 5×33=165
+            // Simple: 196 total / 6 mats = 33 per mat
+            // Fill each mat until it reaches the target, then move to next
+            $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
+            $doelPerMat = ceil($totaalWedstrijden / $aantalMatten);
+
             $wedstrijdenPerMat = array_fill_keys($matIds, 0);
             $huidigeMatIndex = 0;
-            $totaalWedstrijden = $poules->sum('aantal_wedstrijden');
-            $gemiddelde = $totaalWedstrijden / $aantalMatten;
-            $totaalToegewezen = 0;
 
             foreach ($poules as $poule) {
                 $huidigeMat = $matIds[$huidigeMatIndex];
@@ -650,17 +650,10 @@ class BlokMatVerdelingService
                 // Assign poule to current mat
                 $poule->update(['mat_id' => $huidigeMat]);
                 $wedstrijdenPerMat[$huidigeMat] += $poule->aantal_wedstrijden;
-                $totaalToegewezen += $poule->aantal_wedstrijden;
 
-                // Move to next mat when remaining ≤ what other mats need
-                $resterendeMatten = $aantalMatten - $huidigeMatIndex - 1;
-                if ($resterendeMatten > 0) {
-                    $resterend = $totaalWedstrijden - $totaalToegewezen;
-                    $nodigVoorRest = $resterendeMatten * $gemiddelde;
-
-                    if ($resterend <= $nodigVoorRest) {
-                        $huidigeMatIndex++;
-                    }
+                // Move to next mat when current mat reached its target
+                if ($wedstrijdenPerMat[$huidigeMat] >= $doelPerMat && $huidigeMatIndex < $aantalMatten - 1) {
+                    $huidigeMatIndex++;
                 }
             }
         }
