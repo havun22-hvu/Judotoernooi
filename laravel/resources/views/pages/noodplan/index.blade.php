@@ -726,105 +726,326 @@ function abbreviateClub(name) {
         }
     </script>
 
-    <!-- IP-ADRESSEN LOKALE SERVERS -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="ipAddresses()">
+    <!-- NETWERK & BACKUP CONFIGURATIE -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="networkConfig()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🌐</span>
-            IP-ADRESSEN LOKALE SERVERS
+            NETWERK & BACKUP CONFIGURATIE
         </h2>
-        <p class="text-sm text-gray-600 mb-4">Noteer deze adressen vóór het toernooi. Bij internetstoring kunnen tablets hiermee verbinden.</p>
 
-        <div class="space-y-4">
-            <!-- Primary Server IP -->
+        <!-- Configuratie status -->
+        @if($toernooi->heeft_eigen_router)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📡</span>
+                    <div>
+                        <strong class="text-blue-800">Configuratie: MET eigen router (TP-Link Deco)</strong>
+                        <p class="text-sm text-blue-600">Tablets blijven altijd op dezelfde WiFi, alleen de bron verandert.</p>
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">📱</span>
+                    <div>
+                        <strong class="text-orange-800">Configuratie: ZONDER eigen router (mobiele hotspot als backup)</strong>
+                        <p class="text-sm text-orange-600">Bij storing: tablets overzetten naar hotspot.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Scenario overzicht -->
+        <div class="mb-6">
+            <h3 class="font-bold text-gray-800 mb-3">Wat te doen bij storingen?</h3>
+
+            @if($toernooi->heeft_eigen_router)
+            <!-- MET EIGEN ROUTER -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left">Situatie</th>
+                            <th class="border p-2 text-left">Wat te doen</th>
+                            <th class="border p-2 text-left">Tablets verbinden met</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium">✅ Normaal</td>
+                            <td class="border p-2">Niets, alles werkt</td>
+                            <td class="border p-2">
+                                <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Cloud
+                            </td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2">Start lokale server op laptop</td>
+                            <td class="border p-2">
+                                <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Lokale server
+                                <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen!)</span>
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2">Print schema's, verder op papier</td>
+                            <td class="border p-2 text-gray-500">N.v.t.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <!-- ZONDER EIGEN ROUTER -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border p-2 text-left">Situatie</th>
+                            <th class="border p-2 text-left">Wat te doen</th>
+                            <th class="border p-2 text-left">Tablets verbinden met</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-green-50">
+                            <td class="border p-2 font-medium">✅ Normaal</td>
+                            <td class="border p-2">Niets, alles werkt</td>
+                            <td class="border p-2"><strong>Sporthal WiFi</strong> → Cloud</td>
+                        </tr>
+                        <tr class="bg-yellow-50">
+                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2">
+                                1. Zet hotspot aan op telefoon<br>
+                                2. Verbind laptop + tablets met hotspot<br>
+                                3. Start lokale server
+                            </td>
+                            <td class="border p-2">
+                                <strong>{{ $toernooi->hotspot_ssid ?: 'Mobiele hotspot' }}</strong> → Lokale server
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium">⚠️ WiFi weg</td>
+                            <td class="border p-2">Zelfde als hierboven (hotspot)</td>
+                            <td class="border p-2">
+                                <strong>{{ $toernooi->hotspot_ssid ?: 'Mobiele hotspot' }}</strong> → Lokale server
+                            </td>
+                        </tr>
+                        <tr class="bg-red-50">
+                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2">Print schema's, verder op papier</td>
+                            <td class="border p-2 text-gray-500">N.v.t.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </div>
+
+        <!-- Netwerk gegevens -->
+        <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <!-- Eigen Router / Hotspot info -->
+            @if($toernooi->heeft_eigen_router)
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded">
+                <h4 class="font-bold text-blue-800 mb-2">📡 Eigen Router (Deco)</h4>
+                @if($toernooi->eigen_router_ssid)
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-blue-700">SSID:</span>
+                            <div class="flex items-center gap-2">
+                                <code class="bg-blue-100 px-2 py-1 rounded font-mono text-blue-900">{{ $toernooi->eigen_router_ssid }}</code>
+                                <button @click="copyToClipboard('{{ $toernooi->eigen_router_ssid }}')" class="text-blue-600 hover:text-blue-800">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        @if($toernooi->eigen_router_wachtwoord)
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-blue-700">Wachtwoord:</span>
+                            <div class="flex items-center gap-2">
+                                <code class="bg-blue-100 px-2 py-1 rounded font-mono text-blue-900">{{ $toernooi->eigen_router_wachtwoord }}</code>
+                                <button @click="copyToClipboard('{{ $toernooi->eigen_router_wachtwoord }}')" class="text-blue-600 hover:text-blue-800">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                @else
+                    <p class="text-blue-600 italic text-sm">Nog niet ingesteld</p>
+                @endif
+            </div>
+            @else
+            <div class="p-4 bg-orange-50 border border-orange-200 rounded">
+                <h4 class="font-bold text-orange-800 mb-2">📱 Mobiele Hotspot (backup)</h4>
+                @if($toernooi->hotspot_ssid)
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-orange-700">SSID:</span>
+                            <div class="flex items-center gap-2">
+                                <code class="bg-orange-100 px-2 py-1 rounded font-mono text-orange-900">{{ $toernooi->hotspot_ssid }}</code>
+                                <button @click="copyToClipboard('{{ $toernooi->hotspot_ssid }}')" class="text-orange-600 hover:text-orange-800">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        @if($toernooi->hotspot_wachtwoord)
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-orange-700">Wachtwoord:</span>
+                            <div class="flex items-center gap-2">
+                                <code class="bg-orange-100 px-2 py-1 rounded font-mono text-orange-900">{{ $toernooi->hotspot_wachtwoord }}</code>
+                                <button @click="copyToClipboard('{{ $toernooi->hotspot_wachtwoord }}')" class="text-orange-600 hover:text-orange-800">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                @else
+                    <p class="text-orange-600 italic text-sm">Nog niet ingesteld</p>
+                @endif
+            </div>
+            @endif
+
+            <!-- Server IP's -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-green-800">Primary Server</h3>
-                        <p class="text-sm text-green-600">Hoofdlaptop met de lokale server</p>
-                    </div>
-                    <div class="flex items-center gap-2">
+                <h4 class="font-bold text-green-800 mb-2">💻 Lokale Server IP's</h4>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-green-700">Primary:</span>
                         @if($toernooi->local_server_primary_ip)
-                            <code class="bg-green-100 px-3 py-2 rounded text-lg font-mono font-bold text-green-900">
-                                http://{{ $toernooi->local_server_primary_ip }}:8000
-                            </code>
-                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_primary_ip }}:8000')"
-                                    class="p-2 bg-green-600 text-white rounded hover:bg-green-700" title="Kopiëren">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                </svg>
+                        <div class="flex items-center gap-2">
+                            <code class="bg-green-100 px-2 py-1 rounded font-mono text-green-900">http://{{ $toernooi->local_server_primary_ip }}:8000</code>
+                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_primary_ip }}:8000')" class="text-green-600 hover:text-green-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                             </button>
+                        </div>
                         @else
-                            <span class="text-gray-400 italic">Nog niet ingesteld</span>
+                        <span class="text-gray-400 italic text-sm">Niet ingesteld</span>
                         @endif
                     </div>
-                </div>
-            </div>
-
-            <!-- Standby Server IP -->
-            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-yellow-800">Standby Server</h3>
-                        <p class="text-sm text-yellow-600">Backup laptop (bij uitval primary)</p>
-                    </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-green-700">Standby:</span>
                         @if($toernooi->local_server_standby_ip)
-                            <code class="bg-yellow-100 px-3 py-2 rounded text-lg font-mono font-bold text-yellow-900">
-                                http://{{ $toernooi->local_server_standby_ip }}:8000
-                            </code>
-                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_standby_ip }}:8000')"
-                                    class="p-2 bg-yellow-600 text-white rounded hover:bg-yellow-700" title="Kopiëren">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                </svg>
+                        <div class="flex items-center gap-2">
+                            <code class="bg-green-100 px-2 py-1 rounded font-mono text-green-900">http://{{ $toernooi->local_server_standby_ip }}:8000</code>
+                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_standby_ip }}:8000')" class="text-green-600 hover:text-green-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                             </button>
+                        </div>
                         @else
-                            <span class="text-gray-400 italic">Nog niet ingesteld</span>
+                        <span class="text-gray-400 italic text-sm">Niet ingesteld</span>
                         @endif
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Instellen knop -->
-            <div class="flex justify-end">
-                <button @click="showEditModal = true"
-                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
-                    IP-adressen instellen
-                </button>
-            </div>
+        <!-- Instellen knop -->
+        <div class="flex justify-end">
+            <button @click="showEditModal = true"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                ⚙️ Netwerkinstellingen configureren
+            </button>
         </div>
 
         <!-- Edit Modal -->
         <div x-show="showEditModal" x-cloak
-             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
              @click.self="showEditModal = false">
-            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
-                <h3 class="text-lg font-bold mb-4">IP-adressen instellen</h3>
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <h3 class="text-lg font-bold mb-4">Netwerkinstellingen configureren</h3>
 
                 <form method="POST" action="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}">
                     @csrf
                     @method('PUT')
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Primary Server IP</label>
-                            <input type="text" name="local_server_primary_ip"
-                                   value="{{ $toernooi->local_server_primary_ip }}"
-                                   placeholder="192.168.1.100"
-                                   class="w-full px-3 py-2 border rounded-lg font-mono">
-                            <p class="text-xs text-gray-500 mt-1">Zoek op via: ipconfig (Windows) of ifconfig (Mac/Linux)</p>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Standby Server IP</label>
-                            <input type="text" name="local_server_standby_ip"
-                                   value="{{ $toernooi->local_server_standby_ip }}"
-                                   placeholder="192.168.1.101"
-                                   class="w-full px-3 py-2 border rounded-lg font-mono">
+                    <!-- Router keuze -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Heb je een eigen router (bijv. TP-Link Deco)?</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer" :class="heeftEigenRouter ? 'border-blue-500 bg-blue-50' : 'border-gray-300'">
+                                <input type="radio" name="heeft_eigen_router" value="1" x-model="heeftEigenRouter" class="text-blue-600">
+                                <div>
+                                    <strong>Ja, eigen router</strong>
+                                    <p class="text-xs text-gray-500">Aanbevolen - tablets hoeven niet te wisselen</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer" :class="!heeftEigenRouter ? 'border-orange-500 bg-orange-50' : 'border-gray-300'">
+                                <input type="radio" name="heeft_eigen_router" value="0" x-model="heeftEigenRouter" class="text-orange-600">
+                                <div>
+                                    <strong>Nee, sporthal WiFi + hotspot</strong>
+                                    <p class="text-xs text-gray-500">Backup via mobiele hotspot</p>
+                                </div>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 mt-6">
+                    <!-- Eigen router velden -->
+                    <div x-show="heeftEigenRouter" x-cloak class="mb-6 p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-bold text-blue-800 mb-3">📡 Eigen Router gegevens</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Router WiFi naam (SSID)</label>
+                                <input type="text" name="eigen_router_ssid"
+                                       value="{{ $toernooi->eigen_router_ssid }}"
+                                       placeholder="JudoToernooi-WiFi"
+                                       class="w-full px-3 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Router wachtwoord</label>
+                                <input type="text" name="eigen_router_wachtwoord"
+                                       value="{{ $toernooi->eigen_router_wachtwoord }}"
+                                       placeholder="wachtwoord123"
+                                       class="w-full px-3 py-2 border rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hotspot velden -->
+                    <div x-show="!heeftEigenRouter" x-cloak class="mb-6 p-4 bg-orange-50 rounded-lg">
+                        <h4 class="font-bold text-orange-800 mb-3">📱 Mobiele Hotspot gegevens (backup)</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hotspot naam (SSID)</label>
+                                <input type="text" name="hotspot_ssid"
+                                       value="{{ $toernooi->hotspot_ssid }}"
+                                       placeholder="iPhone van Henk"
+                                       class="w-full px-3 py-2 border rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hotspot wachtwoord</label>
+                                <input type="text" name="hotspot_wachtwoord"
+                                       value="{{ $toernooi->hotspot_wachtwoord }}"
+                                       placeholder="wachtwoord123"
+                                       class="w-full px-3 py-2 border rounded-lg">
+                            </div>
+                        </div>
+                        <p class="text-xs text-orange-600 mt-2">💡 Tip: Zet de hotspot naam/wachtwoord van tevoren klaar in je telefoon instellingen</p>
+                    </div>
+
+                    <!-- Server IP's -->
+                    <div class="mb-6 p-4 bg-green-50 rounded-lg">
+                        <h4 class="font-bold text-green-800 mb-3">💻 Lokale Server IP-adressen</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Primary Server IP</label>
+                                <input type="text" name="local_server_primary_ip"
+                                       value="{{ $toernooi->local_server_primary_ip }}"
+                                       placeholder="192.168.1.100"
+                                       class="w-full px-3 py-2 border rounded-lg font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Standby Server IP (optioneel)</label>
+                                <input type="text" name="local_server_standby_ip"
+                                       value="{{ $toernooi->local_server_standby_ip }}"
+                                       placeholder="192.168.1.101"
+                                       class="w-full px-3 py-2 border rounded-lg font-mono">
+                            </div>
+                        </div>
+                        <p class="text-xs text-green-600 mt-2">💡 IP opzoeken: <code class="bg-green-100 px-1 rounded">ipconfig</code> (Windows) of <code class="bg-green-100 px-1 rounded">ifconfig</code> (Mac/Linux)</p>
+                    </div>
+
+                    <div class="flex justify-end gap-2">
                         <button type="button" @click="showEditModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
                             Annuleren
@@ -841,15 +1062,16 @@ function abbreviateClub(name) {
         <!-- Copied toast -->
         <div x-show="showCopied" x-transition
              class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-            Gekopieerd naar klembord!
+            ✓ Gekopieerd naar klembord!
         </div>
     </div>
 
     <script>
-        function ipAddresses() {
+        function networkConfig() {
             return {
                 showEditModal: false,
                 showCopied: false,
+                heeftEigenRouter: {{ $toernooi->heeft_eigen_router ? 'true' : 'false' }},
 
                 copyToClipboard(text) {
                     navigator.clipboard.writeText(text).then(() => {
@@ -861,72 +1083,83 @@ function abbreviateClub(name) {
         }
     </script>
 
-    <!-- OVERSTAPPEN NAAR LOKALE SERVER -->
+    <!-- STAP-VOOR-STAP INSTRUCTIES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🔄</span>
-            OVERSTAPPEN NAAR LOKALE SERVER
+            <span class="mr-2">📋</span>
+            STAP-VOOR-STAP: LOKALE SERVER STARTEN
         </h2>
-        <p class="text-sm text-gray-600 mb-4">Bij internetstoring kun je overstappen naar een lokale server. Hieronder staat hoe dat werkt.</p>
 
         <div class="space-y-4">
-            <!-- Stap 1: Download backup -->
+            <!-- Voorbereiding -->
             <div class="p-4 bg-gray-50 border border-gray-200 rounded">
-                <h3 class="font-bold text-gray-800 mb-2">1. Download de JSON backup</h3>
-                <p class="text-sm text-gray-600 mb-2">
-                    Download vóór het toernooi de JSON backup via de knop hierboven. Bewaar dit bestand op een USB-stick of laptop.
-                </p>
+                <h3 class="font-bold text-gray-800 mb-2">🗓️ Avond ervoor</h3>
+                <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside">
+                    <li>Download de <strong>JSON backup</strong> (knop hierboven)</li>
+                    <li>Bewaar op USB-stick én laptop</li>
+                    @if($toernooi->heeft_eigen_router)
+                    <li>Test de eigen router - zet aan, verbind laptop</li>
+                    <li>Zoek laptop IP op: <code class="bg-gray-200 px-1 rounded">ipconfig</code></li>
+                    @else
+                    <li>Controleer hotspot instellingen op telefoon</li>
+                    <li>Noteer hotspot naam en wachtwoord</li>
+                    @endif
+                    <li>Vul IP-adressen in via de knop hierboven</li>
+                    <li><strong>Print deze pagina!</strong></li>
+                </ol>
             </div>
 
-            <!-- Stap 2: Primaire lokale server -->
-            <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-bold text-green-800 mb-2">2. Primaire lokale server starten</h3>
-                <p class="text-sm text-green-700 mb-2">
-                    Start de lokale server op je laptop (met Laravel/PHP geïnstalleerd):
-                </p>
-                <code class="block bg-green-100 p-2 rounded text-xs text-green-900 font-mono mb-2">
-                    cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000
-                </code>
-                <p class="text-sm text-green-700">
-                    Open <strong>http://laptop-ip:8000</strong> op alle apparaten in het lokale netwerk.
-                </p>
+            <!-- Bij storing -->
+            <div class="p-4 bg-red-50 border border-red-200 rounded">
+                <h3 class="font-bold text-red-800 mb-2">🚨 Bij internet/WiFi storing</h3>
+                <ol class="text-sm text-red-700 space-y-2 list-decimal list-inside">
+                    @if($toernooi->heeft_eigen_router)
+                    <li>Controleer of eigen router aan staat</li>
+                    <li>Start lokale server op laptop:
+                        <code class="block bg-red-100 p-2 rounded mt-1 text-xs font-mono">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code>
+                    </li>
+                    <li>Tablets gaan automatisch naar lokale server (zelfde WiFi!)</li>
+                    @else
+                    <li>Zet <strong>mobiele hotspot</strong> aan op telefoon</li>
+                    <li>Verbind laptop met hotspot</li>
+                    <li>Verbind alle tablets met hotspot</li>
+                    <li>Start lokale server op laptop:
+                        <code class="block bg-red-100 p-2 rounded mt-1 text-xs font-mono">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code>
+                    </li>
+                    <li>Open op tablets: <code class="bg-red-100 px-1 rounded">http://[laptop-ip]:8000</code></li>
+                    @endif
+                </ol>
             </div>
 
-            <!-- Stap 3: Standby server -->
-            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <h3 class="font-bold text-yellow-800 mb-2">3. Standby server (optioneel)</h3>
-                <p class="text-sm text-yellow-700 mb-2">
-                    Voor extra zekerheid kun je een tweede laptop als standby server klaarzetten:
-                </p>
-                <ul class="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                    <li>Zelfde setup als primaire server</li>
-                    <li>Laad regelmatig de nieuwste JSON backup in</li>
-                    <li>Bij uitval primaire: schakel over naar standby IP-adres</li>
-                </ul>
-            </div>
-
-            <!-- Stap 4: JSON inladen -->
+            <!-- Papier backup -->
             <div class="p-4 bg-purple-50 border border-purple-200 rounded">
-                <h3 class="font-bold text-purple-800 mb-2">4. JSON backup inladen</h3>
-                <p class="text-sm text-purple-700 mb-2">
-                    Op de lokale server: ga naar het Noodplan en klik op <strong>"Laad JSON backup"</strong> om de gedownloade data in te laden.
-                </p>
-                <p class="text-sm text-purple-600">
-                    De wedstrijddata wordt dan in de browser (localStorage) geladen en je kunt verder werken.
-                </p>
+                <h3 class="font-bold text-purple-800 mb-2">📄 Noodgeval: verder op papier</h3>
+                <p class="text-sm text-purple-700 mb-2">Als helemaal niets meer werkt:</p>
+                <ol class="text-sm text-purple-700 space-y-1 list-decimal list-inside">
+                    <li>Gebruik de geprinte wedstrijdschema's (zie "Ingevulde schema's" hierboven)</li>
+                    <li>Vul scores handmatig in op papier</li>
+                    <li>Na afloop: voer alles in via de cloud wanneer internet weer werkt</li>
+                </ol>
             </div>
         </div>
     </div>
 
     <!-- Checklist -->
     <div class="p-4 bg-blue-50 rounded-lg">
-        <h3 class="font-bold text-blue-800 mb-2">Checklist vóór het toernooi</h3>
+        <h3 class="font-bold text-blue-800 mb-2">✅ Checklist vóór het toernooi</h3>
         <ul class="text-sm text-blue-700 space-y-1">
             <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
             <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
-            <li>☐ Test lokale server op laptop</li>
-            <li>☐ Noteer IP-adressen van primaire en standby server</li>
-            <li>☐ Zorg voor WiFi-router zonder internetverbinding als backup</li>
+            @if($toernooi->heeft_eigen_router)
+            <li>☐ Test eigen router (Deco) - werkt WiFi?</li>
+            <li>☐ Verbind laptop met eigen router, zoek IP op</li>
+            @else
+            <li>☐ Controleer hotspot instellingen op telefoon</li>
+            <li>☐ Noteer hotspot SSID en wachtwoord hierboven</li>
+            @endif
+            <li>☐ Test lokale server: <code class="bg-blue-100 px-1 rounded text-xs">php artisan serve --host=0.0.0.0</code></li>
+            <li>☐ Vul IP-adressen in via "Netwerkinstellingen configureren"</li>
+            <li>☐ <strong>Print deze pagina!</strong></li>
         </ul>
     </div>
 </div>

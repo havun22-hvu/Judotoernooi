@@ -440,20 +440,28 @@ class ToernooiController extends Controller
     }
 
     /**
-     * Update local server IP addresses
+     * Update local server and network settings
      */
     public function updateLocalServerIps(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
     {
         $validated = $request->validate([
             'local_server_primary_ip' => 'nullable|ip',
             'local_server_standby_ip' => 'nullable|ip',
+            'heeft_eigen_router' => 'boolean',
+            'eigen_router_ssid' => 'nullable|string|max:100',
+            'eigen_router_wachtwoord' => 'nullable|string|max:100',
+            'hotspot_ssid' => 'nullable|string|max:100',
+            'hotspot_wachtwoord' => 'nullable|string|max:100',
         ]);
+
+        // Ensure boolean is set correctly
+        $validated['heeft_eigen_router'] = $request->boolean('heeft_eigen_router');
 
         $toernooi->update($validated);
 
         return redirect()
             ->route('toernooi.noodplan.index', $toernooi->routeParams())
-            ->with('success', 'IP-adressen opgeslagen');
+            ->with('success', 'Netwerkinstellingen opgeslagen');
     }
 
     /**
