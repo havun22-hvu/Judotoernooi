@@ -54,10 +54,17 @@
                 <td class="py-1 text-gray-500">Band:</td>
                 <td class="py-1 font-medium">{{ $judoka->band_enum?->label() ?? ucfirst(explode(' ', $judoka->band ?? '')[0]) ?: '-' }}</td>
             </tr>
+            @if($toernooi->gebruik_gewichtsklassen)
             <tr>
                 <td class="py-1 text-gray-500">Gewichtsklasse:</td>
                 <td class="py-1 font-medium">{{ $judoka->gewichtsklasse ?? '-' }}</td>
             </tr>
+            @else
+            <tr>
+                <td class="py-1 text-gray-500">Opgegeven gewicht:</td>
+                <td class="py-1 font-medium">{{ $judoka->gewicht ? number_format($judoka->gewicht, 1) . ' kg' : '-' }}</td>
+            </tr>
+            @endif
             <tr>
                 <td class="py-1 text-gray-500">Geboortejaar:</td>
                 <td class="py-1 font-medium">{{ $judoka->geboortejaar ?? '-' }}</td>
