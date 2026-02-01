@@ -25,11 +25,9 @@
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
         </a>
-        @if(!$toernooi->voorbereiding_klaar_op)
         <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             ← Terug naar Blokkenverdeling
         </a>
-        @endif
     </div>
 </div>
 
@@ -41,9 +39,7 @@
 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
 @endif
 
-@if(!$toernooi->voorbereiding_klaar_op)
 <p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
-@endif
 
 @php
     // Dynamisch uit toernooi config (ondersteunt eigen presets)
