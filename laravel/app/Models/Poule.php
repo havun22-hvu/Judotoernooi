@@ -338,12 +338,23 @@ class Poule extends Model
     public function getGewichtsRange(): ?array
     {
         // Use gewicht_gewogen if available, otherwise fall back to gewicht (ingeschreven)
-        $gewichten = $this->judokas()
+        // Na weging sluiten: alleen gewogen judoka's meetellen (gewicht_gewogen != null)
+        // Voor weging: alle actieve judoka's met ingeschreven gewicht
+        $blok = $this->blok;
+        $wegingGesloten = $blok?->weging_gesloten ?? false;
+
+        $query = $this->judokas()
             ->where(function ($q) {
                 $q->whereNull('aanwezigheid')
                   ->orWhere('aanwezigheid', '!=', 'afwezig');
-            })
-            ->get()
+            });
+
+        // Na weging sluiten: alleen gewogen judoka's
+        if ($wegingGesloten) {
+            $query->whereNotNull('gewicht_gewogen');
+        }
+
+        $gewichten = $query->get()
             ->map(fn($j) => $j->gewicht_gewogen ?? $j->gewicht)
             ->filter()
             ->values();
