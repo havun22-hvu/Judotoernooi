@@ -731,6 +731,7 @@ function abbreviateClub(name) {
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🌐</span>
             NETWERK & BACKUP CONFIGURATIE
+            <span class="ml-2 text-xs text-gray-400 font-normal">v2.0 - 2026-02-02 14:30</span>
         </h2>
 
         <!-- Configuratie status -->
