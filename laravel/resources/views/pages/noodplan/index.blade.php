@@ -261,6 +261,40 @@
         </div>
     </div>
 
+    <!-- POULES PRINTEN (VOORBEREIDING) -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📋</span>
+            POULES PRINTEN (voorbereiding)
+        </h2>
+        <p class="text-sm text-gray-600 mb-4">Print poule-overzichten per blok/mat vóór het toernooi begint. Handig om uit te delen aan tafelofficiëls.</p>
+
+        <div class="space-y-4">
+            @foreach($blokken as $blok)
+            <div class="p-3 bg-blue-50 border border-blue-200 rounded">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-blue-800">Blok {{ $blok->nummer }}</h3>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    @php
+                        $matten = $blok->poules->pluck('mat_nummer')->unique()->sort();
+                    @endphp
+                    @foreach($matten as $matNummer)
+                    <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}&mat={{ $matNummer }}" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        Mat {{ $matNummer }}
+                    </a>
+                    @endforeach
+                    <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}" target="_blank"
+                       class="px-3 py-2 bg-blue-800 text-white rounded text-sm hover:bg-blue-900">
+                        Alle matten
+                    </a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
     <!-- TIJDENS DE WEDSTRIJD -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup()" x-init="init()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
