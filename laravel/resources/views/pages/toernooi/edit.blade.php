@@ -2372,6 +2372,26 @@
                 </div>
             </div>
 
+            <!-- Poules printen (wedstrijddag - na overpoulen) -->
+            <div class="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded">
+                <div>
+                    <h3 class="font-medium text-orange-800">Poules printen (wedstrijddag)</h3>
+                    <p class="text-sm text-orange-600">Na overpoulen - definitieve poules per blok</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-orange-500 text-white rounded text-sm hover:bg-orange-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
             <!-- JSON Download voor offline gebruik -->
             <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="noodplanJsonDownloader()">
                 <div class="flex items-center justify-between">
