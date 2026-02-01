@@ -205,8 +205,26 @@ class Judoka extends Model
     }
 
     /**
+     * Check of dit een vaste gewichtsklasse is (max_kg_verschil = 0)
+     * Gebruikt poule categorie config als beschikbaar, anders string fallback
+     */
+    public function isVasteGewichtsklasse(): bool
+    {
+        // Probeer via poule's categorie config
+        $poule = $this->poules()->first();
+        if ($poule && $poule->categorie_key) {
+            // isDynamisch = max_kg_verschil > 0, dus vaste klasse = !isDynamisch
+            return !$poule->isDynamisch();
+        }
+
+        // Fallback: string prefix check (voor edge cases zonder poule)
+        $klasse = $this->gewichtsklasse ?? '';
+        return str_starts_with($klasse, '-') || str_starts_with($klasse, '+');
+    }
+
+    /**
      * Check if weight is within allowed range for weight class
-     * Only applies to fixed weight classes (-30, +70)
+     * Only applies to fixed weight classes (max_kg_verschil = 0)
      * Variable weight classes always return true
      */
     public function isGewichtBinnenKlasse(?float $gewicht = null, float $tolerantie = 0.5): bool
@@ -217,13 +235,13 @@ class Judoka extends Model
         $klasse = $this->gewichtsklasse;
         if (!$klasse) return true;
 
-        // Only check fixed weight classes (start with - or +)
-        $isVasteKlasse = str_starts_with($klasse, '-') || str_starts_with($klasse, '+');
-        if (!$isVasteKlasse) {
+        // Only check fixed weight classes (max_kg_verschil = 0)
+        if (!$this->isVasteGewichtsklasse()) {
             // Variable weight class - no limits to check
             return true;
         }
 
+        // Voor vaste klassen: check of gewicht binnen limiet valt
         $isPlusKlasse = str_starts_with($klasse, '+');
         $limiet = floatval(preg_replace('/[^0-9.]/', '', $klasse));
 

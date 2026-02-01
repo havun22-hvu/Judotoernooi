@@ -169,8 +169,7 @@
 
         {{-- WAARSCHUWING: Te zwaar - melden bij jury (alleen bij vaste gewichtsklassen) --}}
         @php
-            $isVasteKlasse = str_starts_with($judoka->gewichtsklasse ?? '', '-') || str_starts_with($judoka->gewichtsklasse ?? '', '+');
-            $moetMeldenBijJury = $isVasteKlasse && $judoka->opmerking && str_contains($judoka->opmerking, 'Te zwaar');
+            $moetMeldenBijJury = $judoka->isVasteGewichtsklasse() && $judoka->opmerking && str_contains($judoka->opmerking, 'Te zwaar');
         @endphp
         @if($moetMeldenBijJury)
         <div class="px-3 py-3 bg-red-600 text-white text-center">
