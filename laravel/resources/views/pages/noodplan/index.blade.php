@@ -726,15 +726,72 @@ function abbreviateClub(name) {
         }
     </script>
 
-    <!-- Info box -->
+    <!-- OVERSTAPPEN NAAR LOKALE SERVER -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🔄</span>
+            OVERSTAPPEN NAAR LOKALE SERVER
+        </h2>
+        <p class="text-sm text-gray-600 mb-4">Bij internetstoring kun je overstappen naar een lokale server. Hieronder staat hoe dat werkt.</p>
+
+        <div class="space-y-4">
+            <!-- Stap 1: Download backup -->
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded">
+                <h3 class="font-bold text-gray-800 mb-2">1. Download de JSON backup</h3>
+                <p class="text-sm text-gray-600 mb-2">
+                    Download vóór het toernooi de JSON backup via de knop hierboven. Bewaar dit bestand op een USB-stick of laptop.
+                </p>
+            </div>
+
+            <!-- Stap 2: Primaire lokale server -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <h3 class="font-bold text-green-800 mb-2">2. Primaire lokale server starten</h3>
+                <p class="text-sm text-green-700 mb-2">
+                    Start de lokale server op je laptop (met Laravel/PHP geïnstalleerd):
+                </p>
+                <code class="block bg-green-100 p-2 rounded text-xs text-green-900 font-mono mb-2">
+                    cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000
+                </code>
+                <p class="text-sm text-green-700">
+                    Open <strong>http://laptop-ip:8000</strong> op alle apparaten in het lokale netwerk.
+                </p>
+            </div>
+
+            <!-- Stap 3: Standby server -->
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <h3 class="font-bold text-yellow-800 mb-2">3. Standby server (optioneel)</h3>
+                <p class="text-sm text-yellow-700 mb-2">
+                    Voor extra zekerheid kun je een tweede laptop als standby server klaarzetten:
+                </p>
+                <ul class="text-sm text-yellow-700 list-disc list-inside space-y-1">
+                    <li>Zelfde setup als primaire server</li>
+                    <li>Laad regelmatig de nieuwste JSON backup in</li>
+                    <li>Bij uitval primaire: schakel over naar standby IP-adres</li>
+                </ul>
+            </div>
+
+            <!-- Stap 4: JSON inladen -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded">
+                <h3 class="font-bold text-purple-800 mb-2">4. JSON backup inladen</h3>
+                <p class="text-sm text-purple-700 mb-2">
+                    Op de lokale server: ga naar het Noodplan en klik op <strong>"Laad JSON backup"</strong> om de gedownloade data in te laden.
+                </p>
+                <p class="text-sm text-purple-600">
+                    De wedstrijddata wordt dan in de browser (localStorage) geladen en je kunt verder werken.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checklist -->
     <div class="p-4 bg-blue-50 rounded-lg">
-        <h3 class="font-bold text-blue-800 mb-2">Tip voor noodgevallen</h3>
+        <h3 class="font-bold text-blue-800 mb-2">Checklist vóór het toernooi</h3>
         <ul class="text-sm text-blue-700 space-y-1">
-            <li>• Download de <strong>Excel backup</strong> en <strong>JSON backup</strong> vóór het toernooi begint</li>
-            <li>• De JSON backup bevat alle wedstrijddata en kan offline worden ingelezen</li>
-            <li>• "Live wedstrijd schema's" werkt ook offline via de browser backup (localStorage)</li>
-            <li>• Lege wedstrijdschema's: vul handmatig in bij stroomuitval</li>
-            <li>• Contactlijst: bel coaches bij problemen</li>
+            <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
+            <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
+            <li>☐ Test lokale server op laptop</li>
+            <li>☐ Noteer IP-adressen van primaire en standby server</li>
+            <li>☐ Zorg voor WiFi-router zonder internetverbinding als backup</li>
         </ul>
     </div>
 </div>
