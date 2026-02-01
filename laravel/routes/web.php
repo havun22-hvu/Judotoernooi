@@ -147,6 +147,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
     Route::put('bloktijden', [ToernooiController::class, 'updateBloktijden'])->name('bloktijden');
     Route::put('betalingen', [ToernooiController::class, 'updateBetalingInstellingen'])->name('betalingen.instellingen');
     Route::put('portaal', [ToernooiController::class, 'updatePortaalInstellingen'])->name('portaal.instellingen');
+    Route::put('local-server-ips', [ToernooiController::class, 'updateLocalServerIps'])->name('local-server-ips');
     Route::post('heropen-voorbereiding', [ToernooiController::class, 'heropenVoorbereiding'])->name('heropen-voorbereiding');
 
     // Mollie OAuth

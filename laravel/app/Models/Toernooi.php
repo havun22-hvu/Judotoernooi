@@ -181,6 +181,8 @@ class Toernooi extends Model
         'mollie_onboarded',
         'mollie_organization_name',
         'import_fouten',
+        'local_server_primary_ip',
+        'local_server_standby_ip',
     ];
 
     protected $hidden = [

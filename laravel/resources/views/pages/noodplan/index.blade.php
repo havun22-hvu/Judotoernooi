@@ -726,6 +726,141 @@ function abbreviateClub(name) {
         }
     </script>
 
+    <!-- IP-ADRESSEN LOKALE SERVERS -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="ipAddresses()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🌐</span>
+            IP-ADRESSEN LOKALE SERVERS
+        </h2>
+        <p class="text-sm text-gray-600 mb-4">Noteer deze adressen vóór het toernooi. Bij internetstoring kunnen tablets hiermee verbinden.</p>
+
+        <div class="space-y-4">
+            <!-- Primary Server IP -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-green-800">Primary Server</h3>
+                        <p class="text-sm text-green-600">Hoofdlaptop met de lokale server</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if($toernooi->local_server_primary_ip)
+                            <code class="bg-green-100 px-3 py-2 rounded text-lg font-mono font-bold text-green-900">
+                                http://{{ $toernooi->local_server_primary_ip }}:8000
+                            </code>
+                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_primary_ip }}:8000')"
+                                    class="p-2 bg-green-600 text-white rounded hover:bg-green-700" title="Kopiëren">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                        @else
+                            <span class="text-gray-400 italic">Nog niet ingesteld</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standby Server IP -->
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-yellow-800">Standby Server</h3>
+                        <p class="text-sm text-yellow-600">Backup laptop (bij uitval primary)</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if($toernooi->local_server_standby_ip)
+                            <code class="bg-yellow-100 px-3 py-2 rounded text-lg font-mono font-bold text-yellow-900">
+                                http://{{ $toernooi->local_server_standby_ip }}:8000
+                            </code>
+                            <button @click="copyToClipboard('http://{{ $toernooi->local_server_standby_ip }}:8000')"
+                                    class="p-2 bg-yellow-600 text-white rounded hover:bg-yellow-700" title="Kopiëren">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                            </button>
+                        @else
+                            <span class="text-gray-400 italic">Nog niet ingesteld</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instellen knop -->
+            <div class="flex justify-end">
+                <button @click="showEditModal = true"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                    IP-adressen instellen
+                </button>
+            </div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div x-show="showEditModal" x-cloak
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+             @click.self="showEditModal = false">
+            <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+                <h3 class="text-lg font-bold mb-4">IP-adressen instellen</h3>
+
+                <form method="POST" action="{{ route('toernooi.local-server-ips', $toernooi->routeParams()) }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Primary Server IP</label>
+                            <input type="text" name="local_server_primary_ip"
+                                   value="{{ $toernooi->local_server_primary_ip }}"
+                                   placeholder="192.168.1.100"
+                                   class="w-full px-3 py-2 border rounded-lg font-mono">
+                            <p class="text-xs text-gray-500 mt-1">Zoek op via: ipconfig (Windows) of ifconfig (Mac/Linux)</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Standby Server IP</label>
+                            <input type="text" name="local_server_standby_ip"
+                                   value="{{ $toernooi->local_server_standby_ip }}"
+                                   placeholder="192.168.1.101"
+                                   class="w-full px-3 py-2 border rounded-lg font-mono">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button type="button" @click="showEditModal = false"
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+                            Annuleren
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Opslaan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Copied toast -->
+        <div x-show="showCopied" x-transition
+             class="fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+            Gekopieerd naar klembord!
+        </div>
+    </div>
+
+    <script>
+        function ipAddresses() {
+            return {
+                showEditModal: false,
+                showCopied: false,
+
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.showCopied = true;
+                        setTimeout(() => this.showCopied = false, 2000);
+                    });
+                }
+            };
+        }
+    </script>
+
     <!-- OVERSTAPPEN NAAR LOKALE SERVER -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
