@@ -2330,10 +2330,10 @@
         </h2>
 
         <div class="space-y-4">
-            <!-- Poule Export -->
+            <!-- Poule Export (Excel/CSV) -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-medium text-green-800">Volledige poule-indeling</h3>
+                    <h3 class="font-medium text-green-800">Volledige poule-indeling (export)</h3>
                     <div class="flex gap-2">
                         <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
@@ -2350,6 +2350,26 @@
                     <li>Gesorteerd op mat</li>
                     <li>Met leeftijds-/gewichtsklasse</li>
                 </ul>
+            </div>
+
+            <!-- Poules printen (wedstrijddag) -->
+            <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+                <div>
+                    <h3 class="font-medium text-blue-800">Poules printen (wedstrijddag)</h3>
+                    <p class="text-sm text-blue-600">Na indeling klaar - print per blok</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
             </div>
 
             <!-- JSON Download voor offline gebruik -->
