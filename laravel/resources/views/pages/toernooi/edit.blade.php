@@ -85,6 +85,12 @@
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
             Organisatie
         </button>
+        <button type="button"
+                @click="activeTab = 'noodplan'"
+                :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
+            🚨 Noodplan
+        </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
                 @click="activeTab = 'test'"
@@ -1837,12 +1843,6 @@
                 </svg>
                 Pagina Builder
             </a>
-            <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2" title="In Case of Emergency - Break Glass">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-                Noodplan
-            </a>
         </div>
     </div>
 
@@ -2307,6 +2307,401 @@
     @endif
 
     </div><!-- End TAB: ORGANISATIE -->
+
+    <!-- TAB: NOODPLAN -->
+    <div x-show="activeTab === 'noodplan'" x-cloak>
+
+    <!-- Intro -->
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
+        <div class="flex items-center">
+            <span class="text-2xl mr-3">🚨</span>
+            <div>
+                <h3 class="font-bold text-red-800">Noodplan - Case of Emergency</h3>
+                <p class="text-red-700 text-sm">Backup, print en offline opties voor als er iets misgaat tijdens het toernooi.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POULE EXPORT -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">📋</span>
+            POULE EXPORT (backup)
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Poule Export -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-medium text-green-800">Volledige poule-indeling</h3>
+                    <div class="flex gap-2">
+                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
+                           class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
+                            Excel
+                        </a>
+                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
+                           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
+                            CSV
+                        </a>
+                    </div>
+                </div>
+                <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
+                    <li>Per blok een tab</li>
+                    <li>Gesorteerd op mat</li>
+                    <li>Met leeftijds-/gewichtsklasse</li>
+                </ul>
+            </div>
+
+            <!-- JSON Download voor offline gebruik -->
+            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="noodplanJsonDownloader()">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
+                        <p class="text-sm text-purple-600">Download alle wedstrijddata voor offline gebruik</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button @click="downloadFromServer()" type="button"
+                                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
+                            Download van server
+                        </button>
+                        <button @click="downloadFromStorage()" type="button"
+                                class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 font-medium"
+                                :disabled="!hasLocalData" :class="{ 'opacity-50 cursor-not-allowed': !hasLocalData }">
+                            Download uit browser
+                        </button>
+                    </div>
+                </div>
+                <p class="mt-2 text-xs text-purple-500" x-show="hasLocalData">
+                    Lokale data beschikbaar (<span x-text="localDataCount"></span> uitslagen)
+                </p>
+            </div>
+
+            <!-- Weeglijsten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Weeglijsten</h3>
+                    <p class="text-sm text-gray-500">Alfabetisch per blok, met invulvak</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Weegkaarten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+                <div>
+                    <h3 class="font-medium">Weegkaarten</h3>
+                    <p class="text-sm text-gray-500">Per judoka (QR + gegevens)</p>
+                </div>
+                <div class="flex gap-2 relative">
+                    <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Alle
+                    </a>
+                    <div class="relative">
+                        <button @click="open = !open" type="button"
+                                class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                            Per club ▼
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                            @foreach($clubs ?? [] as $club)
+                            <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
+                               class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                {{ $club->naam }}
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coachkaarten -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
+                <div>
+                    <h3 class="font-medium">Coachkaarten</h3>
+                    <p class="text-sm text-gray-500">Toegang dojo</p>
+                </div>
+                <div class="flex gap-2 relative">
+                    <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Alle
+                    </a>
+                    <div class="relative">
+                        <button @click="open = !open" type="button"
+                                class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                            Per club ▼
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-cloak
+                             class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
+                            @foreach($clubs ?? [] as $club)
+                            <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank"
+                               class="block px-4 py-2 text-sm hover:bg-gray-100">
+                                {{ $club->naam }}
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contactlijst -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Contactlijst</h3>
+                    <p class="text-sm text-gray-500">Coach contactgegevens per club</p>
+                </div>
+                <a href="{{ route('toernooi.noodplan.contactlijst', $toernooi->routeParams()) }}" target="_blank"
+                   class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                    Bekijken
+                </a>
+            </div>
+
+            <!-- Lege wedstrijdschema's -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Lege wedstrijdschema's</h3>
+                    <p class="text-sm text-gray-500">Handmatig invullen</p>
+                </div>
+                <div class="flex gap-2">
+                    @for($i = 2; $i <= 7; $i++)
+                    <a href="{{ route('toernooi.noodplan.leeg-schema', $toernooi->routeParamsWith(['aantal' => $i])) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        {{ $i }}
+                    </a>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIJDENS DE WEDSTRIJD -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLiveBackup()" x-init="init()">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">🏆</span>
+            TIJDENS DE WEDSTRIJD
+            <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                Live
+            </span>
+            <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                <span class="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
+                Backup modus
+            </span>
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Status info -->
+            <div class="p-3 rounded text-sm flex items-center justify-between" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
+                <div>
+                    <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+                </div>
+                <div class="flex gap-2">
+                    <label class="px-3 py-1 bg-white border rounded text-xs cursor-pointer hover:bg-gray-50">
+                        📁 Laad JSON backup
+                        <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Ingevulde schema's (matrix) -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Ingevulde schema's (matrix)</h3>
+                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg - voor handmatig invullen</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Live wedstrijd schema's -->
+            <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div>
+                    <h3 class="font-medium text-yellow-800">Live wedstrijd schema's</h3>
+                    <p class="text-sm text-yellow-600">Met alle al gespeelde wedstrijden + punten</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
+                        Alle
+                    </a>
+                    @foreach($blokken as $blok)
+                    <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">
+                        {{ $blok->nummer }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info box -->
+    <div class="p-4 bg-blue-50 rounded-lg">
+        <h3 class="font-bold text-blue-800 mb-2">Tip voor noodgevallen</h3>
+        <ul class="text-sm text-blue-700 space-y-1">
+            <li>• Download de <strong>Excel backup</strong> en <strong>JSON backup</strong> vóór het toernooi begint</li>
+            <li>• De JSON backup bevat alle wedstrijddata en kan offline worden ingelezen</li>
+            <li>• "Live wedstrijd schema's" werkt ook offline via de browser backup (localStorage)</li>
+            <li>• Lege wedstrijdschema's: vul handmatig in bij stroomuitval</li>
+            <li>• Contactlijst: bel coaches bij problemen</li>
+        </ul>
+    </div>
+
+    <script>
+    function noodplanJsonDownloader() {
+        return {
+            toernooiId: {{ $toernooi->id }},
+            toernooiNaam: '{{ $toernooi->slug }}',
+            hasLocalData: false,
+            localDataCount: 0,
+
+            init() {
+                this.checkLocalData();
+            },
+
+            checkLocalData() {
+                const storageKey = `noodplan_${this.toernooiId}_poules`;
+                const countKey = `noodplan_${this.toernooiId}_count`;
+                const data = localStorage.getItem(storageKey);
+                this.hasLocalData = !!data;
+                this.localDataCount = parseInt(localStorage.getItem(countKey) || '0');
+            },
+
+            async downloadFromServer() {
+                try {
+                    const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
+                    if (!response.ok) throw new Error('Server error');
+                    const data = await response.json();
+                    this.saveAsFile(data);
+                } catch (e) {
+                    alert('Server niet bereikbaar. Probeer "Download uit browser" als je lokale data hebt.');
+                }
+            },
+
+            downloadFromStorage() {
+                const storageKey = `noodplan_${this.toernooiId}_poules`;
+                const data = localStorage.getItem(storageKey);
+                if (!data) {
+                    alert('Geen lokale data beschikbaar.');
+                    return;
+                }
+                this.saveAsFile(JSON.parse(data));
+            },
+
+            saveAsFile(data) {
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+                const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+    }
+
+    function noodplanLiveBackup() {
+        return {
+            syncStatus: 'disconnected',
+            uitslagCount: 0,
+            laatsteSync: null,
+            toernooiId: {{ $toernooi->id }},
+
+            init() {
+                this.loadFromStorage();
+                setInterval(() => this.loadFromStorage(), 1000);
+            },
+
+            loadFromStorage() {
+                const storageKey = `noodplan_${this.toernooiId}_poules`;
+                const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                const countKey = `noodplan_${this.toernooiId}_count`;
+
+                const count = localStorage.getItem(countKey);
+                this.uitslagCount = count ? parseInt(count) : 0;
+
+                const sync = localStorage.getItem(syncKey);
+                if (sync) {
+                    const date = new Date(sync);
+                    this.laatsteSync = date.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+                    const now = new Date();
+                    const diffMs = now - date;
+                    this.syncStatus = diffMs < 120000 ? 'connected' : 'disconnected';
+                } else {
+                    this.syncStatus = 'disconnected';
+                }
+            },
+
+            loadJsonBackup(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.toernooi_id && data.toernooi_id !== this.toernooiId) {
+                            if (!confirm(`Dit backup bestand is van een ander toernooi (ID: ${data.toernooi_id}). Toch laden?`)) {
+                                return;
+                            }
+                        }
+
+                        const storageKey = `noodplan_${this.toernooiId}_poules`;
+                        const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                        const countKey = `noodplan_${this.toernooiId}_count`;
+
+                        localStorage.setItem(storageKey, JSON.stringify(data));
+                        localStorage.setItem(syncKey, new Date().toISOString());
+
+                        let count = 0;
+                        if (data.poules) {
+                            data.poules.forEach(p => {
+                                if (p.wedstrijden) {
+                                    p.wedstrijden.forEach(w => {
+                                        if (w.is_gespeeld) count++;
+                                    });
+                                }
+                            });
+                        }
+                        localStorage.setItem(countKey, count.toString());
+                        this.loadFromStorage();
+                        alert(`Backup geladen: ${data.poules?.length || 0} poules, ${count} uitslagen`);
+                    } catch (err) {
+                        alert('Ongeldig JSON bestand: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+        };
+    }
+    </script>
+
+    </div><!-- End TAB: NOODPLAN -->
 
     <!-- TAB: TEST (alleen voor admin) -->
     @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')

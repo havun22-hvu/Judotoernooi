@@ -76,6 +76,11 @@ class ToernooiController extends Controller
     {
         $blokken = $toernooi->blokken()->orderBy('nummer')->get();
 
+        // Clubs voor noodplan tab (weegkaarten, coachkaarten per club)
+        $clubs = \App\Models\Club::whereHas('judokas', fn($q) => $q->where('toernooi_id', $toernooi->id))
+            ->orderBy('naam')
+            ->get();
+
         try {
             $overlapWarning = $this->checkCategorieOverlap($toernooi);
         } catch (\Throwable $e) {
@@ -83,7 +88,7 @@ class ToernooiController extends Controller
             $overlapWarning = null;
         }
 
-        return view('pages.toernooi.edit', compact('toernooi', 'blokken', 'overlapWarning'));
+        return view('pages.toernooi.edit', compact('toernooi', 'blokken', 'clubs', 'overlapWarning'));
     }
 
     public function update(Organisator $organisator, ToernooiRequest $request, Toernooi $toernooi): RedirectResponse|JsonResponse
