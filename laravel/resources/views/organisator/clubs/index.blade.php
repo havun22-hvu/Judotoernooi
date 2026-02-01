@@ -142,27 +142,27 @@
                                     </td>
                                 </template>
 
-                                {{-- Edit Mode --}}
+                                {{-- Edit Mode (zelfde volgorde als toevoegen) --}}
                                 <template x-if="editing">
                                     <td colspan="8" class="px-6 py-4">
-                                        <form action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="grid grid-cols-2 md:grid-cols-4 gap-4 items-end">
+                                        <form action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                                             @csrf
                                             @method('PUT')
                                             <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Naam</label>
+                                                <label class="block text-xs text-gray-500 mb-1">Naam *</label>
                                                 <input type="text" name="naam" value="{{ $club->naam }}" required class="w-full border rounded px-2 py-1 text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-500 mb-1">Email</label>
+                                                <input type="email" name="email" value="{{ $club->email }}" class="w-full border rounded px-2 py-1 text-sm">
                                             </div>
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">Plaats</label>
                                                 <input type="text" name="plaats" value="{{ $club->plaats }}" class="w-full border rounded px-2 py-1 text-sm">
                                             </div>
                                             <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Contact</label>
+                                                <label class="block text-xs text-gray-500 mb-1">Contactpersoon</label>
                                                 <input type="text" name="contact_naam" value="{{ $club->contact_naam }}" class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Email</label>
-                                                <input type="email" name="email" value="{{ $club->email }}" class="w-full border rounded px-2 py-1 text-sm">
                                             </div>
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">Telefoon</label>
@@ -170,9 +170,9 @@
                                             </div>
                                             <div>
                                                 <label class="block text-xs text-gray-500 mb-1">Website</label>
-                                                <input type="url" name="website" value="{{ $club->website }}" class="w-full border rounded px-2 py-1 text-sm" placeholder="https://...">
+                                                <input type="url" name="website" value="{{ $club->website }}" class="w-full border rounded px-2 py-1 text-sm" placeholder="https://budoschool.nl">
                                             </div>
-                                            <div class="flex space-x-2 md:col-span-2">
+                                            <div class="md:col-span-3 flex justify-end space-x-2">
                                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded">
                                                     Opslaan
                                                 </button>
