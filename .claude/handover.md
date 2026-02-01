@@ -1,4 +1,4 @@
-# Session Handover: 31 januari 2026 (avond)
+# Session Handover: 1 februari 2026
 
 ## 🚀 Startinstructies voor nieuwe sessie
 
@@ -147,6 +147,7 @@ start-server.command                          - Mac launcher
 |-----|---------|
 | `/local-server` | Dashboard |
 | `/local-server/setup` | Rol configureren |
+| `/local-server/opstarten` | **Startup wizard (stap-voor-stap)** |
 | `/local-server/preflight` | Pre-flight check |
 | `/local-server/standby-sync` | Standby sync monitor |
 | `/local-server/health-dashboard` | Health overzicht |
@@ -157,3 +158,21 @@ start-server.command                          - Mac launcher
 ## Status
 
 **ALLE FASES COMPLEET** - Redundantie systeem is klaar voor gebruik.
+
+---
+
+## Laatste Sessie: 1 februari 2026
+
+### Wat is gedaan:
+- Startup wizard voor wedstrijddag (`/local-server/opstarten`)
+- Computernaam prominent tonen op alle local server pagina's
+- WP invoer: geen auto-fill meer, alleen eigen waarde
+- JP invoer: blanco = reset, 0 = gelijkspel
+- Groen/geel wedstrijd selectie verbeterd met bevestiging
+- Help pagina bijgewerkt met nieuwe logica
+
+### Openstaande items:
+- [ ] Testen van redundantie systeem in productie
+
+### Bekende issues/bugs:
+- Geen

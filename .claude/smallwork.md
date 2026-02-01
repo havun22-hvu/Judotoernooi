@@ -418,6 +418,49 @@
 
 ---
 
+## Sessie: 1 februari 2026
+
+### Feat: Startup wizard voor wedstrijddag
+- **Type:** Feature
+- **Wat:** Stap-voor-stap handleiding voor leken: Primary starten, Standby starten, Deco configureren, Pre-flight check
+- **Bestanden:** startup-wizard.blade.php, LocalSyncController.php, routes/web.php, dashboard.blade.php
+- **URL:** `/local-server/opstarten`
+
+### Feat: Computernaam prominent tonen
+- **Type:** UI improvement
+- **Wat:** Hostname automatisch invullen en tonen op alle local server pagina's voor Deco configuratie
+- **Bestanden:** setup.blade.php, dashboard.blade.php, emergency-failover.blade.php, health-dashboard.blade.php, preflight.blade.php
+
+### Fix: WP invoer geen auto-fill
+- **Type:** Bug fix
+- **Wat:** Handmatig WP invoeren vulde automatisch tegenstander in (0→2), nu alleen eigen waarde
+- **Bestanden:** mat/_content.blade.php
+- **Oplossing:** Auto-fill alleen via JP invoer, niet via WP
+
+### Fix: JP invoer reset en gelijkspel
+- **Type:** Bug fix
+- **Wat:** JP blanco = reset alles, JP 0 = gelijkspel (beide WP=1)
+- **Bestanden:** mat/_content.blade.php
+- **Was:** Lege waarde werd als 0 behandeld
+
+### Fix: Groen/geel wedstrijd klik gedrag
+- **Type:** UI improvement
+- **Wat:** Nieuwe selectie logica voor groen (speelt nu) en geel (volgende)
+- **Bestanden:** mat/_content.blade.php
+- **Gedrag:**
+  - Klik groen → bevestiging, geel wordt groen
+  - Klik geel → wordt neutraal
+  - Klik grijs (geen groen) → wordt groen
+  - Klik grijs (wel groen, geen geel) → wordt geel
+  - Klik grijs (wel groen, wel geel) → alert "eerst gele uitzetten"
+
+### Docs: Help pagina bijgewerkt
+- **Type:** Documentation
+- **Wat:** Wedstrijd selectie tabel en score invoer uitleg toegevoegd
+- **Bestanden:** help.blade.php
+
+---
+
 <!--
 TEMPLATE:
 
