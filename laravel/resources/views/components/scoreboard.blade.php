@@ -335,7 +335,7 @@
     </div>
 </div>
 
-@pushOnce('scripts')
+@once
 <script>
 // Web Audio context for alarm sounds
 let audioContext = null;
@@ -684,4 +684,4 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 </script>
-@endPushOnce
+@endonce
