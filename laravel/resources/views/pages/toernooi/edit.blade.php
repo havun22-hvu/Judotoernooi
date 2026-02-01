@@ -2312,60 +2312,43 @@
     <div x-show="activeTab === 'noodplan'" x-cloak>
 
     <!-- Intro -->
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-        <div class="flex items-center">
-            <span class="text-2xl mr-3">🚨</span>
-            <div>
-                <h3 class="font-bold text-red-800">Noodplan - Case of Emergency</h3>
-                <p class="text-red-700 text-sm">Backup, print en offline opties voor als er iets misgaat tijdens het toernooi.</p>
-            </div>
-        </div>
-    </div>
-
     <!-- POULE EXPORT -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📋</span>
-            POULE EXPORT (backup)
-        </h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Exports & Printen</h2>
 
-        <div class="space-y-4">
+        <div class="space-y-3">
             <!-- Poule Export (Excel/CSV) -->
-            <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-medium text-green-800">Volledige poule-indeling (export)</h3>
-                    <div class="flex gap-2">
-                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
-                           class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
-                            Excel
-                        </a>
-                        <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
-                           class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">
-                            CSV
-                        </a>
-                    </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                <div>
+                    <h3 class="font-medium">Volledige poule-indeling</h3>
+                    <p class="text-sm text-gray-500">Per blok, gesorteerd op mat</p>
                 </div>
-                <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
-                    <li>Per blok een tab</li>
-                    <li>Gesorteerd op mat</li>
-                    <li>Met leeftijds-/gewichtsklasse</li>
-                </ul>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                        Excel
+                    </a>
+                    <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'csv'])) }}"
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                        CSV
+                    </a>
+                </div>
             </div>
 
             <!-- Poules printen (na voorbereidingen) -->
-            <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium text-blue-800">Poules printen (na voorbereidingen)</h3>
-                    <p class="text-sm text-blue-600">Indeling klaar, vóór wedstrijddag - print per blok</p>
+                    <h3 class="font-medium">Poules printen (na voorbereidingen)</h3>
+                    <p class="text-sm text-gray-500">Vóór wedstrijddag</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
                     @endforeach
@@ -2373,19 +2356,19 @@
             </div>
 
             <!-- Poules printen (wedstrijddag - na overpoulen) -->
-            <div class="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium text-orange-800">Poules printen (wedstrijddag)</h3>
-                    <p class="text-sm text-orange-600">Na overpoulen - definitieve poules per blok</p>
+                    <h3 class="font-medium">Poules printen (wedstrijddag)</h3>
+                    <p class="text-sm text-gray-500">Na overpoulen</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700">
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-orange-500 text-white rounded text-sm hover:bg-orange-600">
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
                     @endforeach
@@ -2393,17 +2376,15 @@
             </div>
 
             <!-- JSON Download voor offline gebruik -->
-            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="noodplanJsonDownloader()">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
-                        <p class="text-sm text-purple-600">Voor lokale server bij internetstoring</p>
-                    </div>
-                    <button @click="download()" type="button"
-                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
-                        Download backup
-                    </button>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="noodplanJsonDownloader()">
+                <div>
+                    <h3 class="font-medium">Offline Backup (JSON)</h3>
+                    <p class="text-sm text-gray-500">Voor lokale server bij internetstoring</p>
                 </div>
+                <button @click="download()" type="button"
+                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                    Download
+                </button>
             </div>
 
             <!-- Weeglijsten -->
@@ -2516,34 +2497,29 @@
 
     <!-- TIJDENS DE WEDSTRIJD -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🏆</span>
-            TIJDENS DE WEDSTRIJD
-        </h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Tijdens de wedstrijd</h2>
 
-        <div class="space-y-4">
-            <!-- Laad JSON backup - altijd zichtbaar -->
-            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="noodplanLiveBackup()">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium text-purple-800">📁 Laad JSON backup</h3>
-                        <p class="text-sm text-purple-600">Laad eerder gedownloade backup in voor offline gebruik</p>
-                        <p class="text-xs text-purple-500 mt-1" x-show="uitslagCount > 0">
-                            <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || '-'"></span>
-                        </p>
-                    </div>
-                    <label class="px-4 py-2 bg-purple-600 text-white rounded cursor-pointer hover:bg-purple-700 font-medium">
-                        Kies bestand
-                        <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
-                    </label>
+        <div class="space-y-3">
+            <!-- Laad JSON backup -->
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="noodplanLiveBackup()">
+                <div>
+                    <h3 class="font-medium">Laad JSON backup</h3>
+                    <p class="text-sm text-gray-500">Laad eerder gedownloade backup in</p>
+                    <p class="text-xs text-gray-400 mt-1" x-show="uitslagCount > 0">
+                        <span x-text="uitslagCount"></span> uitslagen | Sync: <span x-text="laatsteSync || '-'"></span>
+                    </p>
                 </div>
+                <label class="px-3 py-2 bg-blue-600 text-white rounded text-sm cursor-pointer hover:bg-blue-700">
+                    Kies bestand
+                    <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
+                </label>
             </div>
 
             <!-- Ingevulde schema's (matrix) -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
                     <h3 class="font-medium">Ingevulde schema's (matrix)</h3>
-                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg - voor handmatig invullen</p>
+                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
@@ -2560,19 +2536,19 @@
             </div>
 
             <!-- Live wedstrijd schema's -->
-            <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium text-yellow-800">Live wedstrijd schema's</h3>
-                    <p class="text-sm text-yellow-600">Met alle al gespeelde wedstrijden + punten</p>
+                    <h3 class="font-medium">Live wedstrijd schema's</h3>
+                    <p class="text-sm text-gray-500">Met gespeelde wedstrijden + punten</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         Alle
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
                     @endforeach
@@ -2581,72 +2557,47 @@
         </div>
     </div>
 
-    <!-- OVERSTAPPEN NAAR LOKALE SERVER -->
+    <!-- LOKALE SERVER BIJ INTERNETSTORING -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🔄</span>
-            OVERSTAPPEN NAAR LOKALE SERVER
-        </h2>
-        <p class="text-sm text-gray-600 mb-4">Bij internetstoring kun je overstappen naar een lokale server. Hieronder staat hoe dat werkt.</p>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Lokale server bij internetstoring</h2>
+        <p class="text-sm text-gray-600 mb-4">Bij internetstoring kun je overstappen naar een lokale server.</p>
 
-        <div class="space-y-4">
-            <!-- Stap 1: Download backup -->
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded">
-                <h3 class="font-bold text-gray-800 mb-2">1. Download de JSON backup</h3>
-                <p class="text-sm text-gray-600">
-                    Download vóór het toernooi de JSON backup via de knop hierboven. Bewaar dit bestand op een USB-stick of laptop.
-                </p>
+        <div class="space-y-3">
+            <div class="p-3 bg-gray-50 rounded">
+                <h3 class="font-medium mb-1">1. Download de JSON backup</h3>
+                <p class="text-sm text-gray-500">Bewaar op USB-stick of laptop vóór het toernooi.</p>
             </div>
 
-            <!-- Stap 2: Primaire lokale server -->
-            <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-bold text-green-800 mb-2">2. Primaire lokale server starten</h3>
-                <p class="text-sm text-green-700 mb-2">
-                    Start de lokale server op je laptop (met Laravel/PHP geïnstalleerd):
-                </p>
-                <code class="block bg-green-100 p-2 rounded text-xs text-green-900 font-mono mb-2">
+            <div class="p-3 bg-gray-50 rounded">
+                <h3 class="font-medium mb-1">2. Primaire lokale server starten</h3>
+                <p class="text-sm text-gray-500 mb-2">Start op laptop met Laravel/PHP:</p>
+                <code class="block bg-gray-200 p-2 rounded text-xs font-mono">
                     cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000
                 </code>
-                <p class="text-sm text-green-700">
-                    Open <strong>http://laptop-ip:8000</strong> op alle apparaten in het lokale netwerk.
-                </p>
+                <p class="text-sm text-gray-500 mt-2">Open <strong>http://laptop-ip:8000</strong> op alle apparaten.</p>
             </div>
 
-            <!-- Stap 3: Standby server -->
-            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <h3 class="font-bold text-yellow-800 mb-2">3. Standby server (optioneel)</h3>
-                <p class="text-sm text-yellow-700 mb-2">
-                    Voor extra zekerheid kun je een tweede laptop als standby server klaarzetten:
-                </p>
-                <ul class="text-sm text-yellow-700 list-disc list-inside space-y-1">
-                    <li>Zelfde setup als primaire server</li>
-                    <li>Laad regelmatig de nieuwste JSON backup in</li>
-                    <li>Bij uitval primaire: schakel over naar standby IP-adres</li>
-                </ul>
+            <div class="p-3 bg-gray-50 rounded">
+                <h3 class="font-medium mb-1">3. Standby server (optioneel)</h3>
+                <p class="text-sm text-gray-500">Tweede laptop met zelfde setup. Bij uitval primaire: schakel over naar standby IP.</p>
             </div>
 
-            <!-- Stap 4: JSON inladen -->
-            <div class="p-4 bg-purple-50 border border-purple-200 rounded">
-                <h3 class="font-bold text-purple-800 mb-2">4. JSON backup inladen</h3>
-                <p class="text-sm text-purple-700 mb-2">
-                    Op de lokale server: ga naar het Noodplan en klik op <strong>"Laad JSON backup"</strong> om de gedownloade data in te laden.
-                </p>
-                <p class="text-sm text-purple-600">
-                    De wedstrijddata wordt dan in de browser (localStorage) geladen en je kunt verder werken.
-                </p>
+            <div class="p-3 bg-gray-50 rounded">
+                <h3 class="font-medium mb-1">4. JSON backup inladen</h3>
+                <p class="text-sm text-gray-500">Op lokale server: klik "Laad JSON backup" hierboven om data in te laden.</p>
             </div>
         </div>
     </div>
 
     <!-- Checklist -->
-    <div class="p-4 bg-blue-50 rounded-lg">
-        <h3 class="font-bold text-blue-800 mb-2">Checklist vóór het toernooi</h3>
-        <ul class="text-sm text-blue-700 space-y-1">
-            <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
-            <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Checklist vóór het toernooi</h2>
+        <ul class="text-sm text-gray-600 space-y-2">
+            <li>☐ Download Excel backup (poule-indeling)</li>
+            <li>☐ Download JSON backup (wedstrijddata)</li>
             <li>☐ Test lokale server op laptop</li>
             <li>☐ Noteer IP-adressen van primaire en standby server</li>
-            <li>☐ Zorg voor WiFi-router zonder internetverbinding als backup</li>
+            <li>☐ WiFi-router zonder internet als backup</li>
         </ul>
     </div>
 
