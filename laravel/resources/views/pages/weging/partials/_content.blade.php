@@ -374,9 +374,8 @@ async function registreerGewicht() {
                 setTimeout(() => { clearSelection(); }, 2000);
             } else {
                 // TE ZWAAR/TE LICHT - prominente rode waarschuwing
-                // Check of het vaste gewichtsklassen zijn (bijv. -30, +70)
-                const klasse = selectedJudoka.gewichtsklasse || '';
-                const isVasteKlasse = klasse.startsWith('-') || klasse.startsWith('+');
+                // Check of het vaste gewichtsklassen zijn (max_kg_verschil = 0)
+                const isVasteKlasse = selectedJudoka.is_vaste_klasse || false;
 
                 if (isVasteKlasse) {
                     // Vaste gewichtsklassen: melden bij jurytafel voor overpoulen
