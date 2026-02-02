@@ -250,6 +250,46 @@ class WedstrijdSchemaService
             $pouleSchemas[] = $pouleSchema;
         }
 
+        // Clean up invalid selections (wedstrijden that are already played)
+        // This handles cases where the browser was closed before auto-advance happened
+        $needsUpdate = false;
+        $updates = [];
+
+        if ($mat->actieve_wedstrijd_id) {
+            $actieve = Wedstrijd::find($mat->actieve_wedstrijd_id);
+            if (!$actieve || $actieve->is_gespeeld) {
+                // Actieve wedstrijd is gespeeld, doorschuiven
+                $updates['actieve_wedstrijd_id'] = $mat->volgende_wedstrijd_id;
+                $updates['volgende_wedstrijd_id'] = $mat->gereedmaken_wedstrijd_id;
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if (!$needsUpdate && $mat->volgende_wedstrijd_id) {
+            $volgende = Wedstrijd::find($mat->volgende_wedstrijd_id);
+            if (!$volgende || $volgende->is_gespeeld) {
+                // Volgende wedstrijd is gespeeld, doorschuiven
+                $updates['volgende_wedstrijd_id'] = $mat->gereedmaken_wedstrijd_id;
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if (!$needsUpdate && $mat->gereedmaken_wedstrijd_id) {
+            $gereedmaken = Wedstrijd::find($mat->gereedmaken_wedstrijd_id);
+            if (!$gereedmaken || $gereedmaken->is_gespeeld) {
+                // Gereedmaken wedstrijd is gespeeld, verwijderen
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if ($needsUpdate) {
+            $mat->update($updates);
+            $mat->refresh();
+        }
+
         // Return with mat-level selection (groen/geel/blauw)
         return [
             'mat' => [
