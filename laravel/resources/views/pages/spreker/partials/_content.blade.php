@@ -29,9 +29,7 @@
             class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
         >
             <span class="text-lg">🏆</span> Uitslagen
-            @if($klarePoules->isNotEmpty())
-            <span class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $klarePoules->count() }}</span>
-            @endif
+            <span x-show="klarePouleCount > 0" class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="klarePouleCount"></span>
         </button>
         <button
             @click="activeTab = 'oproepen'"
@@ -473,6 +471,7 @@ function sprekerInterface() {
         showPouleModal: false,
         selectedPouleData: null,
         loadingPoule: false,
+        klarePouleCount: {{ $klarePoules->count() }},
 
         async init() {
             // Laad geschiedenis uit localStorage
@@ -557,6 +556,9 @@ function sprekerInterface() {
                 if (data.success) {
                     const tijd = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
                     this.addToGeschiedenis(pouleId, pouleNaam, pouleType, tijd);
+
+                    // Update badge count
+                    this.klarePouleCount = Math.max(0, this.klarePouleCount - 1);
 
                     const element = document.getElementById('poule-' + pouleId);
                     if (element) {
