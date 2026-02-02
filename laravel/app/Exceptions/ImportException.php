@@ -14,6 +14,7 @@ class ImportException extends JudoToernooiException
     public const ERROR_ROW_VALIDATION = 2003;
     public const ERROR_DUPLICATE_ENTRY = 2004;
     public const ERROR_FILE_READ = 2005;
+    public const ERROR_DATABASE = 2006;
 
     protected array $rowErrors = [];
 
@@ -67,6 +68,16 @@ class ImportException extends JudoToernooiException
             'Bestand kon niet worden gelezen.',
             $context,
             self::ERROR_FILE_READ
+        );
+    }
+
+    public static function databaseError(string $message, array $context = []): static
+    {
+        return new static(
+            "Database error during import: {$message}",
+            'Er ging iets mis bij het opslaan. Probeer opnieuw.',
+            $context,
+            self::ERROR_DATABASE
         );
     }
 
