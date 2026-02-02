@@ -282,6 +282,75 @@ class PubliekController extends Controller
     }
 
     /**
+     * Get live mat data (AJAX) - groen/geel/blauw wedstrijden per mat
+     */
+    public function matten(Organisator $organisator, Toernooi $toernooi): JsonResponse
+    {
+        $matten = $toernooi->matten()
+            ->with(['poules' => function ($q) {
+                $q->whereNull('afgeroepen_at')
+                  ->with(['judokas.club', 'wedstrijden'])
+                  ->orderBy('nummer');
+            }])
+            ->orderBy('nummer')
+            ->get()
+            ->map(function ($mat) {
+                // Cleanup invalid selections (gespeelde wedstrijden)
+                $mat->cleanupGespeeldeSelecties();
+
+                // Get first unfinished poule for this mat
+                $poule = $mat->poules->first();
+
+                // Collect all wedstrijden from all poules on this mat
+                $alleWedstrijden = $mat->poules->flatMap(fn($p) => $p->wedstrijden);
+
+                // Groen/geel/blauw van MAT niveau
+                $groeneWedstrijd = null;
+                $geleWedstrijd = null;
+                $blauweWedstrijd = null;
+
+                if ($mat->actieve_wedstrijd_id) {
+                    $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                }
+                if ($mat->volgende_wedstrijd_id) {
+                    $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                }
+                if ($mat->gereedmaken_wedstrijd_id) {
+                    $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
+                }
+
+                // Add judoka info to wedstrijden
+                $formatWedstrijd = function ($wedstrijd) use ($mat) {
+                    if (!$wedstrijd) return null;
+                    $wedstrijdPoule = $mat->poules->first(fn($p) => $p->wedstrijden->contains('id', $wedstrijd->id));
+                    if (!$wedstrijdPoule) return null;
+
+                    $wit = $wedstrijdPoule->judokas->firstWhere('id', $wedstrijd->judoka_wit_id);
+                    $blauw = $wedstrijdPoule->judokas->firstWhere('id', $wedstrijd->judoka_blauw_id);
+
+                    return [
+                        'id' => $wedstrijd->id,
+                        'poule_titel' => $wedstrijdPoule->getDisplayTitel(),
+                        'wit' => $wit ? ['naam' => $wit->naam, 'club' => $wit->club?->naam] : null,
+                        'blauw' => $blauw ? ['naam' => $blauw->naam, 'club' => $blauw->club?->naam] : null,
+                    ];
+                };
+
+                return [
+                    'id' => $mat->id,
+                    'nummer' => $mat->nummer,
+                    'naam' => $mat->naam,
+                    'poule_titel' => $poule?->getDisplayTitel(),
+                    'groen' => $formatWedstrijd($groeneWedstrijd),
+                    'geel' => $formatWedstrijd($geleWedstrijd),
+                    'blauw' => $formatWedstrijd($blauweWedstrijd),
+                ];
+            });
+
+        return response()->json(['matten' => $matten]);
+    }
+
+    /**
      * Get poules for favorite judokas (AJAX)
      */
     public function favorieten(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse

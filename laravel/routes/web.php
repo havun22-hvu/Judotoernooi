@@ -564,6 +564,7 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
     Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
     Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
     Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
+    Route::get('matten', [PubliekController::class, 'matten'])->name('matten');
     Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
     Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
 })
