@@ -8,6 +8,7 @@ use App\Models\Club;
 use App\Models\ClubUitnodiging;
 use App\Models\Coach;
 use App\Models\CoachKaart;
+use App\Models\EmailLog;
 use App\Models\Organisator;
 use App\Models\Toernooi;
 use Illuminate\Http\RedirectResponse;
@@ -344,7 +345,33 @@ class ClubController extends Controller
 
         // Send email
         $recipients = array_filter([$club->email, $club->email2]);
-        Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
+        $subject = "Uitnodiging {$toernooi->naam}";
+
+        try {
+            Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
+
+            EmailLog::logSent(
+                $toernooi->id,
+                'uitnodiging',
+                $recipients,
+                $subject,
+                "Uitnodiging voor {$club->naam}",
+                $club->id
+            );
+        } catch (\Exception $e) {
+            EmailLog::logFailed(
+                $toernooi->id,
+                'uitnodiging',
+                $recipients,
+                $subject,
+                $e->getMessage(),
+                $club->id
+            );
+
+            return redirect()
+                ->route('toernooi.club.index', $toernooi->routeParams())
+                ->with('error', "Uitnodiging versturen mislukt: {$e->getMessage()}");
+        }
 
         return redirect()
             ->route('toernooi.club.index', $toernooi->routeParams())
@@ -365,7 +392,11 @@ class ClubController extends Controller
         $verzonden = 0;
         $fouten = 0;
 
+        $subject = "Uitnodiging {$toernooi->naam}";
+
         foreach ($clubs as $club) {
+            $recipients = array_filter([$club->email, $club->email2]);
+
             try {
                 $uitnodiging = ClubUitnodiging::firstOrCreate(
                     ['toernooi_id' => $toernooi->id, 'club_id' => $club->id],
@@ -374,11 +405,28 @@ class ClubController extends Controller
 
                 $uitnodiging->update(['uitgenodigd_op' => now()]);
 
-                $recipients = array_filter([$club->email, $club->email2]);
                 Mail::to($recipients)->send(new ClubUitnodigingMail($uitnodiging));
+
+                EmailLog::logSent(
+                    $toernooi->id,
+                    'uitnodiging',
+                    $recipients,
+                    $subject,
+                    "Uitnodiging voor {$club->naam}",
+                    $club->id
+                );
 
                 $verzonden++;
             } catch (\Exception $e) {
+                EmailLog::logFailed(
+                    $toernooi->id,
+                    'uitnodiging',
+                    $recipients,
+                    $subject,
+                    $e->getMessage(),
+                    $club->id
+                );
+
                 $fouten++;
             }
         }
@@ -593,5 +641,18 @@ class ClubController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * Show email log for this toernooi
+     */
+    public function emailLog(Organisator $organisator, Toernooi $toernooi): View
+    {
+        $emails = EmailLog::where('toernooi_id', $toernooi->id)
+            ->with('club')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('toernooi.email-log', compact('organisator', 'toernooi', 'emails'));
     }
 }
