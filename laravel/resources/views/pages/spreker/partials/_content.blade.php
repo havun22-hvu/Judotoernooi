@@ -307,73 +307,80 @@
 
     <!-- TAB 3: NOTITIES (Spiekbriefje) -->
     <div x-show="activeTab === 'notities'">
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-            <p class="text-yellow-800 text-sm">
-                <span class="font-bold">📝 Spiekbriefje:</span> Maak notities voor het welkomstwoord en andere aandachtspunten.
-                Notities worden opgeslagen op de server en blijven bewaard voor volgend jaar.
-            </p>
-        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <!-- Textarea -->
+            <div class="mb-3">
+                <textarea
+                    x-model="notities"
+                    @input.debounce.2000ms="autoSaveNotities()"
+                    rows="18"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                    :class="{ 'border-yellow-400': hasUnsavedChanges }"
+                    placeholder="Typ hier je notities..."
+                ></textarea>
+            </div>
 
-        <!-- Templates dropdown -->
-        <div class="bg-white rounded-lg shadow p-4 mb-4">
-            <div class="flex flex-wrap items-center gap-3">
-                <label class="text-sm font-medium text-gray-700">📋 Templates:</label>
+            <!-- Werkbalk onder textarea -->
+            <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-200">
+                <!-- Opslaan -->
+                <button
+                    @click="saveNotities()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                    💾 Opslaan
+                </button>
+
+                <!-- Divider -->
+                <div class="w-px h-6 bg-gray-300"></div>
+
+                <!-- Template dropdown -->
                 <select
                     x-model="selectedTemplate"
                     @change="laadTemplate()"
-                    class="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 min-w-[140px]"
                 >
-                    <option value="">-- Kies template --</option>
+                    <option value="">📋 Template...</option>
                     <template x-for="(template, index) in templates" :key="index">
                         <option :value="index" x-text="template.naam"></option>
                     </template>
                 </select>
+
+                <!-- Opslaan als template -->
+                <button
+                    @click="showSaveAsModal = true"
+                    :disabled="!notities.trim()"
+                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-3 py-2 rounded-lg text-sm font-medium"
+                    title="Huidige tekst opslaan als template"
+                >
+                    📥 Opslaan als...
+                </button>
+
+                <!-- Beheer -->
                 <button
                     @click="showTemplateModal = true"
-                    class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium"
+                    title="Templates beheren"
                 >
                     ⚙️ Beheer
                 </button>
-            </div>
-        </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Welkomstwoord / Aandachtspunten</label>
-                <textarea
-                    x-model="notities"
-                    @input.debounce.2000ms="autoSaveNotities()"
-                    rows="20"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-                    :class="{ 'border-yellow-400': hasUnsavedChanges }"
-                    placeholder="Typ hier je notities of kies een template hierboven..."
-                ></textarea>
-            </div>
-            <div class="flex flex-wrap justify-between items-center gap-2">
-                <div class="flex flex-wrap gap-2 items-center">
-                    <button
-                        @click="saveNotities()"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                    >
-                        💾 Opslaan
-                    </button>
-                    <button
-                        @click="showSaveAsModal = true"
-                        :disabled="!notities.trim()"
-                        class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-3 py-2 rounded-lg text-sm font-medium"
-                    >
-                        📋 Opslaan als template
-                    </button>
-                    <span x-show="notitiesSaved" x-cloak class="text-green-600 text-sm">✓ Opgeslagen</span>
-                    <span x-show="autoSaving" x-cloak class="text-gray-400 text-sm">⏳ Auto-save...</span>
-                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600 text-sm">● Niet opgeslagen</span>
-                </div>
+                <!-- Divider -->
+                <div class="w-px h-6 bg-gray-300"></div>
+
+                <!-- Wis -->
                 <button
                     @click="clearNotities()"
-                    class="text-red-600 hover:text-red-800 text-sm"
+                    class="text-red-600 hover:text-red-800 px-2 py-2 text-sm"
+                    title="Notities wissen"
                 >
-                    Wis notities
+                    🗑️
                 </button>
+
+                <!-- Status indicators (rechts) -->
+                <div class="ml-auto flex items-center gap-2 text-sm">
+                    <span x-show="autoSaving" x-cloak class="text-gray-400">⏳ Opslaan...</span>
+                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600">● Niet opgeslagen</span>
+                </div>
             </div>
         </div>
     </div>
@@ -635,7 +642,6 @@ function sprekerInterface() {
         selectedBlok: {{ isset($poulesPerBlok) && $poulesPerBlok->isNotEmpty() ? $poulesPerBlok->keys()->first() : 1 }},
         openPoules: [],
         notities: '',
-        notitiesSaved: false,
         isRefreshing: false,
         showPouleModal: false,
         selectedPouleData: null,
@@ -783,8 +789,7 @@ function sprekerInterface() {
                 if (data.success) {
                     this.lastSavedNotities = this.notities;
                     this.hasUnsavedChanges = false;
-                    this.notitiesSaved = true;
-                    setTimeout(() => this.notitiesSaved = false, 2000);
+                    this.showFeedback('Notities opgeslagen!');
                 }
             } catch (err) {
                 console.error('Fout bij opslaan notities:', err);
