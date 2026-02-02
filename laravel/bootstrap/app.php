@@ -4,8 +4,18 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\RateLimiter;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->booted(function () {
+        // Rate limiters moeten hier gedefinieerd worden (voor routes laden)
+        RateLimiter::for('login', fn ($request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('api', fn ($request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('public-api', fn ($request) => Limit::perMinute(30)->by($request->ip()));
+        RateLimiter::for('form-submit', fn ($request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('webhook', fn ($request) => Limit::perMinute(100)->by($request->ip()));
+    })
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
     )
