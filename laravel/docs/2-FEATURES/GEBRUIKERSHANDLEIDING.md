@@ -676,6 +676,26 @@ Na activatie kun je poules nog verplaatsen tussen matten:
    - Wedstrijdschema in optimale volgorde
    - Status (gespeeld/niet gespeeld)
 
+### Wedstrijd Selectie (3-Kleurensysteem)
+
+Om te communiceren welke wedstrijden gespeeld worden, gebruikt het systeem een 3-kleurensysteem. Klik op een wedstrijd om deze te selecteren:
+
+| Kleur | Betekenis | Actie voor judoka's |
+|-------|-----------|---------------------|
+| **Groen** | Wedstrijd speelt NU | Naar de mat komen |
+| **Geel** | Judoka's staan KLAAR | Klaar staan naast de mat |
+| **Blauw** | Judoka's moeten GEREEDMAKEN | Alvast opwarmen/voorbereiden |
+
+**Hoe het werkt:**
+- Klik op een ongeselecteerde wedstrijd → wordt eerst **groen**, dan **geel**, dan **blauw**
+- Maximaal 3 wedstrijden tegelijk geselecteerd (1 groen, 1 geel, 1 blauw)
+- Klik op een geselecteerde wedstrijd om te deselecteren
+- Bij deselectie groen: geel schuift door naar groen, blauw naar geel
+- Na uitslag registreren: automatisch doorschuiven (geel → groen, blauw → geel)
+
+**Voor spreker/publiek:**
+De kleuren zijn ook zichtbaar op het publieke scorebord en in de spreker interface, zodat de spreker de juiste judoka's kan oproepen.
+
 ### Uitslag Registreren
 
 1. Klik op een wedstrijd
