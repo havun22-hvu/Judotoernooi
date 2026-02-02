@@ -284,7 +284,18 @@ class BlokController extends Controller
         // Get category statuses for wedstrijddag (includes doorgestuurd_op from database)
         $categories = $this->getCategoryStatuses($toernooi);
 
-        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories'));
+        // Check if preparation can be finalized (all poules have blok and mat)
+        $poulesZonderBlok = $toernooi->poules()
+            ->whereNull('blok_id')
+            ->where('aantal_judokas', '>', 1)
+            ->count();
+        $poulesZonderMat = $toernooi->poules()
+            ->whereNull('mat_id')
+            ->where('aantal_judokas', '>', 1)
+            ->count();
+        $kanAfronden = $poulesZonderBlok === 0 && $poulesZonderMat === 0;
+
+        return view('pages.blok.zaaloverzicht', compact('toernooi', 'overzicht', 'categories', 'kanAfronden', 'poulesZonderMat', 'poulesZonderBlok'));
     }
 
     /**
