@@ -25,6 +25,13 @@
         </div>
     </div>
     <div class="flex gap-2">
+        <a href="{{ route('toernooi.email-log', $toernooi->routeParams()) }}"
+           class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            Email Log
+        </a>
         <a href="{{ route('organisator.clubs.index', [$organisator, 'back' => url()->current()]) }}"
            class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded flex items-center gap-2">
             Clubs Beheren
