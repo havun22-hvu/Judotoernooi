@@ -276,9 +276,11 @@ class MatController extends Controller
     }
 
     /**
-     * Manually set current/next match for a poule
+     * Set current/next match on MAT level (new implementation)
      * - actieve_wedstrijd_id = green (currently playing)
-     * - huidige_wedstrijd_id = yellow (next up)
+     * - volgende_wedstrijd_id = yellow (next up)
+     *
+     * Only 1 green and 1 yellow per mat, regardless of number of poules
      */
     public function setHuidigeWedstrijd(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
@@ -286,11 +288,10 @@ class MatController extends Controller
     }
 
     /**
-     * Device-bound version - no toernooi check needed, poule validates itself
+     * Device-bound version - no toernooi check needed, mat validates itself
      */
     public function setHuidigeWedstrijdDevice(Request $request): JsonResponse
     {
-        // Get toernooi from device_toegang
         $toegang = $request->get('device_toegang');
         return $this->doSetHuidigeWedstrijd($request, $toegang->toernooi_id);
     }
@@ -298,37 +299,45 @@ class MatController extends Controller
     private function doSetHuidigeWedstrijd(Request $request, int $toernooiId): JsonResponse
     {
         $validated = $request->validate([
-            'poule_id' => 'required|exists:poules,id',
-            'wedstrijd_id' => 'nullable|exists:wedstrijden,id',
-            'type' => 'nullable|in:actief,volgend', // actief=green, volgend=yellow
+            'mat_id' => 'required|exists:matten,id',
+            'actieve_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+            'volgende_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
         ]);
 
-        $poule = Poule::findOrFail($validated['poule_id']);
-        $type = $validated['type'] ?? 'volgend'; // Default to old behavior
+        $mat = Mat::findOrFail($validated['mat_id']);
 
-        // Verify poule belongs to this toernooi
-        if ($poule->toernooi_id !== $toernooiId) {
-            return response()->json(['success' => false, 'error' => 'Poule hoort niet bij dit toernooi'], 403);
+        // Verify mat belongs to this toernooi
+        if ($mat->toernooi_id !== $toernooiId) {
+            return response()->json(['success' => false, 'error' => 'Mat hoort niet bij dit toernooi'], 403);
         }
 
-        // Verify wedstrijd belongs to this poule (if provided)
-        if ($validated['wedstrijd_id']) {
-            $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
-            if ($wedstrijd->poule_id !== $poule->id) {
-                return response()->json(['success' => false, 'error' => 'Wedstrijd hoort niet bij deze poule'], 403);
+        // Verify wedstrijden belong to poules on this mat (if provided)
+        if ($validated['actieve_wedstrijd_id']) {
+            $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated['actieve_wedstrijd_id']);
+            if ($wedstrijd->poule->mat_id !== $mat->id) {
+                return response()->json(['success' => false, 'error' => 'Actieve wedstrijd hoort niet bij deze mat'], 403);
             }
         }
 
-        if ($type === 'actief') {
-            $poule->update(['actieve_wedstrijd_id' => $validated['wedstrijd_id']]);
-        } else {
-            $poule->update(['huidige_wedstrijd_id' => $validated['wedstrijd_id']]);
+        if ($validated['volgende_wedstrijd_id']) {
+            $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated['volgende_wedstrijd_id']);
+            if ($wedstrijd->poule->mat_id !== $mat->id) {
+                return response()->json(['success' => false, 'error' => 'Volgende wedstrijd hoort niet bij deze mat'], 403);
+            }
         }
+
+        $mat->update([
+            'actieve_wedstrijd_id' => $validated['actieve_wedstrijd_id'],
+            'volgende_wedstrijd_id' => $validated['volgende_wedstrijd_id'],
+        ]);
 
         return response()->json([
             'success' => true,
-            'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,
-            'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
+            'mat' => [
+                'id' => $mat->id,
+                'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+                'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+            ],
         ]);
     }
 

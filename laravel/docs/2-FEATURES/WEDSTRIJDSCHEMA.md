@@ -189,9 +189,16 @@ Deze instelling is te vinden bij: **Toernooi → Instellingen → Kruisfinale pl
 - Roept winnaars om voor prijsuitreiking
 - Ziet uitslagen in volgorde van binnenkomst (FIFO)
 
+## Wedstrijd Selectie (Groen/Geel)
+
+> **Uitgebreide documentatie:** Zie `MAT-WEDSTRIJD-SELECTIE.md`
+
+De actieve wedstrijd (groen = speelt nu) en volgende wedstrijd (geel = klaar maken) worden opgeslagen op **mat niveau**, niet op poule niveau. Dit zorgt ervoor dat er per mat altijd maar 1 wedstrijd tegelijk kan spelen, ongeacht het aantal poules op die mat.
+
 ## Technische Implementatie
 
 ### Database Tabellen
+- `matten` - Mat informatie + actieve/volgende wedstrijd IDs
 - `poules` - Poule informatie inclusief type (voorronde/kruisfinale)
 - `wedstrijden` - Individuele wedstrijden met scores
 - `poule_judoka` - Koppeltabel met eindstanden
