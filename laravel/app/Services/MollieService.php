@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\MollieException;
 use App\Models\Toernooi;
+use App\Support\CircuitBreaker;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Crypt;
@@ -15,6 +16,7 @@ class MollieService
     private string $apiUrl;
     private string $oauthUrl;
     private string $oauthTokenUrl;
+    private CircuitBreaker $circuitBreaker;
 
     // Timeout configuration (seconds)
     private const TIMEOUT = 15;
@@ -22,11 +24,38 @@ class MollieService
     private const RETRY_TIMES = 2;
     private const RETRY_SLEEP_MS = 500;
 
+    // Circuit breaker config
+    private const CIRCUIT_FAILURE_THRESHOLD = 3;
+    private const CIRCUIT_RECOVERY_TIMEOUT = 30;
+
     public function __construct()
     {
         $this->apiUrl = config('services.mollie.api_url');
         $this->oauthUrl = config('services.mollie.oauth_url');
         $this->oauthTokenUrl = config('services.mollie.oauth_token_url');
+
+        // Circuit breaker prevents cascading failures when Mollie is down
+        $this->circuitBreaker = new CircuitBreaker(
+            'mollie',
+            self::CIRCUIT_FAILURE_THRESHOLD,
+            self::CIRCUIT_RECOVERY_TIMEOUT
+        );
+    }
+
+    /**
+     * Check if Mollie service is available (circuit not open).
+     */
+    public function isAvailable(): bool
+    {
+        return $this->circuitBreaker->isAvailable();
+    }
+
+    /**
+     * Get circuit breaker status for monitoring.
+     */
+    public function getCircuitStatus(): array
+    {
+        return $this->circuitBreaker->getStatus();
     }
 
     /*
@@ -418,11 +447,27 @@ class MollieService
     */
 
     /**
-     * Make an API request to Mollie with timeout, retry, and error handling.
+     * Make an API request to Mollie with circuit breaker, timeout, retry, and error handling.
+     *
+     * Circuit breaker prevents cascading failures:
+     * - After 3 consecutive failures, blocks all requests for 30 seconds
+     * - Allows app to fail fast instead of waiting for timeouts
      *
      * @throws MollieException
      */
     private function makeApiRequest(string $method, string $endpoint, array $data, string $apiKey): object
+    {
+        // Use circuit breaker to prevent cascading failures
+        return $this->circuitBreaker->call(
+            fn() => $this->executeApiRequest($method, $endpoint, $data, $apiKey),
+            fn() => throw MollieException::apiError($endpoint, 'Service temporarily unavailable (circuit open)')
+        );
+    }
+
+    /**
+     * Execute the actual API request with retry logic.
+     */
+    private function executeApiRequest(string $method, string $endpoint, array $data, string $apiKey): object
     {
         $url = $this->apiUrl . $endpoint;
         $attempt = 0;
@@ -450,18 +495,22 @@ class MollieService
                     return $response->object();
                 }
 
-                // Non-retryable errors (4xx)
+                // Non-retryable errors (4xx) - don't count towards circuit breaker
                 if ($response->clientError()) {
                     throw MollieException::apiError($endpoint, $response->body(), $response->status());
                 }
 
-                // Server error (5xx) - retry
+                // Server error (5xx) - retry and count towards circuit
                 $lastException = MollieException::apiError($endpoint, $response->body(), $response->status());
 
             } catch (ConnectionException $e) {
                 $lastException = MollieException::timeout($endpoint);
             } catch (MollieException $e) {
-                throw $e; // Don't retry client errors
+                // Client errors (4xx) should not trigger circuit breaker
+                if ($e->getCode() === MollieException::ERROR_API && str_contains($e->getMessage(), '4')) {
+                    throw $e;
+                }
+                $lastException = $e;
             }
 
             // Wait before retry

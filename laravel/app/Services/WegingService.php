@@ -72,6 +72,12 @@ class WegingService
     private function heeftVasteGewichtsklassenVoorJudoka(Judoka $judoka): bool
     {
         $toernooi = $judoka->toernooi;
+
+        // Guard: toernooi moet bestaan
+        if (!$toernooi) {
+            return true; // Default: vaste klassen (veiligste optie)
+        }
+
         $categorieKey = $judoka->categorie_key;
 
         // Probeer categorie config op te halen

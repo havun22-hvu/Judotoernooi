@@ -213,7 +213,7 @@ class PouleIndelingService
                         'type' => 'eliminatie',
                         'leeftijdsklasse' => $leeftijdsklasse,
                         'gewichtsklasse' => $gewichtsklasse,
-                        'categorie_key' => $configKey,
+                        'categorie_key' => $categorieKey,
                         'aantal_judokas' => $aantalDeelnemers,
                     ]);
 
