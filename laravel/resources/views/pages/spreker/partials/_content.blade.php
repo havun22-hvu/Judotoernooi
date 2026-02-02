@@ -21,8 +21,8 @@
     }
 @endphp
 <div x-data="sprekerInterface()" x-cloak>
-    <!-- Tab Navigation -->
-    <div class="flex border-b border-gray-200 mb-4 bg-white rounded-t-lg shadow-sm">
+    <!-- Tab Navigation - Sticky -->
+    <div class="flex border-b border-gray-200 mb-4 bg-white rounded-t-lg shadow-sm sticky top-[60px] z-40">
         <button
             @click="activeTab = 'uitslagen'"
             :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
