@@ -165,7 +165,7 @@ class WedstrijdSchemaService
 
     /**
      * Get match schedule for a mat in a block
-     * Returns mat-level green/yellow selection plus all poules
+     * Returns mat-level green/yellow/blue selection plus all poules
      */
     public function getSchemaVoorMat(Blok $blok, Mat $mat): array
     {
@@ -250,13 +250,14 @@ class WedstrijdSchemaService
             $pouleSchemas[] = $pouleSchema;
         }
 
-        // Return with mat-level selection
+        // Return with mat-level selection (groen/geel/blauw)
         return [
             'mat' => [
                 'id' => $mat->id,
                 'nummer' => $mat->nummer,
                 'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
                 'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+                'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
             ],
             'poules' => $pouleSchemas,
         ];

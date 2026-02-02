@@ -20,6 +20,7 @@ class Mat extends Model
         'kleur',
         'actieve_wedstrijd_id',
         'volgende_wedstrijd_id',
+        'gereedmaken_wedstrijd_id',
     ];
 
     public function toernooi(): BelongsTo
@@ -41,7 +42,7 @@ class Mat extends Model
     }
 
     /**
-     * De wedstrijd die klaar moet maken (geel)
+     * De wedstrijd die klaar staat (geel)
      */
     public function volgendeWedstrijd(): BelongsTo
     {
@@ -49,24 +50,59 @@ class Mat extends Model
     }
 
     /**
+     * De wedstrijd die gereed moet maken (blauw)
+     */
+    public function gereedmakenWedstrijd(): BelongsTo
+    {
+        return $this->belongsTo(Wedstrijd::class, 'gereedmaken_wedstrijd_id');
+    }
+
+    /**
      * Reset wedstrijd selectie als de wedstrijd van een specifieke poule is
+     * Inclusief doorschuiving: als geel reset → blauw wordt geel
      */
     public function resetWedstrijdSelectieVoorPoule(int $pouleId): void
     {
         $updates = [];
+        $resetGroen = false;
+        $resetGeel = false;
+        $resetBlauw = false;
 
+        // Check welke kleuren gereset moeten worden
         if ($this->actieve_wedstrijd_id) {
             $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
             if ($actieve && $actieve->poule_id === $pouleId) {
-                $updates['actieve_wedstrijd_id'] = null;
+                $resetGroen = true;
             }
         }
 
         if ($this->volgende_wedstrijd_id) {
             $volgende = Wedstrijd::find($this->volgende_wedstrijd_id);
             if ($volgende && $volgende->poule_id === $pouleId) {
-                $updates['volgende_wedstrijd_id'] = null;
+                $resetGeel = true;
             }
+        }
+
+        if ($this->gereedmaken_wedstrijd_id) {
+            $gereedmaken = Wedstrijd::find($this->gereedmaken_wedstrijd_id);
+            if ($gereedmaken && $gereedmaken->poule_id === $pouleId) {
+                $resetBlauw = true;
+            }
+        }
+
+        // Doorschuiving toepassen
+        if ($resetGroen) {
+            // Groen reset: geel → groen, blauw → geel
+            $updates['actieve_wedstrijd_id'] = $this->volgende_wedstrijd_id;
+            $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
+            $updates['gereedmaken_wedstrijd_id'] = null;
+        } elseif ($resetGeel) {
+            // Geel reset: blauw → geel
+            $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
+            $updates['gereedmaken_wedstrijd_id'] = null;
+        } elseif ($resetBlauw) {
+            // Blauw reset: geen doorschuiving
+            $updates['gereedmaken_wedstrijd_id'] = null;
         }
 
         if (!empty($updates)) {
