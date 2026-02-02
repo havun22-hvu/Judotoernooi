@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ExternalServiceException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
  */
 class DynamischeIndelingService
 {
+    // Process timeout in seconds
+    private const PROCESS_TIMEOUT = 30;
     private array $config = [
         'poule_grootte_voorkeur' => [5, 4, 6, 3],
     ];
@@ -143,9 +146,10 @@ class DynamischeIndelingService
                 str_replace('/', '\\', $tempOutput)
             );
         } else {
-            // Linux/Mac
+            // Linux/Mac with timeout
             $cmd = sprintf(
-                '%s %s %s > %s 2>/dev/null',
+                'timeout %d %s %s %s > %s 2>/dev/null',
+                self::PROCESS_TIMEOUT,
                 escapeshellarg($pythonCmd),
                 escapeshellarg($scriptPath),
                 escapeshellarg($tempInput),
@@ -153,7 +157,9 @@ class DynamischeIndelingService
             );
         }
 
+        $startTime = microtime(true);
         exec($cmd, $cmdOutput, $exitCode);
+        $duration = round(microtime(true) - $startTime, 2);
 
         // Read output from file
         if (file_exists($tempOutput)) {
@@ -164,23 +170,49 @@ class DynamischeIndelingService
         @unlink($tempInput);
         @unlink($tempOutput);
 
-        // Log debug output van Python solver
-        if (!empty($stderr)) {
-            Log::debug('Python solver debug output', ['stderr' => $stderr]);
+        // Check for timeout (exit code 124 on Linux)
+        if ($exitCode === 124) {
+            $exception = ExternalServiceException::timeout('Python poule solver', self::PROCESS_TIMEOUT);
+            $exception->log();
+            Log::warning('Python solver timeout, using fallback', [
+                'judoka_count' => $judokas->count(),
+                'timeout' => self::PROCESS_TIMEOUT,
+            ]);
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandGrens, $bandVerschilBeginners);
         }
 
         if ($exitCode !== 0 || empty($output)) {
-            Log::error('Python solver fout', ['exitCode' => $exitCode, 'stderr' => $stderr]);
+            $exception = ExternalServiceException::pythonSolverError($exitCode, $stderr);
+            $exception->log();
+            Log::warning('Python solver error, using fallback', [
+                'exit_code' => $exitCode,
+                'judoka_count' => $judokas->count(),
+            ]);
             return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandGrens, $bandVerschilBeginners);
         }
 
         // Parse Python output
         $result = json_decode($output, true);
 
-        if (!$result || !isset($result['success']) || !$result['success']) {
-            Log::error('Python solver gaf ongeldige output', ['output' => $output]);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $exception = ExternalServiceException::invalidResponse('Python poule solver', substr($output, 0, 200));
+            $exception->log();
             return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandGrens, $bandVerschilBeginners);
         }
+
+        if (!$result || !isset($result['success']) || !$result['success']) {
+            Log::warning('Python solver returned unsuccessful result', [
+                'error' => $result['error'] ?? 'unknown',
+                'judoka_count' => $judokas->count(),
+            ]);
+            return $this->simpleFallback($judokas, $maxKg, $maxLeeftijd, $maxBand, $bandGrens, $bandVerschilBeginners);
+        }
+
+        Log::debug('Python solver completed', [
+            'judoka_count' => $judokas->count(),
+            'poule_count' => count($result['poules'] ?? []),
+            'duration_seconds' => $duration,
+        ]);
 
         // Converteer Python output naar PHP poules met judoka objecten
         $poules = [];
