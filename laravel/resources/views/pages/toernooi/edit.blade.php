@@ -2787,9 +2787,11 @@
     function verbindingStatus() {
         return {
             wifiStatus: 'checking',
+            wifiLatency: null,
             internetStatus: 'checking',
             latency: null,
             laatsteCheck: '-',
+            localServerIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
 
             init() {
                 this.checkVerbinding();
@@ -2798,8 +2800,33 @@
             },
 
             async checkVerbinding() {
-                // WiFi check (altijd connected als pagina laadt)
-                this.wifiStatus = navigator.onLine ? 'connected' : 'offline';
+                // WiFi check - ping lokale server als IP bekend is
+                if (this.localServerIp) {
+                    const wifiStart = Date.now();
+                    try {
+                        const wifiResponse = await fetch(`http://${this.localServerIp}:8000/ping`, {
+                            method: 'GET',
+                            cache: 'no-store',
+                            mode: 'no-cors',
+                            signal: AbortSignal.timeout(3000)
+                        });
+                        this.wifiLatency = Date.now() - wifiStart;
+                        this.wifiStatus = 'connected';
+                    } catch (e) {
+                        // no-cors geeft altijd opaque response, dus check alleen tijd
+                        const elapsed = Date.now() - wifiStart;
+                        if (elapsed < 2900) {
+                            this.wifiLatency = elapsed;
+                            this.wifiStatus = 'connected';
+                        } else {
+                            this.wifiStatus = navigator.onLine ? 'no-server' : 'offline';
+                            this.wifiLatency = null;
+                        }
+                    }
+                } else {
+                    this.wifiStatus = navigator.onLine ? 'no-ip' : 'offline';
+                    this.wifiLatency = null;
+                }
 
                 // Internet check (ping naar cloud)
                 const startTime = Date.now();
