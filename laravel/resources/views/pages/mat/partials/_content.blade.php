@@ -1147,25 +1147,27 @@ function matInterface() {
                 return this.isEliminatieAfgerond(poule);
             }
 
-            // Poule: alle wedstrijden moeten gespeeld zijn
-            return poule.wedstrijden.every(w => w.is_gespeeld);
+            // Poule: alle wedstrijden moeten ECHT gespeeld zijn (met winnaar)
+            // ROBUUST: check winnaar_id, niet alleen is_gespeeld
+            return poule.wedstrijden.every(w => w.winnaar_id);
         },
 
         // Check of eliminatie bracket volledig is afgerond
-        // Afgerond = finale gespeeld + alle brons wedstrijden gespeeld
+        // Afgerond = finale gespeeld (met winnaar) + alle brons wedstrijden gespeeld (met winnaar)
+        // ROBUUST: gebruik winnaar_id check, niet alleen is_gespeeld
         isEliminatieAfgerond(poule) {
-            // Check finale (A-groep)
+            // Check finale (A-groep) - moet winnaar hebben
             const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
-            if (!finale || !finale.is_gespeeld) return false;
+            if (!finale || !finale.winnaar_id) return false;
 
             // Check brons wedstrijden (b_halve_finale_2)
             const bronsWedstrijden = poule.wedstrijden.filter(w =>
                 w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons' || w.ronde === 'b_finale'
             );
 
-            // Als er brons wedstrijden zijn, moeten die ook gespeeld zijn
+            // Als er brons wedstrijden zijn, moeten die ook winnaar hebben
             if (bronsWedstrijden.length > 0) {
-                return bronsWedstrijden.every(w => w.is_gespeeld);
+                return bronsWedstrijden.every(w => w.winnaar_id);
             }
 
             // Geen brons wedstrijden (kleine bracket) = alleen finale nodig
@@ -1317,10 +1319,18 @@ function matInterface() {
         // Blauw = mat.gereedmaken_wedstrijd_id (1 per mat, ongeacht poules) - Gereed maken
         // Helper: check of wedstrijd nog te spelen is (geen winnaar)
         // ROBUUST: alleen wedstrijden MET winnaar zijn echt gespeeld
+        // Consistent met PHP Wedstrijd::isNogTeSpelen()
         isNogTeSpelen(w) {
-            // Wedstrijd is nog te spelen als er GEEN winnaar is
-            // (is_gespeeld flag kan true zijn zonder winnaar - dat is een "lopende" wedstrijd)
-            return !w.winnaar_id;
+            // Wedstrijd is nog te spelen als:
+            // - niet gespeeld (!is_gespeeld), OF
+            // - gespeeld maar geen winnaar (lopende wedstrijd)
+            return !w.is_gespeeld || !w.winnaar_id;
+        },
+
+        // Helper: check of wedstrijd ECHT gespeeld is (met winnaar)
+        // Consistent met PHP Wedstrijd::isEchtGespeeld()
+        isEchtGespeeld(w) {
+            return w.is_gespeeld && w.winnaar_id;
         },
 
         getHuidigeEnVolgende(poule) {
