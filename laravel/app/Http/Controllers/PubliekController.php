@@ -287,9 +287,9 @@ class PubliekController extends Controller
     public function matten(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         $matten = $toernooi->matten()
+            // Load ALL poules (including afgeroepen) for wedstrijd lookup
             ->with(['poules' => function ($q) {
-                $q->whereNull('afgeroepen_at')
-                  ->with(['judokas.club', 'wedstrijden'])
+                $q->with(['judokas.club', 'wedstrijden'])
                   ->orderBy('nummer');
             }])
             ->orderBy('nummer')
@@ -298,10 +298,10 @@ class PubliekController extends Controller
                 // Cleanup invalid selections (gespeelde wedstrijden)
                 $mat->cleanupGespeeldeSelecties();
 
-                // Get first unfinished poule for this mat
-                $poule = $mat->poules->first();
+                // Get first unfinished (not afgeroepen) poule for display title
+                $poule = $mat->poules->whereNull('afgeroepen_at')->first();
 
-                // Collect all wedstrijden from all poules on this mat
+                // Collect all wedstrijden from ALL poules on this mat (including afgeroepen)
                 $alleWedstrijden = $mat->poules->flatMap(fn($p) => $p->wedstrijden);
 
                 // Groen/geel/blauw van MAT niveau

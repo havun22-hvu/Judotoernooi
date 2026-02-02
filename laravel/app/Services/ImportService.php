@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Enums\Band;
 use App\Enums\Geslacht;
+use App\Exceptions\ImportException;
 use App\Models\Club;
 use App\Models\Coach;
 use App\Models\CoachKaart;
 use App\Models\Judoka;
 use App\Models\Toernooi;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ImportService
@@ -139,55 +141,104 @@ class ImportService
 
     /**
      * Import participants from array data (CSV/Excel)
+     *
+     * @throws ImportException On critical database errors
      */
     public function importeerDeelnemers(Toernooi $toernooi, array $data, array $kolomMapping = []): array
     {
+        if (empty($data)) {
+            return [
+                'geimporteerd' => 0,
+                'overgeslagen' => 0,
+                'fouten' => ['Geen data om te importeren'],
+                'codes_bijgewerkt' => 0,
+            ];
+        }
+
         // Load preset config for classification
         $this->gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
 
-        return DB::transaction(function () use ($toernooi, $data, $kolomMapping) {
-            $resultaat = [
-                'geimporteerd' => 0,
-                'overgeslagen' => 0,
-                'fouten' => [],
-                'codes_bijgewerkt' => 0,
-            ];
+        try {
+            return DB::transaction(function () use ($toernooi, $data, $kolomMapping) {
+                $resultaat = [
+                    'geimporteerd' => 0,
+                    'overgeslagen' => 0,
+                    'fouten' => [],
+                    'codes_bijgewerkt' => 0,
+                ];
 
-            // Default column mapping
-            $mapping = array_merge([
-                'naam' => 'naam',
-                'band' => 'band',
-                'club' => 'club',
-                'gewicht' => 'gewicht',
-                'gewichtsklasse' => 'gewichtsklasse',
-                'geslacht' => 'geslacht',
-                'geboortejaar' => 'geboortejaar',
-                'telefoon' => 'telefoon',
-            ], $kolomMapping);
+                // Default column mapping
+                $mapping = array_merge([
+                    'naam' => 'naam',
+                    'band' => 'band',
+                    'club' => 'club',
+                    'gewicht' => 'gewicht',
+                    'gewichtsklasse' => 'gewichtsklasse',
+                    'geslacht' => 'geslacht',
+                    'geboortejaar' => 'geboortejaar',
+                    'telefoon' => 'telefoon',
+                ], $kolomMapping);
 
-            foreach ($data as $index => $rij) {
-                $rijNummer = $index + 2; // +2 for header and 0-index
+                foreach ($data as $index => $rij) {
+                    $rijNummer = $index + 2; // +2 for header and 0-index
 
-                try {
-                    $judoka = $this->verwerkRij($toernooi, $rij, $mapping);
-                    if ($judoka) {
-                        $resultaat['geimporteerd']++;
-                    } else {
-                        $resultaat['overgeslagen']++;
+                    // Skip completely empty rows
+                    if ($this->isEmptyRow($rij)) {
+                        continue;
                     }
-                } catch (\Exception $e) {
-                    $naam = $this->getWaarde($rij, $mapping['naam']) ?? '(geen naam)';
-                    $leesbareFout = $this->maakFoutLeesbaar($e->getMessage(), $naam);
-                    $resultaat['fouten'][] = "Rij {$rijNummer} ({$naam}): {$leesbareFout}";
-                    \Log::error("Import fout rij {$rijNummer}: {$e->getMessage()}", ['exception' => $e->getTraceAsString()]);
+
+                    try {
+                        $judoka = $this->verwerkRij($toernooi, $rij, $mapping);
+                        if ($judoka) {
+                            $resultaat['geimporteerd']++;
+                        } else {
+                            $resultaat['overgeslagen']++;
+                        }
+                    } catch (\Exception $e) {
+                        $naam = $this->getWaarde($rij, $mapping['naam']) ?? '(geen naam)';
+                        $leesbareFout = $this->maakFoutLeesbaar($e->getMessage(), $naam);
+                        $resultaat['fouten'][] = "Rij {$rijNummer} ({$naam}): {$leesbareFout}";
+                        Log::warning("Import fout rij {$rijNummer}", [
+                            'naam' => $naam,
+                            'error' => $e->getMessage(),
+                            'toernooi_id' => $toernooi->id,
+                        ]);
+                    }
                 }
+
+                // Create coaches and coach cards for clubs without one
+                $resultaat['coaches_aangemaakt'] = $this->maakCoachesVoorClubs($toernooi);
+
+                // Log summary
+                Log::info('Import completed', [
+                    'toernooi_id' => $toernooi->id,
+                    'imported' => $resultaat['geimporteerd'],
+                    'skipped' => $resultaat['overgeslagen'],
+                    'errors' => count($resultaat['fouten']),
+                ]);
+
+                return $resultaat;
+            }, 3); // 3 retries on deadlock
+        } catch (\Illuminate\Database\QueryException $e) {
+            Log::error('Import database error', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+            throw ImportException::databaseError($e->getMessage());
+        }
+    }
+
+    /**
+     * Check if a row is completely empty.
+     */
+    private function isEmptyRow(array $rij): bool
+    {
+        foreach ($rij as $value) {
+            if ($value !== null && trim((string)$value) !== '') {
+                return false;
             }
-
-            // Create coaches and coach cards for clubs without one
-            $resultaat['coaches_aangemaakt'] = $this->maakCoachesVoorClubs($toernooi);
-
-            return $resultaat;
-        });
+        }
+        return true;
     }
 
     /**

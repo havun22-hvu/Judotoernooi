@@ -35,6 +35,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Handle custom JudoToernooi exceptions
+        $exceptions->render(function (\App\Exceptions\JudoToernooiException $e, $request) {
+            $e->log();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $e->getUserMessage(),
+                    'error_code' => $e->getCode(),
+                ], 422);
+            }
+
+            return back()->with('error', $e->getUserMessage());
+        });
+
         // Handle 419 Page Expired (CSRF token expired) - redirect to login
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {

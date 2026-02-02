@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\MollieException;
 use App\Models\Organisator;
 use App\Models\Betaling;
 use App\Models\Judoka;
@@ -10,6 +11,7 @@ use App\Models\ToernooiBetaling;
 use App\Services\MollieService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class MollieController extends Controller
@@ -63,11 +65,24 @@ class MollieController extends Controller
             $tokens = $this->mollieService->exchangeCodeForTokens($code);
             $this->mollieService->saveTokensToToernooi($toernooi, $tokens);
 
+            Log::info('Mollie account connected', [
+                'toernooi_id' => $toernooi->id,
+                'organization' => $toernooi->mollie_organization_name,
+            ]);
+
             return redirect()->route('toernooi.edit', $toernooi->routeParams())
                 ->with('success', 'Mollie account succesvol gekoppeld!');
-        } catch (\Exception $e) {
+        } catch (MollieException $e) {
+            $e->log();
             return redirect()->route('toernooi.edit', $toernooi->routeParams())
-                ->with('error', 'Fout bij koppelen: ' . $e->getMessage());
+                ->with('error', $e->getUserMessage());
+        } catch (\Exception $e) {
+            Log::error('Unexpected error during Mollie OAuth', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+            return redirect()->route('toernooi.edit', $toernooi->routeParams())
+                ->with('error', 'Er ging iets mis bij het koppelen. Probeer het opnieuw.');
         }
     }
 
@@ -115,11 +130,21 @@ class MollieController extends Controller
 
             $this->updateBetalingStatus($betaling, $payment->status);
 
+            Log::info('Mollie webhook processed', [
+                'payment_id' => $paymentId,
+                'status' => $payment->status,
+            ]);
+
+            return response('OK', 200);
+        } catch (MollieException $e) {
+            $e->log();
+            // Return 200 to Mollie to prevent retries for known errors
             return response('OK', 200);
         } catch (\Exception $e) {
-            \Log::error('Mollie webhook error', [
+            Log::error('Unexpected Mollie webhook error', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
             return response('Error', 500);
         }
@@ -147,21 +172,31 @@ class MollieController extends Controller
         try {
             $apiKey = $this->mollieService->getPlatformApiKey();
 
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-            ])->get(config('services.mollie.api_url') . '/payments/' . $paymentId);
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->connectTimeout(5)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                ])->get(config('services.mollie.api_url') . '/payments/' . $paymentId);
 
             if (!$response->successful()) {
-                throw new \Exception('Mollie API error: ' . $response->body());
+                throw MollieException::apiError('/payments/' . $paymentId, $response->body(), $response->status());
             }
 
             $payment = $response->object();
 
             $this->updateToernooiBetalingStatus($betaling, $payment->status);
 
+            Log::info('Mollie toernooi webhook processed', [
+                'payment_id' => $paymentId,
+                'status' => $payment->status,
+            ]);
+
             return response('OK', 200);
+        } catch (MollieException $e) {
+            $e->log();
+            return response('OK', 200); // Prevent retries
         } catch (\Exception $e) {
-            \Log::error('Mollie toernooi webhook error', [
+            Log::error('Unexpected Mollie toernooi webhook error', [
                 'payment_id' => $paymentId,
                 'error' => $e->getMessage(),
             ]);

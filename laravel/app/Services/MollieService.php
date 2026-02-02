@@ -2,16 +2,25 @@
 
 namespace App\Services;
 
+use App\Exceptions\MollieException;
 use App\Models\Toernooi;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 
 class MollieService
 {
     private string $apiUrl;
     private string $oauthUrl;
     private string $oauthTokenUrl;
+
+    // Timeout configuration (seconds)
+    private const TIMEOUT = 15;
+    private const CONNECT_TIMEOUT = 5;
+    private const RETRY_TIMES = 2;
+    private const RETRY_SLEEP_MS = 500;
 
     public function __construct()
     {
@@ -59,6 +68,8 @@ class MollieService
 
     /**
      * Create a payment for a tournament
+     *
+     * @throws MollieException
      */
     public function createPayment(Toernooi $toernooi, array $data): object
     {
@@ -69,39 +80,36 @@ class MollieService
             $data = $this->addPlatformFeeToDescription($toernooi, $data);
         }
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post($this->apiUrl . '/payments', $data);
+        try {
+            $response = $this->makeApiRequest('POST', '/payments', $data, $apiKey);
 
-        if (!$response->successful()) {
-            Log::error('Mollie payment creation failed', [
+            Log::info('Mollie payment created', [
                 'toernooi_id' => $toernooi->id,
-                'mode' => $toernooi->mollie_mode,
-                'error' => $response->body(),
+                'payment_id' => $response->id ?? 'unknown',
+                'amount' => $data['amount']['value'] ?? 'unknown',
             ]);
-            throw new \Exception('Mollie API error: ' . $response->body());
-        }
 
-        return $response->object();
+            return $response;
+        } catch (MollieException $e) {
+            $e->log();
+            throw MollieException::paymentCreationFailed($e->getMessage(), $toernooi->id);
+        }
     }
 
     /**
      * Get payment status
+     *
+     * @throws MollieException
      */
     public function getPayment(Toernooi $toernooi, string $paymentId): object
     {
         $apiKey = $this->getApiKeyForToernooi($toernooi);
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-        ])->get($this->apiUrl . '/payments/' . $paymentId);
-
-        if (!$response->successful()) {
-            throw new \Exception('Mollie API error: ' . $response->body());
+        try {
+            return $this->makeApiRequest('GET', '/payments/' . $paymentId, [], $apiKey);
+        } catch (MollieException $e) {
+            throw MollieException::paymentNotFound($paymentId);
         }
-
-        return $response->object();
     }
 
     /**
@@ -161,75 +169,94 @@ class MollieService
 
     /**
      * Exchange authorization code for access tokens
+     *
+     * @throws MollieException
      */
     public function exchangeCodeForTokens(string $code): array
     {
-        $response = Http::asForm()->post($this->oauthTokenUrl . '/tokens', [
-            'grant_type' => 'authorization_code',
-            'client_id' => config('services.mollie.client_id'),
-            'client_secret' => config('services.mollie.client_secret'),
-            'code' => $code,
-            'redirect_uri' => config('services.mollie.redirect_uri'),
-        ]);
+        try {
+            $response = Http::timeout(self::TIMEOUT)
+                ->connectTimeout(self::CONNECT_TIMEOUT)
+                ->asForm()
+                ->post($this->oauthTokenUrl . '/tokens', [
+                    'grant_type' => 'authorization_code',
+                    'client_id' => config('services.mollie.client_id'),
+                    'client_secret' => config('services.mollie.client_secret'),
+                    'code' => $code,
+                    'redirect_uri' => config('services.mollie.redirect_uri'),
+                ]);
 
-        if (!$response->successful()) {
-            Log::error('Mollie OAuth token exchange failed', [
-                'error' => $response->body(),
-            ]);
-            throw new \Exception('OAuth token exchange failed: ' . $response->body());
+            if (!$response->successful()) {
+                throw MollieException::oauthError($response->body());
+            }
+
+            Log::info('Mollie OAuth tokens exchanged successfully');
+
+            return $response->json();
+        } catch (ConnectionException $e) {
+            throw MollieException::timeout('oauth/tokens');
         }
-
-        return $response->json();
     }
 
     /**
      * Refresh expired access token
+     *
+     * @throws MollieException
      */
     public function refreshAccessToken(Toernooi $toernooi): array
     {
-        $refreshToken = $this->decryptToken($toernooi->mollie_refresh_token);
-
-        $response = Http::asForm()->post($this->oauthTokenUrl . '/tokens', [
-            'grant_type' => 'refresh_token',
-            'client_id' => config('services.mollie.client_id'),
-            'client_secret' => config('services.mollie.client_secret'),
-            'refresh_token' => $refreshToken,
-        ]);
-
-        if (!$response->successful()) {
-            Log::error('Mollie OAuth token refresh failed', [
-                'toernooi_id' => $toernooi->id,
-                'error' => $response->body(),
-            ]);
-            throw new \Exception('OAuth token refresh failed: ' . $response->body());
+        if (!$toernooi->mollie_refresh_token) {
+            throw MollieException::tokenExpired($toernooi->id);
         }
 
-        $tokens = $response->json();
+        try {
+            $refreshToken = $this->decryptToken($toernooi->mollie_refresh_token);
 
-        // Update tournament with new tokens
-        $toernooi->update([
-            'mollie_access_token' => $this->encryptToken($tokens['access_token']),
-            'mollie_refresh_token' => $this->encryptToken($tokens['refresh_token']),
-            'mollie_token_expires_at' => now()->addSeconds($tokens['expires_in']),
-        ]);
+            $response = Http::timeout(self::TIMEOUT)
+                ->connectTimeout(self::CONNECT_TIMEOUT)
+                ->asForm()
+                ->post($this->oauthTokenUrl . '/tokens', [
+                    'grant_type' => 'refresh_token',
+                    'client_id' => config('services.mollie.client_id'),
+                    'client_secret' => config('services.mollie.client_secret'),
+                    'refresh_token' => $refreshToken,
+                ]);
 
-        return $tokens;
+            if (!$response->successful()) {
+                throw MollieException::tokenExpired($toernooi->id);
+            }
+
+            $tokens = $response->json();
+
+            // Update tournament with new tokens
+            $toernooi->update([
+                'mollie_access_token' => $this->encryptToken($tokens['access_token']),
+                'mollie_refresh_token' => $this->encryptToken($tokens['refresh_token']),
+                'mollie_token_expires_at' => now()->addSeconds($tokens['expires_in']),
+            ]);
+
+            Log::info('Mollie OAuth token refreshed', ['toernooi_id' => $toernooi->id]);
+
+            return $tokens;
+        } catch (ConnectionException $e) {
+            throw MollieException::timeout('oauth/tokens');
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            throw MollieException::tokenExpired($toernooi->id);
+        }
     }
 
     /**
      * Get organization info from Mollie
+     *
+     * @throws MollieException
      */
     public function getOrganization(string $accessToken): object
     {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $accessToken,
-        ])->get($this->apiUrl . '/organizations/me');
-
-        if (!$response->successful()) {
-            throw new \Exception('Failed to get organization: ' . $response->body());
+        try {
+            return $this->makeApiRequest('GET', '/organizations/me', [], $accessToken);
+        } catch (MollieException $e) {
+            throw MollieException::apiError('/organizations/me', $e->getMessage());
         }
-
-        return $response->object();
     }
 
     /**
@@ -382,5 +409,67 @@ class MollieService
             'id' => $paymentId,
             'status' => $status,
         ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | API Request Helper
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Make an API request to Mollie with timeout, retry, and error handling.
+     *
+     * @throws MollieException
+     */
+    private function makeApiRequest(string $method, string $endpoint, array $data, string $apiKey): object
+    {
+        $url = $this->apiUrl . $endpoint;
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt < self::RETRY_TIMES) {
+            $attempt++;
+
+            try {
+                $request = Http::timeout(self::TIMEOUT)
+                    ->connectTimeout(self::CONNECT_TIMEOUT)
+                    ->withHeaders([
+                        'Authorization' => 'Bearer ' . $apiKey,
+                        'Content-Type' => 'application/json',
+                    ]);
+
+                $response = match (strtoupper($method)) {
+                    'GET' => $request->get($url),
+                    'POST' => $request->post($url, $data),
+                    'DELETE' => $request->delete($url),
+                    default => throw new \InvalidArgumentException("Unsupported HTTP method: {$method}"),
+                };
+
+                if ($response->successful()) {
+                    return $response->object();
+                }
+
+                // Non-retryable errors (4xx)
+                if ($response->clientError()) {
+                    throw MollieException::apiError($endpoint, $response->body(), $response->status());
+                }
+
+                // Server error (5xx) - retry
+                $lastException = MollieException::apiError($endpoint, $response->body(), $response->status());
+
+            } catch (ConnectionException $e) {
+                $lastException = MollieException::timeout($endpoint);
+            } catch (MollieException $e) {
+                throw $e; // Don't retry client errors
+            }
+
+            // Wait before retry
+            if ($attempt < self::RETRY_TIMES) {
+                usleep(self::RETRY_SLEEP_MS * 1000);
+            }
+        }
+
+        throw $lastException ?? MollieException::apiError($endpoint, 'Unknown error');
     }
 }
