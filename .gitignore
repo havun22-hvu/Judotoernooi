@@ -19,3 +19,4 @@ __pycache__/
 # Test/debug files
 laravel/scripts/debug_output.json
 laravel/scripts/test_input.json
+laravel/.phpunit.cache/
