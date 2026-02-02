@@ -334,6 +334,9 @@ class MatController extends Controller
             'gereedmaken_wedstrijd_id' => $validated['gereedmaken_wedstrijd_id'] ?? null,
         ]);
 
+        // Refresh to get the actual saved values
+        $mat->refresh();
+
         return response()->json([
             'success' => true,
             'mat' => [
