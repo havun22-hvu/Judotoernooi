@@ -2483,16 +2483,32 @@
             <span class="mr-2">🌐</span> NETWERK CONFIGURATIE
         </h2>
 
-        <!-- Uitleg WiFi vs Internet -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 class="font-bold text-blue-800 mb-2">📡 WiFi vs Internet - wat is het verschil?</h3>
+        <!-- Uitleg WiFi vs Internet met live status -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-bold text-blue-800">📡 WiFi vs Internet - wat is het verschil?</h3>
+                <span class="text-xs text-gray-500">Laatst gecontroleerd: <span x-text="laatsteCheck"></span></span>
+            </div>
             <div class="grid md:grid-cols-2 gap-4 text-sm">
                 <div class="bg-white p-3 rounded border">
-                    <strong class="text-blue-700">WiFi (lokaal netwerk)</strong>
+                    <div class="flex items-center justify-between">
+                        <strong class="text-blue-700">WiFi (lokaal netwerk)</strong>
+                        <span class="text-xs px-2 py-0.5 rounded"
+                              :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'"
+                              x-text="wifiStatus === 'connected' ? '🟢 OK' : '🔴 Offline'"></span>
+                    </div>
                     <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop in dezelfde ruimte. Werkt ook zonder internet!</p>
                 </div>
                 <div class="bg-white p-3 rounded border">
-                    <strong class="text-green-700">Internet (cloud)</strong>
+                    <div class="flex items-center justify-between">
+                        <strong class="text-green-700">Internet (cloud)</strong>
+                        <span class="text-xs px-2 py-0.5 rounded"
+                              :class="internetStatus === 'connected' ? 'bg-green-200 text-green-800' : (internetStatus === 'slow' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800')">
+                            <span x-show="internetStatus === 'connected'" x-text="'🟢 ' + latency + 'ms'"></span>
+                            <span x-show="internetStatus === 'slow'" x-text="'🟡 ' + latency + 'ms'"></span>
+                            <span x-show="internetStatus === 'offline'">🔴 Offline</span>
+                        </span>
+                    </div>
                     <p class="text-gray-600 mt-1">Verbinding met judotournament.org voor live sync. Vereist werkend internet.</p>
                 </div>
             </div>
@@ -2676,65 +2692,6 @@
     </div>
 
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
-    <!-- Live verbinding status -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="verbindingStatus()">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📡</span> VERBINDING STATUS
-            <span class="ml-auto text-sm font-normal text-gray-500">Laatst gecontroleerd: <span x-text="laatsteCheck"></span></span>
-        </h2>
-
-        <div class="grid md:grid-cols-2 gap-4 mb-4">
-            <!-- WiFi Status -->
-            <div class="p-4 rounded-lg border-2 transition-all"
-                 :class="wifiStatus === 'connected' ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'">
-                <div class="flex items-center gap-3">
-                    <div class="text-3xl" x-text="wifiStatus === 'connected' ? '🟢' : '🔴'"></div>
-                    <div>
-                        <h3 class="font-bold" :class="wifiStatus === 'connected' ? 'text-green-800' : 'text-red-800'">
-                            WiFi (lokaal netwerk)
-                        </h3>
-                        <p class="text-sm" :class="wifiStatus === 'connected' ? 'text-green-600' : 'text-red-600'"
-                           x-text="wifiStatus === 'connected' ? 'Verbonden - tablets kunnen elkaar bereiken' : 'Niet verbonden'"></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Internet Status -->
-            <div class="p-4 rounded-lg border-2 transition-all"
-                 :class="internetStatus === 'connected' ? 'bg-green-50 border-green-300' : (internetStatus === 'slow' ? 'bg-yellow-50 border-yellow-300' : 'bg-red-50 border-red-300')">
-                <div class="flex items-center gap-3">
-                    <div class="text-3xl" x-text="internetStatus === 'connected' ? '🟢' : (internetStatus === 'slow' ? '🟡' : '🔴')"></div>
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between">
-                            <h3 class="font-bold" :class="internetStatus === 'connected' ? 'text-green-800' : (internetStatus === 'slow' ? 'text-yellow-800' : 'text-red-800')">
-                                Internet (cloud)
-                            </h3>
-                            <span x-show="latency" class="text-sm font-mono px-2 py-1 rounded"
-                                  :class="latency < 500 ? 'bg-green-200 text-green-800' : (latency < 2000 ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800')"
-                                  x-text="latency + ' ms'"></span>
-                        </div>
-                        <p class="text-sm" :class="internetStatus === 'connected' ? 'text-green-600' : (internetStatus === 'slow' ? 'text-yellow-600' : 'text-red-600')">
-                            <span x-show="internetStatus === 'connected'">Verbonden met judotournament.org</span>
-                            <span x-show="internetStatus === 'slow'">Trage verbinding</span>
-                            <span x-show="internetStatus === 'offline'">Geen verbinding met cloud</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Waarschuwing bij problemen -->
-        <div x-show="internetStatus === 'offline'" class="p-4 bg-red-100 border border-red-300 rounded-lg">
-            <p class="text-red-800 font-medium">⚠️ Internet is offline! Overweeg over te schakelen naar de lokale server.</p>
-        </div>
-
-        <button @click="checkVerbinding()" type="button"
-                class="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
-            🔄 Opnieuw controleren
-        </button>
-    </div>
-
-    <!-- Bij storing -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🔄</span> BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER
