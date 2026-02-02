@@ -282,19 +282,12 @@
             </div>
             <div class="w-40">
                 <label class="block text-gray-600 text-sm mb-1">Mat</label>
-                @if(isset($isDeviceBound) && $isDeviceBound && $matten->count() === 1)
-                    {{-- Device-bound: alleen deze mat, niet wijzigbaar --}}
-                    <div class="w-full border rounded px-3 py-2 text-sm bg-gray-200 text-gray-700 font-medium">
-                        Mat {{ $matten->first()->nummer }}
-                    </div>
-                @else
-                    <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
-                        <option value="">Selecteer...</option>
-                        @foreach($matten as $mat)
-                        <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
-                        @endforeach
-                    </select>
-                @endif
+                <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
+                    <option value="">Selecteer...</option>
+                    @foreach($matten as $mat)
+                    <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
+                    @endforeach
+                </select>
             </div>
         </div>
     </div>
@@ -799,10 +792,11 @@ function matInterface() {
     const mattenData = @json($matten->map(fn($m) => ['id' => $m->id, 'nummer' => $m->nummer]));
     const voorgeselecteerdBlok = blokNummer ? blokkenData.find(b => b.nummer == blokNummer) : null;
     const isDeviceBound = {{ isset($isDeviceBound) && $isDeviceBound ? 'true' : 'false' }};
+    const gebondenMatNummer = {{ isset($matNummer) && $matNummer ? $matNummer : 'null' }};
 
     // LocalStorage key voor dit toernooi (include mat for device-bound)
-    const storageKey = isDeviceBound && mattenData.length === 1
-        ? 'mat_interface_{{ $toernooi->id }}_mat_' + mattenData[0].id
+    const storageKey = isDeviceBound && gebondenMatNummer
+        ? 'mat_interface_{{ $toernooi->id }}_mat_' + gebondenMatNummer
         : 'mat_interface_{{ $toernooi->id }}';
 
     // Laad laatst geselecteerde blok/mat uit localStorage
@@ -826,8 +820,11 @@ function matInterface() {
         localStorage.removeItem(storageKey);
     }
 
-    // For device-bound: always use the single mat
-    const forcedMatId = isDeviceBound && mattenData.length === 1 ? String(mattenData[0].id) : null;
+    // For device-bound: find mat by gebonden nummer and pre-select it
+    const gebondenMat = isDeviceBound && gebondenMatNummer
+        ? mattenData.find(m => m.nummer == gebondenMatNummer)
+        : null;
+    const forcedMatId = gebondenMat ? String(gebondenMat.id) : null;
 
     return {
         blokId: savedBlokId || (voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : ''),
@@ -837,11 +834,12 @@ function matInterface() {
         blokkenData,
         mattenData,
         isDeviceBound,
+        gebondenMatNummer,
         debugSlots: false,  // Toggle om slot nummers te tonen
 
         init() {
-            // Device-bound: always use forced mat
-            if (isDeviceBound && forcedMatId) {
+            // Device-bound: always pre-select the bound mat (but allow switching)
+            if (isDeviceBound && forcedMatId && !savedMatId) {
                 this.matId = forcedMatId;
             }
 
@@ -849,8 +847,8 @@ function matInterface() {
             if (this.blokId && this.matId) {
                 this.laadWedstrijden();
             } else if (this.blokId && @json($matten->count()) > 0) {
-                // Fallback: eerste mat selecteren
-                this.matId = '{{ $matten->first()?->id }}';
+                // Fallback: eerste mat selecteren (of gebonden mat)
+                this.matId = forcedMatId || '{{ $matten->first()?->id }}';
                 this.laadWedstrijden();
             }
         },
