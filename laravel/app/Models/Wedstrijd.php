@@ -133,6 +133,23 @@ class Wedstrijd extends Model
     }
 
     /**
+     * Check of wedstrijd ECHT gespeeld is (met winnaar, niet alleen is_gespeeld flag)
+     * Gebruik dit ipv alleen is_gespeeld te checken
+     */
+    public function isEchtGespeeld(): bool
+    {
+        return $this->is_gespeeld && $this->winnaar_id !== null;
+    }
+
+    /**
+     * Check of wedstrijd nog te spelen is (niet gespeeld of geen winnaar)
+     */
+    public function isNogTeSpelen(): bool
+    {
+        return !$this->is_gespeeld || $this->winnaar_id === null;
+    }
+
+    /**
      * Bereken winnaar doel-locatie op basis van locatie_wit
      * Locatie 1,2 → 1 | Locatie 3,4 → 2 | Locatie 5,6 → 3 | etc.
      */
