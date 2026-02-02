@@ -2804,7 +2804,7 @@
                 // Internet check (ping naar cloud)
                 const startTime = Date.now();
                 try {
-                    const response = await fetch('/api/ping', {
+                    const response = await fetch('/ping', {
                         method: 'GET',
                         cache: 'no-store',
                         signal: AbortSignal.timeout(5000)
