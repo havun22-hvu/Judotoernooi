@@ -19,6 +19,7 @@ use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Controllers\MollieController;
 use App\Http\Controllers\DeviceToegangController;
 use App\Http\Controllers\DeviceToegangBeheerController;
+use App\Http\Controllers\VrijwilligerController;
 use App\Http\Controllers\GewichtsklassenPresetController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
@@ -195,6 +196,14 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('{toegang}/regenerate-pin', [DeviceToegangBeheerController::class, 'regeneratePin'])->name('regenerate-pin');
         Route::delete('{toegang}', [DeviceToegangBeheerController::class, 'destroy'])->name('destroy');
         Route::post('reset-all', [DeviceToegangBeheerController::class, 'resetAll'])->name('reset-all');
+    });
+
+    // Vrijwilligers API routes (per organisator, via toernooi context)
+    Route::middleware(CheckToernooiRol::class . ':admin')->prefix('api/vrijwilligers')->name('vrijwilligers.')->group(function () {
+        Route::get('/', [VrijwilligerController::class, 'index'])->name('index');
+        Route::post('/', [VrijwilligerController::class, 'store'])->name('store');
+        Route::put('{vrijwilliger}', [VrijwilligerController::class, 'update'])->name('update');
+        Route::delete('{vrijwilliger}', [VrijwilligerController::class, 'destroy'])->name('destroy');
     });
 
     // Admin only routes

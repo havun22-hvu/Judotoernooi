@@ -668,6 +668,29 @@
 
         <!-- Favorieten Tab -->
         <div x-show="activeTab === 'favorieten'" x-cloak>
+            <!-- Notificatie banner -->
+            <div x-show="favorieten.length > 0 && !notificatiesAan" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">🔔</span>
+                        <div>
+                            <p class="font-medium text-blue-800 text-sm">Meldingen aanzetten?</p>
+                            <p class="text-blue-600 text-xs">Krijg een melding als je favoriet moet klaarmaken</p>
+                        </div>
+                    </div>
+                    <button @click="vraagNotificatiePermissie()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium">
+                        Aanzetten
+                    </button>
+                </div>
+            </div>
+            <div x-show="favorieten.length > 0 && notificatiesAan" class="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
+                <div class="flex items-center gap-2 text-green-700 text-sm">
+                    <span>🔔</span>
+                    <span>Meldingen staan aan - je krijgt een signaal als je favoriet moet klaarmaken</span>
+                </div>
+            </div>
+
             <template x-if="favorieten.length === 0">
                 <div class="text-center py-12 text-gray-500">
                     <p class="text-xl">Geen favorieten</p>
@@ -935,6 +958,7 @@
 
     <script>
         const STORAGE_KEY = 'judotoernooi_favorieten_{{ $toernooi->id }}';
+        const NOTIFIED_KEY = 'judotoernooi_notified_{{ $toernooi->id }}';
         const poulesGegenereerd = {{ $poulesGegenereerd ? 'true' : 'false' }};
 
         // Judoka names cache for display
@@ -952,8 +976,22 @@
                 heeftGezocht: false,
                 poulesGegenereerd: poulesGegenereerd,
                 liveLoading: false,
+                notificatiesAan: false,
+                notifiedState: {}, // Track welke notificaties al verstuurd zijn
 
                 init() {
+                    // Load notification state
+                    try {
+                        const notified = localStorage.getItem(NOTIFIED_KEY);
+                        if (notified) this.notifiedState = JSON.parse(notified);
+                    } catch (e) {
+                        this.notifiedState = {};
+                    }
+
+                    // Check notification permission
+                    if ('Notification' in window) {
+                        this.notificatiesAan = Notification.permission === 'granted';
+                    }
                     // Load favorites from localStorage first
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
@@ -1039,12 +1077,142 @@
                         }
 
                         const data = await response.json();
+                        const oldPoules = this.favorietenPoules;
                         this.favorietenPoules = data.poules || [];
+
+                        // Check for status changes and send notifications
+                        this.checkAndNotify(oldPoules, this.favorietenPoules);
                     } catch (error) {
                         console.error('Error loading poules:', error);
                         this.favorietenPoules = [];
                     } finally {
                         this.loadingPoules = false;
+                    }
+                },
+
+                // Vraag notificatie permissie
+                async vraagNotificatiePermissie() {
+                    if (!('Notification' in window)) {
+                        alert('Je browser ondersteunt geen notificaties');
+                        return;
+                    }
+
+                    const permission = await Notification.requestPermission();
+                    this.notificatiesAan = permission === 'granted';
+
+                    if (permission === 'granted') {
+                        this.speelGeluid('klaar');
+                        new Notification('Notificaties aan! 🔔', {
+                            body: 'Je krijgt nu een melding als je favoriet moet klaarmaken of aan de beurt is.',
+                            icon: '/icon-192x192.png',
+                            tag: 'test'
+                        });
+                    }
+                },
+
+                // Check status veranderingen en stuur notificaties
+                checkAndNotify(oldPoules, newPoules) {
+                    if (!this.notificatiesAan) return;
+
+                    newPoules.forEach(poule => {
+                        poule.judokas.forEach(judoka => {
+                            if (!judoka.is_favoriet) return;
+
+                            const key = `${judoka.id}`;
+                            const oldState = this.notifiedState[key] || {};
+
+                            // Check "aan de beurt" (groen) - hoogste prioriteit
+                            if (judoka.is_aan_de_beurt && !oldState.aanDeBeurt) {
+                                this.stuurNotificatie(judoka.naam, 'aanDeBeurt', poule.mat_label);
+                                this.notifiedState[key] = { ...oldState, aanDeBeurt: true, volgende: true };
+                            }
+                            // Check "volgende" (geel) - klaarmaken
+                            else if (judoka.is_volgende && !judoka.is_aan_de_beurt && !oldState.volgende) {
+                                this.stuurNotificatie(judoka.naam, 'volgende', poule.mat_label);
+                                this.notifiedState[key] = { ...oldState, volgende: true };
+                            }
+
+                            // Reset state als wedstrijd gespeeld is (niet meer aan de beurt)
+                            if (!judoka.is_aan_de_beurt && !judoka.is_volgende && oldState.aanDeBeurt) {
+                                this.notifiedState[key] = {};
+                            }
+                        });
+                    });
+
+                    // Save state
+                    localStorage.setItem(NOTIFIED_KEY, JSON.stringify(this.notifiedState));
+                },
+
+                // Stuur browser notificatie
+                stuurNotificatie(naam, type, mat) {
+                    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+                    let title, body, geluid;
+                    if (type === 'aanDeBeurt') {
+                        title = `🥋 ${naam} is aan de beurt!`;
+                        body = `Nu op ${mat || 'de mat'}`;
+                        geluid = 'aanDeBeurt';
+                    } else {
+                        title = `⏳ ${naam} moet klaarmaken!`;
+                        body = `Volgende wedstrijd op ${mat || 'de mat'}`;
+                        geluid = 'klaar';
+                    }
+
+                    // Browser notificatie
+                    try {
+                        new Notification(title, {
+                            body: body,
+                            icon: '/icon-192x192.png',
+                            tag: `${naam}-${type}`,
+                            requireInteraction: true,
+                            vibrate: [200, 100, 200]
+                        });
+                    } catch (e) {
+                        console.log('Notification error:', e);
+                    }
+
+                    // Geluid + vibratie
+                    this.speelGeluid(geluid);
+                    this.vibreer(type);
+                },
+
+                // Speel notificatie geluid
+                speelGeluid(type) {
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        if (type === 'aanDeBeurt') {
+                            // Urgenter geluid - hoger en langer
+                            osc.frequency.value = 880;
+                            gain.gain.value = 0.3;
+                            osc.start();
+                            setTimeout(() => { osc.frequency.value = 1100; }, 150);
+                            setTimeout(() => { osc.frequency.value = 880; }, 300);
+                            setTimeout(() => { osc.stop(); ctx.close(); }, 500);
+                        } else {
+                            // Zachter geluid voor klaarmaken
+                            osc.frequency.value = 660;
+                            gain.gain.value = 0.2;
+                            osc.start();
+                            setTimeout(() => { osc.frequency.value = 880; }, 200);
+                            setTimeout(() => { osc.stop(); ctx.close(); }, 350);
+                        }
+                    } catch (e) {
+                        console.log('Audio error:', e);
+                    }
+                },
+
+                // Vibreer telefoon
+                vibreer(type) {
+                    if (!('vibrate' in navigator)) return;
+                    if (type === 'aanDeBeurt') {
+                        navigator.vibrate([200, 100, 200, 100, 300]);
+                    } else {
+                        navigator.vibrate([200, 100, 200]);
                     }
                 },
 

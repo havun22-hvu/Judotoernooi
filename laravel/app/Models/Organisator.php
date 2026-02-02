@@ -195,6 +195,14 @@ class Organisator extends Authenticatable
     }
 
     /**
+     * Get all vrijwilligers belonging to this organisator
+     */
+    public function vrijwilligers(): HasMany
+    {
+        return $this->hasMany(Vrijwilliger::class);
+    }
+
+    /**
      * Get all toernooi betalingen for this organisator
      */
     public function toernooiBetalingen(): HasMany

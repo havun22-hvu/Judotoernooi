@@ -73,7 +73,10 @@ Eén link/knop opent popup voor vrijwilligers beheer:
 Bij device toegang aanmaken/bewerken:
 1. Dropdown "Selecteer vrijwilliger" (gefilterd op rol)
 2. Bij selectie: naam wordt automatisch ingevuld
-3. WhatsApp icoon naast URL knop → opent `https://wa.me/{nummer}?text={bericht}`
+3. Knoppen per toegang:
+   - **📋 URL** - kopieer link naar klembord (bestaand)
+   - **📋 PIN** - kopieer pincode naar klembord (bestaand)
+   - **WhatsApp** - opent `https://wa.me/{nummer}?text={bericht}` (nieuw, alleen als telefoon bekend)
 
 ### WhatsApp Bericht
 
