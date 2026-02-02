@@ -1307,8 +1307,9 @@ function matInterface() {
             if (poule.huidige_wedstrijd_id) {
                 volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id && !w.is_gespeeld);
             }
-            // Auto-fallback: tweede niet-gespeelde (na huidige)
-            if (!volgende && huidige) {
+            // Auto-fallback: tweede niet-gespeelde (na huidige) - alleen als niet expliciet uitgeschakeld
+            const geenFallback = this.geenAutoFallback && this.geenAutoFallback[poule.poule_id];
+            if (!volgende && huidige && !geenFallback) {
                 volgende = wedstrijden.find(w => !w.is_gespeeld && w.id !== huidige.id);
             }
 
@@ -1367,6 +1368,9 @@ function matInterface() {
 
             // Klik op GELE wedstrijd = deselecteren (wordt neutraal)
             if (volgende && wedstrijd.id === volgende.id) {
+                // Onderdruk auto-fallback voor deze poule
+                if (!this.geenAutoFallback) this.geenAutoFallback = {};
+                this.geenAutoFallback[poule.poule_id] = true;
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, null);
                 return;
             }
@@ -1379,10 +1383,12 @@ function matInterface() {
                     alert('Er is al een volgende wedstrijd geselecteerd (geel).\n\nKlik eerst op de gele wedstrijd om die te deselecteren.');
                     return;
                 }
-                // Geen gele, dus deze wordt geel
+                // Geen gele, dus deze wordt geel - reset auto-fallback onderdrukking
+                if (this.geenAutoFallback) delete this.geenAutoFallback[poule.poule_id];
                 await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, wedstrijd.id);
             } else {
-                // Geen groene, deze wordt groen (geen automatische gele)
+                // Geen groene, deze wordt groen (geen automatische gele) - reset auto-fallback onderdrukking
+                if (this.geenAutoFallback) delete this.geenAutoFallback[poule.poule_id];
                 await this.setWedstrijdStatus(poule, wedstrijd.id, null);
             }
         },
