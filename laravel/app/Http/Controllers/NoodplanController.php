@@ -176,7 +176,7 @@ class NoodplanController extends Controller
     public function printCoachkaarten(Organisator $organisator, Toernooi $toernooi): View
     {
         $coachkaarten = CoachKaart::where('toernooi_id', $toernooi->id)
-            ->with(['club', 'coach'])
+            ->with(['club'])
             ->orderBy('club_id')
             ->get();
 
@@ -190,7 +190,7 @@ class NoodplanController extends Controller
     {
         $coachkaarten = CoachKaart::where('toernooi_id', $toernooi->id)
             ->where('club_id', $club->id)
-            ->with(['club', 'coach'])
+            ->with(['club'])
             ->get();
 
         return view('pages.noodplan.coachkaarten', compact('toernooi', 'coachkaarten', 'club'));
