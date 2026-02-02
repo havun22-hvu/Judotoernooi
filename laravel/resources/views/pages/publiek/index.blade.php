@@ -436,110 +436,128 @@
         </div>
 
         <!-- Live Matten Tab -->
-        @if($poulesGegenereerd && count($matten) > 0)
+        @if($poulesGegenereerd)
         <div x-show="activeTab === 'live'" x-cloak>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                @foreach($matten as $mat)
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <!-- Mat Header -->
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-bold">Mat {{ $mat->nummer }}</span>
-                            @if($mat->huidigePoule)
-                            <span class="bg-green-500 px-2 py-1 rounded text-xs">LIVE</span>
-                            @else
-                            <span class="bg-gray-500 px-2 py-1 rounded text-xs">WACHT</span>
-                            @endif
-                        </div>
-                        @if($mat->huidigePoule)
-                        <div class="text-blue-200 text-sm mt-1">
-                            #{{ $mat->huidigePoule->nummer }} {{ $mat->huidigePoule->leeftijdsklasse ?? '-' }}
-                            @if($mat->huidigePoule->gewichtsklasse && $mat->huidigePoule->gewichtsklasse !== 'onbekend')
-                            {{ $mat->huidigePoule->gewichtsklasse }}
-                            @endif
-                        </div>
-                        @endif
-                    </div>
-
-                    @if($mat->huidigePoule)
-                    <!-- Groen: Speelt nu -->
-                    @if($mat->huidigePoule->groeneWedstrijd)
-                    <div class="bg-green-100 border-l-4 border-green-500 px-4 py-3">
-                        <div class="flex items-center gap-2 text-green-800 font-bold text-sm mb-2">
-                            <span class="text-lg">🥋</span> SPEELT NU
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
-                                    <span class="font-medium">{{ $mat->huidigePoule->groeneWedstrijd->wit?->naam ?? '?' }}</span>
-                                </div>
-                                <div class="text-gray-500 text-xs ml-6">{{ $mat->huidigePoule->groeneWedstrijd->wit?->club?->naam ?? '' }}</div>
-                            </div>
-                            <span class="text-gray-400 font-bold mx-3">vs</span>
-                            <div class="flex-1 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <span class="font-medium">{{ $mat->huidigePoule->groeneWedstrijd->blauw?->naam ?? '?' }}</span>
-                                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
-                                </div>
-                                <div class="text-gray-500 text-xs mr-6">{{ $mat->huidigePoule->groeneWedstrijd->blauw?->club?->naam ?? '' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Geel: Klaar maken -->
-                    @if($mat->huidigePoule->geleWedstrijd)
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 px-4 py-3">
-                        <div class="flex items-center gap-2 text-yellow-800 font-bold text-sm mb-2">
-                            <span class="text-lg">⏳</span> KLAAR MAKEN
-                        </div>
-                        <div class="flex items-center justify-between text-sm">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
-                                    <span class="font-medium">{{ $mat->huidigePoule->geleWedstrijd->wit?->naam ?? '?' }}</span>
-                                </div>
-                                <div class="text-gray-500 text-xs ml-6">{{ $mat->huidigePoule->geleWedstrijd->wit?->club?->naam ?? '' }}</div>
-                            </div>
-                            <span class="text-gray-400 font-bold mx-3">vs</span>
-                            <div class="flex-1 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <span class="font-medium">{{ $mat->huidigePoule->geleWedstrijd->blauw?->naam ?? '?' }}</span>
-                                    <span class="w-4 h-4 rounded-full bg-blue-500"></span>
-                                </div>
-                                <div class="text-gray-500 text-xs mr-6">{{ $mat->huidigePoule->geleWedstrijd->blauw?->club?->naam ?? '' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
-                    <!-- Stand -->
-                    <div class="border-t bg-gray-50 px-4 py-2">
-                        <div class="text-xs font-bold text-gray-500 mb-1">STAND</div>
-                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                            @foreach($mat->huidigePoule->standings as $index => $standing)
-                            <div class="flex items-center gap-1">
-                                <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold
-                                    @if($index === 0) bg-yellow-400 text-yellow-900
-                                    @elseif($index === 1) bg-gray-300 text-gray-800
-                                    @elseif($index === 2) bg-orange-300 text-orange-900
-                                    @else bg-gray-200 text-gray-600
-                                    @endif">{{ $index + 1 }}</span>
-                                <span class="font-medium">{{ Str::limit($standing['judoka']->naam, 12) }}</span>
-                                <span class="text-blue-600 font-bold">{{ $standing['wp'] }}</span>
-                            </div>
-                            @endforeach
-                        </div>
-                    </div>
-                    @else
-                    <div class="p-8 text-center text-gray-500">
-                        <div class="text-4xl mb-2">⏳</div>
-                        <p>Wacht op volgende poule</p>
-                    </div>
-                    @endif
+            <!-- Loading state -->
+            <template x-if="liveMatten.length === 0 && liveLoading">
+                <div class="text-center py-8">
+                    <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p class="text-gray-500">Laden...</p>
                 </div>
-                @endforeach
+            </template>
+
+            <!-- No matten -->
+            <template x-if="liveMatten.length === 0 && !liveLoading">
+                <div class="text-center py-8 text-gray-500">
+                    <div class="text-4xl mb-2">⏳</div>
+                    <p>Geen actieve matten</p>
+                </div>
+            </template>
+
+            <!-- Matten grid -->
+            <div x-show="liveMatten.length > 0" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <template x-for="mat in liveMatten" :key="mat.id">
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <!-- Mat Header -->
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></span>
+                                <span x-show="mat.groen" class="bg-green-500 px-2 py-1 rounded text-xs">LIVE</span>
+                                <span x-show="!mat.groen" class="bg-gray-500 px-2 py-1 rounded text-xs">WACHT</span>
+                            </div>
+                            <div x-show="mat.poule_titel" class="text-blue-200 text-sm mt-1" x-text="mat.poule_titel"></div>
+                        </div>
+
+                        <!-- Groen: Speelt nu -->
+                        <template x-if="mat.groen">
+                            <div class="bg-green-100 border-l-4 border-green-500 px-4 py-3">
+                                <div class="flex items-center gap-2 text-green-800 font-bold text-sm mb-2">
+                                    <span class="text-lg">🥋</span> SPEELT NU
+                                </div>
+                                <div x-show="mat.groen.poule_titel !== mat.poule_titel" class="text-green-700 text-xs mb-2" x-text="mat.groen.poule_titel"></div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
+                                            <span class="font-medium" x-text="mat.groen.wit?.naam || '?'"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs ml-6" x-text="mat.groen.wit?.club || ''"></div>
+                                    </div>
+                                    <span class="text-gray-400 font-bold mx-3">vs</span>
+                                    <div class="flex-1 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span class="font-medium" x-text="mat.groen.blauw?.naam || '?'"></span>
+                                            <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs mr-6" x-text="mat.groen.blauw?.club || ''"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Geel: Klaar maken -->
+                        <template x-if="mat.geel">
+                            <div class="bg-yellow-50 border-l-4 border-yellow-400 px-4 py-3">
+                                <div class="flex items-center gap-2 text-yellow-800 font-bold text-sm mb-2">
+                                    <span class="text-lg">⏳</span> KLAAR MAKEN
+                                </div>
+                                <div x-show="mat.geel.poule_titel !== mat.poule_titel" class="text-yellow-700 text-xs mb-2" x-text="mat.geel.poule_titel"></div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
+                                            <span class="font-medium" x-text="mat.geel.wit?.naam || '?'"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs ml-6" x-text="mat.geel.wit?.club || ''"></div>
+                                    </div>
+                                    <span class="text-gray-400 font-bold mx-3">vs</span>
+                                    <div class="flex-1 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span class="font-medium" x-text="mat.geel.blauw?.naam || '?'"></span>
+                                            <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs mr-6" x-text="mat.geel.blauw?.club || ''"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Blauw: Gereed maken -->
+                        <template x-if="mat.blauw">
+                            <div class="bg-blue-50 border-l-4 border-blue-400 px-4 py-3">
+                                <div class="flex items-center gap-2 text-blue-800 font-bold text-sm mb-2">
+                                    <span class="text-lg">📋</span> GEREED MAKEN
+                                </div>
+                                <div x-show="mat.blauw.poule_titel !== mat.poule_titel" class="text-blue-700 text-xs mb-2" x-text="mat.blauw.poule_titel"></div>
+                                <div class="flex items-center justify-between text-sm">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-4 h-4 rounded-full bg-white border-2 border-gray-400"></span>
+                                            <span class="font-medium" x-text="mat.blauw.wit?.naam || '?'"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs ml-6" x-text="mat.blauw.wit?.club || ''"></div>
+                                    </div>
+                                    <span class="text-gray-400 font-bold mx-3">vs</span>
+                                    <div class="flex-1 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span class="font-medium" x-text="mat.blauw.blauw?.naam || '?'"></span>
+                                            <span class="w-4 h-4 rounded-full bg-blue-500"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs mr-6" x-text="mat.blauw.blauw?.club || ''"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Geen wedstrijden -->
+                        <template x-if="!mat.groen && !mat.geel && !mat.blauw">
+                            <div class="p-8 text-center text-gray-500">
+                                <div class="text-4xl mb-2">⏳</div>
+                                <p>Wacht op volgende wedstrijd</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </div>
 
             <div class="text-center mt-4">
@@ -555,6 +573,7 @@
                     </svg>
                     <span x-text="liveLoading ? 'Laden...' : 'Ververs'"></span>
                 </button>
+                <p class="text-gray-400 text-xs mt-2">Vernieuwd automatisch elke 15 seconden</p>
             </div>
         </div>
         @endif
@@ -976,6 +995,7 @@
                 heeftGezocht: false,
                 poulesGegenereerd: poulesGegenereerd,
                 liveLoading: false,
+                liveMatten: [],
                 notificatiesAan: false,
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
 
@@ -1025,11 +1045,19 @@
                         sessionStorage.setItem('publiek_active_tab_{{ $toernooi->id }}', tab);
                     });
 
-                    // Auto-refresh: favorieten elke 15 sec
+                    // Initial load of matten
+                    if (poulesGegenereerd) {
+                        this.loadMatten();
+                    }
+
+                    // Auto-refresh: favorieten en matten elke 15 sec
                     if (poulesGegenereerd) {
                         setInterval(() => {
                             if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
                                 this.loadFavorieten();
+                            }
+                            if (this.activeTab === 'live') {
+                                this.loadMatten();
                             }
                         }, 15000);
                     }
@@ -1243,10 +1271,22 @@
                     });
                 },
 
-                refreshLive() {
+                async refreshLive() {
+                    await this.loadMatten();
+                },
+
+                async loadMatten() {
                     this.liveLoading = true;
-                    // Session storage already saves activeTab, so just reload
-                    window.location.reload();
+                    try {
+                        const response = await fetch('{{ route('publiek.matten', $toernooi->routeParams()) }}');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.liveMatten = data.matten || [];
+                        }
+                    } catch (e) {
+                        console.error('Error loading matten:', e);
+                    }
+                    this.liveLoading = false;
                 },
 
                 async zoekJudokas() {
