@@ -216,14 +216,31 @@
     </div>
 
     <script>
-        // Generate QR code
-        document.addEventListener('DOMContentLoaded', function() {
+        // Generate QR code when content becomes visible
+        function generateQR() {
             const canvas = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
-            if (canvas) {
+            if (canvas && canvas.offsetParent !== null) {
                 QRCode.toCanvas(canvas, '{{ route('weegkaart.show', $judoka->qr_code) }}', {
                     width: 208,
                     margin: 1
                 });
+                return true;
+            }
+            return false;
+        }
+
+        // Try immediately, then with Alpine, then with interval as fallback
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!generateQR()) {
+                // Wait for Alpine to show content
+                document.addEventListener('alpine:initialized', function() {
+                    setTimeout(generateQR, 100);
+                });
+                // Fallback: check periodically
+                const interval = setInterval(function() {
+                    if (generateQR()) clearInterval(interval);
+                }, 200);
+                setTimeout(() => clearInterval(interval), 5000);
             }
         });
 
