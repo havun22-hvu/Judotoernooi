@@ -299,14 +299,14 @@ class Poule extends Model
         $label = null;
         $cleanTitel = preg_replace('/\s*\/\s*/', ' ', $titel);
         $cleanTitel = preg_replace('/\s*[\d.]+-[\d.]+kg\s*/i', ' ', $cleanTitel);
-        $cleanTitel = preg_replace('/\s*\d+-\d+j\s*/', ' ', $cleanTitel);
+        $cleanTitel = preg_replace('/\s*\d+(-\d+)?j\s*/', ' ', $cleanTitel); // Match both "10j" and "10-11j"
         $cleanTitel = preg_replace('/\s*Poule\s+\d+\s*/i', ' ', $cleanTitel);
         $cleanTitel = trim(preg_replace('/\s+/', ' ', $cleanTitel));
 
         if (!empty($cleanTitel)) {
             $label = $cleanTitel;
         } elseif ($this->leeftijdsklasse) {
-            $label = trim(preg_replace('/\s*\d+-\d+j\s*/', '', $this->leeftijdsklasse));
+            $label = trim(preg_replace('/\s*\d+(-\d+)?j\s*/', '', $this->leeftijdsklasse)); // Match both "10j" and "10-11j"
         }
 
         // Leeftijd: ALTIJD live berekenen uit judoka's
