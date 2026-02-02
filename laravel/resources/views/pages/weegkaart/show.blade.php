@@ -6,7 +6,7 @@
     <title>Weegkaart - {{ $judoka->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         @media print {
