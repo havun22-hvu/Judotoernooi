@@ -410,7 +410,6 @@
                                 @if($pastNietInCategorie)<p class="text-sm text-red-700 mt-1 font-medium">🚫 {{ $categorieProbleem }}</p>@endif
                                 @if($isOnvolledig)<p class="text-sm text-yellow-700 mt-1">Ontbreekt: {{ implode(', ', $ontbrekend) }}</p>@endif
                                 @if(count($warnings) > 0)<p class="text-sm text-orange-600 mt-1">⚠ {{ implode(' | ', $warnings) }}</p>@endif
-                                @if($judoka->import_warnings)<p class="text-sm text-red-600 mt-1">⚠️ {{ $judoka->import_warnings }}</p>@endif
                             </div>
                         </div>
                         @if($inschrijvingOpen && (($magWijzigen ?? true) || ($magInschrijven ?? true)))
