@@ -789,7 +789,7 @@ function abbreviateClub(name) {
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
                             <td class="border p-2">Print schema's, verder op papier</td>
                             <td class="border p-2 text-gray-500">N.v.t.</td>
                         </tr>
@@ -826,16 +826,16 @@ function abbreviateClub(name) {
                         <tr class="bg-orange-50">
                             <td class="border p-2 font-medium">🔴 Cloud server crash</td>
                             <td class="border p-2">
-                                1. Start Deco router<br>
-                                2. Verbind tablets met Deco<br>
+                                1. Start eigen router (bijv. Deco)<br>
+                                2. Verbind tablets met router<br>
                                 3. Start lokale server op laptop
                             </td>
                             <td class="border p-2">
-                                <strong>Deco WiFi</strong> → Lokale server
+                                <strong>Eigen router WiFi</strong> → Lokale server
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Alles kapot</td>
+                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
                             <td class="border p-2">Print schema's, verder op papier</td>
                             <td class="border p-2 text-gray-500">N.v.t.</td>
                         </tr>
@@ -850,7 +850,7 @@ function abbreviateClub(name) {
             <!-- Eigen Router / Hotspot info -->
             @if($toernooi->heeft_eigen_router)
             <div class="p-4 bg-blue-50 border border-blue-200 rounded">
-                <h4 class="font-bold text-blue-800 mb-2">📡 Eigen Router (Deco)</h4>
+                <h4 class="font-bold text-blue-800 mb-2">📡 Eigen Router</h4>
                 @if($toernooi->eigen_router_ssid)
                     <div class="space-y-2">
                         <div class="flex justify-between items-center">
@@ -965,7 +965,7 @@ function abbreviateClub(name) {
 
                     <!-- Router keuze -->
                     <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700 mb-3">Heb je een eigen router (bijv. TP-Link Deco)?</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Heb je een eigen router?</label>
                         <div class="flex gap-4">
                             <label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer" :class="heeftEigenRouter ? 'border-blue-500 bg-blue-50' : 'border-gray-300'">
                                 <input type="radio" name="heeft_eigen_router" value="1" x-model="heeftEigenRouter" class="text-blue-600">
@@ -1155,7 +1155,7 @@ function abbreviateClub(name) {
             <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
             <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
             @if($toernooi->heeft_eigen_router)
-            <li>☐ Test eigen router (Deco) - werkt WiFi?</li>
+            <li>☐ Test eigen router - werkt WiFi?</li>
             <li>☐ Verbind laptop met eigen router, zoek IP op</li>
             @else
             <li>☐ Controleer hotspot instellingen op telefoon</li>
