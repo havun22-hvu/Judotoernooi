@@ -996,7 +996,14 @@
                     const stored = localStorage.getItem(STORAGE_KEY);
                     if (stored) {
                         try {
-                            this.favorieten = JSON.parse(stored);
+                            let loadedFavorieten = JSON.parse(stored);
+                            // Filter: alleen judoka's die in dit toernooi bestaan
+                            const geldigeFavorieten = loadedFavorieten.filter(id => judokaNamen[id] !== undefined);
+                            // Als er ongeldige favorieten waren, update localStorage
+                            if (geldigeFavorieten.length !== loadedFavorieten.length) {
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(geldigeFavorieten));
+                            }
+                            this.favorieten = geldigeFavorieten;
                         } catch (e) {
                             this.favorieten = [];
                         }
