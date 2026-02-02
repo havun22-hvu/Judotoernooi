@@ -135,6 +135,9 @@ class PubliekController extends Controller
                 ->orderBy('nummer')
                 ->get()
                 ->map(function ($mat) {
+                    // Cleanup invalid selections (gespeelde wedstrijden)
+                    $mat->cleanupGespeeldeSelecties();
+
                     // Get first unfinished poule for this mat
                     $poule = $mat->poules->first();
 
