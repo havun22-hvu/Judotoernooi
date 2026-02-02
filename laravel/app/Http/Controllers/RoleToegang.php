@@ -189,10 +189,13 @@ class RoleToegang extends Controller
         $toegang = $request->get('device_toegang');
         $toernooi = $toegang->toernooi->load('organisator');
 
-        // Filter matten to only show the bound mat
-        $matten = $toegang->mat_nummer
-            ? $toernooi->matten->where('nummer', $toegang->mat_nummer)
-            : $toernooi->matten;
+        // Filter matten to only show the bound mat (use strict int comparison)
+        if ($toegang->mat_nummer) {
+            $matNummer = (int) $toegang->mat_nummer;
+            $matten = $toernooi->matten->filter(fn($m) => (int) $m->nummer === $matNummer)->values();
+        } else {
+            $matten = $toernooi->matten;
+        }
 
         return view('pages.mat.interface', [
             'toernooi' => $toernooi,
