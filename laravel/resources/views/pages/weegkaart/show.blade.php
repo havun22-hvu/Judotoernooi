@@ -221,11 +221,21 @@
         let qrGenerated = false;
         function generateQR() {
             if (qrGenerated) return;
+
+            // Check if QRCode library is loaded
+            if (typeof QRCode === 'undefined') {
+                console.log('QRCode library not loaded yet, retrying...');
+                setTimeout(generateQR, 100);
+                return;
+            }
+
             const canvas = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
             if (canvas) {
                 QRCode.toCanvas(canvas, '{{ route('weegkaart.show', $judoka->qr_code) }}', {
                     width: 208,
                     margin: 1
+                }, function(error) {
+                    if (error) console.error('QR generation error:', error);
                 });
                 qrGenerated = true;
             }
