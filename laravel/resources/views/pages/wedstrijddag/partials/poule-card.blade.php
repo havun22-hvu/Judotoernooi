@@ -142,6 +142,11 @@
                         class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                         title="Zoek geschikte poule"
                     >🔍</button>
+                    <button
+                        onclick="event.stopPropagation(); meldJudokaAf({{ $judoka->id }}, '{{ addslashes($judoka->naam) }}')"
+                        class="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Afmelden (kan niet deelnemen)"
+                    >✕</button>
                 </div>
             </div>
         </div>

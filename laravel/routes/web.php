@@ -35,6 +35,9 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+// Simple ping for connection status check (no auth required)
+Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]))->name('ping');
+
 // Homepage
 Route::get('/', fn() => view('pages.home'))->name('home');
 
@@ -360,6 +363,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('wedstrijddag/zet-om-naar-poules', [WedstrijddagController::class, 'zetOmNaarPoules'])->name('wedstrijddag.zetOmNaarPoules');
         Route::post('wedstrijddag/wijzig-poule-type', [WedstrijddagController::class, 'wijzigPouleType'])->name('wedstrijddag.wijzigPouleType');
         Route::post('wedstrijddag/naar-wachtruimte', [WedstrijddagController::class, 'naarWachtruimte'])->name('wedstrijddag.naar-wachtruimte');
+        Route::post('wedstrijddag/meld-judoka-af', [WedstrijddagController::class, 'meldJudokaAf'])->name('wedstrijddag.meld-judoka-af');
     });
 
     // Mat routes (mat + admin)

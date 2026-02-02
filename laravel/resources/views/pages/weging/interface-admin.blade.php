@@ -88,6 +88,7 @@
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewogen</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijd</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actie</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -103,6 +104,11 @@
                             <span x-show="!judoka.gewogen" class="text-gray-400">-</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500" x-text="judoka.gewogen_om || '-'"></td>
+                        <td class="px-4 py-3">
+                            <button @click="openEditGewicht(judoka)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Wijzig
+                            </button>
+                        </td>
                     </tr>
                 </template>
                 <tr x-show="gefilterd.length === 0">
