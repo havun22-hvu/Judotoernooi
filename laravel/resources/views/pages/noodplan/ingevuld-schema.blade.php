@@ -353,8 +353,8 @@ function abbreviateClubName($name, $maxLength = 15) {
                         }
                     @endphp
                     @if($participates)
-                    <td class="score-cel w-cel {{ $gespeeld ? 'gespeeld' : '' }}">{{ $showScores && $gespeeld ? $wp : '' }}</td>
-                    <td class="score-cel j-cel {{ $gespeeld ? 'gespeeld' : '' }}">{{ $showScores && $gespeeld ? $jp : '' }}</td>
+                    <td class="score-cel w-cel {{ $gespeeld ? 'gespeeld' : '' }}">@if($showScores && $gespeeld){{ $wp }}@endif</td>
+                    <td class="score-cel j-cel {{ $gespeeld ? 'gespeeld' : '' }}">@if($showScores && $gespeeld){{ $jp }}@endif</td>
                     @else
                     <td class="score-cel w-cel inactief"></td>
                     <td class="score-cel j-cel inactief"></td>
