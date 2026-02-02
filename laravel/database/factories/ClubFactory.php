@@ -16,17 +16,10 @@ class ClubFactory extends Factory
     public function definition(): array
     {
         $prefixes = ['Judo', 'Judovereniging', 'JV', 'Judoclub', 'Sportvereniging'];
-        $suffixes = fake()->randomElement([
-            fake()->city(),
-            fake()->lastName(),
-            fake()->colorName(),
-            'De Kampioen',
-            'Ippon',
-        ]);
 
         return [
             'organisator_id' => Organisator::factory(),
-            'naam' => fake()->randomElement($prefixes) . ' ' . $suffixes,
+            'naam' => fake()->randomElement($prefixes) . ' ' . fake()->unique()->city(),
             'email' => fake()->unique()->safeEmail(),
             'email2' => fake()->optional(0.3)->safeEmail(),
             'contact_naam' => fake()->name(),
