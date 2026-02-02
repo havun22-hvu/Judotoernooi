@@ -123,7 +123,7 @@ class PubliekController extends Controller
         $poulesGegenereerd = $toernooi->poules()->exists();
 
         // Get mat info with current poule, wedstrijden and standings
-        // Groen/geel komt nu van MAT niveau (niet poule niveau)
+        // Groen/geel/blauw komt nu van MAT niveau (niet poule niveau)
         $matten = [];
         if ($poulesGegenereerd) {
             $matten = $toernooi->matten()
@@ -138,18 +138,22 @@ class PubliekController extends Controller
                     // Get first unfinished poule for this mat
                     $poule = $mat->poules->first();
 
-                    // Collect all wedstrijden from all poules on this mat (for finding groen/geel)
+                    // Collect all wedstrijden from all poules on this mat (for finding groen/geel/blauw)
                     $alleWedstrijden = $mat->poules->flatMap(fn($p) => $p->wedstrijden);
 
-                    // Groen/geel van MAT niveau
+                    // Groen/geel/blauw van MAT niveau
                     $groeneWedstrijd = null;
                     $geleWedstrijd = null;
+                    $blauweWedstrijd = null;
 
                     if ($mat->actieve_wedstrijd_id) {
                         $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
                     }
                     if ($mat->volgende_wedstrijd_id) {
                         $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                    }
+                    if ($mat->gereedmaken_wedstrijd_id) {
+                        $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
                     }
 
                     if ($poule) {
@@ -184,13 +188,22 @@ class PubliekController extends Controller
                                 $geleWedstrijd->blauw = $gelePoule->judokas->firstWhere('id', $geleWedstrijd->judoka_blauw_id);
                             }
                         }
+                        if ($blauweWedstrijd) {
+                            $blauwePoule = $mat->poules->first(fn($p) => $p->wedstrijden->contains('id', $blauweWedstrijd->id));
+                            if ($blauwePoule) {
+                                $blauweWedstrijd->wit = $blauwePoule->judokas->firstWhere('id', $blauweWedstrijd->judoka_wit_id);
+                                $blauweWedstrijd->blauw = $blauwePoule->judokas->firstWhere('id', $blauweWedstrijd->judoka_blauw_id);
+                            }
+                        }
 
                         $poule->groeneWedstrijd = $groeneWedstrijd;
                         $poule->geleWedstrijd = $geleWedstrijd;
+                        $poule->blauweWedstrijd = $blauweWedstrijd;
                     }
                     $mat->huidigePoule = $poule;
                     $mat->groeneWedstrijd = $groeneWedstrijd;
                     $mat->geleWedstrijd = $geleWedstrijd;
+                    $mat->blauweWedstrijd = $blauweWedstrijd;
                     return $mat;
                 });
         }
@@ -276,7 +289,7 @@ class PubliekController extends Controller
             return response()->json(['poules' => []]);
         }
 
-        // Get poules containing these judokas, include mat for groen/geel lookup
+        // Get poules containing these judokas, include mat for groen/geel/blauw lookup
         $poules = Poule::where('toernooi_id', $toernooi->id)
             ->whereHas('judokas', function ($q) use ($judokaIds) {
                 $q->whereIn('judokas.id', $judokaIds);
@@ -287,23 +300,28 @@ class PubliekController extends Controller
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
                 $mat = $poule->mat;
 
-                // Find current and next match - NOW ON MAT LEVEL
+                // Find current, next and preparing match - NOW ON MAT LEVEL
                 $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
 
                 $huidigeWedstrijd = null;
                 $volgendeWedstrijd = null;
+                $gereedmakenWedstrijd = null;
 
-                // Groen/Geel komen van MAT niveau (niet poule)
+                // Groen/Geel/Blauw komen van MAT niveau (niet poule)
                 if ($mat && $mat->actieve_wedstrijd_id) {
                     $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
                 }
                 if ($mat && $mat->volgende_wedstrijd_id) {
                     $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
                 }
+                if ($mat && $mat->gereedmaken_wedstrijd_id) {
+                    $gereedmakenWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
+                }
 
-                // IDs of judokas in current/next match (use correct column names)
+                // IDs of judokas in current/next/preparing match
                 $huidigeJudokaIds = $huidigeWedstrijd ? [$huidigeWedstrijd->judoka_wit_id, $huidigeWedstrijd->judoka_blauw_id] : [];
                 $volgendeJudokaIds = $volgendeWedstrijd ? [$volgendeWedstrijd->judoka_wit_id, $volgendeWedstrijd->judoka_blauw_id] : [];
+                $gereedmakenJudokaIds = $gereedmakenWedstrijd ? [$gereedmakenWedstrijd->judoka_wit_id, $gereedmakenWedstrijd->judoka_blauw_id] : [];
 
                 return [
                     'id' => $poule->id,
@@ -322,7 +340,11 @@ class PubliekController extends Controller
                         'judoka1_id' => $volgendeWedstrijd->judoka_wit_id,
                         'judoka2_id' => $volgendeWedstrijd->judoka_blauw_id,
                     ] : null,
-                    'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds) {
+                    'gereedmaken_wedstrijd' => $gereedmakenWedstrijd ? [
+                        'judoka1_id' => $gereedmakenWedstrijd->judoka_wit_id,
+                        'judoka2_id' => $gereedmakenWedstrijd->judoka_blauw_id,
+                    ] : null,
+                    'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds, $gereedmakenJudokaIds) {
                         // Extract band color for colored dot display
                         $bandKleur = $this->getBandKleur($j->band);
 
@@ -338,6 +360,7 @@ class PubliekController extends Controller
                             'is_afwezig' => $j->aanwezigheid === 'afwezig',
                             'is_aan_de_beurt' => in_array($j->id, $huidigeJudokaIds),
                             'is_volgende' => in_array($j->id, $volgendeJudokaIds),
+                            'is_gereedmaken' => in_array($j->id, $gereedmakenJudokaIds),
                             'positie' => $j->pivot->positie ?? null,
                             'punten' => $j->pivot->punten ?? 0,
                             'eindpositie' => $j->pivot->eindpositie ?? null,

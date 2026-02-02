@@ -1,71 +1,79 @@
-# Mat Wedstrijd Selectie (Groen/Geel Systeem)
+# Mat Wedstrijd Selectie (Groen/Geel/Blauw Systeem)
 
 ## Probleem
 
-Voorheen had elke **poule** een eigen `actieve_wedstrijd_id` (groen) en `huidige_wedstrijd_id` (geel). Dit werkt niet goed wanneer meerdere poules op dezelfde mat staan:
+Voorheen had elke **poule** een eigen selectie. Dit werkt niet goed wanneer meerdere poules op dezelfde mat staan:
 
-- 3 poules op 1 mat = 3 groene en 3 gele wedstrijden mogelijk
+- 3 poules op 1 mat = meerdere selecties mogelijk
 - Fysiek kan er maar 1 wedstrijd tegelijk op de mat
 - Verwarring bij mat-jury en toeschouwers
 
-## Oplossing: Mat-niveau selectie
+## Oplossing: Mat-niveau selectie met 3 kleuren
 
-Groen (speelt nu) en geel (klaar maken) worden opgeslagen op **mat niveau**, niet op poule niveau.
+Selecties worden opgeslagen op **mat niveau**, niet op poule niveau. Er zijn 3 statussen:
 
-### Database
+| Kleur | Database veld | Betekenis | UI |
+|-------|---------------|-----------|-----|
+| **Groen** | `mat.actieve_wedstrijd_id` | Wedstrijd speelt NU | Groene achtergrond |
+| **Geel** | `mat.volgende_wedstrijd_id` | Judoka's staan KLAAR | Gele achtergrond |
+| **Blauw** | `mat.gereedmaken_wedstrijd_id` | Judoka's moeten GEREEDMAKEN | Blauwe achtergrond |
+| **Neutraal** | NULL | Geen selectie | Witte achtergrond |
 
-**Tabel: `matten`** (nieuwe velden)
+---
+
+## Database
+
+**Tabel: `matten`**
 
 | Kolom | Type | Beschrijving |
 |-------|------|--------------|
 | `actieve_wedstrijd_id` | bigint NULL | FK → wedstrijden (groene wedstrijd) |
 | `volgende_wedstrijd_id` | bigint NULL | FK → wedstrijden (gele wedstrijd) |
-
-**Tabel: `poules`** (velden VERWIJDEREN)
-
-| Kolom | Status |
-|-------|--------|
-| `actieve_wedstrijd_id` | DEPRECATED → verwijderen |
-| `huidige_wedstrijd_id` | DEPRECATED → verwijderen |
-
-### Terminologie
-
-| Kleur | Database veld | Betekenis | UI |
-|-------|---------------|-----------|-----|
-| **Groen** | `mat.actieve_wedstrijd_id` | Wedstrijd speelt NU op de mat | Groene achtergrond |
-| **Geel** | `mat.volgende_wedstrijd_id` | Judoka's moeten klaar staan | Gele achtergrond |
-| **Neutraal** | NULL | Geen selectie | Witte achtergrond |
+| `gereedmaken_wedstrijd_id` | bigint NULL | FK → wedstrijden (blauwe wedstrijd) |
 
 ---
 
 ## Interactie Logica
 
-### Klik op wedstrijd
+### Selecteren (klik op ongeselecteerde wedstrijd)
 
-| Situatie | Actie | Resultaat |
-|----------|-------|-----------|
-| Geen groen, geen geel | Klik wedstrijd X | X wordt **groen** |
-| Wel groen, geen geel | Klik wedstrijd Y | Y wordt **geel** |
-| Wel groen, wel geel | Klik wedstrijd Z | Alert: "Deselecteer eerst geel" |
+| Huidige situatie | Nieuwe wedstrijd wordt |
+|------------------|----------------------|
+| Geen groen | **Groen** |
+| Wel groen, geen geel | **Geel** |
+| Wel groen, wel geel, geen blauw | **Blauw** |
+| Groen + geel + blauw aanwezig | Alert: "Deselecteer eerst een wedstrijd" |
 
-### Klik op groene wedstrijd (stoppen)
+### Deselecteren (klik op geselecteerde wedstrijd)
 
-1. Vraag bevestiging: "Wedstrijd stoppen?"
-2. Bij "OK":
-   - Geel wordt groen (promoveren)
-   - Geel wordt null
-3. Bij "Annuleren": niets
+| Klik op | Actie | Doorschuiving |
+|---------|-------|---------------|
+| **Groen** | Vraag bevestiging: "Wedstrijd stoppen?" | Geel → Groen, Blauw → Geel |
+| **Geel** | Direct deselecteren | Blauw → Geel |
+| **Blauw** | Direct deselecteren | Geen doorschuiving |
 
-### Klik op gele wedstrijd (deselecteren)
-
-- Geel wordt null (direct, geen bevestiging)
-- Groen blijft staan
+**Belangrijk:** Deselectie alleen bij klik op eigen kleur!
 
 ### Wedstrijd afgerond (uitslag geregistreerd)
 
 1. Groene wedstrijd wordt gemarkeerd als gespeeld
-2. Geel wordt automatisch groen
-3. Auto-fallback: eerste ongespeelde wedstrijd van actieve poules wordt geel
+2. Automatische doorschuiving:
+   - Geel → Groen
+   - Blauw → Geel
+   - Blauw wordt null
+
+---
+
+## Legenda
+
+Bovenaan elke mat interface wordt een legenda getoond:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ ● Speelt nu   ● Staat klaar   ● Gereed maken        │
+│   (groen)       (geel)          (blauw)             │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -73,78 +81,78 @@ Groen (speelt nu) en geel (klaar maken) worden opgeslagen op **mat niveau**, nie
 
 ### Poule verplaatst naar andere mat
 
-| Veld | Gedrag |
-|------|--------|
+| Kleur | Gedrag |
+|-------|--------|
 | **Groen** | Blijft staan tot wedstrijd klaar of gedeselecteerd |
-| **Geel** | Wordt automatisch null (gereset) |
-
-**Reden:** Gele wedstrijd is "klaar maken" - bij verplaatsing moeten judoka's opnieuw opgeroepen worden.
+| **Geel** | Wordt automatisch null (gereset), blauw → geel |
+| **Blauw** | Wordt automatisch null (gereset) |
 
 ### Poule toegevoegd aan mat
 
 - Geen automatische selectie
-- Mat-jury klikt handmatig op gewenste wedstrijd
+- Mat-jury klikt handmatig op gewenste wedstrijden
 
 ### Poule verwijderd van mat
 
-- Als groene wedstrijd van deze poule was: groen wordt null
-- Als gele wedstrijd van deze poule was: geel wordt null
+- Als groene wedstrijd van deze poule was: groen = null, geel → groen, blauw → geel
+- Als gele wedstrijd van deze poule was: geel = null, blauw → geel
+- Als blauwe wedstrijd van deze poule was: blauw = null
 
 ---
 
 ## Controller Logica
 
-### MatController@setHuidigeWedstrijd
+### MatController@setWedstrijdStatus
 
 ```php
-public function setHuidigeWedstrijd(Request $request, Mat $mat)
+public function setWedstrijdStatus(Request $request, Mat $mat)
 {
     $validated = $request->validate([
         'actieve_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
         'volgende_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+        'gereedmaken_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
     ]);
 
     // Valideer dat wedstrijden bij poules op deze mat horen
-    if ($validated['actieve_wedstrijd_id']) {
-        $wedstrijd = Wedstrijd::find($validated['actieve_wedstrijd_id']);
-        if ($wedstrijd->poule->mat_id !== $mat->id) {
-            return response()->json(['error' => 'Wedstrijd hoort niet bij deze mat'], 422);
+    foreach (['actieve', 'volgende', 'gereedmaken'] as $type) {
+        $key = "{$type}_wedstrijd_id";
+        if ($validated[$key]) {
+            $wedstrijd = Wedstrijd::find($validated[$key]);
+            if ($wedstrijd->poule->mat_id !== $mat->id) {
+                return response()->json(['error' => 'Wedstrijd hoort niet bij deze mat'], 422);
+            }
         }
     }
 
-    $mat->update([
-        'actieve_wedstrijd_id' => $validated['actieve_wedstrijd_id'],
-        'volgende_wedstrijd_id' => $validated['volgende_wedstrijd_id'],
-    ]);
+    $mat->update($validated);
 
-    return response()->json(['success' => true]);
+    return response()->json(['success' => true, 'mat' => [
+        'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+        'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+        'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
+    ]]);
 }
 ```
 
-### PouleController@verplaats
+### Doorschuiving na deselectie groen
 
 ```php
-public function verplaats(Request $request, Poule $poule)
-{
-    $nieuweMatId = $request->input('mat_id');
-    $oudeMatId = $poule->mat_id;
+// Bij deselectie van groen (wedstrijd stoppen)
+$mat->update([
+    'actieve_wedstrijd_id' => $mat->volgende_wedstrijd_id,    // geel → groen
+    'volgende_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id, // blauw → geel
+    'gereedmaken_wedstrijd_id' => null,                        // blauw = null
+]);
+```
 
-    // Reset geel op oude mat als het een wedstrijd van deze poule was
-    if ($oudeMatId) {
-        $oudeMat = Mat::find($oudeMatId);
-        if ($oudeMat->volgende_wedstrijd_id) {
-            $geleWedstrijd = Wedstrijd::find($oudeMat->volgende_wedstrijd_id);
-            if ($geleWedstrijd && $geleWedstrijd->poule_id === $poule->id) {
-                $oudeMat->update(['volgende_wedstrijd_id' => null]);
-            }
-        }
-        // Groen blijft staan - mat-jury moet handmatig stoppen
-    }
+### Doorschuiving na deselectie geel
 
-    $poule->update(['mat_id' => $nieuweMatId]);
-
-    return response()->json(['success' => true]);
-}
+```php
+// Bij deselectie van geel
+$mat->update([
+    'volgende_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id, // blauw → geel
+    'gereedmaken_wedstrijd_id' => null,                        // blauw = null
+]);
 ```
 
 ---
@@ -153,128 +161,124 @@ public function verplaats(Request $request, Poule $poule)
 
 ### Mat Interface (_content.blade.php)
 
-**Huidige code (poule niveau):**
 ```javascript
-const isGroen = wedstrijd.id === poule.actieve_wedstrijd_id;
-const isGeel = wedstrijd.id === poule.huidige_wedstrijd_id;
+// Kleurbepaling
+const isGroen = wedstrijd.id === this.matSelectie.actieve_wedstrijd_id;
+const isGeel = wedstrijd.id === this.matSelectie.volgende_wedstrijd_id;
+const isBlauw = wedstrijd.id === this.matSelectie.gereedmaken_wedstrijd_id;
+
+// CSS classes
+let kleurClass = '';
+if (isGroen) kleurClass = 'bg-green-100 border-green-500';
+else if (isGeel) kleurClass = 'bg-yellow-100 border-yellow-500';
+else if (isBlauw) kleurClass = 'bg-blue-100 border-blue-500';
 ```
 
-**Nieuwe code (mat niveau):**
+### Selectie logica
+
 ```javascript
-const isGroen = wedstrijd.id === this.mat.actieve_wedstrijd_id;
-const isGeel = wedstrijd.id === this.mat.volgende_wedstrijd_id;
-```
+toggleWedstrijd(wedstrijdId) {
+    const isGroen = wedstrijdId === this.matSelectie.actieve_wedstrijd_id;
+    const isGeel = wedstrijdId === this.matSelectie.volgende_wedstrijd_id;
+    const isBlauw = wedstrijdId === this.matSelectie.gereedmaken_wedstrijd_id;
 
-### Publiek PWA (Live Matten)
-
-**Huidige code:**
-```php
-$groeneWedstrijd = $poule->actieveWedstrijd;
-$geleWedstrijd = $poule->huidigeWedstrijd;
-```
-
-**Nieuwe code:**
-```php
-$groeneWedstrijd = $mat->actieveWedstrijd;
-$geleWedstrijd = $mat->volgendeWedstrijd;
-```
-
----
-
-## Migratie Strategie
-
-### Stap 1: Database migratie
-
-```php
-Schema::table('matten', function (Blueprint $table) {
-    $table->foreignId('actieve_wedstrijd_id')->nullable()->constrained('wedstrijden')->nullOnDelete();
-    $table->foreignId('volgende_wedstrijd_id')->nullable()->constrained('wedstrijden')->nullOnDelete();
-});
-```
-
-### Stap 2: Data migratie (optioneel)
-
-Als er actieve toernooien zijn met groen/geel ingesteld:
-```php
-// Migreer bestaande data van poules naar matten
-foreach (Poule::whereNotNull('actieve_wedstrijd_id')->get() as $poule) {
-    if ($poule->mat) {
-        $poule->mat->update([
-            'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,
-            'volgende_wedstrijd_id' => $poule->huidige_wedstrijd_id,
-        ]);
+    if (isGroen) {
+        // Deselecteer groen met bevestiging
+        if (confirm('Wedstrijd stoppen?')) {
+            this.deselecteerGroen();
+        }
+    } else if (isGeel) {
+        // Deselecteer geel
+        this.deselecteerGeel();
+    } else if (isBlauw) {
+        // Deselecteer blauw
+        this.deselecteerBlauw();
+    } else {
+        // Selecteer nieuw
+        this.selecteerWedstrijd(wedstrijdId);
     }
+}
+
+selecteerWedstrijd(wedstrijdId) {
+    if (!this.matSelectie.actieve_wedstrijd_id) {
+        // Geen groen → wordt groen
+        this.matSelectie.actieve_wedstrijd_id = wedstrijdId;
+    } else if (!this.matSelectie.volgende_wedstrijd_id) {
+        // Wel groen, geen geel → wordt geel
+        this.matSelectie.volgende_wedstrijd_id = wedstrijdId;
+    } else if (!this.matSelectie.gereedmaken_wedstrijd_id) {
+        // Wel groen + geel, geen blauw → wordt blauw
+        this.matSelectie.gereedmaken_wedstrijd_id = wedstrijdId;
+    } else {
+        alert('Deselecteer eerst een wedstrijd');
+        return;
+    }
+    this.saveMatSelectie();
+}
+
+deselecteerGroen() {
+    // Doorschuiven: geel → groen, blauw → geel
+    this.matSelectie.actieve_wedstrijd_id = this.matSelectie.volgende_wedstrijd_id;
+    this.matSelectie.volgende_wedstrijd_id = this.matSelectie.gereedmaken_wedstrijd_id;
+    this.matSelectie.gereedmaken_wedstrijd_id = null;
+    this.saveMatSelectie();
+}
+
+deselecteerGeel() {
+    // Doorschuiven: blauw → geel
+    this.matSelectie.volgende_wedstrijd_id = this.matSelectie.gereedmaken_wedstrijd_id;
+    this.matSelectie.gereedmaken_wedstrijd_id = null;
+    this.saveMatSelectie();
+}
+
+deselecteerBlauw() {
+    this.matSelectie.gereedmaken_wedstrijd_id = null;
+    this.saveMatSelectie();
 }
 ```
 
-### Stap 3: Code updates
+---
 
-1. MatController - nieuwe endpoint of update bestaande
-2. Mat model - relaties `actieveWedstrijd()` en `volgendeWedstrijd()`
-3. Views - alle referenties naar `poule.actieve_wedstrijd_id` → `mat.actieve_wedstrijd_id`
-4. PubliekController - groen/geel van mat halen
+## Migratie
 
-### Stap 4: Verwijder oude velden (later)
+### Database migratie
 
 ```php
-Schema::table('poules', function (Blueprint $table) {
-    $table->dropColumn(['actieve_wedstrijd_id', 'huidige_wedstrijd_id']);
+Schema::table('matten', function (Blueprint $table) {
+    $table->foreignId('gereedmaken_wedstrijd_id')->nullable()->constrained('wedstrijden')->nullOnDelete();
 });
 ```
-
----
-
-## Impacted Files
-
-| File | Wijziging |
-|------|-----------|
-| `database/migrations/xxx_add_wedstrijd_selectie_to_matten.php` | Nieuwe velden |
-| `app/Models/Mat.php` | Nieuwe relaties |
-| `app/Models/Poule.php` | Relaties verwijderen (later) |
-| `app/Http/Controllers/MatController.php` | Nieuwe logica |
-| `app/Http/Controllers/PouleController.php` | Reset geel bij verplaatsing |
-| `app/Http/Controllers/PubliekController.php` | Groen/geel van mat |
-| `resources/views/pages/mat/partials/_content.blade.php` | JS logica |
-| `resources/views/pages/publiek/index.blade.php` | Display logica |
-
----
-
-## Backwards Compatibility
-
-Tijdens transitie:
-1. **Lees** groen/geel van mat (nieuw)
-2. **Fallback** naar poule als mat velden null zijn (tijdelijk)
-3. **Schrijf** alleen naar mat velden
-
-Na volledige migratie:
-- Verwijder poule velden
-- Verwijder fallback code
 
 ---
 
 ## Test Scenarios
 
-### Basis functionaliteit
+### Selectie
 
 | Test | Verwacht resultaat |
 |------|-------------------|
-| Klik wedstrijd (geen groen) | Wordt groen |
-| Klik andere wedstrijd (wel groen, geen geel) | Wordt geel |
-| Klik groene wedstrijd + bevestig | Geel → groen, geel = null |
-| Klik gele wedstrijd | Geel = null |
+| Klik wedstrijd (niets geselecteerd) | Wordt groen |
+| Klik andere wedstrijd (alleen groen) | Wordt geel |
+| Klik andere wedstrijd (groen + geel) | Wordt blauw |
+| Klik andere wedstrijd (groen + geel + blauw) | Alert |
 
-### Poule verplaatsing
-
-| Test | Verwacht resultaat |
-|------|-------------------|
-| Verplaats poule met groene wedstrijd | Groen blijft op oude mat |
-| Verplaats poule met gele wedstrijd | Geel wordt null op oude mat |
-| Voeg nieuwe poule toe aan mat | Geen automatische selectie |
-
-### Multi-poule scenario
+### Deselectie
 
 | Test | Verwacht resultaat |
 |------|-------------------|
-| 3 poules op mat, klik wedstrijd poule A | Wordt groen |
-| Klik wedstrijd poule B | Wordt geel |
-| Poule B verplaatst | Geel wordt null, groen (poule A) blijft |
+| Klik groene wedstrijd + bevestig | Geel → groen, blauw → geel |
+| Klik gele wedstrijd | Blauw → geel |
+| Klik blauwe wedstrijd | Blauw = null |
+
+### Doorschuiving na uitslag
+
+| Test | Verwacht resultaat |
+|------|-------------------|
+| Registreer uitslag groene wedstrijd | Geel → groen, blauw → geel |
+
+### Multi-poule
+
+| Test | Verwacht resultaat |
+|------|-------------------|
+| 3 poules op mat, selecteer uit elke poule 1 | 1 groen, 1 geel, 1 blauw |
+| Verplaats poule met gele wedstrijd | Blauw → geel, groen blijft |

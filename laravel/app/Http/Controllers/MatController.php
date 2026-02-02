@@ -276,11 +276,12 @@ class MatController extends Controller
     }
 
     /**
-     * Set current/next match on MAT level (new implementation)
+     * Set current/next/prepare match on MAT level
      * - actieve_wedstrijd_id = green (currently playing)
-     * - volgende_wedstrijd_id = yellow (next up)
+     * - volgende_wedstrijd_id = yellow (standing ready)
+     * - gereedmaken_wedstrijd_id = blue (preparing)
      *
-     * Only 1 green and 1 yellow per mat, regardless of number of poules
+     * Only 1 green, 1 yellow, 1 blue per mat, regardless of number of poules
      */
     public function setHuidigeWedstrijd(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
@@ -302,6 +303,7 @@ class MatController extends Controller
             'mat_id' => 'required|exists:matten,id',
             'actieve_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
             'volgende_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
+            'gereedmaken_wedstrijd_id' => 'nullable|exists:wedstrijden,id',
         ]);
 
         $mat = Mat::findOrFail($validated['mat_id']);
@@ -312,23 +314,24 @@ class MatController extends Controller
         }
 
         // Verify wedstrijden belong to poules on this mat (if provided)
-        if ($validated['actieve_wedstrijd_id']) {
-            $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated['actieve_wedstrijd_id']);
-            if ($wedstrijd->poule->mat_id !== $mat->id) {
-                return response()->json(['success' => false, 'error' => 'Actieve wedstrijd hoort niet bij deze mat'], 403);
-            }
-        }
-
-        if ($validated['volgende_wedstrijd_id']) {
-            $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated['volgende_wedstrijd_id']);
-            if ($wedstrijd->poule->mat_id !== $mat->id) {
-                return response()->json(['success' => false, 'error' => 'Volgende wedstrijd hoort niet bij deze mat'], 403);
+        foreach (['actieve_wedstrijd_id', 'volgende_wedstrijd_id', 'gereedmaken_wedstrijd_id'] as $field) {
+            if (!empty($validated[$field])) {
+                $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated[$field]);
+                if ($wedstrijd->poule->mat_id !== $mat->id) {
+                    $label = match ($field) {
+                        'actieve_wedstrijd_id' => 'Actieve',
+                        'volgende_wedstrijd_id' => 'Volgende',
+                        'gereedmaken_wedstrijd_id' => 'Gereedmaken',
+                    };
+                    return response()->json(['success' => false, 'error' => "{$label} wedstrijd hoort niet bij deze mat"], 403);
+                }
             }
         }
 
         $mat->update([
             'actieve_wedstrijd_id' => $validated['actieve_wedstrijd_id'],
             'volgende_wedstrijd_id' => $validated['volgende_wedstrijd_id'],
+            'gereedmaken_wedstrijd_id' => $validated['gereedmaken_wedstrijd_id'] ?? null,
         ]);
 
         return response()->json([
@@ -337,6 +340,7 @@ class MatController extends Controller
                 'id' => $mat->id,
                 'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
                 'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+                'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
             ],
         ]);
     }
