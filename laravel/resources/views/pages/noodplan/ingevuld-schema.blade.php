@@ -310,6 +310,7 @@ function abbreviateClubName($name, $maxLength = 15) {
                 $judokaNr = $idx + 1;
                 $totaalWP = 0;
                 $totaalJP = 0;
+                $heeftGespeeldeWedstrijd = false;
             @endphp
             <tr class="judoka-row">
                 <td class="px-1 text-center font-bold nr-cel">{{ $judokaNr }}</td>
@@ -340,6 +341,7 @@ function abbreviateClubName($name, $maxLength = 15) {
 
                             if ($wedstrijd && $wedstrijd->is_gespeeld) {
                                 $gespeeld = true;
+                                $heeftGespeeldeWedstrijd = true;
                                 // Is deze judoka wit of blauw in de wedstrijd?
                                 $isWit = $wedstrijd->judoka_wit_id == $judoka->id;
                                 $wp = $isWit ? ($wedstrijd->score_wit ?? 0) : ($wedstrijd->score_blauw ?? 0);
@@ -358,8 +360,8 @@ function abbreviateClubName($name, $maxLength = 15) {
                     <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
-                <td class="totaal-cel">{{ $showScores && $totaalWP > 0 ? $totaalWP : '' }}</td>
-                <td class="totaal-cel">{{ $showScores && $totaalJP > 0 ? $totaalJP : '' }}</td>
+                <td class="totaal-cel">{{ $showScores && $heeftGespeeldeWedstrijd ? $totaalWP : '' }}</td>
+                <td class="totaal-cel">{{ $showScores && $heeftGespeeldeWedstrijd ? $totaalJP : '' }}</td>
                 <td class="plts-cel"></td>
             </tr>
             @endforeach
