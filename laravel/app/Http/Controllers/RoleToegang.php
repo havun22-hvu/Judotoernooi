@@ -187,7 +187,7 @@ class RoleToegang extends Controller
     public function matDeviceBound(Request $request): View
     {
         $toegang = $request->get('device_toegang');
-        $toernooi = $toegang->toernooi;
+        $toernooi = $toegang->toernooi->load('organisator');
 
         // Filter matten to only show the bound mat
         $matten = $toegang->mat_nummer
