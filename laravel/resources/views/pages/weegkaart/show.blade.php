@@ -28,7 +28,8 @@
           fromPortal: new URLSearchParams(window.location.search).has('from_portal'),
           confirmed: localStorage.getItem('weegkaart_{{ $judoka->qr_code }}') === 'true',
           get showContent() { return this.fromPortal || this.confirmed }
-      }">
+      }"
+      x-init="$watch('showContent', val => { if(val) setTimeout(generateQR, 50) }); if(showContent) setTimeout(generateQR, 50)">
 
     {{-- Confirmation Modal - only show when NOT from portal and NOT confirmed --}}
     <div x-show="!fromPortal && !confirmed" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -216,33 +217,19 @@
     </div>
 
     <script>
-        // Generate QR code when content becomes visible
+        // Generate QR code - called from Alpine when content becomes visible
+        let qrGenerated = false;
         function generateQR() {
+            if (qrGenerated) return;
             const canvas = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
-            if (canvas && canvas.offsetParent !== null) {
+            if (canvas) {
                 QRCode.toCanvas(canvas, '{{ route('weegkaart.show', $judoka->qr_code) }}', {
                     width: 208,
                     margin: 1
                 });
-                return true;
+                qrGenerated = true;
             }
-            return false;
         }
-
-        // Try immediately, then with Alpine, then with interval as fallback
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!generateQR()) {
-                // Wait for Alpine to show content
-                document.addEventListener('alpine:initialized', function() {
-                    setTimeout(generateQR, 100);
-                });
-                // Fallback: check periodically
-                const interval = setInterval(function() {
-                    if (generateQR()) clearInterval(interval);
-                }, 200);
-                setTimeout(() => clearInterval(interval), 5000);
-            }
-        });
 
         async function downloadWeegkaart() {
             const element = document.getElementById('weegkaart');
