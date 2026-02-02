@@ -924,8 +924,11 @@ De Mat Interface heeft **2 versies** afhankelijk van wie het opent:
 - URL + PIN + device binding
 - **Gekoppeld aan specifieke mat** (Mat 1, Mat 2, etc.)
 - Beheer via Instellingen → Organisatie → Mat toegangen
+- **BELANGRIJK:** Elke mat heeft eigen PWA toegang. Mat 1 PWA ziet alleen Mat 1, niet andere matten.
 
 **Doel:** Gefocust werken, geen afleiding door navigatie
+
+**Mat binding:** De mat dropdown is niet wijzigbaar voor device-bound toegang. Header toont "Mat X Interface". 6 matten = 6 aparte PWA toegangen.
 
 ### Layout verschil
 
@@ -1099,6 +1102,8 @@ De deelnemers worden gegroepeerd op basis van de **toernooi-instellingen** (`$to
 
 ### Live Matten Tab - Groen/Geel Weergave
 
+> **Uitgebreide documentatie:** Zie `MAT-WEDSTRIJD-SELECTIE.md` voor volledige technische details.
+
 Per mat worden getoond:
 1. **Groen (speelt nu)**: Wedstrijd met beide judoka's
 2. **Geel (klaar maken)**: Volgende wedstrijd met beide judoka's
@@ -1118,7 +1123,9 @@ Per mat worden getoond:
 └─────────────────────────────────┘
 ```
 
-**Data:** Komt van `actieve_wedstrijd_id` (groen) en `huidige_wedstrijd_id` (geel) op de poule.
+**Data:** Komt van `actieve_wedstrijd_id` (groen) en `volgende_wedstrijd_id` (geel) op de **mat** (niet poule).
+
+**Belangrijk:** Er is maar 1 groen en 1 geel per mat, ongeacht het aantal poules op die mat.
 
 ### Favorieten Tab - Groen/Geel Weergave
 

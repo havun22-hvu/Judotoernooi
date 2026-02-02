@@ -182,18 +182,25 @@ class RoleToegang extends Controller
 
     /**
      * Mat interface (device-bound)
+     * Only shows the mat bound to this device toegang
      */
     public function matDeviceBound(Request $request): View
     {
         $toegang = $request->get('device_toegang');
         $toernooi = $toegang->toernooi;
 
+        // Filter matten to only show the bound mat
+        $matten = $toegang->mat_nummer
+            ? $toernooi->matten->where('nummer', $toegang->mat_nummer)
+            : $toernooi->matten;
+
         return view('pages.mat.interface', [
             'toernooi' => $toernooi,
             'blokken' => $toernooi->blokken,
-            'matten' => $toernooi->matten,
+            'matten' => $matten,
             'toegang' => $toegang,
             'matNummer' => $toegang->mat_nummer,
+            'isDeviceBound' => true,
         ]);
     }
 

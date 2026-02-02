@@ -165,9 +165,13 @@ class WedstrijdSchemaService
 
     /**
      * Get match schedule for a mat in a block
+     * Returns mat-level green/yellow selection plus all poules
      */
     public function getSchemaVoorMat(Blok $blok, Mat $mat): array
     {
+        // Refresh mat to get latest wedstrijd selectie
+        $mat->refresh();
+
         // Alleen poules die doorgestuurd zijn EN wedstrijden hebben
         // Poules zonder wedstrijden mogen niet op mat interface verschijnen
         $poules = Poule::where('blok_id', $blok->id)
@@ -177,7 +181,7 @@ class WedstrijdSchemaService
             ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar', 'mat'])
             ->get();
 
-        $schema = [];
+        $pouleSchemas = [];
 
         foreach ($poules as $poule) {
             $isEliminatie = $poule->type === 'eliminatie';
@@ -197,8 +201,9 @@ class WedstrijdSchemaService
                 'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
-                'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id, // yellow (next)
-                'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id, // green (current)
+                // DEPRECATED - kept for backwards compatibility during transition
+                'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
+                'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,
                 'judokas' => $poule->judokas
                     ->filter(fn($j) => $j->aanwezigheid !== 'afwezig')
                     ->map(fn($j) => [
@@ -242,10 +247,19 @@ class WedstrijdSchemaService
                 })->toArray(),
             ];
 
-            $schema[] = $pouleSchema;
+            $pouleSchemas[] = $pouleSchema;
         }
 
-        return $schema;
+        // Return with mat-level selection
+        return [
+            'mat' => [
+                'id' => $mat->id,
+                'nummer' => $mat->nummer,
+                'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+                'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+            ],
+            'poules' => $pouleSchemas,
+        ];
     }
 
     /**

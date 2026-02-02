@@ -266,12 +266,19 @@
             </div>
             <div class="w-40">
                 <label class="block text-gray-600 text-sm mb-1">Mat</label>
-                <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
-                    <option value="">Selecteer...</option>
-                    @foreach($matten as $mat)
-                    <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
-                    @endforeach
-                </select>
+                @if(isset($isDeviceBound) && $isDeviceBound && $matten->count() === 1)
+                    {{-- Device-bound: alleen deze mat, niet wijzigbaar --}}
+                    <div class="w-full border rounded px-3 py-2 text-sm bg-gray-200 text-gray-700 font-medium">
+                        Mat {{ $matten->first()->nummer }}
+                    </div>
+                @else
+                    <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
+                        <option value="">Selecteer...</option>
+                        @foreach($matten as $mat)
+                        <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
         </div>
     </div>
@@ -775,9 +782,12 @@ function matInterface() {
     const blokkenData = @json($blokken->map(fn($b) => ['id' => $b->id, 'nummer' => $b->nummer]));
     const mattenData = @json($matten->map(fn($m) => ['id' => $m->id, 'nummer' => $m->nummer]));
     const voorgeselecteerdBlok = blokNummer ? blokkenData.find(b => b.nummer == blokNummer) : null;
+    const isDeviceBound = {{ isset($isDeviceBound) && $isDeviceBound ? 'true' : 'false' }};
 
-    // LocalStorage key voor dit toernooi
-    const storageKey = 'mat_interface_{{ $toernooi->id }}';
+    // LocalStorage key voor dit toernooi (include mat for device-bound)
+    const storageKey = isDeviceBound && mattenData.length === 1
+        ? 'mat_interface_{{ $toernooi->id }}_mat_' + mattenData[0].id
+        : 'mat_interface_{{ $toernooi->id }}';
 
     // Laad laatst geselecteerde blok/mat uit localStorage
     const opgeslagen = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -800,15 +810,25 @@ function matInterface() {
         localStorage.removeItem(storageKey);
     }
 
+    // For device-bound: always use the single mat
+    const forcedMatId = isDeviceBound && mattenData.length === 1 ? String(mattenData[0].id) : null;
+
     return {
         blokId: savedBlokId || (voorgeselecteerdBlok ? String(voorgeselecteerdBlok.id) : ''),
-        matId: savedMatId || '',
+        matId: forcedMatId || savedMatId || '',
         poules: [],
+        matSelectie: null,  // Mat-level wedstrijd selectie {actieve_wedstrijd_id, volgende_wedstrijd_id}
         blokkenData,
         mattenData,
+        isDeviceBound,
         debugSlots: false,  // Toggle om slot nummers te tonen
 
         init() {
+            // Device-bound: always use forced mat
+            if (isDeviceBound && forcedMatId) {
+                this.matId = forcedMatId;
+            }
+
             // Als we opgeslagen waardes hebben, gebruik die
             if (this.blokId && this.matId) {
                 this.laadWedstrijden();
@@ -886,13 +906,16 @@ function matInterface() {
                 }
 
                 const data = await response.json();
-                console.log('[Mat] Loaded', data.length, 'poules');
+                // New API format: {mat: {...}, poules: [...]}
+                this.matSelectie = data.mat || null;
+                const pouleData = data.poules || data;  // Fallback for old API format
+                console.log('[Mat] Loaded', pouleData.length, 'poules, mat selectie:', this.matSelectie);
 
             // Swap ruimte wordt NIET meer automatisch gecleared
             // Admin kan judoka's in swap houden ook na lock
 
             // Initialize scores from existing data
-            this.poules = data.map(poule => {
+            this.poules = pouleData.map(poule => {
                 poule.wedstrijden = poule.wedstrijden.map(w => {
                     w.wpScores = {};
                     w.jpScores = {};

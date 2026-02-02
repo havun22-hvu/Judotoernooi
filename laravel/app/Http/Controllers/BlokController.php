@@ -1045,9 +1045,20 @@ class BlokController extends Controller
         ]);
 
         $poule = Poule::findOrFail($validated['poule_id']);
+        $oudeMatId = $poule->mat_id;
+        $nieuweMatId = $validated['mat_id'];
 
-        // Alleen mat_id wijzigen - wedstrijden en scores blijven intact
-        $poule->update(['mat_id' => $validated['mat_id']]);
+        // Reset geel (volgende_wedstrijd) op oude mat als het een wedstrijd van deze poule was
+        // Groen blijft staan - mat-jury moet handmatig stoppen
+        if ($oudeMatId && $oudeMatId != $nieuweMatId) {
+            $oudeMat = Mat::find($oudeMatId);
+            if ($oudeMat) {
+                $oudeMat->resetWedstrijdSelectieVoorPoule($poule->id);
+            }
+        }
+
+        // Mat_id wijzigen - wedstrijden en scores blijven intact
+        $poule->update(['mat_id' => $nieuweMatId]);
 
         return response()->json([
             'success' => true,
