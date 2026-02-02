@@ -1315,6 +1315,14 @@ function matInterface() {
         // Groen = mat.actieve_wedstrijd_id (1 per mat, ongeacht poules) - Speelt nu
         // Geel = mat.volgende_wedstrijd_id (1 per mat, ongeacht poules) - Staat klaar
         // Blauw = mat.gereedmaken_wedstrijd_id (1 per mat, ongeacht poules) - Gereed maken
+        // Helper: check of wedstrijd nog te spelen is (geen winnaar)
+        // ROBUUST: alleen wedstrijden MET winnaar zijn echt gespeeld
+        isNogTeSpelen(w) {
+            // Wedstrijd is nog te spelen als er GEEN winnaar is
+            // (is_gespeeld flag kan true zijn zonder winnaar - dat is een "lopende" wedstrijd)
+            return !w.winnaar_id;
+        },
+
         getHuidigeEnVolgende(poule) {
             const wedstrijden = poule.wedstrijden;
             if (!wedstrijden || wedstrijden.length === 0) return { huidige: null, volgende: null, gereedmaken: null };
@@ -1324,22 +1332,23 @@ function matInterface() {
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            // Huidige (groen) = als mat's actieve wedstrijd in DEZE poule zit
+            // ROBUUST: gebruik isNogTeSpelen (check op winnaar_id, niet is_gespeeld)
+            // Huidige (groen) = als mat's actieve wedstrijd in DEZE poule zit EN nog geen winnaar heeft
             let huidige = null;
             if (matActieveId) {
-                huidige = wedstrijden.find(w => w.id === matActieveId && !w.is_gespeeld);
+                huidige = wedstrijden.find(w => w.id === matActieveId && this.isNogTeSpelen(w));
             }
 
-            // Volgende (geel) = als mat's volgende wedstrijd in DEZE poule zit
+            // Volgende (geel) = als mat's volgende wedstrijd in DEZE poule zit EN nog geen winnaar heeft
             let volgende = null;
             if (matVolgendeId) {
-                volgende = wedstrijden.find(w => w.id === matVolgendeId && !w.is_gespeeld);
+                volgende = wedstrijden.find(w => w.id === matVolgendeId && this.isNogTeSpelen(w));
             }
 
-            // Gereedmaken (blauw) = als mat's gereedmaken wedstrijd in DEZE poule zit
+            // Gereedmaken (blauw) = als mat's gereedmaken wedstrijd in DEZE poule zit EN nog geen winnaar heeft
             let gereedmaken = null;
             if (matGereedmakenId) {
-                gereedmaken = wedstrijden.find(w => w.id === matGereedmakenId && !w.is_gespeeld);
+                gereedmaken = wedstrijden.find(w => w.id === matGereedmakenId && this.isNogTeSpelen(w));
             }
 
             return { huidige, volgende, gereedmaken };
