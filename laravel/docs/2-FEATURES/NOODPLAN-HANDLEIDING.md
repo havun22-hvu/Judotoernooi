@@ -5,6 +5,20 @@
 
 ---
 
+## Noodplan in de App
+
+De noodplan configuratie vind je in de app onder:
+**Toernooi → Instellingen → Tab 3 (Noodplan)**
+
+Hier kun je:
+- **Netwerk status** live bekijken (lokaal netwerk + internet latency)
+- **Netwerk modus** kiezen (MET/ZONDER eigen router)
+- **IP-adressen** configureren (primair, standby, hotspot)
+- **Noodbackup downloaden** (avond voor het toernooi)
+- **Poule-indeling downloaden** (Excel voor printen)
+
+---
+
 ## Waarom een Noodplan?
 
 Bij een groot toernooi (200+ deelnemers, 500+ bezoekers) kunnen dingen misgaan:
