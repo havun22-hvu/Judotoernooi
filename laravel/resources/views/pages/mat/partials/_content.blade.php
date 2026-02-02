@@ -1395,6 +1395,12 @@ function matInterface() {
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
+            console.log('[Mat] toggleVolgendeWedstrijd - clicked:', wedstrijd.id, 'current state:', {
+                groen: matActieveId,
+                geel: matVolgendeId,
+                blauw: matGereedmakenId
+            });
+
             // Klik op GROENE wedstrijd = bevestiging vragen, dan doorschuiven
             if (matActieveId && wedstrijd.id === matActieveId) {
                 if (!confirm('Weet je zeker dat je deze wedstrijd wilt stoppen?\n\nGeel→Groen, Blauw→Geel')) {
@@ -1462,7 +1468,9 @@ function matInterface() {
                 const data = await response.json();
                 if (data.success && data.mat) {
                     // Update lokale mat selectie
+                    console.log('[Mat] setWedstrijdStatus response:', data.mat);
                     this.matSelectie = data.mat;
+                    console.log('[Mat] matSelectie updated to:', this.matSelectie);
                 }
             } catch (err) {
                 console.error('Fout bij wijzigen wedstrijd status:', err);
