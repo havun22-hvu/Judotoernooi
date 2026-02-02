@@ -37,15 +37,15 @@ class SecurityHeaders
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
 
-        // Content Security Policy (allow same origin + inline styles for Tailwind)
-        if (!app()->environment('local')) {
+        // Content Security Policy - only in production (CDN scripts used in dev/staging)
+        if (app()->environment('production')) {
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Needed for Alpine.js
-                "style-src 'self' 'unsafe-inline'", // Needed for Tailwind
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.tailwindcss.com cdn.jsdelivr.net unpkg.com cdnjs.cloudflare.com",
+                "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
-                "connect-src 'self' wss:", // WebSocket for Reverb
+                "connect-src 'self' wss:",
                 "frame-ancestors 'self'",
             ]));
         }
