@@ -562,11 +562,11 @@ class JudokaController extends Controller
                 $wijzigingen['naam'] = $naamNieuw;
             }
 
-            // Correct band to kyu notation (groen → Groen (3e kyu))
+            // Normalize band to lowercase base value (Geel (5e kyu) → geel, GROEN → groen)
             if (!empty($judoka->band)) {
                 $bandEnum = Band::fromString($judoka->band);
                 if ($bandEnum) {
-                    $bandNieuw = $bandEnum->labelMetKyu();
+                    $bandNieuw = strtolower($bandEnum->value);
                     if ($judoka->band !== $bandNieuw) {
                         $wijzigingen['band'] = $bandNieuw;
                     }

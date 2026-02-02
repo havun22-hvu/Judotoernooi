@@ -514,17 +514,17 @@ class ImportService
     }
 
     /**
-     * Parse belt color
+     * Parse belt color - returns lowercase base value (geel, groen, etc.)
      */
     private function parseBand(mixed $waarde): string
     {
         if (empty($waarde)) {
-            return 'Wit (6e kyu)';
+            return 'wit';
         }
 
         $band = Band::fromString((string)$waarde);
-        // Sla op met kyu notatie voor consistentie
-        return $band ? $band->labelMetKyu() : trim((string)$waarde);
+        // Sla op als lowercase base value (geen kyu notatie)
+        return $band ? strtolower($band->value) : strtolower(trim(explode(' ', (string)$waarde)[0]));
     }
 
     /**
