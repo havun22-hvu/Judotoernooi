@@ -249,6 +249,10 @@ function abbreviateClubName($name, $maxLength = 15) {
             $wedstrijdByPositie[$w->volgorde ?? $w->id] = $w;
         }
     }
+
+    // Check of ALLE wedstrijden van deze poule gespeeld zijn (met winnaar)
+    $pouleCompleet = $showScores && $poule->wedstrijden->count() > 0
+        && $poule->wedstrijden->every(fn($w) => $w->winnaar_id !== null);
 @endphp
 
 @php
@@ -365,8 +369,8 @@ function abbreviateClubName($name, $maxLength = 15) {
                     <td class="score-cel j-cel inactief"></td>
                     @endif
                 @endforeach
-                <td class="totaal-cel">{{ $showScores && $heeftGespeeldeWedstrijd ? $totaalWP : '' }}</td>
-                <td class="totaal-cel">{{ $showScores && $heeftGespeeldeWedstrijd ? $totaalJP : '' }}</td>
+                <td class="totaal-cel">{{ $pouleCompleet ? $totaalWP : '' }}</td>
+                <td class="totaal-cel">{{ $pouleCompleet ? $totaalJP : '' }}</td>
                 <td class="plts-cel"></td>
             </tr>
             @endforeach
@@ -399,7 +403,15 @@ function pouleSelect() {
     return {
         printInclude: true,
         init() {
-            this.$watch('printInclude', () => {
+            // Direct class manipulation voor print CSS
+            this.$watch('printInclude', (value) => {
+                if (value) {
+                    this.$el.classList.remove('print-exclude');
+                    this.$el.classList.remove('opacity-50');
+                } else {
+                    this.$el.classList.add('print-exclude');
+                    this.$el.classList.add('opacity-50');
+                }
                 this.$nextTick(() => updatePrintCounter());
             });
         }
@@ -412,8 +424,12 @@ function selectAllPoules(checked) {
         if (checkbox) {
             checkbox.checked = checked;
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            // Trigger Alpine update
+            checkbox.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
+    // Force class update
+    setTimeout(updatePrintCounter, 100);
 }
 
 function updatePrintCounter() {
