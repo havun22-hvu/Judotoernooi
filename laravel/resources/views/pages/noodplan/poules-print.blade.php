@@ -16,7 +16,7 @@
         @if($matPoules->isNotEmpty())
         <div class="{{ !$isFirst ? 'page-break' : '' }}">
             <h2 class="text-xl font-bold text-blue-800 mb-3 border-b-2 border-blue-300 pb-2">
-                @if(!$enkelBlok)Blok {{ $blok->nummer }} - @endifMat {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
+                {{ !$enkelBlok ? "Blok {$blok->nummer} - " : '' }}Mat {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
             </h2>
 
             @foreach($matPoules as $poule)
