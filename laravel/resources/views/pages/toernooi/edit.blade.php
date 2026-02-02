@@ -2486,13 +2486,13 @@
         <!-- Uitleg WiFi vs Internet met live status -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-blue-800">📡 WiFi vs Internet - wat is het verschil?</h3>
+                <h3 class="font-bold text-blue-800">📡 Lokaal netwerk vs Internet - wat is het verschil?</h3>
                 <span class="text-xs text-gray-500">Laatst gecontroleerd: <span x-text="laatsteCheck"></span></span>
             </div>
             <div class="grid md:grid-cols-2 gap-4 text-sm">
                 <div class="bg-white p-3 rounded border">
                     <div class="flex items-center justify-between">
-                        <strong class="text-blue-700">WiFi (lokaal netwerk)</strong>
+                        <strong class="text-blue-700">Lokaal netwerk</strong>
                         <span class="text-xs px-2 py-0.5 rounded"
                               :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : (wifiStatus === 'no-server' || wifiStatus === 'no-ip' ? 'bg-gray-200 text-gray-600' : 'bg-red-200 text-red-800')">
                             <span x-show="wifiStatus === 'connected'" x-text="'🟢 ' + wifiLatency + 'ms'"></span>
@@ -2502,7 +2502,7 @@
                             <span x-show="wifiStatus === 'checking'">⏳</span>
                         </span>
                     </div>
-                    <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop in dezelfde ruimte. Werkt ook zonder internet!</p>
+                    <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop (WiFi of LAN). Werkt ook zonder internet!</p>
                 </div>
                 <div class="bg-white p-3 rounded border">
                     <div class="flex items-center justify-between">
