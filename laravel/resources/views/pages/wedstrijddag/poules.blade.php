@@ -1554,8 +1554,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
 const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", $toernooi->routeParamsWith(["judoka" => "__JUDOKA_ID__"])) }}';
 const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi->routeParams()) }}';
+const meldAfUrl = '{{ route("toernooi.wedstrijddag.meld-judoka-af", $toernooi->routeParams()) }}';
+
+// Huidige judoka in modal (voor afmelden)
+let zoekMatchJudokaId = null;
+let zoekMatchFromPouleId = null;
 
 async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
+    zoekMatchJudokaId = judokaId;
+    zoekMatchFromPouleId = fromPouleId;
     const modal = document.getElementById('zoek-match-modal');
     const content = document.getElementById('zoek-match-content');
     const loading = document.getElementById('zoek-match-loading');
@@ -1600,9 +1607,15 @@ async function openZoekMatchWedstrijddag(judokaId, fromPouleId) {
             return (blokOrder[a[1].status] ?? 3) - (blokOrder[b[1].status] ?? 3);
         });
 
-        let html = `<div class="mb-3 pb-2 border-b">
-            <span class="font-bold">${data.judoka.naam}</span>
-            <span class="text-gray-500">(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)</span>
+        let html = `<div class="mb-3 pb-2 border-b flex justify-between items-center">
+            <div>
+                <span class="font-bold">${data.judoka.naam}</span>
+                <span class="text-gray-500">(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)</span>
+            </div>
+            <button onclick="meldJudokaAf(${judokaId}, '${data.judoka.naam.replace(/'/g, "\\'")}')"
+                class="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded">
+                ✕ Afmelden
+            </button>
         </div>`;
 
         const blokColors = {
@@ -1687,6 +1700,36 @@ async function selecteerPouleWedstrijddag(judokaId, vanPouleId, naarPouleId) {
 
 function closeZoekMatchModal() {
     document.getElementById('zoek-match-modal').classList.add('hidden');
+    zoekMatchJudokaId = null;
+    zoekMatchFromPouleId = null;
+}
+
+// Meld judoka af (kan niet deelnemen)
+async function meldJudokaAf(judokaId, naam) {
+    if (!confirm(`${naam} afmelden? Deze judoka kan dan niet meer deelnemen.`)) return;
+
+    try {
+        const response = await fetch(meldAfUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ judoka_id: judokaId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            closeZoekMatchModal();
+            window.location.reload();
+        } else {
+            alert('Fout: ' + (data.message || 'Onbekende fout'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij afmelden');
+    }
 }
 </script>
 
