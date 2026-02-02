@@ -710,12 +710,13 @@
                 </div>
 
                 <!-- Judoka's per coach -->
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
                     <label for="judokas_per_coach" class="text-gray-700 font-medium">Judoka's per coach kaart:</label>
                     <input type="number" name="judokas_per_coach" id="judokas_per_coach"
-                           value="{{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }}"
-                           class="w-16 border rounded px-2 py-1 text-center" min="1" max="20">
+                           x-model="value"
+                           class="w-16 border rounded px-2 py-1 text-center" min="1">
                     <span class="text-sm text-gray-500">(toegang tot dojo)</span>
+                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">⚠️ Hoog aantal</span>
                 </div>
 
                 <!-- Coach in/uitcheck systeem -->
