@@ -48,8 +48,8 @@
                 </table>
             </div>
             @endforeach
+            @php $isFirst = false; @endphp
         </div>
-        @php $isFirst = false; @endphp
         @endif
     @endforeach
 @endforeach
