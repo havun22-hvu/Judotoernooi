@@ -14,6 +14,7 @@ class ExternalServiceException extends JudoToernooiException
     public const ERROR_INVALID_RESPONSE = 3003;
     public const ERROR_RATE_LIMITED = 3004;
     public const ERROR_AUTHENTICATION = 3005;
+    public const ERROR_PROCESS = 3006;
 
     protected ?string $serviceName = null;
     protected ?int $httpStatusCode = null;
@@ -76,6 +77,18 @@ class ExternalServiceException extends JudoToernooiException
             self::ERROR_AUTHENTICATION
         );
         $exception->serviceName = $service;
+        return $exception;
+    }
+
+    public static function pythonSolverError(int $exitCode, string $stderr = '', array $context = []): static
+    {
+        $exception = new static(
+            "Python solver failed with exit code {$exitCode}" . ($stderr ? ": {$stderr}" : ''),
+            'Indeling berekening mislukt. Probeer opnieuw.',
+            array_merge($context, ['exit_code' => $exitCode, 'stderr' => $stderr]),
+            self::ERROR_PROCESS
+        );
+        $exception->serviceName = 'Python poule solver';
         return $exception;
     }
 
