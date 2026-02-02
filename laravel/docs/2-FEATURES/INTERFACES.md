@@ -33,15 +33,69 @@ Zie de specifieke interface secties voor routes en views.
 
 ---
 
+## Vrijwilligers Database
+
+Organisatoren kunnen vrijwilligers opslaan voor hergebruik tussen toernooien.
+
+### Database
+
+**Tabel:** `vrijwilligers`
+
+| Kolom | Type | Beschrijving |
+|-------|------|--------------|
+| `id` | bigint | PK |
+| `organisator_id` | bigint | FK → organisatoren |
+| `voornaam` | string | Naam vrijwilliger |
+| `telefoonnummer` | string | Voor WhatsApp linkjes |
+| `functie` | enum | mat, weging, spreker, dojo, hoofdjury |
+| `timestamps` | | created_at, updated_at |
+
+### UI (Instellingen → Organisatie)
+
+Eén link/knop opent popup voor vrijwilligers beheer:
+
+```
+┌─────────────────────────────────────────────────┐
+│  VRIJWILLIGERS                         [Sluiten]│
+├─────────────────────────────────────────────────┤
+│  + Nieuwe vrijwilliger                          │
+├─────────────────────────────────────────────────┤
+│  Jan         06-12345678    Mat       [🗑️]      │
+│  Piet        06-87654321    Weging    [🗑️]      │
+│  Marie       06-11223344    Spreker   [🗑️]      │
+└─────────────────────────────────────────────────┘
+```
+
+**Toevoegen:** Inline formulier (voornaam, telefoon, functie dropdown)
+
+### Koppeling met Device Toegang
+
+Bij device toegang aanmaken/bewerken:
+1. Dropdown "Selecteer vrijwilliger" (gefilterd op rol)
+2. Bij selectie: naam wordt automatisch ingevuld
+3. WhatsApp icoon naast URL knop → opent `https://wa.me/{nummer}?text={bericht}`
+
+### WhatsApp Bericht
+
+Template (automatisch gegenereerd):
+```
+Hoi {voornaam}! Hier is je link voor {rol} op {toernooi_naam}:
+{url}
+PIN: {pincode}
+```
+
+---
+
 ## Device Binding voor PWA's
 
 Alle standalone PWA's (Weging, Mat, Spreker, Dojo) vereisen device binding:
 
 ### Flow
 1. Organisator/Hoofdjury maakt toegang aan (Instellingen → Organisatie)
-2. Vrijwilliger ontvangt URL + PIN
-3. Eerste keer: opent URL → voert PIN in → device wordt gebonden
-4. Daarna: device wordt herkend → direct naar interface
+2. **Optioneel:** Selecteer vrijwilliger uit database → naam + WhatsApp link
+3. Vrijwilliger ontvangt URL + PIN (via WhatsApp of handmatig)
+4. Eerste keer: opent URL → voert PIN in → device wordt gebonden
+5. Daarna: device wordt herkend → direct naar interface
 
 ### Beheer (Instellingen → Organisatie)
 - Toegangen aanmaken/verwijderen per rol
