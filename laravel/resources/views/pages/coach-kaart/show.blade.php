@@ -141,26 +141,14 @@
     @endif
 
     <script>
-        // Generate QR code when content becomes visible
-        function generateQR() {
+        // Generate QR code on page load
+        document.addEventListener('DOMContentLoaded', function() {
             const canvas = document.getElementById('qr-coach-{{ $coachKaart->id }}');
-            if (canvas && canvas.offsetParent !== null) {
+            if (canvas) {
                 QRCode.toCanvas(canvas, '{{ route('coach-kaart.scan', $coachKaart->qr_code) }}', {
                     width: 208,
                     margin: 1
                 });
-                return true;
-            }
-            return false;
-        }
-
-        // Try immediately, then with interval as fallback
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!generateQR()) {
-                const interval = setInterval(function() {
-                    if (generateQR()) clearInterval(interval);
-                }, 200);
-                setTimeout(() => clearInterval(interval), 5000);
             }
         });
 
