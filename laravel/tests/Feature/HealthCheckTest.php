@@ -3,13 +3,14 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class HealthCheckTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function health_endpoint_returns_healthy_status(): void
     {
         $response = $this->getJson('/health');
@@ -29,7 +30,7 @@ class HealthCheckTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function health_detailed_endpoint_returns_more_info(): void
     {
         $response = $this->getJson('/health/detailed');
@@ -49,7 +50,7 @@ class HealthCheckTest extends TestCase
             ]);
     }
 
-    /** @test */
+    #[Test]
     public function ping_endpoint_returns_ok(): void
     {
         $response = $this->getJson('/ping');

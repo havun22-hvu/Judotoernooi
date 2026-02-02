@@ -5,140 +5,62 @@ namespace App\Exceptions;
 /**
  * Exception for Mollie payment errors.
  *
- * Handles:
- * - API errors (timeouts, rate limits, server errors)
- * - OAuth errors (token refresh, authorization)
- * - Payment errors (creation, status updates)
+ * Handles payment-specific errors with appropriate user messages
+ * that don't expose sensitive payment details.
  */
 class MollieException extends JudoToernooiException
 {
-    public const ERROR_API = 1001;
-    public const ERROR_TIMEOUT = 1002;
-    public const ERROR_OAUTH = 1003;
-    public const ERROR_TOKEN_EXPIRED = 1004;
-    public const ERROR_PAYMENT_CREATION = 1005;
-    public const ERROR_PAYMENT_NOT_FOUND = 1006;
-    public const ERROR_WEBHOOK = 1007;
-    public const ERROR_INVALID_RESPONSE = 1008;
+    public const ERROR_API_FAILURE = 1001;
+    public const ERROR_INVALID_WEBHOOK = 1002;
+    public const ERROR_PAYMENT_FAILED = 1003;
+    public const ERROR_REFUND_FAILED = 1004;
+    public const ERROR_CONFIG_MISSING = 1005;
 
-    protected string $logLevel = 'error';
+    protected static array $defaultMessages = [
+        self::ERROR_API_FAILURE => 'Betalingssysteem is tijdelijk niet beschikbaar.',
+        self::ERROR_INVALID_WEBHOOK => 'Ongeldige betaling notificatie ontvangen.',
+        self::ERROR_PAYMENT_FAILED => 'Betaling kon niet worden verwerkt.',
+        self::ERROR_REFUND_FAILED => 'Terugbetaling kon niet worden verwerkt.',
+        self::ERROR_CONFIG_MISSING => 'Betalingsconfiguratie ontbreekt.',
+    ];
 
-    /**
-     * API call failed.
-     */
-    public static function apiError(string $endpoint, string $error, ?int $statusCode = null): static
+    public static function apiFailure(string $technicalMessage, array $context = []): static
     {
         return new static(
-            "Mollie API error on {$endpoint}: {$error}",
-            'Er ging iets mis met de betaaldienst. Probeer het later opnieuw.',
-            [
-                'endpoint' => $endpoint,
-                'error' => $error,
-                'status_code' => $statusCode,
-            ],
-            self::ERROR_API
+            $technicalMessage,
+            static::$defaultMessages[self::ERROR_API_FAILURE],
+            $context,
+            self::ERROR_API_FAILURE
         );
     }
 
-    /**
-     * API call timed out.
-     */
-    public static function timeout(string $endpoint): static
+    public static function invalidWebhook(string $reason, array $context = []): static
     {
         return new static(
-            "Mollie API timeout on {$endpoint}",
-            'De betaaldienst reageert niet. Probeer het later opnieuw.',
-            ['endpoint' => $endpoint],
-            self::ERROR_TIMEOUT
+            "Invalid webhook: {$reason}",
+            static::$defaultMessages[self::ERROR_INVALID_WEBHOOK],
+            $context,
+            self::ERROR_INVALID_WEBHOOK
         );
     }
 
-    /**
-     * OAuth token exchange failed.
-     */
-    public static function oauthError(string $error): static
+    public static function paymentFailed(string $reason, array $context = []): static
     {
         return new static(
-            "Mollie OAuth error: {$error}",
-            'Fout bij koppelen met Mollie. Probeer opnieuw te verbinden.',
-            ['error' => $error],
-            self::ERROR_OAUTH
+            "Payment failed: {$reason}",
+            static::$defaultMessages[self::ERROR_PAYMENT_FAILED],
+            $context,
+            self::ERROR_PAYMENT_FAILED
         );
     }
 
-    /**
-     * Token refresh failed.
-     */
-    public static function tokenExpired(int $toernooiId): static
+    public static function configMissing(string $what, array $context = []): static
     {
         return new static(
-            "Mollie token refresh failed for toernooi {$toernooiId}",
-            'De Mollie koppeling is verlopen. Verbind opnieuw in de toernooi instellingen.',
-            ['toernooi_id' => $toernooiId],
-            self::ERROR_TOKEN_EXPIRED
-        );
-    }
-
-    /**
-     * Payment creation failed.
-     */
-    public static function paymentCreationFailed(string $error, int $toernooiId): static
-    {
-        return new static(
-            "Payment creation failed for toernooi {$toernooiId}: {$error}",
-            'Betaling kon niet worden aangemaakt. Controleer de instellingen.',
-            [
-                'toernooi_id' => $toernooiId,
-                'error' => $error,
-            ],
-            self::ERROR_PAYMENT_CREATION
-        );
-    }
-
-    /**
-     * Payment not found.
-     */
-    public static function paymentNotFound(string $paymentId): static
-    {
-        $exception = new static(
-            "Payment not found: {$paymentId}",
-            'Betaling niet gevonden.',
-            ['payment_id' => $paymentId],
-            self::ERROR_PAYMENT_NOT_FOUND
-        );
-        $exception->logLevel = 'warning';
-        return $exception;
-    }
-
-    /**
-     * Webhook processing error.
-     */
-    public static function webhookError(string $paymentId, string $error): static
-    {
-        return new static(
-            "Webhook processing failed for payment {$paymentId}: {$error}",
-            'Betaling status kon niet worden bijgewerkt.',
-            [
-                'payment_id' => $paymentId,
-                'error' => $error,
-            ],
-            self::ERROR_WEBHOOK
-        );
-    }
-
-    /**
-     * Invalid response from Mollie.
-     */
-    public static function invalidResponse(string $endpoint, string $response): static
-    {
-        return new static(
-            "Invalid response from Mollie {$endpoint}",
-            'Onverwacht antwoord van de betaaldienst.',
-            [
-                'endpoint' => $endpoint,
-                'response' => substr($response, 0, 500),
-            ],
-            self::ERROR_INVALID_RESPONSE
+            "Mollie config missing: {$what}",
+            static::$defaultMessages[self::ERROR_CONFIG_MISSING],
+            $context,
+            self::ERROR_CONFIG_MISSING
         );
     }
 }

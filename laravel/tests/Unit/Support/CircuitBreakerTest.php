@@ -5,6 +5,7 @@ namespace Tests\Unit\Support;
 use App\Support\CircuitBreaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class CircuitBreakerTest extends TestCase
@@ -17,7 +18,7 @@ class CircuitBreakerTest extends TestCase
         Cache::flush();
     }
 
-    /** @test */
+    #[Test]
     public function it_executes_callback_when_circuit_is_closed(): void
     {
         $breaker = new CircuitBreaker('test-service');
@@ -28,7 +29,7 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals('closed', $breaker->getState());
     }
 
-    /** @test */
+    #[Test]
     public function it_opens_circuit_after_threshold_failures(): void
     {
         $breaker = new CircuitBreaker('test-service', failureThreshold: 3);
@@ -46,7 +47,7 @@ class CircuitBreakerTest extends TestCase
         $this->assertFalse($breaker->isAvailable());
     }
 
-    /** @test */
+    #[Test]
     public function it_uses_fallback_when_circuit_is_open(): void
     {
         $breaker = new CircuitBreaker('test-service', failureThreshold: 1);
@@ -67,7 +68,7 @@ class CircuitBreakerTest extends TestCase
         $this->assertEquals('fallback', $result);
     }
 
-    /** @test */
+    #[Test]
     public function it_throws_when_open_and_no_fallback(): void
     {
         $breaker = new CircuitBreaker('test-service', failureThreshold: 1);
@@ -85,7 +86,7 @@ class CircuitBreakerTest extends TestCase
         $breaker->call(fn () => 'should not execute');
     }
 
-    /** @test */
+    #[Test]
     public function it_can_be_manually_reset(): void
     {
         $breaker = new CircuitBreaker('test-service', failureThreshold: 1);
@@ -105,7 +106,7 @@ class CircuitBreakerTest extends TestCase
         $this->assertTrue($breaker->isAvailable());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_status_for_monitoring(): void
     {
         $breaker = new CircuitBreaker('test-service', failureThreshold: 3, recoveryTimeout: 30);

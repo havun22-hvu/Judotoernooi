@@ -8,6 +8,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Club;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class WedstrijdTest extends TestCase
@@ -38,7 +39,7 @@ class WedstrijdTest extends TestCase
         return [$wedstrijd, $judokaWit, $judokaBlauw, $poule];
     }
 
-    /** @test */
+    #[Test]
     public function it_determines_if_wedstrijd_is_echt_gespeeld(): void
     {
         [$wedstrijd, $judokaWit] = $this->createWedstrijdWithJudokas();
@@ -53,7 +54,7 @@ class WedstrijdTest extends TestCase
         $this->assertTrue($wedstrijd->fresh()->isEchtGespeeld());
     }
 
-    /** @test */
+    #[Test]
     public function it_determines_if_wedstrijd_is_nog_te_spelen(): void
     {
         [$wedstrijd, $judokaWit] = $this->createWedstrijdWithJudokas();
@@ -68,7 +69,7 @@ class WedstrijdTest extends TestCase
         $this->assertFalse($wedstrijd->fresh()->isNogTeSpelen());
     }
 
-    /** @test */
+    #[Test]
     public function it_belongs_to_a_poule(): void
     {
         [$wedstrijd, , , $poule] = $this->createWedstrijdWithJudokas();
@@ -77,7 +78,7 @@ class WedstrijdTest extends TestCase
         $this->assertEquals($poule->id, $wedstrijd->poule->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_has_wit_and_blauw_judokas(): void
     {
         [$wedstrijd, $judokaWit, $judokaBlauw] = $this->createWedstrijdWithJudokas();

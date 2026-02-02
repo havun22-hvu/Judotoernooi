@@ -3,102 +3,89 @@
 namespace App\Exceptions;
 
 /**
- * Exception for external service errors.
+ * Exception for external service failures.
  *
- * Handles:
- * - Python solver errors (DynamischeIndelingService)
- * - HTTP client errors
- * - External API timeouts
+ * Used for API calls, webhooks, and third-party integrations.
  */
 class ExternalServiceException extends JudoToernooiException
 {
     public const ERROR_TIMEOUT = 3001;
     public const ERROR_CONNECTION = 3002;
-    public const ERROR_PROCESS = 3003;
-    public const ERROR_INVALID_RESPONSE = 3004;
+    public const ERROR_INVALID_RESPONSE = 3003;
+    public const ERROR_RATE_LIMITED = 3004;
+    public const ERROR_AUTHENTICATION = 3005;
 
-    protected string $logLevel = 'error';
+    protected ?string $serviceName = null;
+    protected ?int $httpStatusCode = null;
 
-    /**
-     * Service timed out.
-     */
-    public static function timeout(string $service, int $timeoutSeconds): static
-    {
-        return new static(
-            "Service {$service} timed out after {$timeoutSeconds}s",
-            'De bewerking duurde te lang. Probeer het opnieuw.',
-            [
-                'service' => $service,
-                'timeout' => $timeoutSeconds,
-            ],
-            self::ERROR_TIMEOUT
-        );
-    }
-
-    /**
-     * Connection failed.
-     */
-    public static function connectionFailed(string $service, string $error): static
-    {
-        return new static(
-            "Connection to {$service} failed: {$error}",
-            'Verbinding mislukt. Probeer het later opnieuw.',
-            [
-                'service' => $service,
-                'error' => $error,
-            ],
-            self::ERROR_CONNECTION
-        );
-    }
-
-    /**
-     * External process error (Python, etc.).
-     */
-    public static function processError(string $process, int $exitCode, string $stderr = ''): static
-    {
-        return new static(
-            "Process {$process} failed with exit code {$exitCode}",
-            'Berekening mislukt. Er wordt een alternatieve methode gebruikt.',
-            [
-                'process' => $process,
-                'exit_code' => $exitCode,
-                'stderr' => substr($stderr, 0, 1000),
-            ],
-            self::ERROR_PROCESS
-        );
-    }
-
-    /**
-     * Invalid response from service.
-     */
-    public static function invalidResponse(string $service, string $response): static
-    {
-        return new static(
-            "Invalid response from {$service}",
-            'Onverwacht antwoord ontvangen.',
-            [
-                'service' => $service,
-                'response' => substr($response, 0, 500),
-            ],
-            self::ERROR_INVALID_RESPONSE
-        );
-    }
-
-    /**
-     * Python solver error.
-     */
-    public static function pythonSolverError(int $exitCode, string $stderr = ''): static
+    public static function timeout(string $service, int $timeoutSeconds, array $context = []): static
     {
         $exception = new static(
-            "Python poule solver failed with exit code {$exitCode}",
-            'Automatische indeling mislukt. Handmatige indeling beschikbaar.',
-            [
-                'exit_code' => $exitCode,
-                'stderr' => substr($stderr, 0, 1000),
-            ],
-            self::ERROR_PROCESS
+            "{$service} request timed out after {$timeoutSeconds}s",
+            'Externe service reageert niet. Probeer het later opnieuw.',
+            array_merge($context, ['service' => $service, 'timeout' => $timeoutSeconds]),
+            self::ERROR_TIMEOUT
         );
-        $exception->logLevel = 'warning'; // Fallback exists
+        $exception->serviceName = $service;
         return $exception;
+    }
+
+    public static function connection(string $service, string $reason, array $context = []): static
+    {
+        $exception = new static(
+            "{$service} connection failed: {$reason}",
+            'Kan geen verbinding maken met externe service.',
+            array_merge($context, ['service' => $service]),
+            self::ERROR_CONNECTION
+        );
+        $exception->serviceName = $service;
+        return $exception;
+    }
+
+    public static function invalidResponse(string $service, string $reason, ?int $statusCode = null, array $context = []): static
+    {
+        $exception = new static(
+            "{$service} returned invalid response: {$reason}",
+            'Onverwacht antwoord van externe service.',
+            array_merge($context, ['service' => $service, 'status_code' => $statusCode]),
+            self::ERROR_INVALID_RESPONSE
+        );
+        $exception->serviceName = $service;
+        $exception->httpStatusCode = $statusCode;
+        return $exception;
+    }
+
+    public static function rateLimited(string $service, ?int $retryAfter = null, array $context = []): static
+    {
+        $exception = new static(
+            "{$service} rate limit exceeded" . ($retryAfter ? ", retry after {$retryAfter}s" : ''),
+            'Te veel verzoeken. Wacht even en probeer opnieuw.',
+            array_merge($context, ['service' => $service, 'retry_after' => $retryAfter]),
+            self::ERROR_RATE_LIMITED
+        );
+        $exception->serviceName = $service;
+        return $exception;
+    }
+
+    public static function authentication(string $service, string $reason, array $context = []): static
+    {
+        $exception = new static(
+            "{$service} authentication failed: {$reason}",
+            'Authenticatie met externe service mislukt.',
+            array_merge($context, ['service' => $service]),
+            self::ERROR_AUTHENTICATION
+        );
+        $exception->serviceName = $service;
+        return $exception;
+    }
+
+    public function getServiceName(): ?string
+    {
+        return $this->serviceName;
+    }
+
+    public function getHttpStatusCode(): ?int
+    {
+        return $this->httpStatusCode;
     }
 }

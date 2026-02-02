@@ -6,34 +6,32 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Base exception for JudoToernooi application.
+ * Base exception for all JudoToernooi specific exceptions.
  *
  * Provides consistent error handling with:
- * - User-friendly messages (Dutch)
- * - Context for logging
- * - Error codes for categorization
+ * - User-friendly messages (safe to display)
+ * - Technical details for logging
+ * - Contextual data for debugging
  */
 class JudoToernooiException extends Exception
 {
-    protected array $context = [];
     protected string $userMessage;
-    protected string $logLevel = 'warning';
+    protected array $context = [];
 
     public function __construct(
-        string $message,
-        string $userMessage = '',
+        string $technicalMessage,
+        string $userMessage = 'Er ging iets mis. Probeer het opnieuw.',
         array $context = [],
         int $code = 0,
         ?Exception $previous = null
     ) {
-        parent::__construct($message, $code, $previous);
-
-        $this->userMessage = $userMessage ?: 'Er ging iets mis. Probeer het opnieuw.';
+        parent::__construct($technicalMessage, $code, $previous);
+        $this->userMessage = $userMessage;
         $this->context = $context;
     }
 
     /**
-     * Get user-friendly message (Dutch) for display.
+     * Get safe message for display to users.
      */
     public function getUserMessage(): string
     {
@@ -41,57 +39,44 @@ class JudoToernooiException extends Exception
     }
 
     /**
-     * Get context for logging.
+     * Get context data for logging/debugging.
      */
     public function getContext(): array
     {
         return array_merge($this->context, [
             'exception_class' => static::class,
-            'user_id' => auth()->id(),
+            'technical_message' => $this->getMessage(),
         ]);
-    }
-
-    /**
-     * Get log level for this exception.
-     */
-    public function getLogLevel(): string
-    {
-        return $this->logLevel;
     }
 
     /**
      * Log this exception with appropriate level and context.
      */
-    public function log(): void
+    public function log(string $level = 'warning'): void
     {
         $context = $this->getContext();
-        $context['trace'] = $this->getTraceAsString();
 
-        match ($this->logLevel) {
-            'error' => Log::error($this->getMessage(), $context),
-            'warning' => Log::warning($this->getMessage(), $context),
-            'info' => Log::info($this->getMessage(), $context),
-            default => Log::warning($this->getMessage(), $context),
-        };
+        if ($this->getPrevious()) {
+            $context['previous_exception'] = $this->getPrevious()->getMessage();
+        }
+
+        Log::$level($this->getMessage(), $context);
     }
 
     /**
-     * Create exception with error-level logging.
+     * Create from another exception with user-friendly message.
      */
-    public static function error(string $message, string $userMessage = '', array $context = []): static
-    {
-        $exception = new static($message, $userMessage, $context);
-        $exception->logLevel = 'error';
-        return $exception;
-    }
-
-    /**
-     * Create exception with warning-level logging.
-     */
-    public static function warning(string $message, string $userMessage = '', array $context = []): static
-    {
-        $exception = new static($message, $userMessage, $context);
-        $exception->logLevel = 'warning';
-        return $exception;
+    public static function fromException(
+        Exception $e,
+        string $userMessage = 'Er ging iets mis. Probeer het opnieuw.',
+        array $context = []
+    ): static {
+        return new static(
+            $e->getMessage(),
+            $userMessage,
+            $context,
+            (int) $e->getCode(),
+            $e
+        );
     }
 }
