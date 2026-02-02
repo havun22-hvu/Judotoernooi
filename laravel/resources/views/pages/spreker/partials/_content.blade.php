@@ -306,38 +306,54 @@
     </div>
 
     <!-- TAB 3: NOTITIES (Spiekbriefje) -->
-    <div x-show="activeTab === 'notities'">
-        <div class="bg-white rounded-lg shadow p-4">
-            <!-- Textarea -->
-            <div class="mb-3">
+    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }">
+        <div class="bg-white rounded-lg shadow p-2 sm:p-4">
+            <!-- Zoom controls boven textarea -->
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-gray-500">Tekstgrootte:</span>
+                <div class="flex items-center gap-1">
+                    <button
+                        @click="fontSize = Math.max(14, fontSize - 2)"
+                        class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
+                        title="Kleiner"
+                    >−</button>
+                    <span class="w-10 text-center text-sm" x-text="fontSize + 'px'"></span>
+                    <button
+                        @click="fontSize = Math.min(32, fontSize + 2)"
+                        class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
+                        title="Groter"
+                    >+</button>
+                </div>
+            </div>
+
+            <!-- Textarea - volledige hoogte -->
+            <div class="mb-2">
                 <textarea
                     x-model="notities"
                     @input.debounce.2000ms="autoSaveNotities()"
-                    rows="18"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                    :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
+                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     :class="{ 'border-yellow-400': hasUnsavedChanges }"
+                    style="min-height: calc(100vh - 280px); max-height: calc(100vh - 200px);"
                     placeholder="Typ hier je notities..."
                 ></textarea>
             </div>
 
-            <!-- Werkbalk onder textarea -->
-            <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-gray-200">
+            <!-- Compacte werkbalk onder textarea -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
                 <!-- Opslaan -->
                 <button
                     @click="saveNotities()"
                     class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
                 >
-                    💾 Opslaan
+                    💾
                 </button>
-
-                <!-- Divider -->
-                <div class="w-px h-6 bg-gray-300"></div>
 
                 <!-- Template dropdown -->
                 <select
                     x-model="selectedTemplate"
                     @change="laadTemplate()"
-                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 flex-1 min-w-[120px] max-w-[200px]"
                 >
                     <option value="">📋 Template...</option>
                     <template x-for="(template, index) in templates" :key="index">
@@ -349,23 +365,20 @@
                 <button
                     @click="showSaveAsModal = true"
                     :disabled="!notities.trim()"
-                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-3 py-2 rounded-lg text-sm font-medium"
-                    title="Huidige tekst opslaan als template"
+                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-2 py-2 rounded-lg text-sm"
+                    title="Opslaan als template"
                 >
-                    📥 Opslaan als...
+                    📥
                 </button>
 
                 <!-- Beheer -->
                 <button
                     @click="showTemplateModal = true"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-2 rounded-lg text-sm"
                     title="Templates beheren"
                 >
-                    ⚙️ Beheer
+                    ⚙️
                 </button>
-
-                <!-- Divider -->
-                <div class="w-px h-6 bg-gray-300"></div>
 
                 <!-- Wis -->
                 <button
@@ -377,9 +390,9 @@
                 </button>
 
                 <!-- Status indicators (rechts) -->
-                <div class="ml-auto flex items-center gap-2 text-sm">
-                    <span x-show="autoSaving" x-cloak class="text-gray-400">⏳ Opslaan...</span>
-                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600">● Niet opgeslagen</span>
+                <div class="ml-auto flex items-center gap-1 text-xs">
+                    <span x-show="autoSaving" x-cloak class="text-gray-400">⏳</span>
+                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600">●</span>
                 </div>
             </div>
         </div>

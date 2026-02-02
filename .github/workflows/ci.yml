@@ -85,6 +85,32 @@ jobs:
         working-directory: laravel
         continue-on-error: true
 
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+        working-directory: laravel
+
+      - name: Install PHPStan
+        run: composer require --dev phpstan/phpstan --no-interaction
+        working-directory: laravel
+
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan analyse --memory-limit=512M
+        working-directory: laravel
+        continue-on-error: true
+
   security:
     name: Security Check
     runs-on: ubuntu-latest
