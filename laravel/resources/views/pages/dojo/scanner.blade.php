@@ -10,7 +10,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>Dojo Scanner - {{ $toernooi->naam }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
         body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }

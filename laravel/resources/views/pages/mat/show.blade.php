@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#1e40af">
     <title>Mat {{ $mat->nummer }} - {{ $toernooi->naam }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
     <header class="bg-blue-800 text-white px-4 py-3 shadow-lg">

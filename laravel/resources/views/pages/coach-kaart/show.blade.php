@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coach Kaart - {{ $coachKaart->club->naam }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @media print {
