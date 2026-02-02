@@ -329,8 +329,8 @@ class MatController extends Controller
         }
 
         $mat->update([
-            'actieve_wedstrijd_id' => $validated['actieve_wedstrijd_id'],
-            'volgende_wedstrijd_id' => $validated['volgende_wedstrijd_id'],
+            'actieve_wedstrijd_id' => $validated['actieve_wedstrijd_id'] ?? null,
+            'volgende_wedstrijd_id' => $validated['volgende_wedstrijd_id'] ?? null,
             'gereedmaken_wedstrijd_id' => $validated['gereedmaken_wedstrijd_id'] ?? null,
         ]);
 
