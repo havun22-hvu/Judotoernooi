@@ -114,46 +114,75 @@ class Mat extends Model
      * Clean up invalid selections (wedstrijden that are already played WITH a winner)
      * Handles cases where auto-advance didn't happen (browser closed, etc.)
      * Only cleans up if wedstrijd has a winnaar_id (not just is_gespeeld flag)
+     *
+     * ROBUUST: Alleen doorschuiven als wedstrijd ECHT gespeeld is (met winnaar).
+     * Als wedstrijd niet gevonden wordt, NIET automatisch doorschuiven (kan data-issue zijn).
      */
     public function cleanupGespeeldeSelecties(): void
     {
-        $needsUpdate = false;
         $updates = [];
 
-        // Helper: check if wedstrijd is truly finished (has winner, not just is_gespeeld flag)
-        $isEchtGespeeld = fn($w) => $w && $w->isEchtGespeeld();
-
+        // Check groen: alleen doorschuiven als wedstrijd BESTAAT en ECHT gespeeld is
         if ($this->actieve_wedstrijd_id) {
             $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
-            if (!$actieve || $isEchtGespeeld($actieve)) {
+            if ($actieve && $actieve->isEchtGespeeld()) {
                 // Actieve wedstrijd is echt gespeeld (met winnaar), doorschuiven
                 $updates['actieve_wedstrijd_id'] = $this->volgende_wedstrijd_id;
                 $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
                 $updates['gereedmaken_wedstrijd_id'] = null;
-                $needsUpdate = true;
             }
+            // Als wedstrijd niet gevonden: NIET doorschuiven (behoud huidige selectie)
         }
 
-        if (!$needsUpdate && $this->volgende_wedstrijd_id) {
+        // Check geel: alleen als groen niet doorgeschoven is
+        if (empty($updates) && $this->volgende_wedstrijd_id) {
             $volgende = Wedstrijd::find($this->volgende_wedstrijd_id);
-            if (!$volgende || $isEchtGespeeld($volgende)) {
+            if ($volgende && $volgende->isEchtGespeeld()) {
                 // Volgende wedstrijd is echt gespeeld, doorschuiven
                 $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
                 $updates['gereedmaken_wedstrijd_id'] = null;
-                $needsUpdate = true;
             }
         }
 
-        if (!$needsUpdate && $this->gereedmaken_wedstrijd_id) {
+        // Check blauw: alleen als groen en geel niet doorgeschoven zijn
+        if (empty($updates) && $this->gereedmaken_wedstrijd_id) {
             $gereedmaken = Wedstrijd::find($this->gereedmaken_wedstrijd_id);
-            if (!$gereedmaken || $isEchtGespeeld($gereedmaken)) {
+            if ($gereedmaken && $gereedmaken->isEchtGespeeld()) {
                 // Gereedmaken wedstrijd is echt gespeeld, verwijderen
                 $updates['gereedmaken_wedstrijd_id'] = null;
-                $needsUpdate = true;
             }
         }
 
-        if ($needsUpdate) {
+        if (!empty($updates)) {
+            $this->update($updates);
+            $this->refresh();
+        }
+    }
+
+    /**
+     * Verwijder selecties die naar niet-bestaande wedstrijden verwijzen
+     * Dit is een aparte functie om data-integriteit te herstellen
+     */
+    public function cleanupOngeldigeSelecties(): void
+    {
+        $updates = [];
+
+        if ($this->actieve_wedstrijd_id && !Wedstrijd::find($this->actieve_wedstrijd_id)) {
+            \Log::warning("Mat {$this->id}: actieve_wedstrijd_id {$this->actieve_wedstrijd_id} bestaat niet, reset naar null");
+            $updates['actieve_wedstrijd_id'] = null;
+        }
+
+        if ($this->volgende_wedstrijd_id && !Wedstrijd::find($this->volgende_wedstrijd_id)) {
+            \Log::warning("Mat {$this->id}: volgende_wedstrijd_id {$this->volgende_wedstrijd_id} bestaat niet, reset naar null");
+            $updates['volgende_wedstrijd_id'] = null;
+        }
+
+        if ($this->gereedmaken_wedstrijd_id && !Wedstrijd::find($this->gereedmaken_wedstrijd_id)) {
+            \Log::warning("Mat {$this->id}: gereedmaken_wedstrijd_id {$this->gereedmaken_wedstrijd_id} bestaat niet, reset naar null");
+            $updates['gereedmaken_wedstrijd_id'] = null;
+        }
+
+        if (!empty($updates)) {
             $this->update($updates);
             $this->refresh();
         }
