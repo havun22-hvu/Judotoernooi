@@ -65,7 +65,7 @@ class ToernooiRequest extends FormRequest
             'gewicht_tolerantie' => 'nullable|numeric|min:0|max:5',
             'weging_verplicht' => 'nullable|boolean',
             'max_wegingen' => 'nullable|integer|min:1|max:10',
-            'judokas_per_coach' => 'nullable|integer|min:1|max:20',
+            'judokas_per_coach' => 'nullable|integer|min:1',
             'coach_incheck_actief' => 'nullable|boolean',
             'gewichtsklassen' => 'nullable|array',
             'gewichtsklassen.*' => 'nullable|string',
