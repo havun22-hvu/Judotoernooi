@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BlokController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\CoachPortalController;
 use App\Http\Controllers\JudokaController;
 use App\Http\Controllers\MatController;
@@ -38,6 +39,10 @@ use Illuminate\Support\Facades\Route;
 
 // Simple ping for connection status check (no auth required)
 Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]))->name('ping');
+
+// Health check endpoints for monitoring
+Route::get('/health', [HealthController::class, 'check'])->name('health');
+Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
 
 // Homepage
 Route::get('/', fn() => view('pages.home'))->name('home');
