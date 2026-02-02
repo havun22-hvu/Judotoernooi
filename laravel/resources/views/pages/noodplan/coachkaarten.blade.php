@@ -2,6 +2,10 @@
 
 @section('title', isset($club) ? "Coachkaarten - {$club->naam}" : 'Coachkaarten')
 
+@push('styles')
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+@endpush
+
 @section('content')
 <div class="kaart-grid">
     @foreach($coachkaarten as $kaart)
@@ -13,8 +17,7 @@
             </div>
             @if($kaart->qr_code)
             <div class="qr-placeholder">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ urlencode(route('coach-kaart.scan', $kaart->qr_code)) }}"
-                     alt="QR" class="w-full h-full">
+                <canvas id="qr-coach-{{ $kaart->id }}" width="100" height="100"></canvas>
             </div>
             @else
             <div class="qr-placeholder">
@@ -69,4 +72,17 @@
 <div class="no-print mt-6 text-sm text-gray-600">
     <p><strong>Totaal:</strong> {{ $coachkaarten->count() }} coachkaarten</p>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @foreach($coachkaarten as $kaart)
+    @if($kaart->qr_code)
+    QRCode.toCanvas(document.getElementById('qr-coach-{{ $kaart->id }}'), '{{ route('coach-kaart.scan', $kaart->qr_code) }}', {
+        width: 100,
+        margin: 1
+    });
+    @endif
+    @endforeach
+});
+</script>
 @endsection
