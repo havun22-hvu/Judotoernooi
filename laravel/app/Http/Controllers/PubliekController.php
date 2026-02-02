@@ -150,13 +150,13 @@ class PubliekController extends Controller
                     $blauweWedstrijd = null;
 
                     if ($mat->actieve_wedstrijd_id) {
-                        $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                        $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && $w->isNogTeSpelen());
                     }
                     if ($mat->volgende_wedstrijd_id) {
-                        $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                        $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && $w->isNogTeSpelen());
                     }
                     if ($mat->gereedmaken_wedstrijd_id) {
-                        $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
+                        $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && $w->isNogTeSpelen());
                     }
 
                     if ($poule) {
@@ -310,13 +310,13 @@ class PubliekController extends Controller
                 $blauweWedstrijd = null;
 
                 if ($mat->actieve_wedstrijd_id) {
-                    $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                    $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && $w->isNogTeSpelen());
                 }
                 if ($mat->volgende_wedstrijd_id) {
-                    $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                    $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && $w->isNogTeSpelen());
                 }
                 if ($mat->gereedmaken_wedstrijd_id) {
-                    $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
+                    $blauweWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && $w->isNogTeSpelen());
                 }
 
                 // Add judoka info to wedstrijden
@@ -381,13 +381,13 @@ class PubliekController extends Controller
 
                 // Groen/Geel/Blauw komen van MAT niveau (niet poule)
                 if ($mat && $mat->actieve_wedstrijd_id) {
-                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && $w->isNogTeSpelen());
                 }
                 if ($mat && $mat->volgende_wedstrijd_id) {
-                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && $w->isNogTeSpelen());
                 }
                 if ($mat && $mat->gereedmaken_wedstrijd_id) {
-                    $gereedmakenWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && !$w->is_gespeeld);
+                    $gereedmakenWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->gereedmaken_wedstrijd_id && $w->isNogTeSpelen());
                 }
 
                 // IDs of judokas in current/next/preparing match

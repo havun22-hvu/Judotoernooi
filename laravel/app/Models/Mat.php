@@ -121,7 +121,7 @@ class Mat extends Model
         $updates = [];
 
         // Helper: check if wedstrijd is truly finished (has winner, not just is_gespeeld flag)
-        $isEchtGespeeld = fn($w) => $w && $w->is_gespeeld && $w->winnaar_id;
+        $isEchtGespeeld = fn($w) => $w && $w->isEchtGespeeld();
 
         if ($this->actieve_wedstrijd_id) {
             $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
