@@ -605,6 +605,23 @@ Na sluiten weegtijd moeten judoka's die buiten hun gewichtsklasse vallen worden 
 4. Let op: max 6 judoka's per poule
 5. Statistieken updaten automatisch
 
+### Judoka Afmelden (kan niet deelnemen)
+
+Als een judoka niet kan deelnemen (blessure, te zwaar, te jong, etc.):
+
+**Optie 1: Via weging**
+- Bij weging gewicht **0** invoeren = afmelden
+- Of in Weeglijst Live: klik "Wijzig" → "Afmelden" knop
+
+**Optie 2: Via Wedstrijddag Poules**
+- Hover over judoka in poule → klik **✕** (afmelden)
+- Of klik 🔍 (zoek poule) → "Afmelden" knop in modal
+
+**Wat gebeurt er:**
+- Judoka krijgt status `afwezig`
+- Judoka verdwijnt uit poule (wordt niet meer getoond)
+- Poule statistieken worden bijgewerkt
+
 ### Naar Zaaloverzicht Sturen
 
 Wanneer een poule klaar is (overgepouled):

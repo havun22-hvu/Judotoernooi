@@ -2,6 +2,30 @@
 
 Alle belangrijke wijzigingen worden hier bijgehouden.
 
+## [2026-02-02] - Afmelden Judoka's
+
+### Toegevoegd
+- **Gewicht 0 = afmelden** bij weging interface
+  - Tip tekst onder registreer knop
+  - Judoka krijgt status `afwezig`
+- **Wijzig knop in Weeglijst Live** (interface-admin)
+  - Modal met gewicht input
+  - Werkt ook na weegtijd sluiting
+  - "Afmelden" snelknop
+- **Afmelden in Wedstrijddag Poules**
+  - ✕ knop bij elke judoka (hover)
+  - "Afmelden" knop in zoek-match modal (🔍)
+  - Bevestigingsdialog
+- **Herstel endpoint** (backend)
+  - `POST wedstrijddag/herstel-judoka`
+  - Zet judoka terug naar actief
+
+### Gewijzigd
+- WegingController accepteert gewicht 0 (voorheen min 15)
+- Poule statistieken updaten automatisch na afmelden
+
+---
+
 ## [2026-02-02] - Noodplan Uitbreiding & Netwerk Monitoring
 
 ### Toegevoegd
