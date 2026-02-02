@@ -14,19 +14,13 @@
     </div>
     <div class="flex items-center gap-4">
         @if(!$toernooi->voorbereiding_klaar_op)
-            @if($kanAfronden)
-            <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                        onclick="return confirm('Voorbereiding afronden?\n\nDit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.')">
-                    Einde Voorbereiding
-                </button>
-            </form>
-            @else
-            <span class="px-4 py-2 bg-gray-300 text-gray-600 rounded cursor-not-allowed" title="Nog {{ $poulesZonderBlok }} poules zonder blok, {{ $poulesZonderMat }} zonder mat">
+        <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="inline">
+            @csrf
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    onclick="return confirm('Voorbereiding afronden?\n\nDit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.')">
                 Einde Voorbereiding
-            </span>
-            @endif
+            </button>
+        </form>
         @endif
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
             Wedstrijddag Poules →
