@@ -8,14 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive test suite with Model Factories
-- CI/CD pipeline with GitHub Actions
+- Comprehensive test suite with Model Factories (37 tests, 110 assertions)
+- CI/CD pipeline with GitHub Actions (tests, code quality, security audit)
 - Security Headers Middleware (CSP, HSTS, X-Frame-Options)
 - PHPStan static analysis (Level 5)
 - Professional API documentation with examples
 - Circuit Breaker pattern for external services
 - Result object pattern for error handling
-- Custom exception classes (JudoToernooiException, MollieException, ImportException)
+- Custom exception classes (JudoToernooiException, MollieException, ImportException, ExternalServiceException)
+- Production validation command (`php artisan validate:production`)
+- Error notification service for critical production errors
+- Vite asset bundling (Tailwind CSS + Alpine.js)
 
 ### Changed
 - Improved error handling across all services
