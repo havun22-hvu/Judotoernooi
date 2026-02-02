@@ -49,6 +49,40 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->with('error', $e->getUserMessage());
         });
 
+        // Send notifications for critical/unexpected exceptions in production
+        $exceptions->report(function (\Throwable $e) {
+            // Only notify in production for critical errors
+            if (!app()->environment('local', 'testing')) {
+                // Skip common non-critical exceptions
+                $ignoredExceptions = [
+                    \Illuminate\Session\TokenMismatchException::class,
+                    \Illuminate\Database\Eloquent\ModelNotFoundException::class,
+                    \Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class,
+                    \Illuminate\Validation\ValidationException::class,
+                ];
+
+                foreach ($ignoredExceptions as $ignored) {
+                    if ($e instanceof $ignored) {
+                        return;
+                    }
+                }
+
+                // Send notification for critical errors
+                try {
+                    app(\App\Services\ErrorNotificationService::class)->notifyException($e, [
+                        'url' => request()?->fullUrl(),
+                        'method' => request()?->method(),
+                        'input' => request()?->except(['password', 'password_confirmation']),
+                    ]);
+                } catch (\Exception $notifyError) {
+                    // Don't let notification failure break error handling
+                    \Illuminate\Support\Facades\Log::warning('Error notification failed', [
+                        'error' => $notifyError->getMessage(),
+                    ]);
+                }
+            }
+        });
+
         // Handle 419 Page Expired (CSRF token expired) - redirect to login
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {

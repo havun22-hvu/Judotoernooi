@@ -19,6 +19,12 @@ class ImportService
     private PouleIndelingService $pouleIndelingService;
     private array $gewichtsklassenConfig = [];
 
+    /** @var array<string, Club|null> Cache for clubs during import (prevents N+1 queries) */
+    private array $clubCache = [];
+
+    /** @var int|null Cached organisator ID for import session */
+    private ?int $cachedOrganisatorId = null;
+
     public function __construct(PouleIndelingService $pouleIndelingService)
     {
         $this->pouleIndelingService = $pouleIndelingService;
@@ -297,11 +303,10 @@ class ImportService
             }
         }
 
-        // Get or create club (scoped to organisator if available)
+        // Get or create club (scoped to organisator, with caching to prevent N+1)
         $club = null;
         if (!empty($clubNaam)) {
-            $organisatorId = $toernooi->organisatoren()->first()?->id;
-            $club = Club::findOrCreateByName($clubNaam, $organisatorId);
+            $club = $this->getOrCreateClubCached($clubNaam, $toernooi);
         }
 
         // Calculate age class using preset config (not hardcoded enum)
@@ -881,5 +886,43 @@ class ImportService
         }
 
         return $error;
+    }
+
+    /**
+     * Get or create club with caching to prevent N+1 queries during import.
+     */
+    private function getOrCreateClubCached(string $clubNaam, Toernooi $toernooi): ?Club
+    {
+        // Normalize club name for cache key
+        $cacheKey = mb_strtolower(trim($clubNaam));
+
+        // Return from cache if already looked up
+        if (array_key_exists($cacheKey, $this->clubCache)) {
+            return $this->clubCache[$cacheKey];
+        }
+
+        // Get organisator ID (cached for entire import session)
+        if ($this->cachedOrganisatorId === null) {
+            $this->cachedOrganisatorId = $toernooi->organisatoren()->first()?->id ?? 0;
+        }
+
+        // Find or create club
+        $organisatorId = $this->cachedOrganisatorId ?: null;
+        $club = Club::findOrCreateByName($clubNaam, $organisatorId);
+
+        // Cache the result
+        $this->clubCache[$cacheKey] = $club;
+
+        return $club;
+    }
+
+    /**
+     * Clear import session caches (call after import completes).
+     */
+    public function clearCache(): void
+    {
+        $this->clubCache = [];
+        $this->cachedOrganisatorId = null;
+        $this->gewichtsklassenConfig = [];
     }
 }

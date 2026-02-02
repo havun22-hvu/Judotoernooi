@@ -65,4 +65,18 @@ return [
         'default_platform_fee' => env('MOLLIE_PLATFORM_FEE', 0.50),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Error Notification
+    |--------------------------------------------------------------------------
+    |
+    | Configure webhook URL for real-time error notifications to HavunCore.
+    | Set ERROR_NOTIFICATION_WEBHOOK in .env to enable.
+    |
+    */
+
+    'error_notification' => [
+        'webhook_url' => env('ERROR_NOTIFICATION_WEBHOOK'),
+    ],
+
 ];

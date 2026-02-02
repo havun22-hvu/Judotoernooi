@@ -173,30 +173,58 @@ class ToernooiBetalingController extends Controller
 
     /**
      * Create a platform payment (goes to JudoToernooi's Mollie account)
+     *
+     * @throws \App\Exceptions\MollieException
      */
     private function createPlatformPayment(Toernooi $toernooi, ToernooiBetaling $betaling, float $prijs, string $description, string $redirectUrl): object
     {
-        $apiKey = $this->mollieService->getPlatformApiKey();
-
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Content-Type' => 'application/json',
-        ])->post(config('services.mollie.api_url') . '/payments', [
-            'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
-            'description' => $description,
-            'redirectUrl' => $redirectUrl,
-            'webhookUrl' => route('mollie.webhook.toernooi'),
-            'metadata' => [
-                'toernooi_betaling_id' => $betaling->id,
-                'toernooi_id' => $toernooi->id,
-            ],
-        ]);
-
-        if (!$response->successful()) {
-            throw new \Exception('Mollie API error: ' . $response->body());
+        // Guard: check if Mollie service is available
+        if (!$this->mollieService->isAvailable()) {
+            throw \App\Exceptions\MollieException::apiError(
+                '/payments',
+                'Betaaldienst tijdelijk niet beschikbaar'
+            );
         }
 
-        return $response->object();
+        $apiKey = $this->mollieService->getPlatformApiKey();
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->connectTimeout(5)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ])->post(config('services.mollie.api_url') . '/payments', [
+                    'amount' => ['currency' => 'EUR', 'value' => number_format($prijs, 2, '.', '')],
+                    'description' => $description,
+                    'redirectUrl' => $redirectUrl,
+                    'webhookUrl' => route('mollie.webhook.toernooi'),
+                    'metadata' => [
+                        'toernooi_betaling_id' => $betaling->id,
+                        'toernooi_id' => $toernooi->id,
+                    ],
+                ]);
+
+            if (!$response->successful()) {
+                throw \App\Exceptions\MollieException::apiError(
+                    '/payments',
+                    $response->body(),
+                    $response->status()
+                );
+            }
+
+            $result = $response->object();
+
+            // Guard: validate response has required fields
+            if (!isset($result->id) || !isset($result->_links->checkout->href)) {
+                throw \App\Exceptions\MollieException::invalidResponse('/payments', json_encode($result) ?: 'empty');
+            }
+
+            return $result;
+
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            throw \App\Exceptions\MollieException::timeout('/payments');
+        }
     }
 
     /**

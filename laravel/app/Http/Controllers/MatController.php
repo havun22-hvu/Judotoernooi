@@ -133,8 +133,14 @@ class MatController extends Controller
             // Auto-advance: winnaar naar volgende ronde, verliezer naar B-poule
             $correcties = [];
             if ($validated['winnaar_id']) {
-                // Get toernooi via wedstrijd->poule relationship
-                $toernooi = $wedstrijd->poule->blok->toernooi;
+                // Get toernooi via wedstrijd->poule relationship (with null safety)
+                $toernooi = $wedstrijd->poule?->blok?->toernooi;
+                if (!$toernooi) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Wedstrijd heeft geen gekoppeld toernooi',
+                    ], 400);
+                }
                 $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
                 $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
             }
