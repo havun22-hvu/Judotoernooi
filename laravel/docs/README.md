@@ -38,12 +38,14 @@ docs/
   - [Slot Systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md)
   - [Test Matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md)
 
-### 3. Technical
+### 3. Technical / Development
 - [URL Structuur](./URL-STRUCTUUR.md) - Routes en authenticatie schema
 - [API Documentatie](./3-TECHNICAL/API.md) - REST endpoints
 - [Database Schema](./3-TECHNICAL/DATABASE.md) - Tabelstructuur
 - [Ontwikkelaar Gids](./3-TECHNICAL/ONTWIKKELAAR.md) - Dev info
 - [Redundantie & Veiligheid](./3-TECHNICAL/REDUNDANTIE.md) - Enterprise fail-safe architectuur
+- [Code Standaarden](./3-DEVELOPMENT/CODE-STANDAARDEN.md) - **Verplichte** coding conventions
+- [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) - Exceptions, Circuit Breaker, Rate Limiting
 
 ### 4. Planning
 - [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding
