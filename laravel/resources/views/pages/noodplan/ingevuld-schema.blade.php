@@ -26,10 +26,11 @@
             color-adjust: exact !important;
         }
         .score-cel.inactief {
-            background: #e5e7eb !important;
+            background: #6b7280 !important;
         }
+        /* Geen groene kleur bij printen - gewoon wit */
         .score-cel.gespeeld {
-            background: #d1fae5 !important;
+            background: #fff !important;
         }
         .totaal-cel {
             background: #f3f4f6 !important;
@@ -81,15 +82,6 @@
         text-align: center;
         margin-bottom: 1rem;
         width: 100%;
-    }
-    .page-header .toernooi-naam {
-        font-size: 16px;
-        font-weight: bold;
-        color: #000;
-    }
-    .page-header .toernooi-datum {
-        font-size: 12px;
-        color: #666;
     }
     .page-header .poule-info {
         font-size: 14px;
@@ -154,12 +146,13 @@
         border-left: none;
         border-right: 2px solid #333;
     }
-    /* Lichtgrijs voor inactieve cellen (inkt besparen) */
+    /* Donkergrijs voor inactieve cellen (duidelijk zichtbaar) */
     .score-cel.inactief {
-        background: #e5e7eb;
+        background: #6b7280;
     }
+    /* Geen groene kleur voor print - gewoon wit */
     .score-cel.gespeeld {
-        background: #d1fae5;
+        background: #fff;
     }
     .totaal-cel {
         width: 30px;
@@ -260,9 +253,10 @@ function abbreviateClubName($name, $maxLength = 15) {
         }
     }
 
-    // Check of ALLE wedstrijden van deze poule gespeeld zijn (met winnaar)
+    // Check of ALLE wedstrijden van deze poule gespeeld zijn
+    // Een wedstrijd is gespeeld als is_gespeeld=true OF winnaar_id is ingevuld
     $pouleCompleet = $showScores && $poule->wedstrijden->count() > 0
-        && $poule->wedstrijden->every(fn($w) => $w->winnaar_id !== null);
+        && $poule->wedstrijden->every(fn($w) => $w->is_gespeeld || $w->winnaar_id !== null);
 @endphp
 
 @php
@@ -280,8 +274,6 @@ function abbreviateClubName($name, $maxLength = 15) {
             <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
             <span style="font-size: 12px; color: #666;">Print dit schema</span>
         </label>
-        <div class="toernooi-naam">{{ $toernooi->naam }}</div>
-        <div class="toernooi-datum">{{ $toernooi->datum->format('d-m-Y') }}</div>
         <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
         <div class="mat-blok-info">
             @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
