@@ -110,6 +110,51 @@ class Mat extends Model
         }
     }
 
+    /**
+     * Clean up invalid selections (wedstrijden that are already played)
+     * Handles cases where auto-advance didn't happen (browser closed, etc.)
+     */
+    public function cleanupGespeeldeSelecties(): void
+    {
+        $needsUpdate = false;
+        $updates = [];
+
+        if ($this->actieve_wedstrijd_id) {
+            $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
+            if (!$actieve || $actieve->is_gespeeld) {
+                // Actieve wedstrijd is gespeeld, doorschuiven
+                $updates['actieve_wedstrijd_id'] = $this->volgende_wedstrijd_id;
+                $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if (!$needsUpdate && $this->volgende_wedstrijd_id) {
+            $volgende = Wedstrijd::find($this->volgende_wedstrijd_id);
+            if (!$volgende || $volgende->is_gespeeld) {
+                // Volgende wedstrijd is gespeeld, doorschuiven
+                $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if (!$needsUpdate && $this->gereedmaken_wedstrijd_id) {
+            $gereedmaken = Wedstrijd::find($this->gereedmaken_wedstrijd_id);
+            if (!$gereedmaken || $gereedmaken->is_gespeeld) {
+                // Gereedmaken wedstrijd is gespeeld, verwijderen
+                $updates['gereedmaken_wedstrijd_id'] = null;
+                $needsUpdate = true;
+            }
+        }
+
+        if ($needsUpdate) {
+            $this->update($updates);
+            $this->refresh();
+        }
+    }
+
     public function getLabelAttribute(): string
     {
         return $this->naam ?? "Mat {$this->nummer}";
