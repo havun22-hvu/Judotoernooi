@@ -503,6 +503,41 @@
 
 ---
 
+## Sessie: 3 februari 2026
+
+### Feat: Email audit log
+- **Type:** Feature
+- **Wat:** Logging van alle verstuurde emails (uitnodigingen, correctie verzoeken) als bewijs
+- **Bestanden:** EmailLog.php (nieuw model), email_logs migration, ClubController.php, JudokaController.php, email-log.blade.php
+- **Routes:** `toernooi.email-log` op Clubs pagina
+
+### Fix: Mat import ontbreekt in BlokController
+- **Type:** Bug fix
+- **Wat:** `Class 'App\Http\Controllers\Mat' not found` bij poule verplaatsen in zaaloverzicht
+- **Bestanden:** BlokController.php
+- **Oplossing:** `use App\Models\Mat;` import toegevoegd
+
+### Fix: QR code niet zichtbaar op weegkaart
+- **Type:** Bug fix
+- **Wat:** QRCode library laadde niet vanwege verkeerde CDN URL
+- **Bestanden:** weegkaart/show.blade.php, coach-kaart/show.blade.php
+- **Oorzaak:** CDN URL `@1.5.3/build/qrcode.min.js` bestond niet
+- **Oplossing:** URL gewijzigd naar `/npm/qrcode/build/qrcode.min.js` + retry logic
+
+### Fix: Scroll positie reset na form submit
+- **Type:** Bug fix
+- **Wat:** Na opslaan van instellingen sprong pagina naar top
+- **Bestanden:** edit.blade.php
+- **Oplossing:** Global form submit listener voor alle forms, niet alleen main form
+
+### UI: Sticky tabs op instellingen pagina
+- **Type:** UI improvement
+- **Wat:** Tabs blijven zichtbaar bij scrollen
+- **Bestanden:** edit.blade.php
+- **CSS:** `sticky top-0 bg-white z-10`
+
+---
+
 <!--
 TEMPLATE:
 

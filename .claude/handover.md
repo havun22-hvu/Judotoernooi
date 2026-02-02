@@ -1,7 +1,7 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 2 februari 2026
-> **Status:** PRODUCTION READY - Launch over 3 dagen
+> **Laatste update:** 3 februari 2026
+> **Status:** PRODUCTION READY - Launch over 2 dagen
 
 ---
 
@@ -19,7 +19,8 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
-| **2 feb 2026** | 10+ Production Ready | `.claude/handover/2026-02-02-10plus-production.md` |
+| **3 feb 2026** | Staging testing, Email log, QR fix | smallwork.md |
+| 2 feb 2026 | 10+ Production Ready | `.claude/handover/2026-02-02-10plus-production.md` |
 | 1 feb 2026 | Redundantie systeem | `.claude/handover/` (afgerond) |
 | 24 jan 2026 | Reverb fix, DB reset | `.claude/handover/2026-01-24-avond-reverb-fix-db-reset.md` |
 | 23 jan 2026 | Coach in/uit check | `.claude/handover/2026-01-23-avond-coach-inuitcheck.md` |
