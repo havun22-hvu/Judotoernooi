@@ -1440,6 +1440,12 @@ function matInterface() {
 
         // Helper: update actieve, volgende en gereedmaken wedstrijd op MAT niveau
         async setWedstrijdStatus(actieveId, volgendeId, gereedmakenId) {
+            console.log('[Mat] setWedstrijdStatus SENDING:', {
+                mat_id: this.matId,
+                actieve_wedstrijd_id: actieveId,
+                volgende_wedstrijd_id: volgendeId,
+                gereedmaken_wedstrijd_id: gereedmakenId
+            });
             try {
                 const url = `{{ $huidigeWedstrijdUrl }}`;
 
