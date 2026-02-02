@@ -327,20 +327,31 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Welkomstwoord / Aandachtspunten</label>
                 <textarea
                     x-model="notities"
+                    @input.debounce.2000ms="autoSaveNotities()"
                     rows="20"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                    :class="{ 'border-yellow-400': hasUnsavedChanges }"
                     placeholder="Typ hier je notities of kies een template hierboven..."
                 ></textarea>
             </div>
-            <div class="flex justify-between items-center">
-                <div class="flex gap-2">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <div class="flex flex-wrap gap-2 items-center">
                     <button
                         @click="saveNotities()"
                         class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
                     >
                         💾 Opslaan
                     </button>
-                    <span x-show="notitiesSaved" class="text-green-600 text-sm py-2">✓ Opgeslagen</span>
+                    <button
+                        @click="showSaveAsModal = true"
+                        :disabled="!notities.trim()"
+                        class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-3 py-2 rounded-lg text-sm font-medium"
+                    >
+                        📋 Opslaan als template
+                    </button>
+                    <span x-show="notitiesSaved" x-cloak class="text-green-600 text-sm">✓ Opgeslagen</span>
+                    <span x-show="autoSaving" x-cloak class="text-gray-400 text-sm">⏳ Auto-save...</span>
+                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600 text-sm">● Niet opgeslagen</span>
                 </div>
                 <button
                     @click="clearNotities()"
@@ -348,6 +359,62 @@
                 >
                     Wis notities
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Opslaan als template -->
+    <div x-show="showSaveAsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showSaveAsModal = false">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
+                <span class="font-bold">📋 Opslaan als template</span>
+                <button @click="showSaveAsModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            </div>
+            <div class="p-4">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Template naam:</label>
+                    <input
+                        type="text"
+                        x-model="saveAsNaam"
+                        placeholder="Bijv. 'Welkomstwoord aangepast'"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                        @keyup.enter="doSaveAsTemplate()"
+                    >
+                </div>
+
+                <!-- Bestaande templates om te overschrijven -->
+                <template x-if="templates.length > 0">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Of overschrijf bestaande:</label>
+                        <div class="space-y-1 max-h-32 overflow-y-auto">
+                            <template x-for="(template, index) in templates" :key="index">
+                                <button
+                                    @click="overschrijfTemplate(index)"
+                                    class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors"
+                                >
+                                    <span class="font-medium" x-text="template.naam"></span>
+                                    <span class="text-gray-400 ml-1">→ overschrijven</span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="flex justify-end gap-2">
+                    <button
+                        @click="showSaveAsModal = false"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
+                    >
+                        Annuleren
+                    </button>
+                    <button
+                        @click="doSaveAsTemplate()"
+                        :disabled="!saveAsNaam.trim()"
+                        class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                        Opslaan als nieuw
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -564,6 +631,13 @@ function sprekerInterface() {
         selectedTemplate: '',
         showTemplateModal: false,
         nieuweTemplateNaam: '',
+        // Auto-save
+        hasUnsavedChanges: false,
+        autoSaving: false,
+        lastSavedNotities: '',
+        // Save as modal
+        showSaveAsModal: false,
+        saveAsNaam: '',
 
         async init() {
             // Laad templates uit localStorage
@@ -617,6 +691,8 @@ function sprekerInterface() {
                 const data = await response.json();
                 if (data.success && data.notities) {
                     this.notities = data.notities;
+                    this.lastSavedNotities = data.notities;
+                    this.hasUnsavedChanges = false;
                 }
             } catch (err) {
                 console.error('Fout bij laden notities:', err);
@@ -687,6 +763,8 @@ function sprekerInterface() {
                 });
                 const data = await response.json();
                 if (data.success) {
+                    this.lastSavedNotities = this.notities;
+                    this.hasUnsavedChanges = false;
                     this.notitiesSaved = true;
                     setTimeout(() => this.notitiesSaved = false, 2000);
                 }
@@ -854,6 +932,69 @@ OPRUIMEN
             } else {
                 alert('Alle standaard templates bestaan al.');
             }
+        },
+
+        // Auto-save functie (wordt aangeroepen na 2 sec inactiviteit)
+        async autoSaveNotities() {
+            // Check of er wijzigingen zijn
+            if (this.notities === this.lastSavedNotities) {
+                this.hasUnsavedChanges = false;
+                return;
+            }
+
+            this.hasUnsavedChanges = true;
+            this.autoSaving = true;
+
+            try {
+                const response = await fetch('{{ $notitiesSaveUrl }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ notities: this.notities })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.lastSavedNotities = this.notities;
+                    this.hasUnsavedChanges = false;
+                }
+            } catch (err) {
+                console.error('Auto-save fout:', err);
+            } finally {
+                this.autoSaving = false;
+            }
+        },
+
+        // Opslaan als nieuwe template
+        doSaveAsTemplate() {
+            const naam = this.saveAsNaam.trim();
+            if (!naam || !this.notities.trim()) return;
+
+            // Check of naam al bestaat
+            const exists = this.templates.findIndex(t => t.naam.toLowerCase() === naam.toLowerCase());
+            if (exists >= 0) {
+                if (!confirm(`Template "${naam}" bestaat al. Overschrijven?`)) return;
+                this.templates[exists].tekst = this.notities;
+            } else {
+                this.templates.push({ naam, tekst: this.notities });
+            }
+
+            this.saveTemplates();
+            this.saveAsNaam = '';
+            this.showSaveAsModal = false;
+            alert(`Template "${naam}" opgeslagen!`);
+        },
+
+        // Overschrijf bestaande template
+        overschrijfTemplate(index) {
+            const template = this.templates[index];
+            if (!confirm(`Template "${template.naam}" overschrijven met huidige tekst?`)) return;
+
+            this.templates[index].tekst = this.notities;
+            this.saveTemplates();
+            this.showSaveAsModal = false;
+            alert(`Template "${template.naam}" bijgewerkt!`);
         }
     }
 }
