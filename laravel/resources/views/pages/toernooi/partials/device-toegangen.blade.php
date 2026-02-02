@@ -1,6 +1,14 @@
 {{-- Device Toegangen Beheer --}}
 <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="deviceToegangen()">
-    <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Device Toegangen</h2>
+    <div class="flex items-center justify-between mb-4 pb-2 border-b">
+        <h2 class="text-xl font-bold text-gray-800">Device Toegangen</h2>
+        <button type="button"
+                @click="showVrijwilligersModal = true"
+                class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
+            <span>👥</span>
+            <span>Vrijwilligers beheren</span>
+        </button>
+    </div>
     <p class="text-gray-600 mb-4">
         Maak toegangen aan voor vrijwilligers. Elke toegang heeft een unieke URL en PIN.
         <br><span class="text-sm text-gray-500">Het device wordt gekoppeld bij eerste login - zo kunnen alleen geautoriseerde devices de interface gebruiken.</span>
@@ -36,14 +44,15 @@
                                     <span class="font-bold text-gray-800" x-text="toegang.label"></span>
                                     <span class="block text-xs" :class="toegang.is_gebonden ? 'text-green-600' : 'text-gray-400'" x-text="toegang.status"></span>
                                 </div>
-                                {{-- Naam (editable) --}}
+                                {{-- Vrijwilliger dropdown (niet voor mat) --}}
                                 <div class="flex-1 max-w-xs flex items-center gap-2" x-show="rol.key !== 'mat'">
-                                    <input type="text"
-                                           :value="toegang.naam"
-                                           @blur="updateNaam(toegang, $event.target.value)"
-                                           @keydown.enter="$event.target.blur()"
-                                           placeholder="Naam vrijwilliger..."
-                                           class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                    <select @change="selectVrijwilliger(toegang, $event.target.value)"
+                                            class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">-- Selecteer vrijwilliger --</option>
+                                        <template x-for="v in vrijwilligersPerFunctie[rol.key] || []" :key="v.id">
+                                            <option :value="v.id" :selected="toegang.naam === v.voornaam" x-text="v.voornaam + (v.telefoonnummer ? ' (' + v.telefoonnummer + ')' : '')"></option>
+                                        </template>
+                                    </select>
                                     <span x-show="savedId === toegang.id" x-cloak
                                           class="text-green-600 text-xs font-medium whitespace-nowrap">
                                         ✓ Opgeslagen
@@ -56,6 +65,14 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
+                                {{-- WhatsApp (alleen als telefoon bekend) --}}
+                                <a x-show="toegang.telefoon"
+                                   :href="getWhatsAppUrl(toegang)"
+                                   target="_blank"
+                                   class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm"
+                                   title="Stuur via WhatsApp">
+                                    <span>📱 WhatsApp</span>
+                                </a>
                                 {{-- Copy URL --}}
                                 <button type="button"
                                         @click="copyUrl(toegang)"
@@ -123,6 +140,72 @@
         </div>
     </div>
 
+    {{-- Vrijwilligers Modal --}}
+    <div x-show="showVrijwilligersModal"
+         x-cloak
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         @click.self="showVrijwilligersModal = false">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">Vrijwilligers</h3>
+                <button type="button" @click="showVrijwilligersModal = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1">
+                {{-- Add new vrijwilliger --}}
+                <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div class="grid grid-cols-12 gap-2">
+                        <input type="text"
+                               x-model="newVrijwilliger.voornaam"
+                               placeholder="Voornaam"
+                               class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                        <input type="text"
+                               x-model="newVrijwilliger.telefoonnummer"
+                               placeholder="Telefoonnummer"
+                               class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                        <select x-model="newVrijwilliger.functie"
+                                class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                            <template x-for="rol in rollen" :key="rol.key">
+                                <option :value="rol.key" x-text="rol.naam"></option>
+                            </template>
+                        </select>
+                        <button type="button"
+                                @click="addVrijwilliger()"
+                                :disabled="!newVrijwilliger.voornaam"
+                                class="col-span-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded text-sm">
+                            +
+                        </button>
+                    </div>
+                </div>
+
+                {{-- List vrijwilligers --}}
+                <div class="space-y-2">
+                    <template x-if="vrijwilligers.length === 0">
+                        <p class="text-gray-400 italic text-center py-4">Nog geen vrijwilligers toegevoegd</p>
+                    </template>
+                    <template x-for="v in vrijwilligers" :key="v.id">
+                        <div class="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
+                            <div class="flex items-center gap-3">
+                                <span class="font-medium" x-text="v.voornaam"></span>
+                                <span class="text-gray-500 text-sm" x-text="v.telefoonnummer || '-'"></span>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded" x-text="v.functie_label"></span>
+                            </div>
+                            <button type="button"
+                                    @click="deleteVrijwilliger(v)"
+                                    class="text-red-400 hover:text-red-600 text-lg px-2">
+                                &times;
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="p-4 border-t bg-gray-50">
+                <p class="text-xs text-gray-500">Vrijwilligers worden bewaard en zijn beschikbaar voor al je toernooien.</p>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -132,6 +215,10 @@ function deviceToegangen() {
         copiedId: null,
         savedId: null,
         toegangen: [],
+        vrijwilligers: [],
+        showVrijwilligersModal: false,
+        newVrijwilliger: { voornaam: '', telefoonnummer: '', functie: 'mat' },
+        toernooiNaam: '{{ $toernooi->naam }}',
         rollen: [
             { key: 'hoofdjury', naam: 'Hoofdjury', icon: '⚖️' },
             { key: 'mat', naam: 'Mat', icon: '🥋' },
@@ -149,8 +236,17 @@ function deviceToegangen() {
             return grouped;
         },
 
+        get vrijwilligersPerFunctie() {
+            const grouped = {};
+            this.rollen.forEach(r => grouped[r.key] = []);
+            this.vrijwilligers.forEach(v => {
+                if (grouped[v.functie]) grouped[v.functie].push(v);
+            });
+            return grouped;
+        },
+
         async init() {
-            await this.loadToegangen();
+            await Promise.all([this.loadToegangen(), this.loadVrijwilligers()]);
         },
 
         async loadToegangen() {
@@ -163,6 +259,94 @@ function deviceToegangen() {
                     this.toegangen = await response.json();
                 }
             } catch (e) {}
+        },
+
+        async loadVrijwilligers() {
+            try {
+                const response = await fetch('{{ route("toernooi.vrijwilligers.index", $toernooi->routeParams()) }}', {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (response.ok) {
+                    this.vrijwilligers = await response.json();
+                }
+            } catch (e) {}
+        },
+
+        async addVrijwilliger() {
+            if (!this.newVrijwilliger.voornaam) return;
+            try {
+                const response = await fetch('{{ route("toernooi.vrijwilligers.store", $toernooi->routeParams()) }}', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(this.newVrijwilliger),
+                });
+                if (response.ok) {
+                    const nieuweV = await response.json();
+                    this.vrijwilligers.push(nieuweV);
+                    this.newVrijwilliger = { voornaam: '', telefoonnummer: '', functie: this.newVrijwilliger.functie };
+                }
+            } catch (e) {
+                console.error('Failed to add vrijwilliger:', e);
+            }
+        },
+
+        async deleteVrijwilliger(v) {
+            if (!confirm(`${v.voornaam} verwijderen?`)) return;
+            try {
+                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/vrijwilligers') }}/${v.id}`, {
+                    method: 'DELETE',
+                    credentials: 'same-origin',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                });
+                if (response.ok) {
+                    this.vrijwilligers = this.vrijwilligers.filter(x => x.id !== v.id);
+                }
+            } catch (e) {}
+        },
+
+        async selectVrijwilliger(toegang, vrijwilligerId) {
+            const v = this.vrijwilligers.find(x => x.id == vrijwilligerId);
+            const naam = v ? v.voornaam : '';
+            const telefoon = v ? v.telefoonnummer : null;
+
+            try {
+                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ naam, telefoon }),
+                });
+                if (response.ok) {
+                    const updated = await response.json();
+                    Object.assign(toegang, updated);
+                    this.savedId = toegang.id;
+                    setTimeout(() => this.savedId = null, 2000);
+                }
+            } catch (e) {
+                console.error('Failed to update toegang:', e);
+            }
+        },
+
+        getWhatsAppUrl(toegang) {
+            if (!toegang.telefoon) return '';
+            let nummer = toegang.telefoon.replace(/[^0-9+]/g, '');
+            if (nummer.startsWith('06')) {
+                nummer = '+31' + nummer.substring(1);
+            } else if (nummer.startsWith('0')) {
+                nummer = '+31' + nummer.substring(1);
+            }
+            const bericht = `Hoi ${toegang.naam || 'daar'}! Hier is je link voor ${toegang.label} op ${this.toernooiNaam}:\n${toegang.url}\nPIN: ${toegang.pincode}`;
+            return 'https://wa.me/' + nummer.replace('+', '') + '?text=' + encodeURIComponent(bericht);
         },
 
         async addToegang(rol) {
@@ -193,35 +377,6 @@ function deviceToegangen() {
                 }
             } catch (e) {
                 console.error('Failed to add toegang:', e);
-            }
-        },
-
-        async updateNaam(toegang, naam) {
-            if (toegang.naam === naam) return;
-            try {
-                const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
-                    method: 'PUT',
-                    credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ naam }),
-                });
-                if (response.ok) {
-                    const updated = await response.json();
-                    Object.assign(toegang, updated);
-                    // Show saved indicator
-                    this.savedId = toegang.id;
-                    setTimeout(() => this.savedId = null, 2000);
-                } else {
-                    console.error('Failed to update naam:', response.status, await response.text());
-                    alert('Opslaan mislukt: ' + response.status);
-                }
-            } catch (e) {
-                console.error('Failed to update naam:', e);
-                alert('Opslaan mislukt: ' + e.message);
             }
         },
 
@@ -289,5 +444,4 @@ function deviceToegangen() {
         },
     };
 }
-
 </script>
