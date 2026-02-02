@@ -111,8 +111,8 @@ class MatController extends Controller
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'winnaar_id' => 'nullable|exists:judokas,id',
-            'score_wit' => 'nullable|string|max:20',
-            'score_blauw' => 'nullable|string|max:20',
+            'score_wit' => 'nullable|integer|in:0,1,2',
+            'score_blauw' => 'nullable|integer|in:0,1,2',
             'uitslag_type' => 'nullable|string|max:20',
         ]);
 
@@ -154,8 +154,8 @@ class MatController extends Controller
             $this->wedstrijdService->registreerUitslag(
                 $wedstrijd,
                 $validated['winnaar_id'],
-                $validated['score_wit'] ?? '',
-                $validated['score_blauw'] ?? '',
+                (string) ($validated['score_wit'] ?? ''),
+                (string) ($validated['score_blauw'] ?? ''),
                 $validated['uitslag_type'] ?? 'beslissing'
             );
         }
