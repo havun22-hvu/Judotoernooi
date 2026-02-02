@@ -21,6 +21,21 @@
     }
 @endphp
 <div x-data="sprekerInterface()" x-cloak>
+    <!-- Feedback bar (groene balk) -->
+    <div
+        x-show="showFeedbackBar"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg font-medium flex items-center gap-2"
+    >
+        <span>✓</span>
+        <span x-text="feedbackMessage"></span>
+    </div>
+
     <!-- Tab Navigation - Sticky -->
     <div class="flex border-b border-gray-200 mb-4 bg-white rounded-t-lg shadow-sm sticky top-[60px] z-40">
         <button
@@ -638,6 +653,9 @@ function sprekerInterface() {
         // Save as modal
         showSaveAsModal: false,
         saveAsNaam: '',
+        // Feedback bar
+        showFeedbackBar: false,
+        feedbackMessage: '',
 
         async init() {
             // Laad templates uit localStorage
@@ -815,6 +833,13 @@ function sprekerInterface() {
             }
         },
 
+        // Feedback helper (groene balk ipv lelijke alert)
+        showFeedback(message) {
+            this.feedbackMessage = message;
+            this.showFeedbackBar = true;
+            setTimeout(() => this.showFeedbackBar = false, 3000);
+        },
+
         // Template functies
         loadTemplates() {
             const TEMPLATE_KEY = 'spreker_templates_{{ $toernooi->organisator_id }}';
@@ -862,7 +887,7 @@ function sprekerInterface() {
 
             this.saveTemplates();
             this.nieuweTemplateNaam = '';
-            alert(`Template "${naam}" opgeslagen!`);
+            this.showFeedback(`Template "${naam}" opgeslagen!`);
         },
 
         deleteTemplate(index) {
@@ -928,9 +953,9 @@ OPRUIMEN
 
             this.saveTemplates();
             if (added > 0) {
-                alert(`${added} standaard template(s) toegevoegd!`);
+                this.showFeedback(`${added} standaard template(s) toegevoegd!`);
             } else {
-                alert('Alle standaard templates bestaan al.');
+                this.showFeedback('Alle standaard templates bestaan al.');
             }
         },
 
@@ -983,7 +1008,7 @@ OPRUIMEN
             this.saveTemplates();
             this.saveAsNaam = '';
             this.showSaveAsModal = false;
-            alert(`Template "${naam}" opgeslagen!`);
+            this.showFeedback(`Template "${naam}" opgeslagen!`);
         },
 
         // Overschrijf bestaande template
@@ -994,7 +1019,7 @@ OPRUIMEN
             this.templates[index].tekst = this.notities;
             this.saveTemplates();
             this.showSaveAsModal = false;
-            alert(`Template "${template.naam}" bijgewerkt!`);
+            this.showFeedback(`Template "${template.naam}" bijgewerkt!`);
         }
     }
 }
