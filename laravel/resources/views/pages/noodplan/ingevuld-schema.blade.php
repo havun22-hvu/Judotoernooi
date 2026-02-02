@@ -26,7 +26,7 @@
             color-adjust: exact !important;
         }
         .score-cel.inactief {
-            background: #6b7280 !important;
+            background: #374151 !important;
         }
         /* Geen groene kleur bij printen - gewoon wit */
         .score-cel.gespeeld {
@@ -83,20 +83,16 @@
         margin-bottom: 1rem;
         width: 100%;
     }
-    .page-header .toernooi-naam {
-        font-size: 16px;
-        font-weight: bold;
-        color: #000;
-    }
-    .page-header .toernooi-datum {
-        font-size: 12px;
-        color: #666;
-    }
     .page-header .poule-info {
         font-size: 14px;
         font-weight: bold;
         margin-top: 0.5rem;
         color: #333;
+    }
+    .page-header .toernooi-datum {
+        font-weight: normal;
+        font-size: 12px;
+        color: #666;
     }
     .page-header .mat-blok-info {
         font-size: 11px;
@@ -157,7 +153,7 @@
     }
     /* Donkergrijs voor inactieve cellen (duidelijk zichtbaar) */
     .score-cel.inactief {
-        background: #6b7280;
+        background: #374151;
     }
     /* Geen groene kleur voor print - gewoon wit */
     .score-cel.gespeeld {
@@ -283,9 +279,7 @@ function abbreviateClubName($name, $maxLength = 15) {
             <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
             <span style="font-size: 12px; color: #666;">Print dit schema</span>
         </label>
-        <div class="toernooi-naam">{{ $toernooi->naam }}</div>
-        <div class="toernooi-datum">{{ $toernooi->datum->format('d-m-Y') }}</div>
-        <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
+        <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }} <span class="toernooi-datum">({{ $toernooi->datum->format('d-m-Y') }})</span></div>
         <div class="mat-blok-info">
             @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
             @if($poule->mat && $poule->blok) | @endif
