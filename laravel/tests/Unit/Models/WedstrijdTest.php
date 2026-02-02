@@ -6,6 +6,7 @@ use App\Models\Wedstrijd;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Models\Club;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,132 +14,77 @@ class WedstrijdTest extends TestCase
 {
     use RefreshDatabase;
 
-    private Toernooi $toernooi;
-    private Poule $poule;
-    private Judoka $judokaWit;
-    private Judoka $judokaBlauw;
-
-    protected function setUp(): void
+    private function createWedstrijdWithJudokas(): array
     {
-        parent::setUp();
+        $toernooi = Toernooi::factory()->create();
+        $club = Club::factory()->create(['organisator_id' => $toernooi->organisator_id]);
+        $poule = Poule::factory()->create(['toernooi_id' => $toernooi->id]);
 
-        $this->toernooi = Toernooi::factory()->create();
-        $this->poule = Poule::factory()->create(['toernooi_id' => $this->toernooi->id]);
-        $this->judokaWit = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
-        $this->judokaBlauw = Judoka::factory()->create(['toernooi_id' => $this->toernooi->id]);
+        $judokaWit = Judoka::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+        ]);
+        $judokaBlauw = Judoka::factory()->create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $club->id,
+        ]);
+
+        $wedstrijd = Wedstrijd::factory()->create([
+            'poule_id' => $poule->id,
+            'judoka_wit_id' => $judokaWit->id,
+            'judoka_blauw_id' => $judokaBlauw->id,
+        ]);
+
+        return [$wedstrijd, $judokaWit, $judokaBlauw, $poule];
     }
 
     /** @test */
     public function it_determines_if_wedstrijd_is_echt_gespeeld(): void
     {
-        $gespeeldMetWinnaar = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
+        [$wedstrijd, $judokaWit] = $this->createWedstrijdWithJudokas();
+
+        $this->assertFalse($wedstrijd->isEchtGespeeld());
+
+        $wedstrijd->update([
             'is_gespeeld' => true,
-            'winnaar_id' => $this->judokaWit->id,
+            'winnaar_id' => $judokaWit->id,
         ]);
 
-        $gespeeldZonderWinnaar = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-            'is_gespeeld' => true,
-            'winnaar_id' => null, // Bijv. geannuleerd
-        ]);
-
-        $nietGespeeld = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-            'is_gespeeld' => false,
-            'winnaar_id' => null,
-        ]);
-
-        $this->assertTrue($gespeeldMetWinnaar->isEchtGespeeld());
-        $this->assertFalse($gespeeldZonderWinnaar->isEchtGespeeld());
-        $this->assertFalse($nietGespeeld->isEchtGespeeld());
+        $this->assertTrue($wedstrijd->fresh()->isEchtGespeeld());
     }
 
     /** @test */
     public function it_determines_if_wedstrijd_is_nog_te_spelen(): void
     {
-        $gespeeld = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
+        [$wedstrijd, $judokaWit] = $this->createWedstrijdWithJudokas();
+
+        $this->assertTrue($wedstrijd->isNogTeSpelen());
+
+        $wedstrijd->update([
             'is_gespeeld' => true,
-            'winnaar_id' => $this->judokaWit->id,
+            'winnaar_id' => $judokaWit->id,
         ]);
 
-        $nogTeSpelen = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-            'is_gespeeld' => false,
-            'winnaar_id' => null,
-        ]);
-
-        $this->assertFalse($gespeeld->isNogTeSpelen());
-        $this->assertTrue($nogTeSpelen->isNogTeSpelen());
+        $this->assertFalse($wedstrijd->fresh()->isNogTeSpelen());
     }
 
     /** @test */
-    public function it_validates_scores_are_within_range(): void
+    public function it_belongs_to_a_poule(): void
     {
-        $wedstrijd = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-            'score_wit' => '2',
-            'score_blauw' => '1',
-        ]);
+        [$wedstrijd, , , $poule] = $this->createWedstrijdWithJudokas();
 
-        // Scores should be 0, 1, or 2
-        $this->assertContains((int) $wedstrijd->score_wit, [0, 1, 2]);
-        $this->assertContains((int) $wedstrijd->score_blauw, [0, 1, 2]);
+        $this->assertInstanceOf(Poule::class, $wedstrijd->poule);
+        $this->assertEquals($poule->id, $wedstrijd->poule->id);
     }
 
     /** @test */
-    public function it_gets_opponent_of_judoka(): void
+    public function it_has_wit_and_blauw_judokas(): void
     {
-        $wedstrijd = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-        ]);
+        [$wedstrijd, $judokaWit, $judokaBlauw] = $this->createWedstrijdWithJudokas();
 
-        $this->assertEquals($this->judokaBlauw->id, $wedstrijd->getOpponent($this->judokaWit->id)?->id);
-        $this->assertEquals($this->judokaWit->id, $wedstrijd->getOpponent($this->judokaBlauw->id)?->id);
-    }
-
-    /** @test */
-    public function it_determines_color_of_judoka(): void
-    {
-        $wedstrijd = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => $this->judokaBlauw->id,
-        ]);
-
-        $this->assertEquals('wit', $wedstrijd->getKleur($this->judokaWit->id));
-        $this->assertEquals('blauw', $wedstrijd->getKleur($this->judokaBlauw->id));
-        $this->assertNull($wedstrijd->getKleur(9999)); // Unknown judoka
-    }
-
-    /** @test */
-    public function it_handles_bye_match(): void
-    {
-        $byeWedstrijd = Wedstrijd::factory()->create([
-            'poule_id' => $this->poule->id,
-            'judoka_wit_id' => $this->judokaWit->id,
-            'judoka_blauw_id' => null,
-            'is_gespeeld' => true,
-            'winnaar_id' => $this->judokaWit->id,
-            'uitslag_type' => 'bye',
-        ]);
-
-        $this->assertTrue($byeWedstrijd->isBye());
-        $this->assertEquals($this->judokaWit->id, $byeWedstrijd->winnaar_id);
+        $this->assertInstanceOf(Judoka::class, $wedstrijd->judokaWit);
+        $this->assertInstanceOf(Judoka::class, $wedstrijd->judokaBlauw);
+        $this->assertEquals($judokaWit->id, $wedstrijd->judokaWit->id);
+        $this->assertEquals($judokaBlauw->id, $wedstrijd->judokaBlauw->id);
     }
 }

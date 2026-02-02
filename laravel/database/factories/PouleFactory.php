@@ -30,11 +30,10 @@ class PouleFactory extends Factory
             'titel' => "{$leeftijdsklasse} {$gewichtsklasse} Poule",
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
-            'type' => 'poule',
+            'type' => 'voorronde',
             'aantal_judokas' => 0,
             'aantal_wedstrijden' => 0,
-            'is_vast' => false,
-            'spreker_klaar' => false,
+            'spreker_klaar' => null,
         ];
     }
 
@@ -50,13 +49,13 @@ class PouleFactory extends Factory
     }
 
     /**
-     * Create an elimination bracket poule.
+     * Create a kruisfinale (elimination) poule.
      */
-    public function eliminatie(): static
+    public function kruisfinale(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'eliminatie',
-            'titel' => str_replace('Poule', 'Eliminatie', $attributes['titel'] ?? 'Eliminatie'),
+            'type' => 'kruisfinale',
+            'titel' => str_replace('Poule', 'Kruisfinale', $attributes['titel'] ?? 'Kruisfinale'),
         ]);
     }
 
@@ -66,7 +65,7 @@ class PouleFactory extends Factory
     public function afgerond(): static
     {
         return $this->state(fn (array $attributes) => [
-            'spreker_klaar' => true,
+            'spreker_klaar' => now(),
         ]);
     }
 

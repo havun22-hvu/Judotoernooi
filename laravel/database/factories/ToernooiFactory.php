@@ -38,7 +38,6 @@ class ToernooiFactory extends Factory
             'weging_verplicht' => true,
             'max_wegingen' => 2,
             'judokas_per_coach' => 8,
-            'is_afgesloten' => false,
         ];
     }
 
@@ -58,8 +57,7 @@ class ToernooiFactory extends Factory
     public function afgesloten(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_afgesloten' => true,
-            'afgesloten_op' => now(),
+            'afgesloten_at' => now(),
             'datum' => fake()->dateTimeBetween('-3 months', '-1 week'),
         ]);
     }
