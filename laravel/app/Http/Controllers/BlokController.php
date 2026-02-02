@@ -6,6 +6,7 @@ use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Club;
 use App\Models\CoachKaart;
+use App\Models\Mat;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Services\BlokMatVerdelingService;
