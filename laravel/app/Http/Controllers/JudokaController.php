@@ -7,6 +7,7 @@ use App\Http\Requests\JudokaStoreRequest;
 use App\Http\Requests\JudokaUpdateRequest;
 use App\Jobs\ImportJudokasJob;
 use App\Mail\CorrectieVerzoekMail;
+use App\Models\EmailLog;
 use App\Models\Organisator;
 use App\Models\Club;
 use App\Models\Judoka;
@@ -395,12 +396,33 @@ class JudokaController extends Controller
                 continue;
             }
 
+            $recipients = array_filter([$club->email, $club->email2]);
+            $subject = "Correctie vereist - {$toernooi->naam}";
+            $judokaCount = $judokas->count();
+
             try {
-                $recipients = array_filter([$club->email, $club->email2]);
                 Mail::to($recipients)->send(new CorrectieVerzoekMail($toernooi, $club, $judokas));
+
+                EmailLog::logSent(
+                    $toernooi->id,
+                    'correctie',
+                    $recipients,
+                    $subject,
+                    "{$judokaCount} judoka(s) vereisen correctie voor {$club->naam}",
+                    $club->id
+                );
+
                 $verstuurd++;
             } catch (\Exception $e) {
-                // Log error but don't stop the process
+                EmailLog::logFailed(
+                    $toernooi->id,
+                    'correctie',
+                    $recipients,
+                    $subject,
+                    $e->getMessage(),
+                    $club->id
+                );
+
                 \Log::error("Failed to send correction email to club {$club->naam}: " . $e->getMessage());
             }
         }

@@ -280,6 +280,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('club/verstuur-alle', [ClubController::class, 'verstuurAlleUitnodigingen'])->name('club.verstuur-alle');
         Route::get('club/{club}/coach-url', [ClubController::class, 'getCoachUrl'])->name('club.coach-url');
 
+        // Email log
+        Route::get('email-log', [ClubController::class, 'emailLog'])->name('email-log');
+
         // Coach management
         Route::post('club/{club}/coach', [ClubController::class, 'storeCoach'])->name('club.coach.store');
         Route::put('coach/{coach}', [ClubController::class, 'updateCoach'])->name('club.coach.update');
