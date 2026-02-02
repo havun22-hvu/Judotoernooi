@@ -299,6 +299,29 @@
             </p>
         </div>
 
+        <!-- Templates dropdown -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <label class="text-sm font-medium text-gray-700">📋 Templates:</label>
+                <select
+                    x-model="selectedTemplate"
+                    @change="laadTemplate()"
+                    class="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="">-- Kies template --</option>
+                    <template x-for="(template, index) in templates" :key="index">
+                        <option :value="index" x-text="template.naam"></option>
+                    </template>
+                </select>
+                <button
+                    @click="showTemplateModal = true"
+                    class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                    ⚙️ Beheer
+                </button>
+            </div>
+        </div>
+
         <div class="bg-white rounded-lg shadow p-4">
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Welkomstwoord / Aandachtspunten</label>
@@ -306,7 +329,7 @@
                     x-model="notities"
                     rows="20"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-                    placeholder="Typ hier je notities of gebruik de knop hieronder voor een voorbeeldtekst..."
+                    placeholder="Typ hier je notities of kies een template hierboven..."
                 ></textarea>
             </div>
             <div class="flex justify-between items-center">
@@ -327,15 +350,79 @@
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- Voorbeeldtekst laden -->
-        <div class="mt-4">
-            <button
-                @click="laadVoorbeeldtekst()"
-                class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium"
-            >
-                📋 Laad voorbeeldtekst
-            </button>
+    <!-- Modal: Template beheer -->
+    <div x-show="showTemplateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showTemplateModal = false">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+                <span class="font-bold">📋 Templates beheren</span>
+                <button @click="showTemplateModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto max-h-[70vh]">
+                <!-- Huidige notities opslaan als template -->
+                <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <label class="block text-sm font-medium text-green-800 mb-2">💾 Huidige notities opslaan als template:</label>
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            x-model="nieuweTemplateNaam"
+                            placeholder="Naam voor template..."
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            @keyup.enter="saveAsTemplate()"
+                        >
+                        <button
+                            @click="saveAsTemplate()"
+                            :disabled="!nieuweTemplateNaam.trim() || !notities.trim()"
+                            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                        >
+                            Opslaan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bestaande templates -->
+                <div class="space-y-2">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Opgeslagen templates:</h3>
+                    <template x-if="templates.length === 0">
+                        <p class="text-gray-500 text-sm italic">Nog geen templates opgeslagen</p>
+                    </template>
+                    <template x-for="(template, index) in templates" :key="index">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                            <div class="flex-1 min-w-0">
+                                <span class="font-medium text-gray-800" x-text="template.naam"></span>
+                                <p class="text-xs text-gray-500 truncate" x-text="template.tekst.substring(0, 50) + '...'"></p>
+                            </div>
+                            <div class="flex gap-2 ml-2">
+                                <button
+                                    @click="selectedTemplate = index; laadTemplate(); showTemplateModal = false"
+                                    class="text-blue-600 hover:text-blue-800 text-sm px-2 py-1"
+                                    title="Laden"
+                                >
+                                    📥
+                                </button>
+                                <button
+                                    @click="deleteTemplate(index)"
+                                    class="text-red-600 hover:text-red-800 text-sm px-2 py-1"
+                                    title="Verwijderen"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Standaard voorbeeldtekst toevoegen -->
+                <div class="mt-4 pt-4 border-t">
+                    <button
+                        @click="addDefaultTemplate()"
+                        class="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium"
+                    >
+                        ➕ Voeg standaard voorbeeldtekst toe
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -472,8 +559,15 @@ function sprekerInterface() {
         selectedPouleData: null,
         loadingPoule: false,
         klarePouleCount: {{ $klarePoules->count() }},
+        // Templates
+        templates: [],
+        selectedTemplate: '',
+        showTemplateModal: false,
+        nieuweTemplateNaam: '',
 
         async init() {
+            // Laad templates uit localStorage
+            this.loadTemplates();
             // Laad geschiedenis uit localStorage
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
@@ -643,10 +737,70 @@ function sprekerInterface() {
             }
         },
 
-        laadVoorbeeldtekst() {
-            const voorbeeldtekst = `WELKOMSTWOORD
-- Welkom bij het 7e WestFries Open Judotoernooi!
-- Namens Judoschool Cees Veen wensen wij iedereen een sportieve dag
+        // Template functies
+        loadTemplates() {
+            const TEMPLATE_KEY = 'spreker_templates_{{ $toernooi->organisator_id }}';
+            try {
+                const stored = localStorage.getItem(TEMPLATE_KEY);
+                if (stored) {
+                    this.templates = JSON.parse(stored);
+                }
+            } catch (e) {
+                this.templates = [];
+            }
+        },
+
+        saveTemplates() {
+            const TEMPLATE_KEY = 'spreker_templates_{{ $toernooi->organisator_id }}';
+            localStorage.setItem(TEMPLATE_KEY, JSON.stringify(this.templates));
+        },
+
+        laadTemplate() {
+            if (this.selectedTemplate === '' || this.selectedTemplate === null) return;
+            const template = this.templates[this.selectedTemplate];
+            if (!template) return;
+
+            if (this.notities && !confirm(`Template "${template.naam}" laden?\n\nDit vervangt je huidige notities.`)) {
+                this.selectedTemplate = '';
+                return;
+            }
+            this.notities = template.tekst;
+            this.saveNotities();
+            this.selectedTemplate = '';
+        },
+
+        saveAsTemplate() {
+            const naam = this.nieuweTemplateNaam.trim();
+            if (!naam || !this.notities.trim()) return;
+
+            // Check of naam al bestaat
+            const exists = this.templates.findIndex(t => t.naam.toLowerCase() === naam.toLowerCase());
+            if (exists >= 0) {
+                if (!confirm(`Template "${naam}" bestaat al. Overschrijven?`)) return;
+                this.templates[exists].tekst = this.notities;
+            } else {
+                this.templates.push({ naam, tekst: this.notities });
+            }
+
+            this.saveTemplates();
+            this.nieuweTemplateNaam = '';
+            alert(`Template "${naam}" opgeslagen!`);
+        },
+
+        deleteTemplate(index) {
+            const template = this.templates[index];
+            if (!confirm(`Template "${template.naam}" verwijderen?`)) return;
+            this.templates.splice(index, 1);
+            this.saveTemplates();
+        },
+
+        addDefaultTemplate() {
+            const defaultTemplates = [
+                {
+                    naam: 'Welkomstwoord',
+                    tekst: `WELKOMSTWOORD
+- Welkom bij het judotoernooi!
+- Namens de organisatie wensen wij iedereen een sportieve dag
 - Dank aan alle vrijwilligers en scheidsrechters
 
 HUISREGELS
@@ -657,18 +811,49 @@ PRAKTISCH
 - Kantine open tot 17:00
 - Toiletten bij de ingang en achter de kantine
 - EHBO-post naast de jury tafel
-- Gevonden voorwerpen bij de inschrijftafel
-
-PRIJSUITREIKING
+- Gevonden voorwerpen bij de inschrijftafel`
+                },
+                {
+                    naam: 'Prijsuitreiking',
+                    tekst: `PRIJSUITREIKING
 - Direct na de laatste wedstrijd per categorie
 - Judoka's verzamelen bij de podiummat
-- Ouders welkom om foto's te maken`;
+- Ouders welkom om foto's te maken
+- Winnaars worden per poule opgeroepen
 
-            if (this.notities && !confirm('Dit vervangt je huidige notities. Doorgaan?')) {
-                return;
+MEDAILLES
+- Goud: 1e plaats
+- Zilver: 2e plaats
+- Brons: 3e plaats(en)`
+                },
+                {
+                    naam: 'Afsluitend woord',
+                    tekst: `AFSLUITING
+- Dank aan alle deelnemers voor het sportieve gedrag
+- Dank aan de scheidsrechters en vrijwilligers
+- Tot volgend jaar!
+
+OPRUIMEN
+- Graag afval in de prullenbakken
+- Niet vergeten: judopakken, bidons, tassen
+- Gevonden voorwerpen bij de organisatie`
+                }
+            ];
+
+            let added = 0;
+            defaultTemplates.forEach(dt => {
+                if (!this.templates.find(t => t.naam === dt.naam)) {
+                    this.templates.push(dt);
+                    added++;
+                }
+            });
+
+            this.saveTemplates();
+            if (added > 0) {
+                alert(`${added} standaard template(s) toegevoegd!`);
+            } else {
+                alert('Alle standaard templates bestaan al.');
             }
-            this.notities = voorbeeldtekst;
-            this.saveNotities();
         }
     }
 }

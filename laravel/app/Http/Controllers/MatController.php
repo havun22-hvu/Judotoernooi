@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\WedstrijdUitslagRequest;
 use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Mat;

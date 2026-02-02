@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Band;
+use App\Http\Requests\JudokaStoreRequest;
+use App\Http\Requests\JudokaUpdateRequest;
 use App\Mail\CorrectieVerzoekMail;
 use App\Models\Organisator;
 use App\Models\Club;
@@ -102,15 +104,9 @@ class JudokaController extends Controller
         return view('pages.judoka.edit', compact('toernooi', 'judoka'));
     }
 
-    public function update(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): RedirectResponse
+    public function update(Organisator $organisator, JudokaUpdateRequest $request, Toernooi $toernooi, Judoka $judoka): RedirectResponse
     {
-        $validated = $request->validate([
-            'naam' => 'required|string|max:255',
-            'geboortejaar' => 'required|integer|min:1900|max:' . date('Y'),
-            'geslacht' => 'required|in:M,V',
-            'band' => 'required|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
-        ]);
+        $validated = $request->validated();
 
         // Free tier: naam cannot be changed after creation
         if ($toernooi->isFreeTier()) {
@@ -145,7 +141,7 @@ class JudokaController extends Controller
         return redirect($redirectRoute)->with('success', 'Judoka bijgewerkt');
     }
 
-    public function store(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
+    public function store(Organisator $organisator, JudokaStoreRequest $request, Toernooi $toernooi): RedirectResponse
     {
         // Check freemium judoka limit
         if (!$toernooi->canAddMoreJudokas()) {
@@ -153,15 +149,7 @@ class JudokaController extends Controller
                 ->with('error', 'Maximum aantal judoka\'s voor dit toernooi bereikt. Upgrade naar een betaald abonnement voor meer ruimte.');
         }
 
-        $validated = $request->validate([
-            'naam' => 'required|string|max:255',
-            'club_id' => 'nullable|exists:clubs,id',
-            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
-            'geslacht' => 'nullable|in:M,V',
-            'band' => 'nullable|string|max:20',
-            'gewicht' => 'nullable|numeric|min:10|max:200',
-            'telefoon' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         // Calculate leeftijdsklasse and gewichtsklasse
         $leeftijdsklasse = null;

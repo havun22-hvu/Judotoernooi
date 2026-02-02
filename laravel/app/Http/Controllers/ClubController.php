@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ClubRequest;
 use App\Mail\ClubUitnodigingMail;
 use App\Models\Club;
 use App\Models\ClubUitnodiging;
@@ -45,7 +46,7 @@ class ClubController extends Controller
     /**
      * Store a new club for this organisator
      */
-    public function storeOrganisator(Request $request, Organisator $organisator): RedirectResponse
+    public function storeOrganisator(ClubRequest $request, Organisator $organisator): RedirectResponse
     {
         $loggedIn = auth('organisator')->user();
 
@@ -53,15 +54,7 @@ class ClubController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'naam' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'email2' => 'nullable|email|max:255',
-            'contact_naam' => 'nullable|string|max:255',
-            'telefoon' => 'nullable|string|max:20',
-            'plaats' => 'nullable|string|max:255',
-            'website' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $validated['organisator_id'] = $organisator->id;
 
@@ -80,7 +73,7 @@ class ClubController extends Controller
     /**
      * Update a club
      */
-    public function updateOrganisator(Request $request, Organisator $organisator, Club $club): RedirectResponse
+    public function updateOrganisator(ClubRequest $request, Organisator $organisator, Club $club): RedirectResponse
     {
         $loggedIn = auth('organisator')->user();
 
@@ -93,15 +86,7 @@ class ClubController extends Controller
             abort(403);
         }
 
-        $validated = $request->validate([
-            'naam' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'email2' => 'nullable|email|max:255',
-            'contact_naam' => 'nullable|string|max:255',
-            'telefoon' => 'nullable|string|max:20',
-            'plaats' => 'nullable|string|max:255',
-            'website' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $club->update($validated);
 
