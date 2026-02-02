@@ -100,6 +100,7 @@ Route: `/toernooi` (alleen voor sitebeheerder)
 | Betalingen | CLAUDE.md | `BETALINGEN.md` |
 | Interfaces/PWA | README.md | `INTERFACES.md` |
 | **Code standaarden** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
+| **Error handling** | CLAUDE.md | `laravel/docs/3-DEVELOPMENT/STABILITY.md` |
 
 ### Workflow: Local → GitHub → Server
 ```
@@ -186,5 +187,21 @@ cd "D:/GitHub/JudoToernooi/laravel" && php artisan serve --port=8007
 | Project details | `.claude/context.md` |
 | Classificatie/Poules | `laravel/docs/2-FEATURES/CLASSIFICATIE.md` |
 | Mollie betalingen | `laravel/docs/2-FEATURES/BETALINGEN.md` |
+| Error handling | `laravel/docs/3-DEVELOPMENT/STABILITY.md` |
+| Code standaarden | `laravel/docs/3-DEVELOPMENT/CODE-STANDAARDEN.md` |
 | Project docs | `laravel/docs/README.md` |
+| Handover | `.claude/handover.md` |
 | HavunCore KB | `D:\GitHub\HavunCore\docs\kb\`
+
+## Production Commands
+
+```bash
+# Validate production readiness
+php artisan validate:production
+
+# Run tests
+php artisan test
+
+# Build assets
+npm run build
+```
