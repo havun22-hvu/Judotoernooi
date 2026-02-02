@@ -123,6 +123,7 @@ class PubliekController extends Controller
         $poulesGegenereerd = $toernooi->poules()->exists();
 
         // Get mat info with current poule, wedstrijden and standings
+        // Groen/geel komt nu van MAT niveau (niet poule niveau)
         $matten = [];
         if ($poulesGegenereerd) {
             $matten = $toernooi->matten()
@@ -136,6 +137,21 @@ class PubliekController extends Controller
                 ->map(function ($mat) {
                     // Get first unfinished poule for this mat
                     $poule = $mat->poules->first();
+
+                    // Collect all wedstrijden from all poules on this mat (for finding groen/geel)
+                    $alleWedstrijden = $mat->poules->flatMap(fn($p) => $p->wedstrijden);
+
+                    // Groen/geel van MAT niveau
+                    $groeneWedstrijd = null;
+                    $geleWedstrijd = null;
+
+                    if ($mat->actieve_wedstrijd_id) {
+                        $groeneWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                    }
+                    if ($mat->volgende_wedstrijd_id) {
+                        $geleWedstrijd = $alleWedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
+                    }
+
                     if ($poule) {
                         // Calculate standings for each judoka
                         $poule->standings = $poule->judokas->map(function ($judoka) use ($poule) {
@@ -153,41 +169,28 @@ class PubliekController extends Controller
                             return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
                         })->sortByDesc(fn($s) => (int) $s['wp'] * 1000 + (int) $s['jp'])->values();
 
-                        // Determine groen (speelt nu) en geel (klaar maken) wedstrijden
-                        $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
-
-                        // Groen: actieve_wedstrijd_id of auto-fallback (eerste niet-gespeelde)
-                        $groeneWedstrijd = null;
-                        if ($poule->actieve_wedstrijd_id) {
-                            $groeneWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->actieve_wedstrijd_id && !$w->is_gespeeld);
-                        }
-                        if (!$groeneWedstrijd) {
-                            $groeneWedstrijd = $wedstrijden->first(fn($w) => !$w->is_gespeeld);
-                        }
-
-                        // Geel: huidige_wedstrijd_id of auto-fallback (tweede niet-gespeelde)
-                        $geleWedstrijd = null;
-                        if ($poule->huidige_wedstrijd_id) {
-                            $geleWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && !$w->is_gespeeld);
-                        }
-                        if (!$geleWedstrijd && $groeneWedstrijd) {
-                            $geleWedstrijd = $wedstrijden->first(fn($w) => !$w->is_gespeeld && $w->id !== $groeneWedstrijd->id);
-                        }
-
-                        // Add judoka info to wedstrijden
+                        // Add judoka info to wedstrijden (find from all poules)
                         if ($groeneWedstrijd) {
-                            $groeneWedstrijd->wit = $poule->judokas->firstWhere('id', $groeneWedstrijd->judoka_wit_id);
-                            $groeneWedstrijd->blauw = $poule->judokas->firstWhere('id', $groeneWedstrijd->judoka_blauw_id);
+                            $groenePoule = $mat->poules->first(fn($p) => $p->wedstrijden->contains('id', $groeneWedstrijd->id));
+                            if ($groenePoule) {
+                                $groeneWedstrijd->wit = $groenePoule->judokas->firstWhere('id', $groeneWedstrijd->judoka_wit_id);
+                                $groeneWedstrijd->blauw = $groenePoule->judokas->firstWhere('id', $groeneWedstrijd->judoka_blauw_id);
+                            }
                         }
                         if ($geleWedstrijd) {
-                            $geleWedstrijd->wit = $poule->judokas->firstWhere('id', $geleWedstrijd->judoka_wit_id);
-                            $geleWedstrijd->blauw = $poule->judokas->firstWhere('id', $geleWedstrijd->judoka_blauw_id);
+                            $gelePoule = $mat->poules->first(fn($p) => $p->wedstrijden->contains('id', $geleWedstrijd->id));
+                            if ($gelePoule) {
+                                $geleWedstrijd->wit = $gelePoule->judokas->firstWhere('id', $geleWedstrijd->judoka_wit_id);
+                                $geleWedstrijd->blauw = $gelePoule->judokas->firstWhere('id', $geleWedstrijd->judoka_blauw_id);
+                            }
                         }
 
                         $poule->groeneWedstrijd = $groeneWedstrijd;
                         $poule->geleWedstrijd = $geleWedstrijd;
                     }
                     $mat->huidigePoule = $poule;
+                    $mat->groeneWedstrijd = $groeneWedstrijd;
+                    $mat->geleWedstrijd = $geleWedstrijd;
                     return $mat;
                 });
         }
@@ -273,7 +276,7 @@ class PubliekController extends Controller
             return response()->json(['poules' => []]);
         }
 
-        // Get poules containing these judokas
+        // Get poules containing these judokas, include mat for groen/geel lookup
         $poules = Poule::where('toernooi_id', $toernooi->id)
             ->whereHas('judokas', function ($q) use ($judokaIds) {
                 $q->whereIn('judokas.id', $judokaIds);
@@ -282,39 +285,25 @@ class PubliekController extends Controller
             ->get()
             ->map(function ($poule) use ($judokaIds, $toernooi) {
                 $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+                $mat = $poule->mat;
 
-                // Find current and next match
-                // Huidige (groen) = manual override (actieve_wedstrijd_id) OR auto-fallback
-                // Volgende (geel) = manual override (huidige_wedstrijd_id) OR auto-fallback
+                // Find current and next match - NOW ON MAT LEVEL
                 $wedstrijden = $poule->wedstrijden->sortBy('volgorde')->values();
 
                 $huidigeWedstrijd = null;
                 $volgendeWedstrijd = null;
 
-                // Groen (speelt nu): check manual override first
-                if ($poule->actieve_wedstrijd_id) {
-                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->actieve_wedstrijd_id && $w->status !== 'gespeeld');
+                // Groen/Geel komen van MAT niveau (niet poule)
+                if ($mat && $mat->actieve_wedstrijd_id) {
+                    $huidigeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->actieve_wedstrijd_id && !$w->is_gespeeld);
+                }
+                if ($mat && $mat->volgende_wedstrijd_id) {
+                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $mat->volgende_wedstrijd_id && !$w->is_gespeeld);
                 }
 
-                // Auto-fallback for groen: first unplayed
-                if (!$huidigeWedstrijd) {
-                    $ongespeeld = $wedstrijden->filter(fn($w) => $w->status !== 'gespeeld')->values();
-                    $huidigeWedstrijd = $ongespeeld->first();
-                }
-
-                // Geel (klaar maken): check manual override first
-                if ($poule->huidige_wedstrijd_id) {
-                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->id === $poule->huidige_wedstrijd_id && $w->status !== 'gespeeld');
-                }
-
-                // Auto-fallback for geel: second unplayed (after huidige)
-                if (!$volgendeWedstrijd && $huidigeWedstrijd) {
-                    $volgendeWedstrijd = $wedstrijden->first(fn($w) => $w->status !== 'gespeeld' && $w->id !== $huidigeWedstrijd->id);
-                }
-
-                // IDs of judokas in current/next match
-                $huidigeJudokaIds = $huidigeWedstrijd ? [$huidigeWedstrijd->judoka1_id, $huidigeWedstrijd->judoka2_id] : [];
-                $volgendeJudokaIds = $volgendeWedstrijd ? [$volgendeWedstrijd->judoka1_id, $volgendeWedstrijd->judoka2_id] : [];
+                // IDs of judokas in current/next match (use correct column names)
+                $huidigeJudokaIds = $huidigeWedstrijd ? [$huidigeWedstrijd->judoka_wit_id, $huidigeWedstrijd->judoka_blauw_id] : [];
+                $volgendeJudokaIds = $volgendeWedstrijd ? [$volgendeWedstrijd->judoka_wit_id, $volgendeWedstrijd->judoka_blauw_id] : [];
 
                 return [
                     'id' => $poule->id,
@@ -322,16 +311,16 @@ class PubliekController extends Controller
                     'titel' => $poule->getDisplayTitel(),
                     'leeftijdsklasse' => $poule->leeftijdsklasse,
                     'gewichtsklasse' => $poule->gewichtsklasse,
-                    'mat' => $poule->mat?->nummer,
+                    'mat' => $mat?->nummer,
                     'blok' => $poule->blok?->nummer,
                     'type' => $poule->type,
                     'huidige_wedstrijd' => $huidigeWedstrijd ? [
-                        'judoka1_id' => $huidigeWedstrijd->judoka1_id,
-                        'judoka2_id' => $huidigeWedstrijd->judoka2_id,
+                        'judoka1_id' => $huidigeWedstrijd->judoka_wit_id,
+                        'judoka2_id' => $huidigeWedstrijd->judoka_blauw_id,
                     ] : null,
                     'volgende_wedstrijd' => $volgendeWedstrijd ? [
-                        'judoka1_id' => $volgendeWedstrijd->judoka1_id,
-                        'judoka2_id' => $volgendeWedstrijd->judoka2_id,
+                        'judoka1_id' => $volgendeWedstrijd->judoka_wit_id,
+                        'judoka2_id' => $volgendeWedstrijd->judoka_blauw_id,
                     ] : null,
                     'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds) {
                         // Extract band color for colored dot display

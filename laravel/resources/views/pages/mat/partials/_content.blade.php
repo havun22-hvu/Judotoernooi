@@ -1054,27 +1054,22 @@ function matInterface() {
 
             const wasGespeeld = wedstrijd.is_gespeeld;
 
-            // BELANGRIJK: Check VOOR is_gespeeld update of dit de actieve (groene) wedstrijd was
-            // Anders klopt de berekening niet meer na de update
-            const wasActief = poule && (
-                poule.actieve_wedstrijd_id === wedstrijd.id ||
-                (!poule.actieve_wedstrijd_id && !wasGespeeld)  // Fallback: eerste niet-gespeelde
-            );
+            // BELANGRIJK: Check VOOR is_gespeeld update of dit de actieve (groene) wedstrijd was op MAT niveau
+            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
+            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
+            const wasActief = matActieveId === wedstrijd.id;
 
             wedstrijd.is_gespeeld = !!(winnaarId || (wedstrijd.jpScores[wedstrijd.wit.id] !== undefined && wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined));
             wedstrijd.winnaar_id = winnaarId;
 
             // Auto-advance: als groene wedstrijd klaar → gele (klaar maken) wordt groen (speelt)
+            // Dit werkt nu op MAT niveau
             if (!wasGespeeld && wedstrijd.is_gespeeld && wasActief) {
-                // Gele (huidige_wedstrijd_id = klaar maken) wordt groen (actief)
-                // huidige_wedstrijd_id bevat de handmatig geselecteerde gele wedstrijd
-                const nieuweActief = poule.huidige_wedstrijd_id || null;
+                // Gele (volgende_wedstrijd_id op mat) wordt groen (actief)
+                const nieuweActief = matVolgendeId || null;
 
-                poule.actieve_wedstrijd_id = nieuweActief;
-                poule.huidige_wedstrijd_id = null; // Reset geel
-
-                // Notify backend
-                await this.setWedstrijdStatus(poule, nieuweActief, null);
+                // Notify backend en update lokale state
+                await this.setWedstrijdStatus(nieuweActief, null);
             }
         },
 
@@ -1304,37 +1299,36 @@ function matInterface() {
             }
         },
 
-        // Bepaal huidige (groen) en volgende (geel) wedstrijd
-        // Groen = actieve_wedstrijd_id OF eerste niet-gespeelde
-        // Geel = huidige_wedstrijd_id OF tweede niet-gespeelde
+        // Bepaal huidige (groen) en volgende (geel) wedstrijd - NU OP MAT NIVEAU
+        // Groen = mat.actieve_wedstrijd_id (1 per mat, ongeacht poules)
+        // Geel = mat.volgende_wedstrijd_id (1 per mat, ongeacht poules)
+        // Auto-fallback voor display: eerste niet-gespeelde als geen groen, tweede als geen geel
         getHuidigeEnVolgende(poule) {
             const wedstrijden = poule.wedstrijden;
             if (!wedstrijden || wedstrijden.length === 0) return { huidige: null, volgende: null };
 
-            // Zoek eerste niet-gespeelde wedstrijd (voor auto-fallback)
+            // Zoek eerste niet-gespeelde wedstrijd in DEZE poule (voor auto-fallback display)
             const eersteNietGespeeld = wedstrijden.find(w => !w.is_gespeeld);
-            const tweedeNietGespeeld = wedstrijden.filter(w => !w.is_gespeeld)[1] || null;
 
-            // Huidige (groen) = handmatig actieve OF eerste niet-gespeelde
+            // MAT-niveau: haal actieve/volgende van matSelectie
+            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
+            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
+
+            // Huidige (groen) = als mat's actieve wedstrijd in DEZE poule zit
             let huidige = null;
-            if (poule.actieve_wedstrijd_id) {
-                huidige = wedstrijden.find(w => w.id === poule.actieve_wedstrijd_id && !w.is_gespeeld);
-            }
-            if (!huidige) {
-                huidige = eersteNietGespeeld;
+            if (matActieveId) {
+                huidige = wedstrijden.find(w => w.id === matActieveId && !w.is_gespeeld);
             }
 
-            // Volgende (geel) = handmatig geselecteerd OF auto-fallback
-            // Auto-fallback is nodig zodat zaal/coach-app de volgende wedstrijd zien
+            // Volgende (geel) = als mat's volgende wedstrijd in DEZE poule zit
             let volgende = null;
-            if (poule.huidige_wedstrijd_id) {
-                volgende = wedstrijden.find(w => w.id === poule.huidige_wedstrijd_id && !w.is_gespeeld);
+            if (matVolgendeId) {
+                volgende = wedstrijden.find(w => w.id === matVolgendeId && !w.is_gespeeld);
             }
-            // Auto-fallback: tweede niet-gespeelde (na huidige) - alleen als niet expliciet uitgeschakeld
-            const geenFallback = this.geenAutoFallback && this.geenAutoFallback[poule.poule_id];
-            if (!volgende && huidige && !geenFallback) {
-                volgende = wedstrijden.find(w => !w.is_gespeeld && w.id !== huidige.id);
-            }
+
+            // Auto-fallback voor DISPLAY only (geen groen op mat = toon eerste niet-gespeelde als "potentieel")
+            // Dit is alleen visueel, niet de echte groen/geel status
+            // GEEN auto-fallback meer - mat-jury moet handmatig selecteren
 
             return { huidige, volgende };
         },
@@ -1369,96 +1363,76 @@ function matInterface() {
             return 'Klik om te selecteren';
         },
 
-        // Toggle wedstrijd selectie (groen/geel systeem)
-        // MATJURY kan handmatig groen/geel instellen door te klikken
-        // CODE mag alleen: geel→groen promoten bij score, groen uitzetten bij score
-        // CODE maakt NOOIT automatisch een nieuwe gele aan
+        // Toggle wedstrijd selectie (groen/geel systeem) - NU OP MAT NIVEAU
+        // 1 groen en 1 geel per mat, ongeacht aantal poules
         async toggleVolgendeWedstrijd(poule, wedstrijd) {
             // Niet toestaan voor gespeelde wedstrijden
             if (wedstrijd.is_gespeeld) return;
 
-            const { huidige, volgende } = this.getHuidigeEnVolgende(poule);
+            // Haal huidige mat-niveau selectie
+            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
+            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
 
             // Klik op GROENE wedstrijd = bevestiging vragen, dan neutraal, gele wordt groen
-            if (huidige && wedstrijd.id === huidige.id) {
+            if (matActieveId && wedstrijd.id === matActieveId) {
                 if (!confirm('Weet je zeker dat je deze wedstrijd wilt stoppen?\n\nDe gele (volgende) wedstrijd wordt dan groen (speelt nu).')) {
                     return;
                 }
-                const nieuweActieve = volgende ? volgende.id : null;
-                await this.setWedstrijdStatus(poule, nieuweActieve, null);
+                const nieuweActieve = matVolgendeId || null;
+                await this.setWedstrijdStatus(nieuweActieve, null);
                 return;
             }
 
             // Klik op GELE wedstrijd = deselecteren (wordt neutraal)
-            if (volgende && wedstrijd.id === volgende.id) {
-                // Onderdruk auto-fallback voor deze poule
-                if (!this.geenAutoFallback) this.geenAutoFallback = {};
-                this.geenAutoFallback[poule.poule_id] = true;
-                await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, null);
+            if (matVolgendeId && wedstrijd.id === matVolgendeId) {
+                await this.setWedstrijdStatus(matActieveId, null);
                 return;
             }
 
             // Klik op andere wedstrijd
-            if (huidige) {
+            if (matActieveId) {
                 // Er is al een groene - check of er al een gele is
-                if (volgende) {
+                if (matVolgendeId) {
                     // Er is al een gele, eerst die uitzetten
                     alert('Er is al een volgende wedstrijd geselecteerd (geel).\n\nKlik eerst op de gele wedstrijd om die te deselecteren.');
                     return;
                 }
-                // Geen gele, dus deze wordt geel - reset auto-fallback onderdrukking
-                if (this.geenAutoFallback) delete this.geenAutoFallback[poule.poule_id];
-                await this.setWedstrijdStatus(poule, poule.actieve_wedstrijd_id, wedstrijd.id);
+                // Geen gele, dus deze wordt geel
+                await this.setWedstrijdStatus(matActieveId, wedstrijd.id);
             } else {
-                // Geen groene, deze wordt groen (geen automatische gele) - reset auto-fallback onderdrukking
-                if (this.geenAutoFallback) delete this.geenAutoFallback[poule.poule_id];
-                await this.setWedstrijdStatus(poule, wedstrijd.id, null);
+                // Geen groene, deze wordt groen
+                await this.setWedstrijdStatus(wedstrijd.id, null);
             }
         },
 
-        // Helper: update actieve en/of huidige wedstrijd
-        async setWedstrijdStatus(poule, actieveId, huidigeId) {
+        // Helper: update actieve en volgende wedstrijd op MAT niveau
+        async setWedstrijdStatus(actieveId, volgendeId) {
             try {
                 const url = `{{ $huidigeWedstrijdUrl }}`;
 
-                // Update actieve (groen)
-                const response1 = await fetch(url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        poule_id: poule.poule_id,
-                        wedstrijd_id: actieveId,
-                        type: 'actief'
+                        mat_id: this.matId,
+                        actieve_wedstrijd_id: actieveId,
+                        volgende_wedstrijd_id: volgendeId
                     })
                 });
 
-                if (!response1.ok) return;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    alert('Fout: ' + (errorData.error || 'Onbekende fout'));
+                    return;
+                }
 
-                // Update huidige (geel = klaar maken)
-                const response2 = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        poule_id: poule.poule_id,
-                        wedstrijd_id: huidigeId,
-                        type: 'volgend'
-                    })
-                });
-
-                if (!response2.ok) return;
-
-                const data1 = await response1.json();
-                const data2 = await response2.json();
-
-                if (data1.success && data2.success) {
-                    poule.actieve_wedstrijd_id = actieveId;
-                    poule.huidige_wedstrijd_id = huidigeId;
+                const data = await response.json();
+                if (data.success && data.mat) {
+                    // Update lokale mat selectie
+                    this.matSelectie = data.mat;
                 }
             } catch (err) {
                 console.error('Fout bij wijzigen wedstrijd status:', err);
