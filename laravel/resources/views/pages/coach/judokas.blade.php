@@ -429,7 +429,7 @@
 
                     <!-- Edit mode -->
                     @if($inschrijvingOpen && ($magWijzigen ?? true))
-                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }}, '{{ $judoka->band ?? '' }}')" class="mt-3">
+                    <div x-show="editing" x-data="judokaEditForm({{ $judoka->geboortejaar ?? 'null' }}, '{{ $judoka->geslacht ?? '' }}', '{{ $judoka->gewichtsklasse ?? '' }}', {{ $judoka->gewicht ?? 'null' }}, '{{ $judoka->band ? strtolower(explode(' ', $judoka->band)[0]) : '' }}')" class="mt-3">
                         <form action="{{ route('coach.portal.judoka.update', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code, 'judoka' => $judoka]) }}" method="POST">
                             @csrf @method('PUT')
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -440,13 +440,13 @@
                                 </select>
                                 <select name="band" x-model="band" class="border rounded px-3 py-2">
                                     <option value="">Band</option>
-                                    <option value="wit">Wit</option>
-                                    <option value="geel">Geel</option>
-                                    <option value="oranje">Oranje</option>
-                                    <option value="groen">Groen</option>
-                                    <option value="blauw">Blauw</option>
-                                    <option value="bruin">Bruin</option>
-                                    <option value="zwart">Zwart</option>
+                                    <option value="wit" :selected="band === 'wit'">Wit</option>
+                                    <option value="geel" :selected="band === 'geel'">Geel</option>
+                                    <option value="oranje" :selected="band === 'oranje'">Oranje</option>
+                                    <option value="groen" :selected="band === 'groen'">Groen</option>
+                                    <option value="blauw" :selected="band === 'blauw'">Blauw</option>
+                                    <option value="bruin" :selected="band === 'bruin'">Bruin</option>
+                                    <option value="zwart" :selected="band === 'zwart'">Zwart</option>
                                 </select>
                                 <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" class="border rounded px-3 py-2" placeholder="Gewicht (kg)">
                                 <select name="gewichtsklasse" x-model="gewichtsklasse" class="border rounded px-3 py-2">
