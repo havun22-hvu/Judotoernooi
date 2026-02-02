@@ -83,20 +83,21 @@
         margin-bottom: 1rem;
         width: 100%;
     }
+    .page-header .toernooi-titel {
+        font-size: 16px;
+        font-weight: bold;
+        color: #000;
+    }
     .page-header .poule-info {
         font-size: 14px;
         font-weight: bold;
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
         color: #333;
-    }
-    .page-header .toernooi-datum {
-        font-weight: normal;
-        font-size: 12px;
-        color: #666;
     }
     .page-header .mat-blok-info {
         font-size: 11px;
         color: #666;
+        margin-top: 0.1rem;
     }
     .schema-table {
         width: auto;
@@ -279,11 +280,12 @@ function abbreviateClubName($name, $maxLength = 15) {
             <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
             <span style="font-size: 12px; color: #666;">Print dit schema</span>
         </label>
-        <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }} <span class="toernooi-datum">({{ $toernooi->datum->format('d-m-Y') }})</span></div>
+        <div class="toernooi-titel">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d-m-Y') }}</div>
+        <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
         <div class="mat-blok-info">
-            @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
-            @if($poule->mat && $poule->blok) | @endif
             @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
+            @if($poule->mat && $poule->blok) | @endif
+            @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
         </div>
     </div>
 
