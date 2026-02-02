@@ -814,21 +814,24 @@ function abbreviateClub(name) {
                             <td class="border p-2"><strong>Sporthal WiFi</strong> → Cloud</td>
                         </tr>
                         <tr class="bg-yellow-50">
-                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2 font-medium">⚠️ WiFi / Internet weg</td>
                             <td class="border p-2">
-                                1. Zet hotspot aan op telefoon<br>
-                                2. Verbind laptop + tablets met hotspot<br>
-                                3. Start lokale server
+                                Zet 5G hotspot aan op telefoon<br>
+                                Verbind tablets met hotspot
                             </td>
                             <td class="border p-2">
-                                <strong>{{ $toernooi->hotspot_ssid ?: 'Mobiele hotspot' }}</strong> → Lokale server
+                                <strong>{{ $toernooi->hotspot_ssid ?: '5G Hotspot' }}</strong> → Cloud
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">⚠️ WiFi weg</td>
-                            <td class="border p-2">Zelfde als hierboven (hotspot)</td>
+                            <td class="border p-2 font-medium">🔴 Cloud server crash</td>
                             <td class="border p-2">
-                                <strong>{{ $toernooi->hotspot_ssid ?: 'Mobiele hotspot' }}</strong> → Lokale server
+                                1. Start Deco router<br>
+                                2. Verbind tablets met Deco<br>
+                                3. Start lokale server op laptop
+                            </td>
+                            <td class="border p-2">
+                                <strong>Deco WiFi</strong> → Lokale server
                             </td>
                         </tr>
                         <tr class="bg-red-50">
