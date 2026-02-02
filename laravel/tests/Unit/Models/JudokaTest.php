@@ -6,13 +6,14 @@ use App\Models\Judoka;
 use App\Models\Toernooi;
 use App\Models\Club;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class JudokaTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function it_generates_qr_code_on_create(): void
     {
         $toernooi = Toernooi::factory()->create();
@@ -28,7 +29,7 @@ class JudokaTest extends TestCase
         $this->assertIsString($judoka->qr_code);
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_effectief_gewicht_preferring_gewogen(): void
     {
         $judoka = Judoka::factory()->make([
@@ -39,7 +40,7 @@ class JudokaTest extends TestCase
         $this->assertEquals(26.0, $judoka->getEffectiefGewicht());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_ingeschreven_gewicht_when_not_weighed(): void
     {
         $judoka = Judoka::factory()->make([
@@ -50,7 +51,7 @@ class JudokaTest extends TestCase
         $this->assertEquals(25.5, $judoka->getEffectiefGewicht());
     }
 
-    /** @test */
+    #[Test]
     public function it_calculates_leeftijd_via_attribute(): void
     {
         $judoka = Judoka::factory()->make([
@@ -60,7 +61,7 @@ class JudokaTest extends TestCase
         $this->assertEquals(8, $judoka->leeftijd);
     }
 
-    /** @test */
+    #[Test]
     public function it_determines_aanwezig_status(): void
     {
         $aanwezig = Judoka::factory()->make(['aanwezigheid' => 'aanwezig']);
@@ -72,7 +73,7 @@ class JudokaTest extends TestCase
         $this->assertFalse($onbekend->isAanwezig());
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_if_judoka_is_actief(): void
     {
         $actief = Judoka::factory()->make([
@@ -89,7 +90,7 @@ class JudokaTest extends TestCase
         $this->assertFalse($afwezig->isActief(wegingGesloten: true));
     }
 
-    /** @test */
+    #[Test]
     public function it_checks_volledig_data(): void
     {
         $volledig = Judoka::factory()->make([

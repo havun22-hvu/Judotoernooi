@@ -83,6 +83,15 @@
         margin-bottom: 1rem;
         width: 100%;
     }
+    .page-header .toernooi-naam {
+        font-size: 16px;
+        font-weight: bold;
+        color: #000;
+    }
+    .page-header .toernooi-datum {
+        font-size: 12px;
+        color: #666;
+    }
     .page-header .poule-info {
         font-size: 14px;
         font-weight: bold;
@@ -274,6 +283,8 @@ function abbreviateClubName($name, $maxLength = 15) {
             <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
             <span style="font-size: 12px; color: #666;">Print dit schema</span>
         </label>
+        <div class="toernooi-naam">{{ $toernooi->naam }}</div>
+        <div class="toernooi-datum">{{ $toernooi->datum->format('d-m-Y') }}</div>
         <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
         <div class="mat-blok-info">
             @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif

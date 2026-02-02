@@ -3,130 +3,86 @@
 namespace App\Exceptions;
 
 /**
- * Exception for import errors (CSV, Excel).
+ * Exception for import errors (CSV, Excel, etc).
  *
- * Handles:
- * - File parsing errors
- * - Data validation errors
- * - Row-level errors with tracking
+ * Tracks row-level errors for user feedback.
  */
 class ImportException extends JudoToernooiException
 {
-    public const ERROR_FILE_READ = 2001;
-    public const ERROR_INVALID_FORMAT = 2002;
-    public const ERROR_MISSING_COLUMNS = 2003;
-    public const ERROR_ROW_VALIDATION = 2004;
-    public const ERROR_DATABASE = 2005;
-    public const ERROR_PARTIAL_IMPORT = 2006;
+    public const ERROR_INVALID_FORMAT = 2001;
+    public const ERROR_MISSING_COLUMNS = 2002;
+    public const ERROR_ROW_VALIDATION = 2003;
+    public const ERROR_DUPLICATE_ENTRY = 2004;
+    public const ERROR_FILE_READ = 2005;
 
-    protected string $logLevel = 'warning';
     protected array $rowErrors = [];
 
-    /**
-     * File could not be read.
-     */
-    public static function fileReadError(string $filename, string $error): static
+    public static function invalidFormat(string $expected, string $received, array $context = []): static
     {
         return new static(
-            "Could not read file {$filename}: {$error}",
-            "Bestand kon niet worden gelezen. Controleer of het een geldig CSV of Excel bestand is.",
-            [
-                'filename' => $filename,
-                'error' => $error,
-            ],
-            self::ERROR_FILE_READ
-        );
-    }
-
-    /**
-     * Invalid file format.
-     */
-    public static function invalidFormat(string $filename, string $expectedType): static
-    {
-        return new static(
-            "Invalid file format for {$filename}, expected {$expectedType}",
-            "Ongeldig bestandsformaat. Gebruik een CSV of Excel (.xlsx) bestand.",
-            [
-                'filename' => $filename,
-                'expected_type' => $expectedType,
-            ],
+            "Invalid format: expected {$expected}, got {$received}",
+            "Ongeldig bestandsformaat. Verwacht: {$expected}.",
+            $context,
             self::ERROR_INVALID_FORMAT
         );
     }
 
-    /**
-     * Required columns missing.
-     */
-    public static function missingColumns(array $missing): static
+    public static function missingColumns(array $columns, array $context = []): static
     {
-        $columns = implode(', ', $missing);
+        $columnList = implode(', ', $columns);
         return new static(
-            "Missing required columns: {$columns}",
-            "Verplichte kolommen ontbreken: {$columns}",
-            ['missing_columns' => $missing],
+            "Missing required columns: {$columnList}",
+            "Verplichte kolommen ontbreken: {$columnList}.",
+            $context,
             self::ERROR_MISSING_COLUMNS
         );
     }
 
-    /**
-     * Row validation error.
-     */
-    public static function rowError(int $rowNumber, string $field, string $error, mixed $value = null): static
+    public static function rowValidation(int $row, string $error, array $context = []): static
     {
-        return new static(
-            "Row {$rowNumber}: {$field} - {$error}",
-            "Rij {$rowNumber}: {$error}",
-            [
-                'row_number' => $rowNumber,
-                'field' => $field,
-                'value' => $value,
-            ],
+        $exception = new static(
+            "Row {$row} validation failed: {$error}",
+            "Fout op regel {$row}: {$error}.",
+            array_merge($context, ['row' => $row]),
             self::ERROR_ROW_VALIDATION
         );
-    }
-
-    /**
-     * Database error during import.
-     */
-    public static function databaseError(string $error, int $rowNumber = 0): static
-    {
-        $exception = new static(
-            "Database error during import at row {$rowNumber}: {$error}",
-            "Database fout bij importeren. Neem contact op met support.",
-            [
-                'row_number' => $rowNumber,
-                'error' => $error,
-            ],
-            self::ERROR_DATABASE
-        );
-        $exception->logLevel = 'error';
+        $exception->addRowError($row, $error);
         return $exception;
     }
 
-    /**
-     * Partial import completed with errors.
-     */
-    public static function partialImport(int $imported, int $failed, array $errors): static
+    public static function duplicateEntry(int $row, string $identifier, array $context = []): static
     {
-        $exception = new static(
-            "Partial import: {$imported} imported, {$failed} failed",
-            "{$imported} judoka's geïmporteerd, {$failed} mislukt.",
-            [
-                'imported' => $imported,
-                'failed' => $failed,
-                'errors' => array_slice($errors, 0, 10), // Limit stored errors
-            ],
-            self::ERROR_PARTIAL_IMPORT
+        return new static(
+            "Duplicate entry at row {$row}: {$identifier}",
+            "Dubbele invoer op regel {$row}: {$identifier}.",
+            array_merge($context, ['row' => $row, 'identifier' => $identifier]),
+            self::ERROR_DUPLICATE_ENTRY
         );
-        $exception->rowErrors = $errors;
-        return $exception;
     }
 
-    /**
-     * Get row-level errors for display.
-     */
+    public static function fileRead(string $reason, array $context = []): static
+    {
+        return new static(
+            "File read error: {$reason}",
+            'Bestand kon niet worden gelezen.',
+            $context,
+            self::ERROR_FILE_READ
+        );
+    }
+
+    public function addRowError(int $row, string $error): self
+    {
+        $this->rowErrors[$row] = $error;
+        return $this;
+    }
+
     public function getRowErrors(): array
     {
         return $this->rowErrors;
+    }
+
+    public function hasRowErrors(): bool
+    {
+        return !empty($this->rowErrors);
     }
 }

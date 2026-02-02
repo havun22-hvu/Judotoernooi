@@ -3,11 +3,12 @@
 namespace Tests\Unit\Support;
 
 use App\Support\Result;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ResultTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_creates_success_result(): void
     {
         $result = Result::success('data');
@@ -18,7 +19,7 @@ class ResultTest extends TestCase
         $this->assertNull($result->getError());
     }
 
-    /** @test */
+    #[Test]
     public function it_creates_failure_result(): void
     {
         $result = Result::failure('error message');
@@ -29,7 +30,7 @@ class ResultTest extends TestCase
         $this->assertNull($result->getValueOr(null)); // Use getValueOr for failures
     }
 
-    /** @test */
+    #[Test]
     public function it_maps_success_value(): void
     {
         $result = Result::success(5)
@@ -39,7 +40,7 @@ class ResultTest extends TestCase
         $this->assertEquals(10, $result->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_map_failure(): void
     {
         $result = Result::failure('error')
@@ -49,7 +50,7 @@ class ResultTest extends TestCase
         $this->assertEquals('error', $result->getError());
     }
 
-    /** @test */
+    #[Test]
     public function it_flat_maps_success(): void
     {
         $result = Result::success(5)
@@ -59,7 +60,7 @@ class ResultTest extends TestCase
         $this->assertEquals(10, $result->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function it_flat_maps_to_failure(): void
     {
         $result = Result::success(5)
@@ -69,7 +70,7 @@ class ResultTest extends TestCase
         $this->assertEquals('failed', $result->getError());
     }
 
-    /** @test */
+    #[Test]
     public function it_returns_value_or_default(): void
     {
         $success = Result::success('value');
@@ -79,7 +80,7 @@ class ResultTest extends TestCase
         $this->assertEquals('default', $failure->getValueOr('default'));
     }
 
-    /** @test */
+    #[Test]
     public function it_converts_success_to_json_response(): void
     {
         $result = Result::success(['name' => 'test']);
@@ -92,7 +93,7 @@ class ResultTest extends TestCase
         $this->assertEquals(['name' => 'test'], $data['data']);
     }
 
-    /** @test */
+    #[Test]
     public function it_converts_failure_to_json_response(): void
     {
         $result = Result::failure('something went wrong');
@@ -105,7 +106,7 @@ class ResultTest extends TestCase
         $this->assertEquals('something went wrong', $data['error']);
     }
 
-    /** @test */
+    #[Test]
     public function it_chains_multiple_operations(): void
     {
         $result = Result::success(2)
@@ -117,7 +118,7 @@ class ResultTest extends TestCase
         $this->assertEquals('Result: 10', $result->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function it_stops_chain_on_failure(): void
     {
         $called = false;

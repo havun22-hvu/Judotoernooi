@@ -99,8 +99,8 @@
             </div>
         </div>
 
-        <!-- Toernooi header -->
-        <div class="bg-white px-4 py-3 border-b-2 border-gray-300">
+        <!-- Toernooi header (alleen op scherm, niet printen) -->
+        <div class="bg-white px-4 py-3 border-b-2 border-gray-300 no-print">
             <div class="max-w-7xl mx-auto flex justify-between items-start">
                 <div>
                     <h1 class="text-2xl font-bold">{{ $toernooi->naam }}</h1>
