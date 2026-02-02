@@ -25,18 +25,8 @@
             print-color-adjust: exact !important;
             color-adjust: exact !important;
         }
-        .header-row,
-        .header-row th,
-        .header-row th div,
-        .header-row th * {
-            background: #1f2937 !important;
-            color: white !important;
-        }
-        .header-row .sub-header {
-            color: #9ca3af !important;
-        }
         .score-cel.inactief {
-            background: #1f2937 !important;
+            background: #e5e7eb !important;
         }
         .score-cel.gespeeld {
             background: #d1fae5 !important;
@@ -48,13 +38,6 @@
         .plts-cel {
             background: #fef9c3 !important;
             color: #000 !important;
-        }
-        .title-row td {
-            background: #1f2937 !important;
-            color: white !important;
-        }
-        .info-row td {
-            background: #f3f4f6 !important;
         }
         /* Page breaks between poules */
         .poule-page:not(.print-exclude) {
@@ -70,11 +53,11 @@
     }
     @page {
         size: A4 portrait;
-        margin: 0.5cm;
+        margin: 1cm;
     }
     @page landscape {
         size: A4 landscape;
-        margin: 0.5cm;
+        margin: 1cm;
     }
     @media screen {
         .print-container {
@@ -86,6 +69,38 @@
             border-bottom: 2px dashed #ccc;
         }
     }
+    /* Centered page layout */
+    .poule-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 1rem;
+    }
+    /* Page header above table */
+    .page-header {
+        text-align: center;
+        margin-bottom: 1rem;
+        width: 100%;
+    }
+    .page-header .toernooi-naam {
+        font-size: 16px;
+        font-weight: bold;
+        color: #000;
+    }
+    .page-header .toernooi-datum {
+        font-size: 12px;
+        color: #666;
+    }
+    .page-header .poule-info {
+        font-size: 14px;
+        font-weight: bold;
+        margin-top: 0.5rem;
+        color: #333;
+    }
+    .page-header .mat-blok-info {
+        font-size: 11px;
+        color: #666;
+    }
     .schema-table {
         width: auto;
         border-collapse: collapse;
@@ -94,19 +109,21 @@
     .schema-table td {
         border: 1px solid #333;
     }
+    /* Light header - wit met zwarte tekst (inkt besparen) */
     .header-row {
-        background: #1f2937;
-        color: white;
+        background: #fff;
+        color: #000;
     }
     .header-row th {
-        border-color: #374151;
+        border: 1px solid #333;
         font-size: 11px;
         padding: 4px 2px;
+        font-weight: bold;
     }
     .sub-header {
         font-size: 9px;
         font-weight: normal;
-        color: #9ca3af;
+        color: #666;
     }
     .judoka-row td {
         height: 36px;
@@ -131,14 +148,15 @@
         border-right: 1px solid #ccc;
     }
     .score-cel.w-cel.inactief {
-        border-right: none;
+        border-right: 1px solid #999;
     }
     .score-cel.j-cel {
         border-left: none;
         border-right: 2px solid #333;
     }
+    /* Lichtgrijs voor inactieve cellen (inkt besparen) */
     .score-cel.inactief {
-        background: #1f2937;
+        background: #e5e7eb;
     }
     .score-cel.gespeeld {
         background: #d1fae5;
@@ -158,19 +176,11 @@
         text-align: center;
         font-size: 12px;
     }
-    .title-row td {
-        background: #1f2937;
-        color: white;
-        padding: 6px 12px;
-        font-size: 11px;
-        border: none;
-    }
-    .info-row td {
-        background: #f3f4f6;
-        padding: 6px 12px;
-        font-size: 12px;
-        border: none;
-        border-bottom: 2px solid #333;
+    .legenda {
+        margin-top: 0.5rem;
+        font-size: 10px;
+        color: #666;
+        text-align: center;
     }
 </style>
 @endpush
@@ -264,35 +274,25 @@ function abbreviateClubName($name, $maxLength = 15) {
      :class="{ 'print-exclude': !printInclude, 'opacity-50': !printInclude }"
      data-poule-id="{{ $poule->id }}">
 
-    <!-- Matrix tabel met header rows -->
+    <!-- Header boven tabel (selectie checkbox alleen op scherm) -->
+    <div class="page-header">
+        <label class="no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
+            <span style="font-size: 12px; color: #666;">Print dit schema</span>
+        </label>
+        <div class="toernooi-naam">{{ $toernooi->naam }}</div>
+        <div class="toernooi-datum">{{ $toernooi->datum->format('d-m-Y') }}</div>
+        <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
+        <div class="mat-blok-info">
+            @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
+            @if($poule->mat && $poule->blok) | @endif
+            @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
+        </div>
+    </div>
+
+    <!-- Matrix tabel -->
     <table class="schema-table text-sm">
         <thead>
-            <!-- Toernooi titel row -->
-            <tr class="title-row">
-                <td colspan="{{ $totalCols }}">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>{{ $toernooi->naam }}</span>
-                        <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
-                    </div>
-                </td>
-            </tr>
-            <!-- Poule info row -->
-            <tr class="info-row">
-                <td colspan="{{ $totalCols }}">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <label class="no-print" style="cursor: pointer;">
-                                <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
-                            </label>
-                            <strong>Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</strong>
-                        </div>
-                        <span>
-                            @if($poule->mat)<strong>Mat {{ $poule->mat->nummer }}</strong> | @endif
-                            @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
-                        </span>
-                    </div>
-                </td>
-            </tr>
             <!-- Column headers -->
             <tr class="header-row">
                 <th class="px-1 py-1 text-center nr-cel">Nr</th>
@@ -378,7 +378,7 @@ function abbreviateClubName($name, $maxLength = 15) {
     </table>
 
     <!-- Legenda -->
-    <div class="mt-2 text-xs text-gray-600">
+    <div class="legenda">
         <strong>W</strong> = Wedstrijdpunten (0 of 2) | <strong>J</strong> = Judopunten | Plts = handmatig invullen
     </div>
 </div>
