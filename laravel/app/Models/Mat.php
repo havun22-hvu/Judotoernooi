@@ -111,18 +111,22 @@ class Mat extends Model
     }
 
     /**
-     * Clean up invalid selections (wedstrijden that are already played)
+     * Clean up invalid selections (wedstrijden that are already played WITH a winner)
      * Handles cases where auto-advance didn't happen (browser closed, etc.)
+     * Only cleans up if wedstrijd has a winnaar_id (not just is_gespeeld flag)
      */
     public function cleanupGespeeldeSelecties(): void
     {
         $needsUpdate = false;
         $updates = [];
 
+        // Helper: check if wedstrijd is truly finished (has winner, not just is_gespeeld flag)
+        $isEchtGespeeld = fn($w) => $w && $w->is_gespeeld && $w->winnaar_id;
+
         if ($this->actieve_wedstrijd_id) {
             $actieve = Wedstrijd::find($this->actieve_wedstrijd_id);
-            if (!$actieve || $actieve->is_gespeeld) {
-                // Actieve wedstrijd is gespeeld, doorschuiven
+            if (!$actieve || $isEchtGespeeld($actieve)) {
+                // Actieve wedstrijd is echt gespeeld (met winnaar), doorschuiven
                 $updates['actieve_wedstrijd_id'] = $this->volgende_wedstrijd_id;
                 $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
                 $updates['gereedmaken_wedstrijd_id'] = null;
@@ -132,8 +136,8 @@ class Mat extends Model
 
         if (!$needsUpdate && $this->volgende_wedstrijd_id) {
             $volgende = Wedstrijd::find($this->volgende_wedstrijd_id);
-            if (!$volgende || $volgende->is_gespeeld) {
-                // Volgende wedstrijd is gespeeld, doorschuiven
+            if (!$volgende || $isEchtGespeeld($volgende)) {
+                // Volgende wedstrijd is echt gespeeld, doorschuiven
                 $updates['volgende_wedstrijd_id'] = $this->gereedmaken_wedstrijd_id;
                 $updates['gereedmaken_wedstrijd_id'] = null;
                 $needsUpdate = true;
@@ -142,8 +146,8 @@ class Mat extends Model
 
         if (!$needsUpdate && $this->gereedmaken_wedstrijd_id) {
             $gereedmaken = Wedstrijd::find($this->gereedmaken_wedstrijd_id);
-            if (!$gereedmaken || $gereedmaken->is_gespeeld) {
-                // Gereedmaken wedstrijd is gespeeld, verwijderen
+            if (!$gereedmaken || $isEchtGespeeld($gereedmaken)) {
+                // Gereedmaken wedstrijd is echt gespeeld, verwijderen
                 $updates['gereedmaken_wedstrijd_id'] = null;
                 $needsUpdate = true;
             }
