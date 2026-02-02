@@ -3334,6 +3334,13 @@ window.triggerAutoSave = function() {};
         sessionStorage.setItem('toernooi_edit_scroll', window.scrollY);
     });
 
+    // Save scroll position for ALL forms on the page (not just toernooi-form)
+    document.addEventListener('submit', (e) => {
+        if (e.target.tagName === 'FORM') {
+            sessionStorage.setItem('toernooi_edit_scroll', window.scrollY);
+        }
+    }, true);
+
     // Restore scroll position after form submit (if success message present)
     @if(session('success'))
     const savedScroll = sessionStorage.getItem('toernooi_edit_scroll');
