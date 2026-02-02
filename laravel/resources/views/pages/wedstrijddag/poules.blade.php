@@ -692,6 +692,34 @@ const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParam
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
+const meldAfUrl = '{{ route("toernooi.wedstrijddag.meld-judoka-af", $toernooi->routeParams()) }}';
+
+// Meld judoka af (kan niet deelnemen) - moet vroeg gedefinieerd zijn voor poule-card buttons
+async function meldJudokaAf(judokaId, naam) {
+    if (!confirm(`${naam} afmelden? Deze judoka kan dan niet meer deelnemen.`)) return;
+
+    try {
+        const response = await fetch(meldAfUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ judoka_id: judokaId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Fout: ' + (data.message || 'Onbekende fout'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Fout bij afmelden');
+    }
+}
 
 async function updateKruisfinale(pouleId, plaatsen) {
     try {
@@ -1554,7 +1582,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Zoek Match voor wedstrijddag (dynamisch overpoulen)
 const zoekMatchUrl = '{{ route("toernooi.poule.zoek-match", $toernooi->routeParamsWith(["judoka" => "__JUDOKA_ID__"])) }}';
 const naarWachtruimteUrl = '{{ route("toernooi.wedstrijddag.naar-wachtruimte", $toernooi->routeParams()) }}';
-const meldAfUrl = '{{ route("toernooi.wedstrijddag.meld-judoka-af", $toernooi->routeParams()) }}';
 
 // Huidige judoka in modal (voor afmelden)
 let zoekMatchJudokaId = null;
@@ -1702,34 +1729,6 @@ function closeZoekMatchModal() {
     document.getElementById('zoek-match-modal').classList.add('hidden');
     zoekMatchJudokaId = null;
     zoekMatchFromPouleId = null;
-}
-
-// Meld judoka af (kan niet deelnemen)
-async function meldJudokaAf(judokaId, naam) {
-    if (!confirm(`${naam} afmelden? Deze judoka kan dan niet meer deelnemen.`)) return;
-
-    try {
-        const response = await fetch(meldAfUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ judoka_id: judokaId })
-        });
-
-        const data = await response.json();
-        if (data.success) {
-            closeZoekMatchModal();
-            window.location.reload();
-        } else {
-            alert('Fout: ' + (data.message || 'Onbekende fout'));
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Fout bij afmelden');
-    }
 }
 </script>
 

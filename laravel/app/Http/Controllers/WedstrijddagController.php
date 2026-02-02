@@ -835,4 +835,30 @@ class WedstrijddagController extends Controller
             'message' => $judoka->naam . ' is afgemeld',
         ]);
     }
+
+    /**
+     * Herstel afgemelde judoka (terugzetten naar actief)
+     */
+    public function herstelJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|integer|exists:judokas,id',
+        ]);
+
+        $judoka = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('id', $validated['judoka_id'])
+            ->first();
+
+        if (!$judoka) {
+            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden'], 404);
+        }
+
+        // Herstel aanwezigheid (null = normaal aanwezig)
+        $judoka->update(['aanwezigheid' => null]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $judoka->naam . ' is hersteld',
+        ]);
+    }
 }
