@@ -3295,11 +3295,13 @@ window.triggerAutoSave = function() {};
                 const errorMsg = data?.message || data?.error || 'Onbekende fout';
                 console.error('Save failed:', data);
                 showStatus('✗ ' + errorMsg, 'error');
+                setTimeout(() => status.classList.add('hidden'), 5000);
             }
         })
         .catch((error) => {
             console.error('Auto-save error:', error);
             showStatus('✗ ' + (error.message || 'Fout bij opslaan'), 'error');
+            setTimeout(() => status.classList.add('hidden'), 5000);
         });
     }
 
