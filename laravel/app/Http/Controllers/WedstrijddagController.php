@@ -794,4 +794,45 @@ class WedstrijddagController extends Controller
             'message' => 'Gewijzigd naar ' . $nieuwType,
         ]);
     }
+
+    /**
+     * Meld judoka af (kan niet deelnemen)
+     * Zet aanwezigheid op 'afwezig' en verwijdert uit poule
+     */
+    public function meldJudokaAf(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'judoka_id' => 'required|integer|exists:judokas,id',
+        ]);
+
+        $judoka = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('id', $validated['judoka_id'])
+            ->first();
+
+        if (!$judoka) {
+            return response()->json(['success' => false, 'message' => 'Judoka niet gevonden'], 404);
+        }
+
+        // Houd bij in welke poules de judoka zat (voor statistieken update)
+        $pouleIds = $judoka->poules()->pluck('poules.id');
+
+        // Markeer als afwezig
+        $judoka->update(['aanwezigheid' => 'afwezig']);
+
+        // Verwijder uit alle poules
+        $judoka->poules()->detach();
+
+        // Update statistieken van de poules
+        foreach ($pouleIds as $pouleId) {
+            $poule = Poule::find($pouleId);
+            if ($poule) {
+                $poule->updateStatistieken();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $judoka->naam . ' is afgemeld',
+        ]);
+    }
 }

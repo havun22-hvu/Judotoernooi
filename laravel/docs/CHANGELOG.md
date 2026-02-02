@@ -2,6 +2,37 @@
 
 Alle belangrijke wijzigingen worden hier bijgehouden.
 
+## [2026-02-02] - Noodplan Uitbreiding & Netwerk Monitoring
+
+### Toegevoegd
+- **Netwerk status monitoring** op noodplan tab
+  - Live latency meting voor lokaal netwerk (ping naar lokale server)
+  - Live latency meting voor internet (ping naar cloud)
+  - Automatische check elke 30 seconden
+- **Netwerk configuratie sectie**
+  - Keuze: MET eigen router (Deco) of ZONDER
+  - Scenario tabellen per modus (wat te doen bij storingen)
+  - IP-adressen velden met copy knoppen (primair, standby, hotspot)
+- **Voorbereiding sectie**
+  - Download noodbackup knop (JSON met alle data)
+  - Download poule-indeling knop (Excel)
+- **Vereenvoudigde lokale server instructies**
+  - Geen technische commando's meer
+  - Kopieerbare URL voor tablets
+- **Database velden**
+  - `toernooien.local_server_primary_ip`
+  - `toernooien.local_server_standby_ip`
+  - `toernooien.hotspot_ip`
+  - `toernooien.heeft_eigen_router`
+  - `toernooien.eigen_router_ssid`
+  - `toernooien.hotspot_ssid`
+- **Web route** `/ping` voor connection status check
+
+### Gewijzigd
+- "WiFi" hernoemd naar "Lokaal netwerk" (ondersteunt WiFi én LAN)
+
+---
+
 ## [2026-01-24] - Docs Reorganisatie & Bug Fixes
 
 ### Verplaatst
