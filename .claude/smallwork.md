@@ -461,6 +461,48 @@
 
 ---
 
+## Sessie: 2 februari 2026
+
+### Feat: Noodplan netwerk status monitoring
+- **Type:** Feature
+- **Wat:** Live latency meting voor lokaal netwerk en internet op noodplan tab
+- **Bestanden:** edit.blade.php, web.php
+- **Details:**
+  - Lokaal netwerk: ping naar lokale server IP (als ingesteld)
+  - Internet: ping naar `/ping` endpoint
+  - Automatische check elke 30 sec
+  - Status badges met ms weergave
+
+### Feat: Netwerk configuratie UI
+- **Type:** Feature
+- **Wat:** Keuze MET/ZONDER eigen router, IP-adressen configuratie
+- **Bestanden:** edit.blade.php, ToernooiController.php
+- **Velden:** heeft_eigen_router, local_server_primary_ip, local_server_standby_ip, hotspot_ip
+
+### Feat: Voorbereiding sectie noodplan
+- **Type:** Feature
+- **Wat:** Download noodbackup en poule-indeling knoppen
+- **Bestanden:** edit.blade.php
+- **Details:** Verplaatst van "overstappen" sectie naar aparte voorbereiding box
+
+### Fix: Ping route werkte niet
+- **Type:** Bug fix
+- **Wat:** API routes niet geladen in Laravel 11, route verplaatst naar web.php
+- **Bestanden:** web.php, api.php
+- **Oplossing:** `Route::get('/ping', ...)` in web.php
+
+### UI: Lokale server instructies vereenvoudigd
+- **Type:** UI improvement
+- **Wat:** Technische terminal commando's verwijderd, simpele stappen voor organisatoren
+- **Bestanden:** edit.blade.php
+
+### Rename: WiFi → Lokaal netwerk
+- **Type:** UI fix
+- **Wat:** "WiFi" hernoemd naar "Lokaal netwerk" (ondersteunt WiFi én LAN)
+- **Bestanden:** edit.blade.php
+
+---
+
 <!--
 TEMPLATE:
 
