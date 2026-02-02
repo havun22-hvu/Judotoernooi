@@ -2494,8 +2494,13 @@
                     <div class="flex items-center justify-between">
                         <strong class="text-blue-700">WiFi (lokaal netwerk)</strong>
                         <span class="text-xs px-2 py-0.5 rounded"
-                              :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'"
-                              x-text="wifiStatus === 'connected' ? '🟢 OK' : '🔴 Offline'"></span>
+                              :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : (wifiStatus === 'no-server' || wifiStatus === 'no-ip' ? 'bg-gray-200 text-gray-600' : 'bg-red-200 text-red-800')">
+                            <span x-show="wifiStatus === 'connected'" x-text="'🟢 ' + wifiLatency + 'ms'"></span>
+                            <span x-show="wifiStatus === 'no-server'">⚪ Server uit</span>
+                            <span x-show="wifiStatus === 'no-ip'">⚪ Geen IP</span>
+                            <span x-show="wifiStatus === 'offline'">🔴 Offline</span>
+                            <span x-show="wifiStatus === 'checking'">⏳</span>
+                        </span>
                     </div>
                     <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop in dezelfde ruimte. Werkt ook zonder internet!</p>
                 </div>
