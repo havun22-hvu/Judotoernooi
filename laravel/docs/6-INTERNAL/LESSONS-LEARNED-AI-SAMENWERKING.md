@@ -419,3 +419,126 @@ Bij Sortable.js met meerdere containers:
 - Gebruik `evt.from` voor source, `evt.to` voor target
 - Zet de update logica in de container waar je **vandaan** sleept
 
+---
+
+## Les: QR Code Generatie met Alpine.js x-cloak
+
+> Bron: Weegkaarten QR codes niet zichtbaar (feb 2026)
+
+### Probleem
+
+QR codes werden niet getoond op weegkaarten en coachkaarten. Eerst CSP error (externe API geblokkeerd), daarna met QRCode.js library nog steeds geen QR zichtbaar.
+
+### Oorzaak 1: Content Security Policy
+
+Externe QR API (`api.qrserver.com`) werd geblokkeerd door CSP directive `img-src 'self' data: blob:`.
+
+**Oplossing:** Gebruik client-side QRCode.js library i.p.v. externe API.
+
+```html
+<!-- oud (geblokkeerd) -->
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=...">
+
+<!-- nieuw (lokaal) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<canvas id="qr-123" width="208" height="208"></canvas>
+<script>
+QRCode.toCanvas(document.getElementById('qr-123'), 'https://...', { width: 208 });
+</script>
+```
+
+### Oorzaak 2: Alpine.js x-cloak + DOMContentLoaded timing
+
+Canvas element was verborgen door `x-cloak` + `x-show="showContent"` op moment van QR generatie.
+
+**QRCode.toCanvas kan niet renderen naar een onzichtbaar canvas!**
+
+```html
+<!-- canvas is hidden door x-cloak totdat Alpine klaar is -->
+<div x-show="showContent" x-cloak>
+    <canvas id="qr-123"></canvas>
+</div>
+
+<script>
+// FOUT: canvas is nog verborgen op DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    QRCode.toCanvas(canvas, url, options); // Werkt niet!
+});
+</script>
+```
+
+**Oplossing:** Gebruik Alpine's `x-init` en `$watch` om QR te genereren wanneer content zichtbaar wordt:
+
+```html
+<body x-data="{ showContent: false }"
+      x-init="$watch('showContent', val => { if(val) setTimeout(generateQR, 50) });
+              if(showContent) setTimeout(generateQR, 50)">
+
+<script>
+let qrGenerated = false;
+function generateQR() {
+    if (qrGenerated) return;
+    const canvas = document.getElementById('qr-123');
+    if (canvas) {
+        QRCode.toCanvas(canvas, url, { width: 208 });
+        qrGenerated = true;
+    }
+}
+</script>
+```
+
+### Regels
+
+1. **CSP blokkades:** Check altijd of externe resources toegestaan zijn
+2. **x-cloak + canvas:** QR library's hebben een ZICHTBAAR canvas nodig
+3. **Alpine timing:** Gebruik `x-init` en `$watch` voor code die na Alpine moet draaien
+4. **Guard tegen dubbel:** Gebruik flag om dubbele generatie te voorkomen
+
+---
+
+## Les: Band/Kyu Opslag Consistentie
+
+> Bron: Band reset naar 0 bij bewerken judoka (feb 2026, 2x voorgevallen)
+
+### Probleem
+
+Bij het bewerken van een judoka werd de band steeds gereset naar 0/leeg.
+
+### Oorzaak
+
+Inconsistente opslag van band waarden door de codebase:
+- Import sloeg op als `"Geel (5e kyu)"` (met kyu notatie)
+- Controller update normaliseerde naar `"geel"` (lowercase base)
+- Frontend select verwachtte `"geel"` maar kreeg `"Geel (5e kyu)"`
+
+```php
+// ImportService.php - FOUT
+$band = Band::fromString($waarde);
+return $band ? $band->labelMetKyu() : $waarde; // "Geel (5e kyu)"
+
+// JudokaController.php - FOUT
+$bandNieuw = $bandEnum->labelMetKyu(); // "Geel (5e kyu)"
+```
+
+### Oplossing
+
+ALTIJD opslaan als lowercase base value (`"geel"`, `"groen"`, etc.):
+
+```php
+// ImportService.php - GOED
+$band = Band::fromString($waarde);
+return $band ? strtolower($band->value) : strtolower(trim(explode(' ', $waarde)[0]));
+
+// JudokaController.php - GOED
+$bandNieuw = strtolower($bandEnum->value);
+
+// Frontend - strip kyu suffix bij initialisatie
+x-data="judokaEditForm(..., '{{ strtolower(explode(' ', $judoka->band)[0]) }}')"
+```
+
+### Regel
+
+**Database opslag:** Alleen lowercase base values (`wit`, `geel`, `oranje`, etc.)
+**Display:** Enum kan kyu toevoegen voor weergave (`Band::labelMetKyu()`)
+**Nooit:** Kyu notatie in database opslaan
+
