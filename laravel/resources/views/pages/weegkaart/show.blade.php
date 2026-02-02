@@ -6,6 +6,7 @@
     <title>Weegkaart - {{ $judoka->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         @media print {
@@ -179,12 +180,7 @@
 
         {{-- QR CODE --}}
         <div class="p-4 flex flex-col items-center bg-white">
-            <img
-                src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ urlencode(route('weegkaart.show', $judoka->qr_code)) }}"
-                alt="QR Code"
-                class="w-52 h-52"
-                crossorigin="anonymous"
-            >
+            <canvas id="qr-weegkaart-{{ $judoka->id }}" width="208" height="208"></canvas>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</p>
         </div>
 
@@ -220,6 +216,17 @@
     </div>
 
     <script>
+        // Generate QR code
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('qr-weegkaart-{{ $judoka->id }}');
+            if (canvas) {
+                QRCode.toCanvas(canvas, '{{ route('weegkaart.show', $judoka->qr_code) }}', {
+                    width: 208,
+                    margin: 1
+                });
+            }
+        });
+
         async function downloadWeegkaart() {
             const element = document.getElementById('weegkaart');
             const button = event.target.closest('button');

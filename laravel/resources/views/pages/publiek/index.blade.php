@@ -12,6 +12,7 @@
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         /* Touch-friendly star buttons */
@@ -420,9 +421,7 @@
             <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
                 <div class="flex flex-col sm:flex-row items-center gap-6">
                     <div class="flex-shrink-0">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ urlencode(url()->current()) }}"
-                             alt="QR Code"
-                             class="w-32 h-32 sm:w-40 sm:h-40">
+                        <canvas id="qr-publiek" width="160" height="160"></canvas>
                     </div>
                     <div class="text-center sm:text-left">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Scan voor live updates</h3>
@@ -1387,6 +1386,15 @@
                 splash.style.opacity = '0';
                 setTimeout(() => splash.remove(), 500);
             }, 2000);
+        }
+
+        // Generate QR code for sharing
+        const qrPubliek = document.getElementById('qr-publiek');
+        if (qrPubliek) {
+            QRCode.toCanvas(qrPubliek, '{{ url()->current() }}', {
+                width: 160,
+                margin: 1
+            });
         }
     </script>
 </body>
