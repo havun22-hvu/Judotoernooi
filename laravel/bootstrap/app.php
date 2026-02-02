@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('backup:wedstrijddag')->everyMinute();
     })
     ->withMiddleware(function (Middleware $middleware) {
+        // Global middleware - runs on every request
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
             'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
