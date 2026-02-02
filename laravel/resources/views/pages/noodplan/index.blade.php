@@ -782,6 +782,17 @@ function abbreviateClub(name) {
                         </tr>
                         <tr class="bg-yellow-50">
                             <td class="border p-2 font-medium">⚠️ Internet weg</td>
+                            <td class="border p-2">
+                                Verbind router met 5G hotspot<br>
+                                <span class="text-gray-500 text-xs">(USB-tethering of WiFi-bridge)</span>
+                            </td>
+                            <td class="border p-2">
+                                <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Cloud via 5G
+                                <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen!)</span>
+                            </td>
+                        </tr>
+                        <tr class="bg-orange-50">
+                            <td class="border p-2 font-medium">🔴 Cloud server crash</td>
                             <td class="border p-2">Start lokale server op laptop</td>
                             <td class="border p-2">
                                 <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Lokale server
@@ -1101,39 +1112,65 @@ function abbreviateClub(name) {
                 <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside">
                     <li>Download de <strong>JSON backup</strong> (knop hierboven)</li>
                     <li>Bewaar op USB-stick én laptop</li>
+                    <li>Controleer 5G hotspot op telefoon (naam + wachtwoord)</li>
                     @if($toernooi->heeft_eigen_router)
-                    <li>Test de eigen router - zet aan, verbind laptop</li>
-                    <li>Zoek laptop IP op: <code class="bg-gray-200 px-1 rounded">ipconfig</code></li>
-                    @else
-                    <li>Controleer hotspot instellingen op telefoon</li>
-                    <li>Noteer hotspot naam en wachtwoord</li>
+                    <li>Test eigen router + USB-tethering met telefoon</li>
                     @endif
-                    <li>Vul IP-adressen in via de knop hierboven</li>
+                    <li>Test lokale server op laptop (zie commando hieronder)</li>
                     <li><strong>Print deze pagina!</strong></li>
                 </ol>
             </div>
 
-            <!-- Bij storing -->
+            @if($toernooi->heeft_eigen_router)
+            <!-- Bij internet storing (MET eigen router) -->
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <h3 class="font-bold text-yellow-800 mb-2">⚠️ Bij internet storing (WiFi sporthal werkt niet)</h3>
+                <ol class="text-sm text-yellow-700 space-y-2 list-decimal list-inside">
+                    <li>Zet <strong>5G hotspot</strong> aan op telefoon</li>
+                    <li>Verbind router met hotspot:
+                        <ul class="ml-4 mt-1 list-disc text-xs">
+                            <li><strong>USB-tethering</strong> (makkelijkst): telefoon via USB aan router</li>
+                            <li><strong>WiFi-bridge</strong>: in router-app hotspot als bron instellen</li>
+                        </ul>
+                    </li>
+                    <li>Klaar! Tablets blijven op dezelfde WiFi, internet loopt nu via 5G</li>
+                </ol>
+            </div>
+
+            <!-- Bij server crash (MET eigen router) -->
             <div class="p-4 bg-red-50 border border-red-200 rounded">
-                <h3 class="font-bold text-red-800 mb-2">🚨 Bij internet/WiFi storing</h3>
+                <h3 class="font-bold text-red-800 mb-2">🔴 Bij cloud server crash</h3>
                 <ol class="text-sm text-red-700 space-y-2 list-decimal list-inside">
-                    @if($toernooi->heeft_eigen_router)
-                    <li>Controleer of eigen router aan staat</li>
                     <li>Start lokale server op laptop:
                         <code class="block bg-red-100 p-2 rounded mt-1 text-xs font-mono">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code>
                     </li>
                     <li>Tablets gaan automatisch naar lokale server (zelfde WiFi!)</li>
-                    @else
-                    <li>Zet <strong>mobiele hotspot</strong> aan op telefoon</li>
-                    <li>Verbind laptop met hotspot</li>
-                    <li>Verbind alle tablets met hotspot</li>
+                </ol>
+            </div>
+            @else
+            <!-- Bij storing (ZONDER eigen router) -->
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <h3 class="font-bold text-yellow-800 mb-2">⚠️ Bij internet/WiFi storing</h3>
+                <ol class="text-sm text-yellow-700 space-y-2 list-decimal list-inside">
+                    <li>Zet <strong>5G hotspot</strong> aan op telefoon</li>
+                    <li>Verbind alle tablets met de hotspot</li>
+                    <li>Klaar! Cloud server werkt gewoon via 5G</li>
+                </ol>
+            </div>
+
+            <!-- Bij server crash (ZONDER eigen router) -->
+            <div class="p-4 bg-red-50 border border-red-200 rounded">
+                <h3 class="font-bold text-red-800 mb-2">🔴 Bij cloud server crash</h3>
+                <ol class="text-sm text-red-700 space-y-2 list-decimal list-inside">
+                    <li>Start eigen router (bijv. Deco)</li>
+                    <li>Verbind laptop én tablets met router WiFi</li>
                     <li>Start lokale server op laptop:
                         <code class="block bg-red-100 p-2 rounded mt-1 text-xs font-mono">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code>
                     </li>
                     <li>Open op tablets: <code class="bg-red-100 px-1 rounded">http://[laptop-ip]:8000</code></li>
-                    @endif
                 </ol>
             </div>
+            @endif
 
             <!-- Papier backup -->
             <div class="p-4 bg-purple-50 border border-purple-200 rounded">
@@ -1154,15 +1191,11 @@ function abbreviateClub(name) {
         <ul class="text-sm text-blue-700 space-y-1">
             <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
             <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
+            <li>☐ Test 5G hotspot op telefoon (werkt internet?)</li>
             @if($toernooi->heeft_eigen_router)
-            <li>☐ Test eigen router - werkt WiFi?</li>
-            <li>☐ Verbind laptop met eigen router, zoek IP op</li>
-            @else
-            <li>☐ Controleer hotspot instellingen op telefoon</li>
-            <li>☐ Noteer hotspot SSID en wachtwoord hierboven</li>
+            <li>☐ Test eigen router + USB-tethering met telefoon</li>
             @endif
             <li>☐ Test lokale server: <code class="bg-blue-100 px-1 rounded text-xs">php artisan serve --host=0.0.0.0</code></li>
-            <li>☐ Vul IP-adressen in via "Netwerkinstellingen configureren"</li>
             <li>☐ <strong>Print deze pagina!</strong></li>
         </ul>
     </div>
