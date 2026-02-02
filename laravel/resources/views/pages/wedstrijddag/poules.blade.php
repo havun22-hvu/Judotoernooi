@@ -65,7 +65,8 @@
 
         {{-- Te weinig judoka's --}}
         @if($teWeinigjudokas->count() > 0)
-        <p class="text-red-700 text-sm mb-2">Te weinig judoka's (&lt; 3):</p>
+        <p class="text-red-700 text-sm mb-1">Te weinig judoka's (&lt; 3):</p>
+        <p class="text-gray-600 text-xs mb-2">Oplossing: sleep judoka naar andere poule, of bij weging gewicht <strong>0</strong> invoeren = afmelden</p>
         <div id="problematische-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($teWeinigjudokas as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
