@@ -287,8 +287,110 @@ function weeglijst() {
             } catch (err) {
                 console.error('Refresh failed:', err);
             }
+        },
+
+        // Edit gewicht modal
+        editModal: false,
+        editJudoka: null,
+        editGewicht: '',
+        editSaving: false,
+
+        openEditGewicht(judoka) {
+            this.editJudoka = judoka;
+            this.editGewicht = judoka.gewicht_gewogen || '';
+            this.editModal = true;
+        },
+
+        closeEditModal() {
+            this.editModal = false;
+            this.editJudoka = null;
+            this.editGewicht = '';
+        },
+
+        async saveGewicht() {
+            if (!this.editJudoka) return;
+
+            const gewicht = parseFloat(this.editGewicht) || 0;
+            this.editSaving = true;
+
+            try {
+                const response = await fetch(`{{ url()->current() }}`.replace('/weging/interface', `/weging/${this.editJudoka.id}/registreer`), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ gewicht: gewicht })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update lokale data
+                    const idx = this.judokas.findIndex(j => j.id === this.editJudoka.id);
+                    if (idx !== -1) {
+                        if (data.afwezig) {
+                            // Verwijder uit lijst (is nu afwezig)
+                            this.judokas.splice(idx, 1);
+                        } else {
+                            this.judokas[idx].gewogen = true;
+                            this.judokas[idx].gewicht_gewogen = gewicht;
+                        }
+                    }
+                    this.berekenStats();
+                    this.filterJudokas();
+                    this.closeEditModal();
+                } else {
+                    alert(data.message || 'Fout bij opslaan');
+                }
+            } catch (err) {
+                console.error('Save failed:', err);
+                alert('Fout bij opslaan');
+            } finally {
+                this.editSaving = false;
+            }
+        },
+
+        async markeerAfwezig() {
+            this.editGewicht = '0';
+            await this.saveGewicht();
         }
     }
 }
 </script>
+
+<!-- Edit Gewicht Modal -->
+<div x-show="editModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-sm" @click.away="closeEditModal()">
+        <div class="p-4 border-b">
+            <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
+            <p class="text-sm text-gray-600" x-text="editJudoka?.naam"></p>
+        </div>
+        <div class="p-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gewogen gewicht (kg)</label>
+            <input type="number" step="0.1" min="0" max="150" x-model="editGewicht"
+                   class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-lg font-bold text-center"
+                   placeholder="0.0"
+                   @keyup.enter="saveGewicht()">
+            <p class="text-xs text-gray-500 mt-1">Tip: 0 = afmelden (kan niet deelnemen)</p>
+        </div>
+        <div class="p-4 border-t flex gap-2">
+            <button @click="markeerAfwezig()" :disabled="editSaving"
+                    class="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
+                Afmelden
+            </button>
+            <button @click="saveGewicht()" :disabled="editSaving"
+                    class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
+                <span x-show="!editSaving">Opslaan</span>
+                <span x-show="editSaving">Bezig...</span>
+            </button>
+        </div>
+        <div class="p-4 border-t">
+            <button @click="closeEditModal()" class="w-full text-gray-600 hover:text-gray-800 text-sm">
+                Annuleren
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
