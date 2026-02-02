@@ -314,6 +314,7 @@ class MatController extends Controller
         }
 
         // Verify wedstrijden belong to poules on this mat (if provided)
+        // Also check if wedstrijd is already played (with winner) - cannot select those
         foreach (['actieve_wedstrijd_id', 'volgende_wedstrijd_id', 'gereedmaken_wedstrijd_id'] as $field) {
             if (!empty($validated[$field])) {
                 $wedstrijd = Wedstrijd::with('poule')->findOrFail($validated[$field]);
@@ -325,7 +326,27 @@ class MatController extends Controller
                     };
                     return response()->json(['success' => false, 'error' => "{$label} wedstrijd hoort niet bij deze mat"], 403);
                 }
+
+                // Double check: wedstrijd met winnaar kan niet geselecteerd worden
+                if ($wedstrijd->isEchtGespeeld()) {
+                    $label = match ($field) {
+                        'actieve_wedstrijd_id' => 'Actieve',
+                        'volgende_wedstrijd_id' => 'Volgende',
+                        'gereedmaken_wedstrijd_id' => 'Gereedmaken',
+                    };
+                    return response()->json(['success' => false, 'error' => "{$label} wedstrijd is al gespeeld (heeft winnaar)"], 400);
+                }
             }
+        }
+
+        // Double check: geen dubbele wedstrijden in de selectie
+        $selectedIds = array_filter([
+            $validated['actieve_wedstrijd_id'] ?? null,
+            $validated['volgende_wedstrijd_id'] ?? null,
+            $validated['gereedmaken_wedstrijd_id'] ?? null,
+        ]);
+        if (count($selectedIds) !== count(array_unique($selectedIds))) {
+            return response()->json(['success' => false, 'error' => 'Dezelfde wedstrijd kan niet in meerdere slots'], 400);
         }
 
         $mat->update([
