@@ -364,6 +364,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('wedstrijddag/wijzig-poule-type', [WedstrijddagController::class, 'wijzigPouleType'])->name('wedstrijddag.wijzigPouleType');
         Route::post('wedstrijddag/naar-wachtruimte', [WedstrijddagController::class, 'naarWachtruimte'])->name('wedstrijddag.naar-wachtruimte');
         Route::post('wedstrijddag/meld-judoka-af', [WedstrijddagController::class, 'meldJudokaAf'])->name('wedstrijddag.meld-judoka-af');
+        Route::post('wedstrijddag/herstel-judoka', [WedstrijddagController::class, 'herstelJudoka'])->name('wedstrijddag.herstel-judoka');
     });
 
     // Mat routes (mat + admin)
