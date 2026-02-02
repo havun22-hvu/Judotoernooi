@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Band;
 use App\Http\Requests\JudokaStoreRequest;
 use App\Http\Requests\JudokaUpdateRequest;
+use App\Jobs\ImportJudokasJob;
 use App\Mail\CorrectieVerzoekMail;
 use App\Models\Organisator;
 use App\Models\Club;
@@ -350,6 +351,26 @@ class JudokaController extends Controller
         }
 
         return $redirect;
+    }
+
+    /**
+     * Check import progress for async imports.
+     */
+    public function importProgress(Request $request): JsonResponse
+    {
+        $importId = $request->input('import_id');
+
+        if (!$importId) {
+            return response()->json(['error' => 'Import ID required'], 400);
+        }
+
+        $progress = ImportJudokasJob::getProgress($importId);
+
+        if (!$progress) {
+            return response()->json(['error' => 'Import not found'], 404);
+        }
+
+        return response()->json($progress);
     }
 
     /**

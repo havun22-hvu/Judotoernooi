@@ -57,8 +57,10 @@ Route::get('/help', fn() => view('pages.help'))->name('help');
 */
 // Login route without middleware - controller handles auth check and corrupt sessions
 Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
-Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
-Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
+Route::middleware('throttle:login')->group(function () {
+    Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
+    Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
+});
 
 // Guest routes (only for users not logged in)
 Route::middleware('guest:organisator')->group(function () {
@@ -135,8 +137,10 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
 
 // Mollie webhooks & callbacks (no auth, called by Mollie)
 Route::get('mollie/callback', [MollieController::class, 'callback'])->name('mollie.callback');
-Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
-Route::post('mollie/webhook/toernooi', [MollieController::class, 'webhookToernooi'])->name('mollie.webhook.toernooi');
+Route::middleware('throttle:webhook')->group(function () {
+    Route::post('mollie/webhook', [MollieController::class, 'webhook'])->name('mollie.webhook');
+    Route::post('mollie/webhook/toernooi', [MollieController::class, 'webhookToernooi'])->name('mollie.webhook.toernooi');
+});
 Route::get('betaling/simulate', [MollieController::class, 'simulate'])->name('betaling.simulate');
 Route::post('betaling/simulate', [MollieController::class, 'simulateComplete'])->name('betaling.simulate.complete');
 
@@ -218,6 +222,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::get('judoka/import', [JudokaController::class, 'importForm'])->name('judoka.import');
         Route::post('judoka/import', [JudokaController::class, 'import'])->name('judoka.import.store');
         Route::post('judoka/import/confirm', [JudokaController::class, 'importConfirm'])->name('judoka.import.confirm');
+        Route::get('judoka/import/progress', [JudokaController::class, 'importProgress'])->name('judoka.import.progress');
         Route::post('judoka/valideer', [JudokaController::class, 'valideer'])->name('judoka.valideer');
         Route::post('judoka', [JudokaController::class, 'store'])->name('judoka.store');
         Route::patch('judoka/{judoka}/update-api', [JudokaController::class, 'updateApi'])->name('judoka.update-api');
@@ -564,12 +569,14 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
     // Main public page (PWA)
     Route::get('/', [PubliekController::class, 'index'])->name('index');
 
-    // API routes for public page
-    Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
-    Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
-    Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
-    Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
-    Route::get('matten', [PubliekController::class, 'matten'])->name('matten');
+    // API routes for public page (rate limited)
+    Route::middleware('throttle:public-api')->group(function () {
+        Route::get('zoeken', [PubliekController::class, 'zoeken'])->name('zoeken');
+        Route::post('scan-qr', [PubliekController::class, 'scanQR'])->name('scan-qr');
+        Route::post('weging/{judoka}/registreer', [PubliekController::class, 'registreerGewicht'])->name('weging.registreer');
+        Route::post('favorieten', [PubliekController::class, 'favorieten'])->name('favorieten');
+        Route::get('matten', [PubliekController::class, 'matten'])->name('matten');
+    });
     Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
     Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
 })
