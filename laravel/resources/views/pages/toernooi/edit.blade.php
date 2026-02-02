@@ -3226,9 +3226,27 @@ window.triggerAutoSave = function() {};
         })
         .then(response => {
             if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('Server response:', text);
+                return response.json().then(data => {
+                    // Handle Laravel validation errors
+                    if (data.errors) {
+                        const firstError = Object.values(data.errors)[0];
+                        const errorMsg = Array.isArray(firstError) ? firstError[0] : firstError;
+                        console.error('Validation error:', data.errors);
+                        throw new Error(errorMsg);
+                    }
+                    if (data.message) {
+                        throw new Error(data.message);
+                    }
                     throw new Error('Server error: ' + response.status);
+                }).catch(e => {
+                    // If response is not JSON, get text
+                    if (e instanceof SyntaxError) {
+                        return response.text().then(text => {
+                            console.error('Server response:', text);
+                            throw new Error('Server error: ' + response.status);
+                        });
+                    }
+                    throw e;
                 });
             }
             return response.json();
@@ -3274,12 +3292,14 @@ window.triggerAutoSave = function() {};
                     alert(data.blokkenWarning);
                 }
             } else {
-                showStatus('✗ Fout bij opslaan', 'error');
+                const errorMsg = data?.message || data?.error || 'Onbekende fout';
+                console.error('Save failed:', data);
+                showStatus('✗ ' + errorMsg, 'error');
             }
         })
         .catch((error) => {
             console.error('Auto-save error:', error);
-            showStatus('✗ Fout bij opslaan', 'error');
+            showStatus('✗ ' + (error.message || 'Fout bij opslaan'), 'error');
         });
     }
 
