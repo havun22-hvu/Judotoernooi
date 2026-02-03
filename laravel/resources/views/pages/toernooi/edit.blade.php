@@ -60,7 +60,7 @@
 
 <div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
     <!-- Sticky header met titel en tabs -->
-    <div class="sticky top-0 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
+    <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
                 <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
