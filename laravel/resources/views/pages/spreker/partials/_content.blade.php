@@ -267,22 +267,25 @@
                         </div>
                         <div class="divide-y divide-gray-100">
                             @foreach($matData['poules'] as $poule)
+                            @php
+                                $pouleActiveJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+                            @endphp
                             <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer" @click="togglePouleDetail({{ $poule->id }})">
                                 <div class="flex justify-between items-center">
                                     <div>
                                         <div class="font-bold text-gray-800">
                                             <span x-text="openPoules.includes({{ $poule->id }}) ? '▼' : '▶'" class="mr-1"></span>
-                                            {{ $poule->getDisplayTitel() ?: "Poule {$poule->nummer}" }}
+                                            Poule {{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                                         </div>
                                         <div class="text-sm text-gray-500 ml-4">
-                                            {{ $poule->judokas->count() }} judoka's
+                                            {{ $pouleActiveJudokas->count() }} judoka's
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Judoka namen (inklapbaar) -->
+                                <!-- Judoka namen (inklapbaar) - alleen aanwezige judoka's -->
                                 <div x-show="openPoules.includes({{ $poule->id }})" class="mt-2 pl-4 border-l-2 border-blue-200">
                                     <div class="grid grid-cols-1 gap-1 text-sm">
-                                        @foreach($poule->judokas as $judoka)
+                                        @foreach($pouleActiveJudokas as $judoka)
                                         <div class="flex justify-between">
                                             <span class="font-medium">{{ $judoka->naam }}</span>
                                             <span class="text-gray-500">{{ $judoka->club?->naam ?? '-' }}</span>
