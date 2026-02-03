@@ -65,52 +65,6 @@
                 </div>
             </div>
 
-            <!-- Search bar -->
-            <div class="mt-4 relative" @click.outside="if(zoekResultaten.length > 0 || heeftGezocht) { zoekResultaten = []; zoekterm = ''; heeftGezocht = false; }">
-                <input type="text"
-                       x-model="zoekterm"
-                       @input.debounce.300ms="zoekJudokas()"
-                       placeholder="🔍 Zoek judoka of club..."
-                       class="w-full px-4 py-3 pr-10 rounded-lg text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none text-base">
-                <!-- Clear button -->
-                <button x-show="zoekterm.length > 0 && !zoekLoading"
-                        @click="zoekterm = ''; zoekResultaten = []; heeftGezocht = false;"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                        type="button">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                <!-- Loading spinner -->
-                <div x-show="zoekLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
-                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </div>
-                <!-- Geen resultaten -->
-                <div x-show="heeftGezocht && zoekResultaten.length === 0 && !zoekLoading && zoekterm.length >= 2" x-cloak
-                     class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 p-4 text-center text-gray-500 z-50">
-                    Geen judoka's gevonden voor "<span x-text="zoekterm"></span>"
-                </div>
-                <!-- Resultaten -->
-                <div x-show="zoekResultaten.length > 0 && !zoekLoading" x-cloak
-                     class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 max-h-64 overflow-y-auto z-50">
-                    <template x-for="judoka in zoekResultaten" :key="judoka.id">
-                        <div class="px-4 py-3 hover:bg-blue-50 border-b flex justify-between items-center">
-                            <div>
-                                <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
-                                <span class="text-gray-400 text-sm" x-text="'(' + (judoka.leeftijd || '-') + 'j, ' + (judoka.gewicht || '-') + 'kg)'"></span>
-                                <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
-                                <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse || '-'"></span>
-                            </div>
-                            <button @click="toggleFavoriet(judoka.id)"
-                                    class="favorite-star text-2xl"
-                                    :class="isFavoriet(judoka.id) ? 'active' : 'text-gray-300'">&#9733;</button>
-                        </div>
-                    </template>
-                </div>
-            </div>
         </div>
 
         <!-- Tabs -->
@@ -577,6 +531,53 @@
 
         <!-- Deelnemers Tab -->
         <div x-show="activeTab === 'deelnemers'" x-cloak>
+            <!-- Search bar - alleen in deelnemers tab -->
+            <div class="mb-4 relative" @click.outside="if(zoekResultaten.length > 0 || heeftGezocht) { zoekResultaten = []; zoekterm = ''; heeftGezocht = false; }">
+                <input type="text"
+                       x-model="zoekterm"
+                       @input.debounce.300ms="zoekJudokas()"
+                       placeholder="🔍 Zoek judoka of club..."
+                       class="w-full px-4 py-3 pr-10 rounded-lg border border-gray-300 text-gray-800 focus:ring-2 focus:ring-blue-300 focus:outline-none text-base">
+                <!-- Clear button -->
+                <button x-show="zoekterm.length > 0 && !zoekLoading"
+                        @click="zoekterm = ''; zoekResultaten = []; heeftGezocht = false;"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                        type="button">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                <!-- Loading spinner -->
+                <div x-show="zoekLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
+                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <!-- Geen resultaten -->
+                <div x-show="heeftGezocht && zoekResultaten.length === 0 && !zoekLoading && zoekterm.length >= 2" x-cloak
+                     class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 p-4 text-center text-gray-500 z-50 border border-gray-200">
+                    Geen judoka's gevonden voor "<span x-text="zoekterm"></span>"
+                </div>
+                <!-- Resultaten -->
+                <div x-show="zoekResultaten.length > 0 && !zoekLoading" x-cloak
+                     class="absolute top-full left-0 right-0 bg-white rounded-b-lg shadow-lg mt-1 max-h-64 overflow-y-auto z-50 border border-gray-200">
+                    <template x-for="judoka in zoekResultaten" :key="judoka.id">
+                        <div class="px-4 py-3 hover:bg-blue-50 border-b flex justify-between items-center">
+                            <div>
+                                <span class="font-medium text-gray-800" x-text="judoka.naam"></span>
+                                <span class="text-gray-400 text-sm" x-text="'(' + (judoka.leeftijd || '-') + 'j, ' + (judoka.gewicht || '-') + 'kg)'"></span>
+                                <span class="text-gray-500 text-sm" x-text="' - ' + (judoka.club || 'Geen club')"></span>
+                                <span class="text-xs text-gray-400 block" x-text="judoka.leeftijdsklasse || '-'"></span>
+                            </div>
+                            <button @click="toggleFavoriet(judoka.id)"
+                                    class="favorite-star text-2xl"
+                                    :class="isFavoriet(judoka.id) ? 'active' : 'text-gray-300'">&#9733;</button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
             @forelse($categorien as $leeftijdsklasse => $gewichtsklassen)
             @php
                 $leeftijdId = Str::slug($leeftijdsklasse);
