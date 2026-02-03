@@ -7,8 +7,8 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ $toernooi->naam }}">
-    <title>{{ $toernooi->naam }} - Live</title>
+    <meta name="apple-mobile-web-app-title" content="📺 LIVE {{ $toernooi->naam }}">
+    <title>📺 LIVE - {{ $toernooi->naam }}</title>
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
