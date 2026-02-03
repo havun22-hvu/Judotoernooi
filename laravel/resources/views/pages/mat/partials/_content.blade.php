@@ -229,14 +229,17 @@
                                                     class="w-5 text-center border border-gray-300 rounded-sm text-xs py-0.5 font-bold"
                                                     :class="getWpClass(getWP(w, judoka.id))"
                                                     :value="getWP(w, judoka.id)"
+                                                    :disabled="!isInvoerToegestaan(w)"
                                                     @input="updateWP(w, judoka.id, $event.target.value)"
                                                     @blur="saveScore(w, poule)"
                                                 >
                                                 <!-- JP met dropdown -->
                                                 <select
                                                     class="w-7 text-center border border-gray-300 rounded-sm text-xs py-0.5 appearance-none bg-white"
+                                                    :class="!isInvoerToegestaan(w) ? 'bg-gray-100 cursor-not-allowed' : ''"
                                                     :value="getJP(w, judoka.id)"
-                                                    @change="updateJP(w, judoka.id, $event.target.value, $event); saveScore(w, poule)"
+                                                    :disabled="!isInvoerToegestaan(w)"
+                                                    @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
                                                 >
                                                     <option value=""></option>
                                                     <option value="0">0</option>
@@ -1035,11 +1038,8 @@ function matInterface() {
         updateWP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
 
-            // Blokkeer invoer voor geel/blauw wedstrijden
-            if (!this.isInvoerToegestaan(wedstrijd)) {
-                alert('Punten invoeren niet mogelijk.\n\nDeze wedstrijd staat in de wachtrij (geel/blauw).\nSpeel eerst de groene wedstrijd of deselecteer deze.');
-                return;
-            }
+            // Extra check (inputs zijn al disabled, maar voor zekerheid)
+            if (!this.isInvoerToegestaan(wedstrijd)) return;
 
             // Leeg veld = verwijder waarde (voor delete/backspace)
             if (value === '' || value === null || value === undefined) {
@@ -1056,18 +1056,11 @@ function matInterface() {
             wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
         },
 
-        updateJP(wedstrijd, judokaId, value, event) {
+        updateJP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
 
-            // Blokkeer invoer voor geel/blauw wedstrijden
-            if (!this.isInvoerToegestaan(wedstrijd)) {
-                alert('Punten invoeren niet mogelijk.\n\nDeze wedstrijd staat in de wachtrij (geel/blauw).\nSpeel eerst de groene wedstrijd of deselecteer deze.');
-                // Reset select naar originele waarde
-                if (event && event.target) {
-                    event.target.value = wedstrijd.jpScores?.[judokaId] ?? '';
-                }
-                return;
-            }
+            // Extra check (inputs zijn al disabled, maar voor zekerheid)
+            if (!this.isInvoerToegestaan(wedstrijd)) return;
 
             const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
