@@ -2554,6 +2554,23 @@
         <!-- IP Adressen configuratie -->
         <div class="mb-6">
             <h3 class="font-bold text-gray-800 mb-3">IP-adressen configureren</h3>
+
+            <!-- Quick setup buttons -->
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button type="button" @click="detectAndSetIp('primary')"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2"
+                        :disabled="detectingIp">
+                    <span x-show="!detectingIp">🖥️ Maak deze computer primaire server</span>
+                    <span x-show="detectingIp">⏳ Detecteren...</span>
+                </button>
+                <button type="button" @click="detectAndSetIp('standby')"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2"
+                        :disabled="detectingIp">
+                    <span x-show="!detectingIp">🖥️ Maak deze computer standby server</span>
+                    <span x-show="detectingIp">⏳ Detecteren...</span>
+                </button>
+            </div>
+
             <div class="grid md:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Primaire laptop IP</label>
@@ -2869,6 +2886,34 @@
             standbyIp: '{{ $toernooi->local_server_standby_ip ?? "" }}',
             hotspotIp: '{{ $toernooi->hotspot_ip ?? "" }}',
             copied: false,
+            detectingIp: false,
+
+            async detectAndSetIp(type) {
+                this.detectingIp = true;
+                try {
+                    const response = await fetch('{{ route("toernooi.detect-my-ip", $toernooi->routeParams()) }}?save=' + type);
+                    const data = await response.json();
+
+                    if (data.ip) {
+                        if (type === 'primary') {
+                            this.primaryIp = data.ip;
+                            alert('✅ Primaire server IP ingesteld: ' + data.ip);
+                        } else if (type === 'standby') {
+                            this.standbyIp = data.ip;
+                            alert('✅ Standby server IP ingesteld: ' + data.ip);
+                        }
+                        // Refresh netwerk status
+                        window.location.reload();
+                    } else {
+                        alert('❌ Kon IP-adres niet detecteren. Vul handmatig in.');
+                    }
+                } catch (e) {
+                    console.error('Fout bij IP detectie:', e);
+                    alert('❌ Fout bij detecteren IP. Vul handmatig in.');
+                } finally {
+                    this.detectingIp = false;
+                }
+            },
 
             async saveNetwerkConfig() {
                 try {

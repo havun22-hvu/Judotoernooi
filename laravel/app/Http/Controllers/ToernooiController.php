@@ -466,6 +466,54 @@ class ToernooiController extends Controller
     }
 
     /**
+     * Detect the server's local IP address and optionally save it
+     */
+    public function detectMyIp(Organisator $organisator, Request $request, Toernooi $toernooi): \Illuminate\Http\JsonResponse
+    {
+        // Get the server's local IP address
+        $localIp = null;
+
+        // Method 1: Try to get from gethostbyname
+        $hostname = gethostname();
+        $hostIp = gethostbyname($hostname);
+        if ($hostIp !== $hostname && filter_var($hostIp, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $localIp = $hostIp;
+        }
+
+        // Method 2: Try socket connection to detect outgoing IP
+        if (!$localIp || str_starts_with($localIp, '127.')) {
+            $sock = @socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            if ($sock) {
+                @socket_connect($sock, '8.8.8.8', 53);
+                @socket_getsockname($sock, $localIp);
+                @socket_close($sock);
+            }
+        }
+
+        // Method 3: Check SERVER_ADDR (may be the local IP on some setups)
+        if (!$localIp || str_starts_with($localIp, '127.')) {
+            $serverAddr = $_SERVER['SERVER_ADDR'] ?? null;
+            if ($serverAddr && !str_starts_with($serverAddr, '127.')) {
+                $localIp = $serverAddr;
+            }
+        }
+
+        // If save=primary or save=standby, also update the toernooi
+        $saveAs = $request->query('save');
+        if ($localIp && $saveAs === 'primary') {
+            $toernooi->update(['local_server_primary_ip' => $localIp]);
+        } elseif ($localIp && $saveAs === 'standby') {
+            $toernooi->update(['local_server_standby_ip' => $localIp]);
+        }
+
+        return response()->json([
+            'ip' => $localIp,
+            'hostname' => $hostname,
+            'saved_as' => $saveAs,
+        ]);
+    }
+
+    /**
      * Emergency: Reopen preparation phase (reset weegkaarten_gemaakt_op)
      */
     public function heropenVoorbereiding(Organisator $organisator, Request $request, Toernooi $toernooi): RedirectResponse
