@@ -12,7 +12,6 @@
     <link rel="manifest" href="{{ route('publiek.manifest', $toernooi->routeParams()) }}">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
@@ -422,7 +421,7 @@
             <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
                 <div class="flex flex-col sm:flex-row items-center gap-6">
                     <div class="flex-shrink-0">
-                        <canvas id="qr-publiek" width="160" height="160"></canvas>
+                        {!! QrCode::size(160)->generate(url()->current()) !!}
                     </div>
                     <div class="text-center sm:text-left">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Scan voor live updates</h3>
@@ -1422,35 +1421,6 @@
             }, 2000);
         }
 
-        // Generate QR code for sharing
-        const qrPubliek = document.getElementById('qr-publiek');
-        if (qrPubliek && typeof QRCode !== 'undefined') {
-            try {
-                QRCode.toCanvas(qrPubliek, '{{ url()->current() }}', {
-                    width: 160,
-                    margin: 1
-                });
-            } catch (e) {
-                console.warn('QR code generation failed:', e);
-                // Show URL as fallback
-                const ctx = qrPubliek.getContext('2d');
-                ctx.fillStyle = '#f3f4f6';
-                ctx.fillRect(0, 0, 160, 160);
-                ctx.fillStyle = '#6b7280';
-                ctx.font = '12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('QR niet beschikbaar', 80, 80);
-            }
-        } else if (qrPubliek) {
-            console.warn('QRCode library not loaded');
-            const ctx = qrPubliek.getContext('2d');
-            ctx.fillStyle = '#f3f4f6';
-            ctx.fillRect(0, 0, 160, 160);
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('QR niet beschikbaar', 80, 80);
-        }
     </script>
 
     {{-- Real-time mat updates via Reverb --}}
