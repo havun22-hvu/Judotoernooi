@@ -1,8 +1,17 @@
-# Chat functionaliteit met Laravel Reverb
+# Real-time Communicatie met Laravel Reverb
 
 ## Status: Werkend op staging en production
 
 ## Overzicht
+
+Laravel Reverb wordt gebruikt voor twee real-time systemen:
+
+1. **Chat** - Berichten tussen hoofdjury en PWA's (mat, weging, spreker, dojo)
+2. **Mat Updates** - Live synchronisatie van scores, beurten en poule status
+
+---
+
+# 1. Chat Functionaliteit
 
 Realtime chat tussen hoofdjury en PWA's (mat, weging, spreker, dojo) via Laravel Reverb WebSockets.
 
@@ -172,10 +181,96 @@ Berichten worden opgeslagen in `chat_messages`:
 | gelezen_op | datetime | Wanneer gelezen |
 | created_at | datetime | Verzonden op |
 
-## Key files
+## Key files (Chat)
 
 - `app/Events/NewChatMessage.php` - Broadcast event
 - `app/Http/Controllers/ChatController.php` - API endpoints
 - `app/Models/ChatMessage.php` - Model met scopes
 - `resources/views/partials/chat-widget.blade.php` - PWA widget
 - `resources/views/partials/chat-widget-hoofdjury.blade.php` - Hoofdjury widget
+
+---
+
+# 2. Mat Updates (Real-time Score Sync)
+
+Real-time synchronisatie van wedstrijddata tussen Mat PWA → Publiek/Spreker/Jurytafel.
+
+## Waarom?
+
+- **Polling vervelend**: Pagina refresh reset tabs en scrolt naar boven
+- **Snellere updates**: Direct ipv elke 15-30 seconden
+- **Consistentie**: Alle displays tonen dezelfde data
+
+## Kanalen structuur
+
+```
+toernooi.{toernooi_id}                  - Alle updates voor heel toernooi (publiek, spreker)
+mat.{toernooi_id}.{mat_id}              - Specifieke mat updates (jurytafel)
+```
+
+## Event types
+
+| Type | Wanneer | Data |
+|------|---------|------|
+| `score` | Score geregistreerd | wedstrijd_id, jp_wit, jp_blauw, winnaar |
+| `beurt` | Groen/geel/blauw wijzigt | mat_id, groen_wedstrijd_id, geel_wedstrijd_id, blauw_wedstrijd_id |
+| `poule_klaar` | Poule afgerond | poule_id, mat_id |
+
+## Client-side events
+
+Views luisteren naar deze browser events:
+
+```javascript
+window.addEventListener('mat-update', (e) => { /* alle updates */ });
+window.addEventListener('mat-score-update', (e) => { /* score wijziging */ });
+window.addEventListener('mat-beurt-update', (e) => { /* groen/geel/blauw */ });
+window.addEventListener('mat-poule-klaar', (e) => { /* poule afgerond */ });
+window.addEventListener('mat-updates-connected', () => { /* WebSocket verbonden */ });
+window.addEventListener('mat-updates-disconnected', () => { /* WebSocket verbroken */ });
+```
+
+## Welke views luisteren?
+
+| View | Luistert naar | Actie |
+|------|---------------|-------|
+| **Publiek** | score, beurt, poule_klaar | Herlaadt matten + favorieten |
+| **Spreker** | poule_klaar | Pagina reload (nieuwe uitslag) |
+| **Jurytafel** | (toekomstig) | Sync met andere tabs |
+
+## Key files (Mat Updates)
+
+- `app/Events/MatUpdate.php` - Broadcast event (`ShouldBroadcastNow`)
+- `app/Http/Controllers/MatController.php` - Dispatcht events bij wijzigingen
+- `resources/views/partials/mat-updates-listener.blade.php` - Client-side WebSocket listener
+
+## Gebruik in views
+
+```blade
+{{-- Include in views die real-time updates nodig hebben --}}
+@if(config('broadcasting.default') === 'reverb')
+    @include('partials.mat-updates-listener', [
+        'toernooi' => $toernooi,
+        'matId' => null  // null = alle matten, of specifiek mat ID
+    ])
+@endif
+```
+
+## Server Setup (staging)
+
+Staging heeft een aparte Reverb instance op port 8081:
+
+```bash
+# Supervisor config: /etc/supervisor/conf.d/reverb-staging.conf
+supervisorctl status reverb-staging
+
+# Nginx proxy naar /app → 127.0.0.1:8081
+```
+
+## Polling fallback
+
+Real-time updates verminderen de noodzaak voor polling, maar polling blijft als fallback:
+
+| View | Oude polling | Nieuwe polling | Real-time |
+|------|-------------|----------------|-----------|
+| Publiek | 15 sec | 60 sec | ✓ |
+| Spreker | 10 sec | 10 sec | ✓ (poule_klaar) |

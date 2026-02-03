@@ -43,6 +43,7 @@ php artisan serve --port=8007
 - **Poule Indeling** - Automatisch algoritme
 - **Mat Interface** - Wedstrijden en uitslagen
 - **Eliminatie** - Double elimination
+- **Real-time Sync** - Reverb WebSockets voor chat en score updates
 
 ## Belangrijke Regels
 
