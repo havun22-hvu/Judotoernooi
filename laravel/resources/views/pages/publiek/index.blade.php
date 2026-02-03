@@ -412,9 +412,6 @@
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
                             <div class="flex justify-between items-center">
                                 <span class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></span>
-                                <button x-show="mat.groen && !liveLoading" @click="loadMatten()" class="bg-green-500 hover:bg-green-600 px-2 py-1 rounded text-xs cursor-pointer transition-colors" title="Klik om te verversen">LIVE</button>
-                                <button x-show="!mat.groen && !liveLoading" @click="loadMatten()" class="bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded text-xs cursor-pointer transition-colors" title="Klik om te verversen">WACHT</button>
-                                <span x-show="liveLoading" class="bg-yellow-500 px-2 py-1 rounded text-xs animate-pulse">⟳ laden...</span>
                             </div>
                             <div x-show="mat.poule_titel" class="text-blue-200 text-sm mt-1" x-text="mat.poule_titel"></div>
                         </div>
