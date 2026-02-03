@@ -1170,11 +1170,20 @@ function matInterface() {
             };
 
             // Bereken standings voor alle judoka's
-            const standings = poule.judokas.map(j => ({
+            const allStandings = poule.judokas.map(j => ({
                 id: j.id,
                 wp: this.getTotaalWP(poule, j.id),
                 jp: this.getTotaalJP(poule, j.id)
             }));
+
+            // Check of gevraagde judoka afwezig is (0 WP én 0 JP)
+            const judokaStanding = allStandings.find(s => s.id === judokaId);
+            if (judokaStanding && judokaStanding.wp === 0 && judokaStanding.jp === 0) {
+                return '-'; // Afwezige judoka krijgt geen plaats
+            }
+
+            // Filter afwezige judoka's uit (0 WP én 0 JP)
+            const standings = allStandings.filter(s => s.wp > 0 || s.jp > 0);
 
             // Sorteer op WP (desc), dan JP (desc)
             standings.sort((a, b) => {
@@ -1332,12 +1341,15 @@ function matInterface() {
 
         // Vind judoka's die barrage moeten spelen (gelijke WP+JP met cirkel-verliezen)
         getBarrageJudokas(poule) {
-            const standings = poule.judokas.map(j => ({
+            const allStandings = poule.judokas.map(j => ({
                 id: j.id,
                 naam: j.naam,
                 wp: this.getTotaalWP(poule, j.id),
                 jp: this.getTotaalJP(poule, j.id)
             }));
+
+            // Filter afwezige judoka's (0 WP én 0 JP)
+            const standings = allStandings.filter(s => s.wp > 0 || s.jp > 0);
 
             // Groepeer op WP+JP
             const groups = {};
