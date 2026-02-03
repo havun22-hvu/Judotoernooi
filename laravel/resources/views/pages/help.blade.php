@@ -808,7 +808,7 @@
                 <h4 class="font-semibold text-gray-800 mt-4">Live Matten weergave</h4>
                 <ul class="list-disc list-inside space-y-1">
                     <li><span class="text-green-600 font-bold">Groen</span> - Speelt nu</li>
-                    <li><span class="text-yellow-600 font-bold">Geel</span> - Klaar maken</li>
+                    <li><span class="text-yellow-600 font-bold">Geel</span> - Klaar staan</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">Notificaties</h4>
