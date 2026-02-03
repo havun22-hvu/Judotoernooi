@@ -1164,49 +1164,27 @@ function matInterface() {
                 jp: this.getTotaalJP(poule, j.id)
             }));
 
-            const wedstrijden = poule.wedstrijden;
-
-            // Sorteer op WP (desc), dan JP (desc), dan head-to-head
+            // Sorteer op WP (desc), dan JP (desc)
+            // GEEN head-to-head in sortering - dat doen we apart
             standings.sort((a, b) => {
                 if (b.wp !== a.wp) return b.wp - a.wp;
                 if (b.jp !== a.jp) return b.jp - a.jp;
-                // Head-to-head
-                for (const w of wedstrijden) {
-                    const isMatch = (w.wit?.id === a.id && w.blauw?.id === b.id)
-                                 || (w.wit?.id === b.id && w.blauw?.id === a.id);
-                    if (isMatch && w.winnaar_id) {
-                        return w.winnaar_id === a.id ? -1 : 1;
-                    }
-                }
-                return 0;
+                return 0; // Gelijke WP+JP = geen voorkeur
             });
 
-            // Bereken plaats met gedeelde posities bij gelijke stand
-            // Bijv: 1, 2, 2, 2, 5 (drie judoka's delen 2e plek, volgende is 5e)
+            // Groepeer judoka's met gelijke WP+JP
+            // Binnen een groep: allen dezelfde positie (gedeeld)
+            // Bijv: [6WP], [2WP, 2WP, 2WP] → posities 1, 2, 2, 2
             let plaats = 1;
             for (let i = 0; i < standings.length; i++) {
                 if (i > 0) {
                     const prev = standings[i - 1];
                     const curr = standings[i];
-                    // Als WP en JP verschillen, nieuwe positie
+                    // Alleen nieuwe positie als WP OF JP verschilt
                     if (prev.wp !== curr.wp || prev.jp !== curr.jp) {
                         plaats = i + 1;
                     }
-                    // Bij gelijke WP en JP: check head-to-head
-                    else {
-                        let h2hDecided = false;
-                        for (const w of wedstrijden) {
-                            const isMatch = (w.wit?.id === prev.id && w.blauw?.id === curr.id)
-                                         || (w.wit?.id === curr.id && w.blauw?.id === prev.id);
-                            if (isMatch && w.winnaar_id) {
-                                // Head-to-head bepaalt, dus nieuwe positie
-                                plaats = i + 1;
-                                h2hDecided = true;
-                                break;
-                            }
-                        }
-                        // Geen head-to-head winnaar = gedeelde positie (plaats blijft gelijk)
-                    }
+                    // Gelijke WP+JP = gedeelde positie (plaats blijft gelijk)
                 }
                 if (standings[i].id === judokaId) {
                     return plaats;
