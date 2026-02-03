@@ -8,7 +8,21 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-        @if(!$isGeldig)
+        @if($tokenExpired ?? false)
+        {{-- EXPIRED - QR code too old (screenshot protection) --}}
+        <div class="bg-orange-500 text-white px-4 py-6 text-center">
+            <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h1 class="text-2xl font-bold">QR-CODE VERLOPEN</h1>
+            <p class="text-orange-100 mt-1">Deze QR-code is ouder dan 5 minuten</p>
+        </div>
+        <div class="p-6 text-center">
+            <p class="text-gray-600 mb-4">Vraag de coach om de kaart opnieuw te openen op zijn/haar telefoon voor een verse QR-code.</p>
+            <p class="text-orange-600 font-bold text-lg">⚠️ SCREENSHOT DETECTIE</p>
+            <p class="text-gray-500 text-sm mt-2">QR-codes verversen elke 4 minuten ter beveiliging.</p>
+        </div>
+        @elseif(!$isGeldig)
         {{-- INVALID - Not activated or no photo --}}
         <div class="bg-red-500 text-white px-4 py-6 text-center">
             <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

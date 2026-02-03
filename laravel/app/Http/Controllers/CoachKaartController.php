@@ -181,15 +181,30 @@ class CoachKaartController extends Controller
 
     /**
      * Scan endpoint - validates access and marks as scanned
+     * Now includes time-based token validation to prevent screenshot fraud
      */
-    public function scan(string $qrCode): View
+    public function scan(Request $request, string $qrCode): View
     {
         $coachKaart = CoachKaart::where('qr_code', $qrCode)
             ->with(['club', 'toernooi', 'wisselingen'])
             ->firstOrFail();
 
+        // Validate time-based token (if provided)
+        $timestamp = $request->query('t');
+        $signature = $request->query('s');
+        $tokenExpired = false;
+
+        if ($timestamp && $signature) {
+            // Token provided - validate it
+            $tokenExpired = !$coachKaart->validateScanToken((int) $timestamp, $signature, 5);
+        } else {
+            // No token = old QR or direct URL access = treat as expired
+            // This catches screenshots of old QR codes without tokens
+            $tokenExpired = true;
+        }
+
         // Check if card is valid (activated with photo)
-        $isGeldig = $coachKaart->isGeldig();
+        $isGeldig = $coachKaart->isGeldig() && !$tokenExpired;
 
         $wasAlreadyScanned = $coachKaart->is_gescand;
 
@@ -200,7 +215,7 @@ class CoachKaartController extends Controller
         // Get transfer history for display
         $wisselingen = $coachKaart->wisselingen;
 
-        return view('pages.coach-kaart.scan-result', compact('coachKaart', 'wasAlreadyScanned', 'isGeldig', 'wisselingen'));
+        return view('pages.coach-kaart.scan-result', compact('coachKaart', 'wasAlreadyScanned', 'isGeldig', 'wisselingen', 'tokenExpired'));
     }
 
     /**
