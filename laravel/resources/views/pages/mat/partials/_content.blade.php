@@ -1157,6 +1157,18 @@ function matInterface() {
         },
 
         getPlaats(poule, judokaId) {
+            const wedstrijden = poule.wedstrijden;
+
+            // Helper: check of A heeft gewonnen van B
+            const heeftGewonnenVan = (aId, bId) => {
+                for (const w of wedstrijden) {
+                    const isMatch = (w.wit?.id === aId && w.blauw?.id === bId)
+                                 || (w.wit?.id === bId && w.blauw?.id === aId);
+                    if (isMatch && w.winnaar_id === aId) return true;
+                }
+                return false;
+            };
+
             // Bereken standings voor alle judoka's
             const standings = poule.judokas.map(j => ({
                 id: j.id,
@@ -1165,32 +1177,89 @@ function matInterface() {
             }));
 
             // Sorteer op WP (desc), dan JP (desc)
-            // GEEN head-to-head in sortering - dat doen we apart
             standings.sort((a, b) => {
                 if (b.wp !== a.wp) return b.wp - a.wp;
                 if (b.jp !== a.jp) return b.jp - a.jp;
-                return 0; // Gelijke WP+JP = geen voorkeur
+                return 0;
             });
 
             // Groepeer judoka's met gelijke WP+JP
-            // Binnen een groep: allen dezelfde positie (gedeeld)
-            // Bijv: [6WP], [2WP, 2WP, 2WP] → posities 1, 2, 2, 2
-            let plaats = 1;
+            const groups = [];
+            let currentGroup = [];
             for (let i = 0; i < standings.length; i++) {
-                if (i > 0) {
-                    const prev = standings[i - 1];
-                    const curr = standings[i];
-                    // Alleen nieuwe positie als WP OF JP verschilt
-                    if (prev.wp !== curr.wp || prev.jp !== curr.jp) {
-                        plaats = i + 1;
-                    }
-                    // Gelijke WP+JP = gedeelde positie (plaats blijft gelijk)
-                }
-                if (standings[i].id === judokaId) {
-                    return plaats;
+                if (i === 0 || (standings[i].wp === standings[i-1].wp && standings[i].jp === standings[i-1].jp)) {
+                    currentGroup.push(standings[i]);
+                } else {
+                    groups.push(currentGroup);
+                    currentGroup = [standings[i]];
                 }
             }
-            return standings.length; // Fallback
+            if (currentGroup.length > 0) groups.push(currentGroup);
+
+            // Bepaal posities per groep
+            let plaats = 1;
+            const posities = {}; // judokaId -> positie
+
+            for (const group of groups) {
+                if (group.length === 1) {
+                    // Enige in groep = duidelijke positie
+                    posities[group[0].id] = plaats;
+                } else if (group.length === 2) {
+                    // 2 judoka's: head-to-head bepaalt
+                    const [a, b] = group;
+                    if (heeftGewonnenVan(a.id, b.id)) {
+                        posities[a.id] = plaats;
+                        posities[b.id] = plaats + 1;
+                    } else if (heeftGewonnenVan(b.id, a.id)) {
+                        posities[b.id] = plaats;
+                        posities[a.id] = plaats + 1;
+                    } else {
+                        // Geen wedstrijd of gelijk: gedeelde positie
+                        posities[a.id] = plaats;
+                        posities[b.id] = plaats;
+                    }
+                } else {
+                    // 3+ judoka's: check of iemand van ALLE anderen heeft gewonnen
+                    let resolved = false;
+                    const sorted = [...group];
+
+                    // Tel voor elke judoka hoeveel h2h wins binnen de groep
+                    for (const j of sorted) {
+                        j.h2hWins = group.filter(other => other.id !== j.id && heeftGewonnenVan(j.id, other.id)).length;
+                    }
+
+                    // Sorteer op h2h wins binnen groep
+                    sorted.sort((a, b) => b.h2hWins - a.h2hWins);
+
+                    // Check of er een duidelijke winnaar is (heeft van iedereen gewonnen)
+                    if (sorted[0].h2hWins === group.length - 1) {
+                        // Duidelijke winnaar
+                        posities[sorted[0].id] = plaats;
+                        // Rest: recursief of gedeeld
+                        const rest = sorted.slice(1);
+                        if (rest.length === 1) {
+                            posities[rest[0].id] = plaats + 1;
+                        } else {
+                            // Check of er in de rest nog een duidelijke 2e is
+                            // Vereenvoudigd: geef iedereen gedeelde 2e plek
+                            for (const r of rest) {
+                                posities[r.id] = plaats + 1;
+                            }
+                        }
+                        resolved = true;
+                    }
+
+                    if (!resolved) {
+                        // Geen duidelijke winnaar: iedereen gedeelde positie (barrage nodig)
+                        for (const j of group) {
+                            posities[j.id] = plaats;
+                        }
+                    }
+                }
+                plaats += group.length;
+            }
+
+            return posities[judokaId] || standings.length;
         },
 
         isPouleAfgerond(poule) {
