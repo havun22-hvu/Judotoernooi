@@ -38,11 +38,11 @@ class SecurityHeaders
         $response->headers->remove('Server');
 
         // Content Security Policy - strict, all assets bundled locally via Vite
-        // Only external sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas)
+        // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode)
         if (!app()->environment('local')) {
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com",
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
@@ -60,8 +60,9 @@ class SecurityHeaders
         }
 
         // Permissions Policy - disable unnecessary browser features
+        // Camera is needed for QR scanning in weging/dojo interfaces
         $response->headers->set('Permissions-Policy', implode(', ', [
-            'camera=()',
+            'camera=(self)',
             'microphone=()',
             'geolocation=()',
             'payment=()',
