@@ -298,9 +298,18 @@
             </div>
             @else
             {{-- ==================== VAST TOERNOOI ==================== --}}
-            {{-- Per categorie: header + poules + wachtruimte --}}
+            {{-- Groepeer op leeftijdscategorie (label), dan gewichtsklassen --}}
+            @php
+                $categoriesPerLabel = $blok['categories']->groupBy('label');
+            @endphp
+            <div class="space-y-6">
+            @forelse($categoriesPerLabel as $labelNaam => $categoriesInLabel)
+            {{-- Leeftijdscategorie header (Mini's, Jeugd, Dames, Heren) --}}
+            <div class="border-l-4 border-blue-500 bg-blue-50 px-4 py-2 mb-2">
+                <h2 class="text-xl font-bold text-blue-800">{{ $labelNaam }}</h2>
+            </div>
             <div class="divide-y">
-            @forelse($blok['categories'] as $category)
+            @foreach($categoriesInLabel as $category)
             @php
                 $isEliminatie = $category['is_eliminatie'] ?? false;
                 $jsLeeftijd = addslashes($category['leeftijdsklasse']);
@@ -642,6 +651,8 @@
                     </div>
                     @endif
                 </div>
+            </div>
+            @endforeach
             </div>
             @empty
             <div class="p-4 text-gray-500 text-center">Geen categorieën in dit blok</div>
