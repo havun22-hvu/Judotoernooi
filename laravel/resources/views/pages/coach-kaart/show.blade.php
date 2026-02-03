@@ -63,11 +63,12 @@
             </div>
         </div>
 
-        {{-- QR CODE - only on bound device --}}
+        {{-- QR CODE - only on bound device, refreshes every 4 minutes --}}
         @if($isCorrectDevice)
         <div class="p-4 flex flex-col items-center bg-white">
             <canvas id="qr-coach-{{ $coachKaart->id }}" width="208" height="208"></canvas>
             <p class="mt-2 text-xs text-gray-400 font-mono">{{ $coachKaart->qr_code }}</p>
+            <p id="qr-timer" class="text-xs text-gray-400 mt-1"></p>
         </div>
 
         {{-- Info over overdracht als incheck systeem actief is --}}
@@ -118,11 +119,38 @@
     {{-- No download button for coach cards - they should only be shown on device, not saved as images --}}
 
     <script>
-        // Generate QR code on page load with retry logic
-        let qrGenerated = false;
-        function generateQR() {
-            if (qrGenerated) return;
+        // Time-based QR code - regenerates every 4 minutes to prevent screenshot fraud
+        const QR_VALID_MINUTES = 5;
+        const QR_REFRESH_MINUTES = 4;
+        const qrCode = '{{ $coachKaart->qr_code }}';
+        const appKey = '{{ substr(config('app.key'), 7, 32) }}'; // Remove 'base64:' prefix, use first 32 chars
 
+        let qrTimestamp = null;
+        let timerInterval = null;
+
+        // Simple hash function for client-side signature (matches server's first 16 chars of HMAC)
+        async function generateSignature(timestamp) {
+            const data = qrCode + '|' + timestamp;
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(appKey);
+            const msgData = encoder.encode(data);
+
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+            const hashArray = Array.from(new Uint8Array(signature));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex.substring(0, 16);
+        }
+
+        async function generateTimedUrl() {
+            qrTimestamp = Math.floor(Date.now() / 1000);
+            const signature = await generateSignature(qrTimestamp);
+            return '{{ url('/coach-kaart') }}/' + qrCode + '/scan?t=' + qrTimestamp + '&s=' + signature;
+        }
+
+        async function generateQR() {
             if (typeof QRCode === 'undefined') {
                 console.log('QRCode library not loaded yet, retrying...');
                 setTimeout(generateQR, 100);
@@ -131,14 +159,49 @@
 
             const canvas = document.getElementById('qr-coach-{{ $coachKaart->id }}');
             if (canvas) {
-                QRCode.toCanvas(canvas, '{{ route('coach-kaart.scan', $coachKaart->qr_code) }}', {
+                const url = await generateTimedUrl();
+                // Clear canvas first
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                QRCode.toCanvas(canvas, url, {
                     width: 208,
                     margin: 1
                 });
-                qrGenerated = true;
+                console.log('QR generated with timestamp:', qrTimestamp);
+                startTimer();
             }
         }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            const timerEl = document.getElementById('qr-timer');
+            const refreshAt = qrTimestamp + (QR_REFRESH_MINUTES * 60);
+
+            timerInterval = setInterval(() => {
+                const now = Math.floor(Date.now() / 1000);
+                const remaining = refreshAt - now;
+
+                if (remaining <= 0) {
+                    generateQR(); // Refresh QR
+                } else if (remaining <= 60) {
+                    timerEl.textContent = 'Ververst over ' + remaining + 's';
+                    timerEl.className = 'text-xs text-orange-500 mt-1';
+                } else {
+                    timerEl.textContent = '';
+                }
+            }, 1000);
+        }
+
         document.addEventListener('DOMContentLoaded', generateQR);
+
+        // Also regenerate when page becomes visible again (user switches back to tab)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                generateQR();
+            }
+        });
     </script>
 </body>
 </html>

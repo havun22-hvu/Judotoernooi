@@ -299,4 +299,47 @@ class CoachKaart extends Model
         // Niet ingecheckt = kan overdragen
         return !$this->isIngecheckt();
     }
+
+    /**
+     * Generate a time-based scan URL that expires after X minutes.
+     * This prevents screenshot fraud - QR must be regenerated on each view.
+     */
+    public function getTimedScanUrl(int $validMinutes = 5): string
+    {
+        $timestamp = now()->timestamp;
+        $signature = $this->generateScanSignature($timestamp);
+
+        return route('coach-kaart.scan', [
+            'qrCode' => $this->qr_code,
+            't' => $timestamp,
+            's' => $signature,
+        ]);
+    }
+
+    /**
+     * Generate HMAC signature for scan URL
+     */
+    public function generateScanSignature(int $timestamp): string
+    {
+        $data = $this->qr_code . '|' . $timestamp;
+        return substr(hash_hmac('sha256', $data, config('app.key')), 0, 16);
+    }
+
+    /**
+     * Validate a timed scan token
+     */
+    public function validateScanToken(int $timestamp, string $signature, int $maxAgeMinutes = 5): bool
+    {
+        // Check signature
+        $expectedSignature = $this->generateScanSignature($timestamp);
+        if (!hash_equals($expectedSignature, $signature)) {
+            return false;
+        }
+
+        // Check age
+        $age = now()->timestamp - $timestamp;
+        $maxAge = $maxAgeMinutes * 60;
+
+        return $age <= $maxAge && $age >= 0;
+    }
 }
