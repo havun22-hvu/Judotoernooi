@@ -106,8 +106,8 @@ class WedstrijddagController extends Controller
                         'is_eliminatie' => $isEliminatie,
                     ];
                 })->sortBy([
-                ['gewicht_sort', 'asc'],  // Eerst gewicht (licht naar zwaar)
-                ['leeftijd_sort', 'asc'], // Dan leeftijd als tiebreaker
+                ['leeftijd_sort', 'asc'], // Eerst leeftijdscategorie (mini's → jeugd → dames/heren)
+                ['gewicht_sort', 'asc'],  // Dan gewicht (licht naar zwaar)
             ])->values();
 
             // Add wachtruimte judokas to their NEW category (based on actual weight)
