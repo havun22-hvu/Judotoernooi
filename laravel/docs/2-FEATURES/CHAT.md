@@ -221,12 +221,15 @@ mat.{toernooi_id}.{mat_id}              - Specifieke mat updates (jurytafel)
 Views luisteren naar deze browser events:
 
 ```javascript
+// Data updates
 window.addEventListener('mat-update', (e) => { /* alle updates */ });
 window.addEventListener('mat-score-update', (e) => { /* score wijziging */ });
 window.addEventListener('mat-beurt-update', (e) => { /* groen/geel/blauw */ });
 window.addEventListener('mat-poule-klaar', (e) => { /* poule afgerond */ });
-window.addEventListener('mat-updates-connected', () => { /* WebSocket verbonden */ });
-window.addEventListener('mat-updates-disconnected', () => { /* WebSocket verbroken */ });
+
+// Connectie status (voor LIVE/OFFLINE indicator)
+window.addEventListener('reverb-connected', () => { /* WebSocket verbonden */ });
+window.addEventListener('reverb-disconnected', () => { /* WebSocket verbroken */ });
 ```
 
 ## Welke views luisteren?
@@ -274,3 +277,41 @@ Real-time updates verminderen de noodzaak voor polling, maar polling blijft als 
 |------|-------------|----------------|-----------|
 | Publiek | 15 sec | 60 sec | ✓ |
 | Spreker | 10 sec | 10 sec | ✓ (poule_klaar) |
+
+---
+
+# 3. Connectie Status Indicator (Publiek PWA)
+
+De Publiek PWA toont een **LIVE/OFFLINE knop** in de header die de WebSocket verbinding toont.
+
+## Status weergave
+
+| Status | Kleur | Betekenis |
+|--------|-------|-----------|
+| 🟢 **LIVE** | Groen | Reverb WebSocket verbonden, data is real-time |
+| 🔵 **OFFLINE** | Blauw (pulserend) | Geen verbinding, data kan verouderd zijn |
+
+## Klik actie
+
+Bij klik op de knop:
+1. Knop wordt tijdelijk blauw (refresh bezig)
+2. Alle data wordt opnieuw geladen (matten + favorieten)
+3. WebSocket herconnect wordt getriggerd
+4. Knop wordt weer groen als verbinding OK
+
+## Technische werking
+
+```javascript
+// Events die connectie status updaten
+window.addEventListener('reverb-connected', () => { isConnected = true; });
+window.addEventListener('reverb-disconnected', () => { isConnected = false; });
+
+// Bij ontvangst van data = verbonden
+window.addEventListener('mat-score-update', () => { isConnected = true; });
+```
+
+## Waarom?
+
+- Gebruiker weet of data actueel is
+- Bij twijfel: klik = forceer refresh
+- Visuele feedback bij verbindingsproblemen (blauw pulserend)
