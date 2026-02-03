@@ -492,11 +492,11 @@
                             </div>
                         </template>
 
-                        <!-- Geel: Klaar maken -->
+                        <!-- Geel: Klaar staan -->
                         <template x-if="mat.geel">
                             <div class="bg-yellow-50 border-l-4 border-yellow-400 px-4 py-3">
                                 <div class="flex items-center gap-2 text-yellow-800 font-bold text-sm mb-2">
-                                    <span class="text-lg">⏳</span> KLAAR MAKEN
+                                    <span class="text-lg">⏳</span> KLAAR STAAN
                                 </div>
                                 <div x-show="mat.geel.poule_titel !== mat.poule_titel" class="text-yellow-700 text-xs mb-2" x-text="mat.geel.poule_titel"></div>
                                 <div class="flex items-center justify-between text-sm">
@@ -691,7 +691,7 @@
                         <span class="text-2xl">🔔</span>
                         <div>
                             <p class="font-medium text-blue-800 text-sm">Meldingen aanzetten?</p>
-                            <p class="text-blue-600 text-xs">Krijg een melding als je favoriet moet klaarmaken</p>
+                            <p class="text-blue-600 text-xs">Krijg een melding als je favoriet moet klaar staan</p>
                         </div>
                     </div>
                     <button @click="vraagNotificatiePermissie()"
@@ -703,7 +703,7 @@
             <div x-show="favorieten.length > 0 && notificatiesAan" class="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
                 <div class="flex items-center gap-2 text-green-700 text-sm">
                     <span>🔔</span>
-                    <span>Meldingen staan aan - je krijgt een signaal als je favoriet moet klaarmaken</span>
+                    <span>Meldingen staan aan - je krijgt een signaal als je favoriet moet klaar staan</span>
                 </div>
             </div>
 
@@ -1168,7 +1168,7 @@
                     if (permission === 'granted') {
                         this.speelGeluid('klaar');
                         new Notification('Notificaties aan! 🔔', {
-                            body: 'Je krijgt nu een melding als je favoriet moet klaarmaken of aan de beurt is.',
+                            body: 'Je krijgt nu een melding als je favoriet moet klaar staan of aan de beurt is.',
                             icon: '/icon-192x192.png',
                             tag: 'test'
                         });
@@ -1191,7 +1191,7 @@
                                 this.stuurNotificatie(judoka.naam, 'aanDeBeurt', poule.mat_label);
                                 this.notifiedState[key] = { ...oldState, aanDeBeurt: true, volgende: true };
                             }
-                            // Check "volgende" (geel) - klaarmaken
+                            // Check "volgende" (geel) - klaar staan
                             else if (judoka.is_volgende && !judoka.is_aan_de_beurt && !oldState.volgende) {
                                 this.stuurNotificatie(judoka.naam, 'volgende', poule.mat_label);
                                 this.notifiedState[key] = { ...oldState, volgende: true };
@@ -1218,7 +1218,7 @@
                         body = `Nu op ${mat || 'de mat'}`;
                         geluid = 'aanDeBeurt';
                     } else {
-                        title = `⏳ ${naam} moet klaarmaken!`;
+                        title = `⏳ ${naam} moet klaar staan!`;
                         body = `Volgende wedstrijd op ${mat || 'de mat'}`;
                         geluid = 'klaar';
                     }
@@ -1259,7 +1259,7 @@
                             setTimeout(() => { osc.frequency.value = 880; }, 300);
                             setTimeout(() => { osc.stop(); ctx.close(); }, 500);
                         } else {
-                            // Zachter geluid voor klaarmaken
+                            // Zachter geluid voor klaar staan
                             osc.frequency.value = 660;
                             gain.gain.value = 0.2;
                             osc.start();
