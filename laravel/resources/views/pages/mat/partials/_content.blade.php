@@ -236,7 +236,7 @@
                                                 <select
                                                     class="w-7 text-center border border-gray-300 rounded-sm text-xs py-0.5 appearance-none bg-white"
                                                     :value="getJP(w, judoka.id)"
-                                                    @change="updateJP(w, judoka.id, $event.target.value); saveScore(w, poule)"
+                                                    @change="updateJP(w, judoka.id, $event.target.value, $event); saveScore(w, poule)"
                                                 >
                                                     <option value=""></option>
                                                     <option value="0">0</option>
@@ -1056,12 +1056,16 @@ function matInterface() {
             wedstrijd.wpScores = { ...wedstrijd.wpScores, [judokaId]: wp };
         },
 
-        updateJP(wedstrijd, judokaId, value) {
+        updateJP(wedstrijd, judokaId, value, event) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
 
             // Blokkeer invoer voor geel/blauw wedstrijden
             if (!this.isInvoerToegestaan(wedstrijd)) {
                 alert('Punten invoeren niet mogelijk.\n\nDeze wedstrijd staat in de wachtrij (geel/blauw).\nSpeel eerst de groene wedstrijd of deselecteer deze.');
+                // Reset select naar originele waarde
+                if (event && event.target) {
+                    event.target.value = wedstrijd.jpScores?.[judokaId] ?? '';
+                }
                 return;
             }
 
