@@ -555,8 +555,10 @@ class Toernooi extends Model
             return !str_starts_with($key, '_');
         }, ARRAY_FILTER_USE_KEY);
 
-        // Keep original order from config (as defined in instellingen)
-        // DO NOT sort - the order is intentionally set by the user/preset
+        // Sort by max_leeftijd (youngest first = Mini's, then Jeugd, then Dames/Heren)
+        uasort($klassen, function ($a, $b) {
+            return ($a['max_leeftijd'] ?? 99) <=> ($b['max_leeftijd'] ?? 99);
+        });
 
         return $klassen;
     }
