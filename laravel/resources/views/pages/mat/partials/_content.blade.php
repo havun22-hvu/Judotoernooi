@@ -1219,38 +1219,37 @@ function matInterface() {
                         posities[b.id] = plaats;
                     }
                 } else {
-                    // 3+ judoka's: check of iemand van ALLE anderen heeft gewonnen
-                    let resolved = false;
+                    // 3+ judoka's: check of iemand van ALLE anderen in de groep heeft gewonnen
                     const sorted = [...group];
 
-                    // Tel voor elke judoka hoeveel h2h wins binnen de groep
+                    // Tel voor elke judoka hoeveel h2h wins BINNEN deze groep
                     for (const j of sorted) {
-                        j.h2hWins = group.filter(other => other.id !== j.id && heeftGewonnenVan(j.id, other.id)).length;
+                        j.h2hWins = group.filter(other =>
+                            other.id !== j.id && heeftGewonnenVan(j.id, other.id)
+                        ).length;
                     }
 
-                    // Sorteer op h2h wins binnen groep
-                    sorted.sort((a, b) => b.h2hWins - a.h2hWins);
+                    // Check of er een duidelijke winnaar is (heeft van ALLE anderen in groep gewonnen)
+                    const maxWins = group.length - 1;
+                    const winnaar = sorted.find(j => j.h2hWins === maxWins);
 
-                    // Check of er een duidelijke winnaar is (heeft van iedereen gewonnen)
-                    if (sorted[0].h2hWins === group.length - 1) {
-                        // Duidelijke winnaar
-                        posities[sorted[0].id] = plaats;
-                        // Rest: recursief of gedeeld
-                        const rest = sorted.slice(1);
+                    if (winnaar) {
+                        // Duidelijke winnaar binnen groep
+                        posities[winnaar.id] = plaats;
+
+                        // Rest van de groep: check recursief of gedeeld
+                        const rest = sorted.filter(j => j.id !== winnaar.id);
                         if (rest.length === 1) {
                             posities[rest[0].id] = plaats + 1;
                         } else {
-                            // Check of er in de rest nog een duidelijke 2e is
-                            // Vereenvoudigd: geef iedereen gedeelde 2e plek
+                            // Meerdere overblijvers: geef gedeelde positie
                             for (const r of rest) {
                                 posities[r.id] = plaats + 1;
                             }
                         }
-                        resolved = true;
-                    }
-
-                    if (!resolved) {
-                        // Geen duidelijke winnaar: iedereen gedeelde positie (barrage nodig)
+                    } else {
+                        // Geen duidelijke winnaar (carrousel): iedereen gedeelde positie
+                        // Dit betekent barrage nodig
                         for (const j of group) {
                             posities[j.id] = plaats;
                         }
