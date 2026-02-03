@@ -51,8 +51,14 @@ class WedstrijddagController extends Controller
         $blokken = $toernooi->blokken()->orderBy('nummer')->get()->map(function ($blok) use ($poules, $judokasNaarWachtruimte, $tolerantie, $gewichtsklassenConfig, $leeftijdsklasseToKey) {
             $blokPoules = $poules->where('blok_id', $blok->id);
 
-            // Get sort order from preset config
-            $leeftijdVolgorde = $gewichtsklassenConfig ? array_flip(array_map(fn($d) => $d['label'] ?? '', $gewichtsklassenConfig)) : [];
+            // Get sort order from preset config - use max_leeftijd for proper young-to-old sorting
+            $leeftijdVolgorde = [];
+            if ($gewichtsklassenConfig) {
+                foreach ($gewichtsklassenConfig as $key => $data) {
+                    $label = $data['label'] ?? $key;
+                    $leeftijdVolgorde[$label] = $data['max_leeftijd'] ?? 99;
+                }
+            }
 
             $categories = $blokPoules
                 // Filter alleen automatisch aangemaakte lege poules bij variabel gewicht
