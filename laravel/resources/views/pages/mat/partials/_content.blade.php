@@ -32,7 +32,7 @@
 <div x-data="matInterface()" x-init="init()">
     <!-- Huidige selectie + Legenda -->
     <div class="flex items-center justify-between mb-1" x-show="blokId && matId">
-        <!-- Legenda links -->
+        <!-- Legenda links met uitleg -->
         <div class="flex items-center gap-3 text-xs">
             <span class="flex items-center gap-1">
                 <span class="w-3 h-3 rounded bg-green-500"></span>
@@ -46,6 +46,7 @@
                 <span class="w-3 h-3 rounded bg-blue-400"></span>
                 <span class="text-gray-600">Gereed maken</span>
             </span>
+            <span class="text-gray-400 ml-2 cursor-help" title="Tip: Klik op wedstrijdnummer om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik op groen om over te slaan (geel schuift door).">ⓘ tip</span>
         </div>
         <!-- Blok/Mat selectie rechts -->
         <div class="text-sm text-gray-600">
@@ -991,8 +992,29 @@ function matInterface() {
             return 'bg-yellow-50';
         },
 
+        // Check of punten invoer is toegestaan voor deze wedstrijd
+        // Alleen toegestaan voor: groen (actief), of niet-gekleurde wedstrijden
+        isInvoerToegestaan(wedstrijd) {
+            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
+            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
+            const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
+
+            // Geel of blauw = niet toegestaan
+            if (matVolgendeId && wedstrijd.id === matVolgendeId) return false;
+            if (matGereedmakenId && wedstrijd.id === matGereedmakenId) return false;
+
+            // Groen of niet-gekleurd = toegestaan
+            return true;
+        },
+
         updateWP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
+
+            // Blokkeer invoer voor geel/blauw wedstrijden
+            if (!this.isInvoerToegestaan(wedstrijd)) {
+                alert('Punten invoeren niet mogelijk.\n\nDeze wedstrijd staat in de wachtrij (geel/blauw).\nSpeel eerst de groene wedstrijd of deselecteer deze.');
+                return;
+            }
 
             // Leeg veld = verwijder waarde (voor delete/backspace)
             if (value === '' || value === null || value === undefined) {
@@ -1011,6 +1033,13 @@ function matInterface() {
 
         updateJP(wedstrijd, judokaId, value) {
             if (!wedstrijd.wit || !wedstrijd.blauw) return;
+
+            // Blokkeer invoer voor geel/blauw wedstrijden
+            if (!this.isInvoerToegestaan(wedstrijd)) {
+                alert('Punten invoeren niet mogelijk.\n\nDeze wedstrijd staat in de wachtrij (geel/blauw).\nSpeel eerst de groene wedstrijd of deselecteer deze.');
+                return;
+            }
+
             const opponentId = wedstrijd.wit.id == judokaId ? wedstrijd.blauw.id : wedstrijd.wit.id;
 
             // Blanco = reset alles
@@ -1428,7 +1457,7 @@ function matInterface() {
 
             // Klik op GROENE wedstrijd = bevestiging vragen, dan doorschuiven
             if (isAlGroen) {
-                if (!confirm('Weet je zeker dat je deze wedstrijd wilt stoppen?\n\nGeel→Groen, Blauw→Geel')) {
+                if (!confirm('Groene wedstrijd overslaan?\n\nGeel wordt groen, blauw wordt geel.')) {
                     return;
                 }
                 // Doorschuiven: geel→groen, blauw→geel, blauw=null
