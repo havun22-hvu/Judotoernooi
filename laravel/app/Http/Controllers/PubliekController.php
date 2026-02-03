@@ -450,9 +450,9 @@ class PubliekController extends Controller
     public function manifest(Organisator $organisator, Toernooi $toernooi): JsonResponse
     {
         return response()->json([
-            'name' => $toernooi->naam,
-            'short_name' => substr($toernooi->naam, 0, 12),
-            'description' => 'Live informatie voor ' . $toernooi->naam,
+            'name' => '📺 LIVE ' . $toernooi->naam,
+            'short_name' => '📺 LIVE',
+            'description' => 'Live uitslagen voor ' . $toernooi->naam,
             'start_url' => '/' . $toernooi->slug,
             'scope' => '/' . $toernooi->slug,
             'display' => 'standalone',
