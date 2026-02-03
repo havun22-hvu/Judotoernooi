@@ -59,20 +59,21 @@
 @endif
 
 <div class="max-w-4xl mx-auto" x-data="{ activeTab: '{{ request('tab', 'toernooi') }}' }">
-    <div class="flex justify-between items-center mb-6">
-        <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
-            <!-- Verplaatst naar fixed toast -->
+    <!-- Sticky header met titel en tabs -->
+    <div class="sticky top-0 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
+                    &larr; Terug naar Dashboard
+                </a>
+            </div>
         </div>
-        <div class="flex items-center gap-4">
-            <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
-                &larr; Terug naar Dashboard
-            </a>
-        </div>
-    </div>
 
-    <!-- TABS -->
-    <div class="flex border-b mb-6 sticky top-0 bg-white z-10 -mx-4 px-4 pt-2">
+        <!-- TABS -->
+        <div class="flex border-b">
         <button type="button"
                 @click="activeTab = 'toernooi'"
                 :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
@@ -99,6 +100,7 @@
             🧪 Test
         </button>
         @endif
+        </div>
     </div>
 
     <!-- TAB: TOERNOOI -->
