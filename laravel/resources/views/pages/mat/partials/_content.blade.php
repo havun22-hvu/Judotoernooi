@@ -972,6 +972,10 @@ function matInterface() {
                         } else if (w.winnaar_id === w.blauw.id) {
                             w.wpScores[w.wit.id] = 0;
                             w.wpScores[w.blauw.id] = 2;
+                        } else if (w.is_gespeeld && !w.winnaar_id) {
+                            // Gelijkspel: beide krijgen 1 WP
+                            w.wpScores[w.wit.id] = 1;
+                            w.wpScores[w.blauw.id] = 1;
                         }
 
                         // Parse JP from scores
