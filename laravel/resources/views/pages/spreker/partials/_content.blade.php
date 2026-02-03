@@ -326,15 +326,16 @@
                 </div>
             </div>
 
-            <!-- Textarea - volledige hoogte -->
+            <!-- Textarea - grote hoogte voor veel tekst -->
             <div class="mb-2">
                 <textarea
                     x-model="notities"
                     @input.debounce.2000ms="autoSaveNotities()"
                     :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
-                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
                     :class="{ 'border-yellow-400': hasUnsavedChanges }"
-                    style="min-height: calc(100vh - 280px); max-height: calc(100vh - 200px);"
+                    rows="15"
+                    style="min-height: 400px;"
                     placeholder="Typ hier je notities..."
                 ></textarea>
             </div>
