@@ -120,11 +120,18 @@
         </table>
     </div>
 
-    <!-- Edit Gewicht Modal (binnen x-data scope) -->
-    <div x-show="editModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm" @click.away="closeEditModal()">
-            <div class="p-4 border-b">
-                <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
+    <!-- Edit Gewicht Modal (binnen x-data scope) - Draggable -->
+    <div x-show="editModal" x-cloak class="fixed inset-0 z-50 pointer-events-none">
+        <div class="absolute bg-white rounded-lg shadow-xl w-80 pointer-events-auto"
+             x-ref="editModalBox"
+             :style="'left:' + modalX + 'px; top:' + modalY + 'px;'">
+            <div class="p-4 border-b cursor-move select-none bg-gray-50 rounded-t-lg"
+                 @mousedown="startDrag($event)"
+                 @touchstart.prevent="startDrag($event)">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
+                    <button @click="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+                </div>
                 <p class="text-sm text-gray-600">
                     <span x-text="editJudoka?.naam"></span>
                     <template x-if="editJudoka?.gewicht && parseFloat(editJudoka.gewicht) > 0">
@@ -151,11 +158,6 @@
                         class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
                     <span x-show="!editSaving">Opslaan</span>
                     <span x-show="editSaving">Bezig...</span>
-                </button>
-            </div>
-            <div class="p-4 border-t">
-                <button @click="closeEditModal()" class="w-full text-gray-600 hover:text-gray-800 text-sm">
-                    Annuleren
                 </button>
             </div>
         </div>
@@ -330,15 +332,23 @@ function weeglijst() {
             }
         },
 
-        // Edit gewicht modal
+        // Edit gewicht modal (draggable)
         editModal: false,
         editJudoka: null,
         editGewicht: '',
         editSaving: false,
+        modalX: 100,
+        modalY: 100,
+        isDragging: false,
+        dragOffsetX: 0,
+        dragOffsetY: 0,
 
         openEditGewicht(judoka) {
             this.editJudoka = judoka;
             this.editGewicht = judoka.gewicht_gewogen || '';
+            // Center modal on first open
+            this.modalX = Math.max(50, (window.innerWidth - 320) / 2);
+            this.modalY = Math.max(50, (window.innerHeight - 300) / 2);
             this.editModal = true;
         },
 
@@ -346,6 +356,35 @@ function weeglijst() {
             this.editModal = false;
             this.editJudoka = null;
             this.editGewicht = '';
+        },
+
+        startDrag(e) {
+            this.isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            this.dragOffsetX = clientX - this.modalX;
+            this.dragOffsetY = clientY - this.modalY;
+
+            const moveHandler = (ev) => {
+                if (!this.isDragging) return;
+                const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+                const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+                this.modalX = Math.max(0, Math.min(window.innerWidth - 320, cx - this.dragOffsetX));
+                this.modalY = Math.max(0, Math.min(window.innerHeight - 100, cy - this.dragOffsetY));
+            };
+
+            const upHandler = () => {
+                this.isDragging = false;
+                document.removeEventListener('mousemove', moveHandler);
+                document.removeEventListener('mouseup', upHandler);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', upHandler);
+            };
+
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', upHandler);
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', upHandler);
         },
 
         async saveGewicht() {
