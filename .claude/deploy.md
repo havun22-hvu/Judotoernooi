@@ -17,20 +17,11 @@ php artisan serve --port=8007
 ssh root@188.245.159.115
 cd /var/www/staging.judotoernooi/laravel
 
-git pull origin master
+git pull origin main
 composer install --no-dev
-php artisan migrate
-
-# ALTIJD caches clearen VOOR opnieuw opbouwen!
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-
-# Daarna opnieuw cachen
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+npm run build
+php artisan migrate --force
+php artisan optimize:clear && php artisan optimize
 ```
 
 ## Deploy (Production)
@@ -39,18 +30,23 @@ php artisan view:cache
 ssh root@188.245.159.115
 cd /var/www/judotoernooi/laravel
 
-git pull origin master
+git pull origin main
 composer install --no-dev
-php artisan migrate
+npm run build
+php artisan migrate --force
+php artisan optimize:clear && php artisan optimize
+```
 
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
+## One-liner (copy-paste ready)
 
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+**Staging:**
+```bash
+cd /var/www/staging.judotoernooi/laravel && git pull origin main && composer install --no-dev && npm run build && php artisan migrate --force && php artisan optimize:clear && php artisan optimize
+```
+
+**Production:**
+```bash
+cd /var/www/judotoernooi/laravel && git pull origin main && composer install --no-dev && npm run build && php artisan migrate --force && php artisan optimize:clear && php artisan optimize
 ```
 
 > **Let op:** Zonder cache:clear kunnen gebruikers in redirect loop komen bij login!
