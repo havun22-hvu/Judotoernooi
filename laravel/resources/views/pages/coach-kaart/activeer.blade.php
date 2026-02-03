@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coach Kaart Activeren</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <style>
         body {
             -webkit-user-select: none;
             user-select: none;
+        }
+        .cropper-container {
+            max-height: 300px;
         }
     </style>
 </head>
@@ -123,24 +127,41 @@
                 <label class="block text-gray-700 font-medium mb-2">Pasfoto (selfie)</label>
                 <p class="text-gray-500 text-sm mb-3">Deze foto wordt getoond bij de ingang van de dojo ter verificatie.</p>
 
-                {{-- Preview --}}
-                <div id="preview-container" class="hidden mb-3">
-                    <img id="preview" class="w-32 h-32 object-cover rounded-lg mx-auto border-4 border-purple-200">
+                {{-- Cropper container (hidden until image selected) --}}
+                <div id="cropper-container" class="hidden mb-3">
+                    <div class="bg-gray-900 rounded-lg overflow-hidden" style="max-height: 300px;">
+                        <img id="crop-image" class="max-w-full">
+                    </div>
+                    <div class="flex justify-center gap-2 mt-2">
+                        <button type="button" onclick="cropper.zoom(0.1)" class="px-3 py-1 bg-gray-200 rounded text-sm">➕ Zoom in</button>
+                        <button type="button" onclick="cropper.zoom(-0.1)" class="px-3 py-1 bg-gray-200 rounded text-sm">➖ Zoom uit</button>
+                        <button type="button" onclick="resetCrop()" class="px-3 py-1 bg-gray-200 rounded text-sm">↺ Reset</button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Sleep om te centreren, knijp/scroll om te zoomen</p>
                 </div>
 
+                {{-- Final preview (after crop confirmed) --}}
+                <div id="preview-container" class="hidden mb-3">
+                    <img id="preview" class="w-32 h-32 object-cover rounded-lg mx-auto border-4 border-purple-200">
+                    <button type="button" onclick="editCrop()" class="block mx-auto mt-2 text-purple-600 text-sm underline">Aanpassen</button>
+                </div>
+
+                {{-- Hidden input for cropped image --}}
+                <input type="hidden" name="foto_cropped" id="foto_cropped">
+
                 {{-- Camera/upload buttons --}}
-                <div class="flex gap-2">
+                <div id="upload-buttons" class="flex gap-2">
                     <label class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg cursor-pointer flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
                         Maak Selfie
-                        <input type="file" name="foto" id="foto" accept="image/*" capture="user" required class="hidden" onchange="previewImage(this)">
+                        <input type="file" id="foto-input" accept="image/*" capture="user" class="hidden" onchange="loadImage(this)">
                     </label>
                 </div>
 
-                <p class="text-xs text-gray-400 mt-2 text-center">Tip: Gebruik de camera aan de voorkant</p>
+                <p id="upload-tip" class="text-xs text-gray-400 mt-2 text-center">Tip: Gebruik de camera aan de voorkant</p>
             </div>
 
             {{-- Submit --}}
@@ -164,22 +185,86 @@
         @endif
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
+        let cropper = null;
         let fotoSelected = false;
 
-        function previewImage(input) {
-            const preview = document.getElementById('preview');
-            const container = document.getElementById('preview-container');
-
+        function loadImage(input) {
             if (input.files && input.files[0]) {
-                fotoSelected = true;
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    container.classList.remove('hidden');
-                    updateSubmitButton();
+                    const cropImage = document.getElementById('crop-image');
+                    cropImage.src = e.target.result;
+
+                    // Destroy existing cropper
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+
+                    // Show cropper, hide preview and upload button
+                    document.getElementById('cropper-container').classList.remove('hidden');
+                    document.getElementById('preview-container').classList.add('hidden');
+                    document.getElementById('upload-buttons').classList.add('hidden');
+                    document.getElementById('upload-tip').classList.add('hidden');
+
+                    // Initialize cropper
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.9,
+                        restore: false,
+                        guides: false,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: false,
+                        cropBoxResizable: false,
+                        toggleDragModeOnDblclick: false,
+                        ready: function() {
+                            // Auto-confirm after cropper is ready
+                            setTimeout(confirmCrop, 100);
+                        }
+                    });
                 }
                 reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function confirmCrop() {
+            if (!cropper) return;
+
+            // Get cropped canvas (square, 400x400)
+            const canvas = cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            // Convert to blob and set hidden input
+            canvas.toBlob(function(blob) {
+                // Store blob for form submission
+                window.croppedBlob = blob;
+                fotoSelected = true;
+                updateSubmitButton();
+            }, 'image/jpeg', 0.9);
+
+            // Show preview
+            const preview = document.getElementById('preview');
+            preview.src = canvas.toDataURL('image/jpeg', 0.9);
+            document.getElementById('preview-container').classList.remove('hidden');
+        }
+
+        function editCrop() {
+            // Hide preview, show cropper
+            document.getElementById('preview-container').classList.add('hidden');
+            document.getElementById('cropper-container').classList.remove('hidden');
+        }
+
+        function resetCrop() {
+            if (cropper) {
+                cropper.reset();
             }
         }
 
@@ -192,14 +277,45 @@
             const allValid = fotoSelected && naam.value.trim().length > 0 && pincodeValid;
 
             submitBtn.disabled = !allValid;
-            console.log('Button update:', { fotoSelected, naam: naam.value, pincodeValid, allValid });
         }
 
         document.getElementById('naam').addEventListener('input', updateSubmitButton);
         document.getElementById('pincode').addEventListener('input', updateSubmitButton);
-        document.getElementById('foto').addEventListener('change', function() {
-            fotoSelected = this.files.length > 0;
-            updateSubmitButton();
+
+        // Handle form submission with cropped image
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!window.croppedBlob) {
+                e.preventDefault();
+                alert('Maak eerst een foto');
+                return;
+            }
+
+            // Create FormData and append cropped blob
+            const formData = new FormData(this);
+            formData.delete('foto_cropped');
+            formData.append('foto', window.croppedBlob, 'selfie.jpg');
+
+            // Submit via fetch
+            e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Bezig...';
+
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text); });
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Er ging iets mis. Probeer opnieuw.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '{{ $isOvername ? "Neem Coach Kaart Over" : "Activeer Coach Kaart" }}';
+            });
         });
     </script>
 </body>
