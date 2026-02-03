@@ -45,6 +45,9 @@ return Application::configure(basePath: dirname(__DIR__))
             '*/*/scan-qr',     // Public QR scan API
             'mollie/webhook',
             'mollie/webhook/toernooi',
+            'coach-kaart/*/activeer',  // Coach card activation (public, uses pincode)
+            'coach-kaart/*/checkin',   // Coach check-in (public)
+            'coach-kaart/*/checkout',  // Coach check-out (public)
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -96,11 +99,18 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        // Handle 419 Page Expired (CSRF token expired) - redirect to login
+        // Handle 419 Page Expired (CSRF token expired)
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'CSRF token mismatch'], 419);
             }
+
+            // For public routes (coach-kaart, weegkaart), redirect back with error
+            $path = $request->path();
+            if (str_starts_with($path, 'coach-kaart/') || str_starts_with($path, 'weegkaart/')) {
+                return redirect()->back()->with('error', 'Formulier verlopen. Probeer opnieuw.');
+            }
+
             return redirect()
                 ->guest(route('organisator.login'))
                 ->with('warning', 'Sessie verlopen. Log opnieuw in.');
@@ -112,6 +122,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($request->expectsJson()) {
                     return response()->json(['message' => 'Page expired'], 419);
                 }
+
+                // For public routes, redirect back instead of to login
+                $path = $request->path();
+                if (str_starts_with($path, 'coach-kaart/') || str_starts_with($path, 'weegkaart/')) {
+                    return redirect()->back()->with('error', 'Formulier verlopen. Probeer opnieuw.');
+                }
+
                 return redirect()
                     ->guest(route('organisator.login'))
                     ->with('warning', 'Sessie verlopen. Log opnieuw in.');
