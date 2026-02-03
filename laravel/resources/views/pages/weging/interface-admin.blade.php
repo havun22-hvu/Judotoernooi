@@ -26,6 +26,7 @@
                     <option value="">Alle status</option>
                     <option value="gewogen">Gewogen</option>
                     <option value="niet_gewogen">Niet gewogen</option>
+                    <option value="afwezig">Afwezig</option>
                 </select>
 
                 <!-- Einde weegtijd knop - alleen zichtbaar als blok geselecteerd en niet gesloten -->
@@ -93,20 +94,25 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
                 <template x-for="judoka in gefilterd" :key="judoka.id">
-                    <tr class="hover:bg-gray-50" :class="judoka.gewogen ? '' : 'bg-yellow-50'">
-                        <td class="px-4 py-3 font-medium" x-text="judoka.naam"></td>
+                    <tr class="hover:bg-gray-50"
+                        :class="judoka.afwezig ? 'bg-red-50 opacity-60' : (judoka.gewogen ? '' : 'bg-yellow-50')">
+                        <td class="px-4 py-3 font-medium" :class="judoka.afwezig ? 'line-through text-gray-500' : ''">
+                            <span x-text="judoka.naam"></span>
+                            <span x-show="judoka.afwezig" class="ml-2 text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded no-underline inline-block">AFWEZIG</span>
+                        </td>
                         <td class="px-4 py-3 text-gray-600" x-text="judoka.club || '-'"></td>
                         <td class="px-4 py-3" x-text="judoka.leeftijdsklasse || '-'"></td>
                         <td class="px-4 py-3" x-text="(judoka.gewicht || judoka.gewichtsklasse || '-') + ' kg'"></td>
                         <td class="px-4 py-3" x-text="judoka.blok ? 'Blok ' + judoka.blok : '-'"></td>
                         <td class="px-4 py-3">
-                            <span x-show="judoka.gewogen" class="font-bold" x-text="judoka.gewicht_gewogen + ' kg'"></span>
-                            <span x-show="!judoka.gewogen" class="text-gray-400">-</span>
+                            <span x-show="judoka.afwezig" class="text-red-600 font-medium">-</span>
+                            <span x-show="!judoka.afwezig && judoka.gewogen" class="font-bold" x-text="judoka.gewicht_gewogen + ' kg'"></span>
+                            <span x-show="!judoka.afwezig && !judoka.gewogen" class="text-gray-400">-</span>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500" x-text="judoka.gewogen_om || '-'"></td>
                         <td class="px-4 py-3">
                             <button @click="openEditGewicht(judoka)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                Wijzig
+                                <span x-text="judoka.afwezig ? 'Herstel' : 'Wijzig'"></span>
                             </button>
                         </td>
                     </tr>
@@ -306,13 +312,18 @@ function weeglijst() {
             }
 
             if (this.statusFilter === 'gewogen') {
-                result = result.filter(j => j.gewogen);
+                result = result.filter(j => j.gewogen && !j.afwezig);
             } else if (this.statusFilter === 'niet_gewogen') {
-                result = result.filter(j => !j.gewogen);
+                result = result.filter(j => !j.gewogen && !j.afwezig);
+            } else if (this.statusFilter === 'afwezig') {
+                result = result.filter(j => j.afwezig);
             }
 
-            // Sorteer: niet gewogen eerst, dan op naam
+            // Sorteer: afwezig onderaan, dan niet gewogen eerst, dan op naam
             result.sort((a, b) => {
+                // Afwezig altijd onderaan
+                if (a.afwezig !== b.afwezig) return a.afwezig ? 1 : -1;
+                // Gewogen onderaan (niet gewogen eerst)
                 if (a.gewogen !== b.gewogen) return a.gewogen ? 1 : -1;
                 return a.naam.localeCompare(b.naam);
             });
@@ -411,11 +422,14 @@ function weeglijst() {
                     const idx = this.judokas.findIndex(j => j.id === this.editJudoka.id);
                     if (idx !== -1) {
                         if (data.afwezig) {
-                            // Verwijder uit lijst (is nu afwezig)
-                            this.judokas.splice(idx, 1);
+                            // Markeer als afwezig (blijft in lijst zichtbaar)
+                            this.judokas[idx].afwezig = true;
+                            this.judokas[idx].gewogen = false;
+                            this.judokas[idx].gewicht_gewogen = null;
                         } else {
                             this.judokas[idx].gewogen = true;
                             this.judokas[idx].gewicht_gewogen = gewicht;
+                            this.judokas[idx].afwezig = false;
                         }
                     }
                     this.berekenStats();
