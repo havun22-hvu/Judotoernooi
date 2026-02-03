@@ -125,7 +125,12 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-sm" @click.away="closeEditModal()">
             <div class="p-4 border-b">
                 <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
-                <p class="text-sm text-gray-600" x-text="editJudoka?.naam"></p>
+                <p class="text-sm text-gray-600">
+                    <span x-text="editJudoka?.naam"></span>
+                    <span class="text-blue-600 font-medium" x-show="editJudoka?.gewicht">
+                        (opgegeven: <span x-text="editJudoka?.gewicht"></span> kg)
+                    </span>
+                </p>
             </div>
             <div class="p-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gewogen gewicht (kg)</label>
