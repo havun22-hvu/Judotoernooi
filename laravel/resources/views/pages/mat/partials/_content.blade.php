@@ -1111,8 +1111,8 @@ function matInterface() {
                 body: JSON.stringify({
                     wedstrijd_id: wedstrijd.id,
                     winnaar_id: winnaarId,
-                    score_wit: String(wedstrijd.jpScores[wedstrijd.wit.id] || ''),
-                    score_blauw: String(wedstrijd.jpScores[wedstrijd.blauw.id] || ''),
+                    score_wit: wedstrijd.jpScores[wedstrijd.wit.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.wit.id]) : '',
+                    score_blauw: wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.blauw.id]) : '',
                     uitslag_type: 'punten'
                 })
             });
