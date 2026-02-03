@@ -587,14 +587,22 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
 ->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');
 
 // Legacy public routes - redirect to new URL structure
-Route::get('/publiek/{toernooi}/zoeken', fn($toernooi) => redirect()->route('publiek.index', [
-    'organisator' => $toernooi->organisator->slug ?? 'unknown',
-    'toernooi' => $toernooi->slug
-]))->name('publiek.zoeken.legacy');
+Route::get('/publiek/{toernooiSlug}/zoeken', function($toernooiSlug) {
+    $toernooi = \App\Models\Toernooi::where('slug', $toernooiSlug)->first();
+    if (!$toernooi) abort(404);
+    return redirect()->route('publiek.index', [
+        'organisator' => $toernooi->organisator->slug,
+        'toernooi' => $toernooi->slug
+    ]);
+})->name('publiek.zoeken.legacy');
 
-Route::get('/{toernooi}', fn($toernooi) => redirect()->route('publiek.index', [
-    'organisator' => $toernooi->organisator->slug ?? 'unknown',
-    'toernooi' => $toernooi->slug
-]))
+Route::get('/{toernooiSlug}', function($toernooiSlug) {
+    $toernooi = \App\Models\Toernooi::where('slug', $toernooiSlug)->first();
+    if (!$toernooi) abort(404);
+    return redirect()->route('publiek.index', [
+        'organisator' => $toernooi->organisator->slug,
+        'toernooi' => $toernooi->slug
+    ]);
+})
 ->name('publiek.index.legacy')
-->where('toernooi', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
+->where('toernooiSlug', '^(?!admin|login|logout|registreren|organisator|toernooi|coach|team|weging|mat|jury|spreker|dojo|weegkaart|coach-kaart|publiek|mollie|betaling|help|dashboard|local-server).*$');
