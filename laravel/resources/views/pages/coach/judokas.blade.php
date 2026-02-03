@@ -340,10 +340,16 @@
         </div>
         @endif
 
-        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ filter: 'alle' }" @filter-changed.window="filter = $event.detail">
-            <div class="px-4 py-3 border-b bg-gray-50 flex justify-between items-center">
-                <span class="font-semibold text-gray-800">Judoka's</span>
-                <span class="text-sm text-gray-500">{{ $volledigeJudokas->count() }} volledig, {{ $onvolledigeJudokas->count() }} onvolledig</span>
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ filter: 'alle', search: '' }" @filter-changed.window="filter = $event.detail">
+            <div class="px-4 py-3 border-b bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-gray-800">Judoka's</span>
+                    <span class="text-sm text-gray-500">{{ $volledigeJudokas->count() }} volledig, {{ $onvolledigeJudokas->count() }} onvolledig</span>
+                </div>
+                <div class="mt-2">
+                    <input type="text" x-model="search" placeholder="Zoek judoka op naam..."
+                           class="w-full border rounded px-3 py-2 text-sm" />
+                </div>
             </div>
 
             @if($judokas->count() > 0)
@@ -385,7 +391,7 @@
                 @endphp
                 <div class="px-4 py-3 hover:bg-gray-50 {{ $pastNietInCategorie ? 'bg-red-50 border-l-4 border-red-400' : ($isOnvolledig ? 'bg-yellow-50 border-l-4 border-yellow-400' : ($isBetaald ? 'border-l-4 border-green-500' : ($isGewijzigd ? 'border-l-4 border-orange-400' : ($isSynced ? 'border-l-4 border-green-400' : '')))) }} {{ $judoka->import_warnings ? 'bg-red-50' : (count($warnings) > 0 && !$isOnvolledig && !$pastNietInCategorie ? 'bg-orange-50' : '') }}"
                      x-data="{ editing: false }"
-                     x-show="filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }})">
+                     x-show="(search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())) && (filter === 'alle' || (filter === 'synced' && {{ $isSynced ? 'true' : 'false' }}) || (filter === 'gewijzigd' && {{ $isGewijzigd ? 'true' : 'false' }}) || (filter === 'incompleet' && {{ $isOnvolledig ? 'true' : 'false' }}) || (filter === 'klaar' && {{ $isKlaarOmTeSyncen ? 'true' : 'false' }}) || (filter === 'betaald' && {{ $isBetaald ? 'true' : 'false' }}) || (filter === 'klaar_betaling' && {{ $isKlaarVoorBetaling ? 'true' : 'false' }}))">
                     <!-- View mode -->
                     <div x-show="!editing" class="flex justify-between items-center">
                         <div class="flex items-center gap-3 min-w-0">

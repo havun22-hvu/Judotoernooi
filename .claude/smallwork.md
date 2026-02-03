@@ -503,6 +503,16 @@
 
 ---
 
+## Sessie: 3 februari 2026 (deel 2)
+
+### Feat: Zoekfunctie coach portal
+- **Type:** UI improvement
+- **Wat:** Zoekbalk toegevoegd aan judokas en weegkaarten pagina's in coach portal
+- **Bestanden:** coach/judokas.blade.php, coach/weegkaarten.blade.php
+- **Werking:** Alpine.js client-side filter op naam
+
+---
+
 ## Sessie: 3 februari 2026
 
 ### Feat: Email audit log
