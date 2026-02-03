@@ -1424,11 +1424,32 @@
 
         // Generate QR code for sharing
         const qrPubliek = document.getElementById('qr-publiek');
-        if (qrPubliek) {
-            QRCode.toCanvas(qrPubliek, '{{ url()->current() }}', {
-                width: 160,
-                margin: 1
-            });
+        if (qrPubliek && typeof QRCode !== 'undefined') {
+            try {
+                QRCode.toCanvas(qrPubliek, '{{ url()->current() }}', {
+                    width: 160,
+                    margin: 1
+                });
+            } catch (e) {
+                console.warn('QR code generation failed:', e);
+                // Show URL as fallback
+                const ctx = qrPubliek.getContext('2d');
+                ctx.fillStyle = '#f3f4f6';
+                ctx.fillRect(0, 0, 160, 160);
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('QR niet beschikbaar', 80, 80);
+            }
+        } else if (qrPubliek) {
+            console.warn('QRCode library not loaded');
+            const ctx = qrPubliek.getContext('2d');
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, 160, 160);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('QR niet beschikbaar', 80, 80);
         }
     </script>
 
