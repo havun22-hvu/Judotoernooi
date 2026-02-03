@@ -160,8 +160,9 @@ class PubliekController extends Controller
                     }
 
                     if ($poule) {
-                        // Calculate standings for each judoka
-                        $poule->standings = $poule->judokas->map(function ($judoka) use ($poule) {
+                        // Calculate standings for each judoka (exclude absent)
+                        $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+                        $poule->standings = $activeJudokas->map(function ($judoka) use ($poule) {
                             $wp = 0;
                             $jp = 0;
                             foreach ($poule->wedstrijden as $w) {
@@ -238,9 +239,10 @@ class PubliekController extends Controller
             ->with(['judokas.club', 'wedstrijden'])
             ->get();
 
-        // Calculate standings for each poule
+        // Calculate standings for each poule (exclude absent judokas)
         $poules = $poules->map(function ($poule) {
-            $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+            $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+            $standings = $activeJudokas->map(function ($judoka) use ($poule) {
                 $wp = 0;
                 $jp = 0;
                 foreach ($poule->wedstrijden as $w) {

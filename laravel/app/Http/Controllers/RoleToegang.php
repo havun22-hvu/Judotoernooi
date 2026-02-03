@@ -291,7 +291,12 @@ class RoleToegang extends Controller
                     ->first();
 
                 // Calculate standings for regular poule + barrage points
-                $standings = $poule->judokas->map(function ($judoka) use ($poule, $barrage) {
+                // Filter out absent judokas (not weighed or marked afwezig)
+                $activeJudokas = $poule->judokas->filter(function ($judoka) {
+                    return $judoka->gewicht_gewogen !== null && $judoka->aanwezigheid !== 'afwezig';
+                });
+
+                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage) {
                     $wp = 0;
                     $jp = 0;
 
@@ -520,7 +525,10 @@ class RoleToegang extends Controller
      */
     private function berekenPouleStand($poule): \Illuminate\Support\Collection
     {
-        $standings = $poule->judokas->map(function ($judoka) use ($poule) {
+        // Filter out absent judokas (not weighed or marked afwezig)
+        $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+
+        $standings = $activeJudokas->map(function ($judoka) use ($poule) {
             $wp = 0;
             $jp = 0;
 
