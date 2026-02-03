@@ -1563,6 +1563,8 @@ function matInterface() {
                     console.log('[Mat] setWedstrijdStatus response:', data.mat);
                     this.matSelectie = data.mat;
                     console.log('[Mat] matSelectie updated to:', this.matSelectie);
+                    // Force re-render van poules om kleuren bij te werken
+                    this.poules = [...this.poules];
                 }
             } catch (err) {
                 console.error('Fout bij wijzigen wedstrijd status:', err);
