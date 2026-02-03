@@ -82,15 +82,20 @@
 
         console.log('Mat updates WebSocket connected for toernooi:', matUpdateConfig.toernooiId);
 
-        // Connection status
+        // Connection status - dispatch events for UI to track
         pusher.connection.bind('connected', function() {
-            console.log('Mat updates: Connected');
-            window.dispatchEvent(new CustomEvent('mat-updates-connected'));
+            console.log('Reverb: Verbonden');
+            window.dispatchEvent(new CustomEvent('reverb-connected'));
         });
 
         pusher.connection.bind('disconnected', function() {
-            console.log('Mat updates: Disconnected');
-            window.dispatchEvent(new CustomEvent('mat-updates-disconnected'));
+            console.log('Reverb: Verbinding verbroken');
+            window.dispatchEvent(new CustomEvent('reverb-disconnected'));
+        });
+
+        pusher.connection.bind('error', function(err) {
+            console.error('Reverb: Fout', err);
+            window.dispatchEvent(new CustomEvent('reverb-disconnected'));
         });
     }
 

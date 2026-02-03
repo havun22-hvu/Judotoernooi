@@ -58,9 +58,13 @@
                         {{ $totaalJudokas }} <span class="hidden sm:inline">deelnemers</span>
                     </span>
                     @if($poulesGegenereerd)
-                    <span class="bg-green-500 px-2 py-1 rounded-full text-xs sm:text-sm font-bold">
-                        LIVE
-                    </span>
+                    <button @click="forceRefresh()"
+                            class="px-2 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors cursor-pointer"
+                            :class="isConnected ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-400 hover:bg-blue-500 animate-pulse'"
+                            :title="isConnected ? 'Verbonden - klik om te verversen' : 'Geen verbinding - klik om te verbinden'">
+                        <span x-show="!isRefreshing" x-text="isConnected ? 'LIVE' : 'OFFLINE'"></span>
+                        <span x-show="isRefreshing" class="inline-block animate-spin">⟳</span>
+                    </button>
                     @endif
                 </div>
             </div>
@@ -993,6 +997,8 @@
                 liveMatten: [],
                 notificatiesAan: false,
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
+                isConnected: false, // WebSocket verbinding status
+                isRefreshing: false, // Bezig met forceren refresh
 
                 init() {
                     // Load notification state
@@ -1061,11 +1067,39 @@
                     this.setupRealtimeListeners();
                 },
 
+                // Force refresh - herlaad alles en herconnect WebSocket
+                async forceRefresh() {
+                    this.isRefreshing = true;
+
+                    // Reload all data
+                    await Promise.all([
+                        this.loadMatten(),
+                        this.favorieten.length > 0 ? this.loadFavorieten() : Promise.resolve()
+                    ]);
+
+                    // Check connection by seeing if we got data
+                    this.isConnected = this.liveMatten.length >= 0; // API werkt = verbonden
+
+                    this.isRefreshing = false;
+                },
+
                 // Setup real-time mat update listeners
                 setupRealtimeListeners() {
+                    // Track connection status via custom events from mat-updates-listener
+                    window.addEventListener('reverb-connected', () => {
+                        console.log('Publiek: Reverb verbonden');
+                        this.isConnected = true;
+                    });
+
+                    window.addEventListener('reverb-disconnected', () => {
+                        console.log('Publiek: Reverb verbinding verbroken');
+                        this.isConnected = false;
+                    });
+
                     // Score update - reload matten to get fresh data
                     window.addEventListener('mat-score-update', (e) => {
                         console.log('Publiek: Score update ontvangen', e.detail);
+                        this.isConnected = true; // We krijgen updates = verbonden
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();
@@ -1075,6 +1109,7 @@
                     // Beurt update (groen/geel/blauw) - reload matten
                     window.addEventListener('mat-beurt-update', (e) => {
                         console.log('Publiek: Beurt update ontvangen', e.detail);
+                        this.isConnected = true;
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();
@@ -1084,11 +1119,19 @@
                     // Poule klaar - reload everything
                     window.addEventListener('mat-poule-klaar', (e) => {
                         console.log('Publiek: Poule klaar ontvangen', e.detail);
+                        this.isConnected = true;
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();
                         }
                     });
+
+                    // Start met check - als Reverb geladen is zijn we verbonden
+                    setTimeout(() => {
+                        if (window.Pusher) {
+                            this.isConnected = true;
+                        }
+                    }, 2000);
                 },
 
                 isFavoriet(id) {
