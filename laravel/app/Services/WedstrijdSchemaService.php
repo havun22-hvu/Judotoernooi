@@ -277,6 +277,16 @@ class WedstrijdSchemaService
         string $type = 'beslissing'
     ): void {
         DB::transaction(function () use ($wedstrijd, $winnaarId, $scoreWit, $scoreBlauw, $type) {
+            // Als er een winnaar is en één score leeg is, zet die op '0'
+            // Dit voorkomt dat de verliezer geen JP krijgt terwijl de winnaar wel punten heeft
+            if ($winnaarId !== null) {
+                if ($scoreWit === '' && $scoreBlauw !== '') {
+                    $scoreWit = '0';
+                } elseif ($scoreBlauw === '' && $scoreWit !== '') {
+                    $scoreBlauw = '0';
+                }
+            }
+
             $wedstrijd->update([
                 'winnaar_id' => $winnaarId,
                 'score_wit' => $scoreWit,
