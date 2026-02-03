@@ -19,7 +19,8 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
-| **3 feb 2026** | Staging testing, Email log, QR fix | smallwork.md |
+| **3 feb 2026** | Real-time mat updates via Reverb | Zie `CHAT.md` sectie 2 |
+| 3 feb 2026 | Staging testing, Email log, QR fix | smallwork.md |
 | 2 feb 2026 | 10+ Production Ready | `.claude/handover/2026-02-02-10plus-production.md` |
 | 1 feb 2026 | Redundantie systeem | `.claude/handover/` (afgerond) |
 | 24 jan 2026 | Reverb fix, DB reset | `.claude/handover/2026-01-24-avond-reverb-fix-db-reset.md` |
@@ -33,6 +34,7 @@
 - **Redundantie systeem** - Local server, hot standby, failover
 - **10+ Improvements** - Error handling, CI/CD, tests, security
 - **Core features** - Import, weging, mat, spreker, live, eliminatie
+- **Real-time sync** - Reverb WebSockets voor scores, beurten, poule status
 
 ### 🎯 Volgende Stap
 - **Production launch** - Over 3 dagen

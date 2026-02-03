@@ -988,6 +988,7 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 - Prijsuitreiking markeren
 - Geschiedenis (localStorage)
 - Auto-refresh elke 10 seconden
+- **Real-time updates:** Auto-reload bij `mat-poule-klaar` event (via Reverb)
 
 ---
 
@@ -1148,9 +1149,21 @@ In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
 - Groene banner: "🥋 NU! [Naam] is aan het vechten!"
 - Gele banner: "⚡ Maak je klaar! [Naam] is bijna aan de beurt"
 
-### Auto-refresh
-- **Favorieten:** Elke 15 seconden (AJAX)
-- **Live Matten:** Elke 30 seconden (page reload)
+### Real-time Updates via Reverb
+
+De publiek app ontvangt real-time updates via WebSockets (Laravel Reverb):
+
+| Event | Actie |
+|-------|-------|
+| `mat-score-update` | Herlaadt matten + favorieten data |
+| `mat-beurt-update` | Herlaadt matten + favorieten data |
+| `mat-poule-klaar` | Herlaadt matten + favorieten data |
+
+> **Zie:** `CHAT.md` voor volledige Reverb documentatie
+
+### Polling fallback
+- **Favorieten:** Elke 60 seconden (AJAX) - verlaagd van 15s door real-time
+- **Live Matten:** Elke 60 seconden (AJAX) - verlaagd door real-time
 
 ### Bestanden
 - `PubliekController@index` - Hoofd view
