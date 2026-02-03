@@ -379,8 +379,7 @@
                     </div>
                     <div class="text-center sm:text-left">
                         <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Scan voor live updates</h3>
-                        <p class="text-gray-600 text-sm mb-3">Scan deze QR code met je telefoon voor live poule-informatie en om je favoriete judoka's te volgen.</p>
-                        <p class="text-xs text-gray-400 break-all">{{ url()->current() }}</p>
+                        <p class="text-gray-600 text-sm">Scan deze QR code met je telefoon voor live poule-informatie en om je favoriete judoka's te volgen.</p>
                     </div>
                 </div>
             </div>
