@@ -112,8 +112,8 @@ class MatController extends Controller
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'winnaar_id' => 'nullable|exists:judokas,id',
-            'score_wit' => 'nullable|integer|in:0,1,2',
-            'score_blauw' => 'nullable|integer|in:0,1,2',
+            'score_wit' => 'nullable|integer|min:0|max:99',
+            'score_blauw' => 'nullable|integer|min:0|max:99',
             'uitslag_type' => 'nullable|string|max:20',
         ]);
 
