@@ -249,7 +249,13 @@ class WegingService
     }
 
     /**
-     * Mark judoka as absent and remove from poules
+     * Mark judoka as absent (but keep in poules for traceability)
+     *
+     * On tournament day, absent judokas should:
+     * - Stay in poules (shown as strikethrough for traceability)
+     * - Stay in judoka list (with absent status)
+     * - Stay in weging list (with absent status)
+     * - NOT appear in wedstrijddag matches
      */
     public function markeerAfwezig(Judoka $judoka): void
     {
@@ -257,8 +263,8 @@ class WegingService
             'aanwezigheid' => AanwezigheidsStatus::AFWEZIG->value,
         ]);
 
-        // Verwijder uit poules (afwezig = niet mee tellen)
-        $judoka->verwijderUitPoulesIndienNodig();
+        // DO NOT remove from poules - keep for traceability
+        // Views should show afwezig judokas as strikethrough
     }
 
     /**

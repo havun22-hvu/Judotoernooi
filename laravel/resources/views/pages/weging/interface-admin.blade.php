@@ -127,9 +127,11 @@
                 <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
                 <p class="text-sm text-gray-600">
                     <span x-text="editJudoka?.naam"></span>
-                    <span class="text-blue-600 font-medium" x-show="editJudoka?.gewicht">
-                        (opgegeven: <span x-text="editJudoka?.gewicht"></span> kg)
-                    </span>
+                    <template x-if="editJudoka?.gewicht && parseFloat(editJudoka.gewicht) > 0">
+                        <span class="text-blue-600 font-medium">
+                            (opgegeven: <span x-text="editJudoka.gewicht"></span> kg)
+                        </span>
+                    </template>
                 </p>
             </div>
             <div class="p-4">
