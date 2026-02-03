@@ -6,7 +6,7 @@
     <title>Coach Kaart - {{ $coachKaart->club->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -141,16 +141,27 @@
     @endif
 
     <script>
-        // Generate QR code on page load
-        document.addEventListener('DOMContentLoaded', function() {
+        // Generate QR code on page load with retry logic
+        let qrGenerated = false;
+        function generateQR() {
+            if (qrGenerated) return;
+
+            if (typeof QRCode === 'undefined') {
+                console.log('QRCode library not loaded yet, retrying...');
+                setTimeout(generateQR, 100);
+                return;
+            }
+
             const canvas = document.getElementById('qr-coach-{{ $coachKaart->id }}');
             if (canvas) {
                 QRCode.toCanvas(canvas, '{{ route('coach-kaart.scan', $coachKaart->qr_code) }}', {
                     width: 208,
                     margin: 1
                 });
+                qrGenerated = true;
             }
-        });
+        }
+        document.addEventListener('DOMContentLoaded', generateQR);
 
         async function downloadCoachkaart() {
             const element = document.getElementById('coachkaart');
