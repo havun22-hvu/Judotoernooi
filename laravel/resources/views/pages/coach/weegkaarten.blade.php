@@ -57,9 +57,15 @@
         @endif
 
         <!-- Weegkaarten List -->
-        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ copiedId: null }">
-            <div class="px-6 py-4 border-b bg-gray-50 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">Weegkaarten ({{ $judokas->count() }})</h2>
+        <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ copiedId: null, search: '' }">
+            <div class="px-6 py-4 border-b bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-gray-800">Weegkaarten ({{ $judokas->count() }})</h2>
+                </div>
+                <div class="mt-2">
+                    <input type="text" x-model="search" placeholder="Zoek judoka op naam..."
+                           class="w-full border rounded px-3 py-2 text-sm" />
+                </div>
             </div>
 
             @if($judokas->count() > 0)
@@ -69,7 +75,8 @@
                     $weegkaartUrl = route('weegkaart.show', $judoka->qr_code);
                     $blok = $judoka->poules->first()?->blok;
                 @endphp
-                <div class="p-4 hover:bg-gray-50" x-data="{ showQr: false }">
+                <div class="p-4 hover:bg-gray-50" x-data="{ showQr: false }"
+                     x-show="search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())">
                     <div class="flex justify-between items-start gap-4">
                         <!-- QR Code (clickable) -->
                         <div class="cursor-pointer shrink-0" @click="showQr = !showQr" title="Klik voor grote QR">
