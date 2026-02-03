@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MatUpdate;
 use App\Http\Requests\WedstrijdUitslagRequest;
 use App\Models\Organisator;
 use App\Models\Blok;
@@ -161,6 +162,20 @@ class MatController extends Controller
             );
         }
 
+        // Broadcast score update to all listeners (jurytafel, publiek, spreker)
+        $wedstrijd->load('poule.blok');
+        if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
+            $toernooiId = $wedstrijd->poule->blok?->toernooi_id ?? $wedstrijd->poule->toernooi_id;
+            MatUpdate::dispatch($toernooiId, $wedstrijd->poule->mat_id, 'score', [
+                'wedstrijd_id' => $wedstrijd->id,
+                'poule_id' => $wedstrijd->poule_id,
+                'winnaar_id' => $validated['winnaar_id'],
+                'score_wit' => $validated['score_wit'] ?? null,
+                'score_blauw' => $validated['score_blauw'] ?? null,
+                'is_gespeeld' => $wedstrijd->fresh()->is_gespeeld,
+            ]);
+        }
+
         return response()->json(['success' => true]);
     }
 
@@ -269,6 +284,15 @@ class MatController extends Controller
             // Send ORIGINAL poule to spreker (includes all judokas)
             $originelePoule->update(['spreker_klaar' => now()]);
 
+            // Broadcast poule klaar to spreker
+            if ($originelePoule->mat_id) {
+                MatUpdate::dispatch($toernooiId, $originelePoule->mat_id, 'poule_klaar', [
+                    'poule_id' => $originelePoule->id,
+                    'poule_nummer' => $originelePoule->nummer,
+                    'barrage' => true,
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'barrage' => true,
@@ -278,6 +302,14 @@ class MatController extends Controller
         }
 
         $poule->update(['spreker_klaar' => now()]);
+
+        // Broadcast poule klaar to spreker
+        if ($poule->mat_id) {
+            MatUpdate::dispatch($toernooiId, $poule->mat_id, 'poule_klaar', [
+                'poule_id' => $poule->id,
+                'poule_nummer' => $poule->nummer,
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -364,6 +396,13 @@ class MatController extends Controller
 
         // Refresh to get the actual saved values
         $mat->refresh();
+
+        // Broadcast beurt update to all listeners (jurytafel, publiek, spreker)
+        MatUpdate::dispatch($toernooiId, $mat->id, 'beurt', [
+            'actieve_wedstrijd_id' => $mat->actieve_wedstrijd_id,
+            'volgende_wedstrijd_id' => $mat->volgende_wedstrijd_id,
+            'gereedmaken_wedstrijd_id' => $mat->gereedmaken_wedstrijd_id,
+        ]);
 
         return response()->json([
             'success' => true,

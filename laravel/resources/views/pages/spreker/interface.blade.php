@@ -12,6 +12,7 @@
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     <title>Spreker Interface - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
         body { overscroll-behavior: none; }
         [x-cloak] { display: none !important; }
@@ -40,5 +41,18 @@
         'toernooiId' => $toernooi->id,
         'chatApiBase' => route('toernooi.chat.index', $toernooi->routeParams()),
     ])
+
+    {{-- Real-time mat updates via Reverb --}}
+    @if(config('broadcasting.default') === 'reverb')
+        @include('partials.mat-updates-listener', ['toernooi' => $toernooi, 'matId' => null])
+        <script>
+            // Auto-refresh when poule is marked as complete
+            window.addEventListener('mat-poule-klaar', function(e) {
+                console.log('Spreker: Poule klaar ontvangen', e.detail);
+                // Reload page to show new completed poule
+                location.reload();
+            });
+        </script>
+    @endif
 </body>
 </html>

@@ -13,6 +13,7 @@
     <link rel="apple-touch-icon" href="/icon-192x192.png">
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
         /* Touch-friendly star buttons */
@@ -1047,7 +1048,7 @@
                         this.loadMatten();
                     }
 
-                    // Auto-refresh: favorieten en matten elke 15 sec
+                    // Auto-refresh: favorieten en matten elke 60 sec (reduced - Reverb handles real-time)
                     if (poulesGegenereerd) {
                         setInterval(() => {
                             if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
@@ -1056,8 +1057,41 @@
                             if (this.activeTab === 'live') {
                                 this.loadMatten();
                             }
-                        }, 15000);
+                        }, 60000);
                     }
+
+                    // Real-time updates via Reverb
+                    this.setupRealtimeListeners();
+                },
+
+                // Setup real-time mat update listeners
+                setupRealtimeListeners() {
+                    // Score update - reload matten to get fresh data
+                    window.addEventListener('mat-score-update', (e) => {
+                        console.log('Publiek: Score update ontvangen', e.detail);
+                        this.loadMatten();
+                        if (this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                    });
+
+                    // Beurt update (groen/geel/blauw) - reload matten
+                    window.addEventListener('mat-beurt-update', (e) => {
+                        console.log('Publiek: Beurt update ontvangen', e.detail);
+                        this.loadMatten();
+                        if (this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                    });
+
+                    // Poule klaar - reload everything
+                    window.addEventListener('mat-poule-klaar', (e) => {
+                        console.log('Publiek: Poule klaar ontvangen', e.detail);
+                        this.loadMatten();
+                        if (this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                    });
                 },
 
                 isFavoriet(id) {
@@ -1397,5 +1431,10 @@
             });
         }
     </script>
+
+    {{-- Real-time mat updates via Reverb --}}
+    @if(config('broadcasting.default') === 'reverb')
+        @include('partials.mat-updates-listener', ['toernooi' => $toernooi, 'matId' => null])
+    @endif
 </body>
 </html>
