@@ -1282,9 +1282,9 @@ function matInterface() {
                 return this.isEliminatieAfgerond(poule);
             }
 
-            // Poule: alle wedstrijden moeten ECHT gespeeld zijn (met winnaar)
-            // ROBUUST: check winnaar_id, niet alleen is_gespeeld
-            return poule.wedstrijden.every(w => w.winnaar_id);
+            // Poule: alle wedstrijden moeten gespeeld zijn
+            // is_gespeeld = true (kan gelijkspel zijn, dan winnaar_id = null)
+            return poule.wedstrijden.every(w => w.is_gespeeld);
         },
 
         // Check of eliminatie bracket volledig is afgerond
