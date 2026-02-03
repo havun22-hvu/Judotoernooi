@@ -165,6 +165,7 @@ class WegingController extends Controller
             'gewogen' => $j->gewicht_gewogen !== null,
             'gewicht_gewogen' => $j->gewicht_gewogen,
             'gewogen_om' => $j->wegingen->first()?->created_at?->format('H:i'),
+            'afwezig' => !$j->isAanwezig(),
         ])->toArray();
     }
 }
