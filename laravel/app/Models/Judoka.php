@@ -226,18 +226,23 @@ class Judoka extends Model
      * Check if weight is within allowed range for weight class
      * Only applies to fixed weight classes (max_kg_verschil = 0)
      * Variable weight classes always return true
+     *
+     * @param float|null $gewicht - gewicht to check (default: gewicht_gewogen ?? gewicht)
+     * @param float $tolerantie - tolerance in kg (default: 0.5)
+     * @param string|null $pouleGewichtsklasse - use poule's weight class instead of judoka's
      */
-    public function isGewichtBinnenKlasse(?float $gewicht = null, float $tolerantie = 0.5): bool
+    public function isGewichtBinnenKlasse(?float $gewicht = null, float $tolerantie = 0.5, ?string $pouleGewichtsklasse = null): bool
     {
         $gewicht = $gewicht ?? $this->gewicht_gewogen ?? $this->gewicht;
         if (!$gewicht) return true;
 
-        $klasse = $this->gewichtsklasse;
+        // Use poule's weight class if provided, otherwise judoka's
+        $klasse = $pouleGewichtsklasse ?? $this->gewichtsklasse;
         if (!$klasse) return true;
 
-        // Only check fixed weight classes (max_kg_verschil = 0)
-        if (!$this->isVasteGewichtsklasse()) {
-            // Variable weight class - no limits to check
+        // Only check fixed weight classes (format: -XX or +XX)
+        // Variable weight classes (no +/- prefix) always pass
+        if (!str_starts_with($klasse, '-') && !str_starts_with($klasse, '+')) {
             return true;
         }
 

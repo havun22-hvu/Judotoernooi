@@ -554,11 +554,9 @@
                                         $isGewogen = $judoka->gewicht_gewogen !== null;
                                         $isAfwezig = !$judoka->isActief($wegingGesloten);
 
-                                        // Check of judoka past in DEZE POULE's gewichtsklasse
-                                        // Gebruik centrale methode voor gewicht check
-                                        // isGewichtBinnenKlasse() werkt alleen voor vaste klassen
-                                        // Dynamische categorieën: poule-level check via $problematischeGewichtsPoules
-                                        $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+                                        // Check of judoka past in DEZE POULE's gewichtsklasse (niet judoka's eigen klasse!)
+                                        // Gebruik poule->gewichtsklasse voor de check, want judoka kan verplaatst zijn
+                                        $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
                                         $heeftProbleem = $isAfwijkendGewicht;
                                     @endphp
                                     @if($isAfwezig)
