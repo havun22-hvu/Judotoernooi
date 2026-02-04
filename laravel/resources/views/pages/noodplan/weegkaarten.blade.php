@@ -13,13 +13,15 @@
         background: white;
     }
     .weegkaart-header {
-        background: #333;
-        color: white;
-        padding: 4px 8px;
+        background: #f5f5f5;
+        color: #111;
+        padding: 5px 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 9px;
+        font-size: 10px;
+        font-weight: 600;
+        border-bottom: 1px solid #ccc;
     }
     .weegkaart-naam {
         background: white;
