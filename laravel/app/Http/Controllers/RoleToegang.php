@@ -303,24 +303,43 @@ class RoleToegang extends Controller
                     // Points from original poule
                     foreach ($poule->wedstrijden as $w) {
                         if (!$w->is_gespeeld) continue;
+                        $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
+                        if (!$isInWedstrijd) continue;
+
+                        // JP score
                         if ($w->judoka_wit_id === $judoka->id) {
                             $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                            if ($w->winnaar_id === $judoka->id) $wp += 2;
-                        } elseif ($w->judoka_blauw_id === $judoka->id) {
+                        } else {
                             $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                            if ($w->winnaar_id === $judoka->id) $wp += 2;
+                        }
+
+                        // WP: Win=2, Draw=1, Loss=0
+                        if ($w->winnaar_id === $judoka->id) {
+                            $wp += 2;
+                        } elseif ($w->winnaar_id === null) {
+                            $wp += 1; // Gelijkspel
                         }
                     }
 
                     // ADD barrage points if judoka participated in barrage
                     if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
                         foreach ($barrage->wedstrijden as $w) {
+                            if (!$w->is_gespeeld) continue;
+                            $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
+                            if (!$isInWedstrijd) continue;
+
+                            // JP
                             if ($w->judoka_wit_id === $judoka->id) {
-                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
                                 $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                            } elseif ($w->judoka_blauw_id === $judoka->id) {
-                                $wp += $w->winnaar_id === $judoka->id ? 2 : 0;
+                            } else {
                                 $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                            }
+
+                            // WP: Win=2, Draw=1, Loss=0
+                            if ($w->winnaar_id === $judoka->id) {
+                                $wp += 2;
+                            } elseif ($w->winnaar_id === null) {
+                                $wp += 1;
                             }
                         }
                     }
@@ -532,13 +551,23 @@ class RoleToegang extends Controller
             $wp = 0;
             $jp = 0;
 
-            foreach ($poule->wedstrijden as $wedstrijd) {
-                if ($wedstrijd->judoka_wit_id === $judoka->id) {
-                    $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
-                    $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_wit ?? '');
-                } elseif ($wedstrijd->judoka_blauw_id === $judoka->id) {
-                    $wp += $wedstrijd->winnaar_id === $judoka->id ? 2 : 0;
-                    $jp += (int) preg_replace('/[^0-9]/', '', $wedstrijd->score_blauw ?? '');
+            foreach ($poule->wedstrijden as $w) {
+                if (!$w->is_gespeeld) continue;
+                $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
+                if (!$isInWedstrijd) continue;
+
+                // JP
+                if ($w->judoka_wit_id === $judoka->id) {
+                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                } else {
+                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                }
+
+                // WP: Win=2, Draw=1, Loss=0
+                if ($w->winnaar_id === $judoka->id) {
+                    $wp += 2;
+                } elseif ($w->winnaar_id === null) {
+                    $wp += 1; // Gelijkspel
                 }
             }
 
