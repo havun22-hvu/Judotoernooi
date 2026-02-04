@@ -359,17 +359,7 @@
                     </template>
                 </select>
 
-                <!-- Opslaan als template -->
-                <button
-                    @click="showSaveAsModal = true"
-                    :disabled="!notities.trim()"
-                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-4 py-3 rounded-lg text-xl"
-                    title="Opslaan als template"
-                >
-                    📥
-                </button>
-
-                <!-- Beheer -->
+                <!-- Templates beheren (inclusief opslaan als template) -->
                 <button
                     @click="showTemplateModal = true"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-xl"
