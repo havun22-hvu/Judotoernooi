@@ -2637,17 +2637,18 @@
                             <td class="border p-2">🟢 Eigen router</td>
                             <td class="border p-2">🔴 Uitgevallen</td>
                             <td class="border p-2">
-                                <strong>Start lokale server</strong><br>
+                                <strong>1. Maak hotspot op mobiel</strong><br>
+                                <strong>2. Verbind primaire server met hotspot</strong><br>
                                 <span class="text-xs text-gray-600">Tablets blijven op eigen WiFi!</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">⚠️ Internet weg + 4G backup</td>
+                            <td class="border p-2 font-medium">⚠️ Hotspot niet mogelijk</td>
                             <td class="border p-2">🟢 Eigen router</td>
-                            <td class="border p-2">🟡 Via 4G hotspot</td>
+                            <td class="border p-2">🔴 Geen</td>
                             <td class="border p-2">
-                                Verbind router met hotspot<br>
-                                <span class="text-xs text-gray-600">Tablets hoeven niet te wisselen</span>
+                                <strong>Start lokale server</strong><br>
+                                <span class="text-xs text-gray-600">Tablets blijven op eigen WiFi, geen cloud sync</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
@@ -2685,9 +2686,9 @@
                             <td class="border p-2">🟢 Sporthal WiFi</td>
                             <td class="border p-2">🔴 Uitgevallen</td>
                             <td class="border p-2">
-                                <strong>1. Start lokale server</strong><br>
-                                <strong>2. Zet tablets op hotspot</strong><br>
-                                <span class="text-xs text-gray-600">Alle tablets moeten wisselen!</span>
+                                <strong>1. Maak hotspot op mobiel</strong><br>
+                                <strong>2. Verbind primaire server met hotspot</strong><br>
+                                <span class="text-xs text-gray-600">Tablets blijven op sporthal WiFi!</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
@@ -2695,9 +2696,10 @@
                             <td class="border p-2">🔴 Uitgevallen</td>
                             <td class="border p-2">🔴 Geen</td>
                             <td class="border p-2">
-                                <strong>1. Start mobiele hotspot</strong><br>
-                                <strong>2. Zet tablets op hotspot</strong><br>
-                                <strong>3. Start lokale server</strong>
+                                <strong>1. Maak hotspot op mobiel</strong><br>
+                                <strong>2. Verbind primaire server met hotspot</strong><br>
+                                <strong>3. Zet tablets op hotspot</strong><br>
+                                <span class="text-xs text-gray-600">Alle tablets moeten wisselen!</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
