@@ -2586,20 +2586,14 @@
         <div class="mb-6">
             <h3 class="font-bold text-gray-800 mb-3">IP-adressen configureren</h3>
 
-            <!-- Quick setup buttons -->
-            <div class="flex flex-wrap gap-2 mb-4">
-                <button type="button" @click="detectAndSetIp('primary')"
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2"
-                        :disabled="detectingIp">
-                    <span x-show="!detectingIp">🖥️ Maak deze computer primaire server</span>
-                    <span x-show="detectingIp">⏳ Detecteren...</span>
-                </button>
-                <button type="button" @click="detectAndSetIp('standby')"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium flex items-center gap-2"
-                        :disabled="detectingIp">
-                    <span x-show="!detectingIp">🖥️ Maak deze computer standby server</span>
-                    <span x-show="detectingIp">⏳ Detecteren...</span>
-                </button>
+            <!-- Uitleg IP vinden -->
+            <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
+                <p class="text-sm text-blue-800 font-medium mb-2">📍 Hoe vind je het IP-adres van een laptop?</p>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Windows:</strong> Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"</p>
+                    <p><strong>Of:</strong> Instellingen → Netwerk → WiFi → Hardware-eigenschappen</p>
+                    <p class="text-xs text-blue-600 mt-2">Het IP begint meestal met 192.168.x.x (lokaal netwerk)</p>
+                </div>
             </div>
 
             <div class="grid md:grid-cols-3 gap-4">
@@ -2919,90 +2913,6 @@
             standbyIp: '{{ $toernooi->local_server_standby_ip ?? "" }}',
             hotspotIp: '{{ $toernooi->hotspot_ip ?? "" }}',
             copied: false,
-            detectingIp: false,
-
-            async detectAndSetIp(type) {
-                this.detectingIp = true;
-                const serverLabel = type === 'primary' ? 'Primaire' : 'Standby';
-
-                try {
-                    // Probeer eerst automatische detectie via WebRTC
-                    let localIp = await this.getLocalIpAddress();
-
-                    // Als automatische detectie faalt, vraag handmatig
-                    if (!localIp) {
-                        localIp = prompt(
-                            `Automatische IP-detectie werkt niet.\n\n` +
-                            `⚠️ LET OP: Je hebt het LOKALE netwerk IP nodig!\n` +
-                            `Dit begint meestal met 192.168.x.x of 10.x.x.x\n` +
-                            `(NIET je internet/externe IP-adres)\n\n` +
-                            `Vind je lokale IP via:\n` +
-                            `• Windows: Open CMD → typ "ipconfig"\n` +
-                            `• Mac/Linux: Open Terminal → typ "ifconfig"\n\n` +
-                            `Zoek naar "IPv4 Address" onder je WiFi/Ethernet adapter\n\n` +
-                            `Voer het lokale ${serverLabel.toLowerCase()} server IP in:`
-                        );
-
-                        if (!localIp) {
-                            return; // Gebruiker heeft geannuleerd
-                        }
-
-                        // Valideer IP formaat
-                        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
-                        if (!ipRegex.test(localIp.trim())) {
-                            alert('❌ Ongeldig IP-adres formaat.\n\nGebruik formaat: 192.168.x.x');
-                            return;
-                        }
-                        localIp = localIp.trim();
-                    }
-
-                    if (type === 'primary') {
-                        this.primaryIp = localIp;
-                    } else if (type === 'standby') {
-                        this.standbyIp = localIp;
-                    }
-
-                    // Sla op naar server
-                    await this.saveNetwerkConfig();
-                    alert('✅ ' + serverLabel + ' server IP ingesteld: ' + localIp);
-                } catch (e) {
-                    console.error('Fout bij IP detectie:', e);
-                    alert('❌ Er ging iets mis. Probeer het opnieuw.');
-                } finally {
-                    this.detectingIp = false;
-                }
-            },
-
-            // Detecteer lokale IP via WebRTC
-            async getLocalIpAddress() {
-                return new Promise((resolve) => {
-                    const pc = new RTCPeerConnection({ iceServers: [] });
-                    pc.createDataChannel('');
-
-                    pc.onicecandidate = (e) => {
-                        if (!e.candidate) return;
-
-                        // Extract IP from candidate string
-                        const match = e.candidate.candidate.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
-                        if (match) {
-                            const ip = match[1];
-                            // Filter out public IPs and localhost
-                            if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
-                                pc.close();
-                                resolve(ip);
-                            }
-                        }
-                    };
-
-                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
-
-                    // Timeout na 3 seconden
-                    setTimeout(() => {
-                        pc.close();
-                        resolve(null);
-                    }, 3000);
-                });
-            },
 
             async saveNetwerkConfig() {
                 try {
