@@ -369,6 +369,8 @@ class PouleIndelingService
 
                 } else {
                     // STANDARD GROUPING: Split into optimal pools (existing flow)
+                    // Sort by weight to ensure similar weights end up in same pool
+                    $judokas = $judokas->sortBy('gewicht')->values();
                     $pouleVerdelingen = $this->maakOptimalePoules($judokas);
 
                     foreach ($pouleVerdelingen as $pouleJudokas) {

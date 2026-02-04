@@ -86,7 +86,7 @@
                         <div class="flex-grow min-w-0">
                             <p class="font-medium text-gray-800">{{ $judoka->naam }}</p>
                             <p class="text-sm text-gray-600">
-                                @if($judoka->gewichtsklasse && $judoka->gewichtsklasse !== 'Variabel'){{ $judoka->gewichtsklasse }} kg | @elseif($judoka->gewicht){{ $judoka->gewicht }} kg | @endif{{ ucfirst(\App\Enums\Band::stripKyu($judoka->band ?? '')) }} |
+                                @if($judoka->gewichtsklasse && $judoka->gewichtsklasse !== 'Variabel'){{ $judoka->gewichtsklasse }} kg | @elseif($judoka->gewicht){{ $judoka->gewicht }} kg | @endif{{ \App\Enums\Band::toKleur($judoka->band) }} |
                                 {{ $judoka->leeftijdsklasse }}
                             </p>
                             @if($toernooi->voorbereiding_klaar_op && $blok)
