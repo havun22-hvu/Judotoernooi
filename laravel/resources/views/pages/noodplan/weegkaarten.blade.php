@@ -13,73 +13,74 @@
         background: white;
     }
     .weegkaart-header {
-        background: #1d4ed8;
+        background: #333;
         color: white;
-        padding: 6px 10px;
+        padding: 4px 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 11px;
+        font-size: 9px;
     }
     .weegkaart-naam {
-        background: #f8fafc;
-        border-bottom: 2px solid #bfdbfe;
-        padding: 8px 10px;
+        background: white;
+        border-bottom: 1px solid #ccc;
+        padding: 6px 8px;
         text-align: center;
     }
     .weegkaart-naam h3 {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 900;
         margin: 0;
         color: #111;
     }
     .weegkaart-naam p {
-        font-size: 12px;
-        color: #2563eb;
+        font-size: 10px;
+        color: #333;
         margin: 2px 0 0;
         font-weight: 500;
     }
     .weegkaart-classificatie {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 4px;
-        padding: 6px 8px;
+        gap: 2px;
+        padding: 4px 6px;
         border-bottom: 1px solid #e5e7eb;
         text-align: center;
     }
     .weegkaart-classificatie .label {
-        font-size: 8px;
+        font-size: 7px;
         text-transform: uppercase;
-        color: #6b7280;
+        color: #666;
     }
     .weegkaart-classificatie .value {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
+        color: #111;
     }
     .weegkaart-blok {
-        background: #fefce8;
-        padding: 6px 10px;
+        background: white;
+        padding: 6px 8px;
         border-bottom: 1px solid #e5e7eb;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
     .weegkaart-blok .mat-badge {
-        background: #333;
-        color: white;
+        background: white;
+        color: #111;
         padding: 2px 8px;
-        border-radius: 4px;
+        border: 2px solid #111;
         font-weight: 900;
-        font-size: 12px;
+        font-size: 11px;
     }
     .weegkaart-blok .blok-badge {
-        background: #f59e0b;
-        color: white;
+        background: white;
+        color: #111;
         padding: 2px 6px;
-        border-radius: 4px;
+        border: 1px solid #666;
         font-weight: 700;
-        font-size: 10px;
-        margin-right: 6px;
+        font-size: 9px;
+        margin-right: 4px;
     }
     .weegkaart-blok .tijden {
         font-size: 9px;
@@ -105,11 +106,11 @@
         margin-top: 4px;
     }
     .weegkaart-footer {
-        background: #eff6ff;
-        border-top: 1px solid #bfdbfe;
-        padding: 4px 10px;
-        font-size: 9px;
-        color: #1d4ed8;
+        background: #f5f5f5;
+        border-top: 1px solid #ccc;
+        padding: 3px 8px;
+        font-size: 8px;
+        color: #333;
         display: flex;
         justify-content: space-between;
     }
@@ -122,13 +123,8 @@
     .band-bruin { background: #92400e; color: white; }
     .band-zwart { background: #111827; color: white; }
     .band-default { background: #e5e7eb; color: #374151; }
-    /* Geslacht kleuren */
-    .geslacht-m { color: #2563eb; }
-    .geslacht-v { color: #db2777; }
-    /* Leeftijd kleur */
-    .leeftijd { color: #7c3aed; }
-    /* Gewicht kleur */
-    .gewicht { color: #16a34a; }
+    /* Geen kleuren voor print - alles zwart */
+    .geslacht-m, .geslacht-v, .leeftijd, .gewicht { color: #111; }
 
     @media print {
         .weegkaart-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -231,7 +227,7 @@
 
         {{-- QR code --}}
         <div class="weegkaart-qr">
-            <canvas id="qr-{{ $judoka->id }}" width="100" height="100"></canvas>
+            <canvas id="qr-{{ $judoka->id }}" width="120" height="120"></canvas>
             <div class="code">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</div>
         </div>
 
@@ -256,7 +252,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     @foreach($judokas as $judoka)
     QRCode.toCanvas(document.getElementById('qr-{{ $judoka->id }}'), '{{ route('weegkaart.show', $judoka->qr_code) }}', {
-        width: 100,
+        width: 120,
         margin: 1
     });
     @endforeach
