@@ -437,4 +437,65 @@ try {
 
 ---
 
-*Laatst bijgewerkt: 2 februari 2026*
+## 13. Band Kleuren (GEEN kyu!)
+
+### Volgorde beginner → expert
+
+```
+wit → geel → oranje → groen → blauw → bruin → zwart
+ 0      1       2        3        4        5       6
+```
+
+### Opslag
+
+**ALLEEN** lowercase kleur naam in database:
+- ✓ `wit`, `geel`, `oranje`, `groen`, `blauw`, `bruin`, `zwart`
+- ✗ `Geel (5e kyu)`, `5`, `5e kyu` - **NOOIT**
+
+### Weergave (UI)
+
+**ALLEEN** kleur naam met hoofdletter - **NOOIT kyu nummers**:
+- ✓ `Wit`, `Geel`, `Groen`
+- ✗ `Geel (5e kyu)`, `5e kyu` - **NOOIT**
+
+### Code Gebruik
+
+```php
+// ✓ GOED - centrale methode voor weergave
+{{ \App\Enums\Band::toKleur($judoka->band) }}
+
+// ✓ GOED - enum voor logica
+$bandEnum = Band::fromString($judoka->band);
+$niveau = $bandEnum->niveau();  // 0=wit/beginner, 6=zwart/expert
+
+// ✗ FOUT - direct tonen zonder conversie
+{{ $judoka->band }}  // Kan "geel (5e kyu)" zijn als data fout is!
+
+// ✗ FOUT - hardcoded kyu mapping
+$kyu = match($band) { 'geel' => 5, 'groen' => 3, ... };
+```
+
+### Import
+
+Bij import wordt kyu automatisch omgezet:
+- Input: `"Geel (5e kyu)"` of `"5"` of `"geel"`
+- Output (opslag): `"geel"`
+
+```php
+// ImportService::parseBand() doet dit automatisch
+$band = Band::fromString($input);
+return $band ? strtolower($band->name) : 'wit';
+```
+
+### Beschikbare Methodes
+
+| Methode | Doel | Input | Output |
+|---------|------|-------|--------|
+| `Band::toKleur($band)` | Weergave | any | `"Geel"` |
+| `Band::fromString($str)` | Parsing | `"geel (5e kyu)"` | `Band::GEEL` |
+| `Band::niveau()` | Sortering beginner→expert | - | `0-6` |
+| `Band::label()` | Enum label | - | `"Geel"` |
+
+---
+
+*Laatst bijgewerkt: 4 februari 2026*

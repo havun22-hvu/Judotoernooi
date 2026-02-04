@@ -2,8 +2,21 @@
 
 namespace App\Enums;
 
+/**
+ * Judo band kleuren enum
+ *
+ * VOLGORDE (beginner → expert):
+ *   wit → geel → oranje → groen → blauw → bruin → zwart
+ *
+ * OPSLAG: alleen lowercase kleur naam (wit, geel, oranje, groen, blauw, bruin, zwart)
+ * WEERGAVE: alleen kleur naam met hoofdletter (Wit, Geel, etc.) - NOOIT kyu nummers
+ *
+ * De int value is voor sortering (0=zwart/hoogste, 6=wit/laagste)
+ * Voor sortering beginner→expert: gebruik niveau() methode
+ */
 enum Band: int
 {
+    // Values: 0=hoogste (zwart), 6=laagste (wit) - voor sortering expert→beginner
     case ZWART = 0;
     case BRUIN = 1;
     case BLAUW = 2;
@@ -12,6 +25,9 @@ enum Band: int
     case GEEL = 5;
     case WIT = 6;
 
+    /**
+     * Display label (alleen kleur, NOOIT kyu)
+     */
     public function label(): string
     {
         return match($this) {
@@ -39,13 +55,41 @@ enum Band: int
     }
 
     /**
-     * Strip kyu notation from band string: "Geel (5e kyu)" → "Geel"
+     * Get kleur naam van band value (nummer of string)
+     * Gebruik dit ALTIJD in views voor weergave
+     *
+     * @param mixed $band - kan zijn: int (0-6), string ("wit"), string ("Geel (5e kyu)")
+     * @return string - kleurnaam met hoofdletter (Wit, Geel, etc.) of lege string
+     */
+    public static function toKleur(mixed $band): string
+    {
+        if ($band === null || $band === '') {
+            return '';
+        }
+
+        // Nummer: direct via enum
+        if (is_numeric($band)) {
+            return self::tryFrom((int)$band)?->label() ?? '';
+        }
+
+        // String: probeer als enum, anders strip kyu
+        $enumVal = self::fromString((string)$band);
+        if ($enumVal) {
+            return $enumVal->label();
+        }
+
+        // Fallback: strip alles na " (" en capitalize
+        $pos = strpos($band, ' (');
+        $kleur = $pos !== false ? substr($band, 0, $pos) : $band;
+        return ucfirst(strtolower(trim($kleur)));
+    }
+
+    /**
+     * @deprecated Gebruik toKleur() in plaats hiervan
      */
     public static function stripKyu(string $band): string
     {
-        // Remove everything from " (" onwards
-        $pos = strpos($band, ' (');
-        return $pos !== false ? substr($band, 0, $pos) : $band;
+        return self::toKleur($band);
     }
 
     public static function fromString(string $band): ?self
@@ -89,5 +133,14 @@ enum Band: int
         }
 
         return null;
+    }
+
+    /**
+     * Niveau voor sortering beginner→expert (0=wit, 6=zwart)
+     * Inverse van enum value
+     */
+    public function niveau(): int
+    {
+        return 6 - $this->value;
     }
 }
