@@ -347,13 +347,22 @@ function abbreviateClubName($name, $maxLength = 15) {
                                 $heeftGespeeldeWedstrijd = true;
                                 // Is deze judoka wit of blauw in de wedstrijd?
                                 $isWit = $wedstrijd->judoka_wit_id == $judoka->id;
-                                // Winnaar krijgt de score, verliezer krijgt 0
-                                // score_wit/score_blauw kan leeg zijn (verliezer) - behandel als 0
-                                $rawWp = $isWit ? $wedstrijd->score_wit : $wedstrijd->score_blauw;
-                                $wp = ($rawWp !== null && $rawWp !== '') ? $rawWp : 0;
-                                // JP: winnaar = 2, verliezer = 0
                                 $isWinnaar = $wedstrijd->winnaar_id == $judoka->id;
-                                $jp = $isWinnaar ? 2 : 0;
+                                $isGelijk = $wedstrijd->winnaar_id === null;
+
+                                // WP (Wedstrijdpunten): Win=2, Gelijk=1, Verlies=0
+                                if ($isWinnaar) {
+                                    $wp = 2;
+                                } elseif ($isGelijk) {
+                                    $wp = 1;
+                                } else {
+                                    $wp = 0;
+                                }
+
+                                // JP (Judopunten): score van deze judoka (ippon=10, waza-ari=7, etc.)
+                                // Bij gelijk of verlies = 0
+                                $rawJp = $isWit ? $wedstrijd->score_wit : $wedstrijd->score_blauw;
+                                $jp = $isWinnaar ? (($rawJp !== null && $rawJp !== '') ? $rawJp : 0) : 0;
 
                                 $totaalWP += (int)$wp;
                                 $totaalJP += (int)$jp;
