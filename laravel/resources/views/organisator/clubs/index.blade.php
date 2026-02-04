@@ -164,17 +164,15 @@
                                     <template x-if="!editing">
                                         <div class="space-x-2">
                                             <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">Bewerken</button>
-                                            @if($club->judokas_count === 0)
-                                                <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST" class="inline"
-                                                      onsubmit="return confirm('Weet je zeker dat je deze club wilt verwijderen?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    @if(request('back'))
-                                                        <input type="hidden" name="back" value="{{ request('back') }}">
-                                                    @endif
-                                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Verwijderen</button>
-                                                </form>
-                                            @endif
+                                            <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST" class="inline"
+                                                  onsubmit="return confirm('{{ $club->judokas_count > 0 ? "LET OP: Deze club heeft {$club->judokas_count} judoka(s). Deze worden ook verwijderd! Doorgaan?" : "Weet je zeker dat je deze club wilt verwijderen?" }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                @if(request('back'))
+                                                    <input type="hidden" name="back" value="{{ request('back') }}">
+                                                @endif
+                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Verwijderen</button>
+                                            </form>
                                         </div>
                                     </template>
                                     <template x-if="editing">

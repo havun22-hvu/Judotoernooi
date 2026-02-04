@@ -116,18 +116,14 @@ class ClubController extends Controller
             abort(403);
         }
 
-        // Check if club has judokas in any toernooi
-        if ($club->judokas()->exists()) {
-            $params = ['organisator' => $organisator];
-            if (request('back')) {
-                $params['back'] = request('back');
-            }
-            return redirect()
-                ->route('organisator.clubs.index', $params)
-                ->with('error', 'Kan club niet verwijderen: er zijn nog judoka\'s gekoppeld');
+        $naam = $club->naam;
+        $aantalJudokas = $club->judokas()->count();
+
+        // Delete all judokas from this club first
+        if ($aantalJudokas > 0) {
+            $club->judokas()->delete();
         }
 
-        $naam = $club->naam;
         $club->delete();
 
         $params = ['organisator' => $organisator];
