@@ -447,7 +447,7 @@ class PubliekController extends Controller
                             'id' => $j->id,
                             'naam' => $j->naam,
                             'club' => $j->club?->naam,
-                            'band' => Band::stripKyu($j->band ?? ''),
+                            'band' => Band::toKleur($j->band),
                             'band_kleur' => $bandKleur,
                             'leeftijd' => $j->geboortejaar ? (date('Y') - $j->geboortejaar) : null,
                             'gewicht' => $j->gewicht,
@@ -526,7 +526,7 @@ class PubliekController extends Controller
                     'leeftijd' => $j->leeftijd,
                     'gewicht' => $j->gewicht_gewogen ?? $j->gewicht,
                     'leeftijdsklasse' => $j->leeftijdsklasse ?? '-',
-                    'band' => $j->band ? Band::stripKyu($j->band) : '-',
+                    'band' => Band::toKleur($j->band) ?: '-',
                 ];
             });
 
