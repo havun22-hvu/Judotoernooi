@@ -131,7 +131,8 @@
                     'is_poule' => true,
                 ];
             })
-            ->filter(fn($c) => $c['wedstrijden'] > 0);
+            ->filter(fn($c) => $c['wedstrijden'] > 0)
+            ->toBase();  // Convert Eloquent Collection to base Collection (fixes merge error)
     }
 
     // VASTE CATEGORIEËN: individuele poules (net als variabele)
@@ -158,7 +159,8 @@
                     'min_kg' => $minKg,
                     'is_poule' => true,
                 ];
-            });
+            })
+            ->toBase();  // Convert Eloquent Collection to base Collection (fixes merge error)
     }
 
     // Combineer en sorteer: jong → oud, licht → zwaar
