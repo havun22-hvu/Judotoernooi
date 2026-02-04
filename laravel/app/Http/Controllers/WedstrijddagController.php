@@ -268,8 +268,8 @@ class WedstrijddagController extends Controller
         }
 
         // Check of judoka past in de nieuwe poule (voor vaste gewichtsklassen)
-        // Gebruik centrale methode isGewichtBinnenKlasse()
-        $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie);
+        // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
+        $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
 
         return response()->json([
             'success' => true,
