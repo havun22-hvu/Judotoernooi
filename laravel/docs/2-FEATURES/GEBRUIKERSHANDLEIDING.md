@@ -191,11 +191,22 @@ Ga naar **Toernooi** > **Clubs** om budoclubs te beheren:
 Per club toont de tabel de portal toegang:
 - **URL** → kopieer knop voor portal link
 - **PIN** → kopieer knop voor pincode
-- Deel via email, WhatsApp, SMS of mondeling
+- **WhatsApp** → groene knop opent WhatsApp met vooringevuld bericht (URL + PIN)
+  - Met telefoonnummer: gaat direct naar dat contact
+  - Zonder telefoonnummer: lichtgroene knop, kies zelf contact
 
 **Uitnodiging per email:**
 - **Alle Uitnodigen** - Stuurt email naar alle clubs met email adres
 - **Email** knop per club - Stuurt individuele email
+
+**Club bewerken:**
+- Klik **Bewerken** (groene knop) → modal popup opent
+- Pas gegevens aan en klik **Opslaan**
+
+**Club verwijderen:**
+- Klik **Delete** (rode knop)
+- Als club judoka's heeft: eerst waarschuwing "X judoka's worden ook verwijderd"
+- Daarna: bevestiging "Weet je zeker dat je [club] wilt verwijderen?"
 
 **Email bevat:**
 - Toernooi info (naam, datum, locatie, deadline)
