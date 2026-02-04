@@ -60,11 +60,17 @@ class PouleBlokSheet implements FromArray, WithTitle, WithEvents
             $isFirstPouleInMat = false;
 
             // Poule header met marker
+            // Format: Poule X | Leeftijdsklasse | Gewicht kg | (X judoka's, Y wedstrijden)
+            $gewicht = $poule->gewichtsklasse ?? 'Onbekend';
+            // Voeg 'kg' toe als het nog niet aanwezig is
+            if ($gewicht !== 'Onbekend' && !str_contains($gewicht, 'kg')) {
+                $gewicht .= ' kg';
+            }
             $rows[] = [sprintf(
-                'POULE_HEADER_%s | %s | Poule %d | (%d judoka\'s, %d wedstrijden)',
-                $poule->leeftijdsklasse ?? 'Onbekend',
-                $poule->gewichtsklasse ?? 'Onbekend',
+                'POULE_HEADER_Poule %d | %s | %s | (%d judoka\'s, %d wedstrijden)',
                 $poule->nummer,
+                $poule->leeftijdsklasse ?? 'Onbekend',
+                $gewicht,
                 $poule->aantal_judokas,
                 $poule->aantal_wedstrijden
             )];

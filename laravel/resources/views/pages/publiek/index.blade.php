@@ -58,11 +58,12 @@
                         {{ $totaalJudokas }} <span class="hidden sm:inline">deelnemers</span>
                     </span>
                     @if($poulesGegenereerd)
-                    <button @click="forceRefresh()"
+                    <button @click="forceRefresh(); debugTapCount++"
+                            @dblclick.prevent="debugMode = !debugMode"
                             class="px-2 py-1 rounded-full text-xs sm:text-sm font-bold transition-colors cursor-pointer"
-                            :class="isConnected ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-400 hover:bg-blue-500 animate-pulse'"
-                            :title="isConnected ? 'Verbonden - klik om te verversen' : 'Geen verbinding - klik om te verbinden'">
-                        <span x-show="!isRefreshing" x-text="isConnected ? 'LIVE' : 'OFFLINE'"></span>
+                            :class="isConnected ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-600 animate-pulse'"
+                            :title="isConnected ? 'WebSocket verbonden - klik om te verversen' : 'Polling modus - klik om te verversen'">
+                        <span x-show="!isRefreshing" x-text="isConnected ? 'LIVE' : 'POLL'"></span>
                         <span x-show="isRefreshing" class="inline-block animate-spin">⟳</span>
                     </button>
                     @endif
@@ -109,6 +110,18 @@
             </div>
         </div>
     </header>
+
+    <!-- Debug Panel (double-click on LIVE/POLL button to toggle) -->
+    <div x-show="debugMode" x-cloak class="bg-gray-900 text-green-400 text-xs font-mono p-2 border-b border-gray-700">
+        <div class="max-w-6xl mx-auto flex flex-wrap gap-4">
+            <span>WS: <span :class="isConnected ? 'text-green-400' : 'text-red-400'" x-text="isConnected ? 'Connected' : 'Disconnected'"></span></span>
+            <span>Poll: <span x-text="Math.round(currentInterval/1000) + 's'"></span></span>
+            <span>Mode: <span x-text="REFRESH_CONFIG.configured ? 'Fixed' : 'Adaptive'"></span></span>
+            <span>WS msgs: <span x-text="wsMessageCount"></span></span>
+            <span>Last activity: <span x-text="Math.round((Date.now() - lastActivity)/1000) + 's ago'"></span></span>
+            <button @click="debugMode = false" class="text-gray-500 hover:text-white ml-auto">[x]</button>
+        </div>
+    </div>
 
     <main class="max-w-6xl mx-auto px-2 sm:px-4 py-4 sm:py-6 flex-grow">
         <!-- Info Tab -->
@@ -979,6 +992,15 @@
         const NOTIFIED_KEY = 'judotoernooi_notified_{{ $toernooi->id }}';
         const poulesGegenereerd = {{ $poulesGegenereerd ? 'true' : 'false' }};
 
+        // Adaptive polling configuration
+        const REFRESH_CONFIG = {
+            configured: {{ $toernooi->live_refresh_interval ?? 'null' }}, // null = adaptive
+            minInterval: 5000,      // 5 sec minimum (during activity)
+            maxInterval: 60000,     // 60 sec maximum (idle)
+            defaultInterval: 15000, // 15 sec default
+            activityBoostDuration: 30000, // 30 sec boost after activity
+        };
+
         // Judoka names cache for display
         const judokaNamen = @json($categorien->flatten(2)->pluck('naam', 'id'));
 
@@ -999,6 +1021,13 @@
                 notifiedState: {}, // Track welke notificaties al verstuurd zijn
                 isConnected: false, // WebSocket verbinding status
                 isRefreshing: false, // Bezig met forceren refresh
+                // Adaptive polling state
+                lastActivity: Date.now(),
+                currentInterval: REFRESH_CONFIG.configured || REFRESH_CONFIG.defaultInterval,
+                pollTimer: null,
+                wsMessageCount: 0, // Count WebSocket messages for debug
+                debugMode: false, // Toggle with double-click on LIVE button
+                debugTapCount: 0, // For tracking taps
 
                 init() {
                     // Load notification state
@@ -1051,20 +1080,71 @@
                         this.loadMatten();
                     }
 
-                    // Auto-refresh: favorieten en matten elke 60 sec (reduced - Reverb handles real-time)
+                    // Start adaptive polling
                     if (poulesGegenereerd) {
-                        setInterval(() => {
-                            if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
-                                this.loadFavorieten();
-                            }
-                            if (this.activeTab === 'live') {
-                                this.loadMatten();
-                            }
-                        }, 60000);
+                        this.startAdaptivePolling();
                     }
 
                     // Real-time updates via Reverb
                     this.setupRealtimeListeners();
+                },
+
+                // Adaptive polling - adjust interval based on activity
+                startAdaptivePolling() {
+                    const poll = () => {
+                        // Calculate adaptive interval
+                        this.currentInterval = this.calculateInterval();
+
+                        // Only poll if on relevant tab
+                        if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                        if (this.activeTab === 'live') {
+                            this.loadMatten();
+                        }
+
+                        // Schedule next poll
+                        this.pollTimer = setTimeout(poll, this.currentInterval);
+                    };
+
+                    // Start polling after initial interval
+                    this.pollTimer = setTimeout(poll, this.currentInterval);
+                },
+
+                calculateInterval() {
+                    // If configured, use that (not adaptive)
+                    if (REFRESH_CONFIG.configured) {
+                        return REFRESH_CONFIG.configured * 1000;
+                    }
+
+                    // Adaptive: faster when active, slower when idle
+                    const timeSinceActivity = Date.now() - this.lastActivity;
+
+                    if (timeSinceActivity < REFRESH_CONFIG.activityBoostDuration) {
+                        // Recent activity: fast polling
+                        return REFRESH_CONFIG.minInterval;
+                    } else if (this.isConnected) {
+                        // WebSocket connected: slower polling (WS handles real-time)
+                        return REFRESH_CONFIG.maxInterval;
+                    } else {
+                        // No WebSocket, no recent activity: default
+                        return REFRESH_CONFIG.defaultInterval;
+                    }
+                },
+
+                // Mark activity (called when WebSocket event received)
+                markActivity() {
+                    this.lastActivity = Date.now();
+                    this.wsMessageCount++;
+
+                    // Boost polling immediately if timer is set for slow interval
+                    if (this.pollTimer && this.currentInterval > REFRESH_CONFIG.minInterval) {
+                        clearTimeout(this.pollTimer);
+                        this.currentInterval = REFRESH_CONFIG.minInterval;
+                        this.pollTimer = setTimeout(() => {
+                            this.startAdaptivePolling();
+                        }, this.currentInterval);
+                    }
                 },
 
                 // Force refresh - herlaad alles en herconnect WebSocket
@@ -1099,7 +1179,8 @@
                     // Score update - reload matten to get fresh data
                     window.addEventListener('mat-score-update', (e) => {
                         console.log('Publiek: Score update ontvangen', e.detail);
-                        this.isConnected = true; // We krijgen updates = verbonden
+                        this.isConnected = true;
+                        this.markActivity(); // Boost polling
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();
@@ -1110,6 +1191,7 @@
                     window.addEventListener('mat-beurt-update', (e) => {
                         console.log('Publiek: Beurt update ontvangen', e.detail);
                         this.isConnected = true;
+                        this.markActivity();
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();
@@ -1120,6 +1202,7 @@
                     window.addEventListener('mat-poule-klaar', (e) => {
                         console.log('Publiek: Poule klaar ontvangen', e.detail);
                         this.isConnected = true;
+                        this.markActivity();
                         this.loadMatten();
                         if (this.favorieten.length > 0) {
                             this.loadFavorieten();

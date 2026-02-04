@@ -190,6 +190,37 @@
                 </div>
             </div>
 
+            <!-- Live Refresh Instelling -->
+            <div class="mt-6 pt-4 border-t">
+                <label for="live_refresh_interval" class="block text-gray-700 font-medium mb-1">
+                    Live Verversing
+                    <span class="text-gray-400 font-normal text-sm ml-2">Publiek/Spreker PWA</span>
+                </label>
+                <select name="live_refresh_interval" id="live_refresh_interval" class="w-full md:w-64 border rounded px-3 py-2">
+                    <option value="" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) === null ? 'selected' : '' }}>
+                        Automatisch (adaptief)
+                    </option>
+                    <option value="5" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) == 5 ? 'selected' : '' }}>
+                        5 seconden (snel, meer dataverkeer)
+                    </option>
+                    <option value="10" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) == 10 ? 'selected' : '' }}>
+                        10 seconden
+                    </option>
+                    <option value="15" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) == 15 ? 'selected' : '' }}>
+                        15 seconden (aanbevolen)
+                    </option>
+                    <option value="30" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) == 30 ? 'selected' : '' }}>
+                        30 seconden
+                    </option>
+                    <option value="60" {{ old('live_refresh_interval', $toernooi->live_refresh_interval) == 60 ? 'selected' : '' }}>
+                        60 seconden (minder dataverkeer)
+                    </option>
+                </select>
+                <p class="text-gray-500 text-sm mt-1">
+                    Hoe vaak de publieke apps verversen. <strong>Automatisch</strong> = snel bij activiteit, langzaam bij pauze.
+                </p>
+            </div>
+
         </div>
 
         <!-- POULE INSTELLINGEN -->
