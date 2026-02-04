@@ -337,18 +337,22 @@ categorie passen maar geen gewichtsmatch hebben.
 
 ## Poule Titels
 
-Titels worden **dynamisch** samengesteld uit maximaal 4 componenten:
+### Opbouw (algemene regel)
 
-| Component | Tonen wanneer | Voorbeeld |
-|-----------|---------------|-----------|
-| **Poule #** | Altijd | `#1` |
-| **Label** | `toon_label_in_titel = true` | `Mini's` |
-| **Leeftijd** | `max_leeftijd_verschil > 0` | `4-5j` |
-| **Gewicht** | Vaste klassen OF `max_kg_verschil > 0` | `-26kg` of `25-27kg` |
+```
+#nummer Label / Leeftijd / Gewicht
+```
 
-**Titel opbouw:** `#nummer Label / leeftijd / gewicht`
+| # | Component | Tonen wanneer | Voorbeeld |
+|---|-----------|---------------|-----------|
+| 1 | **Poule #** | Altijd (in UI prefix) | `#1`, `#5` |
+| 2 | **Label** | `toon_label_in_titel = true` | `Mini's`, `Jeugd` |
+| 3 | **Leeftijd** | `max_leeftijd_verschil > 0` | `4j`, `9-10j` |
+| 4a | **Gewichtsklasse** | `max_kg_verschil = 0` (vaste klassen) | `-26kg` |
+| 4b | **Gewichtsrange** | `max_kg_verschil > 0` (variabel) | `25-27kg` |
 
-**Voorbeelden:**
+### Voorbeelden
+
 ```
 #1 Mini's / 4j / -26kg     ← label aan, lft_verschil>0, vaste kg klasse
 #2 Mini's / -26kg          ← label aan, lft_verschil=0 (geen lft), vaste kg
@@ -357,11 +361,30 @@ Titels worden **dynamisch** samengesteld uit maximaal 4 componenten:
 #5 Mini's                  ← label aan, lft_verschil=0, geen gewichtsklassen
 ```
 
-**Belangrijk:**
+### Waar wordt de titel gebruikt?
+
+| Locatie | Format | Voorbeeld |
+|---------|--------|-----------|
+| **Poule pagina** | `#nummer Titel` | `#1 Mini's / 4j / -26kg` |
+| **Wedstrijddag poules** | `#nummer Titel` | `#1 Mini's / 4j / -26kg` |
+| **Blokverdeling chips** | `#nummer Afkorting` | `#1 M` (1e letter van label) |
+| **Zaaloverzicht** | `#nummer Afkorting` | `#1 M` (1e letter van label) |
+| **Wedstrijdschema's** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Publieke app** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Spreker interface** | Volledige titel | `Mini's / 4j / -26kg` |
+| **Mat interface** | Volledige titel | `Mini's / 4j / -26kg` |
+
+### Regels
+
 - Als `max_leeftijd_verschil = 0`: leeftijd niet tonen (organisator zet het in label)
 - Als `max_kg_verschil = 0` MET vaste gewichtsklassen: toon de klasse (bijv. `-26kg`)
 - Als `max_kg_verschil = 0` ZONDER gewichtsklassen: geen gewicht tonen
 - Als `max_kg_verschil > 0`: toon live berekende range uit judoka's
+
+### Code locatie
+
+- `Poule::getDisplayTitel()` - centrale methode voor titel generatie
+- Gebruik altijd deze methode, niet zelf titel samenstellen
 
 ---
 
