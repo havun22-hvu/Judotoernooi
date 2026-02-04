@@ -309,22 +309,22 @@
     </div>
 
     <!-- TAB 3: NOTITIES (Spiekbriefje) - Schermvullend -->
-    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }" class="flex flex-col" style="height: calc(100vh - 180px);">
-        <!-- Textarea - schermvullend -->
-        <div class="flex-1 min-h-0">
+    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }" class="flex flex-col pb-16">
+        <!-- Textarea - schermvullend, ruimte voor fixed toolbar onderaan -->
+        <div class="flex-1" style="height: calc(100vh - 240px);">
             <textarea
                 x-model="notities"
                 @input.debounce.2000ms="autoSaveNotities()"
                 :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
-                class="w-full h-full px-3 py-3 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words"
+                class="w-full h-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words"
                 style="word-wrap: break-word; overflow-wrap: break-word;"
                 :class="{ 'border-yellow-400': hasUnsavedChanges }"
                 placeholder="Typ hier je notities..."
             ></textarea>
         </div>
 
-        <!-- Sticky werkbalk onderaan -->
-        <div class="sticky bottom-0 bg-white border-t border-gray-300 shadow-lg rounded-b-lg px-3 py-2">
+        <!-- Fixed werkbalk onderaan scherm -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg px-3 py-2 z-50">
             <div class="flex flex-wrap items-center gap-2">
                 <!-- Zoom controls -->
                 <div class="flex items-center gap-1 border-r pr-2 mr-1">
