@@ -71,22 +71,28 @@
 @php
 
     // Bepaal per categorie of het VAST is (v.lft=0 EN v.kg=0) of VARIABEL
-    $vasteLeeftijdsklassen = [];
-    $variabeleLeeftijdsklassen = [];
+    // Let op: we indexeren op ZOWEL config key ALS label, want poules kunnen
+    // oude labels hebben als de config is gewijzigd
+    $vasteCategorieen = [];      // key => true (config keys)
+    $variabeleCategorieen = [];  // key => true (config keys)
+    $vasteLeeftijdsklassen = []; // label => true (voor legacy)
+    $variabeleLeeftijdsklassen = []; // label => true (voor legacy)
     foreach ($gewichtsklassenConfig as $key => $catConfig) {
         $label = $catConfig['label'] ?? $key;
         $maxKg = (float) ($catConfig['max_kg_verschil'] ?? 0);
         $maxLft = (int) ($catConfig['max_leeftijd_verschil'] ?? 0);
 
         if ($maxKg == 0 && $maxLft == 0) {
+            $vasteCategorieen[$key] = true;
             $vasteLeeftijdsklassen[$label] = true;
         } else {
+            $variabeleCategorieen[$key] = true;
             $variabeleLeeftijdsklassen[$label] = true;
         }
     }
 
-    $heeftVariabeleCategorieen = !empty($variabeleLeeftijdsklassen);
-    $heeftVasteCategorieen = !empty($vasteLeeftijdsklassen);
+    $heeftVariabeleCategorieen = !empty($variabeleCategorieen);
+    $heeftVasteCategorieen = !empty($vasteCategorieen);
 
     // Genereer afkortingen: gebruik label direct (of korte versie als >8 chars)
     $afkortingen = [];
@@ -106,10 +112,11 @@
         ->get();
 
     // VARIABELE CATEGORIEËN: elke poule apart
+    // Match op categorie_key (primair) OF leeftijdsklasse (fallback voor oude poules)
     $variabeleCats = collect();
     if ($heeftVariabeleCategorieen) {
         $variabeleCats = $allePoules
-            ->filter(fn($p) => isset($variabeleLeeftijdsklassen[$p->leeftijdsklasse]))
+            ->filter(fn($p) => isset($variabeleCategorieen[$p->categorie_key]) || isset($variabeleLeeftijdsklassen[$p->leeftijdsklasse]))
             ->map(function($p) {
                 // Haal min leeftijd en gewicht uit live berekende ranges
                 $lftRange = $p->getLeeftijdsRange();
@@ -136,9 +143,10 @@
     }
 
     // VASTE CATEGORIEËN: individuele poules (net als variabele)
+    // Match op categorie_key (primair) OF leeftijdsklasse (fallback voor oude poules)
     $vasteCats = collect();
     if ($heeftVasteCategorieen) {
-        $vastePoules = $allePoules->filter(fn($p) => isset($vasteLeeftijdsklassen[$p->leeftijdsklasse]));
+        $vastePoules = $allePoules->filter(fn($p) => isset($vasteCategorieen[$p->categorie_key]) || isset($vasteLeeftijdsklassen[$p->leeftijdsklasse]));
 
         $vasteCats = $vastePoules
             ->filter(fn($p) => $p->aantal_wedstrijden > 0)
