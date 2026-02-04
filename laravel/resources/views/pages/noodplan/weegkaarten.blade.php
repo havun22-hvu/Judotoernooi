@@ -4,94 +4,241 @@
 
 @push('styles')
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<style>
+    .weegkaart {
+        border: 2px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+        page-break-inside: avoid;
+        background: white;
+    }
+    .weegkaart-header {
+        background: #1d4ed8;
+        color: white;
+        padding: 6px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+    }
+    .weegkaart-naam {
+        background: #f8fafc;
+        border-bottom: 2px solid #bfdbfe;
+        padding: 8px 10px;
+        text-align: center;
+    }
+    .weegkaart-naam h3 {
+        font-size: 16px;
+        font-weight: 900;
+        margin: 0;
+        color: #111;
+    }
+    .weegkaart-naam p {
+        font-size: 12px;
+        color: #2563eb;
+        margin: 2px 0 0;
+        font-weight: 500;
+    }
+    .weegkaart-classificatie {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 6px 8px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    .weegkaart-classificatie .label {
+        font-size: 8px;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+    .weegkaart-classificatie .value {
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .weegkaart-blok {
+        background: #fefce8;
+        padding: 6px 10px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .weegkaart-blok .mat-badge {
+        background: #333;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 900;
+        font-size: 12px;
+    }
+    .weegkaart-blok .blok-badge {
+        background: #f59e0b;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 10px;
+        margin-right: 6px;
+    }
+    .weegkaart-blok .tijden {
+        font-size: 9px;
+        text-align: right;
+        color: #4b5563;
+    }
+    .weegkaart-blok .tijden strong {
+        color: #111;
+    }
+    .weegkaart-qr {
+        padding: 8px;
+        text-align: center;
+        background: white;
+    }
+    .weegkaart-qr canvas {
+        display: block;
+        margin: 0 auto;
+    }
+    .weegkaart-qr .code {
+        font-size: 8px;
+        color: #9ca3af;
+        font-family: monospace;
+        margin-top: 4px;
+    }
+    .weegkaart-footer {
+        background: #eff6ff;
+        border-top: 1px solid #bfdbfe;
+        padding: 4px 10px;
+        font-size: 9px;
+        color: #1d4ed8;
+        display: flex;
+        justify-content: space-between;
+    }
+    /* Band kleuren */
+    .band-wit { background: white; color: #374151; border: 1px solid #9ca3af; }
+    .band-geel { background: #facc15; color: #713f12; }
+    .band-oranje { background: #f97316; color: white; }
+    .band-groen { background: #16a34a; color: white; }
+    .band-blauw { background: #2563eb; color: white; }
+    .band-bruin { background: #92400e; color: white; }
+    .band-zwart { background: #111827; color: white; }
+    .band-default { background: #e5e7eb; color: #374151; }
+    /* Geslacht kleuren */
+    .geslacht-m { color: #2563eb; }
+    .geslacht-v { color: #db2777; }
+    /* Leeftijd kleur */
+    .leeftijd { color: #7c3aed; }
+    /* Gewicht kleur */
+    .gewicht { color: #16a34a; }
+
+    @media print {
+        .weegkaart-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .weegkaart-naam { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .weegkaart-blok { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .weegkaart-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .band-wit, .band-geel, .band-oranje, .band-groen, .band-blauw, .band-bruin, .band-zwart, .band-default {
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+    }
+</style>
 @endpush
 
 @section('content')
 <div class="kaart-grid">
     @foreach($judokas as $judoka)
-    <div class="kaart no-break">
-        <div class="flex justify-between items-start mb-3">
-            <div>
-                <h3 class="font-bold text-lg">{{ $judoka->naam }}</h3>
-                <p class="text-sm text-gray-600">{{ $judoka->club?->naam ?? 'Onbekend' }}</p>
-            </div>
-            <div class="qr-placeholder">
-                <canvas id="qr-{{ $judoka->id }}" width="100" height="100"></canvas>
-            </div>
-        </div>
+    @php
+        $poule = $judoka->poules->first();
+        $blok = $poule?->blok;
+        $mat = $poule?->mat;
+        $aantalBlokken = $toernooi->blokken()->count();
 
-        @php
-            $poule = $judoka->poules->first();
-        @endphp
+        // Band kleur class
+        $bandKleur = match(strtolower($judoka->band ?? '')) {
+            'wit' => 'band-wit',
+            'geel' => 'band-geel',
+            'oranje' => 'band-oranje',
+            'groen' => 'band-groen',
+            'blauw' => 'band-blauw',
+            'bruin' => 'band-bruin',
+            'zwart' => 'band-zwart',
+            default => 'band-default',
+        };
 
-        @if($poule)
-        @php $blok = $poule->blok; @endphp
-        <div class="mb-2 p-2 bg-blue-50 rounded text-center">
-            @if(!($enkelBlok ?? false))
-            <span class="font-bold text-blue-800">Blok {{ $blok?->nummer ?? '?' }}</span>
-            @endif
-            @if($poule->mat)
-            <span class="{{ !($enkelBlok ?? false) ? 'ml-2' : '' }} text-blue-600">{{ !($enkelBlok ?? false) ? '| ' : '' }}Mat {{ $poule->mat->nummer }}</span>
-            @endif
-        </div>
-        @if($blok)
-        <div class="text-xs text-center mb-2">
-            @if($blok->weging_start && $blok->weging_einde)
-            <span class="text-gray-600">Weging: <strong>{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</strong></span>
-            @endif
-            @if($blok->starttijd)
-            <span class="text-gray-600 ml-2">| Start: <strong>{{ $blok->starttijd->format('H:i') }}</strong></span>
-            @endif
-        </div>
-        @endif
-        @else
-        <div class="mb-2 p-2 bg-yellow-50 rounded text-center text-yellow-700 text-sm">
-            Nog geen poule toegewezen
-        </div>
-        @endif
-
-        <table class="w-full text-xs">
-            <tr>
-                <td class="py-1 text-gray-500">Geslacht:</td>
-                <td class="py-1 font-medium">{{ $judoka->geslacht_enum?->label() ?? $judoka->geslacht ?? '-' }}</td>
-            </tr>
-            <tr>
-                <td class="py-1 text-gray-500">Band:</td>
-                <td class="py-1 font-medium">{{ $judoka->band_enum?->label() ?? ucfirst(explode(' ', $judoka->band ?? '')[0]) ?: '-' }}</td>
-            </tr>
-            @if($toernooi->gebruik_gewichtsklassen)
-            <tr>
-                <td class="py-1 text-gray-500">Gewichtsklasse:</td>
-                <td class="py-1 font-medium">{{ $judoka->gewichtsklasse ?? '-' }}</td>
-            </tr>
-            @else
-            <tr>
-                <td class="py-1 text-gray-500">Opgegeven gewicht:</td>
-                <td class="py-1 font-medium">{{ $judoka->gewicht ? number_format($judoka->gewicht, 1) . ' kg' : '-' }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="py-1 text-gray-500">Geboortejaar:</td>
-                <td class="py-1 font-medium">{{ $judoka->geboortejaar ?? '-' }}</td>
-            </tr>
-            <tr class="border-t">
-                <td class="py-1 text-gray-500">Gewogen:</td>
-                <td class="py-1 font-bold text-lg">
-                    @if($judoka->gewicht_gewogen)
-                        {{ number_format($judoka->gewicht_gewogen, 1) }} kg
-                    @else
-                        ______ kg
-                    @endif
-                </td>
-            </tr>
-        </table>
-
-        <div class="mt-3 pt-2 border-t text-xs text-gray-500 flex justify-between">
+        // Gewicht display
+        if ($judoka->gewichtsklasse === 'Variabel') {
+            $gewichtDisplay = $judoka->gewicht ? $judoka->gewicht . ' kg' : 'Var.';
+        } else {
+            $gewichtDisplay = $judoka->gewichtsklasse ? '-' . $judoka->gewichtsklasse . ' kg' : '?';
+        }
+    @endphp
+    <div class="weegkaart no-break">
+        {{-- Header met toernooi naam + datum --}}
+        <div class="weegkaart-header">
             <span>{{ $toernooi->naam }}</span>
             <span>{{ $toernooi->datum->format('d-m-Y') }}</span>
         </div>
-        <div class="text-[9px] text-gray-400 text-right mt-1">
-            Aangemaakt: {{ now()->format('d-m-Y H:i') }}
+
+        {{-- Naam + club prominent --}}
+        <div class="weegkaart-naam">
+            <h3>{{ $judoka->naam }}</h3>
+            <p>{{ $judoka->club?->naam ?? 'Onbekend' }}</p>
+        </div>
+
+        {{-- Classificatie: Leeftijd | Gewicht | Band | Geslacht --}}
+        <div class="weegkaart-classificatie">
+            <div>
+                <div class="label">Leeftijd</div>
+                <div class="value leeftijd">{{ $judoka->leeftijdsklasse ?? '?' }}</div>
+            </div>
+            <div>
+                <div class="label">Gewicht</div>
+                <div class="value gewicht">{{ $gewichtDisplay }}</div>
+            </div>
+            <div>
+                <div class="label">Band</div>
+                <div class="value"><span class="{{ $bandKleur }}" style="padding: 1px 6px; border-radius: 3px;">{{ ucfirst(explode(' ', $judoka->band ?? '?')[0]) }}</span></div>
+            </div>
+            <div>
+                <div class="label">Geslacht</div>
+                <div class="value geslacht-{{ strtolower($judoka->geslacht ?? 'm') }}">{{ $judoka->geslacht ?? '?' }}</div>
+            </div>
+        </div>
+
+        {{-- Blok + Mat + Tijden --}}
+        @if($poule)
+        <div class="weegkaart-blok">
+            <div>
+                @if($aantalBlokken > 1 && $blok)
+                <span class="blok-badge">{{ $blok->naam ?? 'Blok ' . $blok->nummer }}</span>
+                @endif
+                @if($mat)
+                <span class="mat-badge">Mat {{ $mat->nummer }}</span>
+                @endif
+            </div>
+            <div class="tijden">
+                @if($blok?->weging_start && $blok?->weging_einde)
+                <div>Weging: <strong>{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</strong></div>
+                @endif
+                @if($blok?->starttijd)
+                <div>Start: <strong>{{ $blok->starttijd->format('H:i') }}</strong></div>
+                @endif
+            </div>
+        </div>
+        @else
+        <div class="weegkaart-blok" style="background: #fef3c7; justify-content: center;">
+            <span style="color: #92400e; font-size: 10px;">Nog geen poule toegewezen</span>
+        </div>
+        @endif
+
+        {{-- QR code --}}
+        <div class="weegkaart-qr">
+            <canvas id="qr-{{ $judoka->id }}" width="100" height="100"></canvas>
+            <div class="code">{{ strtoupper(Str::limit($judoka->qr_code, 12, '')) }}</div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="weegkaart-footer">
+            <span>📱 Toon bij weging</span>
+            <span>{{ now()->format('d-m H:i') }}</span>
         </div>
     </div>
     @endforeach
