@@ -337,23 +337,31 @@ categorie passen maar geen gewichtsmatch hebben.
 
 ## Poule Titels
 
-Titels worden automatisch samengesteld:
+Titels worden **dynamisch** samengesteld uit maximaal 4 componenten:
 
-| Situatie | In titel |
-|----------|----------|
-| `toon_label_in_titel = true` | Categorie naam |
-| `max_leeftijd_verschil = 0` | Geen leeftijd (zit in label) |
-| `max_leeftijd_verschil > 0` | Min-max leeftijd van poule |
-| `max_kg_verschil = 0` | Vaste gewichtsklasse |
-| `max_kg_verschil > 0` | Min-max gewicht van poule |
+| Component | Tonen wanneer | Voorbeeld |
+|-----------|---------------|-----------|
+| **Poule #** | Altijd | `#1` |
+| **Label** | `toon_label_in_titel = true` | `Mini's` |
+| **Leeftijd** | `max_leeftijd_verschil > 0` | `4-5j` |
+| **Gewicht** | Vaste klassen OF `max_kg_verschil > 0` | `-26kg` of `25-27kg` |
+
+**Titel opbouw:** `#nummer Label / leeftijd / gewicht`
 
 **Voorbeelden:**
 ```
-#5 Mini's U7 -26kg        ← label aan, vast
-#5 Mini's U7 28-32kg      ← label aan, variabel gewicht
-#5 Jeugd 9-10j 28-32kg    ← label aan, beide variabel
-#5 9-10j 28-32kg          ← label uit, beide variabel
+#1 Mini's / 4j / -26kg     ← label aan, lft_verschil>0, vaste kg klasse
+#2 Mini's / -26kg          ← label aan, lft_verschil=0 (geen lft), vaste kg
+#3 Jeugd / 9-10j / 28-32kg ← label aan, beide variabel (ranges)
+#4 9-10j / 28-32kg         ← label uit, beide variabel
+#5 Mini's                  ← label aan, lft_verschil=0, geen gewichtsklassen
 ```
+
+**Belangrijk:**
+- Als `max_leeftijd_verschil = 0`: leeftijd niet tonen (organisator zet het in label)
+- Als `max_kg_verschil = 0` MET vaste gewichtsklassen: toon de klasse (bijv. `-26kg`)
+- Als `max_kg_verschil = 0` ZONDER gewichtsklassen: geen gewicht tonen
+- Als `max_kg_verschil > 0`: toon live berekende range uit judoka's
 
 ---
 

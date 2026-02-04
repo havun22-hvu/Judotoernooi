@@ -309,27 +309,34 @@ class Poule extends Model
             $label = trim(preg_replace('/\s*\d+(-\d+)?j\s*/', '', $this->leeftijdsklasse)); // Match both "10j" and "10-11j"
         }
 
-        // Leeftijd: ALTIJD live berekenen uit judoka's
+        // Get category config for display rules
+        $config = $this->getCategorieConfig();
+        $maxLeeftijdVerschil = (int) ($config['max_leeftijd_verschil'] ?? 0);
+        $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
+
+        // Leeftijd: alleen tonen als max_leeftijd_verschil > 0
         $leeftijd = null;
-        $leeftijdRange = $this->getLeeftijdsRange();
-        if ($leeftijdRange) {
-            if ($leeftijdRange['min_jaar'] === $leeftijdRange['max_jaar']) {
-                $leeftijd = $leeftijdRange['min_jaar'] . 'j';
-            } else {
-                $leeftijd = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
+        if ($maxLeeftijdVerschil > 0) {
+            $leeftijdRange = $this->getLeeftijdsRange();
+            if ($leeftijdRange) {
+                if ($leeftijdRange['min_jaar'] === $leeftijdRange['max_jaar']) {
+                    $leeftijd = $leeftijdRange['min_jaar'] . 'j';
+                } else {
+                    $leeftijd = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
+                }
             }
         }
 
-        // Gewicht: live berekenen voor dynamische poules
+        // Gewicht: live berekenen voor dynamische poules (max_kg_verschil > 0)
         $gewicht = null;
-        if ($this->isDynamisch()) {
+        if ($maxKgVerschil > 0) {
             $gewichtRange = $this->getGewichtsRange();
             if ($gewichtRange) {
                 $gewicht = round($gewichtRange['min_kg'], 1) . '-' . round($gewichtRange['max_kg'], 1) . 'kg';
             }
         }
 
-        // Fallback: gebruik opgeslagen gewichtsklasse
+        // Fallback: gebruik opgeslagen gewichtsklasse (vaste klassen)
         if (!$gewicht && $this->gewichtsklasse) {
             $gewicht = $this->gewichtsklasse;
         }
