@@ -417,23 +417,43 @@
                     </div>
                 </template>
 
-                <!-- Wel templates: keuze overschrijven of nieuw -->
+                <!-- Wel templates: huidige overschrijven of andere kiezen -->
                 <template x-if="templates.length > 0">
                     <div>
-                        <p class="text-gray-600 mb-3">Kies een bestaande template om te overschrijven:</p>
-                        <div class="space-y-2 max-h-40 overflow-y-auto mb-4">
-                            <template x-for="(template, index) in templates" :key="index">
+                        <!-- Huidige template overschrijven (als er een geselecteerd is) -->
+                        <template x-if="selectedTemplate !== '' && templates[selectedTemplate]">
+                            <div class="mb-4">
+                                <p class="text-gray-600 mb-3">
+                                    "<span class="font-bold" x-text="templates[selectedTemplate].naam"></span>" overschrijven?
+                                </p>
                                 <button
-                                    @click="overschrijfTemplate(index)"
-                                    class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors"
+                                    @click="overschrijfTemplate(parseInt(selectedTemplate))"
+                                    class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium"
                                 >
-                                    <span class="font-medium" x-text="template.naam"></span>
+                                    Ja, overschrijven
                                 </button>
-                            </template>
+                            </div>
+                        </template>
+
+                        <!-- Andere template kiezen -->
+                        <div class="border-t pt-3" :class="{ 'border-t-0 pt-0': selectedTemplate === '' }">
+                            <p class="text-gray-600 mb-2 text-sm" x-text="selectedTemplate !== '' ? 'Of kies andere template:' : 'Kies template om te overschrijven:'"></p>
+                            <div class="space-y-1 max-h-32 overflow-y-auto mb-3">
+                                <template x-for="(template, index) in templates" :key="index">
+                                    <button
+                                        x-show="String(index) !== selectedTemplate"
+                                        @click="overschrijfTemplate(index)"
+                                        class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors text-sm"
+                                    >
+                                        <span class="font-medium" x-text="template.naam"></span>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
 
+                        <!-- Nieuwe template -->
                         <div class="border-t pt-3">
-                            <p class="text-gray-600 mb-2 text-sm">Of maak een nieuwe template:</p>
+                            <p class="text-gray-600 mb-2 text-sm">Of maak nieuwe template:</p>
                             <div class="flex gap-2">
                                 <input
                                     type="text"
