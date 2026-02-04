@@ -162,7 +162,7 @@ class PubliekController extends Controller
 
                     if ($poule) {
                         // Calculate standings for each judoka (exclude absent)
-                        $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+                        $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen > 0 && $j->aanwezigheid !== 'afwezig');
                         $poule->standings = $activeJudokas->map(function ($judoka) use ($poule) {
                             $wp = 0;
                             $jp = 0;
@@ -252,7 +252,7 @@ class PubliekController extends Controller
 
         // Calculate standings for each poule (exclude absent judokas)
         $poules = $poules->map(function ($poule) {
-            $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen !== null && $j->aanwezigheid !== 'afwezig');
+            $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen > 0 && $j->aanwezigheid !== 'afwezig');
             $standings = $activeJudokas->map(function ($judoka) use ($poule) {
                 $wp = 0;
                 $jp = 0;
@@ -575,7 +575,7 @@ class PubliekController extends Controller
                 'gewichtsklasse' => $judoka->gewichtsklasse,
                 'gewicht' => $judoka->gewicht, // opgegeven gewicht bij aanmelding
                 'blok' => $judoka->poules->first()?->blok?->nummer,
-                'gewogen' => $judoka->gewicht_gewogen !== null,
+                'gewogen' => $judoka->gewicht_gewogen > 0,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
                 'vorige_wegingen' => $judoka->wegingen->take(5)->map(fn($w) => [
                     'gewicht' => $w->gewicht,

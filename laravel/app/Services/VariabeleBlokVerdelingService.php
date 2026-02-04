@@ -202,7 +202,7 @@ class VariabeleBlokVerdelingService
      */
     private function getEffectiefGewicht($judoka): float
     {
-        if ($judoka->gewicht_gewogen !== null) {
+        if ($judoka->gewicht_gewogen > 0) {
             return (float) $judoka->gewicht_gewogen;
         }
         if ($judoka->gewicht !== null) {

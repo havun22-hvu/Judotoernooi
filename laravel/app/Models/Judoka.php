@@ -289,7 +289,7 @@ class Judoka extends Model
      */
     public function getEffectiefGewicht(): ?float
     {
-        if ($this->gewicht_gewogen !== null) {
+        if ($this->gewicht_gewogen > 0) {
             return (float) $this->gewicht_gewogen;
         }
 

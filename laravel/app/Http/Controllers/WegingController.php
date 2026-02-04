@@ -115,7 +115,7 @@ class WegingController extends Controller
                 'blok' => $judoka->poules->first()?->blok?->nummer,
                 'mat' => $judoka->poules->first()?->mat?->nummer,
                 'aanwezig' => $judoka->isAanwezig(),
-                'gewogen' => $judoka->gewicht_gewogen !== null,
+                'gewogen' => $judoka->gewicht_gewogen > 0,
                 'gewicht_gewogen' => $judoka->gewicht_gewogen,
                 'aantal_wegingen' => $aantalWegingen,
                 'vorige_wegingen' => $judoka->wegingen->take(5)->map(fn($w) => [
@@ -162,7 +162,7 @@ class WegingController extends Controller
             'gewichtsklasse' => $j->gewichtsklasse,
             'is_vaste_klasse' => $j->isVasteGewichtsklasse(),
             'blok' => $j->poules->first()?->blok?->nummer,
-            'gewogen' => $j->gewicht_gewogen !== null,
+            'gewogen' => $j->gewicht_gewogen > 0,
             'gewicht_gewogen' => $j->gewicht_gewogen,
             'gewogen_om' => $j->wegingen->first()?->created_at?->format('H:i'),
             'afwezig' => !$j->isAanwezig(),
