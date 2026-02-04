@@ -326,7 +326,12 @@
                         $gewichtVerschil = $maxG - $minG;
                     }
                 }
-                $heeftGewichtWaarschuwing = isset($gewichtVerschil) && $gewichtVerschil > 4 && !$isKruisfinale && !$isEliminatie;
+                // Gewichtswaarschuwing alleen bij variabele gewichtsklassen
+                $categorieConfig = $poule->getCategorieConfig();
+                $maxKgVerschil = (float) ($categorieConfig['max_kg_verschil'] ?? 0);
+                // Bij vaste gewichtsklassen (max_kg_verschil = 0) geen waarschuwing
+                // Bij variabele gewichtsklassen: waarschuwing als verschil > toegestaan maximum
+                $heeftGewichtWaarschuwing = $maxKgVerschil > 0 && isset($gewichtVerschil) && $gewichtVerschil > $maxKgVerschil && !$isKruisfinale && !$isEliminatie;
             @endphp
             <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftGewichtWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
