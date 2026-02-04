@@ -13,15 +13,18 @@ class ToernooiService
 {
     /**
      * Initialize a new tournament
+     * Automatically cleans up old tournaments from the same organisator
      */
     public function initialiseerToernooi(array $data): Toernooi
     {
         return DB::transaction(function () use ($data) {
-            // Note: Multiple tournaments can now be active simultaneously
-            // is_actief is kept for backward compatibility but no longer enforces single-active
-
             // Get the owner organisator
             $organisator = auth('organisator')->user();
+
+            // Clean up old tournaments from this organisator (fresh start)
+            if ($organisator) {
+                $this->verwijderOudeToernooien($organisator->id);
+            }
 
             $toernooi = Toernooi::create([
                 'organisator_id' => $organisator?->id,
@@ -279,5 +282,64 @@ class ToernooiService
                 ]
             ])
             ->toArray();
+    }
+
+    /**
+     * Verwijder alle oude toernooien van een organisator
+     * Wordt aangeroepen bij aanmaken nieuw toernooi voor een frisse start
+     */
+    public function verwijderOudeToernooien(int $organisatorId): int
+    {
+        $oudeToernooien = Toernooi::where('organisator_id', $organisatorId)->get();
+        $verwijderd = 0;
+
+        foreach ($oudeToernooien as $toernooi) {
+            $this->verwijderToernooi($toernooi);
+            $verwijderd++;
+        }
+
+        return $verwijderd;
+    }
+
+    /**
+     * Verwijder een toernooi en alle gerelateerde data
+     */
+    public function verwijderToernooi(Toernooi $toernooi): void
+    {
+        DB::transaction(function () use ($toernooi) {
+            // Verwijder in volgorde van afhankelijkheden
+            // 1. Wedstrijden (hangen aan poules)
+            DB::table('wedstrijden')
+                ->whereIn('poule_id', $toernooi->poules()->pluck('id'))
+                ->delete();
+
+            // 2. Poule-judoka koppelingen
+            DB::table('poule_judoka')
+                ->whereIn('poule_id', $toernooi->poules()->pluck('id'))
+                ->delete();
+
+            // 3. Poules
+            $toernooi->poules()->delete();
+
+            // 4. Blokken
+            $toernooi->blokken()->delete();
+
+            // 5. Matten
+            $toernooi->matten()->delete();
+
+            // 6. Judokas
+            $toernooi->judokas()->delete();
+
+            // 7. Device toegangen
+            $toernooi->deviceToegangen()->delete();
+
+            // 8. Organisator-toernooi koppeling (pivot)
+            DB::table('organisator_toernooi')
+                ->where('toernooi_id', $toernooi->id)
+                ->delete();
+
+            // 9. Het toernooi zelf
+            $toernooi->delete();
+        });
     }
 }
