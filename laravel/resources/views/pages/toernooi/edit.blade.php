@@ -2893,28 +2893,59 @@
             async detectAndSetIp(type) {
                 this.detectingIp = true;
                 try {
-                    const response = await fetch('{{ route("toernooi.detect-my-ip", $toernooi->routeParams()) }}?save=' + type);
-                    const data = await response.json();
+                    // Detecteer lokale IP via WebRTC (client-side)
+                    const localIp = await this.getLocalIpAddress();
 
-                    if (data.ip) {
+                    if (localIp) {
                         if (type === 'primary') {
-                            this.primaryIp = data.ip;
-                            alert('✅ Primaire server IP ingesteld: ' + data.ip);
+                            this.primaryIp = localIp;
                         } else if (type === 'standby') {
-                            this.standbyIp = data.ip;
-                            alert('✅ Standby server IP ingesteld: ' + data.ip);
+                            this.standbyIp = localIp;
                         }
-                        // Refresh netwerk status
-                        window.location.reload();
+
+                        // Sla op naar server
+                        await this.saveNetwerkConfig();
+                        alert('✅ ' + (type === 'primary' ? 'Primaire' : 'Standby') + ' server IP ingesteld: ' + localIp);
                     } else {
-                        alert('❌ Kon IP-adres niet detecteren. Vul handmatig in.');
+                        alert('❌ Kon lokaal IP-adres niet detecteren.\n\nTip: Open Command Prompt en typ "ipconfig" om je IP te vinden.');
                     }
                 } catch (e) {
                     console.error('Fout bij IP detectie:', e);
-                    alert('❌ Fout bij detecteren IP. Vul handmatig in.');
+                    alert('❌ Fout bij detecteren IP.\n\nTip: Open Command Prompt en typ "ipconfig" om je IP te vinden.');
                 } finally {
                     this.detectingIp = false;
                 }
+            },
+
+            // Detecteer lokale IP via WebRTC
+            async getLocalIpAddress() {
+                return new Promise((resolve) => {
+                    const pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel('');
+
+                    pc.onicecandidate = (e) => {
+                        if (!e.candidate) return;
+
+                        // Extract IP from candidate string
+                        const match = e.candidate.candidate.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+                        if (match) {
+                            const ip = match[1];
+                            // Filter out public IPs and localhost
+                            if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+                                pc.close();
+                                resolve(ip);
+                            }
+                        }
+                    };
+
+                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
+
+                    // Timeout na 3 seconden
+                    setTimeout(() => {
+                        pc.close();
+                        resolve(null);
+                    }, 3000);
+                });
             },
 
             async saveNetwerkConfig() {
