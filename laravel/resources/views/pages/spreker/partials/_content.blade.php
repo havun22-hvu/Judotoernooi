@@ -823,7 +823,7 @@ function sprekerInterface() {
             }
             this.notities = template.tekst;
             this.saveNotities();
-            this.selectedTemplate = '';
+            // selectedTemplate blijft staan zodat naam zichtbaar is in dropdown
         },
 
         deleteTemplate(index) {
@@ -895,16 +895,20 @@ function sprekerInterface() {
             if (!naam || !this.notities.trim()) return;
 
             // Check of naam al bestaat
+            let newIndex;
             const exists = this.templates.findIndex(t => t.naam.toLowerCase() === naam.toLowerCase());
             if (exists >= 0) {
                 if (!confirm(`Template "${naam}" bestaat al. Overschrijven?`)) return;
                 this.templates[exists].tekst = this.notities;
+                newIndex = exists;
             } else {
                 this.templates.push({ naam, tekst: this.notities });
+                newIndex = this.templates.length - 1;
             }
 
             this.saveTemplates();
             await this.saveNotities();
+            this.selectedTemplate = newIndex; // Toon naam in dropdown
             this.saveAsNaam = '';
             this.showSaveModal = false;
             this.showFeedback(`Template "${naam}" opgeslagen!`);
@@ -916,6 +920,7 @@ function sprekerInterface() {
             this.templates[index].tekst = this.notities;
             this.saveTemplates();
             await this.saveNotities();
+            this.selectedTemplate = index; // Toon naam in dropdown
             this.showSaveModal = false;
             this.showFeedback(`Template "${template.naam}" bijgewerkt!`);
         }
