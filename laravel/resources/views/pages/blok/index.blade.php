@@ -172,7 +172,8 @@
     }
 
     // Combineer en sorteer: jong → oud, licht → zwaar
-    $alleCats = $vasteCats->merge($variabeleCats)
+    // Note: beide zijn al base collections via toBase(), concat werkt beter dan merge
+    $alleCats = $vasteCats->concat($variabeleCats)
         ->sortBy(function($c) use ($leeftijdVolgorde) {
             $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 100000 : 9900000;
             // Gebruik min_lft voor variabele, 99 voor vaste (die sorteren op gewicht)
