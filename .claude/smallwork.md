@@ -14,6 +14,22 @@
 
 ---
 
+## Sessie: 4 februari 2026
+
+### Fix: Kyu notatie PERMANENT verwijderd (4e keer!)
+- **Type:** Bug fix + cleanup
+- **Wat:**
+  - API endpoints gebruikten geen `stripKyu()` → kyu kon nog steeds getoond worden
+  - `labelMetKyu()` en `kyu()` methodes verwijderd uit Band.php
+  - Nu ONMOGELIJK om kyu notatie te tonen
+- **Bestanden:**
+  - `JudokaController.php` (regel 519)
+  - `PubliekController.php` (regels 449, 528 + Band import)
+  - `Band.php` (labelMetKyu en kyu methodes verwijderd)
+- **Regel:** Band = alleen kleur (wit, geel, oranje, etc.) - NOOIT kyu
+
+---
+
 ## Sessie: 25 januari 2026
 
 ### Fix: Variabele gewichtscategorieën
