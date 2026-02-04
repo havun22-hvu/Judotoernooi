@@ -426,7 +426,7 @@
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
                             <div class="text-right text-xs">
-                                <div class="{{ $isTeZwaar ? 'text-red-600 font-bold' : ($isGewogen ? 'text-green-600' : 'text-gray-600') }} font-medium" @if($isTeZwaar) title="Te zwaar voor {{ $poule->gewichtsklasse }}" @endif>{{ $toonGewicht ?? '-' }}</div>
+                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}@if($isTeZwaar) <span title="Te zwaar voor {{ $poule->gewichtsklasse }}">⚠️</span>@endif</div>
                                 <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                             </div>
                             <button
