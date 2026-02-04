@@ -3,20 +3,25 @@
 namespace App\Enums;
 
 /**
- * Judo band kleuren enum
+ * Judo band kleuren enum - ENIGE BRON VAN WAARHEID voor band volgorde
  *
  * VOLGORDE (beginner → expert):
  *   wit → geel → oranje → groen → blauw → bruin → zwart
+ *    0      1       2        3        4        5       6    (niveau)
+ *    6      5       4        3        2        1       0    (enum value)
  *
  * OPSLAG: alleen lowercase kleur naam (wit, geel, oranje, groen, blauw, bruin, zwart)
  * WEERGAVE: alleen kleur naam met hoofdletter (Wit, Geel, etc.) - NOOIT kyu nummers
  *
- * De int value is voor sortering (0=zwart/hoogste, 6=wit/laagste)
- * Voor sortering beginner→expert: gebruik niveau() methode
+ * SORTERING:
+ *   - niveau()     → beginner eerst (wit=0, zwart=6) - voor UI lijsten
+ *   - sortNiveau() → beginner eerst, 1-indexed (wit=1, zwart=7) - voor database sort_band
+ *   - value        → expert eerst (zwart=0, wit=6) - voor filtering
  */
 enum Band: int
 {
-    // Values: 0=hoogste (zwart), 6=laagste (wit) - voor sortering expert→beginner
+    // Enum values: expert→beginner (zwart=0, wit=6)
+    // Dit is handig voor filters: "tm_groen" betekent value >= GROEN->value
     case ZWART = 0;
     case BRUIN = 1;
     case BLAUW = 2;
@@ -137,10 +142,69 @@ enum Band: int
 
     /**
      * Niveau voor sortering beginner→expert (0=wit, 6=zwart)
-     * Inverse van enum value
+     * Gebruik voor UI waar beginners eerst komen
      */
     public function niveau(): int
     {
         return 6 - $this->value;
+    }
+
+    /**
+     * Sort niveau 1-indexed voor database (1=wit, 7=zwart)
+     * Gebruik voor sort_band kolom in database
+     */
+    public function sortNiveau(): int
+    {
+        return $this->niveau() + 1;
+    }
+
+    /**
+     * Get sort niveau van string (1=wit, 7=zwart)
+     * Gebruik voor sortering waar beginners eerst komen
+     */
+    public static function getSortNiveau(?string $band): int
+    {
+        if (empty($band)) {
+            return 7; // Unknown = treat as beginner (hoogste nummer)
+        }
+        $enum = self::fromString($band);
+        return $enum ? $enum->sortNiveau() : 7;
+    }
+
+    /**
+     * Check of band past in filter
+     * Filters: "tm_groen" (beginners t/m groen), "vanaf_blauw" (gevorderden vanaf blauw)
+     *
+     * @param string|null $band - band kleur string
+     * @param string|null $filter - "tm_kleur" of "vanaf_kleur"
+     */
+    public static function pastInFilter(?string $band, ?string $filter): bool
+    {
+        if (empty($filter) || empty($band)) {
+            return true;
+        }
+
+        $bandEnum = self::fromString($band);
+        if (!$bandEnum) {
+            return true; // Unknown band = allow
+        }
+
+        if (str_starts_with($filter, 'tm_')) {
+            // "tm_groen" = beginners t/m groen (wit, geel, oranje, groen)
+            // Band moet enum value >= filter value (hoger value = lager niveau)
+            $filterBand = str_replace('tm_', '', $filter);
+            $filterEnum = self::fromString($filterBand);
+            return $filterEnum && $bandEnum->value >= $filterEnum->value;
+        }
+
+        if (str_starts_with($filter, 'vanaf_')) {
+            // "vanaf_blauw" = gevorderden vanaf blauw (blauw, bruin, zwart)
+            // Band moet enum value <= filter value (lager value = hoger niveau)
+            $filterBand = str_replace('vanaf_', '', $filter);
+            $filterEnum = self::fromString($filterBand);
+            return $filterEnum && $bandEnum->value <= $filterEnum->value;
+        }
+
+        return true;
     }
 }

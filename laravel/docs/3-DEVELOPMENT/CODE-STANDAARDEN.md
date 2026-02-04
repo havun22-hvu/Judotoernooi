@@ -439,11 +439,14 @@ try {
 
 ## 13. Band Kleuren (GEEN kyu!)
 
-### Volgorde beginner → expert
+### Volgorde beginner → expert (ENIGE BRON VAN WAARHEID: Band enum)
 
 ```
 wit → geel → oranje → groen → blauw → bruin → zwart
- 0      1       2        3        4        5       6
+
+niveau():      0      1       2        3        4        5       6   (beginner eerst)
+sortNiveau():  1      2       3        4        5        6       7   (database sort_band)
+enum value:    6      5       4        3        2        1       0   (expert eerst, voor filters)
 ```
 
 ### Opslag
@@ -487,14 +490,44 @@ $band = Band::fromString($input);
 return $band ? strtolower($band->name) : 'wit';
 ```
 
-### Beschikbare Methodes
+### Beschikbare Methodes (allemaal in Band enum)
 
-| Methode | Doel | Input | Output |
-|---------|------|-------|--------|
-| `Band::toKleur($band)` | Weergave | any | `"Geel"` |
-| `Band::fromString($str)` | Parsing | `"geel (5e kyu)"` | `Band::GEEL` |
-| `Band::niveau()` | Sortering beginner→expert | - | `0-6` |
-| `Band::label()` | Enum label | - | `"Geel"` |
+| Methode | Doel | Voorbeeld |
+|---------|------|-----------|
+| `Band::toKleur($band)` | Weergave in UI | `"geel"` → `"Geel"` |
+| `Band::fromString($str)` | String naar enum | `"geel (5e kyu)"` → `Band::GEEL` |
+| `Band::getSortNiveau($str)` | Sortering (static) | `"geel"` → `2` |
+| `Band::pastInFilter($band, $filter)` | Filter check | `"groen"`, `"tm_groen"` → `true` |
+| `$band->niveau()` | Beginner→expert | `Band::WIT->niveau()` → `0` |
+| `$band->sortNiveau()` | Database sort_band | `Band::WIT->sortNiveau()` → `1` |
+| `$band->label()` | Kleur naam | `Band::GEEL->label()` → `"Geel"` |
+| `$band->value` | Expert→beginner | `Band::ZWART->value` → `0` |
+
+### Filters
+
+```php
+// "tm_groen" = beginners t/m groen (wit, geel, oranje, groen)
+Band::pastInFilter('geel', 'tm_groen');   // true
+Band::pastInFilter('blauw', 'tm_groen');  // false
+
+// "vanaf_blauw" = gevorderden vanaf blauw (blauw, bruin, zwart)
+Band::pastInFilter('bruin', 'vanaf_blauw'); // true
+Band::pastInFilter('groen', 'vanaf_blauw'); // false
+```
+
+### BandHelper (DEPRECATED)
+
+`BandHelper` is deprecated. Gebruik `Band` enum direct:
+
+```php
+// ✗ OUD
+BandHelper::getSortNiveau($band);
+BandHelper::pastInFilter($band, $filter);
+
+// ✓ NIEUW
+Band::getSortNiveau($band);
+Band::pastInFilter($band, $filter);
+```
 
 ---
 
