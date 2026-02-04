@@ -783,20 +783,20 @@ function abbreviateClub(name) {
                         <tr class="bg-yellow-50">
                             <td class="border p-2 font-medium">⚠️ Internet weg</td>
                             <td class="border p-2">
-                                Verbind router met 5G hotspot<br>
-                                <span class="text-gray-500 text-xs">(USB-tethering of WiFi-bridge)</span>
+                                1. Maak hotspot op mobiel<br>
+                                2. Verbind primaire server met hotspot
                             </td>
                             <td class="border p-2">
-                                <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Cloud via 5G
+                                <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Cloud via hotspot
                                 <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen!)</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">🔴 Cloud server crash</td>
+                            <td class="border p-2 font-medium">🔴 Hotspot niet mogelijk</td>
                             <td class="border p-2">Start lokale server op laptop</td>
                             <td class="border p-2">
                                 <strong>{{ $toernooi->eigen_router_ssid ?: 'Eigen router WiFi' }}</strong> → Lokale server
-                                <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen!)</span>
+                                <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen, geen cloud sync)</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
@@ -825,24 +825,26 @@ function abbreviateClub(name) {
                             <td class="border p-2"><strong>Sporthal WiFi</strong> → Cloud</td>
                         </tr>
                         <tr class="bg-yellow-50">
-                            <td class="border p-2 font-medium">⚠️ WiFi / Internet weg</td>
+                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
                             <td class="border p-2">
-                                Zet 5G hotspot aan op telefoon<br>
-                                Verbind tablets met hotspot
+                                1. Maak hotspot op mobiel<br>
+                                2. Verbind primaire server met hotspot
                             </td>
                             <td class="border p-2">
-                                <strong>{{ $toernooi->hotspot_ssid ?: '5G Hotspot' }}</strong> → Cloud
+                                <strong>Sporthal WiFi</strong> → Cloud via hotspot
+                                <br><span class="text-gray-500 text-xs">(tablets hoeven niet te wisselen!)</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">🔴 Cloud server crash</td>
+                            <td class="border p-2 font-medium">⚠️ Sporthal WiFi weg</td>
                             <td class="border p-2">
-                                1. Start eigen router (bijv. Deco)<br>
-                                2. Verbind tablets met router<br>
-                                3. Start lokale server op laptop
+                                1. Maak hotspot op mobiel<br>
+                                2. Verbind primaire server met hotspot<br>
+                                3. Zet tablets op hotspot
                             </td>
                             <td class="border p-2">
-                                <strong>Eigen router WiFi</strong> → Lokale server
+                                <strong>{{ $toernooi->hotspot_ssid ?: 'Mobiele hotspot' }}</strong> → Cloud via hotspot
+                                <br><span class="text-gray-500 text-xs">(alle tablets moeten wisselen!)</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
