@@ -2923,26 +2923,48 @@
 
             async detectAndSetIp(type) {
                 this.detectingIp = true;
-                try {
-                    // Detecteer lokale IP via WebRTC (client-side)
-                    const localIp = await this.getLocalIpAddress();
+                const serverLabel = type === 'primary' ? 'Primaire' : 'Standby';
 
-                    if (localIp) {
-                        if (type === 'primary') {
-                            this.primaryIp = localIp;
-                        } else if (type === 'standby') {
-                            this.standbyIp = localIp;
+                try {
+                    // Probeer eerst automatische detectie via WebRTC
+                    let localIp = await this.getLocalIpAddress();
+
+                    // Als automatische detectie faalt, vraag handmatig
+                    if (!localIp) {
+                        localIp = prompt(
+                            `Automatische IP-detectie werkt niet.\n\n` +
+                            `Vind je IP-adres via:\n` +
+                            `• Windows: Open CMD → typ "ipconfig"\n` +
+                            `• Mac/Linux: Open Terminal → typ "ifconfig"\n\n` +
+                            `Zoek naar "IPv4 Address" (bijv. 192.168.1.100)\n\n` +
+                            `Voer het ${serverLabel.toLowerCase()} server IP in:`
+                        );
+
+                        if (!localIp) {
+                            return; // Gebruiker heeft geannuleerd
                         }
 
-                        // Sla op naar server
-                        await this.saveNetwerkConfig();
-                        alert('✅ ' + (type === 'primary' ? 'Primaire' : 'Standby') + ' server IP ingesteld: ' + localIp);
-                    } else {
-                        alert('❌ Kon lokaal IP-adres niet detecteren.\n\nTip: Open Command Prompt en typ "ipconfig" om je IP te vinden.');
+                        // Valideer IP formaat
+                        const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                        if (!ipRegex.test(localIp.trim())) {
+                            alert('❌ Ongeldig IP-adres formaat.\n\nGebruik formaat: 192.168.x.x');
+                            return;
+                        }
+                        localIp = localIp.trim();
                     }
+
+                    if (type === 'primary') {
+                        this.primaryIp = localIp;
+                    } else if (type === 'standby') {
+                        this.standbyIp = localIp;
+                    }
+
+                    // Sla op naar server
+                    await this.saveNetwerkConfig();
+                    alert('✅ ' + serverLabel + ' server IP ingesteld: ' + localIp);
                 } catch (e) {
                     console.error('Fout bij IP detectie:', e);
-                    alert('❌ Fout bij detecteren IP.\n\nTip: Open Command Prompt en typ "ipconfig" om je IP te vinden.');
+                    alert('❌ Er ging iets mis. Probeer het opnieuw.');
                 } finally {
                     this.detectingIp = false;
                 }
