@@ -350,15 +350,41 @@ De harde limieten (leeftijd/gewicht/geslacht/band) worden NOOIT overschreden.
 
 ### Poule Titels
 
-Poule titels worden automatisch samengesteld uit:
-- **Categorie naam** (uit Instellingen → Categorieën → Naam veld)
-- Geslacht (M/V, alleen bij niet-gemengde categorieën)
-- Leeftijd range (berekend uit judoka's)
-- Gewicht range (berekend uit judoka's)
+Poule titels worden **dynamisch** samengesteld. Het formaat is:
 
-**Voorbeeld:** "Jeugd 9-10j 30-33kg"
+```
+#nummer Label / leeftijd / gewicht
+```
 
-**Let op:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert.
+**Componenten:**
+
+| Component | Wanneer getoond | Voorbeeld |
+|-----------|-----------------|-----------|
+| **#nummer** | Altijd | `#1`, `#5` |
+| **Label** | Als "Toon label in titel" aangevinkt | `Mini's`, `Jeugd` |
+| **Leeftijd** | Als `max_leeftijd_verschil > 0` | `4j`, `9-10j` |
+| **Gewicht** | Vaste klassen OF variabel (`max_kg_verschil > 0`) | `-26kg`, `28-32kg` |
+
+**Voorbeelden:**
+
+| Poule titel | Uitleg |
+|-------------|--------|
+| `#1 Mini's / 4j / -26kg` | Label aan, leeftijd variabel, vaste gewichtsklasse |
+| `#2 Mini's / -26kg` | Label aan, `max_lft_verschil=0` (geen leeftijd), vaste klasse |
+| `#3 Jeugd / 9-10j / 28-32kg` | Label aan, beide variabel (ranges berekend) |
+| `#4 9-10j / 28-32kg` | Label uit, beide variabel |
+| `#5 Mini's` | Label aan, `max_lft_verschil=0`, geen gewichtsklassen |
+
+**Hoe werkt het?**
+
+1. **Label**: De categorie naam (bijv. "Mini's") wordt getoond als je bij Instellingen → Categorieën het vakje "Toon label in titel" aanvinkt
+2. **Leeftijd**: Wordt alleen getoond als `max_leeftijd_verschil > 0`. Bij `0` wordt aangenomen dat de leeftijd al in het label zit (bijv. "U9 Jongens")
+3. **Gewicht**:
+   - Bij **vaste gewichtsklassen** (bijv. -20, -23, -26): toont de klasse naam
+   - Bij **variabel gewicht** (`max_kg_verschil > 0`): toont de berekende range uit de judoka's in de poule
+   - Bij geen gewichtsklassen EN `max_kg_verschil = 0`: geen gewicht getoond
+
+**Tip:** Wijzig de categorie naam in Instellingen VOORDAT je poules genereert.
 
 ### Poule Regels
 
