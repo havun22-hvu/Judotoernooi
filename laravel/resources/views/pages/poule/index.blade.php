@@ -410,6 +410,9 @@
                             $toonGewicht = null;
                         }
                         $isGewogen = $judoka->gewicht_gewogen !== null;
+                        // Check of judoka te zwaar is voor de poule's gewichtsklasse
+                        $tolerantie = $toernooi->weging_tolerantie ?? 0.5;
+                        $isTeZwaar = $judoka->gewicht && !$judoka->isGewichtBinnenKlasse($judoka->gewicht, $tolerantie, $poule->gewichtsklasse);
                     @endphp
                     <div class="px-3 py-2 hover:bg-blue-50 cursor-move text-sm judoka-item group {{ $isEliminatie ? 'border border-gray-200 rounded' : '' }}"
                          data-judoka-id="{{ $judoka->id }}"
@@ -423,7 +426,7 @@
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
                             <div class="text-right text-xs">
-                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
+                                <div class="{{ $isTeZwaar ? 'text-red-600 font-bold' : ($isGewogen ? 'text-green-600' : 'text-gray-600') }} font-medium" @if($isTeZwaar) title="Te zwaar voor {{ $poule->gewichtsklasse }}" @endif>{{ $toonGewicht ?? '-' }}</div>
                                 <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                             </div>
                             <button
