@@ -2772,10 +2772,40 @@
                     Open op elke tablet de browser en ga naar:
                 </p>
                 <div class="flex items-center gap-2 bg-blue-100 p-3 rounded">
-                    <code class="text-lg font-bold text-blue-900" x-text="'http://' + (primaryIp || '[laptop-ip]') + ':8000'"></code>
-                    <button @click="copyUrl()" type="button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                        📋 Kopieer
-                    </button>
+                    <template x-if="!editingIp">
+                        <code class="text-lg font-bold text-blue-900" x-text="'http://' + (primaryIp || '[laptop-ip]') + ':8000'"></code>
+                    </template>
+                    <template x-if="editingIp">
+                        <div class="flex items-center gap-1">
+                            <span class="text-lg font-bold text-blue-900">http://</span>
+                            <input type="text" x-model="newIp" x-ref="ipInput"
+                                   class="w-36 px-2 py-1 border rounded font-mono text-blue-900"
+                                   placeholder="192.168.x.x"
+                                   @keyup.enter="saveIp()"
+                                   @keyup.escape="editingIp = false">
+                            <span class="text-lg font-bold text-blue-900">:8000</span>
+                        </div>
+                    </template>
+                    <template x-if="!editingIp">
+                        <button @click="copyUrl()" type="button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                            📋 Kopieer
+                        </button>
+                    </template>
+                    <template x-if="!editingIp">
+                        <button @click="startEditIp()" type="button" class="px-2 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                            ✏️
+                        </button>
+                    </template>
+                    <template x-if="editingIp">
+                        <button @click="saveIp()" type="button" class="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                            ✓ Opslaan
+                        </button>
+                    </template>
+                    <template x-if="editingIp">
+                        <button @click="editingIp = false" type="button" class="px-2 py-1 bg-gray-400 text-white rounded text-sm hover:bg-gray-500">
+                            ✕
+                        </button>
+                    </template>
                 </div>
             </div>
 
@@ -2987,10 +3017,46 @@
             primaryIp: '{{ $toernooi->local_server_primary_ip ?? "" }}',
             uitslagCount: 0,
             laatsteSync: null,
+            editingIp: false,
+            newIp: '',
 
             init() {
                 this.loadFromStorage();
                 setInterval(() => this.loadFromStorage(), 1000);
+            },
+
+            startEditIp() {
+                this.newIp = this.primaryIp || '';
+                this.editingIp = true;
+                this.$nextTick(() => this.$refs.ipInput?.focus());
+            },
+
+            async saveIp() {
+                const ip = this.newIp.trim();
+                if (!ip) {
+                    this.editingIp = false;
+                    return;
+                }
+                // Valideer IP formaat
+                const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+                if (!ipRegex.test(ip)) {
+                    alert('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100');
+                    return;
+                }
+                try {
+                    await fetch('{{ route("toernooi.local-server-ips", $toernooi->routeParams()) }}', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ local_server_primary_ip: ip })
+                    });
+                    this.primaryIp = ip;
+                    this.editingIp = false;
+                } catch (e) {
+                    alert('Fout bij opslaan: ' + e.message);
+                }
             },
 
             copyUrl() {
