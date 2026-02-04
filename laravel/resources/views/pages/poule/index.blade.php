@@ -419,6 +419,7 @@
                             </div>
                             <div class="text-right text-xs">
                                 <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}</div>
+                                <div class="text-gray-400">{{ is_numeric($judoka->band) ? (\App\Enums\Band::tryFrom((int)$judoka->band)?->label() ?? '') : \App\Enums\Band::stripKyu($judoka->band ?? '') }}</div>
                             </div>
                             <button
                                 onclick="event.stopPropagation(); openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
