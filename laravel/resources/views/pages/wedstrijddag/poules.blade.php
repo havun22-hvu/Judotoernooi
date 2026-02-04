@@ -585,7 +585,7 @@
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 <div class="text-right text-xs">
                                                     <div class="{{ $heeftProbleem ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
-                                                    <div class="text-gray-400">{{ \App\Enums\Band::stripKyu($judoka->band ?? '') }}</div>
+                                                    <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                                                 </div>
                                                 <button
                                                     onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
@@ -632,7 +632,7 @@
                                         <div class="flex items-center gap-1 flex-shrink-0">
                                             <div class="text-right text-xs">
                                                 <div class="text-orange-600 font-medium">{{ $judoka->gewicht_gewogen ?? $judoka->gewicht }} kg</div>
-                                                <div class="text-gray-400">{{ \App\Enums\Band::stripKyu($judoka->band ?? '') }}</div>
+                                                <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                                             </div>
                                             <button
                                                 onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"

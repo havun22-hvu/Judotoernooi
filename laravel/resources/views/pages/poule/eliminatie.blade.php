@@ -38,7 +38,7 @@
             @foreach($poule->judokas as $judoka)
             <div class="p-2 bg-gray-50 rounded border">
                 <span class="font-medium">{{ $judoka->naam }}</span>
-                <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }} - {{ \App\Enums\Band::stripKyu($judoka->band ?? '') }}</span>
+                <span class="text-xs text-gray-500 block">{{ $judoka->club?->naam }} - {{ \App\Enums\Band::toKleur($judoka->band) }}</span>
             </div>
             @endforeach
         </div>

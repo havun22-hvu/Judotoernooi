@@ -523,8 +523,9 @@ class ImportService
         }
 
         $band = Band::fromString((string)$waarde);
-        // Sla op als lowercase base value (geen kyu notatie)
-        return $band ? strtolower($band->value) : strtolower(trim(explode(' ', (string)$waarde)[0]));
+        // Sla op als lowercase kleur naam (wit, geel, oranje, groen, blauw, bruin, zwart)
+        // Band enum value is integer, dus gebruik name property voor de string
+        return $band ? strtolower($band->name) : strtolower(trim(explode(' ', (string)$waarde)[0]));
     }
 
     /**
@@ -691,21 +692,15 @@ class ImportService
     }
 
     /**
-     * Get band niveau (0 = wit, 6 = zwart)
+     * Get band niveau voor classificatie (0 = wit/beginner, 6 = zwart/expert)
+     *
+     * VOLGORDE beginner → expert:
+     *   wit(0) → geel(1) → oranje(2) → groen(3) → blauw(4) → bruin(5) → zwart(6)
      */
     private function getBandNiveau(string $band): int
     {
-        $band = strtolower(trim($band));
-        return match($band) {
-            'wit', 'white' => 0,
-            'geel', 'yellow' => 1,
-            'oranje', 'orange' => 2,
-            'groen', 'green' => 3,
-            'blauw', 'blue' => 4,
-            'bruin', 'brown' => 5,
-            'zwart', 'black' => 6,
-            default => 0,
-        };
+        $bandEnum = Band::fromString($band);
+        return $bandEnum ? $bandEnum->niveau() : 0;
     }
 
     /**

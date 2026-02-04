@@ -17,15 +17,20 @@
 ## Sessie: 4 februari 2026
 
 ### Fix: Kyu notatie PERMANENT verwijderd (4e keer!)
-- **Type:** Bug fix + cleanup
+- **Type:** Bug fix + cleanup + documentatie
 - **Wat:**
   - API endpoints gebruikten geen `stripKyu()` → kyu kon nog steeds getoond worden
   - `labelMetKyu()` en `kyu()` methodes verwijderd uit Band.php
-  - Nu ONMOGELIJK om kyu notatie te tonen
+  - Nieuwe `toKleur()` methode: converteert elk formaat naar kleur naam
+  - Nieuwe `niveau()` methode: sortering beginner→expert (0=wit, 6=zwart)
+  - Import fix: `$band->name` i.p.v. `$band->value` (was bug: gaf nummer i.p.v. kleur)
+  - CODE-STANDAARDEN.md sectie 13 toegevoegd: band regels
 - **Bestanden:**
-  - `JudokaController.php` (regel 519)
-  - `PubliekController.php` (regels 449, 528 + Band import)
-  - `Band.php` (labelMetKyu en kyu methodes verwijderd)
+  - `JudokaController.php` - stripKyu toegevoegd
+  - `PubliekController.php` - stripKyu + Band import
+  - `Band.php` - toKleur(), niveau(), documentatie
+  - `ImportService.php` - parseBand fix + getBandNiveau via enum
+  - `CODE-STANDAARDEN.md` - sectie 13 band regels
 - **Regel:** Band = alleen kleur (wit, geel, oranje, etc.) - NOOIT kyu
 
 ---
