@@ -271,7 +271,7 @@
                         <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             @foreach($elimPoule->judokas as $judoka)
                             @if(!$judoka->isActief($wegingGesloten)) @continue @endif
-                            @php $isGewogenElim = $judoka->gewicht_gewogen !== null; @endphp
+                            @php $isGewogenElim = $judoka->gewicht_gewogen > 0; @endphp
                             <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 group relative">
                                 <div class="flex items-center gap-1">
                                     @if($isGewogenElim)<span class="text-green-500 text-xs">●</span>@endif
@@ -378,7 +378,7 @@
                             @if(!$judoka->isActief($wegingGesloten))
                                 @continue
                             @endif
-                            @php $isGewogen = $judoka->gewicht_gewogen !== null; @endphp
+                            @php $isGewogen = $judoka->gewicht_gewogen > 0; @endphp
                             <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 group">
                                 <div class="flex items-center gap-1">
                                     @if($isGewogen)
@@ -553,7 +553,7 @@
                                 <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
                                     @foreach($poule->judokas as $judoka)
                                     @php
-                                        $isGewogen = $judoka->gewicht_gewogen !== null;
+                                        $isGewogen = $judoka->gewicht_gewogen > 0;
                                         $isAfwezig = !$judoka->isActief($wegingGesloten);
 
                                         // Check of judoka past in DEZE POULE's gewichtsklasse (niet judoka's eigen klasse!)

@@ -107,7 +107,7 @@
     <div class="divide-y divide-gray-100 sortable-poule min-h-[40px]" data-poule-id="{{ $poule->id }}">
         @foreach($poule->judokas as $judoka)
         @php
-            $isGewogen = $judoka->gewicht_gewogen !== null;
+            $isGewogen = $judoka->gewicht_gewogen > 0;
             $isAfwezig = !$judoka->isActief($wegingGesloten);
             // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
             $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
