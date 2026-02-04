@@ -6,7 +6,7 @@
 <style>
     @media print {
         @page {
-            size: {{ $aantal >= 6 ? 'A4 landscape' : 'A4 portrait' }};
+            size: A4 landscape;
             margin: 0.5cm;
         }
         .print-container {

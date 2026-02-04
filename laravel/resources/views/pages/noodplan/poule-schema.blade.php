@@ -2,6 +2,29 @@
 
 @section('title', 'Poule Schema - ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse)
 
+@push('styles')
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0.5cm;
+        }
+        .print-container {
+            max-width: none !important;
+            padding: 0 !important;
+        }
+    }
+    @media screen {
+        .print-container {
+            max-width: none !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="mb-6">
     <!-- Poule header -->
