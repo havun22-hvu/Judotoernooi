@@ -548,6 +548,54 @@
 
 ---
 
+---
+
+## Sessie: 4 februari 2026
+
+### Feat: LIVE/OFFLINE connectie indicator Publiek PWA
+- **Type:** Feature
+- **Wat:** Globale connectie status knop in header (groen=LIVE, blauw=OFFLINE)
+- **Bestanden:** publiek/index.blade.php, mat-updates-listener.blade.php
+- **Details:** Klikbaar om te verversen, animate-pulse bij OFFLINE
+- **Docs:** CHAT.md sectie 2 bijgewerkt
+
+### Fix: JP 0 niet getoond bij verliezer
+- **Type:** Bug fix
+- **Wat:** JavaScript `0 || ''` geeft `''`, nu `!== undefined` check
+- **Bestanden:** WedstrijdSchemaService.php, mat/_content.blade.php
+- **Backend:** Zet lege score naar '0' als er winnaar is
+- **Frontend:** Check met `!== undefined` i.p.v. truthy
+
+### Fix: Afwezige judoka's in uitslagen
+- **Type:** Bug fix
+- **Wat:** Judoka's zonder gewogen gewicht of status 'afwezig' gefilterd uit standings
+- **Bestanden:** RoleToegang.php, BlokController.php, PubliekController.php
+- **Filter:** `gewicht_gewogen !== null && aanwezigheid !== 'afwezig'`
+
+### Fix: Gelijkspel punten niet geteld
+- **Type:** Bug fix
+- **Wat:** Draw (winnaar_id=NULL) gaf 0 WP, moet 1 WP zijn
+- **Bestanden:** RoleToegang.php, BlokController.php, PubliekController.php
+- **Logica:** Win=2, Draw=1, Loss=0
+
+### Fix: Oproepen per poule met nummer
+- **Type:** UI improvement
+- **Wat:** Filter afwezige judoka's + toon poelenummer in titel
+- **Bestanden:** spreker/_content.blade.php
+- **Format:** "Poule 1 - Jeugd 27.1-27.9kg"
+
+### UI: Notities tekstveld groter
+- **Type:** UI fix
+- **Wat:** Textarea `min-height: 400px`, `rows="15"`, `resize-y`
+- **Bestanden:** spreker/_content.blade.php
+
+### Docs: Deploy commands vereenvoudigd
+- **Type:** Documentation
+- **Wat:** 8 individuele cache commands → 2 (optimize:clear + optimize)
+- **Bestanden:** .claude/deploy.md
+
+---
+
 <!--
 TEMPLATE:
 

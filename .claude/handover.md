@@ -1,7 +1,7 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 3 februari 2026
-> **Status:** PRODUCTION READY - Launch over 2 dagen
+> **Laatste update:** 4 februari 2026
+> **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
 
@@ -19,12 +19,12 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
-| **3 feb 2026** | Real-time mat updates via Reverb | Zie `CHAT.md` sectie 2 |
+| **4 feb 2026** | Production deploy, Staging tests, Bug fixes | smallwork.md |
+| 3 feb 2026 | Real-time mat updates via Reverb | Zie `CHAT.md` sectie 2 |
 | 3 feb 2026 | Staging testing, Email log, QR fix | smallwork.md |
 | 2 feb 2026 | 10+ Production Ready | `.claude/handover/2026-02-02-10plus-production.md` |
 | 1 feb 2026 | Redundantie systeem | `.claude/handover/` (afgerond) |
 | 24 jan 2026 | Reverb fix, DB reset | `.claude/handover/2026-01-24-avond-reverb-fix-db-reset.md` |
-| 23 jan 2026 | Coach in/uit check | `.claude/handover/2026-01-23-avond-coach-inuitcheck.md` |
 
 ---
 
@@ -35,10 +35,11 @@
 - **10+ Improvements** - Error handling, CI/CD, tests, security
 - **Core features** - Import, weging, mat, spreker, live, eliminatie
 - **Real-time sync** - Reverb WebSockets voor scores, beurten, poule status
+- **Production deploy** - Alle 3 omgevingen in sync (commit 7458156)
 
 ### 🎯 Volgende Stap
-- **Production launch** - Over 3 dagen
-- Zie planning in `.claude/handover/2026-02-02-10plus-production.md`
+- **Live toernooi** - Klaar voor eerste echte toernooi
+- Monitoring op https://judotournament.org
 
 ---
 
