@@ -419,7 +419,7 @@
                         } else {
                             $toonGewicht = null;
                         }
-                        $isGewogen = $judoka->gewicht_gewogen !== null;
+                        $isGewogen = $judoka->gewicht_gewogen > 0 && $judoka->aanwezigheid !== 'afwezig';
                         // Check of judoka te zwaar is voor de poule's gewichtsklasse
                         $tolerantie = $toernooi->weging_tolerantie ?? 0.5;
                         $isTeZwaar = $judoka->gewicht && !$judoka->isGewichtBinnenKlasse($judoka->gewicht, $tolerantie, $poule->gewichtsklasse);
