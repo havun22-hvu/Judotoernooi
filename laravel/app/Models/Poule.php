@@ -339,6 +339,10 @@ class Poule extends Model
         // Fallback: gebruik opgeslagen gewichtsklasse (vaste klassen)
         if (!$gewicht && $this->gewichtsklasse) {
             $gewicht = $this->gewichtsklasse;
+            // Voeg 'kg' toe als het nog niet eindigt op 'kg'
+            if (!str_ends_with(strtolower($gewicht), 'kg')) {
+                $gewicht .= 'kg';
+            }
         }
 
         // Build formatted title: Label / Leeftijd / Gewicht
