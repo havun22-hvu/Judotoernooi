@@ -329,8 +329,25 @@ function updateWeightDisplay() {
 }
 
 // Register weight
-async function registreerGewicht() {
+async function registreerGewicht(skipAfwijkingCheck = false) {
     if (!selectedJudoka || !weightInput) return;
+
+    const gewogenGewicht = parseFloat(weightInput);
+    const opgegevenGewicht = selectedJudoka.gewicht;
+
+    // Check afwijking > 2 kg van opgegeven gewicht (alleen als er een opgegeven gewicht is)
+    if (!skipAfwijkingCheck && opgegevenGewicht && Math.abs(gewogenGewicht - opgegevenGewicht) > 2) {
+        const verschil = (gewogenGewicht - opgegevenGewicht).toFixed(1);
+        const richting = gewogenGewicht > opgegevenGewicht ? 'zwaarder' : 'lichter';
+        const bevestigd = confirm(
+            `⚠️ GROTE AFWIJKING!\n\n` +
+            `Opgegeven: ${opgegevenGewicht} kg\n` +
+            `Gewogen: ${gewogenGewicht} kg\n` +
+            `Verschil: ${verschil > 0 ? '+' : ''}${verschil} kg (${richting})\n\n` +
+            `Weet je zeker dat dit klopt?`
+        );
+        if (!bevestigd) return;
+    }
 
     const btn = document.getElementById('register-btn');
     btn.disabled = true;
@@ -540,7 +557,14 @@ document.addEventListener('click', function(e) {
 
 // History
 function addToHistory(naam, gewicht, binnenKlasse) {
-    history.unshift({ naam, gewicht, binnenKlasse, tijd: new Date().toISOString() });
+    const gewichtNum = parseFloat(gewicht);
+    const opgegevenGewicht = selectedJudoka?.gewicht;
+    // Verdacht gewicht: < 15 kg OF > 5 kg afwijking van opgave
+    const isVerdacht = gewicht !== 'afwezig' && (
+        gewichtNum < 15 ||
+        (opgegevenGewicht && Math.abs(gewichtNum - opgegevenGewicht) > 5)
+    );
+    history.unshift({ naam, gewicht, binnenKlasse, isVerdacht, tijd: new Date().toISOString() });
     if (history.length > 10) history.pop();
     totalWeighed++;
     localStorage.setItem('weging_history', JSON.stringify(history));
@@ -560,11 +584,20 @@ function updateHistoryDisplay() {
         return;
     }
 
-    list.innerHTML = history.map(h => `
-        <div class="flex justify-between items-center py-0.5 ${h.binnenKlasse ? 'text-gray-700' : 'text-yellow-600'}">
-            <span class="truncate">${h.naam}</span>
-            <span class="font-mono ml-2">${h.gewicht} kg</span>
-        </div>
-    `).join('');
+    // Prioriteit: isVerdacht (rood) > !binnenKlasse (geel) > normaal (grijs)
+    list.innerHTML = history.map(h => {
+        let colorClass = h.binnenKlasse ? 'text-gray-700' : 'text-yellow-600';
+        let icon = '';
+        if (h.isVerdacht) {
+            colorClass = 'text-red-600 font-medium';
+            icon = '🚨 ';
+        }
+        return `
+            <div class="flex justify-between items-center py-0.5 ${colorClass}">
+                <span class="truncate">${icon}${h.naam}</span>
+                <span class="font-mono ml-2">${h.gewicht} kg</span>
+            </div>
+        `;
+    }).join('');
 }
 </script>
