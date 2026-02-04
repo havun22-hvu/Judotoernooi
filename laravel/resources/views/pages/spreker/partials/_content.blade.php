@@ -344,10 +344,11 @@
                     >+</button>
                 </div>
 
-                <!-- Opslaan -->
+                <!-- Opslaan (toont dialoog als tekst gewijzigd) -->
                 <button
-                    @click="saveNotities()"
+                    @click="handleSaveClick()"
                     class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-xl font-medium"
+                    :class="{ 'ring-2 ring-yellow-400': hasUnsavedChanges }"
                 >
                     💾
                 </button>
@@ -364,15 +365,6 @@
                     </template>
                 </select>
 
-                <!-- Templates beheren (inclusief opslaan als template) -->
-                <button
-                    @click="showTemplateModal = true"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-xl"
-                    title="Templates beheren"
-                >
-                    ⚙️
-                </button>
-
                 <!-- Wis -->
                 <button
                     @click="clearNotities()"
@@ -385,138 +377,91 @@
                 <!-- Status indicators (rechts) -->
                 <div class="ml-auto flex items-center gap-2 text-base">
                     <span x-show="autoSaving" x-cloak class="text-gray-400">⏳</span>
-                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600 text-xl">●</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Opslaan als template -->
-    <div x-show="showSaveAsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showSaveAsModal = false">
+    <!-- Modal: Opslaan dialoog -->
+    <div x-show="showSaveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showSaveModal = false">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
-                <span class="font-bold">📋 Opslaan als template</span>
-                <button @click="showSaveAsModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
+            <div class="bg-green-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
+                <span class="font-bold">💾 Notities opslaan</span>
+                <button @click="showSaveModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
             <div class="p-4">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Template naam:</label>
-                    <input
-                        type="text"
-                        x-model="saveAsNaam"
-                        placeholder="Bijv. 'Welkomstwoord aangepast'"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-                        @keyup.enter="doSaveAsTemplate()"
-                    >
-                </div>
-
-                <!-- Bestaande templates om te overschrijven -->
-                <template x-if="templates.length > 0">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Of overschrijf bestaande:</label>
-                        <div class="space-y-1 max-h-32 overflow-y-auto">
-                            <template x-for="(template, index) in templates" :key="index">
-                                <button
-                                    @click="overschrijfTemplate(index)"
-                                    class="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors"
-                                >
-                                    <span class="font-medium" x-text="template.naam"></span>
-                                    <span class="text-gray-400 ml-1">→ overschrijven</span>
-                                </button>
-                            </template>
+                <!-- Geen templates: alleen naam invullen -->
+                <template x-if="templates.length === 0">
+                    <div>
+                        <p class="text-gray-600 mb-3">Geef je notities een naam om ze als template op te slaan:</p>
+                        <input
+                            type="text"
+                            x-model="saveAsNaam"
+                            placeholder="Bijv. 'Welkomstwoord'"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-4"
+                            @keyup.enter="saveAsNewTemplate()"
+                            x-ref="templateNaamInput"
+                        >
+                        <div class="flex justify-end gap-2">
+                            <button @click="justSaveNotities()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                                Alleen opslaan
+                            </button>
+                            <button
+                                @click="saveAsNewTemplate()"
+                                :disabled="!saveAsNaam.trim()"
+                                class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium"
+                            >
+                                Opslaan als template
+                            </button>
                         </div>
                     </div>
                 </template>
 
-                <div class="flex justify-end gap-2">
-                    <button
-                        @click="showSaveAsModal = false"
-                        class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm"
-                    >
-                        Annuleren
-                    </button>
-                    <button
-                        @click="doSaveAsTemplate()"
-                        :disabled="!saveAsNaam.trim()"
-                        class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                    >
-                        Opslaan als nieuw
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Template beheer -->
-    <div x-show="showTemplateModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showTemplateModal = false">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden">
-            <div class="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-                <span class="font-bold">📋 Templates beheren</span>
-                <button @click="showTemplateModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
-            </div>
-            <div class="p-4 overflow-y-auto max-h-[70vh]">
-                <!-- Huidige notities opslaan als template -->
-                <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <label class="block text-sm font-medium text-green-800 mb-2">💾 Huidige notities opslaan als template:</label>
-                    <div class="flex gap-2">
-                        <input
-                            type="text"
-                            x-model="nieuweTemplateNaam"
-                            placeholder="Naam voor template..."
-                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                            @keyup.enter="saveAsTemplate()"
-                        >
-                        <button
-                            @click="saveAsTemplate()"
-                            :disabled="!nieuweTemplateNaam.trim() || !notities.trim()"
-                            class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium"
-                        >
-                            Opslaan
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Bestaande templates -->
-                <div class="space-y-2">
-                    <h3 class="text-sm font-medium text-gray-700 mb-2">Opgeslagen templates:</h3>
-                    <template x-if="templates.length === 0">
-                        <p class="text-gray-500 text-sm italic">Nog geen templates opgeslagen</p>
-                    </template>
-                    <template x-for="(template, index) in templates" :key="index">
-                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
-                            <div class="flex-1 min-w-0">
-                                <span class="font-medium text-gray-800" x-text="template.naam"></span>
-                                <p class="text-xs text-gray-500 truncate" x-text="template.tekst.substring(0, 50) + '...'"></p>
-                            </div>
-                            <div class="flex gap-2 ml-2">
+                <!-- Wel templates: keuze overschrijven of nieuw -->
+                <template x-if="templates.length > 0">
+                    <div>
+                        <p class="text-gray-600 mb-3">Kies een bestaande template om te overschrijven:</p>
+                        <div class="space-y-2 max-h-40 overflow-y-auto mb-4">
+                            <template x-for="(template, index) in templates" :key="index">
                                 <button
-                                    @click="selectedTemplate = index; laadTemplate(); showTemplateModal = false"
-                                    class="text-blue-600 hover:text-blue-800 text-sm px-2 py-1"
-                                    title="Laden"
+                                    @click="overschrijfTemplate(index)"
+                                    class="w-full text-left px-3 py-2 bg-gray-50 hover:bg-yellow-50 rounded border hover:border-yellow-400 transition-colors"
                                 >
-                                    📥
+                                    <span class="font-medium" x-text="template.naam"></span>
                                 </button>
-                                <button
-                                    @click="deleteTemplate(index)"
-                                    class="text-red-600 hover:text-red-800 text-sm px-2 py-1"
-                                    title="Verwijderen"
+                            </template>
+                        </div>
+
+                        <div class="border-t pt-3">
+                            <p class="text-gray-600 mb-2 text-sm">Of maak een nieuwe template:</p>
+                            <div class="flex gap-2">
+                                <input
+                                    type="text"
+                                    x-model="saveAsNaam"
+                                    placeholder="Nieuwe naam..."
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500"
+                                    @keyup.enter="saveAsNewTemplate()"
                                 >
-                                    🗑️
+                                <button
+                                    @click="saveAsNewTemplate()"
+                                    :disabled="!saveAsNaam.trim()"
+                                    class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg text-sm"
+                                >
+                                    Nieuw
                                 </button>
                             </div>
                         </div>
-                    </template>
-                </div>
 
-                <!-- Standaard voorbeeldtekst toevoegen -->
-                <div class="mt-4 pt-4 border-t">
-                    <button
-                        @click="addDefaultTemplate()"
-                        class="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium"
-                    >
-                        ➕ Voeg standaard voorbeeldtekst toe
-                    </button>
-                </div>
+                        <div class="flex justify-between items-center mt-4 pt-3 border-t">
+                            <button @click="justSaveNotities()" class="text-gray-600 hover:text-gray-800 text-sm">
+                                Alleen opslaan (geen template)
+                            </button>
+                            <button @click="showSaveModal = false" class="text-gray-400 hover:text-gray-600 text-sm">
+                                Annuleren
+                            </button>
+                        </div>
+                    </div>
+                </template>
             </div>
         </div>
     </div>
@@ -656,14 +601,12 @@ function sprekerInterface() {
         // Templates
         templates: [],
         selectedTemplate: '',
-        showTemplateModal: false,
-        nieuweTemplateNaam: '',
         // Auto-save
         hasUnsavedChanges: false,
         autoSaving: false,
         lastSavedNotities: '',
-        // Save as modal
-        showSaveAsModal: false,
+        // Save modal
+        showSaveModal: false,
         saveAsNaam: '',
         // Feedback bar
         showFeedbackBar: false,
@@ -883,91 +826,12 @@ function sprekerInterface() {
             this.selectedTemplate = '';
         },
 
-        saveAsTemplate() {
-            const naam = this.nieuweTemplateNaam.trim();
-            if (!naam || !this.notities.trim()) return;
-
-            // Check of naam al bestaat
-            const exists = this.templates.findIndex(t => t.naam.toLowerCase() === naam.toLowerCase());
-            if (exists >= 0) {
-                if (!confirm(`Template "${naam}" bestaat al. Overschrijven?`)) return;
-                this.templates[exists].tekst = this.notities;
-            } else {
-                this.templates.push({ naam, tekst: this.notities });
-            }
-
-            this.saveTemplates();
-            this.nieuweTemplateNaam = '';
-            this.showFeedback(`Template "${naam}" opgeslagen!`);
-        },
-
         deleteTemplate(index) {
             const template = this.templates[index];
             if (!confirm(`Template "${template.naam}" verwijderen?`)) return;
             this.templates.splice(index, 1);
             this.saveTemplates();
-        },
-
-        addDefaultTemplate() {
-            const defaultTemplates = [
-                {
-                    naam: 'Welkomstwoord',
-                    tekst: `WELKOMSTWOORD
-- Welkom bij het judotoernooi!
-- Namens de organisatie wensen wij iedereen een sportieve dag
-- Dank aan alle vrijwilligers en scheidsrechters
-
-HUISREGELS
-- Roken en vapen is verboden in het hele gebouw
-- Alleen judoka's en coaches op de wedstrijdvloer
-
-PRAKTISCH
-- Kantine open tot 17:00
-- Toiletten bij de ingang en achter de kantine
-- EHBO-post naast de jury tafel
-- Gevonden voorwerpen bij de inschrijftafel`
-                },
-                {
-                    naam: 'Prijsuitreiking',
-                    tekst: `PRIJSUITREIKING
-- Direct na de laatste wedstrijd per categorie
-- Judoka's verzamelen bij de podiummat
-- Ouders welkom om foto's te maken
-- Winnaars worden per poule opgeroepen
-
-MEDAILLES
-- Goud: 1e plaats
-- Zilver: 2e plaats
-- Brons: 3e plaats(en)`
-                },
-                {
-                    naam: 'Afsluitend woord',
-                    tekst: `AFSLUITING
-- Dank aan alle deelnemers voor het sportieve gedrag
-- Dank aan de scheidsrechters en vrijwilligers
-- Tot volgend jaar!
-
-OPRUIMEN
-- Graag afval in de prullenbakken
-- Niet vergeten: judopakken, bidons, tassen
-- Gevonden voorwerpen bij de organisatie`
-                }
-            ];
-
-            let added = 0;
-            defaultTemplates.forEach(dt => {
-                if (!this.templates.find(t => t.naam === dt.naam)) {
-                    this.templates.push(dt);
-                    added++;
-                }
-            });
-
-            this.saveTemplates();
-            if (added > 0) {
-                this.showFeedback(`${added} standaard template(s) toegevoegd!`);
-            } else {
-                this.showFeedback('Alle standaard templates bestaan al.');
-            }
+            this.showFeedback(`Template "${template.naam}" verwijderd`);
         },
 
         // Auto-save functie (wordt aangeroepen na 2 sec inactiviteit)
@@ -1002,8 +866,24 @@ OPRUIMEN
             }
         },
 
+        // Klik op bewaarknop: toon dialoog als tekst gewijzigd
+        handleSaveClick() {
+            if (this.hasUnsavedChanges || this.notities !== this.lastSavedNotities) {
+                this.saveAsNaam = '';
+                this.showSaveModal = true;
+            } else {
+                this.showFeedback('Geen wijzigingen om op te slaan');
+            }
+        },
+
+        // Alleen notities opslaan (zonder template)
+        async justSaveNotities() {
+            await this.saveNotities();
+            this.showSaveModal = false;
+        },
+
         // Opslaan als nieuwe template
-        doSaveAsTemplate() {
+        async saveAsNewTemplate() {
             const naam = this.saveAsNaam.trim();
             if (!naam || !this.notities.trim()) return;
 
@@ -1017,19 +897,19 @@ OPRUIMEN
             }
 
             this.saveTemplates();
+            await this.saveNotities();
             this.saveAsNaam = '';
-            this.showSaveAsModal = false;
+            this.showSaveModal = false;
             this.showFeedback(`Template "${naam}" opgeslagen!`);
         },
 
         // Overschrijf bestaande template
-        overschrijfTemplate(index) {
+        async overschrijfTemplate(index) {
             const template = this.templates[index];
-            if (!confirm(`Template "${template.naam}" overschrijven met huidige tekst?`)) return;
-
             this.templates[index].tekst = this.notities;
             this.saveTemplates();
-            this.showSaveAsModal = false;
+            await this.saveNotities();
+            this.showSaveModal = false;
             this.showFeedback(`Template "${template.naam}" bijgewerkt!`);
         }
     }
