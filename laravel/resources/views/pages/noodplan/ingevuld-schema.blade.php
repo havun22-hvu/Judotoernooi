@@ -249,7 +249,12 @@ function abbreviateClubName($name, $maxLength = 15) {
     $aantalWedstrijden = count($schema);
     // Landscape als meer dan 6 wedstrijden (kolommen)
     $isLandscape = $aantalWedstrijden > 6;
-    $judokas = $poule->judokas->values();
+    // Filter judoka's: niet afwezig, en bij verplichte weging ook gewogen
+    $judokas = $poule->judokas->filter(function($j) use ($toernooi) {
+        if ($j->aanwezigheid === 'afwezig') return false;
+        if ($toernooi->weging_verplicht && $j->gewicht_gewogen === null) return false;
+        return true;
+    })->values();
 
     // Maak wedstrijd lookup op positie als we scores tonen
     $wedstrijdByPositie = [];
