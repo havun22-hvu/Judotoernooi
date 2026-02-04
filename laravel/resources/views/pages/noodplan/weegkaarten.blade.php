@@ -13,15 +13,15 @@
         background: white;
     }
     .weegkaart-header {
-        background: #f5f5f5;
-        color: #111;
+        background: #dbeafe;
+        color: #1e3a8a;
         padding: 5px 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-size: 10px;
         font-weight: 600;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid #93c5fd;
     }
     .weegkaart-naam {
         background: white;
@@ -68,13 +68,21 @@
         align-items: center;
     }
     .weegkaart-blok .mat-badge {
-        background: white;
         color: #111;
         padding: 2px 8px;
-        border: 2px solid #111;
+        border: 2px solid currentColor;
         font-weight: 900;
         font-size: 11px;
     }
+    /* Mat kleuren - lichte achtergronden voor print contrast */
+    .mat-rood { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+    .mat-blauw { background: #dbeafe; border-color: #2563eb; color: #1e40af; }
+    .mat-groen { background: #dcfce7; border-color: #16a34a; color: #166534; }
+    .mat-geel { background: #fef9c3; border-color: #ca8a04; color: #854d0e; }
+    .mat-oranje { background: #ffedd5; border-color: #ea580c; color: #9a3412; }
+    .mat-paars { background: #f3e8ff; border-color: #9333ea; color: #6b21a8; }
+    .mat-roze { background: #fce7f3; border-color: #db2777; color: #9d174d; }
+    .mat-default { background: #f3f4f6; border-color: #374151; color: #111; }
     .weegkaart-blok .blok-badge {
         background: white;
         color: #111;
@@ -136,6 +144,9 @@
         .band-wit, .band-geel, .band-oranje, .band-groen, .band-blauw, .band-bruin, .band-zwart, .band-default {
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
+        .mat-rood, .mat-blauw, .mat-groen, .mat-geel, .mat-oranje, .mat-paars, .mat-roze, .mat-default {
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
     }
 </style>
 @endpush
@@ -167,6 +178,18 @@
         } else {
             $gewichtDisplay = $judoka->gewichtsklasse ? '-' . $judoka->gewichtsklasse . ' kg' : '?';
         }
+
+        // Mat kleur class (lichte versies voor print)
+        $matKleur = match(strtolower($mat?->kleur ?? '')) {
+            'rood' => 'mat-rood',
+            'blauw' => 'mat-blauw',
+            'groen' => 'mat-groen',
+            'geel' => 'mat-geel',
+            'oranje' => 'mat-oranje',
+            'paars' => 'mat-paars',
+            'roze' => 'mat-roze',
+            default => 'mat-default',
+        };
     @endphp
     <div class="weegkaart no-break">
         {{-- Header met toernooi naam + datum --}}
@@ -209,7 +232,7 @@
                 <span class="blok-badge">{{ $blok->naam ?? 'Blok ' . $blok->nummer }}</span>
                 @endif
                 @if($mat)
-                <span class="mat-badge">Mat {{ $mat->nummer }}</span>
+                <span class="mat-badge {{ $matKleur }}">Mat {{ $mat->nummer }}</span>
                 @endif
             </div>
             <div class="tijden">
