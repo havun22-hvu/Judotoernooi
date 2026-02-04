@@ -382,8 +382,8 @@
                         {!! QrCode::size(160)->generate(url()->current()) !!}
                     </div>
                     <div class="text-center sm:text-left">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Scan voor live updates</h3>
-                        <p class="text-gray-600 text-sm">Scan deze QR code met je telefoon voor live poule-informatie en om je favoriete judoka's te volgen.</p>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">📱 Deel met anderen</h3>
+                        <p class="text-gray-600 text-sm">Laat mensen om je heen deze QR code scannen zodat zij ook live kunnen meekijken. Ze krijgen dezelfde app op hun telefoon.</p>
                     </div>
                 </div>
             </div>
