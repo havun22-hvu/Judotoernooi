@@ -866,11 +866,18 @@ function sprekerInterface() {
             }
         },
 
-        // Klik op bewaarknop: toon dialoog als tekst gewijzigd
+        // Klik op bewaarknop: toon dialoog als tekst gewijzigd OF nog geen template
         handleSaveClick() {
-            if (this.hasUnsavedChanges || this.notities !== this.lastSavedNotities) {
+            const hasChanges = this.hasUnsavedChanges || this.notities !== this.lastSavedNotities;
+            const hasContent = this.notities.trim().length > 0;
+            const noTemplatesYet = this.templates.length === 0;
+
+            // Toon dialoog als: er wijzigingen zijn, OF er is content maar nog geen templates
+            if (hasChanges || (hasContent && noTemplatesYet)) {
                 this.saveAsNaam = '';
                 this.showSaveModal = true;
+            } else if (!hasContent) {
+                this.showFeedback('Typ eerst iets om op te slaan');
             } else {
                 this.showFeedback('Geen wijzigingen om op te slaan');
             }
