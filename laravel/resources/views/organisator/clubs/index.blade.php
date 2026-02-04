@@ -103,7 +103,7 @@
                                     <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ $club->judokas_count }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center justify-end gap-3">
+                                    <div class="flex items-center justify-end gap-2">
                                         <button @click="openEdit({{ $club->id }}, {{ json_encode([
                                             'naam' => $club->naam,
                                             'plaats' => $club->plaats,
@@ -111,25 +111,20 @@
                                             'email' => $club->email,
                                             'telefoon' => $club->telefoon,
                                             'website' => $club->website,
-                                        ]) }})" class="text-blue-600 hover:text-blue-800 text-sm">
+                                        ]) }})" class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium px-3 py-1 rounded">
                                             Bewerken
                                         </button>
-                                        <div class="relative" x-data="{ open: false }">
-                                            <button @click="open = !open" class="text-gray-400 hover:text-gray-600 px-1">⋮</button>
-                                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[140px]">
-                                                <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST"
-                                                      onsubmit="return confirm('{{ $club->judokas_count > 0 ? "LET OP: Deze club heeft {$club->judokas_count} judoka(s). Deze worden ook verwijderd! Doorgaan?" : "Weet je zeker dat je deze club wilt verwijderen?" }}')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    @if(request('back'))
-                                                        <input type="hidden" name="back" value="{{ request('back') }}">
-                                                    @endif
-                                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                                                        Verwijderen
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
+                                        <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST"
+                                              onsubmit="return confirmDelete({{ $club->judokas_count }}, '{{ addslashes($club->naam) }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            @if(request('back'))
+                                                <input type="hidden" name="back" value="{{ request('back') }}">
+                                            @endif
+                                            <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-3 py-1 rounded">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -221,6 +216,17 @@ function clubsPage() {
             this.editModal = true;
         }
     }
+}
+
+function confirmDelete(judokasCount, clubNaam) {
+    // Stap 1: Waarschuwing voor judoka's (als die er zijn)
+    if (judokasCount > 0) {
+        if (!confirm(`LET OP: "${clubNaam}" heeft ${judokasCount} judoka(s).\n\nDeze worden ook verwijderd!\n\nDoorgaan?`)) {
+            return false;
+        }
+    }
+    // Stap 2: Bevestiging voor verwijderen club
+    return confirm(`Weet je zeker dat je "${clubNaam}" wilt verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
 }
 </script>
 @endsection
