@@ -559,32 +559,39 @@
                                         // Check of judoka past in DEZE POULE's gewichtsklasse (niet judoka's eigen klasse!)
                                         // Gebruik poule->gewichtsklasse voor de check, want judoka kan verplaatst zijn
                                         $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
-                                        $heeftProbleem = $isAfwijkendGewicht;
+                                        // Verdacht gewicht: < 15 kg OF > 5 kg afwijking van opgegeven gewicht
+                                        $isVerdachtGewicht = $isGewogen && (
+                                            $judoka->gewicht_gewogen < 15 ||
+                                            ($judoka->gewicht && abs($judoka->gewicht_gewogen - $judoka->gewicht) > 5)
+                                        );
+                                        $heeftProbleem = $isAfwijkendGewicht || $isVerdachtGewicht;
                                     @endphp
                                     @if($isAfwezig)
                                         @continue
                                     @endif
                                     <div
-                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move group {{ $heeftProbleem ? 'bg-orange-50 border-l-4 border-orange-400' : '' }}"
+                                        class="px-2 py-1.5 text-sm judoka-item hover:bg-blue-50 cursor-move group {{ $isVerdachtGewicht ? 'bg-red-50 border-l-4 border-red-500' : ($heeftProbleem ? 'bg-orange-50 border-l-4 border-orange-400' : '') }}"
                                         data-judoka-id="{{ $judoka->id }}"
                                         draggable="true"
                                     >
                                         <div class="flex justify-between items-start">
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
-                                                {{-- Status marker: green = gewogen, orange = probleem --}}
-                                                @if($heeftProbleem)
+                                                {{-- Status marker: red = verdacht, orange = afwijkend, green = gewogen --}}
+                                                @if($isVerdachtGewicht)
+                                                    <span class="text-red-600 text-xs flex-shrink-0" title="Verdacht gewicht! {{ $judoka->gewicht_gewogen < 15 ? 'Te laag' : 'Grote afwijking van opgave' }}">🚨</span>
+                                                @elseif($heeftProbleem)
                                                     <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
                                                 @elseif($isGewogen)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
                                                 <div class="min-w-0">
-                                                    <div class="font-medium {{ $heeftProbleem ? 'text-orange-800' : 'text-gray-800' }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
+                                                    <div class="font-medium {{ $isVerdachtGewicht ? 'text-red-800' : ($heeftProbleem ? 'text-orange-800' : 'text-gray-800') }} truncate">{{ $judoka->naam }} <span class="text-gray-400 font-normal">({{ $judoka->leeftijd }}j)</span></div>
                                                     <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                                                 </div>
                                             </div>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 <div class="text-right text-xs">
-                                                    <div class="{{ $heeftProbleem ? 'text-orange-600 font-bold' : 'text-gray-600' }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
+                                                    <div class="{{ $isVerdachtGewicht ? 'text-red-600 font-bold' : ($heeftProbleem ? 'text-orange-600 font-bold' : 'text-gray-600') }} font-medium">{{ $judoka->gewicht_gewogen ? $judoka->gewicht_gewogen . ' kg' : ($judoka->gewicht ? $judoka->gewicht . ' kg' : '-') }}</div>
                                                     <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                                                 </div>
                                                 <button
