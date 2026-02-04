@@ -288,71 +288,68 @@ class Poule extends Model
     }
 
     /**
-     * Get display titel met dynamische gewichtsrange
-     * Format: "Label / leeftijd / gewicht" voor alle poules
+     * Get display titel voor poule
+     *
+     * Opbouw: Label / Leeftijd / Gewicht
+     * - Label: alleen als toon_label_in_titel = true in config
+     * - Leeftijd: alleen als max_leeftijd_verschil > 0
+     * - Gewicht: gewichtsklasse (bij kg.verschil=0) OF gewichtsrange (bij kg.verschil>0)
      */
     public function getDisplayTitel(): string
     {
-        $titel = $this->titel ?? '';
-
-        // Extract label from titel or leeftijdsklasse (e.g. "Mini's", "Jeugd")
-        $label = null;
-        $cleanTitel = preg_replace('/\s*\/\s*/', ' ', $titel);
-        $cleanTitel = preg_replace('/\s*[\d.]+-[\d.]+kg\s*/i', ' ', $cleanTitel);
-        $cleanTitel = preg_replace('/\s*\d+(-\d+)?j\s*/', ' ', $cleanTitel); // Match both "10j" and "10-11j"
-        $cleanTitel = preg_replace('/\s*Poule\s+\d+\s*/i', ' ', $cleanTitel);
-        $cleanTitel = trim(preg_replace('/\s+/', ' ', $cleanTitel));
-
-        if (!empty($cleanTitel)) {
-            $label = $cleanTitel;
-        } elseif ($this->leeftijdsklasse) {
-            $label = trim(preg_replace('/\s*\d+(-\d+)?j\s*/', '', $this->leeftijdsklasse)); // Match both "10j" and "10-11j"
-        }
-
-        // Get category config for display rules
         $config = $this->getCategorieConfig();
+        $toonLabel = (bool) ($config['toon_label_in_titel'] ?? false);
         $maxLeeftijdVerschil = (int) ($config['max_leeftijd_verschil'] ?? 0);
         $maxKgVerschil = (float) ($config['max_kg_verschil'] ?? 0);
 
-        // Leeftijd: alleen tonen als max_leeftijd_verschil > 0
-        $leeftijd = null;
+        $parts = [];
+
+        // 1. Label (alleen als aangevinkt in config)
+        if ($toonLabel) {
+            $label = $config['label'] ?? $this->leeftijdsklasse ?? '';
+            // Strip eventuele leeftijd/gewicht uit label
+            $label = trim(preg_replace('/\s*\d+(-\d+)?j\s*/', '', $label));
+            $label = trim(preg_replace('/\s*-?\d+kg\s*/i', '', $label));
+            if ($label) {
+                $parts[] = $label;
+            }
+        }
+
+        // 2. Leeftijd range (alleen als max_leeftijd_verschil > 0)
         if ($maxLeeftijdVerschil > 0) {
             $leeftijdRange = $this->getLeeftijdsRange();
             if ($leeftijdRange) {
                 if ($leeftijdRange['min_jaar'] === $leeftijdRange['max_jaar']) {
-                    $leeftijd = $leeftijdRange['min_jaar'] . 'j';
+                    $parts[] = $leeftijdRange['min_jaar'] . 'j';
                 } else {
-                    $leeftijd = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
+                    $parts[] = $leeftijdRange['min_jaar'] . '-' . $leeftijdRange['max_jaar'] . 'j';
                 }
             }
         }
 
-        // Gewicht: live berekenen voor dynamische poules (max_kg_verschil > 0)
-        $gewicht = null;
+        // 3. Gewicht
         if ($maxKgVerschil > 0) {
+            // Variabel: bereken range uit judoka's
             $gewichtRange = $this->getGewichtsRange();
             if ($gewichtRange) {
-                $gewicht = round($gewichtRange['min_kg'], 1) . '-' . round($gewichtRange['max_kg'], 1) . 'kg';
+                $parts[] = round($gewichtRange['min_kg'], 1) . '-' . round($gewichtRange['max_kg'], 1) . 'kg';
             }
-        }
-
-        // Fallback: gebruik opgeslagen gewichtsklasse (vaste klassen)
-        if (!$gewicht && $this->gewichtsklasse) {
+        } elseif ($this->gewichtsklasse) {
+            // Vaste klasse: gebruik opgeslagen gewichtsklasse
             $gewicht = $this->gewichtsklasse;
-            // Voeg 'kg' toe als het nog niet eindigt op 'kg'
             if (!str_ends_with(strtolower($gewicht), 'kg')) {
                 $gewicht .= 'kg';
             }
+            $parts[] = $gewicht;
         }
 
-        // Build formatted title: Label / Leeftijd / Gewicht
-        $parts = array_filter([$label, $leeftijd, $gewicht]);
-        if (count($parts) >= 2) {
+        // Combineer met " / " separator
+        if (!empty($parts)) {
             return implode(' / ', $parts);
         }
 
-        // Fallback
-        return $titel ?: trim($this->leeftijdsklasse . ' ' . $this->gewichtsklasse);
+        // Fallback: gebruik titel of leeftijdsklasse
+        return $this->titel ?: $this->leeftijdsklasse ?: '';
     }
 
     /**
