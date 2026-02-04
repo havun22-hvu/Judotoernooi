@@ -948,7 +948,7 @@ class BlokMatVerdelingService
                             return [
                                 'id' => $p->id,
                                 'nummer' => $p->nummer,
-                                'titel' => $p->titel,
+                                'titel' => $p->getDisplayTitel(),
                                 'leeftijdsklasse' => $p->leeftijdsklasse,
                                 'gewichtsklasse' => $p->gewichtsklasse,
                                 'type' => 'kruisfinale',
@@ -964,7 +964,7 @@ class BlokMatVerdelingService
                         return [
                             'id' => $p->id,
                             'nummer' => $p->nummer,
-                            'titel' => $p->titel,
+                            'titel' => $p->getDisplayTitel(),
                             'leeftijdsklasse' => $p->leeftijdsklasse,
                             'gewichtsklasse' => $p->gewichtsklasse,
                             'type' => $p->type,
