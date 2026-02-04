@@ -79,119 +79,119 @@
             </div>
         @else
             <div class="overflow-x-auto">
-                <table class="w-full">
+                <table class="w-full table-fixed">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plaats</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefoon</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Website</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judoka's</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
+                            <th class="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
+                            <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plaats</th>
+                            <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                            <th class="w-[18%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                            <th class="w-[12%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefoon</th>
+                            <th class="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Website</th>
+                            <th class="w-[8%] px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judoka's</th>
+                            <th class="w-[12%] px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @foreach($clubs as $club)
                             <tr x-data="{ editing: false }">
-                                {{-- View Mode --}}
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 font-medium">{{ $club->naam }}</td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-gray-600">{{ $club->plaats ?? '-' }}</td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-gray-600">{{ $club->contact_naam ?? '-' }}</td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-gray-600">{{ $club->email ?? '-' }}</td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-gray-600">{{ $club->telefoon ?? '-' }}</td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-gray-600">
-                                        @if($club->website)
-                                            <a href="{{ $club->website }}" target="_blank" class="text-blue-600 hover:underline">{{ Str::limit($club->website, 25) }}</a>
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4">
-                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                            {{ $club->judokas_count }}
-                                        </span>
-                                    </td>
-                                </template>
-                                <template x-if="!editing">
-                                    <td class="px-6 py-4 text-right space-x-2">
-                                        <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">
-                                            Bewerken
-                                        </button>
-                                        @if($club->judokas_count === 0)
-                                            <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST" class="inline"
-                                                  onsubmit="return confirm('Weet je zeker dat je deze club wilt verwijderen?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                @if(request('back'))
-                                                    <input type="hidden" name="back" value="{{ request('back') }}">
-                                                @endif
-                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
-                                                    Verwijderen
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </template>
-
-                                {{-- Edit Mode (zelfde volgorde als toevoegen) --}}
-                                <template x-if="editing">
-                                    <td colspan="8" class="px-6 py-4">
-                                        <form action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                                            @csrf
-                                            @method('PUT')
-                                            @if(request('back'))
-                                                <input type="hidden" name="back" value="{{ request('back') }}">
+                                {{-- Naam --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="font-medium truncate block">{{ $club->naam }}</span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="text" name="naam" value="{{ $club->naam }}" required class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Plaats --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="text-gray-600 truncate block">{{ $club->plaats ?? '-' }}</span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="text" name="plaats" value="{{ $club->plaats }}" class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Contact --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="text-gray-600 truncate block">{{ $club->contact_naam ?? '-' }}</span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="text" name="contact_naam" value="{{ $club->contact_naam }}" class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Email --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="text-gray-600 truncate block">{{ $club->email ?? '-' }}</span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="email" name="email" value="{{ $club->email }}" class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Telefoon --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="text-gray-600 truncate block">{{ $club->telefoon ?? '-' }}</span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="text" name="telefoon" value="{{ $club->telefoon }}" class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Website --}}
+                                <td class="px-4 py-3">
+                                    <template x-if="!editing">
+                                        <span class="truncate block">
+                                            @if($club->website)
+                                                <a href="{{ $club->website }}" target="_blank" class="text-blue-600 hover:underline">{{ Str::limit($club->website, 20) }}</a>
+                                            @else
+                                                <span class="text-gray-600">-</span>
                                             @endif
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Naam *</label>
-                                                <input type="text" name="naam" value="{{ $club->naam }}" required class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Email</label>
-                                                <input type="email" name="email" value="{{ $club->email }}" class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Plaats</label>
-                                                <input type="text" name="plaats" value="{{ $club->plaats }}" class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Contactpersoon</label>
-                                                <input type="text" name="contact_naam" value="{{ $club->contact_naam }}" class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Telefoon</label>
-                                                <input type="text" name="telefoon" value="{{ $club->telefoon }}" class="w-full border rounded px-2 py-1 text-sm">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-500 mb-1">Website</label>
-                                                <input type="url" name="website" value="{{ $club->website }}" class="w-full border rounded px-2 py-1 text-sm" placeholder="https://budoschool.nl">
-                                            </div>
-                                            <div class="md:col-span-3 flex justify-end space-x-2">
-                                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded">
-                                                    Opslaan
-                                                </button>
-                                                <button type="button" @click="editing = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm px-3 py-1 rounded">
-                                                    Annuleren
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </td>
-                                </template>
+                                        </span>
+                                    </template>
+                                    <template x-if="editing">
+                                        <input form="edit-club-{{ $club->id }}" type="url" name="website" value="{{ $club->website }}" class="w-full border rounded px-2 py-1 text-sm">
+                                    </template>
+                                </td>
+                                {{-- Judoka's --}}
+                                <td class="px-4 py-3 text-center">
+                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{{ $club->judokas_count }}</span>
+                                </td>
+                                {{-- Acties --}}
+                                <td class="px-4 py-3 text-right">
+                                    <template x-if="!editing">
+                                        <div class="space-x-2">
+                                            <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">Bewerken</button>
+                                            @if($club->judokas_count === 0)
+                                                <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST" class="inline"
+                                                      onsubmit="return confirm('Weet je zeker dat je deze club wilt verwijderen?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    @if(request('back'))
+                                                        <input type="hidden" name="back" value="{{ request('back') }}">
+                                                    @endif
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Verwijderen</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </template>
+                                    <template x-if="editing">
+                                        <div class="space-x-2">
+                                            <button type="submit" form="edit-club-{{ $club->id }}" class="bg-green-600 hover:bg-green-700 text-white text-sm px-3 py-1 rounded">Opslaan</button>
+                                            <button type="button" @click="editing = false" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm px-3 py-1 rounded">Annuleren</button>
+                                        </div>
+                                    </template>
+                                    {{-- Hidden form for edit --}}
+                                    <form id="edit-club-{{ $club->id }}" action="{{ route('organisator.clubs.update', [$organisator, $club]) }}" method="POST" class="hidden">
+                                        @csrf
+                                        @method('PUT')
+                                        @if(request('back'))
+                                            <input type="hidden" name="back" value="{{ request('back') }}">
+                                        @endif
+                                    </form>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
