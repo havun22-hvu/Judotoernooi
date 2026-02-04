@@ -1019,10 +1019,24 @@ De Spreker Interface heeft **2 versies** afhankelijk van wie het opent:
 | **Vrijwilliger** | Geen | Standalone header + klok, auto-refresh |
 
 ### Functionaliteit (beide versies)
+
+**Tab 1: Uitslagen**
 - Wachtrij afgeronde poules
 - Eindstand met 1e, 2e, 3e plaats
 - Prijsuitreiking markeren
-- Geschiedenis (localStorage)
+
+**Tab 2: Oproepen**
+- Geschiedenis van afgeroepen poules (localStorage)
+
+**Tab 3: Notities (Spiekbriefje)**
+- Schermvullende textarea voor welkomstteksten, aankondigingen
+- **Word-wrap**: Lange woorden breken automatisch af (geen tekst buiten beeld)
+- **Zoom**: +/- knoppen, lettergrootte 14-48px
+- **Templates**: Opgeslagen per organisator (niet per toernooi!) in localStorage
+- **Auto-save**: Elke 2 seconden bij typen
+- **Fixed toolbar**: Altijd zichtbaar onderaan scherm
+
+**Algemeen:**
 - Auto-refresh elke 10 seconden
 - **Real-time updates:** Auto-reload bij `mat-poule-klaar` event (via Reverb)
 
