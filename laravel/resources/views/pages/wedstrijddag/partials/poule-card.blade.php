@@ -37,8 +37,9 @@
 
     // Collect afwezige judokas for info tooltip
     $afwezigeJudokas = $poule->judokas->filter(fn($j) => !$j->isActief($wegingGesloten));
+    // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
     $overpoulers = $poule->judokas->filter(fn($j) =>
-        $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie) && $j->isActief($wegingGesloten)
+        $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse) && $j->isActief($wegingGesloten)
     );
     $verwijderdeTekst = collect();
     foreach ($afwezigeJudokas as $j) {
@@ -108,8 +109,8 @@
         @php
             $isGewogen = $judoka->gewicht_gewogen !== null;
             $isAfwezig = !$judoka->isActief($wegingGesloten);
-            // Gebruik centrale methode voor gewicht check (werkt voor vaste klassen)
-            $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie);
+            // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
+            $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
             $heeftProbleem = $isAfwijkendGewicht;
         @endphp
         @if($isAfwezig)
