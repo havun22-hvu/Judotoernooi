@@ -16,22 +16,23 @@
 
 ## Sessie: 4 februari 2026
 
-### Fix: Kyu notatie PERMANENT verwijderd (4e keer!)
-- **Type:** Bug fix + cleanup + documentatie
+### Refactor: Band enum als enige bron van waarheid
+- **Type:** Refactoring + documentatie
 - **Wat:**
-  - API endpoints gebruikten geen `stripKyu()` → kyu kon nog steeds getoond worden
-  - `labelMetKyu()` en `kyu()` methodes verwijderd uit Band.php
-  - Nieuwe `toKleur()` methode: converteert elk formaat naar kleur naam
-  - Nieuwe `niveau()` methode: sortering beginner→expert (0=wit, 6=zwart)
-  - Import fix: `$band->name` i.p.v. `$band->value` (was bug: gaf nummer i.p.v. kleur)
-  - CODE-STANDAARDEN.md sectie 13 toegevoegd: band regels
-- **Bestanden:**
-  - `JudokaController.php` - stripKyu toegevoegd
-  - `PubliekController.php` - stripKyu + Band import
-  - `Band.php` - toKleur(), niveau(), documentatie
-  - `ImportService.php` - parseBand fix + getBandNiveau via enum
-  - `CODE-STANDAARDEN.md` - sectie 13 band regels
+  - Alle band logica geconsolideerd in `Band.php` enum
+  - `BandHelper.php` deprecated (wrapper voor backwards compatibility)
+  - Nieuwe methodes: `toKleur()`, `niveau()`, `sortNiveau()`, `getSortNiveau()`, `pastInFilter()`
+  - Alle views/controllers gebruiken nu `Band::toKleur()` i.p.v. `stripKyu()`
+  - CODE-STANDAARDEN.md sectie 13 volledig gedocumenteerd
+- **Volgorde:**
+  ```
+  wit → geel → oranje → groen → blauw → bruin → zwart
+  niveau():      0      1       2        3        4        5       6
+  sortNiveau():  1      2       3        4        5        6       7
+  value:         6      5       4        3        2        1       0
+  ```
 - **Regel:** Band = alleen kleur (wit, geel, oranje, etc.) - NOOIT kyu
+- **→ Gedocumenteerd in:** `CODE-STANDAARDEN.md §13`
 
 ---
 

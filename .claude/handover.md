@@ -19,7 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
-| **4 feb 2026** | Production deploy, Staging tests, Bug fixes | smallwork.md |
+| **4 feb 2026** | Band/kyu cleanup, Band enum consolidatie | smallwork.md, CODE-STANDAARDEN.md §13 |
 | 3 feb 2026 | Real-time mat updates via Reverb | Zie `CHAT.md` sectie 2 |
 | 3 feb 2026 | Staging testing, Email log, QR fix | smallwork.md |
 | 2 feb 2026 | 10+ Production Ready | `.claude/handover/2026-02-02-10plus-production.md` |
