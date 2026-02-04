@@ -129,7 +129,7 @@ class RoleToegang extends Controller
             fn ($a, $b) => $a->nummer <=> $b->nummer,
         ]);
 
-        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+        $poulesPerKlasse = $poules->groupBy(fn($p) => $p->categorie_key ?: $p->leeftijdsklasse);
 
         return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse'));
     }
@@ -253,7 +253,7 @@ class RoleToegang extends Controller
             fn ($a, $b) => $a->nummer <=> $b->nummer,
         ]);
 
-        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+        $poulesPerKlasse = $poules->groupBy(fn($p) => $p->categorie_key ?: $p->leeftijdsklasse);
 
         return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse', 'toegang'));
     }
