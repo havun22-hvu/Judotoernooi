@@ -39,7 +39,7 @@
     $afwezigeJudokas = $poule->judokas->filter(fn($j) => !$j->isActief($wegingGesloten));
     // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
     $overpoulers = $poule->judokas->filter(fn($j) =>
-        $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse) && $j->isActief($wegingGesloten)
+        $j->gewicht_gewogen > 0 && !$j->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse) && $j->isActief($wegingGesloten)
     );
     $verwijderdeTekst = collect();
     foreach ($afwezigeJudokas as $j) {

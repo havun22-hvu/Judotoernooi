@@ -1063,7 +1063,7 @@ class PouleController extends Controller
 
         // Gewichten: gewogen > ingeschreven > gewichtsklasse
         $gewichten = $judokas->map(function($j) {
-            if ($j->gewicht_gewogen !== null) return $j->gewicht_gewogen;
+            if ($j->gewicht_gewogen > 0) return $j->gewicht_gewogen;
             if ($j->gewicht !== null) return $j->gewicht;
             // Gewichtsklasse is bijv. "-38" of "+73" - extract getal
             if ($j->gewichtsklasse && preg_match('/(\d+)/', $j->gewichtsklasse, $m)) {

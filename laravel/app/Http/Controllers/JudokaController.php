@@ -518,7 +518,7 @@ class JudokaController extends Controller
                 'gewichtsklasse' => $j->gewichtsklasse,
                 'band' => Band::toKleur($j->band) ?: null,
                 'aanwezig' => $j->isAanwezig(),
-                'gewogen' => $j->gewicht_gewogen !== null,
+                'gewogen' => $j->gewicht_gewogen > 0,
                 'gewicht_gewogen' => $j->gewicht_gewogen,
                 'blok' => $j->poules->first()?->blok?->nummer,
                 'aantal_wegingen' => $j->wegingen()->count(),

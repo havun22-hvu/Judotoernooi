@@ -745,7 +745,7 @@ class BlokController extends Controller
                 // POULE: Calculate WP and JP from wedstrijden + barrage for each judoka
                 // Filter out absent judokas (not weighed or marked afwezig)
                 $activeJudokas = $poule->judokas->filter(function ($judoka) {
-                    return $judoka->gewicht_gewogen !== null && $judoka->aanwezigheid !== 'afwezig';
+                    return $judoka->gewicht_gewogen > 0 && $judoka->aanwezigheid !== 'afwezig';
                 });
 
                 $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage) {
@@ -883,7 +883,7 @@ class BlokController extends Controller
     {
         // Filter out absent judokas (not weighed or marked afwezig)
         $activeJudokas = $poule->judokas->filter(function ($judoka) {
-            return $judoka->gewicht_gewogen !== null && $judoka->aanwezigheid !== 'afwezig';
+            return $judoka->gewicht_gewogen > 0 && $judoka->aanwezigheid !== 'afwezig';
         });
 
         $standings = $activeJudokas->map(function ($judoka) use ($poule) {

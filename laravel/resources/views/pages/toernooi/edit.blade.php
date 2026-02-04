@@ -2583,18 +2583,8 @@
         </div>
 
         <!-- IP Adressen configuratie -->
-        <div class="mb-6">
+        <div class="mb-6" x-data="{ showHelp: false }">
             <h3 class="font-bold text-gray-800 mb-3">IP-adressen configureren</h3>
-
-            <!-- Uitleg IP vinden -->
-            <div class="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
-                <p class="text-sm text-blue-800 font-medium mb-2">📍 Hoe vind je het IP-adres van een laptop?</p>
-                <div class="text-sm text-blue-700 space-y-1">
-                    <p><strong>Windows:</strong> Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"</p>
-                    <p><strong>Of:</strong> Instellingen → Netwerk → WiFi → Hardware-eigenschappen</p>
-                    <p class="text-xs text-blue-600 mt-2">Het IP begint meestal met 192.168.x.x (lokaal netwerk)</p>
-                </div>
-            </div>
 
             <div class="grid md:grid-cols-3 gap-4">
                 <div>
@@ -2634,7 +2624,22 @@
                     </div>
                 </div>
             </div>
-            <p class="text-xs text-gray-500 mt-2">💡 Tip: Noteer deze IP's ook op papier voor noodgevallen</p>
+            <div class="flex items-center gap-4 mt-2">
+                <p class="text-xs text-gray-500">💡 Tip: Noteer deze IP's ook op papier voor noodgevallen</p>
+                <button type="button" @click="showHelp = !showHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
+                    📍 Hoe vind ik mijn IP?
+                </button>
+            </div>
+
+            <!-- Uitleg IP vinden (inklapbaar) -->
+            <div x-show="showHelp" x-collapse class="bg-blue-50 border border-blue-200 rounded p-4 mt-3">
+                <p class="text-sm text-blue-800 font-medium mb-2">Hoe vind je het IP-adres van een laptop?</p>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Windows:</strong> Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"</p>
+                    <p><strong>Of:</strong> Instellingen → Netwerk → WiFi → Hardware-eigenschappen</p>
+                    <p class="text-xs text-blue-600 mt-2">Het IP begint meestal met 192.168.x.x (lokaal netwerk)</p>
+                </div>
+            </div>
         </div>
 
         <!-- Scenario tabel: MET eigen router -->

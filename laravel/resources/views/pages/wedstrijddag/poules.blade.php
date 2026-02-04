@@ -223,7 +223,7 @@
                         // Overgepoulde judoka's (afwijkend gewicht maar wel actief)
                         // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
                         $overpoulersElim = $elimPoule->judokas->filter(fn($j) =>
-                            $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie, $elimPoule->gewichtsklasse) && $j->isActief($wegingGesloten)
+                            $j->gewicht_gewogen > 0 && !$j->isGewichtBinnenKlasse(null, $tolerantie, $elimPoule->gewichtsklasse) && $j->isActief($wegingGesloten)
                         );
                         $aantalActiefElim = $elimPoule->judokas->count() - $afwezigeElim->count();
 
@@ -347,7 +347,7 @@
                         // Collect removed judokas for info tooltip
                         // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
                         $verwijderdeElim = $elimPoule->judokas->filter(function($j) use ($tolerantie, $wegingGesloten, $elimPoule) {
-                            $isAfwijkend = $j->gewicht_gewogen !== null && !$j->isGewichtBinnenKlasse(null, $tolerantie, $elimPoule->gewichtsklasse);
+                            $isAfwijkend = $j->gewicht_gewogen > 0 && !$j->isGewichtBinnenKlasse(null, $tolerantie, $elimPoule->gewichtsklasse);
                             return !$j->isActief($wegingGesloten) || $isAfwijkend;
                         });
 

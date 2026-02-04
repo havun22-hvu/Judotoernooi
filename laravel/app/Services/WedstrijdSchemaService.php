@@ -38,7 +38,7 @@ class WedstrijdSchemaService
                 return false;
             }
             // For fixed categories: skip if weighed and outside weight class
-            if (!$isDynamisch && $judoka->gewicht_gewogen !== null && !$judoka->isGewichtBinnenKlasse(null, $tolerantie)) {
+            if (!$isDynamisch && $judoka->gewicht_gewogen > 0 && !$judoka->isGewichtBinnenKlasse(null, $tolerantie)) {
                 return false;
             }
             return true;
