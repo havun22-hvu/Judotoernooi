@@ -162,17 +162,24 @@
                                 {{-- Acties --}}
                                 <td class="px-4 py-3 text-right">
                                     <template x-if="!editing">
-                                        <div class="space-x-2">
+                                        <div class="flex items-center justify-end gap-3">
                                             <button @click="editing = true" class="text-blue-600 hover:text-blue-800 text-sm">Bewerken</button>
-                                            <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST" class="inline"
-                                                  onsubmit="return confirm('{{ $club->judokas_count > 0 ? "LET OP: Deze club heeft {$club->judokas_count} judoka(s). Deze worden ook verwijderd! Doorgaan?" : "Weet je zeker dat je deze club wilt verwijderen?" }}')">
-                                                @csrf
-                                                @method('DELETE')
-                                                @if(request('back'))
-                                                    <input type="hidden" name="back" value="{{ request('back') }}">
-                                                @endif
-                                                <button type="submit" class="text-red-600 hover:text-red-800 text-sm">Verwijderen</button>
-                                            </form>
+                                            <div class="relative" x-data="{ open: false }">
+                                                <button @click="open = !open" class="text-gray-400 hover:text-gray-600 px-1">⋮</button>
+                                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded shadow-lg z-10 min-w-[140px]">
+                                                    <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST"
+                                                          onsubmit="return confirm('{{ $club->judokas_count > 0 ? "LET OP: Deze club heeft {$club->judokas_count} judoka(s). Deze worden ook verwijderd! Doorgaan?" : "Weet je zeker dat je deze club wilt verwijderen?" }}')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        @if(request('back'))
+                                                            <input type="hidden" name="back" value="{{ request('back') }}">
+                                                        @endif
+                                                        <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                                            Verwijderen
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </div>
                                     </template>
                                     <template x-if="editing">
