@@ -94,6 +94,25 @@ Deze criteria bepalen in WELKE CATEGORIE een judoka komt.
 | `geslacht` | M / V / Gemengd | Moet matchen binnen de leeftijdscategorie |
 | `band_filter` | t/m oranje, vanaf groen | Moet matchen binnen de leeftijdscategorie |
 
+**U-terminologie (JBN standaard):**
+```
+U = Under (jonger dan)
+
+U7  = max_leeftijd 6  (t/m 6 jaar)
+U9  = max_leeftijd 8  (t/m 8 jaar)
+U11 = max_leeftijd 10 (t/m 10 jaar)
+U13 = max_leeftijd 12 (t/m 12 jaar)
+U15 = max_leeftijd 14 (t/m 14 jaar)
+U18 = max_leeftijd 17 (t/m 17 jaar)
+U21 = max_leeftijd 20 (t/m 20 jaar)
+
+Formule: max_leeftijd = U-nummer - 1
+```
+
+**Leeftijd in titel:**
+- `max_leeftijd_verschil > 0` → Titel toont dynamische range (bijv. "7-9j")
+- `max_leeftijd_verschil = 0` → Organisator zet leeftijd in label (bijv. "Dames U15")
+
 ```
 ⚠️ KRITIEK: Doorvallen naar andere leeftijdscategorie is VERBODEN!
 
