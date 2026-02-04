@@ -71,8 +71,8 @@ class PouleController extends Controller
             fn ($a, $b) => $a->nummer <=> $b->nummer,
         ]);
 
-        // Group by leeftijdsklasse (preserving sort order)
-        $poulesPerKlasse = $poules->groupBy('leeftijdsklasse');
+        // Group by categorie_key (stable identifier from config), fallback to leeftijdsklasse
+        $poulesPerKlasse = $poules->groupBy(fn($p) => $p->categorie_key ?: $p->leeftijdsklasse);
 
         return view('pages.poule.index', compact('toernooi', 'poules', 'poulesPerKlasse', 'leeftijdsklasseLabels'));
     }

@@ -253,23 +253,33 @@
 @endif
 </div>
 
-<!-- Per leeftijdsklasse -->
-@forelse($poulesPerKlasse as $leeftijdsklasse => $klassePoules)
+<!-- Per categorie (categorie_key or fallback to leeftijdsklasse) -->
+@forelse($poulesPerKlasse as $categorieKey => $klassePoules)
 @php
-    // Bepaal of deze categorie vaste gewichtsklassen heeft
-    $categorieKey = $toernooi->getCategorieKeyByLabel($leeftijdsklasse);
-    $categorieGewichten = $categorieKey ? ($toernooi->getAlleGewichtsklassen()[$categorieKey]['gewichten'] ?? []) : [];
+    // Haal config op basis van categorie_key (of fallback naar label lookup)
+    $alleConfig = $toernooi->getAlleGewichtsklassen();
+    $categorieConfig = $alleConfig[$categorieKey] ?? null;
+
+    // Als geen directe match, probeer via label lookup
+    if (!$categorieConfig) {
+        $categorieKey = $toernooi->getCategorieKeyByLabel($categorieKey);
+        $categorieConfig = $categorieKey ? ($alleConfig[$categorieKey] ?? null) : null;
+    }
+
+    // Bepaal label en gewichten
+    $categorieLabel = $categorieConfig['label'] ?? $klassePoules->first()?->leeftijdsklasse ?? $categorieKey;
+    $categorieGewichten = $categorieConfig['gewichten'] ?? [];
     $heeftVasteGewichten = !empty($categorieGewichten);
 @endphp
 <div class="mb-8 w-full" x-data="{ open: true }">
     <div class="flex justify-between items-center bg-blue-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="open = !open" class="flex-1 flex justify-between items-center hover:bg-blue-700 -m-3 p-3 rounded-tl-lg">
-            <span class="text-lg font-bold">{{ $leeftijdsklasseLabels[$leeftijdsklasse] ?? $leeftijdsklasse }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
+            <span class="text-lg font-bold">{{ $categorieLabel }} ({{ $klassePoules->count() }} poules, {{ $klassePoules->sum('judokas_count') }} judoka's)</span>
             <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
         </button>
-        <button onclick="openNieuwePouleModal('{{ $categorieKey }}', '{{ $leeftijdsklasse }}', {{ $heeftVasteGewichten ? 'true' : 'false' }})"
+        <button onclick="openNieuwePouleModal('{{ $categorieKey }}', '{{ $categorieLabel }}', {{ $heeftVasteGewichten ? 'true' : 'false' }})"
                 class="ml-3 bg-white text-blue-800 hover:bg-blue-100 text-sm font-bold py-1.5 px-3 rounded">
             + Nieuwe poule
         </button>
