@@ -322,19 +322,19 @@
         ></textarea>
 
         <!-- Fixed werkbalk onderaan scherm -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-300 shadow-lg px-3 py-2 z-50">
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-300 shadow-lg px-4 py-3 z-50">
+            <div class="flex flex-wrap items-center gap-3">
                 <!-- Zoom controls -->
-                <div class="flex items-center gap-1 border-r pr-2 mr-1">
+                <div class="flex items-center gap-2 border-r pr-3 mr-1">
                     <button
                         @click="fontSize = Math.max(14, fontSize - 2)"
-                        class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
+                        class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
                         title="Kleiner"
                     >−</button>
-                    <span class="w-8 text-center text-xs text-gray-500" x-text="fontSize"></span>
+                    <span class="w-10 text-center text-base font-medium text-gray-600" x-text="fontSize"></span>
                     <button
-                        @click="fontSize = Math.min(32, fontSize + 2)"
-                        class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
+                        @click="fontSize = Math.min(48, fontSize + 2)"
+                        class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
                         title="Groter"
                     >+</button>
                 </div>
@@ -342,7 +342,7 @@
                 <!-- Opslaan -->
                 <button
                     @click="saveNotities()"
-                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg text-xl font-medium"
                 >
                     💾
                 </button>
@@ -351,7 +351,7 @@
                 <select
                     x-model="selectedTemplate"
                     @change="laadTemplate()"
-                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 flex-1 min-w-[100px] max-w-[160px]"
+                    class="px-3 py-3 border-2 border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 flex-1 min-w-[120px] max-w-[200px]"
                 >
                     <option value="">📋 Template...</option>
                     <template x-for="(template, index) in templates" :key="index">
@@ -363,7 +363,7 @@
                 <button
                     @click="showSaveAsModal = true"
                     :disabled="!notities.trim()"
-                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-2 py-2 rounded-lg text-sm"
+                    class="bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 disabled:text-gray-400 px-4 py-3 rounded-lg text-xl"
                     title="Opslaan als template"
                 >
                     📥
@@ -372,7 +372,7 @@
                 <!-- Beheer -->
                 <button
                     @click="showTemplateModal = true"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-2 rounded-lg text-sm"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg text-xl"
                     title="Templates beheren"
                 >
                     ⚙️
@@ -381,16 +381,16 @@
                 <!-- Wis -->
                 <button
                     @click="clearNotities()"
-                    class="text-red-600 hover:text-red-800 px-2 py-2 text-sm"
+                    class="text-red-600 hover:text-red-800 px-4 py-3 text-xl"
                     title="Notities wissen"
                 >
                     🗑️
                 </button>
 
                 <!-- Status indicators (rechts) -->
-                <div class="ml-auto flex items-center gap-1 text-xs">
+                <div class="ml-auto flex items-center gap-2 text-base">
                     <span x-show="autoSaving" x-cloak class="text-gray-400">⏳</span>
-                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600">●</span>
+                    <span x-show="hasUnsavedChanges && !autoSaving" x-cloak class="text-yellow-600 text-xl">●</span>
                 </div>
             </div>
         </div>
