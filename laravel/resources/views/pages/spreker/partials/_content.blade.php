@@ -316,7 +316,8 @@
                 x-model="notities"
                 @input.debounce.2000ms="autoSaveNotities()"
                 :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
-                class="w-full h-full px-3 py-3 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                class="w-full h-full px-3 py-3 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words"
+                style="word-wrap: break-word; overflow-wrap: break-word;"
                 :class="{ 'border-yellow-400': hasUnsavedChanges }"
                 placeholder="Typ hier je notities..."
             ></textarea>
