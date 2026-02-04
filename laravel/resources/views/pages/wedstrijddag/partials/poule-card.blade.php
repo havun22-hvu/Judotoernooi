@@ -124,7 +124,7 @@
             <div class="flex justify-between items-start">
                 <div class="flex items-center gap-1 flex-1 min-w-0">
                     @if($heeftProbleem)
-                        <span class="text-orange-500 text-xs flex-shrink-0" title="{{ $isVerkeerdePoule ? 'Verkeerde gewichtsklasse' : 'Afwijkend gewicht' }}">⚠</span>
+                        <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
                     @elseif($isGewogen)
                         <span class="text-green-500 text-xs flex-shrink-0">●</span>
                     @endif
