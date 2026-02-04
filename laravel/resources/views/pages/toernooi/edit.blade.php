@@ -2933,11 +2933,14 @@
                     if (!localIp) {
                         localIp = prompt(
                             `Automatische IP-detectie werkt niet.\n\n` +
-                            `Vind je IP-adres via:\n` +
+                            `⚠️ LET OP: Je hebt het LOKALE netwerk IP nodig!\n` +
+                            `Dit begint meestal met 192.168.x.x of 10.x.x.x\n` +
+                            `(NIET je internet/externe IP-adres)\n\n` +
+                            `Vind je lokale IP via:\n` +
                             `• Windows: Open CMD → typ "ipconfig"\n` +
                             `• Mac/Linux: Open Terminal → typ "ifconfig"\n\n` +
-                            `Zoek naar "IPv4 Address" (bijv. 192.168.1.100)\n\n` +
-                            `Voer het ${serverLabel.toLowerCase()} server IP in:`
+                            `Zoek naar "IPv4 Address" onder je WiFi/Ethernet adapter\n\n` +
+                            `Voer het lokale ${serverLabel.toLowerCase()} server IP in:`
                         );
 
                         if (!localIp) {
