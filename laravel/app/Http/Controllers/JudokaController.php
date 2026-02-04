@@ -516,7 +516,7 @@ class JudokaController extends Controller
                 'club' => $j->club?->naam,
                 'leeftijdsklasse' => $j->leeftijdsklasse,
                 'gewichtsklasse' => $j->gewichtsklasse,
-                'band' => ucfirst($j->band),
+                'band' => $j->band ? ucfirst(Band::stripKyu($j->band)) : null,
                 'aanwezig' => $j->isAanwezig(),
                 'gewogen' => $j->gewicht_gewogen !== null,
                 'gewicht_gewogen' => $j->gewicht_gewogen,

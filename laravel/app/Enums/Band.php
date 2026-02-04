@@ -25,22 +25,6 @@ enum Band: int
         };
     }
 
-    /**
-     * Label met kyu notatie, bijv. "Groen (3e kyu)"
-     */
-    public function labelMetKyu(): string
-    {
-        return match($this) {
-            self::ZWART => 'Zwart (dan)',
-            self::BRUIN => 'Bruin (1e kyu)',
-            self::BLAUW => 'Blauw (2e kyu)',
-            self::GROEN => 'Groen (3e kyu)',
-            self::ORANJE => 'Oranje (4e kyu)',
-            self::GEEL => 'Geel (5e kyu)',
-            self::WIT => 'Wit (6e kyu)',
-        };
-    }
-
     public function kleurCode(): string
     {
         return match($this) {
@@ -105,13 +89,5 @@ enum Band: int
         }
 
         return null;
-    }
-
-    /**
-     * Returns kyu value (0 = zwart/dan, 6 = wit/beginner)
-     */
-    public function kyu(): int
-    {
-        return $this->value;
     }
 }

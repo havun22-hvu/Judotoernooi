@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Band;
 use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Judoka;
@@ -446,7 +447,7 @@ class PubliekController extends Controller
                             'id' => $j->id,
                             'naam' => $j->naam,
                             'club' => $j->club?->naam,
-                            'band' => $j->band,
+                            'band' => Band::stripKyu($j->band ?? ''),
                             'band_kleur' => $bandKleur,
                             'leeftijd' => $j->geboortejaar ? (date('Y') - $j->geboortejaar) : null,
                             'gewicht' => $j->gewicht,
@@ -525,7 +526,7 @@ class PubliekController extends Controller
                     'leeftijd' => $j->leeftijd,
                     'gewicht' => $j->gewicht_gewogen ?? $j->gewicht,
                     'leeftijdsklasse' => $j->leeftijdsklasse ?? '-',
-                    'band' => $j->band ?? '-',
+                    'band' => $j->band ? Band::stripKyu($j->band) : '-',
                 ];
             });
 
