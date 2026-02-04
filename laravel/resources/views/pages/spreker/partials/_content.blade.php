@@ -361,7 +361,7 @@
                 >
                     <option value="">📋 Template...</option>
                     <template x-for="(template, index) in templates" :key="index">
-                        <option :value="index" x-text="template.naam"></option>
+                        <option :value="String(index)" x-text="template.naam"></option>
                     </template>
                 </select>
 
@@ -908,7 +908,7 @@ function sprekerInterface() {
 
             this.saveTemplates();
             await this.saveNotities();
-            this.selectedTemplate = newIndex; // Toon naam in dropdown
+            this.selectedTemplate = String(newIndex); // Toon naam in dropdown
             this.saveAsNaam = '';
             this.showSaveModal = false;
             this.showFeedback(`Template "${naam}" opgeslagen!`);
@@ -920,7 +920,7 @@ function sprekerInterface() {
             this.templates[index].tekst = this.notities;
             this.saveTemplates();
             await this.saveNotities();
-            this.selectedTemplate = index; // Toon naam in dropdown
+            this.selectedTemplate = String(index); // Toon naam in dropdown
             this.showSaveModal = false;
             this.showFeedback(`Template "${template.naam}" bijgewerkt!`);
         }
