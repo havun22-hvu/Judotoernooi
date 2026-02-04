@@ -48,11 +48,11 @@
             }
         }
 
-        /* Weegkaart/coachkaart grid */
+        /* Weegkaart/coachkaart grid - 3 kolommen voor smallere kaarten */
         .kaart-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10mm;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6mm;
         }
 
         .kaart {
