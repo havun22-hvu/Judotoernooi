@@ -308,43 +308,38 @@
         @endif
     </div>
 
-    <!-- TAB 3: NOTITIES (Spiekbriefje) -->
-    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }">
-        <div class="bg-white rounded-lg shadow p-2 sm:p-4">
-            <!-- Zoom controls boven textarea -->
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs text-gray-500">Tekstgrootte:</span>
-                <div class="flex items-center gap-1">
+    <!-- TAB 3: NOTITIES (Spiekbriefje) - Schermvullend -->
+    <div x-show="activeTab === 'notities'" x-data="{ fontSize: 18 }" class="flex flex-col" style="height: calc(100vh - 180px);">
+        <!-- Textarea - schermvullend -->
+        <div class="flex-1 min-h-0">
+            <textarea
+                x-model="notities"
+                @input.debounce.2000ms="autoSaveNotities()"
+                :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
+                class="w-full h-full px-3 py-3 border border-gray-300 rounded-t-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                :class="{ 'border-yellow-400': hasUnsavedChanges }"
+                placeholder="Typ hier je notities..."
+            ></textarea>
+        </div>
+
+        <!-- Sticky werkbalk onderaan -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-300 shadow-lg rounded-b-lg px-3 py-2">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Zoom controls -->
+                <div class="flex items-center gap-1 border-r pr-2 mr-1">
                     <button
                         @click="fontSize = Math.max(14, fontSize - 2)"
                         class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
                         title="Kleiner"
                     >−</button>
-                    <span class="w-10 text-center text-sm" x-text="fontSize + 'px'"></span>
+                    <span class="w-8 text-center text-xs text-gray-500" x-text="fontSize"></span>
                     <button
                         @click="fontSize = Math.min(32, fontSize + 2)"
                         class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded text-lg font-bold"
                         title="Groter"
                     >+</button>
                 </div>
-            </div>
 
-            <!-- Textarea - grote hoogte voor veel tekst -->
-            <div class="mb-2">
-                <textarea
-                    x-model="notities"
-                    @input.debounce.2000ms="autoSaveNotities()"
-                    :style="'font-size: ' + fontSize + 'px; line-height: 1.5;'"
-                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
-                    :class="{ 'border-yellow-400': hasUnsavedChanges }"
-                    rows="15"
-                    style="min-height: 400px;"
-                    placeholder="Typ hier je notities..."
-                ></textarea>
-            </div>
-
-            <!-- Compacte werkbalk onder textarea -->
-            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
                 <!-- Opslaan -->
                 <button
                     @click="saveNotities()"
@@ -357,7 +352,7 @@
                 <select
                     x-model="selectedTemplate"
                     @change="laadTemplate()"
-                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 flex-1 min-w-[120px] max-w-[200px]"
+                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 flex-1 min-w-[100px] max-w-[160px]"
                 >
                     <option value="">📋 Template...</option>
                     <template x-for="(template, index) in templates" :key="index">
