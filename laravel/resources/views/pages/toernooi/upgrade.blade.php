@@ -8,20 +8,24 @@
         <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">&larr; Terug naar toernooi</a>
     </div>
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Upgrade naar Betaald</h1>
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">
+        {{ ($isReUpgrade ?? false) ? 'Meer judoka\'s nodig?' : 'Upgrade naar Betaald' }}
+    </h1>
     <p class="text-gray-600 mb-8">{{ $toernooi->naam }}</p>
 
     {{-- Current status --}}
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-blue-800 mb-4">Huidige Status: Gratis Tier</h2>
+    <div class="{{ ($isReUpgrade ?? false) ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200' }} border rounded-lg p-6 mb-8">
+        <h2 class="text-lg font-semibold {{ ($isReUpgrade ?? false) ? 'text-green-800' : 'text-blue-800' }} mb-4">
+            Huidige Status: {{ ($isReUpgrade ?? false) ? 'Betaald (max ' . $status['max_judokas'] . ' judoka\'s)' : 'Gratis Tier' }}
+        </h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
                 <span class="text-gray-600">Judoka's</span>
-                <p class="text-2xl font-bold text-blue-700">{{ $status['current_judokas'] }} / {{ $status['max_judokas'] }}</p>
+                <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-700' : 'text-blue-700' }}">{{ $status['current_judokas'] }} / {{ $status['max_judokas'] }}</p>
             </div>
             <div>
                 <span class="text-gray-600">Plaatsen over</span>
-                <p class="text-2xl font-bold text-blue-700">{{ $status['remaining_slots'] }}</p>
+                <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-700' : 'text-blue-700' }}">{{ $status['remaining_slots'] }}</p>
             </div>
             <div>
                 <span class="text-gray-600">Print/Noodplan</span>
@@ -31,7 +35,9 @@
             </div>
             <div>
                 <span class="text-gray-600">Status</span>
-                <p class="text-2xl font-bold text-orange-600">Gratis</p>
+                <p class="text-2xl font-bold {{ ($isReUpgrade ?? false) ? 'text-green-600' : 'text-orange-600' }}">
+                    {{ ($isReUpgrade ?? false) ? 'Betaald' : 'Gratis' }}
+                </p>
             </div>
         </div>
     </div>
