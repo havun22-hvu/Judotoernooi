@@ -212,7 +212,7 @@ class ClubController extends Controller
     /**
      * Toggle club selection for this toernooi
      */
-    public function toggleClub(Organisator $organisator, Request $request, Toernooi $toernooi, Club $club): RedirectResponse
+    public function toggleClub(Organisator $organisator, Toernooi $toernooi, Club $club): RedirectResponse
     {
         // Verify club belongs to this toernooi's organisator
         if ($club->organisator_id !== $toernooi->organisator_id) {
