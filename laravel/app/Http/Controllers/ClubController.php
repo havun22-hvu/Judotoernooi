@@ -36,12 +36,39 @@ class ClubController extends Controller
             abort(403);
         }
 
+        // Ensure organisator's own club exists
+        $this->ensureOrganisatorClubExists($organisator);
+
         $clubs = Club::where('organisator_id', $organisator->id)
             ->withCount('judokas')
             ->orderBy('naam')
             ->get();
 
         return view('organisator.clubs.index', compact('organisator', 'clubs'));
+    }
+
+    /**
+     * Ensure the organisator's own judoschool exists as a club
+     */
+    private function ensureOrganisatorClubExists(Organisator $organisator): void
+    {
+        // Skip if organisator has no naam or is sitebeheerder
+        if (empty($organisator->naam) || $organisator->isSitebeheerder()) {
+            return;
+        }
+
+        // Check if club with organisator's name already exists
+        $exists = Club::where('organisator_id', $organisator->id)
+            ->where('naam', $organisator->naam)
+            ->exists();
+
+        if (!$exists) {
+            Club::create([
+                'organisator_id' => $organisator->id,
+                'naam' => $organisator->naam,
+                'email' => $organisator->email,
+            ]);
+        }
     }
 
     /**
