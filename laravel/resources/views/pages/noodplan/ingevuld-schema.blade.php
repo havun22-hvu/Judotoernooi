@@ -209,6 +209,31 @@
 <p class="text-gray-500 text-center py-8">Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.</p>
 @else
 
+{{-- Waarschuwing bij verplichte weging maar niet alle judoka's gewogen --}}
+@if($toernooi->weging_verplicht)
+    @php
+        $totaalJudokas = $poulesMetSchema->sum(fn($item) => $item['poule']->judokas->count());
+        $ongewogenJudokas = $poulesMetSchema->sum(fn($item) => $item['poule']->judokas->whereNull('gewicht_gewogen')->count());
+    @endphp
+    @if($ongewogenJudokas > 0)
+    <div class="no-print bg-amber-50 border-l-4 border-amber-500 p-4 mb-6">
+        <div class="flex items-start gap-3">
+            <span class="text-2xl">⚠️</span>
+            <div>
+                <h3 class="font-bold text-amber-800">Weging nog niet compleet</h3>
+                <p class="text-amber-700 text-sm mt-1">
+                    <strong>{{ $ongewogenJudokas }} van {{ $totaalJudokas }}</strong> judoka's zijn nog niet gewogen.
+                    Bij "Weging verplicht" worden ongewogen judoka's niet getoond in de schema's.
+                </p>
+                <p class="text-amber-600 text-xs mt-2">
+                    💡 Opties: wacht tot alle judoka's gewogen zijn, of zet "Weging verplicht" uit in de toernooi-instellingen.
+                </p>
+            </div>
+        </div>
+    </div>
+    @endif
+@endif
+
 @php
 // Helper functie voor slimme club afkorting
 function abbreviateClubName($name, $maxLength = 15) {

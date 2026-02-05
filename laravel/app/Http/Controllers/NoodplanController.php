@@ -317,8 +317,10 @@ class NoodplanController extends Controller
         }
 
         $blok = null;
-        // Filter afwezige judoka's uit de poules
-        $judokasConstraint = fn($q) => $q->where('aanwezigheid', '!=', 'afwezig')->with('club');
+        // Filter afwezige judoka's uit de poules (NULL = nog niet geregistreerd, wel tonen)
+        $judokasConstraint = fn($q) => $q->where(function($q) {
+            $q->whereNull('aanwezigheid')->orWhere('aanwezigheid', '!=', 'afwezig');
+        })->with('club');
 
         if ($blokNummer) {
             $blok = $toernooi->blokken()->where('nummer', $blokNummer)->first();
