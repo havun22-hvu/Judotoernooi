@@ -99,6 +99,7 @@
                             <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Alle Toernooien</a>
                             @endif
                             <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mijn Toernooien</a>
+                            <a href="{{ route('organisator.instellingen', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Instellingen</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding ↗</a>
                             <hr class="my-1">
                             <form action="{{ route('logout') }}" method="POST">
