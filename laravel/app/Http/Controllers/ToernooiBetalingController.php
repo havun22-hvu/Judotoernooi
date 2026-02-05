@@ -62,7 +62,7 @@ class ToernooiBetalingController extends Controller
             'contactpersoon' => 'required|string|max:255',
             'telefoon' => 'nullable|string|max:20',
             'factuur_email' => 'required|email|max:255',
-            'website' => 'nullable|url|max:255',
+            'website' => 'nullable|string|max:255',
         ]);
 
         $organisator = Auth::guard('organisator')->user();
