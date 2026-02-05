@@ -179,7 +179,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                                <input type="url" name="website" x-model="editData.website" class="w-full border rounded px-3 py-2">
+                                <input type="text" name="website" x-model="editData.website" class="w-full border rounded px-3 py-2" placeholder="havun.nl">
                             </div>
                         </div>
                     </div>
