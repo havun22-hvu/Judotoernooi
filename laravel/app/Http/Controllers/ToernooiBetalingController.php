@@ -60,9 +60,11 @@ class ToernooiBetalingController extends Controller
             'plaats' => 'required|string|max:100',
             'land' => 'required|string|max:100',
             'contactpersoon' => 'required|string|max:255',
-            'telefoon' => 'nullable|string|max:20',
+            'telefoon' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
             'factuur_email' => 'required|email|max:255',
             'website' => 'nullable|string|max:255',
+        ], [
+            'telefoon.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
         ]);
 
         $organisator = Auth::guard('organisator')->user();

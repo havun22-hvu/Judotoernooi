@@ -37,8 +37,10 @@ class VrijwilligerController extends Controller
     {
         $request->validate([
             'voornaam' => 'required|string|max:255',
-            'telefoonnummer' => 'nullable|string|max:20',
+            'telefoonnummer' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
             'functie' => 'required|in:' . implode(',', Vrijwilliger::FUNCTIES),
+        ], [
+            'telefoonnummer.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
         ]);
 
         $vrijwilliger = Vrijwilliger::create([
@@ -69,8 +71,10 @@ class VrijwilligerController extends Controller
 
         $request->validate([
             'voornaam' => 'required|string|max:255',
-            'telefoonnummer' => 'nullable|string|max:20',
+            'telefoonnummer' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
             'functie' => 'required|in:' . implode(',', Vrijwilliger::FUNCTIES),
+        ], [
+            'telefoonnummer.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
         ]);
 
         $vrijwilliger->update([

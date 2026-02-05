@@ -18,7 +18,7 @@ class ClubRequest extends FormRequest
             'email' => 'nullable|email|max:255',
             'email2' => 'nullable|email|max:255',
             'contact_naam' => 'nullable|string|max:255',
-            'telefoon' => 'nullable|string|max:20',
+            'telefoon' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
             'plaats' => 'nullable|string|max:255',
             'website' => 'nullable|string|max:255',
         ];
@@ -31,6 +31,7 @@ class ClubRequest extends FormRequest
             'naam.max' => 'De clubnaam mag maximaal 255 tekens zijn',
             'email.email' => 'Voer een geldig e-mailadres in',
             'email2.email' => 'Voer een geldig tweede e-mailadres in',
+            'telefoon.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678 of +31612345678)',
         ];
     }
 }
