@@ -122,13 +122,17 @@ class OrganisatorAuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'organisatie_naam' => 'required|string|max:255',
             'naam' => 'required|string|max:255',
             'email' => 'required|email|unique:organisators,email',
-            'telefoon' => 'nullable|string|max:20',
+            'telefoon' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'telefoon.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
         ]);
 
         $organisator = Organisator::create([
+            'organisatie_naam' => $validated['organisatie_naam'],
             'naam' => $validated['naam'],
             'email' => $validated['email'],
             'telefoon' => $validated['telefoon'] ?? null,

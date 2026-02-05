@@ -17,15 +17,32 @@
             @csrf
 
             <div class="mb-4">
+                <label for="organisatie_naam" class="block text-sm font-medium text-gray-700 mb-1">
+                    Naam judoschool / organisatie
+                </label>
+                <input type="text"
+                       id="organisatie_naam"
+                       name="organisatie_naam"
+                       value="{{ old('organisatie_naam') }}"
+                       required
+                       autofocus
+                       placeholder="bijv. Judoschool Cees Veen"
+                       class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('organisatie_naam') border-red-500 @enderror">
+                @error('organisatie_naam')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-4">
                 <label for="naam" class="block text-sm font-medium text-gray-700 mb-1">
-                    Naam
+                    Uw naam <span class="text-gray-400">(contactpersoon)</span>
                 </label>
                 <input type="text"
                        id="naam"
                        name="naam"
                        value="{{ old('naam') }}"
                        required
-                       autofocus
+                       placeholder="bijv. Jan Jansen"
                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('naam') border-red-500 @enderror">
                 @error('naam')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

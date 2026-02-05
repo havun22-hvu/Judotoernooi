@@ -55,14 +55,18 @@ class Organisator extends Authenticatable
     protected static function booted(): void
     {
         static::creating(function (Organisator $organisator) {
-            if (empty($organisator->slug) && !empty($organisator->naam)) {
-                $organisator->slug = static::generateUniqueSlug($organisator->naam);
+            // Slug from organisatie_naam (judoschool name), fallback to naam (contact person)
+            $slugSource = $organisator->organisatie_naam ?: $organisator->naam;
+            if (empty($organisator->slug) && !empty($slugSource)) {
+                $organisator->slug = static::generateUniqueSlug($slugSource);
             }
         });
 
         static::updating(function (Organisator $organisator) {
-            if ($organisator->isDirty('naam') && !$organisator->isDirty('slug')) {
-                $organisator->slug = static::generateUniqueSlug($organisator->naam, $organisator->id);
+            // Update slug when organisatie_naam changes (not naam - that's the contact person)
+            if ($organisator->isDirty('organisatie_naam') && !$organisator->isDirty('slug')) {
+                $slugSource = $organisator->organisatie_naam ?: $organisator->naam;
+                $organisator->slug = static::generateUniqueSlug($slugSource, $organisator->id);
             }
         });
     }
