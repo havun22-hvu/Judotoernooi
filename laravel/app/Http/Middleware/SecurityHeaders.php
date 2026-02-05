@@ -38,15 +38,15 @@ class SecurityHeaders
         $response->headers->remove('Server');
 
         // Content Security Policy - strict, all assets bundled locally via Vite
-        // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode)
+        // External sources: cdn.jsdelivr.net (SortableJS, QRCode), cdnjs.cloudflare.com (html2canvas), unpkg.com (html5-qrcode), js.pusher.com (Reverb/Pusher)
         if (!app()->environment('local')) {
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com unpkg.com js.pusher.com",
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
-                "connect-src 'self' wss:",
+                "connect-src 'self' wss: *.pusher.com",
                 "frame-ancestors 'self'",
             ]));
         }
