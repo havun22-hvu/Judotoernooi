@@ -26,7 +26,7 @@
                        value="{{ old('organisatie_naam') }}"
                        required
                        autofocus
-                       placeholder="bijv. Judoschool Cees Veen"
+                       placeholder="Naam van uw judoschool"
                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('organisatie_naam') border-red-500 @enderror">
                 @error('organisatie_naam')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
