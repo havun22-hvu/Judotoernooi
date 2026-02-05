@@ -1,18 +1,35 @@
 # Redundantie & Veiligheidsplan
 
 > **Status:** Planning
-> **Doel:** Enterprise-grade betrouwbaarheid voor grote toernooien
-> **SLA:** 99.9% uptime, max 5 seconden data loss bij failover
+> **Doel:** Toernooien die ALTIJD werken, ongeacht internet
+> **SLA:** 100% lokale uptime, max 5 seconden data loss bij failover
 
 ---
 
-## 1. Overzicht
+## 1. Kernprincipe
 
-Dit document beschrijft de technische architectuur voor een fail-safe toernooi systeem dat blijft werken bij:
-- Internet uitval
-- Server crash
-- Laptop crash
-- Stroomuitval (gedeeltelijk)
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   LOKAAL = PRIMAIR                                                  │
+│   CLOUD = SYNC (bonus, niet vereist)                               │
+│                                                                     │
+│   Een klant in China moet zonder internet een toernooi kunnen      │
+│   draaien. Internet in sporthallen is onbetrouwbaar (uitval, 5G    │
+│   bereik slecht, 500 telefoons op dezelfde wifi).                  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 2. Overzicht
+
+Dit document beschrijft de technische architectuur voor een fail-safe toernooi systeem dat:
+- **Volledig offline werkt** - geen internet nodig tijdens wedstrijddag
+- **Op elke laptop draait** - geen vooraf geïnstalleerde software nodig
+- **Wereldwijd bruikbaar** - China, Australië, overal
+- **Simpel op te zetten** - dubbelklik en klaar
 
 ---
 
