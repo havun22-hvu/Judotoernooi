@@ -160,9 +160,9 @@
 
                 <div>
                     <label for="website" class="block text-gray-700 font-medium mb-1">Website of Facebook</label>
-                    <input type="url" name="website" id="website"
+                    <input type="text" name="website" id="website"
                            value="{{ old('website', $organisator->website) }}"
-                           placeholder="https://www.judoschool.nl"
+                           placeholder="judoschool.nl of facebook.com/judoschool"
                            class="w-full border rounded px-3 py-2">
                     <p class="text-xs text-gray-500 mt-1">Ter verificatie van je organisatie</p>
                 </div>
