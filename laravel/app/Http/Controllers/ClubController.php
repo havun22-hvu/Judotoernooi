@@ -214,22 +214,34 @@ class ClubController extends Controller
      */
     public function toggleClub(Organisator $organisator, Toernooi $toernooi, Club $club): RedirectResponse
     {
+        // Debug logging
+        \Log::info('toggleClub called', [
+            'organisator_slug' => $organisator->slug,
+            'toernooi_slug' => $toernooi->slug,
+            'club_id' => $club->id,
+            'club_naam' => $club->naam,
+            'club_organisator_id' => $club->organisator_id,
+            'toernooi_organisator_id' => $toernooi->organisator_id,
+        ]);
+
         // Verify club belongs to this toernooi's organisator
         if ($club->organisator_id !== $toernooi->organisator_id) {
+            \Log::warning('toggleClub 403: club does not belong to organisator');
             abort(403);
         }
 
         $isLinked = $toernooi->clubs()->where('clubs.id', $club->id)->exists();
+        $judokasCount = $club->judokas()->where('toernooi_id', $toernooi->id)->count();
+        $warning = null;
 
         if ($isLinked) {
-            // Check if club has judokas - can't remove if has judokas
-            if ($club->judokas()->where('toernooi_id', $toernooi->id)->exists()) {
-                return redirect()
-                    ->route('toernooi.club.index', $toernooi->routeParams())
-                    ->with('error', "Kan {$club->naam} niet verwijderen: er zijn nog judoka's ingeschreven");
+            // Warn if club has judokas, but still allow deselect
+            if ($judokasCount > 0) {
+                $warning = "Let op: {$club->naam} heeft nog {$judokasCount} judoka's ingeschreven!";
             }
             $toernooi->clubs()->detach($club->id);
             $message = "{$club->naam} verwijderd uit dit toernooi";
+            \Log::info('toggleClub: club detached', ['club_id' => $club->id]);
         } else {
             // Add club to toernooi with portal credentials
             $toernooi->clubs()->attach($club->id, [
@@ -237,11 +249,16 @@ class ClubController extends Controller
                 'pincode' => $club->pincode,
             ]);
             $message = "{$club->naam} toegevoegd aan dit toernooi";
+            \Log::info('toggleClub: club attached', ['club_id' => $club->id]);
         }
 
-        return redirect()
-            ->route('toernooi.club.index', $toernooi->routeParams())
-            ->with('success', $message);
+        $redirect = redirect()->route('toernooi.club.index', $toernooi->routeParams());
+
+        if ($warning) {
+            return $redirect->with('warning', $warning)->with('success', $message);
+        }
+
+        return $redirect->with('success', $message);
     }
 
     /**
