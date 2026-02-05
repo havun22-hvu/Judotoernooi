@@ -658,6 +658,39 @@
 
 ---
 
+## Sessie: 5 februari 2026 (ochtend)
+
+### Refactor: Live verversing naar organisator niveau
+- **Type:** Refactoring
+- **Wat:** `live_refresh_interval` verplaatst van toernooi naar organisator
+- **Bestanden:** Migration, Organisator.php, web.php, ToernooiController.php, organisator/instellingen.blade.php, app.blade.php, edit.blade.php, publiek/index.blade.php
+- **Details:** Nieuwe "Instellingen" pagina in hamburger menu voor organisator-level settings
+
+### Fix: Clubs unique constraint per organisator
+- **Type:** Bug fix
+- **Wat:** `clubs.naam` was globaal uniek, nu uniek per organisator
+- **Bestanden:** Migration 2026_02_05_084602
+- **Oorzaak:** Zelfde clubnaam (bv "Judoschool Cees Veen") mag bestaan bij meerdere organisatoren
+
+### Feat: Auto-create organisator's eigen club
+- **Type:** Feature
+- **Wat:** Organisator's eigen judoschool wordt automatisch aangemaakt bij bezoeken clubs pagina
+- **Bestanden:** ClubController.php
+- **Reden:** Organisator (judoschool) doet vaak mee aan eigen toernooien
+
+### Fix: Noodplan schema's waarschuwing ongewogen judoka's
+- **Type:** UI improvement
+- **Wat:** Waarschuwing wanneer weging verplicht is maar judoka's niet gewogen
+- **Bestanden:** ingevuld-schema.blade.php, NoodplanController.php
+- **Details:** Banner met aantal ongewogen + tips
+
+### Data: Oude club zonder organisator verwijderd
+- **Type:** Data cleanup
+- **Wat:** Club id=13 "Judoschool Cees Veen" met NULL organisator_id verwijderd
+- **Database:** Production
+
+---
+
 <!--
 TEMPLATE:
 
