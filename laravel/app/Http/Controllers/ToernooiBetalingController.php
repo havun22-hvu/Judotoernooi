@@ -24,15 +24,22 @@ class ToernooiBetalingController extends Controller
      */
     public function showUpgrade(Organisator $organisator, Toernooi $toernooi): View|RedirectResponse
     {
-        // Already paid - redirect to toernooi
-        if ($toernooi->isPaidTier()) {
-            return redirect()->route('toernooi.show', $toernooi->routeParams())
-                ->with('info', 'Dit toernooi heeft al een betaald abonnement.');
-        }
-
         $organisator = Auth::guard('organisator')->user();
         $upgradeOptions = $this->freemiumService->getUpgradeOptions($toernooi);
         $status = $this->freemiumService->getStatus($toernooi);
+
+        // For paid tier: filter to only show HIGHER tiers than current
+        if ($toernooi->isPaidTier()) {
+            $currentMax = $toernooi->paid_max_judokas ?? 0;
+            $upgradeOptions = array_filter($upgradeOptions, fn($opt) => $opt['max'] > $currentMax);
+            $upgradeOptions = array_values($upgradeOptions); // Re-index
+
+            // If no higher tiers available, show message
+            if (empty($upgradeOptions)) {
+                return redirect()->route('toernooi.show', $toernooi->routeParams())
+                    ->with('info', 'Je hebt al het hoogste abonnement (max ' . $currentMax . ' judoka\'s).');
+            }
+        }
 
         // Check if KYC is complete
         $kycCompleet = $organisator->isKycCompleet();
@@ -43,6 +50,7 @@ class ToernooiBetalingController extends Controller
             'status' => $status,
             'organisator' => $organisator,
             'kycCompleet' => $kycCompleet,
+            'isReUpgrade' => $toernooi->isPaidTier(),
         ]);
     }
 
