@@ -994,7 +994,7 @@
 
         // Adaptive polling configuration
         const REFRESH_CONFIG = {
-            configured: {{ $toernooi->live_refresh_interval ?? 'null' }}, // null = adaptive
+            configured: {{ $toernooi->organisator->live_refresh_interval ?? 'null' }}, // null = adaptive
             minInterval: 5000,      // 5 sec minimum (during activity)
             maxInterval: 60000,     // 60 sec maximum (idle)
             defaultInterval: 15000, // 15 sec default

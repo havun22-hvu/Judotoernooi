@@ -40,6 +40,7 @@ class Organisator extends Authenticatable
         'kyc_compleet',
         'kyc_ingevuld_op',
         'is_premium',
+        'live_refresh_interval',
     ];
 
     protected $casts = [
@@ -48,6 +49,7 @@ class Organisator extends Authenticatable
         'is_test' => 'boolean',
         'kortingsregeling' => 'boolean',
         'kyc_compleet' => 'boolean',
+        'live_refresh_interval' => 'integer',
     ];
 
     protected static function booted(): void

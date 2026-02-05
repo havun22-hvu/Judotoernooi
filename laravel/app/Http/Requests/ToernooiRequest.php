@@ -75,7 +75,6 @@ class ToernooiRequest extends FormRequest
             'verdeling_prioriteiten' => 'nullable|array',
             'verdeling_prioriteiten.*' => 'string|in:leeftijd,gewicht,band',
             'wedstrijd_schemas' => 'nullable|array',
-            'live_refresh_interval' => 'nullable|integer|in:5,10,15,30,60',
         ];
     }
 

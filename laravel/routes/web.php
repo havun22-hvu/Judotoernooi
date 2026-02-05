@@ -133,6 +133,10 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     // Toernooi aanmaken
     Route::get('toernooi/nieuw', [ToernooiController::class, 'create'])->name('toernooi.create');
     Route::post('toernooi', [ToernooiController::class, 'store'])->name('toernooi.store');
+
+    // Organisator instellingen
+    Route::get('instellingen', [ToernooiController::class, 'organisatorInstellingen'])->name('organisator.instellingen');
+    Route::put('instellingen', [ToernooiController::class, 'organisatorInstellingenUpdate'])->name('organisator.instellingen.update');
 });
 
 // Mollie webhooks & callbacks (no auth, called by Mollie)
