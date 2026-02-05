@@ -572,6 +572,46 @@
 
 ---
 
+## Sessie: 5 februari 2026
+
+### Feat: Verdachte gewicht waarschuwingen
+- **Type:** Feature
+- **Wat:** Waarschuwingen voor verdachte/onrealistische gewichten op meerdere plekken
+- **Bestanden:** weging/_content.blade.php, poule-card.blade.php, poules.blade.php
+- **Details:**
+  - Weegapp: Confirmation dialog bij > 2 kg afwijking van opgegeven gewicht
+  - Weegapp: Rode markering (🚨) in history voor verdachte gewichten
+  - Wedstrijddag poule cards: Rode border en 🚨 icoon voor verdachte gewichten
+  - Criteria: < 15 kg OF > 5 kg afwijking van opgave
+
+### Fix: Undefined variable $isVerkeerdePoule
+- **Type:** Bug fix
+- **Wat:** Error in wedstrijddag poule-card.blade.php
+- **Bestanden:** poule-card.blade.php
+- **Oplossing:** Variable verwijderd, styling nu gekoppeld aan $heeftProbleem
+
+### Fix: Gewogen indicator check
+- **Type:** Bug fix
+- **Wat:** `gewicht_gewogen !== null` → `gewicht_gewogen > 0`
+- **Bestanden:** 11+ bestanden (controllers, views, services)
+- **Reden:** PHP truthiness: `0 !== null` is TRUE maar `0 > 0` is FALSE
+
+### Feat: Adaptive polling voor live pagina
+- **Type:** Feature
+- **Wat:** Configureerbare/adaptive refresh voor publiek pagina
+- **Bestanden:** publiek/index.blade.php, migration, Toernooi.php, ToernooiRequest.php
+- **Details:**
+  - Nieuwe kolom: `live_refresh_interval` (5/10/15/30/60 sec)
+  - Adaptive: 5 sec tijdens activiteit, 60 sec bij idle
+  - Debug panel (dubbel-klik op LIVE/POLL knop)
+
+### Oops: Staging database reset
+- **Type:** Oops
+- **Wat:** migrate:fresh uitgevoerd op staging zonder seeder
+- **Oplossing:** Gebruiker maakt nieuwe testdata aan via app
+
+---
+
 ## Sessie: 4 februari 2026
 
 ### Feat: LIVE/OFFLINE connectie indicator Publiek PWA
