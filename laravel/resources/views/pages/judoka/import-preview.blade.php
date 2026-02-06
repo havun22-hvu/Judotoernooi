@@ -699,6 +699,20 @@ function updatePreviewHighlights() {
                 mappedToLabel.textContent = 'Ongebruikt';
             }
         }
+
+        // Convert geboortejaar cells in preview table to show year
+        const previewCells = document.querySelectorAll(`.preview-cell[data-col="${i}"]`);
+        previewCells.forEach(cell => {
+            if (veld === 'geboortejaar') {
+                const raw = cell.dataset.raw ?? cell.textContent;
+                cell.dataset.raw = raw; // Store original value
+                const jaar = extractJaar(raw.trim());
+                cell.textContent = (typeof jaar === 'number') ? jaar : raw;
+            } else if (cell.dataset.raw) {
+                // Restore original value if column was remapped away from geboortejaar
+                cell.textContent = cell.dataset.raw;
+            }
+        });
     }
 }
 </script>
