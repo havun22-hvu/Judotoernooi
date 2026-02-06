@@ -83,7 +83,8 @@
                 'bruin' => 'bg-amber-800 text-white',
                 'zwart' => 'bg-gray-900 text-white',
             ];
-            $bandClass = $bandColors[strtolower($judoka->band ?? '')] ?? 'bg-gray-200 text-gray-700';
+            $bandLabel = \App\Enums\Band::toKleur($judoka->band) ?: '?';
+            $bandClass = $bandColors[strtolower($bandLabel)] ?? 'bg-gray-200 text-gray-700';
         @endphp
         <div class="px-3 py-2 grid grid-cols-4 gap-1 text-center border-b">
             <div class="flex flex-col">
@@ -102,7 +103,7 @@
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Band</span>
-                <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ ucfirst(explode(' ', $judoka->band ?? '?')[0]) }}</span>
+                <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ $bandLabel }}</span>
             </div>
             <div class="flex flex-col">
                 <span class="text-[10px] text-gray-500 uppercase">Geslacht</span>
