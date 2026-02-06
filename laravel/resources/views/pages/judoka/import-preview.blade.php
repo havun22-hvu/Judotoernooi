@@ -614,7 +614,9 @@ function updateAlleVoorbeelden() {
 function extractJaar(val) {
     const str = String(val).trim();
     if (!str) return val;
-    const num = parseInt(str);
+    // Normalize backslash separators to forward slash
+    const normalized = str.replace(/\\/g, '/');
+    const num = parseInt(normalized);
     // Excel serial date number (e.g. 43831 = 2020-01-01)
     if (!isNaN(num) && num > 30000 && num < 60000) {
         const excelEpoch = new Date(1899, 11, 30);
@@ -630,19 +632,19 @@ function extractJaar(val) {
         return num > 50 ? 1900 + num : 2000 + num;
     }
     // Any date string: extract 4-digit year (19xx or 20xx)
-    // Covers: 1/1/2020, 24-01-2020, 2020/1/24, 2020-01-24, 24.01.2020, 2015-01-24T12:00:00Z, etc.
-    const match4 = str.match(/\b(19\d{2}|20\d{2})\b/);
+    // Covers: 1/1/2020, 24-01-2020, 2020/1/24, 24\01\2015, 2015-01-24T12:00:00Z, etc.
+    const match4 = normalized.match(/\b(19\d{2}|20\d{2})\b/);
     if (match4) return parseInt(match4[1]);
-    // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy
-    // e.g. 24-01-15, 01/24/15, 24.01.15
-    const matchEnd = str.match(/^\d{1,2}[-\/.]\d{1,2}[-\/.](\d{2})$/);
+    // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy, dd\mm\yy
+    // e.g. 24-01-15, 01/24/15, 24.01.15, 24\01\15
+    const matchEnd = normalized.match(/^\d{1,2}[-\/.]\d{1,2}[-\/.](\d{2})$/);
     if (matchEnd) {
         const yy = parseInt(matchEnd[1]);
         return yy > 50 ? 1900 + yy : 2000 + yy;
     }
-    // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd
-    // e.g. 15-01-24, 15/01/24
-    const matchStart = str.match(/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/);
+    // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd, yy\mm\dd
+    // e.g. 15-01-24, 15/01/24, 15\01\24
+    const matchStart = normalized.match(/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/);
     if (matchStart) {
         const yy = parseInt(matchStart[1]);
         const candidate = yy > 50 ? 1900 + yy : 2000 + yy;
@@ -655,7 +657,7 @@ function extractJaar(val) {
         'september':'september','oktober':'october','november':'november','december':'december',
         'mrt':'mar','okt':'oct'
     };
-    let translated = str.toLowerCase();
+    let translated = normalized.toLowerCase();
     for (const [nl, en] of Object.entries(nlToEn)) {
         translated = translated.replace(nl, en);
     }
