@@ -200,9 +200,18 @@
                                         <div class="text-xs font-bold" x-text="(idx + 1)"></div>
                                     </th>
                                 </template>
-                                <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-10 text-xs">WP</th>
-                                <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 w-10 text-xs">JP</th>
-                                <th class="px-1 py-1 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-8 text-xs">#</th>
+                                <template x-if="poule.is_klok_poule">
+                                    <th class="px-1 py-1 text-center font-bold text-gray-700 bg-green-100 border-l-2 border-green-300 w-10 text-xs">W</th>
+                                </template>
+                                <template x-if="!poule.is_klok_poule">
+                                    <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 border-l-2 border-blue-300 w-10 text-xs">WP</th>
+                                </template>
+                                <template x-if="!poule.is_klok_poule">
+                                    <th class="px-1 py-1 text-center font-bold text-gray-700 bg-blue-100 w-10 text-xs">JP</th>
+                                </template>
+                                <template x-if="!poule.is_klok_poule">
+                                    <th class="px-1 py-1 text-center font-bold text-gray-700 bg-yellow-100 border-l-2 border-yellow-300 w-8 text-xs">#</th>
+                                </template>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,16 +260,25 @@
                                         </td>
                                     </template>
 
-                                    <!-- Totaal WP -->
-                                    <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 border-l-2 border-blue-300 text-blue-800 text-xs"
-                                        x-text="getTotaalWP(poule, judoka.id)"></td>
-                                    <!-- Totaal JP -->
-                                    <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 text-blue-800 text-xs"
-                                        x-text="getTotaalJP(poule, judoka.id)"></td>
-                                    <!-- Plaats - alleen tonen na alle wedstrijden -->
-                                    <td class="px-0.5 py-0.5 text-center font-bold border-l-2 border-yellow-300 text-xs"
-                                        :class="isPouleAfgerond(poule) ? getPlaatsClass(getPlaats(poule, judoka.id)) : 'bg-yellow-50'"
-                                        x-text="isPouleAfgerond(poule) ? getPlaats(poule, judoka.id) : '-'"></td>
+                                    <!-- Klok poule: alleen aantal wins -->
+                                    <template x-if="poule.is_klok_poule">
+                                        <td class="px-0.5 py-0.5 text-center font-bold bg-green-50 border-l-2 border-green-300 text-green-800 text-xs"
+                                            x-text="getTotaalWins(poule, judoka.id)"></td>
+                                    </template>
+                                    <!-- Normale poule: WP + JP + plaats -->
+                                    <template x-if="!poule.is_klok_poule">
+                                        <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 border-l-2 border-blue-300 text-blue-800 text-xs"
+                                            x-text="getTotaalWP(poule, judoka.id)"></td>
+                                    </template>
+                                    <template x-if="!poule.is_klok_poule">
+                                        <td class="px-0.5 py-0.5 text-center font-bold bg-blue-50 text-blue-800 text-xs"
+                                            x-text="getTotaalJP(poule, judoka.id)"></td>
+                                    </template>
+                                    <template x-if="!poule.is_klok_poule">
+                                        <td class="px-0.5 py-0.5 text-center font-bold border-l-2 border-yellow-300 text-xs"
+                                            :class="isPouleAfgerond(poule) ? getPlaatsClass(getPlaats(poule, judoka.id)) : 'bg-yellow-50'"
+                                            x-text="isPouleAfgerond(poule) ? getPlaats(poule, judoka.id) : '-'"></td>
+                                    </template>
                                 </tr>
                             </template>
                         </tbody>
@@ -1138,6 +1156,17 @@ function matInterface() {
                 // Doorschuiven: geel→groen, blauw→geel, blauw=null
                 await this.setWedstrijdStatus(matVolgendeId || null, matGereedmakenId || null, null);
             }
+        },
+
+        getTotaalWins(poule, judokaId) {
+            let wins = 0;
+            poule.wedstrijden.forEach(w => {
+                if (this.speeltInWedstrijd(judokaId, w)) {
+                    const wp = parseInt(w.wpScores?.[judokaId]) || 0;
+                    if (wp === 2) wins++;
+                }
+            });
+            return wins;
         },
 
         getTotaalWP(poule, judokaId) {

@@ -41,8 +41,13 @@
                         </div>
                     </div>
                     <div class="text-right text-xs">
+                        @if($poule->is_klok_poule ?? false)
+                        <span class="font-bold text-green-600">{{ $standing['gewonnen'] }}</span>
+                        <span class="text-gray-400">W</span>
+                        @else
                         <span class="font-bold text-blue-600">{{ $standing['wp'] }}</span>
                         <span class="text-gray-400">WP</span>
+                        @endif
                     </div>
                 </div>
                 @endforeach
