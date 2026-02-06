@@ -373,6 +373,7 @@ class WedstrijdSchemaService
                 'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
+                'is_klok_poule' => $poule->isKlokPoule(),
                 // DEPRECATED - kept for backwards compatibility during transition
                 'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
                 'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,
