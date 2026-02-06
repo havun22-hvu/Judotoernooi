@@ -114,8 +114,8 @@
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
                     <form action="{{ route('toernooi.club.toggle', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST"
-                          @if($isUitgenodigd && !$kanUitschakelen)
-                          onsubmit="alert('Kan {{ $club->naam }} niet deselecteren: er zijn nog {{ $club->judokas_count }} judoka\'s ingeschreven.'); return false;"
+                          @if($isUitgenodigd && $club->judokas_count > 0)
+                          onsubmit="return confirm('{{ $club->naam }} heeft nog {{ $club->judokas_count }} judoka\'s. Toch deselecteren?');"
                           @endif>
                         @csrf
                         <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors
