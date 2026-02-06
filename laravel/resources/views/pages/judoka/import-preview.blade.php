@@ -587,8 +587,12 @@ function updateAlleVoorbeelden() {
             // Haal voorbeeld data
             const waarden = [];
             for (let i = 0; i < Math.min(3, previewData.length); i++) {
-                const val = previewData[i][kolomIndex];
-                if (val !== null && val !== '') waarden.push(val);
+                let val = previewData[i][kolomIndex];
+                if (val !== null && val !== '') {
+                    // Convert dates to year for geboortejaar field
+                    if (veld === 'geboortejaar') val = extractJaar(val);
+                    waarden.push(val);
+                }
             }
             voorbeeldCell.textContent = waarden.length > 0 ? waarden.join(', ') : '-';
 
@@ -605,6 +609,25 @@ function updateAlleVoorbeelden() {
     });
 
     updatePreviewHighlights();
+}
+
+function extractJaar(val) {
+    const str = String(val).trim();
+    const num = parseInt(str);
+    // Excel serial date number
+    if (!isNaN(num) && num > 30000 && num < 60000) {
+        const excelEpoch = new Date(1899, 11, 30);
+        const date = new Date(excelEpoch.getTime() + num * 86400000);
+        return date.getFullYear();
+    }
+    // Already a year
+    if (!isNaN(num) && num >= 1950 && num <= 2026) {
+        return num;
+    }
+    // Date string - extract 4-digit year
+    const match = str.match(/(\d{4})/);
+    if (match) return parseInt(match[1]);
+    return val;
 }
 
 function valideerData(veld, waarden) {
