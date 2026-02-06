@@ -252,8 +252,10 @@ class PubliekController extends Controller
 
         // Calculate standings for each poule (exclude absent judokas)
         $poules = $poules->map(function ($poule) {
+            $isKlokPoule = $poule->isKlokPoule();
             $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen > 0 && $j->aanwezigheid !== 'afwezig');
-            $standings = $activeJudokas->map(function ($judoka) use ($poule) {
+            $standings = $activeJudokas->map(function ($judoka) use ($poule, $isKlokPoule) {
+                $gewonnen = 0;
                 $wp = 0;
                 $jp = 0;
                 foreach ($poule->wedstrijden as $w) {
@@ -261,27 +263,40 @@ class PubliekController extends Controller
                     $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
                     if (!$isInWedstrijd) continue;
 
-                    // JP
-                    if ($w->judoka_wit_id === $judoka->id) {
-                        $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                    } else {
-                        $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                    // Count wins
+                    if ($w->winnaar_id === $judoka->id) {
+                        $gewonnen++;
                     }
 
-                    // WP: Win=2, Draw=1, Loss=0
-                    if ($w->winnaar_id === $judoka->id) {
-                        $wp += 2;
-                    } elseif ($w->winnaar_id === null) {
-                        $wp += 1; // Gelijkspel
+                    if (!$isKlokPoule) {
+                        // JP
+                        if ($w->judoka_wit_id === $judoka->id) {
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                        } else {
+                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                        }
+
+                        // WP: Win=2, Draw=1, Loss=0
+                        if ($w->winnaar_id === $judoka->id) {
+                            $wp += 2;
+                        } elseif ($w->winnaar_id === null) {
+                            $wp += 1; // Gelijkspel
+                        }
                     }
                 }
-                return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp];
+                return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp, 'gewonnen' => (int) $gewonnen];
             });
 
-            // Sort by WP desc, JP desc
-            $poule->standings = $standings->sortByDesc('wp')->sortByDesc(function ($s) {
-                return (int) $s['wp'] * 1000 + (int) $s['jp'];
-            })->values();
+            // Sort: klok poule by gewonnen, normal by WP/JP
+            if ($isKlokPoule) {
+                $poule->standings = $standings->sortByDesc('gewonnen')->values();
+            } else {
+                $poule->standings = $standings->sortByDesc('wp')->sortByDesc(function ($s) {
+                    return (int) $s['wp'] * 1000 + (int) $s['jp'];
+                })->values();
+            }
+
+            $poule->is_klok_poule = $isKlokPoule;
 
             return $poule;
         });

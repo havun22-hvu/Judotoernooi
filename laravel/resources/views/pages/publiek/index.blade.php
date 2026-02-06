@@ -904,21 +904,30 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     @foreach($poules as $poule)
                     <div class="bg-white rounded-lg shadow overflow-hidden">
-                        <div class="bg-purple-600 text-white px-4 py-2">
+                        <div class="{{ $poule->is_klok_poule ? 'bg-teal-600' : 'bg-purple-600' }} text-white px-4 py-2">
                             @if($poule->gewichtsklasse && $poule->gewichtsklasse !== 'onbekend')
                             <span class="font-bold">{{ $poule->gewichtsklasse }}</span> -
                             @endif
-                            <span class="text-purple-200 text-sm">Poule {{ $poule->nummer }}</span>
+                            <span class="{{ $poule->is_klok_poule ? 'text-teal-200' : 'text-purple-200' }} text-sm">
+                                {{ $poule->is_klok_poule ? 'Klok Poule' : 'Poule' }} {{ $poule->nummer }}
+                            </span>
                         </div>
                         <div class="divide-y">
                             @foreach($poule->standings as $index => $standing)
                             @php $plaats = $index + 1; @endphp
                             <div class="px-4 py-2 flex justify-between items-center
-                                @if($plaats === 1) bg-yellow-50
-                                @elseif($plaats === 2) bg-gray-50
-                                @elseif($plaats === 3) bg-orange-50
+                                @if(!$poule->is_klok_poule)
+                                    @if($plaats === 1) bg-yellow-50
+                                    @elseif($plaats === 2) bg-gray-50
+                                    @elseif($plaats === 3) bg-orange-50
+                                    @endif
                                 @endif">
                                 <div class="flex items-center gap-3">
+                                    @if($poule->is_klok_poule)
+                                    <span class="w-8 h-8 rounded-full flex items-center justify-center bg-teal-100 text-teal-700 text-sm font-bold">
+                                        {{ $standing['gewonnen'] }}
+                                    </span>
+                                    @else
                                     <span class="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold
                                         @if($plaats === 1) bg-yellow-400 text-yellow-900
                                         @elseif($plaats === 2) bg-gray-300 text-gray-800
@@ -927,16 +936,22 @@
                                         @endif">
                                         {{ $plaats }}
                                     </span>
+                                    @endif
                                     <div>
                                         <span class="font-medium text-gray-800">{{ $standing['judoka']->naam }}</span>
                                         <span class="text-gray-500 text-xs block">{{ $standing['judoka']->club?->naam ?? '-' }}</span>
                                     </div>
                                 </div>
                                 <div class="text-right text-sm">
+                                    @if($poule->is_klok_poule)
+                                    <span class="font-bold text-teal-600">{{ $standing['gewonnen'] }}</span>
+                                    <span class="text-gray-400">gewonnen</span>
+                                    @else
                                     <span class="font-bold text-blue-600">{{ $standing['wp'] }}</span>
                                     <span class="text-gray-400">WP</span>
                                     <span class="text-gray-600 ml-1">{{ $standing['jp'] }}</span>
                                     <span class="text-gray-400">JP</span>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
