@@ -515,23 +515,26 @@ class ImportService
 
         $waarde = trim((string) $waarde);
 
+        // Normalize backslash separators to forward slash for easier parsing
+        $genormaliseerd = str_replace('\\', '/', $waarde);
+
         // Extract 4-digit year from any string (covers ALL date formats)
-        // Covers: 24-01-2015, 01/24/2015, 2015-01-24, 24.01.2015, 2015-01-24T12:00:00Z, etc.
-        if (preg_match('/\b(19\d{2}|20\d{2})\b/', $waarde, $matches)) {
+        // Covers: 24-01-2015, 01/24/2015, 2015-01-24, 24.01.2015, 24\01\2015, 2015-01-24T12:00:00Z, etc.
+        if (preg_match('/\b(19\d{2}|20\d{2})\b/', $genormaliseerd, $matches)) {
             return (int) $matches[1];
         }
 
-        // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy, mm-dd-yy
-        // e.g. 24-01-15, 01/24/15, 24.01.15
-        if (preg_match('/^\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2}$/', $waarde)) {
-            preg_match('/(\d{2})$/', $waarde, $m);
+        // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy, dd\mm\yy
+        // e.g. 24-01-15, 01/24/15, 24.01.15, 24\01\15
+        if (preg_match('/^\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2}$/', $genormaliseerd)) {
+            preg_match('/(\d{2})$/', $genormaliseerd, $m);
             $yy = (int) $m[1];
             return ($yy > 50) ? 1900 + $yy : 2000 + $yy;
         }
 
-        // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd
-        // e.g. 15-01-24, 15/01/24
-        if (preg_match('/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/', $waarde, $m)) {
+        // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd, yy\mm\dd
+        // e.g. 15-01-24, 15/01/24, 15\01\24
+        if (preg_match('/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/', $genormaliseerd, $m)) {
             $yy = (int) $m[1];
             $candidate = ($yy > 50) ? 1900 + $yy : 2000 + $yy;
             if ($candidate >= 1950 && $candidate <= (int) date('Y')) {
@@ -549,7 +552,7 @@ class ImportService
             'jun' => 'jun', 'jul' => 'jul', 'aug' => 'aug', 'sep' => 'sep',
             'okt' => 'oct', 'nov' => 'nov', 'dec' => 'dec',
         ];
-        $vertaald = str_ireplace(array_keys($nlMaanden), array_values($nlMaanden), $waarde);
+        $vertaald = str_ireplace(array_keys($nlMaanden), array_values($nlMaanden), $genormaliseerd);
 
         // Try strtotime (handles English dates, natural language, ISO 8601)
         $ts = strtotime($vertaald);
@@ -563,7 +566,7 @@ class ImportService
         // Try DateTime::createFromFormat for remaining edge cases
         $formats = ['d-m-y', 'd/m/y', 'd.m.y', 'y-m-d', 'y/m/d', 'y.m.d'];
         foreach ($formats as $format) {
-            $date = \DateTime::createFromFormat($format, $waarde);
+            $date = \DateTime::createFromFormat($format, $genormaliseerd);
             if ($date !== false) {
                 $jaar = (int) $date->format('Y');
                 if ($jaar >= 1950 && $jaar <= (int) date('Y')) {
