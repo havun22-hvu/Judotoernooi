@@ -1159,8 +1159,8 @@
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
                                     onchange="toggleKlokPouleSelect(this)">
                                 <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
-                                <option value="klok_poule" ${systeem === 'klok_poule' ? 'selected' : ''}>Klok Poule</option>
                                 <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''}>Kruisfinale</option>
+                                <option value="klok_poule" ${systeem === 'klok_poule' ? 'selected' : ''}>Klok Poule</option>
                                 <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
                             </select>
                             <select name="klok_poule_wedstrijden[${key}]"
