@@ -612,9 +612,15 @@ function valideerData(veld, waarden) {
 
     for (const val of waarden) {
         if (veld === 'geboortejaar') {
-            const num = parseInt(val);
-            if (isNaN(num) || num < 1950 || num > 2026) {
-                return `Verwacht jaar, gevonden: ${val}`;
+            const str = String(val).trim();
+            const num = parseInt(str);
+            // Accept: plain year (2020), Excel serial date (30000-60000), or string with 4-digit year
+            if (!isNaN(num) && ((num >= 1950 && num <= 2026) || (num > 30000 && num < 60000))) {
+                // OK: plain year or Excel serial
+            } else if (/\d{4}/.test(str)) {
+                // OK: contains 4-digit year (date string like 1/1/2020)
+            } else {
+                return `Verwacht jaar of datum, gevonden: ${val}`;
             }
         }
         if (veld === 'geslacht') {
