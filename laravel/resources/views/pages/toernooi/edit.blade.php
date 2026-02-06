@@ -1849,6 +1849,33 @@
         </div>
     </div>
 
+    <!-- WEEGKAARTEN PUBLIEK -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Weegkaarten in publieke app</h2>
+        <form action="{{ route('toernooi.portaal.instellingen', $toernooi->routeParams()) }}" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="portaal_modus" value="{{ $toernooi->portaal_modus ?? 'mutaties' }}">
+            <div class="p-4 border rounded-lg bg-gray-50">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input type="hidden" name="weegkaarten_publiek" value="0">
+                    <input type="checkbox" name="weegkaarten_publiek" value="1"
+                           {{ $toernooi->weegkaarten_publiek ? 'checked' : '' }}
+                           class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                    <div>
+                        <span class="font-bold text-gray-800">Weegkaarten publiek beschikbaar</span>
+                        <p class="text-sm text-gray-500 mt-1">Ouders en coaches kunnen de weegkaart van hun judoka bekijken via de publieke toernooi pagina.</p>
+                    </div>
+                </label>
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg">
+                    Opslaan
+                </button>
+            </div>
+        </form>
+    </div>
+
     <!-- CHAT SERVER (Reverb) -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Chat Server</h2>
@@ -1982,20 +2009,6 @@
                         <li><strong>Alleen mutaties:</strong> Inschrijving via extern systeem, budoscholen corrigeren gewicht/band via portaal</li>
                         <li><strong>Volledig:</strong> Budoscholen schrijven zelf in via het portaal</li>
                     </ul>
-                </div>
-
-                <!-- Weegkaarten publiek -->
-                <div class="p-4 border rounded-lg bg-gray-50">
-                    <label class="flex items-center gap-3 cursor-pointer">
-                        <input type="hidden" name="weegkaarten_publiek" value="0">
-                        <input type="checkbox" name="weegkaarten_publiek" value="1"
-                               {{ $toernooi->weegkaarten_publiek ? 'checked' : '' }}
-                               class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
-                        <div>
-                            <span class="font-bold text-gray-800">Weegkaarten publiek beschikbaar</span>
-                            <p class="text-sm text-gray-500 mt-1">Ouders en coaches kunnen de weegkaart van hun judoka bekijken via de publieke toernooi pagina.</p>
-                        </div>
-                    </label>
                 </div>
 
                 <div class="flex justify-end">
