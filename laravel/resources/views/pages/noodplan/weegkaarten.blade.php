@@ -124,15 +124,10 @@
         display: flex;
         justify-content: space-between;
     }
-    /* Band kleuren */
-    .band-wit { background: white; color: #374151; border: 1px solid #9ca3af; }
-    .band-geel { background: #facc15; color: #713f12; }
-    .band-oranje { background: #f97316; color: white; }
-    .band-groen { background: #16a34a; color: white; }
-    .band-blauw { background: #2563eb; color: white; }
-    .band-bruin { background: #92400e; color: white; }
-    .band-zwart { background: #111827; color: white; }
-    .band-default { background: #e5e7eb; color: #374151; }
+    /* Band kleuren - leesbare tekst met kleur-bolletje */
+    .band-wit, .band-geel, .band-oranje, .band-groen, .band-blauw, .band-bruin, .band-zwart, .band-default {
+        color: #111; background: none; border: none;
+    }
     /* Geen kleuren voor print - alles zwart */
     .geslacht-m, .geslacht-v, .leeftijd, .gewicht { color: #111; }
 
@@ -141,9 +136,7 @@
         .weegkaart-naam { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .weegkaart-blok { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .weegkaart-footer { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .band-wit, .band-geel, .band-oranje, .band-groen, .band-blauw, .band-bruin, .band-zwart, .band-default {
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        }
+        .band-wit, .band-geel, .band-oranje, .band-groen, .band-blauw, .band-bruin, .band-zwart, .band-default { }
         .mat-rood, .mat-blauw, .mat-groen, .mat-geel, .mat-oranje, .mat-paars, .mat-roze, .mat-default {
             -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
@@ -217,7 +210,7 @@
             </div>
             <div>
                 <div class="label">Band</div>
-                <div class="value"><span class="{{ $bandKleur }}" style="padding: 1px 6px; border-radius: 3px;">{{ $bandLabel }}</span></div>
+                <div class="value">{{ $bandLabel }}</div>
             </div>
             <div>
                 <div class="label">Geslacht</div>
