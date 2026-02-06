@@ -498,7 +498,7 @@ class ImportService
     {
         if (is_numeric($waarde)) {
             $jaar = (int) $waarde;
-            // 2-digit year
+            // 2-digit year (20 → 2020, 85 → 1985)
             if ($jaar < 100) {
                 return ($jaar > 50) ? 1900 + $jaar : 2000 + $jaar;
             }
@@ -516,14 +516,60 @@ class ImportService
         $waarde = trim((string) $waarde);
 
         // Extract 4-digit year from any string (covers ALL date formats)
+        // Covers: 24-01-2015, 01/24/2015, 2015-01-24, 24.01.2015, 2015-01-24T12:00:00Z, etc.
         if (preg_match('/\b(19\d{2}|20\d{2})\b/', $waarde, $matches)) {
             return (int) $matches[1];
         }
 
-        // Last resort: try strtotime for natural language dates
-        $ts = strtotime($waarde);
+        // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy, mm-dd-yy
+        // e.g. 24-01-15, 01/24/15, 24.01.15
+        if (preg_match('/^\d{1,2}[-\/.]\d{1,2}[-\/.]\d{2}$/', $waarde)) {
+            preg_match('/(\d{2})$/', $waarde, $m);
+            $yy = (int) $m[1];
+            return ($yy > 50) ? 1900 + $yy : 2000 + $yy;
+        }
+
+        // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd
+        // e.g. 15-01-24, 15/01/24
+        if (preg_match('/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/', $waarde, $m)) {
+            $yy = (int) $m[1];
+            $candidate = ($yy > 50) ? 1900 + $yy : 2000 + $yy;
+            if ($candidate >= 1950 && $candidate <= (int) date('Y')) {
+                return $candidate;
+            }
+        }
+
+        // Dutch month names → English for strtotime
+        $nlMaanden = [
+            'januari' => 'january', 'februari' => 'february', 'maart' => 'march',
+            'april' => 'april', 'mei' => 'may', 'juni' => 'june',
+            'juli' => 'july', 'augustus' => 'august', 'september' => 'september',
+            'oktober' => 'october', 'november' => 'november', 'december' => 'december',
+            'jan' => 'jan', 'feb' => 'feb', 'mrt' => 'mar', 'apr' => 'apr',
+            'jun' => 'jun', 'jul' => 'jul', 'aug' => 'aug', 'sep' => 'sep',
+            'okt' => 'oct', 'nov' => 'nov', 'dec' => 'dec',
+        ];
+        $vertaald = str_ireplace(array_keys($nlMaanden), array_values($nlMaanden), $waarde);
+
+        // Try strtotime (handles English dates, natural language, ISO 8601)
+        $ts = strtotime($vertaald);
         if ($ts !== false) {
-            return (int) date('Y', $ts);
+            $jaar = (int) date('Y', $ts);
+            if ($jaar >= 1950 && $jaar <= (int) date('Y')) {
+                return $jaar;
+            }
+        }
+
+        // Try DateTime::createFromFormat for remaining edge cases
+        $formats = ['d-m-y', 'd/m/y', 'd.m.y', 'y-m-d', 'y/m/d', 'y.m.d'];
+        foreach ($formats as $format) {
+            $date = \DateTime::createFromFormat($format, $waarde);
+            if ($date !== false) {
+                $jaar = (int) $date->format('Y');
+                if ($jaar >= 1950 && $jaar <= (int) date('Y')) {
+                    return $jaar;
+                }
+            }
         }
 
         throw new \InvalidArgumentException("Ongeldig geboortejaar: {$waarde}");
