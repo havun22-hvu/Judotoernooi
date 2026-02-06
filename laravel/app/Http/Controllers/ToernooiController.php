@@ -466,10 +466,12 @@ class ToernooiController extends Controller
     {
         $validated = $request->validate([
             'portaal_modus' => 'required|in:uit,mutaties,volledig',
+            'weegkaarten_publiek' => 'boolean',
         ]);
 
         $toernooi->update([
             'portaal_modus' => $validated['portaal_modus'],
+            'weegkaarten_publiek' => $request->boolean('weegkaarten_publiek'),
         ]);
 
         return redirect()
