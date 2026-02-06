@@ -160,8 +160,9 @@
         $mat = $poule?->mat;
         $aantalBlokken = $toernooi->blokken()->count();
 
-        // Band kleur class
-        $bandKleur = match(strtolower($judoka->band ?? '')) {
+        // Band kleur class via enum
+        $bandLabel = \App\Enums\Band::toKleur($judoka->band) ?: '?';
+        $bandKleur = match(strtolower($bandLabel)) {
             'wit' => 'band-wit',
             'geel' => 'band-geel',
             'oranje' => 'band-oranje',
@@ -216,7 +217,7 @@
             </div>
             <div>
                 <div class="label">Band</div>
-                <div class="value"><span class="{{ $bandKleur }}" style="padding: 1px 6px; border-radius: 3px;">{{ ucfirst(explode(' ', $judoka->band ?? '?')[0]) }}</span></div>
+                <div class="value"><span class="{{ $bandKleur }}" style="padding: 1px 6px; border-radius: 3px;">{{ $bandLabel }}</span></div>
             </div>
             <div>
                 <div class="label">Geslacht</div>
