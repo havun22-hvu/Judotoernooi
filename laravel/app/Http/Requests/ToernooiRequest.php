@@ -51,7 +51,7 @@ class ToernooiRequest extends FormRequest
             'poule_grootte_voorkeur' => 'nullable|array|min:1',
             'poule_grootte_voorkeur.*' => 'integer|min:2|max:12',
             'wedstrijd_systeem' => 'nullable|array',
-            'wedstrijd_systeem.*' => 'string|in:poules,poules_kruisfinale,eliminatie',
+            'wedstrijd_systeem.*' => 'string|in:poules,klok_poule,poules_kruisfinale,eliminatie',
             'eliminatie_gewichtsklassen' => 'nullable|array',
             'eliminatie_gewichtsklassen.*' => 'nullable|array',
             'eliminatie_gewichtsklassen.*.*' => 'string',
