@@ -629,9 +629,19 @@
                                 </div>
                                 @endif
                             </div>
-                            <button @click="toggleFavoriet({{ $judoka->id }})"
-                                    class="favorite-star text-2xl flex-shrink-0"
-                                    :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                @if($toernooi->weegkaarten_publiek && $judoka->qr_code)
+                                <a href="{{ route('weegkaart.show', $judoka->qr_code) }}" target="_blank"
+                                   class="text-blue-500 hover:text-blue-700" title="Weegkaart">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/>
+                                    </svg>
+                                </a>
+                                @endif
+                                <button @click="toggleFavoriet({{ $judoka->id }})"
+                                        class="favorite-star text-2xl"
+                                        :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
+                            </div>
                         </div>
                         @endforeach
                     </div>
@@ -679,9 +689,19 @@
                                 </div>
                                 @endif
                             </div>
-                            <button @click="toggleFavoriet({{ $judoka->id }})"
-                                    class="favorite-star text-2xl flex-shrink-0"
-                                    :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                @if($toernooi->weegkaarten_publiek && $judoka->qr_code)
+                                <a href="{{ route('weegkaart.show', $judoka->qr_code) }}" target="_blank"
+                                   class="text-blue-500 hover:text-blue-700" title="Weegkaart">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/>
+                                    </svg>
+                                </a>
+                                @endif
+                                <button @click="toggleFavoriet({{ $judoka->id }})"
+                                        class="favorite-star text-2xl"
+                                        :class="isFavoriet({{ $judoka->id }}) ? 'active' : 'text-gray-300'">&#9733;</button>
+                            </div>
                         </div>
                         @endforeach
                     </div>

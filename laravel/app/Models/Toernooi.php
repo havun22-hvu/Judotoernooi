@@ -170,6 +170,7 @@ class Toernooi extends Model
         'herinnering_verstuurd',
         'betaling_actief',
         'portaal_modus',
+        'weegkaarten_publiek',
         'inschrijfgeld',
         'mollie_mode',
         'platform_toeslag',
@@ -241,6 +242,7 @@ class Toernooi extends Model
         'mollie_onboarded' => 'boolean',
         'import_fouten' => 'array',
         'coach_incheck_actief' => 'boolean',
+        'weegkaarten_publiek' => 'boolean',
         'paid_max_judokas' => 'integer',
         'paid_at' => 'datetime',
     ];

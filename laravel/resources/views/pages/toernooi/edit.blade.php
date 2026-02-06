@@ -1984,6 +1984,20 @@
                     </ul>
                 </div>
 
+                <!-- Weegkaarten publiek -->
+                <div class="p-4 border rounded-lg bg-gray-50">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="hidden" name="weegkaarten_publiek" value="0">
+                        <input type="checkbox" name="weegkaarten_publiek" value="1"
+                               {{ $toernooi->weegkaarten_publiek ? 'checked' : '' }}
+                               class="w-5 h-5 rounded text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <span class="font-bold text-gray-800">Weegkaarten publiek beschikbaar</span>
+                            <p class="text-sm text-gray-500 mt-1">Ouders en coaches kunnen de weegkaart van hun judoka bekijken via de publieke toernooi pagina.</p>
+                        </div>
+                    </label>
+                </div>
+
                 <div class="flex justify-end">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg">
                         Opslaan
