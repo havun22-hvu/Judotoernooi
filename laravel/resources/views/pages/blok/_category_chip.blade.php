@@ -33,8 +33,11 @@
     if ($isPoule) {
         // Individuele poule: toon "P{nr} {label} {lft}j {kg}kg (Xw)"
         // Extract label prefix (Mini's → M, Jeugd → J)
+        // Skip prefix if leeftijd is a config key fallback (e.g. "standaard", "u11_jongens")
         $labelPrefix = '';
-        if (preg_match('/^([A-Za-z])/', $cat['leeftijd'], $m)) {
+        $leeftijdLabel = $cat['leeftijd'] ?? '';
+        $looksLikeKey = preg_match('/^[a-z0-9_]+$/', $leeftijdLabel);
+        if (!$looksLikeKey && preg_match('/^([A-Za-z])/', $leeftijdLabel, $m)) {
             $labelPrefix = strtoupper($m[1]);
         }
         // Extract leeftijd uit titel "Jeugd 7-9j -30kg" → "7-9j"
