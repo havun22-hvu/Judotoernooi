@@ -117,8 +117,21 @@ class ImportService
         switch ($veld) {
             case 'geboortejaar':
                 foreach ($values as $val) {
-                    if (!is_numeric($val) || (int)$val < 1950 || (int)$val > date('Y')) {
+                    $val = trim((string) $val);
+                    // Accept: plain year (2020), date string (1/1/2020, 2020-01-15), Excel serial number (43831)
+                    if (is_numeric($val)) {
+                        $num = (int) $val;
+                        if ($num >= 1950 && $num <= (int) date('Y')) {
+                            continue; // Plain year
+                        }
+                        if ($num > 30000 && $num < 60000) {
+                            continue; // Excel serial date number
+                        }
                         return "Verwacht jaren (1950-" . date('Y') . "), gevonden: " . $val;
+                    }
+                    // Date string: extract year
+                    if (!preg_match('/\d{4}/', $val)) {
+                        return "Verwacht jaar of datum, gevonden: " . $val;
                     }
                 }
                 break;
@@ -493,11 +506,27 @@ class ImportService
             if ($jaar < 100) {
                 $jaar = ($jaar > 50) ? 1900 + $jaar : 2000 + $jaar;
             }
+            // Handle Excel serial date numbers (e.g. 43831 = 2020-01-01)
+            if ($jaar > 30000 && $jaar < 60000) {
+                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($jaar);
+                return (int) $date->format('Y');
+            }
             return $jaar;
         }
 
-        // Try to parse date string
-        if (preg_match('/(\d{4})/', (string)$waarde, $matches)) {
+        // Try to parse date string (M/D/Y, D-M-Y, Y-M-D, etc.)
+        $waarde = trim((string) $waarde);
+
+        // Try PHP date parsing for common formats
+        foreach (['m/d/Y', 'd/m/Y', 'Y-m-d', 'd-m-Y', 'm-d-Y'] as $format) {
+            $date = \DateTime::createFromFormat($format, $waarde);
+            if ($date && $date->format($format) === $waarde) {
+                return (int) $date->format('Y');
+            }
+        }
+
+        // Fallback: extract 4-digit year from string
+        if (preg_match('/(\d{4})/', $waarde, $matches)) {
             return (int)$matches[1];
         }
 
@@ -863,7 +892,7 @@ class ImportService
 
         // Invalid data format
         if (str_contains($error, 'Ongeldig geboortejaar')) {
-            return 'Ongeldig geboortejaar - verwacht 4 cijfers (bijv. 2015)';
+            return 'Ongeldig geboortejaar - verwacht jaar (2015) of datum (1/1/2015)';
         }
 
         // Data too long
