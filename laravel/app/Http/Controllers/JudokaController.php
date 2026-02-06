@@ -12,6 +12,7 @@ use App\Models\Organisator;
 use App\Models\Club;
 use App\Models\Judoka;
 use App\Models\Toernooi;
+use App\Services\CategorieClassifier;
 use App\Services\ImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -551,6 +552,11 @@ class JudokaController extends Controller
         $gecorrigeerd = 0;
         $fouten = [];
 
+        // Use CategorieClassifier for correct key + label + sortCategorie
+        $config = $toernooi->getAlleGewichtsklassen();
+        $classifier = new CategorieClassifier($config, $toernooi->gewicht_tolerantie ?? 0.5);
+        $toernooiJaar = $toernooi->datum?->year ?? (int) date('Y');
+
         // First pass: correct names and check required fields
         foreach ($judokas as $judoka) {
             $wijzigingen = [];
@@ -573,12 +579,28 @@ class JudokaController extends Controller
                 }
             }
 
-            // Recalculate leeftijdsklasse from toernooi config
+            // Recalculate classification using CategorieClassifier (key + label + sortCategorie)
             if (!empty($judoka->geboortejaar) && !empty($judoka->geslacht)) {
-                $leeftijd = date('Y') - $judoka->geboortejaar;
-                $nieuweLeeftijdsklasse = $toernooi->bepaalLeeftijdsklasse($leeftijd, $judoka->geslacht, $wijzigingen['band'] ?? $judoka->band);
+                $classificatie = $classifier->classificeer($judoka, $toernooiJaar);
+
+                $nieuweLeeftijdsklasse = $classificatie['label'];
+                $nieuweCategorieKey = $classificatie['key'];
+                $nieuweSortCategorie = $classificatie['sortCategorie'];
+
                 if ($nieuweLeeftijdsklasse && $nieuweLeeftijdsklasse !== $judoka->leeftijdsklasse) {
                     $wijzigingen['leeftijdsklasse'] = $nieuweLeeftijdsklasse;
+                }
+                if ($nieuweCategorieKey !== $judoka->categorie_key) {
+                    $wijzigingen['categorie_key'] = $nieuweCategorieKey;
+                }
+                if ($nieuweSortCategorie !== $judoka->sort_categorie) {
+                    $wijzigingen['sort_categorie'] = $nieuweSortCategorie;
+                }
+
+                // Update gewichtsklasse if classifier found one
+                $nieuweGewichtsklasse = $classificatie['gewichtsklasse'];
+                if ($nieuweGewichtsklasse !== null && $nieuweGewichtsklasse !== $judoka->gewichtsklasse) {
+                    $wijzigingen['gewichtsklasse'] = $nieuweGewichtsklasse;
                 }
 
                 // Update import_status if judoka now fits in a category
@@ -590,21 +612,6 @@ class JudokaController extends Controller
                 // Also mark as niet_in_categorie if judoka no longer fits
                 if ((!$huidigeLeeftijdsklasse || $huidigeLeeftijdsklasse === 'Onbekend') && $judoka->import_status !== 'niet_in_categorie') {
                     $wijzigingen['import_status'] = 'niet_in_categorie';
-                }
-
-                // Recalculate gewichtsklasse from toernooi config (only for fixed weight classes)
-                if (!empty($judoka->gewicht) && $judoka->gewicht > 0) {
-                    $nieuweGewichtsklasse = $toernooi->bepaalGewichtsklasse(
-                        $judoka->gewicht,
-                        $leeftijd,
-                        $judoka->geslacht,
-                        $wijzigingen['band'] ?? $judoka->band
-                    );
-                    // Update if changed (null means dynamic category - keep existing value)
-                    // Don't set null due to database NOT NULL constraint
-                    if ($nieuweGewichtsklasse !== null && $nieuweGewichtsklasse !== $judoka->gewichtsklasse) {
-                        $wijzigingen['gewichtsklasse'] = $nieuweGewichtsklasse;
-                    }
                 }
             }
 
