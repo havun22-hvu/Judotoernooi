@@ -102,6 +102,12 @@ class WedstrijdSchemaService
             };
         }
 
+        // Klok poule: fixed number of matches per judoka
+        if ($poule->isKlokPoule()) {
+            $wedstrijdenPerJudoka = $poule->getKlokPouleWedstrijden();
+            return $this->genereerKlokPouleSchema($aantal, $wedstrijdenPerJudoka);
+        }
+
         // Check if tournament has custom schemas (fresh load to avoid stale cache)
         $toernooi = $poule->toernooi()->first();
         $customSchemas = $toernooi?->wedstrijd_schemas ?? [];
@@ -161,6 +167,172 @@ class WedstrijdSchemaService
         }
 
         return $wedstrijden;
+    }
+
+    /**
+     * Generate klok poule schema where each judoka plays exactly $wedstrijdenPerJudoka matches.
+     *
+     * Algorithm:
+     * - If matches needed == round-robin (n-1): use full round-robin
+     * - If matches needed < round-robin: select subset of pairs, fairly distributed
+     * - If matches needed > round-robin: add extra (repeat) matches
+     *
+     * @param int $n Number of judokas (1-based indices)
+     * @param int $wedstrijdenPerJudoka Target matches per judoka (3, 4, or 5)
+     * @return array Array of [judoka1, judoka2] pairs (1-based)
+     */
+    private function genereerKlokPouleSchema(int $n, int $wedstrijdenPerJudoka): array
+    {
+        if ($n < 2) {
+            return [];
+        }
+
+        // Cap matches at sensible maximum
+        $wedstrijdenPerJudoka = min($wedstrijdenPerJudoka, $n * 2);
+
+        $roundRobinMatches = $n - 1; // matches per judoka in full round-robin
+        $roundRobin = $this->genereerRoundRobinSchema($n);
+
+        if ($wedstrijdenPerJudoka === $roundRobinMatches) {
+            // Exact match: use full round-robin
+            return $roundRobin;
+        }
+
+        if ($wedstrijdenPerJudoka < $roundRobinMatches) {
+            // Need fewer matches: remove pairs fairly
+            return $this->klokPouleMinderWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
+        }
+
+        // Need more matches: add repeat pairs
+        return $this->klokPouleMeerWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
+    }
+
+    /**
+     * Select subset of round-robin pairs so each judoka plays exactly $target matches.
+     */
+    private function klokPouleMinderWedstrijden(int $n, int $target, array $roundRobin): array
+    {
+        // Total matches needed: n * target / 2
+        $totaalNodig = (int) (($n * $target) / 2);
+
+        // Track matches per judoka
+        $matchCount = array_fill(1, $n, 0);
+        $selected = [];
+
+        // Use circle method: select the first $target opponents for each position
+        // Build a fair selection by iterating round-robin rounds
+        // Group round-robin into rounds (each round has n/2 or (n-1)/2 matches)
+        $matchesPerRound = (int) floor($n / 2);
+
+        // Try to select matches fairly from rounds
+        foreach ($roundRobin as $paar) {
+            $j1 = $paar[0];
+            $j2 = $paar[1];
+
+            // Only add if both judokas still need matches
+            if ($matchCount[$j1] < $target && $matchCount[$j2] < $target) {
+                $selected[] = $paar;
+                $matchCount[$j1]++;
+                $matchCount[$j2]++;
+            }
+
+            if (count($selected) >= $totaalNodig) {
+                break;
+            }
+        }
+
+        // If we don't have enough (rare edge case), add remaining pairs
+        if (count($selected) < $totaalNodig) {
+            foreach ($roundRobin as $paar) {
+                if (in_array($paar, $selected)) continue;
+
+                $j1 = $paar[0];
+                $j2 = $paar[1];
+
+                if ($matchCount[$j1] < $target || $matchCount[$j2] < $target) {
+                    $selected[] = $paar;
+                    $matchCount[$j1]++;
+                    $matchCount[$j2]++;
+                }
+
+                if (count($selected) >= $totaalNodig) break;
+            }
+        }
+
+        // Optimize order to minimize consecutive matches for same judoka
+        return $this->optimaliseerVolgorde($selected, $n);
+    }
+
+    /**
+     * Add extra (repeat) matches to round-robin so each judoka plays exactly $target matches.
+     */
+    private function klokPouleMeerWedstrijden(int $n, int $target, array $roundRobin): array
+    {
+        $extraPerJudoka = $target - ($n - 1); // extra matches needed per judoka
+        $totaalExtra = (int) (($n * $extraPerJudoka) / 2);
+
+        $matchCount = array_fill(1, $n, $n - 1); // already have round-robin
+        $extra = [];
+
+        // Add repeat matches from round-robin (cycle through)
+        $index = 0;
+        while (count($extra) < $totaalExtra && $index < count($roundRobin) * 3) {
+            $paar = $roundRobin[$index % count($roundRobin)];
+            $j1 = $paar[0];
+            $j2 = $paar[1];
+
+            if ($matchCount[$j1] < $target && $matchCount[$j2] < $target) {
+                // Swap sides for repeat match (wit/blauw swap)
+                $extra[] = [$paar[1], $paar[0]];
+                $matchCount[$j1]++;
+                $matchCount[$j2]++;
+            }
+
+            $index++;
+        }
+
+        $allMatches = array_merge($roundRobin, $extra);
+        return $this->optimaliseerVolgorde($allMatches, $n);
+    }
+
+    /**
+     * Optimize match order to minimize consecutive matches for the same judoka.
+     * Simple greedy: pick the match where both judokas had the most rest.
+     */
+    private function optimaliseerVolgorde(array $wedstrijden, int $n): array
+    {
+        if (count($wedstrijden) <= 2) {
+            return $wedstrijden;
+        }
+
+        $result = [];
+        $remaining = $wedstrijden;
+        $laatsteWedstrijd = array_fill(1, $n, -999); // last match index per judoka
+
+        for ($i = 0; $i < count($wedstrijden); $i++) {
+            $bestScore = -1;
+            $bestIdx = 0;
+
+            foreach ($remaining as $idx => $paar) {
+                // Score = minimum rest for both judokas (higher = better)
+                $rest1 = $i - $laatsteWedstrijd[$paar[0]];
+                $rest2 = $i - $laatsteWedstrijd[$paar[1]];
+                $score = min($rest1, $rest2);
+
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestIdx = $idx;
+                }
+            }
+
+            $gekozen = $remaining[$bestIdx];
+            $result[] = $gekozen;
+            $laatsteWedstrijd[$gekozen[0]] = $i;
+            $laatsteWedstrijd[$gekozen[1]] = $i;
+            unset($remaining[$bestIdx]);
+        }
+
+        return $result;
     }
 
     /**

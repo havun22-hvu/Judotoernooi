@@ -56,6 +56,23 @@ class Poule extends Model
     }
 
     /**
+     * Check if this poule uses the klok poule system.
+     */
+    public function isKlokPoule(): bool
+    {
+        $systeem = $this->toernooi?->wedstrijd_systeem[$this->categorie_key] ?? 'poules';
+        return $systeem === 'klok_poule';
+    }
+
+    /**
+     * Get the number of matches per judoka for klok poule (default 4).
+     */
+    public function getKlokPouleWedstrijden(): int
+    {
+        return (int) ($this->toernooi?->klok_poule_wedstrijden[$this->categorie_key] ?? 4);
+    }
+
+    /**
      * Originele poule waar deze barrage bij hoort
      */
     public function originelePoule(): BelongsTo
@@ -138,6 +155,12 @@ class Poule extends Model
         // Elimination bracket calculation
         if ($this->type === 'eliminatie') {
             return $this->berekenEliminatieWedstrijden($aantal);
+        }
+
+        // Klok poule: fixed number of matches per judoka
+        if ($this->isKlokPoule() && $aantal >= 2) {
+            $wedstrijdenPerJudoka = $this->getKlokPouleWedstrijden();
+            return (int) ceil(($aantal * $wedstrijdenPerJudoka) / 2);
         }
 
         // Round-robin calculation
