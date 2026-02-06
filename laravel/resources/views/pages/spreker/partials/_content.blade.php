@@ -194,9 +194,13 @@
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
                                 <th class="px-3 py-2 text-left font-bold text-gray-700">Naam</th>
+                                @if($poule->is_klok_poule ?? false)
+                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">W</th>
+                                @else
                                 <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">WP</th>
                                 <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">JP</th>
                                 <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">#</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -207,6 +211,9 @@
                                     <span class="font-bold">{{ $standing['judoka']->naam }}</span>
                                     <span class="text-gray-500 text-xs">({{ $standing['judoka']->club?->naam ?? '-' }})</span>
                                 </td>
+                                @if($poule->is_klok_poule ?? false)
+                                <td class="px-2 py-2 text-center font-bold bg-green-50 text-green-800">{{ $standing['gewonnen'] }}</td>
+                                @else
                                 <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800">{{ $standing['wp'] }}</td>
                                 <td class="px-2 py-2 text-center bg-blue-50 text-blue-800">{{ $standing['jp'] }}</td>
                                 <td class="px-2 py-2 text-center font-bold text-lg
@@ -217,6 +224,7 @@
                                     @endif">
                                     {{ $plaats }}
                                 </td>
+                                @endif
                             </tr>
                             @endforeach
                         </tbody>
@@ -540,9 +548,18 @@
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
                                 <th class="px-3 py-2 text-left font-bold text-gray-700">Naam</th>
-                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">WP</th>
-                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">JP</th>
-                                <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">#</th>
+                                <template x-if="selectedPouleData?.poule?.is_klok_poule">
+                                    <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">W</th>
+                                </template>
+                                <template x-if="!selectedPouleData?.poule?.is_klok_poule">
+                                    <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">WP</th>
+                                </template>
+                                <template x-if="!selectedPouleData?.poule?.is_klok_poule">
+                                    <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">JP</th>
+                                </template>
+                                <template x-if="!selectedPouleData?.poule?.is_klok_poule">
+                                    <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">#</th>
+                                </template>
                             </tr>
                         </thead>
                         <tbody>
@@ -552,8 +569,16 @@
                                         <span class="font-bold" x-text="standing.naam"></span>
                                         <span class="text-gray-500 text-xs" x-text="'(' + standing.club + ')'"></span>
                                     </td>
-                                    <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800" x-text="standing.wp"></td>
-                                    <td class="px-2 py-2 text-center bg-blue-50 text-blue-800" x-text="standing.jp"></td>
+                                    <template x-if="selectedPouleData?.poule?.is_klok_poule">
+                                        <td class="px-2 py-2 text-center font-bold bg-green-50 text-green-800" x-text="standing.gewonnen"></td>
+                                    </template>
+                                    <template x-if="!selectedPouleData?.poule?.is_klok_poule">
+                                        <td class="px-2 py-2 text-center font-bold bg-blue-50 text-blue-800" x-text="standing.wp"></td>
+                                    </template>
+                                    <template x-if="!selectedPouleData?.poule?.is_klok_poule">
+                                        <td class="px-2 py-2 text-center bg-blue-50 text-blue-800" x-text="standing.jp"></td>
+                                    </template>
+                                    <template x-if="!selectedPouleData?.poule?.is_klok_poule">
                                     <td class="px-2 py-2 text-center font-bold text-lg"
                                         :class="{
                                             'bg-yellow-400 text-yellow-900': index === 0,
@@ -562,6 +587,7 @@
                                             'bg-yellow-50': index > 2
                                         }"
                                         x-text="index + 1"></td>
+                                    </template>
                                 </tr>
                             </template>
                         </tbody>
