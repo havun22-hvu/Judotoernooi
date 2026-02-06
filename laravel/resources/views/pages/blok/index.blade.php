@@ -6,7 +6,7 @@
 @php
     // Dynamisch uit toernooi config (ondersteunt eigen presets)
     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
-    $leeftijdVolgorde = array_values(array_map(fn($c) => $c['label'] ?? '', $gewichtsklassenConfig));
+    $leeftijdVolgorde = array_values(array_map(fn($c, $k) => !empty($c['label']) ? $c['label'] : $k, $gewichtsklassenConfig, array_keys($gewichtsklassenConfig)));
 
     // Check of inschrijving gesloten is (weegkaarten hebben dan al bloknummers)
     $inschrijvingGesloten = !$toernooi->isInschrijvingOpen();
@@ -78,7 +78,7 @@
     $vasteLeeftijdsklassen = []; // label => true (voor legacy)
     $variabeleLeeftijdsklassen = []; // label => true (voor legacy)
     foreach ($gewichtsklassenConfig as $key => $catConfig) {
-        $label = $catConfig['label'] ?? $key;
+        $label = !empty($catConfig['label']) ? $catConfig['label'] : $key;
         $maxKg = (float) ($catConfig['max_kg_verschil'] ?? 0);
         $maxLft = (int) ($catConfig['max_leeftijd_verschil'] ?? 0);
 
@@ -97,7 +97,7 @@
     // Genereer afkortingen: gebruik label direct (of korte versie als >8 chars)
     $afkortingen = [];
     foreach ($gewichtsklassenConfig as $key => $config) {
-        $label = $config['label'] ?? $key;
+        $label = !empty($config['label']) ? $config['label'] : $key;
         $afkortingen[$label] = strlen($label) <= 10 ? $label : substr($label, 0, 8) . '..';
     }
 
