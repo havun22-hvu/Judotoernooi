@@ -544,6 +544,17 @@ Hoofdservice voor poule-indeling:
 - `maakPouleTitel()` - Genereert titel
 - `verplaatsJudoka()` - Verplaatst judoka naar andere poule
 
+**BELANGRIJK: Altijd verse config lezen!**
+Alle services lezen bij elke operatie de actuele config uit de database:
+- `genereerPouleIndeling()` → roept `initializeFromToernooi()` + `herberkenKlassen()` aan
+- `BlokMatVerdelingService` → leest direct uit `$toernooi->blokken`, `$toernooi->poules()`
+- Er wordt NOOIT gecachte config hergebruikt van een vorige run
+
+**Herclassificatie triggers:**
+- Bij opslaan categorie-instellingen → `voerValidatieUit()` (JudokaController)
+- Bij poule-indeling genereren → `herberkenKlassen()` (PouleIndelingService)
+- Beide gebruiken `CategorieClassifier` en updaten: leeftijdsklasse, categorie_key, sort_categorie
+
 **Flow:**
 1. `CategorieClassifier` → classificeert judoka's naar categorieën
 2. `PouleIndelingService` → roept Python solver aan per categorie
