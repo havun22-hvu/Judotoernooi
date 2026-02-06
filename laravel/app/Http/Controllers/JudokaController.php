@@ -35,17 +35,16 @@ class JudokaController extends Controller
 
         // Filter out judokas that don't fit in any category (from file import)
         // These are shown in the portal but not in the main list
+        // Use categorie_key (not leeftijdsklasse) - label can be empty in config
         $judokas = $alleJudokas->filter(fn ($j) =>
-            !empty($j->leeftijdsklasse) &&
-            $j->leeftijdsklasse !== 'Onbekend' &&
+            !empty($j->categorie_key) &&
             $j->import_status !== 'niet_in_categorie'
         );
 
         // Keep track of excluded judokas for warning display
         $nietInCategorie = $alleJudokas->filter(fn ($j) =>
             $j->import_status === 'niet_in_categorie' ||
-            empty($j->leeftijdsklasse) ||
-            $j->leeftijdsklasse === 'Onbekend'
+            empty($j->categorie_key)
         );
 
         // Sort by: age class (youngest first), weight class (lightest first), gender, name
@@ -62,12 +61,14 @@ class JudokaController extends Controller
 
         // Add all configured categories (sorted by max_leeftijd)
         // Skip metadata keys (starting with _) and non-array entries
+        // Match on categorie_key (not label) - label can be empty
         foreach ($gewichtsklassen as $key => $config) {
             if (!is_array($config) || str_starts_with($key, '_')) {
                 continue;
             }
             $label = $config['label'] ?? ucfirst(str_replace('_', ' ', $key));
-            $judokasPerKlasse[$label] = $judokas->filter(fn ($j) => $j->leeftijdsklasse === $label);
+            $displayLabel = !empty($label) ? $label : ucfirst(str_replace('_', ' ', $key));
+            $judokasPerKlasse[$displayLabel] = $judokas->filter(fn ($j) => $j->categorie_key === $key);
         }
 
         // Sort by config order (already sorted by max_leeftijd in gewichtsklassen)
