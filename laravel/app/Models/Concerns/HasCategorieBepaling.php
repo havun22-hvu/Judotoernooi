@@ -166,7 +166,7 @@ trait HasCategorieBepaling
             }
 
             // Match gevonden
-            return $cat['label'] ?? $key;
+            return !empty($cat['label']) ? $cat['label'] : $key;
         }
 
         return null; // Geen categorie past binnen de leeftijdscategorie

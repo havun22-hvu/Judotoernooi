@@ -681,7 +681,7 @@ class ImportService
 
             return [
                 'configKey' => $key,
-                'label' => $config['label'] ?? $key,
+                'label' => !empty($config['label']) ? $config['label'] : $key,
                 'sortCategorie' => $sortCategorie,
                 'gewichtsklasse' => $gewichtsklasse,
             ];

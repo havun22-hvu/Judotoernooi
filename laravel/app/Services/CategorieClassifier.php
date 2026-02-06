@@ -92,7 +92,7 @@ class CategorieClassifier
 
             return [
                 'key' => $key,
-                'label' => $config['label'] ?? $key,
+                'label' => !empty($config['label']) ? $config['label'] : $key,
                 'sortCategorie' => $categorieSortIndex,
                 'gewichtsklasse' => $gewichtsklasse,
                 'isDynamisch' => $isDynamisch,
