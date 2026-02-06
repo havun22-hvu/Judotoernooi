@@ -343,7 +343,7 @@
                 // Bij variabele gewichtsklassen: waarschuwing als verschil > toegestaan maximum
                 $heeftGewichtWaarschuwing = $maxKgVerschil > 0 && isset($gewichtVerschil) && $gewichtVerschil > $maxKgVerschil && !$isKruisfinale && !$isEliminatie;
             @endphp
-            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftGewichtWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
+            <div id="poule-{{ $poule->id }}" class="bg-white rounded-lg shadow flex flex-col {{ $isEliminatie ? 'border-2 border-orange-400 col-span-full' : '' }} {{ $isProbleem ? 'border-2 border-red-300' : '' }} {{ $isKruisfinale ? 'border-2 border-purple-300' : '' }} {{ $heeftGewichtWaarschuwing && !$isProbleem ? 'border-2 border-orange-300' : '' }}" data-poule-id="{{ $poule->id }}" data-poule-nummer="{{ $poule->nummer }}" data-poule-leeftijdsklasse="{{ $poule->leeftijdsklasse }}" data-poule-gewichtsklasse="{{ $poule->gewichtsklasse }}" data-poule-is-kruisfinale="{{ $isKruisfinale ? '1' : '0' }}" data-poule-is-eliminatie="{{ $isEliminatie ? '1' : '0' }}">
                 <!-- Poule header -->
                 <div class="px-3 py-2 border-b {{ $isEliminatie ? 'bg-orange-100' : ($isKruisfinale ? 'bg-purple-100' : ($isProbleem ? 'bg-red-100' : 'bg-blue-100')) }}">
                     <div class="flex justify-between items-center">
@@ -409,7 +409,7 @@
                 </div>
 
                 <!-- Judoka's in poule (sortable) -->
-                <div class="{{ $isEliminatie ? 'grid grid-cols-5 gap-1 p-2' : 'divide-y divide-gray-100' }} min-h-[60px] sortable-poule" data-poule-id="{{ $poule->id }}">
+                <div class="{{ $isEliminatie ? 'grid grid-cols-5 gap-1 p-2' : 'divide-y divide-gray-100' }} min-h-[60px] flex-1 sortable-poule" data-poule-id="{{ $poule->id }}">
                     @foreach($poule->judokas as $judoka)
                     @php
                         if ($judoka->gewicht) {
