@@ -613,19 +613,25 @@ function updateAlleVoorbeelden() {
 
 function extractJaar(val) {
     const str = String(val).trim();
+    if (!str) return val;
     const num = parseInt(str);
-    // Excel serial date number
+    // Excel serial date number (e.g. 43831 = 2020-01-01)
     if (!isNaN(num) && num > 30000 && num < 60000) {
         const excelEpoch = new Date(1899, 11, 30);
         const date = new Date(excelEpoch.getTime() + num * 86400000);
         return date.getFullYear();
     }
-    // Already a year
-    if (!isNaN(num) && num >= 1950 && num <= 2026) {
+    // Already a plain year (2015, 2020, etc.)
+    if (!isNaN(num) && num >= 1950 && num <= new Date().getFullYear()) {
         return num;
     }
-    // Date string - extract 4-digit year
-    const match = str.match(/(\d{4})/);
+    // 2-digit year (20 → 2020, 85 → 1985)
+    if (!isNaN(num) && num >= 0 && num < 100) {
+        return num > 50 ? 1900 + num : 2000 + num;
+    }
+    // Any date string: extract 4-digit year (19xx or 20xx)
+    // Covers: 1/1/2020, 24-01-2020, 2020/1/24, 2020-01-24, 24.01.2020, etc.
+    const match = str.match(/\b(19\d{2}|20\d{2})\b/);
     if (match) return parseInt(match[1]);
     return val;
 }
@@ -635,14 +641,9 @@ function valideerData(veld, waarden) {
 
     for (const val of waarden) {
         if (veld === 'geboortejaar') {
-            const str = String(val).trim();
-            const num = parseInt(str);
-            // Accept: plain year (2020), Excel serial date (30000-60000), or string with 4-digit year
-            if (!isNaN(num) && ((num >= 1950 && num <= 2026) || (num > 30000 && num < 60000))) {
-                // OK: plain year or Excel serial
-            } else if (/\d{4}/.test(str)) {
-                // OK: contains 4-digit year (date string like 1/1/2020)
-            } else {
+            // Run extractJaar - if it returns a valid year, it's OK
+            const jaar = extractJaar(val);
+            if (typeof jaar !== 'number' || jaar < 1950 || jaar > new Date().getFullYear()) {
                 return `Verwacht jaar of datum, gevonden: ${val}`;
             }
         }

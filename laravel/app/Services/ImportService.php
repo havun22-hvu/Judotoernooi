@@ -118,19 +118,13 @@ class ImportService
             case 'geboortejaar':
                 foreach ($values as $val) {
                     $val = trim((string) $val);
-                    // Accept: plain year (2020), date string (1/1/2020, 2020-01-15), Excel serial number (43831)
-                    if (is_numeric($val)) {
-                        $num = (int) $val;
-                        if ($num >= 1950 && $num <= (int) date('Y')) {
-                            continue; // Plain year
+                    if ($val === '') continue;
+                    try {
+                        $jaar = $this->parseGeboortejaar($val);
+                        if ($jaar < 1950 || $jaar > (int) date('Y')) {
+                            return "Ongeldig jaar: {$jaar} (uit: {$val})";
                         }
-                        if ($num > 30000 && $num < 60000) {
-                            continue; // Excel serial date number
-                        }
-                        return "Verwacht jaren (1950-" . date('Y') . "), gevonden: " . $val;
-                    }
-                    // Date string: extract year
-                    if (!preg_match('/\d{4}/', $val)) {
+                    } catch (\InvalidArgumentException $e) {
                         return "Verwacht jaar of datum, gevonden: " . $val;
                     }
                 }
@@ -496,38 +490,40 @@ class ImportService
     }
 
     /**
-     * Parse birth year from various formats
+     * Parse birth year from ANY format: plain year, Excel serial, date string.
+     * Supports: 2020, 43831, 1/1/2020, 24-01-2020, 2020/1/24, 2020-01-24,
+     * 24.01.2020, 01 jan 2020, etc.
      */
     private function parseGeboortejaar(mixed $waarde): int
     {
         if (is_numeric($waarde)) {
-            $jaar = (int)$waarde;
-            // Handle 2-digit years
+            $jaar = (int) $waarde;
+            // 2-digit year
             if ($jaar < 100) {
-                $jaar = ($jaar > 50) ? 1900 + $jaar : 2000 + $jaar;
+                return ($jaar > 50) ? 1900 + $jaar : 2000 + $jaar;
             }
-            // Handle Excel serial date numbers (e.g. 43831 = 2020-01-01)
+            // Excel serial date (e.g. 43831 = 2020-01-01)
             if ($jaar > 30000 && $jaar < 60000) {
                 $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($jaar);
                 return (int) $date->format('Y');
             }
-            return $jaar;
-        }
-
-        // Try to parse date string (M/D/Y, D-M-Y, Y-M-D, etc.)
-        $waarde = trim((string) $waarde);
-
-        // Try PHP date parsing for common formats
-        foreach (['m/d/Y', 'd/m/Y', 'Y-m-d', 'd-m-Y', 'm-d-Y'] as $format) {
-            $date = \DateTime::createFromFormat($format, $waarde);
-            if ($date && $date->format($format) === $waarde) {
-                return (int) $date->format('Y');
+            // Plain year
+            if ($jaar >= 1950 && $jaar <= (int) date('Y')) {
+                return $jaar;
             }
         }
 
-        // Fallback: extract 4-digit year from string
-        if (preg_match('/(\d{4})/', $waarde, $matches)) {
-            return (int)$matches[1];
+        $waarde = trim((string) $waarde);
+
+        // Extract 4-digit year from any string (covers ALL date formats)
+        if (preg_match('/\b(19\d{2}|20\d{2})\b/', $waarde, $matches)) {
+            return (int) $matches[1];
+        }
+
+        // Last resort: try strtotime for natural language dates
+        $ts = strtotime($waarde);
+        if ($ts !== false) {
+            return (int) date('Y', $ts);
         }
 
         throw new \InvalidArgumentException("Ongeldig geboortejaar: {$waarde}");
