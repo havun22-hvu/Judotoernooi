@@ -77,7 +77,7 @@
                 class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
             >
                 <span :class="isRefreshing ? 'animate-spin' : ''">🔄</span>
-                <span x-text="isRefreshing ? 'Laden...' : 'Vernieuwen'"></span>
+                <span x-text="isRefreshing ? __laden : __vernieuwen"></span>
             </button>
         </div>
 
@@ -254,7 +254,7 @@
                     :class="selectedBlok === {{ $blokNr }} ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                    Blok {{ $blokNr }}
+                    {{ __('Blok') }} {{ $blokNr }}
                 </button>
                 @endforeach
             </div>
@@ -270,7 +270,7 @@
                     @foreach($data['matten'] as $matData)
                     <div class="bg-white rounded-lg shadow overflow-hidden">
                         <div class="bg-gray-800 text-white px-4 py-2 font-bold">
-                            Mat {{ $matData['mat']->nummer ?? '?' }}
+                            {{ __('Mat') }} {{ $matData['mat']->nummer ?? '?' }}
                             <span class="text-gray-400 font-normal ml-2">({{ $matData['poules']->count() }} poules)</span>
                         </div>
                         <div class="divide-y divide-gray-100">
@@ -288,10 +288,10 @@
                                     <div>
                                         <div class="font-bold text-gray-800">
                                             <span x-text="openPoules.includes({{ $poule->id }}) ? '▼' : '▶'" class="mr-1"></span>
-                                            Poule {{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
+                                            {{ __('Poule') }} {{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}
                                         </div>
                                         <div class="text-sm text-gray-500 ml-4">
-                                            {{ $pouleActiveJudokas->count() }} judoka's
+                                            {{ $pouleActiveJudokas->count() }} {{ __("judoka's") }}
                                         </div>
                                     </div>
                                 </div>
@@ -331,7 +331,7 @@
             class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none break-words mb-16"
             style="word-wrap: break-word; overflow-wrap: break-word;"
             :class="{ 'border-yellow-400': hasUnsavedChanges }"
-            placeholder="Typ hier je notities..."
+            placeholder="{{ __('Typ hier je notities...') }}"
         ></textarea>
 
         <!-- Fixed werkbalk onderaan scherm -->
@@ -342,13 +342,13 @@
                     <button
                         @click="fontSize = Math.max(14, fontSize - 2)"
                         class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
-                        title="Kleiner"
+                        title="{{ __('Kleiner') }}"
                     >−</button>
                     <span class="w-10 text-center text-base font-medium text-gray-600" x-text="fontSize"></span>
                     <button
                         @click="fontSize = Math.min(48, fontSize + 2)"
                         class="w-12 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-lg text-2xl font-bold"
-                        title="Groter"
+                        title="{{ __('Groter') }}"
                     >+</button>
                 </div>
 
@@ -367,7 +367,7 @@
                     @change="laadTemplate()"
                     class="px-3 py-3 border-2 border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 flex-1 min-w-[120px] max-w-[200px]"
                 >
-                    <option value="">📋 Template...</option>
+                    <option value="">📋 {{ __('Template...') }}</option>
                     <template x-for="(template, index) in templates" :key="index">
                         <option :value="String(index)" x-text="template.naam"></option>
                     </template>
@@ -377,7 +377,7 @@
                 <button
                     @click="clearNotities()"
                     class="text-red-600 hover:text-red-800 px-4 py-3 text-xl"
-                    title="Notities wissen"
+                    title="{{ __('Notities wissen') }}"
                 >
                     🗑️
                 </button>
@@ -394,32 +394,32 @@
     <div x-show="showSaveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" @click.self="showSaveModal = false">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div class="bg-green-600 text-white px-4 py-3 flex justify-between items-center rounded-t-lg">
-                <span class="font-bold">💾 Notities opslaan</span>
+                <span class="font-bold">💾 {{ __('Notities opslaan') }}</span>
                 <button @click="showSaveModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
             <div class="p-4">
                 <!-- Geen templates: alleen naam invullen -->
                 <template x-if="templates.length === 0">
                     <div>
-                        <p class="text-gray-600 mb-3">Geef je notities een naam om ze als template op te slaan:</p>
+                        <p class="text-gray-600 mb-3">{{ __('Geef je notities een naam om ze als template op te slaan:') }}</p>
                         <input
                             type="text"
                             x-model="saveAsNaam"
-                            placeholder="Bijv. 'Welkomstwoord'"
+                            placeholder="{{ __("Bijv. 'Welkomstwoord'") }}"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-4"
                             @keyup.enter="saveAsNewTemplate()"
                             x-ref="templateNaamInput"
                         >
                         <div class="flex justify-end gap-2">
                             <button @click="justSaveNotities()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                                Alleen opslaan
+                                {{ __('Alleen opslaan') }}
                             </button>
                             <button
                                 @click="saveAsNewTemplate()"
                                 :disabled="!saveAsNaam.trim()"
                                 class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-medium"
                             >
-                                Opslaan als template
+                                {{ __('Opslaan als template') }}
                             </button>
                         </div>
                     </div>
@@ -432,20 +432,20 @@
                         <template x-if="selectedTemplate !== '' && templates[selectedTemplate]">
                             <div class="mb-4">
                                 <p class="text-gray-600 mb-3">
-                                    "<span class="font-bold" x-text="templates[selectedTemplate].naam"></span>" overschrijven?
+                                    "<span class="font-bold" x-text="templates[selectedTemplate].naam"></span>" {{ __('overschrijven?') }}
                                 </p>
                                 <button
                                     @click="overschrijfTemplate(parseInt(selectedTemplate))"
                                     class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium"
                                 >
-                                    Ja, overschrijven
+                                    {{ __('Ja, overschrijven') }}
                                 </button>
                             </div>
                         </template>
 
                         <!-- Andere template kiezen -->
                         <div class="border-t pt-3" :class="{ 'border-t-0 pt-0': selectedTemplate === '' }">
-                            <p class="text-gray-600 mb-2 text-sm" x-text="selectedTemplate !== '' ? 'Of kies andere template:' : 'Kies template om te overschrijven:'"></p>
+                            <p class="text-gray-600 mb-2 text-sm" x-text="selectedTemplate !== '' ? __ofKiesAndereTemplate : __kiesTemplateOmTeOverschrijven"></p>
                             <div class="space-y-1 max-h-32 overflow-y-auto mb-3">
                                 <template x-for="(template, index) in templates" :key="index">
                                     <button
@@ -461,12 +461,12 @@
 
                         <!-- Nieuwe template -->
                         <div class="border-t pt-3">
-                            <p class="text-gray-600 mb-2 text-sm">Of maak nieuwe template:</p>
+                            <p class="text-gray-600 mb-2 text-sm">{{ __('Of maak nieuwe template:') }}</p>
                             <div class="flex gap-2">
                                 <input
                                     type="text"
                                     x-model="saveAsNaam"
-                                    placeholder="Nieuwe naam..."
+                                    placeholder="{{ __('Nieuwe naam...') }}"
                                     class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500"
                                     @keyup.enter="saveAsNewTemplate()"
                                 >
@@ -475,17 +475,17 @@
                                     :disabled="!saveAsNaam.trim()"
                                     class="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white px-3 py-2 rounded-lg text-sm"
                                 >
-                                    Nieuw
+                                    {{ __('Nieuw') }}
                                 </button>
                             </div>
                         </div>
 
                         <div class="flex justify-between items-center mt-4 pt-3 border-t">
                             <button @click="justSaveNotities()" class="text-gray-600 hover:text-gray-800 text-sm">
-                                Alleen opslaan (geen template)
+                                {{ __('Alleen opslaan (geen template)') }}
                             </button>
                             <button @click="showSaveModal = false" class="text-gray-400 hover:text-gray-600 text-sm">
-                                Annuleren
+                                {{ __('Annuleren') }}
                             </button>
                         </div>
                     </div>
@@ -501,10 +501,10 @@
             <div :class="selectedPouleData?.poule?.is_eliminatie ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-4 py-3 flex justify-between items-center">
                 <div x-show="!loadingPoule && selectedPouleData">
                     <div class="font-bold" x-text="selectedPouleData?.poule?.is_eliminatie
-                        ? 'Eliminatie - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
-                        : 'Poule ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse"></div>
+                        ? __eliminatie + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
+                        : __poule + ' ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse"></div>
                 </div>
-                <div x-show="loadingPoule" class="font-bold">Laden...</div>
+                <div x-show="loadingPoule" class="font-bold" x-text="__laden"></div>
                 <button @click="showPouleModal = false" class="text-white hover:text-gray-200 text-xl">&times;</button>
             </div>
 
@@ -512,7 +512,7 @@
             <div class="p-4 overflow-y-auto max-h-[60vh]">
                 <div x-show="loadingPoule" class="text-center py-8">
                     <div class="animate-spin text-4xl">🔄</div>
-                    <p class="text-gray-500 mt-2">Uitslagen laden...</p>
+                    <p class="text-gray-500 mt-2">{{ __('Uitslagen laden...') }}</p>
                 </div>
 
                 <!-- ELIMINATIE: Medaille winnaars -->
@@ -599,11 +599,34 @@
 </div>
 
 <script>
+// Translation constants for JS
+const __laden = @json(__('Laden...'));
+const __vernieuwen = @json(__('Vernieuwen'));
+const __bezig = @json(__('Bezig...'));
+const __fout = @json(__('Fout:'));
+const __onbekendeFout = @json(__('Onbekende fout'));
+const __terug = @json(__('Terug'));
+const __eliminatie = @json(__('Eliminatie'));
+const __poule = @json(__('Poule'));
+const __notitiesOpgeslagen = @json(__('Notities opgeslagen!'));
+const __foutBijOpslaan = @json(__('Fout bij opslaan'));
+const __wissenBevestiging = @json(__('Weet je zeker dat je alle notities wilt wissen?'));
+const __templateLaden = @json(__('Template ":naam" laden? Dit vervangt je huidige notities.'));
+const __templateVerwijderen = @json(__('Template ":naam" verwijderen?'));
+const __templateVerwijderd = @json(__('Template ":naam" verwijderd'));
+const __typEerstIets = @json(__('Typ eerst iets om op te slaan'));
+const __geenWijzigingen = @json(__('Geen wijzigingen om op te slaan'));
+const __templateBestaatAl = @json(__('Template ":naam" bestaat al. Overschrijven?'));
+const __templateOpgeslagen = @json(__('Template ":naam" opgeslagen!'));
+const __templateBijgewerkt = @json(__('Template ":naam" bijgewerkt!'));
+const __ofKiesAndereTemplate = @json(__('Of kies andere template:'));
+const __kiesTemplateOmTeOverschrijven = @json(__('Kies template om te overschrijven:'));
+
 // Terug functie - zet afgeroepen poule terug naar klaar
 async function zetTerug(pouleId, button) {
     try {
         button.disabled = true;
-        button.innerHTML = '⏳ Bezig...';
+        button.innerHTML = '⏳ ' + __bezig;
 
         const response = await fetch('{{ $terugUrl }}', {
             method: 'POST',
@@ -618,12 +641,12 @@ async function zetTerug(pouleId, button) {
         if (data.success) {
             location.reload();
         } else {
-            alert('Fout: ' + (data.message || 'Onbekende fout'));
+            alert(__fout + ' ' + (data.message || __onbekendeFout));
             button.disabled = false;
-            button.innerHTML = '↩️ Terug';
+            button.innerHTML = '↩️ ' + __terug;
         }
     } catch (err) {
-        alert('Fout: ' + err.message);
+        alert(__fout + ' ' + err.message);
         button.disabled = false;
     }
 }
@@ -758,7 +781,7 @@ function sprekerInterface() {
                     }
                 }
             } catch (err) {
-                alert('Fout: ' + err.message);
+                alert(__fout + ' ' + err.message);
             }
         },
 
@@ -784,16 +807,16 @@ function sprekerInterface() {
                 if (data.success) {
                     this.lastSavedNotities = this.notities;
                     this.hasUnsavedChanges = false;
-                    this.showFeedback('Notities opgeslagen!');
+                    this.showFeedback(__notitiesOpgeslagen);
                 }
             } catch (err) {
                 console.error('Fout bij opslaan notities:', err);
-                alert('Fout bij opslaan');
+                alert(__foutBijOpslaan);
             }
         },
 
         async clearNotities() {
-            if (confirm('Weet je zeker dat je alle notities wilt wissen?')) {
+            if (confirm(__wissenBevestiging)) {
                 this.notities = '';
                 await this.saveNotities();
             }
@@ -822,11 +845,11 @@ function sprekerInterface() {
                 if (data.success) {
                     this.selectedPouleData = data;
                 } else {
-                    alert('Fout: ' + (data.message || 'Onbekende fout'));
+                    alert(__fout + ' ' + (data.message || __onbekendeFout));
                     this.showPouleModal = false;
                 }
             } catch (err) {
-                alert('Fout: ' + err.message);
+                alert(__fout + ' ' + err.message);
                 this.showPouleModal = false;
             } finally {
                 this.loadingPoule = false;
@@ -863,7 +886,7 @@ function sprekerInterface() {
             const template = this.templates[this.selectedTemplate];
             if (!template) return;
 
-            if (this.notities && !confirm(`Template "${template.naam}" laden?\n\nDit vervangt je huidige notities.`)) {
+            if (this.notities && !confirm(__templateLaden.replace(':naam', template.naam))) {
                 this.selectedTemplate = '';
                 return;
             }
@@ -874,10 +897,10 @@ function sprekerInterface() {
 
         deleteTemplate(index) {
             const template = this.templates[index];
-            if (!confirm(`Template "${template.naam}" verwijderen?`)) return;
+            if (!confirm(__templateVerwijderen.replace(':naam', template.naam))) return;
             this.templates.splice(index, 1);
             this.saveTemplates();
-            this.showFeedback(`Template "${template.naam}" verwijderd`);
+            this.showFeedback(__templateVerwijderd.replace(':naam', template.naam));
         },
 
         // Auto-save functie (wordt aangeroepen na 2 sec inactiviteit)
@@ -923,9 +946,9 @@ function sprekerInterface() {
                 this.saveAsNaam = '';
                 this.showSaveModal = true;
             } else if (!hasContent) {
-                this.showFeedback('Typ eerst iets om op te slaan');
+                this.showFeedback(__typEerstIets);
             } else {
-                this.showFeedback('Geen wijzigingen om op te slaan');
+                this.showFeedback(__geenWijzigingen);
             }
         },
 
@@ -944,7 +967,7 @@ function sprekerInterface() {
             let newIndex;
             const exists = this.templates.findIndex(t => t.naam.toLowerCase() === naam.toLowerCase());
             if (exists >= 0) {
-                if (!confirm(`Template "${naam}" bestaat al. Overschrijven?`)) return;
+                if (!confirm(__templateBestaatAl.replace(':naam', naam))) return;
                 this.templates[exists].tekst = this.notities;
                 newIndex = exists;
             } else {
@@ -957,7 +980,7 @@ function sprekerInterface() {
             this.selectedTemplate = String(newIndex); // Toon naam in dropdown
             this.saveAsNaam = '';
             this.showSaveModal = false;
-            this.showFeedback(`Template "${naam}" opgeslagen!`);
+            this.showFeedback(__templateOpgeslagen.replace(':naam', naam));
         },
 
         // Overschrijf bestaande template
@@ -968,7 +991,7 @@ function sprekerInterface() {
             await this.saveNotities();
             this.selectedTemplate = String(index); // Toon naam in dropdown
             this.showSaveModal = false;
-            this.showFeedback(`Template "${template.naam}" bijgewerkt!`);
+            this.showFeedback(__templateBijgewerkt.replace(':naam', template.naam));
         }
     }
 }
