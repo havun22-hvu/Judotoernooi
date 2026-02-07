@@ -52,11 +52,16 @@ Nieuw → Voorbereiding → Wedstrijddag → Afgesloten
          └── Templates hergebruiken ────┘
 ```
 
+### Registratie & Login
+- `/registreren` - Nieuwe organisator aanmelden (guest only)
+- `/login` - Inloggen (email + wachtwoord)
+- Organisator dashboard: `/{slug}/dashboard`
+
 ### Sitebeheerder Dashboard
-Route: `/toernooi` (alleen voor sitebeheerder)
-- Overzicht alle organisatoren
+Route: `/admin` (alleen voor sitebeheerder)
+- Overzicht alle organisatoren en toernooien
+- Klantenbeheer: `/admin/klanten` (bewerken, is_test/kortingsregeling, verwijderen)
 - Per organisator: toernooien, statistieken, status
-- KPI's: totaal judokas, omzet, actieve klanten
 
 ## Rules (ALWAYS follow)
 
