@@ -8,6 +8,13 @@
     $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
     $leeftijdVolgorde = array_values(array_map(fn($c, $k) => !empty($c['label']) ? $c['label'] : $k, $gewichtsklassenConfig, array_keys($gewichtsklassenConfig)));
 
+    // Lookup: categorie_key → config positie (voor robuuste sortering)
+    $categorieVolgorde = [];
+    $idx = 0;
+    foreach ($gewichtsklassenConfig as $key => $config) {
+        $categorieVolgorde[$key] = $idx++;
+    }
+
     // Check of inschrijving gesloten is (weegkaarten hebben dan al bloknummers)
     $inschrijvingGesloten = !$toernooi->isInschrijvingOpen();
 @endphp
@@ -80,9 +87,9 @@
     foreach ($gewichtsklassenConfig as $key => $catConfig) {
         $label = !empty($catConfig['label']) ? $catConfig['label'] : $key;
         $maxKg = (float) ($catConfig['max_kg_verschil'] ?? 0);
-        $maxLft = (int) ($catConfig['max_leeftijd_verschil'] ?? 0);
 
-        if ($maxKg == 0 && $maxLft == 0) {
+        // Alleen max_kg_verschil bepaalt vast/variabel. max_leeftijd_verschil is irrelevant.
+        if ($maxKg == 0) {
             $vasteCategorieen[$key] = true;
             $vasteLeeftijdsklassen[$label] = true;
         } else {
@@ -126,6 +133,7 @@
                 return [
                     'leeftijd' => $p->leeftijdsklasse,
                     'gewicht' => $p->gewichtsklasse,
+                    'categorie_key' => $p->categorie_key,
                     'titel' => $p->getDisplayTitel(),
                     'nummer' => $p->nummer,
                     'poule_id' => $p->id,
@@ -157,6 +165,7 @@
                 return [
                     'leeftijd' => $p->leeftijdsklasse,
                     'gewicht' => $p->gewichtsklasse,
+                    'categorie_key' => $p->categorie_key,
                     'titel' => $p->getDisplayTitel(),
                     'nummer' => $p->nummer,
                     'poule_id' => $p->id,
@@ -175,13 +184,14 @@
     // Combineer en sorteer: jong → oud, licht → zwaar
     // Note: beide zijn al base collections via toBase(), concat werkt beter dan merge
     $alleCats = $vasteCats->concat($variabeleCats)
-        ->sortBy(function($c) use ($leeftijdVolgorde) {
-            $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 100000 : 9900000;
+        ->sortBy(function($c) use ($categorieVolgorde) {
+            // Gebruik categorie_key voor config-positie (robuuster dan label matching)
+            $catPos = isset($c['categorie_key'], $categorieVolgorde[$c['categorie_key']]) ? $categorieVolgorde[$c['categorie_key']] * 100000 : 9900000;
             // Gebruik min_lft voor variabele, 99 voor vaste (die sorteren op gewicht)
             $lftSort = ($c['min_lft'] ?? 99) * 1000;
-            // Gebruik min_kg voor sortering
+            // Gebruik min_kg voor sortering (licht → zwaar)
             $kgSort = $c['min_kg'] ?? 999;
-            return $leeftijdPos + $lftSort + $kgSort;
+            return $catPos + $lftSort + $kgSort;
         })
         ->values();
 
@@ -319,9 +329,9 @@
             $blokWedstrijden = $blokCats->sum('wedstrijden');
             $gewenstWedstrijden = $blok->gewenst_wedstrijden ?? $gemiddeldPerBlok;
             $afwijkingPct = $gewenstWedstrijden > 0 ? round(($blokWedstrijden - $gewenstWedstrijden) / $gewenstWedstrijden * 100) : 0;
-            $blokCatsSorted = $blokCats->sortBy(function($c) use ($leeftijdVolgorde) {
-                $leeftijdPos = ($pos = array_search($c['leeftijd'], $leeftijdVolgorde)) !== false ? $pos * 10000 : 990000;
-                return $leeftijdPos + (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0);
+            $blokCatsSorted = $blokCats->sortBy(function($c) use ($categorieVolgorde) {
+                $catPos = isset($c['categorie_key'], $categorieVolgorde[$c['categorie_key']]) ? $categorieVolgorde[$c['categorie_key']] * 10000 : 990000;
+                return $catPos + (int)preg_replace('/[^0-9]/', '', $c['gewicht']) + (str_starts_with($c['gewicht'], '+') ? 500 : 0);
             });
         @endphp
         <div class="bg-white rounded-lg shadow blok-container" data-blok="{{ $blok->nummer }}" data-blok-id="{{ $blok->id }}" data-gewenst="{{ $gewenstWedstrijden }}">
@@ -435,6 +445,7 @@
                         $leeftijdCats = $alleCats->filter(fn($c) => $c['leeftijd'] === $leeftijd)
                             ->sortBy(fn($c) => ($c['min_lft'] ?? 99) * 1000 + ($c['min_kg'] ?? 999));
                     @endphp
+                    {{-- Sorted by min_lft then min_kg (young→old, light→heavy) --}}
                     @if($leeftijdCats->isNotEmpty())
                     <div class="mb-2">
                         <div class="font-bold text-gray-700 border-b border-gray-200 pb-0.5 mb-1">{{ $afkortingen[$leeftijd] ?? $leeftijd }}</div>
