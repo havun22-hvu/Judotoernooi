@@ -153,12 +153,14 @@ class ToernooiController extends Controller
                 foreach ($categorie['gewichten'] ?? [] as $gewicht) {
                     if (preg_match('/[+-]?\d+(\.\d+)?\s+[+-]?\d/', (string) $gewicht)) {
                         $label = $categorie['label'] ?? $key;
-                        return back()->withErrors([
-                            'gewichtsklassen' => __('Komma vergeten bij :label: ":gewicht". Gebruik komma\'s tussen gewichtsklassen (bijv. -20, -23).', [
-                                'label' => $label,
-                                'gewicht' => $gewicht,
-                            ]),
-                        ])->withInput();
+                        $errorMsg = __('Komma vergeten bij :label: ":gewicht". Gebruik komma\'s tussen gewichtsklassen (bijv. -20, -23).', [
+                            'label' => $label,
+                            'gewicht' => $gewicht,
+                        ]);
+                        if ($request->ajax() || $request->expectsJson()) {
+                            return response()->json(['errors' => ['gewichtsklassen' => [$errorMsg]]], 422);
+                        }
+                        return back()->withErrors(['gewichtsklassen' => $errorMsg])->withInput();
                     }
                 }
             }
