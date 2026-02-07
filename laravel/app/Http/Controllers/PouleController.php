@@ -7,6 +7,7 @@ use App\Models\Organisator;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
+use App\Services\ActivityLogger;
 use App\Services\CategorieClassifier;
 use App\Services\EliminatieService;
 use App\Services\PouleIndelingService;
@@ -142,7 +143,15 @@ class PouleController extends Controller
         $poule->judokas()->detach();
 
         $nummer = $poule->nummer;
+        $leeftijdsklasse = $poule->leeftijdsklasse;
+        $gewichtsklasse = $poule->gewichtsklasse;
         $poule->delete();
+
+        ActivityLogger::log($toernooi, 'verwijder_poule', "Poule #{$nummer} verwijderd ({$leeftijdsklasse} {$gewichtsklasse})", [
+            'model_type' => 'Poule',
+            'model_id' => null,
+            'properties' => ['nummer' => $nummer, 'leeftijdsklasse' => $leeftijdsklasse, 'gewichtsklasse' => $gewichtsklasse],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -189,6 +198,11 @@ class PouleController extends Controller
             'aantal_wedstrijden' => 0,
         ]);
 
+        ActivityLogger::log($toernooi, 'maak_poule', "Poule #{$nieuweNummer} aangemaakt: {$titel}", [
+            'model' => $poule,
+            'properties' => ['nummer' => $nieuweNummer, 'leeftijdsklasse' => $validated['leeftijdsklasse'], 'gewichtsklasse' => $gewichtsklasse],
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => "Poule #{$nieuweNummer} aangemaakt",
@@ -224,6 +238,12 @@ class PouleController extends Controller
 
         // Generate pool division (herberkenKlassen() handles sort fields)
         $statistieken = $this->pouleService->genereerPouleIndeling($toernooi);
+
+        ActivityLogger::log($toernooi, 'genereer_poules', "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, {$statistieken['totaal_wedstrijden']} wedstrijden", [
+            'model_type' => 'Toernooi',
+            'model_id' => $toernooi->id,
+            'properties' => ['totaal_poules' => $statistieken['totaal_poules'], 'totaal_wedstrijden' => $statistieken['totaal_wedstrijden']],
+        ]);
 
         $message = "Poule-indeling gegenereerd: {$statistieken['totaal_poules']} poules, " .
                    "{$statistieken['totaal_wedstrijden']} wedstrijden.";
@@ -631,6 +651,11 @@ class PouleController extends Controller
         $naarRanges = $this->berekenPouleRanges($naarPoule, $huidigJaar);
         $vanTitel = $this->updateDynamischeTitel($vanPoule, $vanRanges);
         $naarTitel = $this->updateDynamischeTitel($naarPoule, $naarRanges);
+
+        ActivityLogger::log($toernooi, 'verplaats_judoka', "{$judoka->naam} verplaatst van poule #{$vanPoule->nummer} naar poule #{$naarPoule->nummer}", [
+            'model' => $judoka,
+            'properties' => ['van_poule_id' => $vanPoule->id, 'naar_poule_id' => $naarPoule->id, 'van_nummer' => $vanPoule->nummer, 'naar_nummer' => $naarPoule->nummer],
+        ]);
 
         return response()->json([
             'success' => true,

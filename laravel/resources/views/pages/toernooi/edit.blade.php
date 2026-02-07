@@ -918,6 +918,12 @@
             const jbn2025 = @json(\App\Models\Toernooi::getJbn2025Gewichtsklassen());
             const jbn2026 = @json(\App\Models\Toernooi::getJbn2026Gewichtsklassen());
 
+            // i18n strings
+            const __confirmLeegCategorieen = @json(__('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?'));
+            const __confirmJbn2025 = @json(__('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?'));
+            const __confirmJbn2026 = @json(__('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?'));
+            const __confirmVerwijderCategorie = @json(__('Deze categorie verwijderen?'));
+
             function updateJsonInput() {
                 const items = container.querySelectorAll('.gewichtsklasse-item');
                 const data = {};
@@ -961,7 +967,7 @@
 
             // Global functies voor radio buttons
             window.loadGeenStandaard = function() {
-                if (confirm('Dit maakt alle categorieën leeg. Je moet zelf categorieën toevoegen. Doorgaan?')) {
+                if (confirm(__confirmLeegCategorieen)) {
                     container.innerHTML = '';
                     updateJsonInput();
                 } else {
@@ -971,7 +977,7 @@
             }
 
             window.loadJbn2025 = function() {
-                if (confirm('Dit vervangt alle huidige instellingen met JBN 2025 regels. Doorgaan?')) {
+                if (confirm(__confirmJbn2025)) {
                     renderCategorieen(jbn2025);
                 } else {
                     document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
@@ -979,7 +985,7 @@
             }
 
             window.loadJbn2026 = function() {
-                if (confirm('Dit vervangt alle huidige instellingen met JBN 2026 regels. Doorgaan?')) {
+                if (confirm(__confirmJbn2026)) {
                     renderCategorieen(jbn2026);
                 } else {
                     document.querySelector('input[name="categorie_type"][value="jbn_2026"]').checked = true;
@@ -1586,7 +1592,7 @@
             // Remove category
             container.addEventListener('click', (e) => {
                 if (e.target.classList.contains('remove-categorie')) {
-                    if (confirm('Deze categorie verwijderen?')) {
+                    if (confirm(__confirmVerwijderCategorie)) {
                         e.target.closest('.gewichtsklasse-item').remove();
                         updateJsonInput();
                     }
@@ -2117,7 +2123,7 @@
                         <div>
                             @if($toernooi->mollie_onboarded)
                             <form action="{{ route('toernooi.mollie.disconnect', $toernooi->routeParams()) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Weet je zeker dat je de Mollie koppeling wilt verbreken?')">
+                                  onsubmit="return confirm('{{ __('Weet je zeker dat je de Mollie koppeling wilt verbreken?') }}')">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
                                     {{ __('Ontkoppelen') }}
@@ -2880,6 +2886,7 @@
     </div>
 
     <script>
+    const __ongeldigIpFormaat = @json(__('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100'));
     function verbindingStatus() {
         return {
             wifiStatus: 'checking',
@@ -3049,7 +3056,7 @@
                 // Valideer IP formaat
                 const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
                 if (!ipRegex.test(ip)) {
-                    alert('Ongeldig IP formaat. Gebruik bijv. 192.168.1.100');
+                    alert(__ongeldigIpFormaat);
                     return;
                 }
                 try {
@@ -3222,6 +3229,18 @@
                 <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->where('is_gespeeld', true)->count() }}</span>
             </div>
         </div>
+    </div>
+
+    <!-- ACTIVITEITEN LOG -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
+            <span class="text-2xl">📋</span> {{ __('Activiteiten Log') }}
+        </h2>
+        <p class="text-gray-600 mb-4 text-sm">{{ __('Bekijk wie wat wanneer heeft gedaan in dit toernooi.') }}</p>
+        <a href="{{ route('toernooi.activiteiten', $toernooi->routeParams()) }}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+            📋 {{ __('Bekijk activiteiten') }}
+        </a>
     </div>
 
     <!-- TOERNOOI VERWIJDEREN -->

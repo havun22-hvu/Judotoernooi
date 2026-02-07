@@ -10,6 +10,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -278,6 +279,15 @@ class WedstrijddagController extends Controller
             ];
         });
 
+        ActivityLogger::log($toernooi, 'verplaats_judoka', "{$judoka->naam} verplaatst naar {$result['nieuwePoule']->getDisplayTitel()}", [
+            'model' => $judoka,
+            'properties' => [
+                'van_poule_id' => $validated['from_poule_id'] ?? null,
+                'naar_poule_id' => $nieuwePoule->id,
+            ],
+            'interface' => 'hoofdjury',
+        ]);
+
         return response()->json([
             'success' => true,
             'van_poule' => $result['oudePouleData'],
@@ -452,6 +462,12 @@ class WedstrijddagController extends Controller
         // Bereken nieuwe gewichtsrange voor titel update
         $gewichtsRange = $oudePoule->getGewichtsRange();
 
+        ActivityLogger::log($toernooi, 'naar_wachtruimte', "{$judoka->naam} naar wachtruimte vanuit poule {$oudePoule->nummer}", [
+            'model' => $judoka,
+            'properties' => ['van_poule_id' => $oudePoule->id],
+            'interface' => 'hoofdjury',
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => "{$judoka->naam} verplaatst naar wachtruimte",
@@ -492,6 +508,12 @@ class WedstrijddagController extends Controller
             ->count();
 
         $aantalWedstrijden = $actieveJudokas > 1 ? ($actieveJudokas * ($actieveJudokas - 1)) / 2 : 0;
+
+        ActivityLogger::log($toernooi, 'verwijder_uit_poule', "{$judoka->naam} verwijderd uit poule {$poule->nummer}", [
+            'model' => $judoka,
+            'properties' => ['poule_id' => $poule->id],
+            'interface' => 'hoofdjury',
+        ]);
 
         return response()->json([
             'success' => true,
@@ -865,6 +887,11 @@ class WedstrijddagController extends Controller
             }
         }
 
+        ActivityLogger::log($toernooi, 'meld_af', "{$judoka->naam} afgemeld", [
+            'model' => $judoka,
+            'interface' => 'hoofdjury',
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => $judoka->naam . ' is afgemeld',
@@ -933,6 +960,12 @@ class WedstrijddagController extends Controller
         $poule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
         $poule->updateStatistieken();
 
+        ActivityLogger::log($toernooi, 'nieuwe_judoka', "{$judoka->naam} toegevoegd aan poule {$poule->nummer}", [
+            'model' => $judoka,
+            'properties' => ['poule_id' => $poule->id],
+            'interface' => 'hoofdjury',
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => $judoka->naam . ' toegevoegd aan poule ' . $poule->nummer,
@@ -959,6 +992,11 @@ class WedstrijddagController extends Controller
 
         // Herstel aanwezigheid (null = normaal aanwezig)
         $judoka->update(['aanwezigheid' => null]);
+
+        ActivityLogger::log($toernooi, 'herstel_judoka', "{$judoka->naam} hersteld", [
+            'model' => $judoka,
+            'interface' => 'hoofdjury',
+        ]);
 
         return response()->json([
             'success' => true,

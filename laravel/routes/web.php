@@ -26,6 +26,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ReverbController;
 use App\Http\Controllers\ToernooiBetalingController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\LocalSyncController;
 use App\Http\Middleware\CheckToernooiRol;
 use App\Http\Middleware\CheckFreemiumPrint;
@@ -317,6 +318,9 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('pagina-builder/opslaan', [PaginaBuilderController::class, 'opslaan'])->name('pagina-builder.opslaan');
         Route::post('pagina-builder/upload', [PaginaBuilderController::class, 'upload'])->name('pagina-builder.upload');
         Route::delete('pagina-builder/afbeelding', [PaginaBuilderController::class, 'verwijderAfbeelding'])->name('pagina-builder.verwijder-afbeelding');
+
+        // Activiteiten log
+        Route::get('activiteiten', [ActivityLogController::class, 'index'])->name('activiteiten');
 
         // Resultaten overzicht (organisator)
         Route::get('resultaten', [PubliekController::class, 'organisatorResultaten'])->name('resultaten.index');

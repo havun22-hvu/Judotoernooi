@@ -52,7 +52,7 @@ docs/
 
 ### 3b. Development
 - [Code Standaarden](./3-DEVELOPMENT/CODE-STANDAARDEN.md) - **Verplichte** coding conventions
-- [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) - Exceptions, Circuit Breaker, Rate Limiting
+- [Stability & Error Handling](./3-DEVELOPMENT/STABILITY.md) - Exceptions, Circuit Breaker, Rate Limiting, Activity Logging
 
 ### 4. Planning
 - [Authenticatie Systeem](./4-PLANNING/PLANNING_AUTHENTICATIE_SYSTEEM.md) - Device binding

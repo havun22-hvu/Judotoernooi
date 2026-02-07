@@ -363,6 +363,11 @@ class Toernooi extends Model
         }
     }
 
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
     public function deviceToegangen(): HasMany
     {
         return $this->hasMany(DeviceToegang::class);

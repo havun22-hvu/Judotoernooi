@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Organisator;
 use App\Models\Judoka;
 use App\Models\Toernooi;
+use App\Services\ActivityLogger;
 use App\Services\WegingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,12 @@ class WegingController extends Controller
             ], 400);
         }
 
+        ActivityLogger::log($toernooi, 'registreer_gewicht', "{$judoka->naam} gewogen: {$validated['gewicht']}kg", [
+            'model' => $judoka,
+            'properties' => ['gewicht' => $validated['gewicht'], 'binnen_klasse' => $resultaat['binnen_klasse']],
+            'interface' => 'weging',
+        ]);
+
         return response()->json([
             'success' => true,
             'binnen_klasse' => $resultaat['binnen_klasse'],
@@ -74,12 +81,22 @@ class WegingController extends Controller
     {
         $this->wegingService->markeerAanwezig($judoka);
 
+        ActivityLogger::log($toernooi, 'markeer_aanwezig', "{$judoka->naam} aanwezig gemarkeerd", [
+            'model' => $judoka,
+            'interface' => 'weging',
+        ]);
+
         return response()->json(['success' => true]);
     }
 
     public function markeerAfwezig(Organisator $organisator, Toernooi $toernooi, Judoka $judoka): JsonResponse
     {
         $this->wegingService->markeerAfwezig($judoka);
+
+        ActivityLogger::log($toernooi, 'markeer_afwezig', "{$judoka->naam} afwezig gemarkeerd", [
+            'model' => $judoka,
+            'interface' => 'weging',
+        ]);
 
         return response()->json(['success' => true]);
     }
