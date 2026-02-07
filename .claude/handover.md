@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **7 feb 2026 avond** | Club delete fix, backup restore, registratie fix, weeglijst AFWEZIG logica, admin klant delete | smallwork.md |
 | **7 feb 2026** | Geboortejaar parser compleet, CSP fix, milestone backups | smallwork.md |
 | **5 feb 2026** | Suspicious weight warnings, organisator instellingen, clubs constraint | smallwork.md |
 | **4 feb 2026** | Poule/clubs UI, WhatsApp, print landscape | GEBRUIKERSHANDLEIDING.md (clubs sectie) |
@@ -100,10 +101,13 @@ php artisan route:cache
 
 | URL | Functie |
 |-----|---------|
+| `/registreren` | Nieuwe organisator aanmelden |
+| `/login` | Organisator login |
+| `/{slug}/dashboard` | Organisator dashboard |
+| `/admin` | Sitebeheerder dashboard |
+| `/admin/klanten` | Klantenbeheer (is_test, kortingsregeling, delete) |
 | `/health` | Health check endpoint |
 | `/local-server` | Local server dashboard |
-| `/organisator/login` | Organisator login |
-| `/organisator/dashboard` | Toernooi overzicht |
 
 ---
 

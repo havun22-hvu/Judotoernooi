@@ -600,27 +600,45 @@ Bij afwijking:
 
 ### Weging Sluiten
 
-1. Ga naar **Blokken** > **Blok X**
-2. Klik **Sluit Weging**
+1. Ga naar **Weeglijst Live** > selecteer blok
+2. Klik **Blok X: Einde weegtijd**
 3. Bevestig
 
 Na sluiten:
-- Geen weging meer mogelijk voor dit blok
+- Blok status wordt "Gesloten"
+- **Bij verplichte weging:** niet-gewogen judoka's worden automatisch als afwezig gemarkeerd
+- **Bij niet-verplichte weging:** geen automatische afmelding, organisator doet dit handmatig
 - Overpoelen kan beginnen
+- AFWEZIG badges worden nu zichtbaar in de weeglijst
 
 ### Automatische Aanwezigheidsbepaling
 
-De aanwezigheid wordt **automatisch** bepaald op basis van weging:
+De aanwezigheidsstatus hangt af van of **weging verplicht** is (toernooi instelling):
 
-| Situatie | Aanwezigheid |
-|----------|--------------|
-| Judoka is gewogen (`gewicht_gewogen` is ingevuld) | **Aanwezig** |
-| Judoka is niet gewogen, weegtijd nog open | Onbekend |
-| Judoka is niet gewogen, weegtijd gesloten | **Afwezig** |
+**Bij weging verplicht (`weging_verplicht = true`):**
+
+| Situatie | Aanwezigheid | Weergave |
+|----------|--------------|----------|
+| Judoka is gewogen | **Aanwezig** | Normaal |
+| Niet gewogen, weegtijd nog open | Onbekend | Geen badge (neutraal) |
+| Niet gewogen, weegtijd gesloten | **Afwezig** (automatisch) | Rode badge + doorgestreept |
+
+Na sluiting weegtijd worden niet-gewogen judoka's **automatisch** als afwezig gemarkeerd.
+
+**Bij weging niet verplicht (`weging_verplicht = false`):**
+
+| Situatie | Aanwezigheid | Weergave |
+|----------|--------------|----------|
+| Judoka is gewogen | **Aanwezig** | Normaal |
+| Niet gewogen | Onbekend | Geen badge (neutraal) |
+| Handmatig afgemeld | **Afwezig** | Rode badge + doorgestreept |
+
+Niet-gewogen judoka's worden **NIET** automatisch afwezig. De organisator meldt zelf judoka's af die er niet zijn.
 
 **Belangrijk:**
 - Gewogen = per definitie aanwezig (je kunt niet wegen zonder er te zijn)
-- Na sluiting weegtijd worden niet-gewogen judoka's automatisch als afwezig beschouwd
+- **AFWEZIG badge** wordt pas getoond nadat de weegtijd van het blok is gesloten
+- Vóór sluiting weegtijd toont de weeglijst geen AFWEZIG status (ongeacht database waarde)
 - De wachtruimte toont alleen **aanwezige** judoka's die overgepouled moeten worden
 
 ## Overpoelen (Wedstrijddag Poules)
