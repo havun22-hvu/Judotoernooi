@@ -144,18 +144,30 @@ class ClubController extends Controller
         }
 
         $naam = $club->naam;
-        $aantalJudokas = $club->judokas()->count();
-
-        // Delete all judokas from this club first
-        if ($aantalJudokas > 0) {
-            $club->judokas()->delete();
-        }
-
-        $club->delete();
 
         $params = ['organisator' => $organisator];
         if (request('back')) {
             $params['back'] = request('back');
+        }
+
+        try {
+            \DB::transaction(function () use ($club) {
+                // Delete related records explicitly (in case cascade is missing on production)
+                $club->coachKaarten()->delete();
+                $club->coaches()->delete();
+                $club->judokas()->delete();
+                $club->toernooien()->detach();
+                \DB::table('club_uitnodigingen')->where('club_id', $club->id)->delete();
+                \DB::table('betalingen')->where('club_id', $club->id)->delete();
+
+                $club->delete();
+            });
+        } catch (\Exception $e) {
+            \Log::error("Club delete failed: {$e->getMessage()}", ['club_id' => $club->id]);
+
+            return redirect()
+                ->route('organisator.clubs.index', $params)
+                ->with('error', "Kon club '{$naam}' niet verwijderen: {$e->getMessage()}");
         }
 
         return redirect()
