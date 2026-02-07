@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Betaling Succesvol - {{ $club->naam }}</title>
+    <title>{{ __('Betaling Succesvol') }} - {{ $club->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -15,20 +15,20 @@
                 </svg>
             </div>
 
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Betaling Succesvol!</h1>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ __('Betaling Succesvol!') }}</h1>
             <p class="text-gray-600 mb-6">
-                De inschrijving voor {{ $club->naam }} is definitief.
+                {{ __('De inschrijving voor :club is definitief.', ['club' => $club->naam]) }}
             </p>
 
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                 <p class="text-green-800">
-                    Je judoka's zijn nu ingeschreven voor {{ $toernooi->naam }}.
+                    {{ __('Je judoka\'s zijn nu ingeschreven voor :toernooi.', ['toernooi' => $toernooi->naam]) }}
                 </p>
             </div>
 
             <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg">
-                Terug naar overzicht
+                {{ __('Terug naar overzicht') }}
             </a>
         </div>
     </div>

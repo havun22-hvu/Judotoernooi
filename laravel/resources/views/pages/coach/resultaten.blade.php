@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $club->naam }} - Resultaten</title>
+    <title>{{ $club->naam }} - {{ __('Resultaten') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <style>
         @media print {
@@ -24,11 +24,11 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="window.print()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm">
-                        Printen
+                        {{ __('Printen') }}
                     </button>
                     <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                         @csrf
-                        <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
+                        <button type="submit" class="text-gray-600 hover:text-gray-800">{{ __('Uitloggen') }}</button>
                     </form>
                 </div>
             </div>
@@ -37,19 +37,19 @@
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
                 <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Judoka's
+                    {{ __('Judoka\'s') }}
                 </a>
                 <a href="{{ route('coach.portal.coachkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Coach Kaarten
+                    {{ __('Coach Kaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.weegkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Weegkaarten
+                    {{ __('Weegkaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.resultaten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
-                    Resultaten
+                    {{ __('Resultaten') }}
                 </a>
             </div>
         </div>
@@ -62,36 +62,36 @@
 
         <!-- Club Summary -->
         <div class="bg-white rounded-lg shadow p-6 mb-6 avoid-break">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">Overzicht {{ $club->naam }}</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-4">{{ __('Overzicht') }} {{ $club->naam }}</h2>
 
             <!-- Medal Count -->
             <div class="grid grid-cols-3 gap-4 mb-6">
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
                     <div class="text-3xl">🥇</div>
                     <div class="text-2xl font-bold text-yellow-700">{{ $medailles['goud'] }}</div>
-                    <div class="text-sm text-yellow-600">Goud</div>
+                    <div class="text-sm text-yellow-600">{{ __('Goud') }}</div>
                 </div>
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
                     <div class="text-3xl">🥈</div>
                     <div class="text-2xl font-bold text-gray-600">{{ $medailles['zilver'] }}</div>
-                    <div class="text-sm text-gray-500">Zilver</div>
+                    <div class="text-sm text-gray-500">{{ __('Zilver') }}</div>
                 </div>
                 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
                     <div class="text-3xl">🥉</div>
                     <div class="text-2xl font-bold text-orange-700">{{ $medailles['brons'] }}</div>
-                    <div class="text-sm text-orange-600">Brons</div>
+                    <div class="text-sm text-orange-600">{{ __('Brons') }}</div>
                 </div>
             </div>
 
             <!-- Club Ranking Position -->
             @if($clubPositieAbsoluut)
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="text-sm text-blue-600 mb-1">Club Klassement</div>
+                <div class="text-sm text-blue-600 mb-1">{{ __('Club Klassement') }}</div>
                 <div class="text-2xl font-bold text-blue-800">
                     #{{ $clubPositieAbsoluut }}
-                    <span class="text-sm font-normal text-blue-600">van {{ count($clubRanking['absoluut']) }} clubs</span>
+                    <span class="text-sm font-normal text-blue-600">{{ __('van :count clubs', ['count' => count($clubRanking['absoluut'])]) }}</span>
                 </div>
-                <div class="text-xs text-blue-500 mt-1">Gesorteerd op gemiddelde WP/JP per judoka</div>
+                <div class="text-xs text-blue-500 mt-1">{{ __('Gesorteerd op gemiddelde WP/JP per judoka') }}</div>
             </div>
             @endif
         </div>
@@ -99,7 +99,7 @@
         <!-- Individual Results -->
         <div class="bg-white rounded-lg shadow overflow-hidden mb-6 avoid-break">
             <div class="bg-purple-600 text-white px-4 py-3">
-                <h2 class="font-bold">Resultaten per Judoka</h2>
+                <h2 class="font-bold">{{ __('Resultaten per Judoka') }}</h2>
             </div>
 
             @if(count($resultaten) > 0)
@@ -144,8 +144,8 @@
             @else
             <div class="p-8 text-center text-gray-500">
                 <div class="text-4xl mb-2">🏆</div>
-                <p>Nog geen resultaten beschikbaar.</p>
-                <p class="text-sm mt-1">Resultaten verschijnen hier zodra poules zijn afgerond.</p>
+                <p>{{ __('Nog geen resultaten beschikbaar.') }}</p>
+                <p class="text-sm mt-1">{{ __('Resultaten verschijnen hier zodra poules zijn afgerond.') }}</p>
             </div>
             @endif
         </div>
@@ -154,7 +154,7 @@
         <div x-data="{ showRanking: false }" class="no-print">
             <button @click="showRanking = !showRanking"
                     class="w-full bg-white rounded-lg shadow p-4 text-left flex justify-between items-center hover:bg-gray-50">
-                <span class="font-bold text-gray-800">Totaal Club Ranking</span>
+                <span class="font-bold text-gray-800">{{ __('Totaal Club Ranking') }}</span>
                 <svg class="w-5 h-5 text-gray-500 transition-transform" :class="showRanking ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>

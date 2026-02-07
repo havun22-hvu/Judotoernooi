@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Coach Kaarten')
+@section('title', __('Coach Kaarten'))
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Coach Kaarten</h1>
-        <p class="text-gray-600 mt-1">Toegangsbewijzen voor begeleiders tot de Dojo (1 per {{ $toernooi->judokas_per_coach ?? 5 }} judoka's)</p>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Coach Kaarten') }}</h1>
+        <p class="text-gray-600 mt-1">{{ __('Toegangsbewijzen voor begeleiders tot de Dojo (1 per :aantal judoka\'s)', ['aantal' => $toernooi->judokas_per_coach ?? 5]) }}</p>
     </div>
     <div class="flex items-center gap-3">
         <form action="{{ route('toernooi.coach-kaart.toggle-incheck', $toernooi->routeParams()) }}" method="POST">
@@ -16,7 +16,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
-                Check-in {{ $toernooi->coach_incheck_actief ? 'Actief' : 'Inactief' }}
+                {{ __('Check-in') }} {{ $toernooi->coach_incheck_actief ? __('Actief') : __('Inactief') }}
             </button>
         </form>
         <form action="{{ route('toernooi.coach-kaart.genereer', $toernooi->routeParams()) }}" method="POST">
@@ -25,7 +25,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
-                Kaarten Genereren/Bijwerken
+                {{ __('Kaarten Genereren/Bijwerken') }}
             </button>
         </form>
     </div>
@@ -40,28 +40,28 @@
 <div class="grid grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <p class="text-3xl font-bold text-purple-600">{{ $totaalKaarten }}</p>
-        <p class="text-gray-600">Totaal kaarten</p>
+        <p class="text-gray-600">{{ __('Totaal kaarten') }}</p>
     </div>
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <p class="text-3xl font-bold text-green-600">{{ $gescand }}</p>
-        <p class="text-gray-600">Gescand (aanwezig)</p>
+        <p class="text-gray-600">{{ __('Gescand (aanwezig)') }}</p>
     </div>
     @if($toernooi->coach_incheck_actief)
     <a href="{{ route('toernooi.coach-kaart.ingecheckt', $toernooi->routeParams()) }}"
        class="bg-white rounded-lg shadow p-4 text-center hover:bg-blue-50 transition">
         <p class="text-3xl font-bold text-blue-600">{{ $ingecheckt }}</p>
-        <p class="text-gray-600">Ingecheckt (dojo)</p>
-        <p class="text-xs text-blue-500 mt-1">Klik voor beheer</p>
+        <p class="text-gray-600">{{ __('Ingecheckt (dojo)') }}</p>
+        <p class="text-xs text-blue-500 mt-1">{{ __('Klik voor beheer') }}</p>
     </a>
     @else
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <p class="text-3xl font-bold text-gray-400">-</p>
-        <p class="text-gray-400">Check-in inactief</p>
+        <p class="text-gray-400">{{ __('Check-in inactief') }}</p>
     </div>
     @endif
     <div class="bg-white rounded-lg shadow p-4 text-center">
         <p class="text-3xl font-bold text-gray-600">{{ $totaalKaarten - $gescand }}</p>
-        <p class="text-gray-600">Nog niet gescand</p>
+        <p class="text-gray-600">{{ __('Nog niet gescand') }}</p>
     </div>
 </div>
 
@@ -69,14 +69,14 @@
     <table class="min-w-full">
         <thead class="bg-gray-50">
             <tr>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Club</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Judoka's</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Kaarten</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Gescand</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">{{ __('Club') }}</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">{{ __("Judoka's") }}</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">{{ __('Kaarten') }}</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">{{ __('Gescand') }}</th>
                 @if($toernooi->coach_incheck_actief)
-                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">In Dojo</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">{{ __('In Dojo') }}</th>
                 @endif
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Links</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">{{ __('Links') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y">
@@ -122,7 +122,7 @@
                         <a href="{{ route('coach-kaart.show', $kaart->qr_code) }}"
                            target="_blank"
                            class="inline-flex items-center px-2 py-1 rounded text-xs {{ $kaart->isIngecheckt() ? 'bg-green-100 text-green-700' : ($kaart->is_gescand ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700 hover:bg-purple-200') }}">
-                            Kaart {{ $index + 1 }}
+                            {{ __('Kaart :nummer', ['nummer' => $index + 1]) }}
                             @if($kaart->isIngecheckt())
                             <span class="w-1.5 h-1.5 bg-green-500 rounded-full ml-1 animate-pulse"></span>
                             @elseif($kaart->is_gescand)
@@ -133,7 +133,7 @@
                         </a>
                         @endforeach
                         @if($kaarten->isEmpty())
-                        <span class="text-gray-400 italic text-sm">Nog geen kaarten</span>
+                        <span class="text-gray-400 italic text-sm">{{ __('Nog geen kaarten') }}</span>
                         @endif
                     </div>
                 </td>
@@ -141,7 +141,7 @@
             @empty
             <tr>
                 <td colspan="{{ $toernooi->coach_incheck_actief ? 6 : 5 }}" class="px-4 py-8 text-center text-gray-500">
-                    Geen clubs met judoka's gevonden
+                    {{ __('Geen clubs met judoka\'s gevonden') }}
                 </td>
             </tr>
             @endforelse

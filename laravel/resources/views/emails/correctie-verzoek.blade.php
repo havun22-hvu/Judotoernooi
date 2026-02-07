@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Correctie vereist - {{ $toernooi->naam }}</title>
+    <title>{{ __('Correctie vereist') }} - {{ $toernooi->naam }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -114,19 +114,19 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Actie Vereist</h1>
+            <h1>{{ __('Actie Vereist') }}</h1>
             <p style="color: #666;">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
         </div>
 
-        <p>Beste {{ $club->contact_naam ?? $club->naam }},</p>
+        <p>{{ __('Beste :naam', ['naam' => $club->contact_naam ?? $club->naam]) }},</p>
 
         <div class="warning-box">
-            <h3>{{ $judokas->count() }} judoka('s) vereisen correctie</h3>
-            <p>Bij het importeren van de judoka-gegevens zijn er problemen gedetecteerd. Wij verzoeken u vriendelijk om de onderstaande gegevens te controleren en aan te vullen.</p>
+            <h3>{{ __(':aantal judoka(\'s) vereisen correctie', ['aantal' => $judokas->count()]) }}</h3>
+            <p>{{ __('Bij het importeren van de judoka-gegevens zijn er problemen gedetecteerd. Wij verzoeken u vriendelijk om de onderstaande gegevens te controleren en aan te vullen.') }}</p>
         </div>
 
         <div class="judoka-list">
-            <h4 style="margin-top: 0; color: #c2410c;">Te corrigeren judoka's:</h4>
+            <h4 style="margin-top: 0; color: #c2410c;">{{ __('Te corrigeren judoka\'s:') }}</h4>
             @foreach($judokas as $judoka)
             <div class="judoka-item">
                 <div class="judoka-name">{{ $judoka->naam }}</div>
@@ -138,28 +138,28 @@
         </div>
 
         <div class="cta-section">
-            <p><strong>Log in op uw club portaal om de gegevens aan te passen:</strong></p>
-            <a href="{{ $portalUrl }}" class="cta-button">Naar Club Portaal</a>
+            <p><strong>{{ __('Log in op uw club portaal om de gegevens aan te passen:') }}</strong></p>
+            <a href="{{ $portalUrl }}" class="cta-button">{{ __('Naar Club Portaal') }}</a>
             <div class="pin-box">
-                <p>PIN code: <span style="font-size: 20px; letter-spacing: 2px;">{{ $pincode }}</span></p>
+                <p>{{ __('PIN code:') }} <span style="font-size: 20px; letter-spacing: 2px;">{{ $pincode }}</span></p>
             </div>
-            <p style="color: #666; font-size: 14px; margin-top: 15px;">Link werkt niet? Kopieer deze URL:</p>
+            <p style="color: #666; font-size: 14px; margin-top: 15px;">{{ __('Link werkt niet? Kopieer deze URL:') }}</p>
             <div class="link-fallback">{{ $portalUrl }}</div>
         </div>
 
         @if($toernooi->inschrijving_deadline)
         <p style="background: #fef3c7; padding: 10px; border-radius: 4px; text-align: center;">
-            <strong>Let op:</strong> Corrigeer de gegevens voor <strong>{{ $toernooi->inschrijving_deadline->format('d-m-Y') }}</strong>
+            {!! __('<strong>Let op:</strong> Corrigeer de gegevens voor <strong>:deadline</strong>', ['deadline' => $toernooi->inschrijving_deadline->format('d-m-Y')]) !!}
         </p>
         @endif
 
-        <p>Heeft u vragen? Neem dan contact op met de organisatie.</p>
+        <p>{{ __('Heeft u vragen? Neem dan contact op met de organisatie.') }}</p>
 
-        <p>Met sportieve groet,<br>
-        <strong>{{ $toernooi->organisatie ?? 'De Organisatie' }}</strong></p>
+        <p>{{ __('Met sportieve groet,') }}<br>
+        <strong>{{ $toernooi->organisatie ?? __('De Organisatie') }}</strong></p>
 
         <div class="footer">
-            <p>Deze email is verstuurd naar {{ $club->email }}.</p>
+            <p>{{ __('Deze email is verstuurd naar :email.', ['email' => $club->email]) }}</p>
             <p>{{ $toernooi->naam }} | {{ $toernooi->datum->format('d-m-Y') }}</p>
         </div>
     </div>

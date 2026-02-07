@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $club->naam }} - Weegkaarten</title>
+    <title>{{ $club->naam }} - {{ __('Weegkaarten') }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
@@ -18,7 +18,7 @@
                 </div>
                 <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                     @csrf
-                    <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
+                    <button type="submit" class="text-gray-600 hover:text-gray-800">{{ __('Uitloggen') }}</button>
                 </form>
             </div>
 
@@ -26,28 +26,27 @@
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
                 <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Judoka's
+                    {{ __('Judoka\'s') }}
                 </a>
                 <a href="{{ route('coach.portal.coachkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Coach Kaarten
+                    {{ __('Coach Kaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.weegkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
-                    Weegkaarten
+                    {{ __('Weegkaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.resultaten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Resultaten
+                    {{ __('Resultaten') }}
                 </a>
             </div>
         </div>
 
         <!-- Info box -->
         <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
-            <p class="font-medium">Weegkaarten voor je judoka's</p>
-            <p class="text-sm mt-1">Stuur deze links naar je judoka's zodat zij hun weegkaart kunnen tonen bij de weging.
-            Elke judoka heeft een unieke QR-code.</p>
+            <p class="font-medium">{{ __('Weegkaarten voor je judoka\'s') }}</p>
+            <p class="text-sm mt-1">{{ __('Stuur deze links naar je judoka\'s zodat zij hun weegkaart kunnen tonen bij de weging. Elke judoka heeft een unieke QR-code.') }}</p>
         </div>
 
         @if(session('success'))
@@ -60,10 +59,10 @@
         <div class="bg-white rounded-lg shadow overflow-hidden" x-data="{ copiedId: null, search: '' }">
             <div class="px-6 py-4 border-b bg-gray-50">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-bold text-gray-800">Weegkaarten ({{ $judokas->count() }})</h2>
+                    <h2 class="text-xl font-bold text-gray-800">{{ __('Weegkaarten') }} ({{ $judokas->count() }})</h2>
                 </div>
                 <div class="mt-2">
-                    <input type="text" x-model="search" placeholder="Zoek judoka op naam..."
+                    <input type="text" x-model="search" placeholder="{{ __('Zoek judoka op naam...') }}"
                            class="w-full border rounded px-3 py-2 text-sm" />
                 </div>
             </div>
@@ -79,7 +78,7 @@
                      x-show="search === '' || '{{ strtolower($judoka->naam) }}'.includes(search.toLowerCase())">
                     <div class="flex justify-between items-start gap-4">
                         <!-- QR Code (clickable) -->
-                        <div class="cursor-pointer shrink-0" @click="showQr = !showQr" title="Klik voor grote QR">
+                        <div class="cursor-pointer shrink-0" @click="showQr = !showQr" title="{{ __('Klik voor grote QR') }}">
                             <canvas id="qr-weeg-{{ $judoka->id }}" class="w-14 h-14"></canvas>
                         </div>
 
@@ -93,13 +92,13 @@
                             <p class="text-sm text-amber-600 mt-1">
                                 @if($toernooi->blokken()->count() > 1){{ $blok->naam }} - @endif
                                 @if($blok->weging_start && $blok->weging_einde)
-                                    Weging: {{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}
+                                    {{ __('Weging:') }} {{ $blok->weging_start->format('H:i') }} - {{ $blok->weging_einde->format('H:i') }}
                                 @endif
                             </p>
                             @elseif(!$toernooi->voorbereiding_klaar_op)
-                            <p class="text-sm text-gray-400 mt-1">Indeling wordt later bekendgemaakt</p>
+                            <p class="text-sm text-gray-400 mt-1">{{ __('Indeling wordt later bekendgemaakt') }}</p>
                             @else
-                            <p class="text-sm text-gray-400 mt-1">Nog niet ingedeeld</p>
+                            <p class="text-sm text-gray-400 mt-1">{{ __('Nog niet ingedeeld') }}</p>
                             @endif
                         </div>
 
@@ -112,7 +111,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                 </svg>
-                                Bekijk
+                                {{ __('Bekijk') }}
                             </a>
 
                             <!-- Copy link button -->
@@ -129,7 +128,7 @@
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
                                         </svg>
-                                        Kopieer
+                                        {{ __('Kopieer') }}
                                     </span>
                                 </template>
                                 <template x-if="copiedId === {{ $judoka->id }}">
@@ -137,7 +136,7 @@
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
-                                        Gekopieerd!
+                                        {{ __('Gekopieerd!') }}
                                     </span>
                                 </template>
                             </button>
@@ -156,7 +155,7 @@
 
                     <!-- Grote QR popup -->
                     <div x-show="showQr" x-collapse class="mt-4 pt-4 border-t text-center">
-                        <p class="text-sm text-gray-600 mb-2">Laat {{ $judoka->naam }} deze QR scannen voor de weegkaart</p>
+                        <p class="text-sm text-gray-600 mb-2">{{ __('Laat :naam deze QR scannen voor de weegkaart', ['naam' => $judoka->naam]) }}</p>
                         <canvas id="qr-weeg-large-{{ $judoka->id }}" class="mx-auto"></canvas>
                     </div>
                 </div>
@@ -164,9 +163,9 @@
             </div>
             @else
             <div class="p-8 text-center text-gray-500">
-                Nog geen judoka's opgegeven.
+                {{ __('Nog geen judoka\'s opgegeven.') }}
                 <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" class="text-blue-600 hover:underline">
-                    Voeg eerst judoka's toe.
+                    {{ __('Voeg eerst judoka\'s toe.') }}
                 </a>
             </div>
             @endif
@@ -175,7 +174,7 @@
         <!-- Bulk actions -->
         @if($judokas->count() > 0)
         <div class="mt-6 bg-white rounded-lg shadow p-4">
-            <h3 class="font-medium text-gray-800 mb-3">Alle weegkaarten delen</h3>
+            <h3 class="font-medium text-gray-800 mb-3">{{ __('Alle weegkaarten delen') }}</h3>
             <div class="flex flex-wrap gap-2">
                 <button
                     onclick="copyAllLinks()"
@@ -184,7 +183,7 @@
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
                     </svg>
-                    Kopieer alle links
+                    {{ __('Kopieer alle links') }}
                 </button>
             </div>
         </div>
@@ -192,7 +191,7 @@
 
         <!-- Footer -->
         <div class="mt-6 text-center text-sm text-gray-500">
-            <p>Stuur de weegkaarten naar je judoka's via WhatsApp of kopieer de link.</p>
+            <p>{{ __('Stuur de weegkaarten naar je judoka\'s via WhatsApp of kopieer de link.') }}</p>
         </div>
     </div>
 
@@ -206,7 +205,7 @@
 
             const text = "Weegkaarten {{ $toernooi->naam }}\n\n" + links.join("\n");
             navigator.clipboard.writeText(text).then(() => {
-                alert('Alle links gekopieerd naar klembord!');
+                alert('{{ __('Alle links gekopieerd naar klembord!') }}');
             });
         }
 

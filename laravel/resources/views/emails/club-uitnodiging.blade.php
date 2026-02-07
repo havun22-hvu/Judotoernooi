@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uitnodiging {{ $toernooi->naam }}</title>
+    <title>{{ __('Uitnodiging :naam', ['naam' => $toernooi->naam]) }}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -109,53 +109,53 @@
             <div class="date">{{ $toernooi->datum->format('l d F Y') }}</div>
         </div>
 
-        <p class="club-name">Beste {{ $club->contact_naam ?? $club->naam }},</p>
+        <p class="club-name">{{ __('Beste :naam', ['naam' => $club->contact_naam ?? $club->naam]) }},</p>
 
-        <p>Namens {{ $toernooi->organisatie ?? 'de organisatie' }} nodigen wij uw club uit voor deelname aan het <strong>{{ $toernooi->naam }}</strong>.</p>
+        <p>{!! __('Namens :organisatie nodigen wij uw club uit voor deelname aan het <strong>:toernooi</strong>.', ['organisatie' => $toernooi->organisatie ?? __('de organisatie'), 'toernooi' => $toernooi->naam]) !!}</p>
 
         <div class="info-box">
-            <h3>Toernooi Informatie</h3>
-            <p><strong>Datum:</strong> {{ $toernooi->datum->format('d-m-Y') }}</p>
+            <h3>{{ __('Toernooi Informatie') }}</h3>
+            <p><strong>{{ __('Datum:') }}</strong> {{ $toernooi->datum->format('d-m-Y') }}</p>
             @if($toernooi->locatie)
-            <p><strong>Locatie:</strong> {{ $toernooi->locatie }}</p>
+            <p><strong>{{ __('Locatie:') }}</strong> {{ $toernooi->locatie }}</p>
             @endif
             @if($toernooi->inschrijving_deadline)
-            <p><strong>Inschrijven tot:</strong> <span class="highlight">{{ $toernooi->inschrijving_deadline->format('d-m-Y') }}</span></p>
+            <p><strong>{{ __('Inschrijven tot:') }}</strong> <span class="highlight">{{ $toernooi->inschrijving_deadline->format('d-m-Y') }}</span></p>
             @endif
             @if($toernooi->max_judokas)
-            <p><strong>Max. deelnemers:</strong> {{ $toernooi->max_judokas }}</p>
+            <p><strong>{{ __('Max. deelnemers:') }}</strong> {{ $toernooi->max_judokas }}</p>
             @endif
         </div>
 
-        <h3>Hoe werkt het?</h3>
+        <h3>{{ __('Hoe werkt het?') }}</h3>
         <ol class="steps">
-            <li><strong>Ga naar de onderstaande link</strong> om naar uw club-pagina te gaan</li>
-            <li><strong>Log in met de PIN code</strong> (zie hieronder)</li>
-            <li><strong>Voeg uw judoka's toe</strong> met naam, geboortejaar, geslacht, band en gewichtsklasse</li>
-            <li><strong>Ontvang de weegkaarten</strong> voor uw judoka's zodra de indeling klaar is</li>
+            <li>{!! __('<strong>Ga naar de onderstaande link</strong> om naar uw club-pagina te gaan') !!}</li>
+            <li>{!! __('<strong>Log in met de PIN code</strong> (zie hieronder)') !!}</li>
+            <li>{!! __('<strong>Voeg uw judoka\'s toe</strong> met naam, geboortejaar, geslacht, band en gewichtsklasse') !!}</li>
+            <li>{!! __('<strong>Ontvang de weegkaarten</strong> voor uw judoka\'s zodra de indeling klaar is') !!}</li>
         </ol>
 
         <div class="cta-section">
-            <a href="{{ $portalUrl }}" class="cta-button">Naar Club Portaal</a>
+            <a href="{{ $portalUrl }}" class="cta-button">{{ __('Naar Club Portaal') }}</a>
             <div style="margin-top: 15px; background: #fef3c7; padding: 15px; border-radius: 8px; display: inline-block;">
-                <p style="margin: 0; color: #92400e; font-weight: bold;">PIN code: <span style="font-size: 20px; letter-spacing: 2px;">{{ $pincode }}</span></p>
+                <p style="margin: 0; color: #92400e; font-weight: bold;">{{ __('PIN code:') }} <span style="font-size: 20px; letter-spacing: 2px;">{{ $pincode }}</span></p>
             </div>
-            <p style="color: #666; font-size: 14px; margin-top: 15px;">Link werkt niet? Kopieer deze URL:</p>
+            <p style="color: #666; font-size: 14px; margin-top: 15px;">{{ __('Link werkt niet? Kopieer deze URL:') }}</p>
             <div class="link-fallback">{{ $portalUrl }}</div>
         </div>
 
         <div class="info-box">
-            <h3>Weegkaarten</h3>
-            <p>Na de poule-indeling ontvangt u in uw coach portaal de weegkaarten voor al uw judoka's. U kunt deze eenvoudig doorsturen via WhatsApp of e-mail naar de ouders/judoka's.</p>
+            <h3>{{ __('Weegkaarten') }}</h3>
+            <p>{{ __('Na de poule-indeling ontvangt u in uw coach portaal de weegkaarten voor al uw judoka\'s. U kunt deze eenvoudig doorsturen via WhatsApp of e-mail naar de ouders/judoka\'s.') }}</p>
         </div>
 
-        <p>Heeft u vragen? Neem dan contact op met de organisatie.</p>
+        <p>{{ __('Heeft u vragen? Neem dan contact op met de organisatie.') }}</p>
 
-        <p>Met sportieve groet,<br>
-        <strong>{{ $toernooi->organisatie ?? 'De Organisatie' }}</strong></p>
+        <p>{{ __('Met sportieve groet,') }}<br>
+        <strong>{{ $toernooi->organisatie ?? __('De Organisatie') }}</strong></p>
 
         <div class="footer">
-            <p>Deze uitnodiging is verstuurd naar {{ $club->email }}.</p>
+            <p>{{ __('Deze uitnodiging is verstuurd naar :email.', ['email' => $club->email]) }}</p>
             <p>{{ $toernooi->naam }} | {{ $toernooi->datum->format('d-m-Y') }}</p>
         </div>
     </div>
