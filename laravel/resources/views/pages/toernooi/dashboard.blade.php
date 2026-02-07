@@ -125,7 +125,7 @@
                 <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST">
                     @csrf
                     <button type="submit" class="w-full text-left bg-green-100 hover:bg-green-200 p-3 rounded">
-                        🎯 Genereer Poule-indeling
+                        🎯 {{ __('Genereer Poule-indeling') }}
                     </button>
                 </form>
                 @endif
@@ -134,21 +134,21 @@
     </div>
 
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-bold mb-4">Blok/Mat Indeling</h2>
+        <h2 class="text-xl font-bold mb-4">{{ __('Blok/Mat Indeling') }}</h2>
         <div class="space-y-3">
             @if($statistieken['totaal_poules'] > 0)
             <form action="{{ route('toernooi.blok.genereer-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline">
                 @csrf
                 <button type="submit" class="w-full text-left bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
-                    📋 Genereer Blok/Mat Verdeling
+                    📋 {{ __('Genereer Blok/Mat Verdeling') }}
                 </button>
             </form>
             @endif
             <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
-                🏟️ Zaaloverzicht
+                🏟️ {{ __('Zaaloverzicht') }}
             </a>
             <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="block bg-yellow-100 hover:bg-yellow-200 p-3 rounded">
-                ⏱️ Blokken Beheer
+                ⏱️ {{ __('Blokken Beheer') }}
             </a>
         </div>
     </div>
@@ -156,23 +156,23 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-bold mb-4">Toernooidag</h2>
+        <h2 class="text-xl font-bold mb-4">{{ __('Toernooidag') }}</h2>
         <div class="space-y-3">
             <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
-                ⚖️ Weging Interface
+                ⚖️ {{ __('Weging Interface') }}
             </a>
             <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="block bg-purple-100 hover:bg-purple-200 p-3 rounded">
-                🥋 Mat Interface
+                🥋 {{ __('Mat Interface') }}
             </a>
             <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
                class="block {{ $toernooi->isAfgesloten() ? 'bg-green-100 hover:bg-green-200' : 'bg-red-100 hover:bg-red-200' }} p-3 rounded">
-                {{ $toernooi->isAfgesloten() ? '🏆 Afgesloten - Bekijk Resultaten' : '🔒 Toernooi Afsluiten' }}
+                {{ $toernooi->isAfgesloten() ? '🏆 ' . __('Afgesloten - Bekijk Resultaten') : '🔒 ' . __('Toernooi Afsluiten') }}
             </a>
         </div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-bold mb-4">Per Leeftijdsklasse</h2>
+        <h2 class="text-xl font-bold mb-4">{{ __('Per Leeftijdsklasse') }}</h2>
         <div class="space-y-2">
             @forelse($statistieken['per_leeftijdsklasse'] as $klasse => $aantal)
             <div class="flex justify-between">
@@ -180,7 +180,7 @@
                 <span class="font-bold">{{ $aantal }}</span>
             </div>
             @empty
-            <p class="text-gray-500">Nog geen deelnemers</p>
+            <p class="text-gray-500">{{ __('Nog geen deelnemers') }}</p>
             @endforelse
         </div>
     </div>
