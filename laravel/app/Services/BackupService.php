@@ -20,8 +20,8 @@ class BackupService
      */
     public function maakMilestoneBackup(string $label): ?string
     {
-        // Only on production/staging (MySQL)
-        if (config('database.default') !== 'mysql') {
+        // Only on production/staging (MySQL on Linux)
+        if (config('database.default') !== 'mysql' || PHP_OS_FAMILY === 'Windows') {
             return null;
         }
 
