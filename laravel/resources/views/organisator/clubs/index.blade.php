@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Mijn Clubs - ' . $organisator->naam)
+@section('title', __('Mijn Clubs') . ' - ' . $organisator->naam)
 
 @section('content')
 <div class="max-w-6xl mx-auto" x-data="clubsPage()">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Mijn Clubs</h1>
-            <p class="text-gray-500">Clubs blijven bewaard en kunnen voor elk toernooi uitgenodigd worden</p>
+            <h1 class="text-2xl font-bold text-gray-800">{{ __('Mijn Clubs') }}</h1>
+            <p class="text-gray-500">{{ __('Clubs blijven bewaard en kunnen voor elk toernooi uitgenodigd worden') }}</p>
         </div>
         <a href="{{ request('back') ?? route('organisator.dashboard', $organisator) }}" class="text-blue-600 hover:text-blue-800">
-            &larr; Terug
+            &larr; {{ __('Terug') }}
         </a>
     </div>
 
@@ -38,39 +38,39 @@
 
     {{-- Add Club Form --}}
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-4">Club Toevoegen</h2>
+        <h2 class="text-lg font-semibold mb-4">{{ __('Club Toevoegen') }}</h2>
         <form action="{{ route('organisator.clubs.store', $organisator) }}" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @csrf
             @if(request('back'))
                 <input type="hidden" name="back" value="{{ request('back') }}">
             @endif
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
-                <input type="text" name="naam" required class="w-full border rounded px-3 py-2" placeholder="Budoschool naam">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Naam') }} *</label>
+                <input type="text" name="naam" required class="w-full border rounded px-3 py-2" placeholder="{{ __('Budoschool naam') }}">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Email') }}</label>
                 <input type="email" name="email" class="w-full border rounded px-3 py-2" placeholder="info@budoschool.nl">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Plaats</label>
-                <input type="text" name="plaats" class="w-full border rounded px-3 py-2" placeholder="Amsterdam">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Plaats') }}</label>
+                <input type="text" name="plaats" class="w-full border rounded px-3 py-2" placeholder="{{ __('Amsterdam') }}">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Contactpersoon</label>
-                <input type="text" name="contact_naam" class="w-full border rounded px-3 py-2" placeholder="Jan Jansen">
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Contactpersoon') }}</label>
+                <input type="text" name="contact_naam" class="w-full border rounded px-3 py-2" placeholder="{{ __('bijv. Jan Jansen') }}">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Telefoon') }}</label>
                 <input type="text" name="telefoon" class="w-full border rounded px-3 py-2" placeholder="06-12345678">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Website') }}</label>
                 <input type="text" name="website" class="w-full border rounded px-3 py-2" placeholder="https://budoschool.nl">
             </div>
             <div class="md:col-span-3 flex justify-end">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Club Toevoegen
+                    {{ __('Club Toevoegen') }}
                 </button>
             </div>
         </form>
@@ -79,25 +79,25 @@
     {{-- Clubs List --}}
     <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b">
-            <h2 class="text-lg font-semibold">Mijn Clubs ({{ $clubs->count() }})</h2>
+            <h2 class="text-lg font-semibold">{{ __('Mijn Clubs') }} ({{ $clubs->count() }})</h2>
         </div>
 
         @if($clubs->isEmpty())
             <div class="p-6 text-center text-gray-500">
-                Je hebt nog geen clubs toegevoegd. Voeg hierboven je eerste club toe.
+                {{ __('Je hebt nog geen clubs toegevoegd. Voeg hierboven je eerste club toe.') }}
             </div>
         @else
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plaats</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telefoon</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
-                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Naam') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Plaats') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Contact') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Email') }}</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Telefoon') }}</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __("Judoka's") }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{{ __('Acties') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -121,7 +121,7 @@
                                             'telefoon' => $club->telefoon,
                                             'website' => $club->website,
                                         ]) }})" class="bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium px-3 py-1 rounded">
-                                            Bewerken
+                                            {{ __('Bewerken') }}
                                         </button>
                                         <form action="{{ route('organisator.clubs.destroy', [$organisator, $club]) }}" method="POST"
                                               onsubmit="return confirmDelete({{ $club->judokas_count }}, '{{ addslashes($club->naam) }}')">
@@ -131,7 +131,7 @@
                                                 <input type="hidden" name="back" value="{{ request('back') }}">
                                             @endif
                                             <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium px-3 py-1 rounded">
-                                                Delete
+                                                {{ __('Verwijderen') }}
                                             </button>
                                         </form>
                                     </div>
@@ -160,44 +160,44 @@
                         <input type="hidden" name="back" value="{{ request('back') }}">
                     @endif
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
-                        <h3 class="text-lg font-bold text-gray-900 mb-4">Club Bewerken</h3>
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">{{ __('Club Bewerken') }}</h3>
                         <div class="grid grid-cols-1 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Naam') }} *</label>
                                 <input type="text" name="naam" x-model="editData.naam" required class="w-full border rounded px-3 py-2">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Plaats</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Plaats') }}</label>
                                     <input type="text" name="plaats" x-model="editData.plaats" class="w-full border rounded px-3 py-2">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Contactpersoon</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Contactpersoon') }}</label>
                                     <input type="text" name="contact_naam" x-model="editData.contact_naam" class="w-full border rounded px-3 py-2">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Email') }}</label>
                                     <input type="email" name="email" x-model="editData.email" class="w-full border rounded px-3 py-2">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Telefoon') }}</label>
                                     <input type="text" name="telefoon" x-model="editData.telefoon" class="w-full border rounded px-3 py-2">
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Website') }}</label>
                                 <input type="text" name="website" x-model="editData.website" class="w-full border rounded px-3 py-2" placeholder="havun.nl">
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
                         <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            Opslaan
+                            {{ __('Opslaan') }}
                         </button>
                         <button type="button" @click="editModal = false" class="mt-3 sm:mt-0 w-full sm:w-auto bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded">
-                            Annuleren
+                            {{ __('Annuleren') }}
                         </button>
                     </div>
                 </form>
@@ -228,13 +228,11 @@ function clubsPage() {
 }
 
 function confirmDelete(judokasCount, clubNaam) {
-    // Stap 1: Waarschuwing voor judoka's (als die er zijn)
     if (judokasCount > 0) {
         if (!confirm(`LET OP: "${clubNaam}" heeft ${judokasCount} judoka(s).\n\nDeze worden ook verwijderd!\n\nDoorgaan?`)) {
             return false;
         }
     }
-    // Stap 2: Bevestiging voor verwijderen club
     return confirm(`Weet je zeker dat je "${clubNaam}" wilt verwijderen?\n\nDit kan niet ongedaan worden gemaakt.`);
 }
 </script>

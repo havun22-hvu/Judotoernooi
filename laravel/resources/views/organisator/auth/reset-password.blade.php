@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wachtwoord resetten - JudoToernooi</title>
+    <title>{{ __('Wachtwoord resetten') }} - JudoToernooi</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">JudoToernooi</h1>
-            <p class="text-gray-600">Nieuw wachtwoord instellen</p>
+            <p class="text-gray-600">{{ __('Nieuw wachtwoord instellen') }}</p>
         </div>
 
         <form action="{{ route('password.update') }}" method="POST">
@@ -20,7 +20,7 @@
 
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                    E-mailadres
+                    {{ __('E-mailadres') }}
                 </label>
                 <input type="email"
                        id="email"
@@ -36,7 +36,7 @@
 
             <div class="mb-4">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                    Nieuw wachtwoord <span class="text-gray-400">(min. 8 tekens)</span>
+                    {{ __('Nieuw wachtwoord') }} <span class="text-gray-400">({{ __('min. 8 tekens') }})</span>
                 </label>
                 <input type="password"
                        id="password"
@@ -51,7 +51,7 @@
 
             <div class="mb-6">
                 <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
-                    Wachtwoord bevestigen
+                    {{ __('Wachtwoord bevestigen') }}
                 </label>
                 <input type="password"
                        id="password_confirmation"
@@ -62,7 +62,7 @@
 
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                Wachtwoord resetten
+                {{ __('Wachtwoord resetten') }}
             </button>
         </form>
     </div>
