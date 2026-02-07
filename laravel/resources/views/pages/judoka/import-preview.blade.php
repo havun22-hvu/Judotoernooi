@@ -614,57 +614,79 @@ function updateAlleVoorbeelden() {
 function extractJaar(val) {
     const str = String(val).trim();
     if (!str) return val;
-    // Normalize backslash separators to forward slash
-    const normalized = str.replace(/\\/g, '/');
-    const num = parseInt(normalized);
-    // Excel serial date number (e.g. 43831 = 2020-01-01)
-    if (!isNaN(num) && num > 30000 && num < 60000) {
-        const excelEpoch = new Date(1899, 11, 30);
-        const date = new Date(excelEpoch.getTime() + num * 86400000);
-        return date.getFullYear();
+    const thisYear = new Date().getFullYear();
+    const toYyyy = (yy) => yy > 50 ? 1900 + yy : 2000 + yy;
+
+    // --- Phase 1: Clean up ---
+    // Strip parentheses/brackets: (2015) → 2015, [24-01-2015] → 24-01-2015
+    let clean = str.replace(/^[\(\[\{]+|[\)\]\}]+$/g, '').trim();
+    // European comma decimal for Excel serials: 43831,5 → 43831.5
+    clean = clean.replace(/^(\d+),(\d+)$/, '$1.$2');
+
+    // --- Phase 2: Numeric values ---
+    const num = parseFloat(clean);
+    if (!isNaN(num) && String(clean).match(/^[\d.]+$/)) {
+        const intVal = Math.floor(num);
+        if (intVal < 100) return toYyyy(intVal);
+        if (intVal > 30000 && intVal < 60000) {
+            const excelEpoch = new Date(1899, 11, 30);
+            return new Date(excelEpoch.getTime() + num * 86400000).getFullYear();
+        }
+        if (intVal >= 1950 && intVal <= thisYear) return intVal;
     }
-    // Already a plain year (2015, 2020, etc.)
-    if (!isNaN(num) && num >= 1950 && num <= new Date().getFullYear()) {
-        return num;
-    }
-    // 2-digit year (20 → 2020, 85 → 1985)
-    if (!isNaN(num) && num >= 0 && num < 100) {
-        return num > 50 ? 1900 + num : 2000 + num;
-    }
-    // Any date string: extract 4-digit year (19xx or 20xx)
-    // Covers: 1/1/2020, 24-01-2020, 2020/1/24, 24\01\2015, 2015-01-24T12:00:00Z, etc.
-    const match4 = normalized.match(/\b(19\d{2}|20\d{2})\b/);
+
+    // --- Phase 3: Normalize string separators ---
+    let norm = clean.replace(/\\/g, '/');
+    // Spaces around separators: "24 - 01 - 2015" → "24-01-2015"
+    norm = norm.replace(/\s*([-.\/])\s*/g, '$1');
+    // Space-only separators: "24 01 2015" → "24/01/2015"
+    norm = norm.replace(/^(\d{1,4})\s+(\d{1,2})\s+(\d{2,4})$/, '$1/$2/$3');
+
+    // --- Phase 4: 4-digit year in any string ---
+    const match4 = norm.match(/\b(19\d{2}|20\d{2})\b/);
     if (match4) return parseInt(match4[1]);
-    // Date with 2-digit year at end: dd-mm-yy, dd/mm/yy, dd.mm.yy, dd\mm\yy
-    // e.g. 24-01-15, 01/24/15, 24.01.15, 24\01\15
-    const matchEnd = normalized.match(/^\d{1,2}[-\/.]\d{1,2}[-\/.](\d{2})$/);
-    if (matchEnd) {
-        const yy = parseInt(matchEnd[1]);
-        return yy > 50 ? 1900 + yy : 2000 + yy;
-    }
-    // Date with 2-digit year at start: yy-mm-dd, yy/mm/dd, yy\mm\dd
-    // e.g. 15-01-24, 15/01/24, 15\01\24
-    const matchStart = normalized.match(/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/);
+
+    // --- Phase 5: Date with 2-digit year at end (dd-mm-yy) ---
+    const matchEnd = norm.match(/^\d{1,2}[-\/.]\d{1,2}[-\/.](\d{2})$/);
+    if (matchEnd) return toYyyy(parseInt(matchEnd[1]));
+
+    // --- Phase 6: Date with 2-digit year at start (yy-mm-dd) ---
+    const matchStart = norm.match(/^(\d{2})[-\/.]\d{1,2}[-\/.]\d{1,2}$/);
     if (matchStart) {
-        const yy = parseInt(matchStart[1]);
-        const candidate = yy > 50 ? 1900 + yy : 2000 + yy;
-        if (candidate >= 1950 && candidate <= new Date().getFullYear()) return candidate;
+        const c = toYyyy(parseInt(matchStart[1]));
+        if (c >= 1950 && c <= thisYear) return c;
     }
-    // Dutch month names
+
+    // --- Phase 7: Compact dates without separators ---
+    // YYYYMMDD: 20150124
+    const mYmd = norm.match(/^(19\d{2}|20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/);
+    if (mYmd) return parseInt(mYmd[1]);
+    // DDMMYYYY: 24012015
+    const mDmy = norm.match(/^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])(19\d{2}|20\d{2})$/);
+    if (mDmy) return parseInt(mDmy[3]);
+    // DDMMYY: 240115 (6 digits)
+    const m6 = norm.match(/^(\d{2})(\d{2})(\d{2})$/);
+    if (m6) {
+        const dd = parseInt(m6[1]), mm = parseInt(m6[2]), yy = parseInt(m6[3]);
+        if (dd >= 1 && dd <= 31 && mm >= 1 && mm <= 12) return toYyyy(yy);
+        if (mm >= 1 && mm <= 12 && yy >= 1 && yy <= 31) return toYyyy(dd);
+    }
+
+    // --- Phase 8: Dutch month names + ordinals ---
     const nlToEn = {
         'januari':'january','februari':'february','maart':'march','april':'april',
         'mei':'may','juni':'june','juli':'july','augustus':'august',
         'september':'september','oktober':'october','november':'november','december':'december',
         'mrt':'mar','okt':'oct'
     };
-    let translated = normalized.toLowerCase();
+    let translated = norm.toLowerCase().replace(/(\d+)\s*(ste|de|e)\b/g, '$1');
     for (const [nl, en] of Object.entries(nlToEn)) {
         translated = translated.replace(nl, en);
     }
     const tsDate = new Date(translated);
     if (!isNaN(tsDate.getTime())) {
         const y = tsDate.getFullYear();
-        if (y >= 1950 && y <= new Date().getFullYear()) return y;
+        if (y >= 1950 && y <= thisYear) return y;
     }
     return val;
 }
