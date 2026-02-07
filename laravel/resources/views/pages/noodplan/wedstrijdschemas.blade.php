@@ -7,7 +7,7 @@
     @php $blokNummer = $blokPoules->first()->blok?->nummer ?? '?'; @endphp
 
     @if(!$blok)
-    <h2 class="text-xl font-bold mb-4 mt-6 first:mt-0 bg-gray-200 p-2">Blok {{ $blokNummer }}</h2>
+    <h2 class="text-xl font-bold mb-4 mt-6 first:mt-0 bg-gray-200 p-2">{{ __('Blok') }} {{ $blokNummer }}</h2>
     @endif
 
     @foreach($blokPoules as $poule)
@@ -21,11 +21,11 @@
                         @if($poule->naam) - {{ $poule->naam }} @endif
                     </span>
                     @if($poule->mat_nummer)
-                    <span class="ml-2 text-sm bg-blue-600 text-white px-2 py-1 rounded">Mat {{ $poule->mat_nummer }}</span>
+                    <span class="ml-2 text-sm bg-blue-600 text-white px-2 py-1 rounded">{{ __('Mat') }} {{ $poule->mat_nummer }}</span>
                     @endif
                 </div>
                 <span class="text-sm text-gray-600">
-                    {{ $poule->wedstrijden->where('uitslag_wit', '!=', null)->count() }}/{{ $poule->wedstrijden->count() }} wedstrijden
+                    {{ $poule->wedstrijden->where('uitslag_wit', '!=', null)->count() }}/{{ $poule->wedstrijden->count() }} {{ __('wedstrijden') }}
                 </span>
             </div>
         </div>
@@ -50,11 +50,11 @@
             <thead>
                 <tr class="bg-gray-200">
                     <th class="p-2 text-center w-8">#</th>
-                    <th class="p-2 text-left">Wit</th>
-                    <th class="p-2 text-center w-16">Score</th>
-                    <th class="p-2 text-left">Blauw</th>
-                    <th class="p-2 text-center w-16">Score</th>
-                    <th class="p-2 text-center w-20">Winnaar</th>
+                    <th class="p-2 text-left">{{ __('Wit') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Score') }}</th>
+                    <th class="p-2 text-left">{{ __('Blauw') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Score') }}</th>
+                    <th class="p-2 text-center w-20">{{ __('Winnaar') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -93,7 +93,7 @@
                                 {{ $winnaar?->naam ?? '?' }}
                             </span>
                         @elseif($heeftUitslag)
-                            <span class="text-gray-400">Gelijk</span>
+                            <span class="text-gray-400">{{ __('Gelijk') }}</span>
                         @else
                             -
                         @endif
@@ -106,15 +106,15 @@
         <!-- Klassement -->
         @if($poule->wedstrijden->where('uitslag_wit', '!=', null)->count() > 0)
         <div class="mt-4 p-3 bg-gray-50 rounded">
-            <h4 class="font-bold text-sm mb-2">Voorlopig Klassement</h4>
+            <h4 class="font-bold text-sm mb-2">{{ __('Voorlopig Klassement') }}</h4>
             <table class="w-full text-xs">
                 <thead>
                     <tr class="bg-gray-200">
                         <th class="p-1 text-center w-8">#</th>
-                        <th class="p-1 text-left">Naam</th>
-                        <th class="p-1 text-center w-12">W</th>
-                        <th class="p-1 text-center w-12">V</th>
-                        <th class="p-1 text-center w-12">WP</th>
+                        <th class="p-1 text-left">{{ __('Naam') }}</th>
+                        <th class="p-1 text-center w-12">{{ __('W') }}</th>
+                        <th class="p-1 text-center w-12">{{ __('V') }}</th>
+                        <th class="p-1 text-center w-12">{{ __('WP') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,6 +152,6 @@
 @endforeach
 
 @if($poules->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen poules gevonden</p>
+<p class="text-gray-500 text-center py-8">{{ __('Geen poules gevonden') }}</p>
 @endif
 @endsection

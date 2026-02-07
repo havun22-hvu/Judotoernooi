@@ -42,7 +42,7 @@
          class="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg p-4 z-50 min-w-48">
         <div class="text-sm">
             <div class="flex justify-between mb-2">
-                <span class="text-gray-600">Status:</span>
+                <span class="text-gray-600">{{ __('Status:') }}</span>
                 <span x-text="statusLabel" class="font-medium"></span>
             </div>
             <div x-show="latency" class="flex justify-between mb-2">
@@ -50,7 +50,7 @@
                 <span x-text="latency + 'ms'" class="font-medium"></span>
             </div>
             <div class="flex justify-between mb-2">
-                <span class="text-gray-600">Wachtend:</span>
+                <span class="text-gray-600">{{ __('Wachtend:') }}</span>
                 <span x-text="queueCount" class="font-medium"></span>
             </div>
             <div class="text-xs text-gray-400 mt-2" x-text="lastCheck"></div>
@@ -70,11 +70,11 @@ function internetIndicator() {
 
         get statusLabel() {
             return {
-                'good': 'Goed',
-                'poor': 'Matig',
+                'good': '{{ __('Goed') }}',
+                'poor': '{{ __('Matig') }}',
                 'offline': 'Offline',
-                'checking': 'Controleren...'
-            }[this.status] || 'Onbekend';
+                'checking': '{{ __('Controleren...') }}'
+            }[this.status] || '{{ __('Onbekend') }}';
         },
 
         async checkStatus() {
@@ -85,7 +85,7 @@ function internetIndicator() {
                 this.status = data.status || 'offline';
                 this.latency = data.latency;
                 this.queueCount = data.queue_count || 0;
-                this.lastCheck = 'Gecontroleerd: ' + new Date().toLocaleTimeString('nl-NL');
+                this.lastCheck = '{{ __('Gecontroleerd:') }} ' + new Date().toLocaleTimeString('nl-NL');
             } catch (e) {
                 this.status = 'offline';
                 this.latency = null;

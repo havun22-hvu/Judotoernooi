@@ -189,14 +189,14 @@
 <div class="bg-gray-100 px-4 py-3 border-b">
     <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
-            <span class="font-medium text-gray-700">Selecteer schema's om te printen:</span>
-            <button onclick="selectAllPoules(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">Alles aan</button>
-            <button onclick="selectAllPoules(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">Alles uit</button>
+            <span class="font-medium text-gray-700">{{ __("Selecteer schema's om te printen") }}:</span>
+            <button onclick="selectAllPoules(true)" type="button" class="text-sm text-blue-600 hover:text-blue-800">{{ __('Alles aan') }}</button>
+            <button onclick="selectAllPoules(false)" type="button" class="text-sm text-gray-600 hover:text-gray-800">{{ __('Alles uit') }}</button>
         </div>
         <div class="flex items-center gap-4">
-            <span class="text-sm text-gray-500" id="print-counter">{{ $poulesMetSchema->count() }} van {{ $poulesMetSchema->count() }} geselecteerd</span>
+            <span class="text-sm text-gray-500" id="print-counter">{{ $poulesMetSchema->count() }} {{ __('van') }} {{ $poulesMetSchema->count() }} {{ __('geselecteerd') }}</span>
             <button onclick="window.print()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-medium">
-                Print geselecteerde
+                {{ __('Print geselecteerde') }}
             </button>
         </div>
     </div>
@@ -206,7 +206,7 @@
 
 @section('content')
 @if($poulesMetSchema->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.</p>
+<p class="text-gray-500 text-center py-8">{{ __('Geen poules met wedstrijden gevonden. Zorg dat poules op de mat staan en wedstrijden zijn gegenereerd.') }}</p>
 @else
 
 {{-- Waarschuwing bij verplichte weging maar niet alle judoka's gewogen --}}
@@ -220,13 +220,13 @@
         <div class="flex items-start gap-3">
             <span class="text-2xl">⚠️</span>
             <div>
-                <h3 class="font-bold text-amber-800">Weging nog niet compleet</h3>
+                <h3 class="font-bold text-amber-800">{{ __('Weging nog niet compleet') }}</h3>
                 <p class="text-amber-700 text-sm mt-1">
-                    <strong>{{ $ongewogenJudokas }} van {{ $totaalJudokas }}</strong> judoka's zijn nog niet gewogen.
-                    Bij "Weging verplicht" worden ongewogen judoka's niet getoond in de schema's.
+                    <strong>{{ $ongewogenJudokas }} {{ __('van') }} {{ $totaalJudokas }}</strong> {{ __("judoka's zijn nog niet gewogen.") }}
+                    {{ __('Bij "Weging verplicht" worden ongewogen judoka\'s niet getoond in de schema\'s.') }}
                 </p>
                 <p class="text-amber-600 text-xs mt-2">
-                    💡 Opties: wacht tot alle judoka's gewogen zijn, of zet "Weging verplicht" uit in de toernooi-instellingen.
+                    {{ __('Opties: wacht tot alle judoka\'s gewogen zijn, of zet "Weging verplicht" uit in de toernooi-instellingen.') }}
                 </p>
             </div>
         </div>
@@ -308,14 +308,14 @@ function abbreviateClubName($name, $maxLength = 15) {
     <div class="page-header">
         <label class="no-print" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <input type="checkbox" x-model="printInclude" checked style="width: 18px; height: 18px;">
-            <span style="font-size: 12px; color: #666;">Print dit schema</span>
+            <span style="font-size: 12px; color: #666;">{{ __('Print dit schema') }}</span>
         </label>
         <div class="toernooi-titel">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d-m-Y') }}</div>
         <div class="poule-info">Poule #{{ $poule->nummer }} - {{ $poule->getDisplayTitel() }}</div>
         <div class="mat-blok-info">
-            @if($poule->blok)Blok {{ $poule->blok->nummer }}@endif
+            @if($poule->blok){{ __('Blok') }} {{ $poule->blok->nummer }}@endif
             @if($poule->mat && $poule->blok) | @endif
-            @if($poule->mat)Mat {{ $poule->mat->nummer }}@endif
+            @if($poule->mat){{ __('Mat') }} {{ $poule->mat->nummer }}@endif
         </div>
     </div>
 
@@ -324,8 +324,8 @@ function abbreviateClubName($name, $maxLength = 15) {
         <thead>
             <!-- Column headers -->
             <tr class="header-row">
-                <th class="px-1 py-1 text-center nr-cel">Nr</th>
-                <th class="px-2 py-1 text-left naam-cel">Naam</th>
+                <th class="px-1 py-1 text-center nr-cel">{{ __('Nr') }}</th>
+                <th class="px-2 py-1 text-left naam-cel">{{ __('Naam') }}</th>
                 @foreach($schema as $idx => $wedstrijd)
                 <th class="py-1 text-center" colspan="2" style="min-width: 36px;">
                     <div class="font-bold">{{ $idx + 1 }}</div>
@@ -417,7 +417,7 @@ function abbreviateClubName($name, $maxLength = 15) {
 
     <!-- Legenda -->
     <div class="legenda">
-        <strong>W</strong> = Wedstrijdpunten (0 of 2) | <strong>J</strong> = Judopunten | Plts = handmatig invullen
+        <strong>W</strong> = {{ __('Wedstrijdpunten (0 of 2)') }} | <strong>J</strong> = {{ __('Judopunten') }} | {{ __('Plts = handmatig invullen') }}
     </div>
 </div>
 @endforeach
@@ -427,9 +427,9 @@ function abbreviateClubName($name, $maxLength = 15) {
 <!-- Info (niet printen) -->
 <div class="no-print mt-6 p-4 bg-blue-50 rounded">
     <p class="text-sm text-blue-800">
-        {{ $poulesMetSchema->count() }} poule(s) met wedstrijden gevonden.
+        {{ __(':count poule(s) met wedstrijden gevonden.', ['count' => $poulesMetSchema->count()]) }}
         @if($blok)
-        (Blok {{ $blok->nummer }})
+        ({{ __('Blok') }} {{ $blok->nummer }})
         @endif
     </p>
 </div>
@@ -474,7 +474,7 @@ function updatePrintCounter() {
     const selected = document.querySelectorAll('.poule-page:not(.print-exclude)').length;
     const counter = document.getElementById('print-counter');
     if (counter) {
-        counter.textContent = selected + ' van ' + totalPoules + ' geselecteerd';
+        counter.textContent = selected + ' {{ __('van') }} ' + totalPoules + ' {{ __('geselecteerd') }}';
     }
 }
 

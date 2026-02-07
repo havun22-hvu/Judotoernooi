@@ -2,7 +2,7 @@
     Location Autocomplete Component using OpenStreetMap Nominatim
     Usage: <x-location-autocomplete name="locatie" :value="$toernooi->locatie" />
 --}}
-@props(['name' => 'locatie', 'value' => '', 'placeholder' => 'Zoek adres...'])
+@props(['name' => 'locatie', 'value' => '', 'placeholder' => null])
 
 <div x-data="locationAutocomplete_{{ $name }}()" class="relative">
     <div class="flex gap-2">
@@ -14,7 +14,7 @@
                    @input.debounce.300ms="search()"
                    @focus="showResults = results.length > 0"
                    @click.away="showResults = false"
-                   placeholder="{{ $placeholder }}"
+                   placeholder="{{ $placeholder ?? __('Zoek adres...') }}"
                    autocomplete="off"
                    {{ $attributes->merge(['class' => 'w-full border rounded px-3 py-2 pr-10']) }}>
             {{-- Loading spinner --}}
@@ -31,12 +31,12 @@
            :href="'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(query)"
            target="_blank"
            class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded flex items-center gap-1 text-sm whitespace-nowrap"
-           title="Route plannen">
+           title="{{ __('Route plannen') }}">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            Route
+            {{ __('Route') }}
         </a>
     </div>
 
@@ -57,7 +57,7 @@
     <div x-show="showResults && results.length === 0 && query.length >= 3 && !loading"
          x-cloak
          class="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg p-3 text-sm text-gray-500">
-        Geen resultaten gevonden
+        {{ __('Geen resultaten gevonden') }}
     </div>
 </div>
 

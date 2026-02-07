@@ -33,8 +33,8 @@
     {{-- Header --}}
     <div class="bg-blue-800 text-white p-4 flex items-center justify-between">
         <div>
-            <h2 class="font-bold text-lg">Hoofdjury Chat</h2>
-            <p class="text-blue-200 text-sm">Communicatie met vrijwilligers</p>
+            <h2 class="font-bold text-lg">{{ __('Hoofdjury Chat') }}</h2>
+            <p class="text-blue-200 text-sm">{{ __('Communicatie met vrijwilligers') }}</p>
         </div>
         <button onclick="toggleChat()" class="p-2 hover:bg-blue-700 rounded-full">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,45 +45,45 @@
 
     {{-- Recipient Selector --}}
     <div class="bg-gray-100 border-b p-3">
-        <label class="text-xs font-medium text-gray-600 block mb-2">Verstuur naar:</label>
+        <label class="text-xs font-medium text-gray-600 block mb-2">{{ __('Verstuur naar:') }}</label>
         <div class="flex flex-wrap gap-2">
             <button type="button" onclick="setRecipient('iedereen', null)"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="iedereen">
-                Iedereen
+                {{ __('Iedereen') }}
             </button>
             <button type="button" onclick="setRecipient('alle_matten', null)"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="alle_matten">
-                Alle Matten
+                {{ __('Alle Matten') }}
             </button>
             <button type="button" onclick="setRecipient('weging', null)"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="weging">
-                Weging
+                {{ __('Weging') }}
             </button>
             <button type="button" onclick="setRecipient('spreker', null)"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="spreker">
-                Spreker
+                {{ __('Spreker') }}
             </button>
             <button type="button" onclick="setRecipient('dojo', null)"
                     class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                     data-type="dojo">
-                Dojo
+                {{ __('Dojo') }}
             </button>
         </div>
 
         {{-- Individual mat buttons --}}
         @if($aantalMatten > 0)
         <div class="mt-2 pt-2 border-t border-gray-200">
-            <label class="text-xs font-medium text-gray-500 block mb-2">Individuele mat:</label>
+            <label class="text-xs font-medium text-gray-500 block mb-2">{{ __('Individuele mat:') }}</label>
             <div class="flex flex-wrap gap-2">
                 @for($i = 1; $i <= $aantalMatten; $i++)
                 <button type="button" onclick="setRecipient('mat', {{ $i }})"
                         class="recipient-btn px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-colors"
                         data-type="mat" data-id="{{ $i }}">
-                    Mat {{ $i }}
+                    {{ __('Mat') }} {{ $i }}
                 </button>
                 @endfor
             </div>
@@ -97,19 +97,19 @@
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
-            <p>Nog geen berichten</p>
+            <p>{{ __('Nog geen berichten') }}</p>
         </div>
     </div>
 
     {{-- Input Area --}}
     <div class="border-t bg-white p-4">
         <div id="recipient-display" class="text-xs text-blue-600 font-medium mb-2">
-            Naar: <span id="recipient-label">Selecteer ontvanger</span>
+            {{ __('Naar:') }} <span id="recipient-label">{{ __('Selecteer ontvanger') }}</span>
         </div>
         <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
             <input type="text"
                    id="chat-input"
-                   placeholder="Typ een bericht..."
+                   placeholder="{{ __('Typ een bericht...') }}"
                    class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                    autocomplete="off"
                    maxlength="1000">
@@ -136,8 +136,8 @@
             </svg>
         </div>
         <div class="flex-1 min-w-0">
-            <p id="chat-toast-sender" class="font-bold text-sm">Mat 1</p>
-            <p id="chat-toast-message" class="text-blue-100 text-sm truncate">Nieuw bericht</p>
+            <p id="chat-toast-sender" class="font-bold text-sm">{{ __('Mat') }} 1</p>
+            <p id="chat-toast-message" class="text-blue-100 text-sm truncate">{{ __('Nieuw bericht') }}</p>
         </div>
         <button onclick="event.stopPropagation(); hideToast();" class="text-blue-200 hover:text-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,12 +185,12 @@
 
     // Recipient labels
     const recipientLabels = {
-        'iedereen': 'Iedereen',
-        'alle_matten': 'Alle Matten',
-        'weging': 'Weging',
-        'spreker': 'Spreker',
-        'dojo': 'Dojo',
-        'mat': 'Mat'
+        'iedereen': '{{ __('Iedereen') }}',
+        'alle_matten': '{{ __('Alle Matten') }}',
+        'weging': '{{ __('Weging') }}',
+        'spreker': '{{ __('Spreker') }}',
+        'dojo': '{{ __('Dojo') }}',
+        'mat': '{{ __('Mat') }}'
     };
 
     // Set recipient
@@ -313,7 +313,7 @@
         event.preventDefault();
 
         if (!selectedRecipient.type) {
-            alert('Selecteer eerst een ontvanger');
+            alert('{{ __('Selecteer eerst een ontvanger') }}');
             return;
         }
 
@@ -360,7 +360,7 @@
 
         } catch (error) {
             console.error('Chat send error:', error);
-            alert('Bericht versturen mislukt. Probeer opnieuw.');
+            alert('{{ __('Bericht versturen mislukt. Probeer opnieuw.') }}');
         }
     }
 

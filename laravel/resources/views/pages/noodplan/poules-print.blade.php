@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', 'Poule-indeling' . ($blok ? " Blok {$blok->nummer}" : ''))
+@section('title', __('Poule-indeling') . ($blok ? ' ' . __('Blok') . " {$blok->nummer}" : ''))
 
 @section('content')
 @php
@@ -16,7 +16,7 @@
         @if($matPoules->isNotEmpty())
         <div class="{{ !$isFirst ? 'page-break' : '' }}">
             <h2 class="text-xl font-bold text-blue-800 mb-3 border-b-2 border-blue-300 pb-2">
-                {{ !$enkelBlok ? "Blok {$blok->nummer} - " : '' }}Mat {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
+                {{ !$enkelBlok ? __('Blok') . " {$blok->nummer} - " : '' }}{{ __('Mat') }} {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
             </h2>
 
             @foreach($matPoules as $poule)
@@ -28,9 +28,9 @@
                     <thead>
                         <tr class="bg-gray-100">
                             <th class="px-2 py-1 text-left w-8">#</th>
-                            <th class="px-2 py-1 text-left">Naam</th>
-                            <th class="px-2 py-1 text-left">Club</th>
-                            <th class="px-2 py-1 text-center w-16">Gewicht</th>
+                            <th class="px-2 py-1 text-left">{{ __('Naam') }}</th>
+                            <th class="px-2 py-1 text-left">{{ __('Club') }}</th>
+                            <th class="px-2 py-1 text-center w-16">{{ __('Gewicht') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,6 +55,6 @@
 @endforeach
 
 @if($blokken->flatMap(fn($b) => $b->poules)->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen poules gevonden</p>
+<p class="text-gray-500 text-center py-8">{{ __('Geen poules gevonden') }}</p>
 @endif
 @endsection
