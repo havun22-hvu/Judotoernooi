@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 5 februari 2026
+> **Laatste update:** 7 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **7 feb 2026** | Geboortejaar parser compleet, CSP fix, milestone backups | smallwork.md |
 | **5 feb 2026** | Suspicious weight warnings, organisator instellingen, clubs constraint | smallwork.md |
 | **4 feb 2026** | Poule/clubs UI, WhatsApp, print landscape | GEBRUIKERSHANDLEIDING.md (clubs sectie) |
 | **4 feb 2026** | Blok view fixes, U-terminologie | CLASSIFICATIE.md (U-terminologie sectie) |
