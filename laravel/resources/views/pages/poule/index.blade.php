@@ -515,7 +515,7 @@
             <button onclick="closeZoekMatchModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
         <div class="p-4 overflow-y-auto flex-1" id="zoek-match-results">
-            <p class="text-gray-500 text-center py-8">Laden...</p>
+            <p class="text-gray-500 text-center py-8">{{ __('Laden...') }}</p>
         </div>
     </div>
 </div>
@@ -523,6 +523,37 @@
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+// i18n constants
+const __leeg = @json(__('Leeg'));
+const __bezigMetVerificatie = @json(__('Bezig met verificatie...'));
+const __laden = @json(__('Laden...'));
+const __geenPassendePoules = @json(__('Geen passende poules gevonden'));
+const __foutBijOphalenMatches = @json(__('Fout bij ophalen matches'));
+const __foutBijOphalen = @json(__('Fout bij ophalen'));
+const __verwijderPoule = @json(__('Verwijder poule'));
+const __selecteer = @json(__('Selecteer...'));
+const __selecteerEerstLeeftijdsklasse = @json(__('Selecteer eerst leeftijdsklasse'));
+const __variabel = @json(__('Variabel'));
+const __problematischePoules = @json(__('Problematische poules'));
+const __dezePoulesMinder3 = @json(__('Deze poules hebben minder dan 3 judoka\'s. Klik om naar de poule te gaan:'));
+const __foutBijOmzetten = @json(__('Fout bij omzetten'));
+const __foutBijAanmaken = @json(__('Fout bij aanmaken'));
+const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
+const __foutBijVerificatie = @json(__('Fout bij verificatie'));
+const __omgezetNaarPoules = @json(__('Omgezet naar poules'));
+const __omgezet = @json(__('Omgezet'));
+const __pouleVerwijderen = @json(__('Poule #:nummer verwijderen?'));
+const __eliminatieOmzettenPoules = @json(__('Eliminatie omzetten naar alleen poules?'));
+const __eliminatieOmzettenPoulesKruisfinale = @json(__('Eliminatie omzetten naar poules + kruisfinale?'));
+const __omzettenNaarEliminatie = @json(__('Omzetten naar eliminatie?'));
+const __omzettenNaarPoules = @json(__('Omzetten naar poules?'));
+const __verificatieProblemenGevonden = @json(__('Verificatie: :aantal probleem(en) gevonden'));
+const __verificatieGeslaagd = @json(__('Verificatie geslaagd!'));
+const __allePoulesCorrect = @json(__('Alle :totaal poules zijn correct. :wedstrijden wedstrijden gepland.'));
+const __poulesHerberekend = @json(__(':aantal poules herberekend'));
+const __paginaVernieuwen = @json(__('Pagina vernieuwen'));
+const __omWijzigingenTeZien = @json(__('om wijzigingen te zien'));
+
 const isLocked = {{ $isLocked ? 'true' : 'false' }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
@@ -572,13 +603,13 @@ function openNieuwePouleModal(categorieKey = null, categorieLabel = null, heeftV
             // Toon gewichtsklasse dropdown
             gewichtsContainer.classList.remove('hidden');
             const gewichten = gewichtsklassen[categorieKey].gewichten;
-            gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
+            gewichtsSelect.innerHTML = `<option value="">${__selecteer}</option>` +
                 gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
             gewichtsSelect.disabled = false;
         } else {
             // Verberg gewichtsklasse dropdown (variabele gewichten)
             gewichtsContainer.classList.add('hidden');
-            gewichtsSelect.innerHTML = '<option value="">Variabel</option>';
+            gewichtsSelect.innerHTML = `<option value="">${__variabel}</option>`;
             gewichtsSelect.value = '';
             gewichtsSelect.disabled = true;
         }
@@ -586,7 +617,7 @@ function openNieuwePouleModal(categorieKey = null, categorieLabel = null, heeftV
         // Geen voorgeselecteerde categorie
         leeftijdsSelect.value = '';
         gewichtsContainer.classList.remove('hidden');
-        gewichtsSelect.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+        gewichtsSelect.innerHTML = `<option value="">${__selecteerEerstLeeftijdsklasse}</option>`;
         gewichtsSelect.disabled = true;
     }
 }
@@ -632,7 +663,7 @@ function updateTotaalStats() {
 }
 
 async function verwijderPoule(pouleId, pouleNummer) {
-    if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
+    if (!confirm(__pouleVerwijderen.replace(':nummer', pouleNummer))) return;
 
     try {
         const response = await fetch(verwijderPouleUrl.replace(':id', pouleId), {
@@ -693,7 +724,7 @@ async function updateKruisfinalesPlaatsen(pouleId, plaatsen) {
 }
 
 async function zetOmNaarPoules(pouleId, systeem) {
-    if (!confirm(`Eliminatie omzetten naar ${systeem === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'alleen poules'}?`)) return;
+    if (!confirm(systeem === 'poules_kruisfinale' ? __eliminatieOmzettenPoulesKruisfinale : __eliminatieOmzettenPoules)) return;
 
     try {
         const response = await fetch(zetOmNaarPoulesUrl, {
@@ -709,24 +740,23 @@ async function zetOmNaarPoules(pouleId, systeem) {
         const data = await response.json();
 
         if (data.success) {
-            showToast(data.message || 'Omgezet naar poules');
+            showToast(data.message || __omgezetNaarPoules);
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(data.message || 'Fout bij omzetten', true);
+            showToast(data.message || __foutBijOmzetten, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Fout bij omzetten', true);
+        showToast(__foutBijOmzetten, true);
     }
 }
 
 async function zetOmNaar(pouleId, type) {
-    const typeLabels = {
-        'eliminatie': 'eliminatie',
-        'voorronde': 'poules',
-        'kruisfinale': 'kruisfinale'
+    const confirmMessages = {
+        'eliminatie': __omzettenNaarEliminatie,
+        'poules': __omzettenNaarPoules
     };
-    if (!confirm(`Omzetten naar ${typeLabels[type] || type}?`)) return;
+    if (!confirm(confirmMessages[type] || `Omzetten naar ${type}?`)) return;
 
     try {
         const response = await fetch(wijzigPouleTypeUrl, {
@@ -742,14 +772,14 @@ async function zetOmNaar(pouleId, type) {
         const data = await response.json();
 
         if (data.success) {
-            showToast(data.message || 'Omgezet');
+            showToast(data.message || __omgezet);
             setTimeout(() => location.reload(), 1000);
         } else {
-            showToast(data.message || 'Fout bij omzetten', true);
+            showToast(data.message || __foutBijOmzetten, true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Fout bij omzetten', true);
+        showToast(__foutBijOmzetten, true);
     }
 }
 
@@ -766,7 +796,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const key = this.value;
 
             if (!key || !gewichtsklassen[key]) {
-                gewichtsSelect.innerHTML = '<option value="">Selecteer eerst leeftijdsklasse</option>';
+                gewichtsSelect.innerHTML = `<option value="">${__selecteerEerstLeeftijdsklasse}</option>`;
                 gewichtsSelect.disabled = true;
                 gewichtsContainer.classList.remove('hidden');
                 return;
@@ -777,12 +807,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Bij variabele gewichten (lege array): verberg gewichtsklasse veld
             if (gewichten.length === 0) {
                 gewichtsContainer.classList.add('hidden');
-                gewichtsSelect.innerHTML = '<option value="">Variabel</option>';
+                gewichtsSelect.innerHTML = `<option value="">${__variabel}</option>`;
                 gewichtsSelect.value = '';
                 gewichtsSelect.disabled = true;
             } else {
                 gewichtsContainer.classList.remove('hidden');
-                gewichtsSelect.innerHTML = '<option value="">Selecteer...</option>' +
+                gewichtsSelect.innerHTML = `<option value="">${__selecteer}</option>` +
                     gewichten.map(g => `<option value="${g}">${g} kg</option>`).join('');
                 gewichtsSelect.disabled = false;
             }
@@ -824,11 +854,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     closeNieuwePouleModal();
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    showToast(data.message || 'Fout bij aanmaken', true);
+                    showToast(data.message || __foutBijAanmaken, true);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Fout bij aanmaken', true);
+                showToast(__foutBijAanmaken, true);
             }
         });
     }
@@ -837,7 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function verifieerPoules() {
     const resultaatDiv = document.getElementById('verificatie-resultaat');
     resultaatDiv.className = 'mb-6 bg-blue-50 border border-blue-300 rounded-lg p-4';
-    resultaatDiv.innerHTML = '<p class="text-blue-700">Bezig met verificatie...</p>';
+    resultaatDiv.innerHTML = `<p class="text-blue-700">${__bezigMetVerificatie}</p>`;
 
     try {
         const response = await fetch(verifieerUrl, {
@@ -864,17 +894,17 @@ async function verifieerPoules() {
 
             if (hasProblems) {
                 html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                    <h3 class="font-bold text-yellow-800 mb-2">⚠️ Verificatie: ${data.problemen.length} probleem(en) gevonden</h3>
+                    <h3 class="font-bold text-yellow-800 mb-2">⚠️ ${__verificatieProblemenGevonden.replace(':aantal', data.problemen.length)}</h3>
                     <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
                         ${data.problemen.map(p => `<li>${p.message}</li>`).join('')}
                     </ul>
-                    ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${data.herberekend} poules herberekend - <button onclick="location.reload()" class="underline hover:no-underline">Pagina vernieuwen</button> om wijzigingen te zien</p>` : ''}
+                    ${refreshNeeded ? `<p class="text-yellow-600 text-sm font-medium">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button onclick="location.reload()" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
                 </div>`;
             } else {
                 html = `<div class="bg-green-50 border border-green-300 rounded-lg p-4">
-                    <h3 class="font-bold text-green-800 mb-2">✅ Verificatie geslaagd!</h3>
-                    <p class="text-green-700 text-sm">Alle ${data.totaal_poules} poules zijn correct. ${data.totaal_wedstrijden} wedstrijden gepland.</p>
-                    ${refreshNeeded ? `<p class="text-green-600 text-sm mt-2">${data.herberekend} poules herberekend - <button onclick="location.reload()" class="underline hover:no-underline">Pagina vernieuwen</button> om wijzigingen te zien</p>` : ''}
+                    <h3 class="font-bold text-green-800 mb-2">✅ ${__verificatieGeslaagd}</h3>
+                    <p class="text-green-700 text-sm">${__allePoulesCorrect.replace(':totaal', data.totaal_poules).replace(':wedstrijden', data.totaal_wedstrijden)}</p>
+                    ${refreshNeeded ? `<p class="text-green-600 text-sm mt-2">${__poulesHerberekend.replace(':aantal', data.herberekend)} - <button onclick="location.reload()" class="underline hover:no-underline">${__paginaVernieuwen}</button> ${__omWijzigingenTeZien}</p>` : ''}
                 </div>`;
             }
 
@@ -885,7 +915,7 @@ async function verifieerPoules() {
     } catch (error) {
         console.error('Error:', error);
         resultaatDiv.className = 'mb-6 bg-red-50 border border-red-300 rounded-lg p-4';
-        resultaatDiv.innerHTML = '<p class="text-red-700">Fout bij verificatie</p>';
+        resultaatDiv.innerHTML = `<p class="text-red-700">${__foutBijVerificatie}</p>`;
     }
 }
 
@@ -960,7 +990,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    showToast('Fout bij verplaatsen', true);
+                    showToast(__foutBijVerplaatsen, true);
                     // Revert the move
                     evt.from.appendChild(evt.item);
                 }
@@ -1002,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!sortableContainer.querySelector('.empty-placeholder')) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder';
-                placeholder.textContent = 'Leeg';
+                placeholder.textContent = __leeg;
                 sortableContainer.appendChild(placeholder);
             }
 
@@ -1010,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (headerTop && !headerTop.querySelector('.delete-empty-btn')) {
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none';
-                deleteBtn.title = 'Verwijder poule';
+                deleteBtn.title = __verwijderPoule;
                 deleteBtn.innerHTML = '&minus;';
                 deleteBtn.onclick = () => verwijderPoule(pouleData.id, pouleData.nummer);
                 headerTop.appendChild(deleteBtn);
@@ -1070,8 +1100,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     container.innerHTML = `
                         <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
-                            <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">1</span>)</h3>
-                            <p class="text-red-700 text-sm mb-3">Deze poules hebben minder dan 3 judoka's. Klik om naar de poule te gaan:</p>
+                            <h3 class="font-bold text-red-800 mb-2">${__problematischePoules} (<span id="problematische-count">1</span>)</h3>
+                            <p class="text-red-700 text-sm mb-3">${__dezePoulesMinder3}</p>
                             <div id="problematische-links" class="flex flex-wrap gap-2">
                                 <a href="#poule-${pouleData.id}" data-probleem-poule="${pouleData.id}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
                                     #${nummer} ${leeftijd} / ${gewicht} kg (<span data-probleem-count="${pouleData.id}">${pouleData.judokas_count}</span>)
@@ -1205,7 +1235,7 @@ async function openZoekMatch() {
     infoSpan.textContent = leeftijd ? `(${leeftijd}j${gewicht ? ', ' + gewicht + 'kg' : ''})` : '';
 
     modal.classList.remove('hidden');
-    resultsDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Laden...</p>';
+    resultsDiv.innerHTML = `<p class="text-gray-500 text-center py-8">${__laden}</p>`;
 
     try {
         const url = zoekMatchUrl.replace('__JUDOKA_ID__', selectedJudokaId);
@@ -1219,7 +1249,7 @@ async function openZoekMatch() {
         const data = await response.json();
 
         if (!data.success) {
-            resultsDiv.innerHTML = `<p class="text-red-500 text-center py-8">${data.message || 'Fout bij ophalen'}</p>`;
+            resultsDiv.innerHTML = `<p class="text-red-500 text-center py-8">${data.message || __foutBijOphalen}</p>`;
             return;
         }
 
@@ -1227,7 +1257,7 @@ async function openZoekMatch() {
         infoSpan.textContent = `(${data.judoka.leeftijd}j, ${data.judoka.gewicht}kg)`;
 
         if (data.matches.length === 0) {
-            resultsDiv.innerHTML = '<p class="text-gray-500 text-center py-8">Geen passende poules gevonden</p>';
+            resultsDiv.innerHTML = `<p class="text-gray-500 text-center py-8">${__geenPassendePoules}</p>`;
             return;
         }
 
@@ -1296,7 +1326,7 @@ async function openZoekMatch() {
 
     } catch (error) {
         console.error('Error:', error);
-        resultsDiv.innerHTML = '<p class="text-red-500 text-center py-8">Fout bij ophalen matches</p>';
+        resultsDiv.innerHTML = `<p class="text-red-500 text-center py-8">${__foutBijOphalenMatches}</p>`;
     }
 }
 
