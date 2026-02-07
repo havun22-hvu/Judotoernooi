@@ -459,14 +459,13 @@ class PouleIndelingService
                 $configKey = $data['config_key'];
                 $systeem = $wedstrijdSysteem[$configKey] ?? 'poules';
 
-                // Kruisfinale alleen bij VASTE categorieën (max_kg=0 en max_lft=0)
+                // Kruisfinale bij categorieën met vaste gewichtsklassen (gewichten gedefinieerd)
                 $gewichtsklassenConfig = $toernooi->getAlleGewichtsklassen();
                 $categorieConfig = $gewichtsklassenConfig[$configKey] ?? [];
-                $isVasteCategorie = (($categorieConfig['max_kg_verschil'] ?? 0) == 0)
-                                 && (($categorieConfig['max_leeftijd_verschil'] ?? 0) == 0);
+                $hasFixedWeightClasses = !empty($categorieConfig['gewichten'] ?? []);
 
-                // Only create kruisfinale if system is poules_kruisfinale AND fixed category AND 2+ voorrondepoules
-                if ($systeem === 'poules_kruisfinale' && $isVasteCategorie && $data['aantal_poules'] >= 2) {
+                // Only create kruisfinale if system is poules_kruisfinale AND fixed weight classes AND 2+ voorrondepoules
+                if ($systeem === 'poules_kruisfinale' && $hasFixedWeightClasses && $data['aantal_poules'] >= 2) {
                     // Calculate how many places qualify based on number of poules
                     // Goal: kruisfinale of 4-6 judokas
                     $aantalPoules = $data['aantal_poules'];
