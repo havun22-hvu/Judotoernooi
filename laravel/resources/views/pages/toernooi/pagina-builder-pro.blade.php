@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pagina Builder')
+@section('title', __('Pagina Builder'))
 
 @push('styles')
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
@@ -103,15 +103,15 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                 </svg>
             </a>
-            <h1 class="text-lg font-semibold text-gray-800">Pagina Builder</h1>
+            <h1 class="text-lg font-semibold text-gray-800">{{ __('Pagina Builder') }}</h1>
             <span x-show="saving" class="text-sm text-blue-600 flex items-center gap-1">
                 <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                Opslaan...
+                {{ __('Opslaan...') }}
             </span>
-            <span x-show="saved" x-transition class="text-sm text-green-600">✓ Opgeslagen</span>
+            <span x-show="saved" x-transition class="text-sm text-green-600">✓ {{ __('Opgeslagen') }}</span>
         </div>
 
         <div class="flex items-center gap-2">
@@ -144,7 +144,7 @@
 
             <!-- Theme Color -->
             <div class="flex items-center gap-2">
-                <label class="text-sm text-gray-600">Thema:</label>
+                <label class="text-sm text-gray-600">{{ __('Thema:') }}</label>
                 <input type="color" x-model="themeColor" @change="saveSettings()"
                        class="w-8 h-8 rounded cursor-pointer border-0">
             </div>
@@ -157,7 +157,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
-                Preview
+                {{ __('Preview') }}
             </a>
         </div>
     </div>
@@ -172,17 +172,17 @@
                 <button @click="sidebarTab = 'blocks'"
                         :class="sidebarTab === 'blocks' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'"
                         class="flex-1 py-3 text-sm font-medium">
-                    Blokken
+                    {{ __('Blokken') }}
                 </button>
                 <button @click="sidebarTab = 'sections'"
                         :class="sidebarTab === 'sections' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'"
                         class="flex-1 py-3 text-sm font-medium">
-                    Secties
+                    {{ __('Secties') }}
                 </button>
                 <button @click="sidebarTab = 'templates'"
                         :class="sidebarTab === 'templates' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'"
                         class="flex-1 py-3 text-sm font-medium">
-                    Templates
+                    {{ __('Templates') }}
                 </button>
             </div>
 
@@ -191,150 +191,150 @@
                 <div class="space-y-4">
                     <!-- Basic Blocks -->
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Basis</h3>
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Basis') }}</h3>
                         <div class="grid grid-cols-2 gap-2">
                             <button @click="addBlock('heading')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Kop</span>
+                                <span class="text-xs text-gray-600">{{ __('Kop') }}</span>
                             </button>
                             <button @click="addBlock('text')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Tekst</span>
+                                <span class="text-xs text-gray-600">{{ __('Tekst') }}</span>
                             </button>
                             <button @click="addBlock('image')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Afbeelding</span>
+                                <span class="text-xs text-gray-600">{{ __('Afbeelding') }}</span>
                             </button>
                             <button @click="addBlock('button')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Button</span>
+                                <span class="text-xs text-gray-600">{{ __('Button') }}</span>
                             </button>
                             <button @click="addBlock('video')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Video</span>
+                                <span class="text-xs text-gray-600">{{ __('Video') }}</span>
                             </button>
                             <button @click="addBlock('divider')" class="block-palette-item p-3 bg-gray-50 rounded-lg text-center hover:bg-gray-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                                 </svg>
-                                <span class="text-xs text-gray-600">Scheidslijn</span>
+                                <span class="text-xs text-gray-600">{{ __('Scheidslijn') }}</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Layout Blocks -->
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Layout</h3>
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Layout') }}</h3>
                         <div class="grid grid-cols-2 gap-2">
                             <button @click="addBlock('hero')" class="block-palette-item p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                                 </svg>
-                                <span class="text-xs text-blue-600">Hero</span>
+                                <span class="text-xs text-blue-600">{{ __('Hero') }}</span>
                             </button>
                             <button @click="addBlock('columns')" class="block-palette-item p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
                                 </svg>
-                                <span class="text-xs text-blue-600">Kolommen</span>
+                                <span class="text-xs text-blue-600">{{ __('Kolommen') }}</span>
                             </button>
                             <button @click="addBlock('cards')" class="block-palette-item p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
                                 </svg>
-                                <span class="text-xs text-blue-600">Kaarten</span>
+                                <span class="text-xs text-blue-600">{{ __('Kaarten') }}</span>
                             </button>
                             <button @click="addBlock('features')" class="block-palette-item p-3 bg-blue-50 rounded-lg text-center hover:bg-blue-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                                 </svg>
-                                <span class="text-xs text-blue-600">Features</span>
+                                <span class="text-xs text-blue-600">{{ __('Features') }}</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Content Blocks -->
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Content</h3>
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Content') }}</h3>
                         <div class="grid grid-cols-2 gap-2">
                             <button @click="addBlock('cta')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                                 </svg>
-                                <span class="text-xs text-green-600">Call to Action</span>
+                                <span class="text-xs text-green-600">{{ __('Call to Action') }}</span>
                             </button>
                             <button @click="addBlock('timeline')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="text-xs text-green-600">Tijdlijn</span>
+                                <span class="text-xs text-green-600">{{ __('Tijdlijn') }}</span>
                             </button>
                             <button @click="addBlock('faq')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="text-xs text-green-600">FAQ</span>
+                                <span class="text-xs text-green-600">{{ __('FAQ') }}</span>
                             </button>
                             <button @click="addBlock('sponsors')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
-                                <span class="text-xs text-green-600">Sponsors</span>
+                                <span class="text-xs text-green-600">{{ __('Sponsors') }}</span>
                             </button>
                             <button @click="addBlock('countdown')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="text-xs text-green-600">Countdown</span>
+                                <span class="text-xs text-green-600">{{ __('Countdown') }}</span>
                             </button>
                             <button @click="addBlock('map')" class="block-palette-item p-3 bg-green-50 rounded-lg text-center hover:bg-green-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                <span class="text-xs text-green-600">Kaart</span>
+                                <span class="text-xs text-green-600">{{ __('Kaart') }}</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Tournament Specific -->
                     <div>
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Toernooi</h3>
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Toernooi') }}</h3>
                         <div class="grid grid-cols-2 gap-2">
                             <button @click="addBlock('info_card')" class="block-palette-item p-3 bg-purple-50 rounded-lg text-center hover:bg-purple-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
-                                <span class="text-xs text-purple-600">Info Kaart</span>
+                                <span class="text-xs text-purple-600">{{ __('Info Kaart') }}</span>
                             </button>
                             <button @click="addBlock('schedule')" class="block-palette-item p-3 bg-purple-50 rounded-lg text-center hover:bg-purple-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
-                                <span class="text-xs text-purple-600">Programma</span>
+                                <span class="text-xs text-purple-600">{{ __('Programma') }}</span>
                             </button>
                             <button @click="addBlock('contact')" class="block-palette-item p-3 bg-purple-50 rounded-lg text-center hover:bg-purple-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                 </svg>
-                                <span class="text-xs text-purple-600">Contact</span>
+                                <span class="text-xs text-purple-600">{{ __('Contact') }}</span>
                             </button>
                             <button @click="addBlock('social')" class="block-palette-item p-3 bg-purple-50 rounded-lg text-center hover:bg-purple-100">
                                 <svg class="w-6 h-6 mx-auto mb-1 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
                                 </svg>
-                                <span class="text-xs text-purple-600">Social Media</span>
+                                <span class="text-xs text-purple-600">{{ __('Social Media') }}</span>
                             </button>
                         </div>
                     </div>
@@ -346,14 +346,14 @@
                 <div class="space-y-2">
                     <!-- Header & Footer -->
                     <div class="mb-4">
-                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Header & Footer</h3>
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Header & Footer') }}</h3>
                         <div class="space-y-2">
                             <button @click="toggleHeaderFooter('header')"
                                     class="w-full p-3 rounded-lg text-left flex items-center justify-between"
                                     :class="headerSection ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-6 bg-blue-400 rounded-t"></div>
-                                    <span class="text-sm">Header</span>
+                                    <span class="text-sm">{{ __('Header') }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <template x-if="headerSection">
@@ -367,8 +367,8 @@
                                             </svg>
                                         </button>
                                     </template>
-                                    <span x-show="headerSection" class="text-green-600 text-xs">✓ Actief</span>
-                                    <span x-show="!headerSection" class="text-gray-400 text-xs">+ Toevoegen</span>
+                                    <span x-show="headerSection" class="text-green-600 text-xs">✓ {{ __('Actief') }}</span>
+                                    <span x-show="!headerSection" class="text-gray-400 text-xs">+ {{ __('Toevoegen') }}</span>
                                 </div>
                             </button>
                             <button @click="toggleHeaderFooter('footer')"
@@ -376,7 +376,7 @@
                                     :class="footerSection ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50 hover:bg-gray-100'">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-6 bg-gray-500 rounded-b"></div>
-                                    <span class="text-sm">Footer</span>
+                                    <span class="text-sm">{{ __('Footer') }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <template x-if="footerSection">
@@ -390,8 +390,8 @@
                                             </svg>
                                         </button>
                                     </template>
-                                    <span x-show="footerSection" class="text-green-600 text-xs">✓ Actief</span>
-                                    <span x-show="!footerSection" class="text-gray-400 text-xs">+ Toevoegen</span>
+                                    <span x-show="footerSection" class="text-green-600 text-xs">✓ {{ __('Actief') }}</span>
+                                    <span x-show="!footerSection" class="text-gray-400 text-xs">+ {{ __('Toevoegen') }}</span>
                                 </div>
                             </button>
                         </div>
@@ -404,42 +404,42 @@
                                 <svg class="w-5 h-5" :class="mergeMode ? 'text-orange-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
                                 </svg>
-                                <span class="text-sm font-medium" :class="mergeMode ? 'text-orange-700' : 'text-gray-700'">Cellen samenvoegen</span>
+                                <span class="text-sm font-medium" :class="mergeMode ? 'text-orange-700' : 'text-gray-700'">{{ __('Cellen samenvoegen') }}</span>
                             </div>
-                            <span x-show="mergeMode" class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded">AAN</span>
+                            <span x-show="mergeMode" class="text-xs bg-orange-200 text-orange-700 px-2 py-1 rounded">{{ __('AAN') }}</span>
                         </button>
-                        <p x-show="mergeMode" class="text-xs text-orange-600 mt-2">Klik op 2 aangrenzende cellen om samen te voegen</p>
+                        <p x-show="mergeMode" class="text-xs text-orange-600 mt-2">{{ __('Klik op 2 aangrenzende cellen om samen te voegen') }}</p>
                         <p x-show="mergeMode && selectedCells.length > 0" class="text-xs text-orange-700 mt-1 font-medium">
-                            <span x-text="selectedCells.length"></span>/2 cellen geselecteerd
+                            <span x-text="selectedCells.length"></span>/2 {{ __('cellen geselecteerd') }}
                         </p>
                     </div>
 
                     <!-- Content Sections -->
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Kolom layouts</h3>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ __('Kolom layouts') }}</h3>
                     <button @click="addSection('full')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 bg-gray-300 rounded"></div>
-                        <span class="text-sm">Volledige breedte</span>
+                        <span class="text-sm">{{ __('Volledige breedte') }}</span>
                     </button>
                     <button @click="addSection('two-cols')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
                             <div class="flex-1 bg-gray-300 rounded-l"></div>
                             <div class="flex-1 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">2 kolommen (50/50)</span>
+                        <span class="text-sm">{{ __('2 kolommen (50/50)') }}</span>
                     </button>
                     <button @click="addSection('two-cols-left')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
                             <div class="w-8 bg-gray-300 rounded-l"></div>
                             <div class="flex-1 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">2 kolommen (66/33)</span>
+                        <span class="text-sm">{{ __('2 kolommen (66/33)') }}</span>
                     </button>
                     <button @click="addSection('two-cols-right')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
                             <div class="flex-1 bg-gray-300 rounded-l"></div>
                             <div class="w-8 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">2 kolommen (33/66)</span>
+                        <span class="text-sm">{{ __('2 kolommen (33/66)') }}</span>
                     </button>
                     <button @click="addSection('three-cols')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
@@ -447,7 +447,7 @@
                             <div class="flex-1 bg-gray-300"></div>
                             <div class="flex-1 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">3 kolommen</span>
+                        <span class="text-sm">{{ __('3 kolommen') }}</span>
                     </button>
                     <button @click="addSection('four-cols')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
@@ -456,25 +456,25 @@
                             <div class="flex-1 bg-gray-300"></div>
                             <div class="flex-1 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">4 kolommen</span>
+                        <span class="text-sm">{{ __('4 kolommen') }}</span>
                     </button>
                     <button @click="addSection('sidebar-left')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
                             <div class="w-3 bg-gray-400 rounded-l"></div>
                             <div class="flex-1 bg-gray-300 rounded-r"></div>
                         </div>
-                        <span class="text-sm">Sidebar links</span>
+                        <span class="text-sm">{{ __('Sidebar links') }}</span>
                     </button>
                     <button @click="addSection('sidebar-right')" class="w-full p-3 bg-gray-50 rounded-lg text-left hover:bg-gray-100 flex items-center gap-3">
                         <div class="w-12 h-8 flex gap-0.5">
                             <div class="flex-1 bg-gray-300 rounded-l"></div>
                             <div class="w-3 bg-gray-400 rounded-r"></div>
                         </div>
-                        <span class="text-sm">Sidebar rechts</span>
+                        <span class="text-sm">{{ __('Sidebar rechts') }}</span>
                     </button>
 
                     <!-- Grid Layouts -->
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">Grid layouts (rijen & kolommen)</h3>
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4">{{ __('Grid layouts (rijen & kolommen)') }}</h3>
                     <button @click="addSection('grid-2x2')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
                         <div class="w-12 h-10 grid grid-cols-2 grid-rows-2 gap-0.5">
                             <div class="bg-blue-300 rounded-tl"></div>
@@ -482,7 +482,7 @@
                             <div class="bg-blue-300 rounded-bl"></div>
                             <div class="bg-blue-300 rounded-br"></div>
                         </div>
-                        <span class="text-sm text-blue-700">2x2 Grid</span>
+                        <span class="text-sm text-blue-700">{{ __('2x2 Grid') }}</span>
                     </button>
                     <button @click="addSection('grid-2x3')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
                         <div class="w-12 h-10 grid grid-cols-3 grid-rows-2 gap-0.5">
@@ -493,7 +493,7 @@
                             <div class="bg-blue-300"></div>
                             <div class="bg-blue-300 rounded-br"></div>
                         </div>
-                        <span class="text-sm text-blue-700">2x3 Grid</span>
+                        <span class="text-sm text-blue-700">{{ __('2x3 Grid') }}</span>
                     </button>
                     <button @click="addSection('grid-3x3')" class="w-full p-3 bg-blue-50 rounded-lg text-left hover:bg-blue-100 flex items-center gap-3">
                         <div class="w-12 h-10 grid grid-cols-3 grid-rows-3 gap-0.5">
@@ -507,7 +507,7 @@
                             <div class="bg-blue-300"></div>
                             <div class="bg-blue-300 rounded-br"></div>
                         </div>
-                        <span class="text-sm text-blue-700">3x3 Grid</span>
+                        <span class="text-sm text-blue-700">{{ __('3x3 Grid') }}</span>
                     </button>
                 </div>
             </div>
@@ -515,22 +515,22 @@
             <!-- Templates Panel -->
             <div x-show="sidebarTab === 'templates'" class="flex-1 overflow-y-auto p-4">
                 <div class="space-y-3">
-                    <p class="text-sm text-gray-500 mb-4">Start met een sjabloon:</p>
+                    <p class="text-sm text-gray-500 mb-4">{{ __('Start met een sjabloon:') }}</p>
                     <button @click="loadTemplate('judo-basic')" class="w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-left hover:from-blue-600 hover:to-blue-700">
-                        <div class="font-medium">Judo Toernooi Basis</div>
-                        <div class="text-xs text-blue-100 mt-1">Hero, info, programma, sponsors</div>
+                        <div class="font-medium">{{ __('Judo Toernooi Basis') }}</div>
+                        <div class="text-xs text-blue-100 mt-1">{{ __('Hero, info, programma, sponsors') }}</div>
                     </button>
                     <button @click="loadTemplate('judo-pro')" class="w-full p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg text-left hover:from-purple-600 hover:to-purple-700">
-                        <div class="font-medium">Judo Toernooi Pro</div>
-                        <div class="text-xs text-purple-100 mt-1">Compleet met countdown, FAQ, kaart</div>
+                        <div class="font-medium">{{ __('Judo Toernooi Pro') }}</div>
+                        <div class="text-xs text-purple-100 mt-1">{{ __('Compleet met countdown, FAQ, kaart') }}</div>
                     </button>
                     <button @click="loadTemplate('minimal')" class="w-full p-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg text-left hover:from-gray-700 hover:to-gray-800">
-                        <div class="font-medium">Minimalistisch</div>
-                        <div class="text-xs text-gray-300 mt-1">Strak en eenvoudig</div>
+                        <div class="font-medium">{{ __('Minimalistisch') }}</div>
+                        <div class="text-xs text-gray-300 mt-1">{{ __('Strak en eenvoudig') }}</div>
                     </button>
                     <div class="border-t pt-3 mt-3">
                         <button @click="clearAll()" class="w-full p-3 bg-red-50 text-red-600 rounded-lg text-center hover:bg-red-100">
-                            Alles wissen
+                            {{ __('Alles wissen') }}
                         </button>
                     </div>
                 </div>
@@ -547,7 +547,7 @@
                          :class="{'ring-2 ring-blue-500': headerSection.settings?.sticky}">
                         <!-- Header Badge -->
                         <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                            <span>HEADER</span>
+                            <span>{{ __('HEADER') }}</span>
                             <template x-if="headerSection.settings?.sticky">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
@@ -590,7 +590,7 @@
                                 <div x-show="!headerSection.columns[0].blocks || headerSection.columns[0].blocks.length === 0"
                                      @click="selectHeaderFooterColumn('header')"
                                      class="text-center py-4 text-gray-400 text-sm cursor-pointer hover:bg-gray-50 rounded">
-                                    <p class="text-xs">Klik om een blok toe te voegen aan de header</p>
+                                    <p class="text-xs">{{ __('Klik om een blok toe te voegen aan de header') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -657,7 +657,7 @@
                                                 <div x-show="cell.colSpan > 1 || cell.rowSpan > 1" class="absolute top-1 left-1">
                                                     <button @click.stop="unmergeCells(section.id, cell.rowIndex, cell.colIndex)"
                                                             class="text-xs bg-orange-100 text-orange-600 px-1 rounded hover:bg-orange-200"
-                                                            title="Samenvoegen ongedaan maken">
+                                                            title="{{ __('Samenvoegen ongedaan maken') }}">
                                                         <span x-text="cell.colSpan + 'x' + cell.rowSpan"></span> ✕
                                                     </button>
                                                 </div>
@@ -750,8 +750,8 @@
                                                         <svg class="w-10 h-10 mx-auto mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                                         </svg>
-                                                        <p class="font-medium">Kolom <span x-text="colIndex + 1"></span></p>
-                                                        <p class="text-xs opacity-75">Klik op een blok links om toe te voegen</p>
+                                                        <p class="font-medium">{{ __('Kolom') }} <span x-text="colIndex + 1"></span></p>
+                                                        <p class="text-xs opacity-75">{{ __('Klik op een blok links om toe te voegen') }}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -767,7 +767,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    Rij
+                                    {{ __('Rij') }}
                                 </button>
                                 <button @click="addColumnToSection(section)"
                                         :disabled="section.gridConfig?.cols >= 6"
@@ -775,7 +775,7 @@
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                     </svg>
-                                    Kolom
+                                    {{ __('Kolom') }}
                                 </button>
                                 <span class="text-xs text-gray-300 px-2 py-1" x-text="(section.gridConfig?.cols || 1) + '×' + (section.grid?.length || 1)"></span>
                             </div>
@@ -788,14 +788,14 @@
                     <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <p class="text-gray-500 text-lg mb-2">Begin met bouwen</p>
-                    <p class="text-gray-400 text-sm mb-6">Kies een sjabloon of voeg secties toe</p>
+                    <p class="text-gray-500 text-lg mb-2">{{ __('Begin met bouwen') }}</p>
+                    <p class="text-gray-400 text-sm mb-6">{{ __('Kies een sjabloon of voeg secties toe') }}</p>
                     <div class="flex justify-center gap-3">
                         <button @click="loadTemplate('judo-basic')" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Start met sjabloon
+                            {{ __('Start met sjabloon') }}
                         </button>
                         <button @click="addSection('full')" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                            Lege sectie
+                            {{ __('Lege sectie') }}
                         </button>
                     </div>
                 </div>
@@ -806,7 +806,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
-                        Sectie toevoegen
+                        {{ __('Sectie toevoegen') }}
                     </button>
                 </div>
                 </div><!-- End sections-container -->
@@ -817,7 +817,7 @@
                          :class="{'ring-2 ring-gray-500': footerSection.settings?.sticky}">
                         <!-- Footer Badge -->
                         <div class="absolute top-2 left-2 z-10 flex items-center gap-2 bg-gray-700 text-white text-xs px-2 py-1 rounded">
-                            <span>FOOTER</span>
+                            <span>{{ __('FOOTER') }}</span>
                             <template x-if="footerSection.settings?.sticky">
                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
@@ -860,7 +860,7 @@
                                 <div x-show="!footerSection.columns[0].blocks || footerSection.columns[0].blocks.length === 0"
                                      @click="selectHeaderFooterColumn('footer')"
                                      class="text-center py-4 text-gray-400 text-sm cursor-pointer hover:bg-gray-50 rounded">
-                                    <p class="text-xs">Klik om een blok toe te voegen aan de footer</p>
+                                    <p class="text-xs">{{ __('Klik om een blok toe te voegen aan de footer') }}</p>
                                 </div>
                             </div>
                         </div>
@@ -897,7 +897,7 @@
             <template x-if="editingSection && !editingBlock">
                 <div class="p-4">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-gray-800">Sectie instellingen</h3>
+                        <h3 class="font-semibold text-gray-800">{{ __('Sectie instellingen') }}</h3>
                         <button @click="editingSection = null" class="text-gray-400 hover:text-gray-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -908,7 +908,7 @@
                     <div class="space-y-4">
                         <!-- Background Color -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Achtergrondkleur</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Achtergrondkleur') }}</label>
                             <div class="flex gap-2">
                                 <input type="color" x-model="editingSection.settings.bgColor" @change="saveData()"
                                        class="w-10 h-10 rounded cursor-pointer border">
@@ -919,7 +919,7 @@
 
                         <!-- Background Image -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Achtergrondafbeelding</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Achtergrondafbeelding') }}</label>
                             <input type="file" @change="uploadSectionBg($event)" accept="image/*"
                                    class="w-full text-sm text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-50 file:text-blue-700">
                             <template x-if="editingSection.settings.bgImage">
@@ -937,19 +937,19 @@
 
                         <!-- Padding -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Padding</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Padding') }}</label>
                             <select x-model="editingSection.settings.padding" @change="saveData()"
                                     class="w-full border rounded px-3 py-2 text-sm">
-                                <option value="py-4 px-4">Klein</option>
-                                <option value="py-8 px-6">Normaal</option>
-                                <option value="py-12 px-6">Groot</option>
-                                <option value="py-20 px-8">Extra groot</option>
+                                <option value="py-4 px-4">{{ __('Klein') }}</option>
+                                <option value="py-8 px-6">{{ __('Normaal') }}</option>
+                                <option value="py-12 px-6">{{ __('Groot') }}</option>
+                                <option value="py-20 px-8">{{ __('Extra groot') }}</option>
                             </select>
                         </div>
 
                         <!-- Text Color -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tekstkleur</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Tekstkleur') }}</label>
                             <div class="flex gap-2">
                                 <button @click="editingSection.settings.textColor = '#1f2937'; saveData()"
                                         class="w-8 h-8 bg-gray-800 rounded border-2"
@@ -963,76 +963,76 @@
                         <!-- Grid Settings (for all grid sections) -->
                         <template x-if="editingSection.grid">
                             <div class="border-t pt-4 mt-4">
-                                <h4 class="text-sm font-medium text-gray-700 mb-3">Grid instellingen</h4>
+                                <h4 class="text-sm font-medium text-gray-700 mb-3">{{ __('Grid instellingen') }}</h4>
 
                                 <!-- Current Grid Info -->
                                 <div class="mb-4 p-3 bg-blue-50 rounded-lg text-sm">
                                     <span class="font-medium text-blue-800">
-                                        <span x-text="editingSection.gridConfig?.cols || 1"></span> kolommen ×
-                                        <span x-text="editingSection.grid?.length || 1"></span> rijen
+                                        <span x-text="editingSection.gridConfig?.cols || 1"></span> {{ __('kolommen') }} ×
+                                        <span x-text="editingSection.grid?.length || 1"></span> {{ __('rijen') }}
                                     </span>
                                 </div>
 
                                 <!-- Column Controls -->
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Kolommen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('Kolommen') }}</label>
                                     <div class="flex items-center gap-2">
                                         <button @click="removeColumnFromSection(editingSection, editingSection.gridConfig.cols - 1)"
                                                 :disabled="editingSection.gridConfig?.cols <= 1"
                                                 class="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-                                            − Kolom
+                                            − {{ __('Kolom') }}
                                         </button>
                                         <span class="px-3 py-2 bg-gray-100 rounded font-medium" x-text="editingSection.gridConfig?.cols || 1"></span>
                                         <button @click="addColumnToSection(editingSection)"
                                                 :disabled="editingSection.gridConfig?.cols >= 6"
                                                 class="flex-1 py-2 px-3 bg-green-50 text-green-600 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-                                            + Kolom
+                                            + {{ __('Kolom') }}
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Row Controls -->
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Rijen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">{{ __('Rijen') }}</label>
                                     <div class="flex items-center gap-2">
                                         <button @click="removeRowFromSection(editingSection, editingSection.grid.length - 1)"
                                                 :disabled="editingSection.grid?.length <= 1"
                                                 class="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-                                            − Rij
+                                            − {{ __('Rij') }}
                                         </button>
                                         <span class="px-3 py-2 bg-gray-100 rounded font-medium" x-text="editingSection.grid?.length || 1"></span>
                                         <button @click="addRowToSection(editingSection)"
                                                 :disabled="editingSection.grid?.length >= 6"
                                                 class="flex-1 py-2 px-3 bg-green-50 text-green-600 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-                                            + Rij
+                                            + {{ __('Rij') }}
                                         </button>
                                     </div>
                                 </div>
 
                                 <!-- Row Gap / Divider Height -->
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Ruimte tussen cellen</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Ruimte tussen cellen') }}</label>
                                     <select x-model="editingSection.settings.gap" @change="saveData()"
                                             class="w-full border rounded px-3 py-2 text-sm">
-                                        <option value="0.5rem">Extra klein (8px)</option>
-                                        <option value="1rem">Klein (16px)</option>
-                                        <option value="1.5rem">Normaal (24px)</option>
-                                        <option value="2rem">Groot (32px)</option>
-                                        <option value="3rem">Extra groot (48px)</option>
-                                        <option value="4rem">Maximaal (64px)</option>
+                                        <option value="0.5rem">{{ __('Extra klein') }} (8px)</option>
+                                        <option value="1rem">{{ __('Klein') }} (16px)</option>
+                                        <option value="1.5rem">{{ __('Normaal') }} (24px)</option>
+                                        <option value="2rem">{{ __('Groot') }} (32px)</option>
+                                        <option value="3rem">{{ __('Extra groot') }} (48px)</option>
+                                        <option value="4rem">{{ __('Maximaal') }} (64px)</option>
                                     </select>
                                 </div>
 
                                 <!-- Row Height -->
                                 <div class="mb-4">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Rij hoogte</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Rij hoogte') }}</label>
                                     <select x-model="editingSection.settings.rowHeight" @change="saveData()"
                                             class="w-full border rounded px-3 py-2 text-sm">
-                                        <option value="auto">Automatisch</option>
-                                        <option value="100px">Klein (100px)</option>
-                                        <option value="150px">Normaal (150px)</option>
-                                        <option value="200px">Groot (200px)</option>
-                                        <option value="300px">Extra groot (300px)</option>
+                                        <option value="auto">{{ __('Automatisch') }}</option>
+                                        <option value="100px">{{ __('Klein') }} (100px)</option>
+                                        <option value="150px">{{ __('Normaal') }} (150px)</option>
+                                        <option value="200px">{{ __('Groot') }} (200px)</option>
+                                        <option value="300px">{{ __('Extra groot') }} (300px)</option>
                                     </select>
                                 </div>
                             </div>

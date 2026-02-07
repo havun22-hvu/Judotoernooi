@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Wedstrijddag Poules')
+@section('title', __('Wedstrijddag Poules'))
 
 @section('content')
 @php
@@ -46,9 +46,9 @@
 @endphp
 <div x-data="wedstrijddagPoules()" class="space-y-6">
     <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold">Wedstrijddag Poules</h1>
+        <h1 class="text-2xl font-bold">{{ __('Wedstrijddag Poules') }}</h1>
         <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            Verifieer poules
+            {{ __('Verifieer poules') }}
         </button>
     </div>
 
@@ -61,12 +61,12 @@
     @endphp
     <div id="problematische-poules-container" class="{{ $totaalProblemen > 0 ? '' : 'hidden' }}" style="width: fit-content;">
     <div class="bg-red-50 border border-red-300 rounded-lg p-4">
-        <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $totaalProblemen }}</span>)</h3>
+        <h3 class="font-bold text-red-800 mb-2">{{ __('Problematische poules') }} (<span id="problematische-count">{{ $totaalProblemen }}</span>)</h3>
 
         {{-- Te weinig judoka's --}}
         @if($teWeinigjudokas->count() > 0)
-        <p class="text-red-700 text-sm mb-1">Te weinig judoka's (&lt; 3):</p>
-        <p class="text-gray-600 text-xs mb-2">Oplossing: sleep judoka naar andere poule, of bij weging gewicht <strong>0</strong> invoeren = afmelden</p>
+        <p class="text-red-700 text-sm mb-1">{{ __("Te weinig judoka's") }} (&lt; 3):</p>
+        <p class="text-gray-600 text-xs mb-2">{{ __('Oplossing: sleep judoka naar andere poule, of bij weging gewicht') }} <strong>0</strong> {{ __('invoeren = afmelden') }}</p>
         <div id="problematische-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($teWeinigjudokas as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-probleem-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm hover:bg-red-200 cursor-pointer transition-colors">
@@ -78,7 +78,7 @@
 
         {{-- Te veel judoka's --}}
         @if($teVeelJudokas->count() > 0)
-        <p class="text-purple-700 text-sm mb-2">Te veel judoka's (&ge; 6) - splitsen:</p>
+        <p class="text-purple-700 text-sm mb-2">{{ __("Te veel judoka's") }} (&ge; 6) - {{ __('splitsen') }}:</p>
         <div id="teveel-links" class="flex flex-wrap gap-2 mb-3">
             @foreach($teVeelJudokas as $p)
             <a href="#poule-{{ $p['id'] }}" onclick="scrollToPoule(event, {{ $p['id'] }})" data-teveel-poule="{{ $p['id'] }}" class="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm hover:bg-purple-200 cursor-pointer transition-colors">
@@ -90,7 +90,7 @@
 
         {{-- Gewichtsrange overschreden --}}
         @if($problematischeGewichtsPoules->count() > 0)
-        <p class="text-orange-700 text-sm mb-2">Gewichtsrange overschreden:</p>
+        <p class="text-orange-700 text-sm mb-2">{{ __('Gewichtsrange overschreden') }}:</p>
         <div id="gewichtsrange-items" class="space-y-3">
             @foreach($problematischeGewichtsPoules as $pouleId => $probleem)
             @php
@@ -115,7 +115,7 @@
                         </a>
                         <span class="text-orange-600 text-sm ml-2">Range: {{ number_format($probleem['range'], 1) }}kg (max: {{ number_format($probleem['max_toegestaan'], 1) }}kg)</span>
                     </div>
-                    <span class="text-red-600 font-bold">+{{ number_format($probleem['overschrijding'], 1) }}kg over</span>
+                    <span class="text-red-600 font-bold">+{{ number_format($probleem['overschrijding'], 1) }}kg {{ __('over') }}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-sm">
                     @if($probleem['lichtste'])
@@ -125,7 +125,7 @@
                             - {{ $probleem['lichtste']->naam }}
                         </span>
                         <button onclick="openZoekMatchWedstrijddag({{ $probleem['lichtste']->id }}, {{ $pouleId }})" class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-0.5 bg-blue-100 rounded">
-                            Zoek match
+                            {{ __('Zoek match') }}
                         </button>
                     </div>
                     @endif
@@ -136,7 +136,7 @@
                             - {{ $probleem['zwaarste']->naam }}
                         </span>
                         <button onclick="openZoekMatchWedstrijddag({{ $probleem['zwaarste']->id }}, {{ $pouleId }})" class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-0.5 bg-red-100 rounded">
-                            Zoek match
+                            {{ __('Zoek match') }}
                         </button>
                     </div>
                     @endif
@@ -151,9 +151,9 @@
 
     {{-- Legenda --}}
     <div class="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 flex items-center gap-6 text-sm">
-        <span class="font-medium text-gray-600">Legenda:</span>
-        <span class="flex items-center gap-1"><span class="text-green-500">●</span> Gewogen</span>
-        <span class="flex items-center gap-1"><span class="text-orange-500">⚠</span> Afwijkend gewicht</span>
+        <span class="font-medium text-gray-600">{{ __('Legenda') }}:</span>
+        <span class="flex items-center gap-1"><span class="text-green-500">●</span> {{ __('Gewogen') }}</span>
+        <span class="flex items-center gap-1"><span class="text-orange-500">⚠</span> {{ __('Afwijkend gewicht') }}</span>
     </div>
 
     <div id="blokken-container" class="space-y-6">
@@ -187,14 +187,14 @@
         <div class="flex items-center bg-gray-800 text-white rounded-t-lg">
             <button @click="open = !open" class="flex-1 flex justify-between items-center px-4 py-3 hover:bg-gray-700 rounded-tl-lg">
                 <div class="flex items-center gap-4">
-                    <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
-                    <span class="text-gray-300 text-sm">{{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blok['categories']->count() }} categorieën</span>
+                    <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
+                    <span class="text-gray-300 text-sm">{{ $blokJudokas }} {{ __("judoka's") }} | {{ $blokWedstrijden }} {{ __('wedstrijden') }} | {{ $blok['categories']->count() }} {{ __('categorieën') }}</span>
                 </div>
                 <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
-            <button onclick="openNieuwePouleModal({{ $blok['nummer'] }})" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ Poule</button>
+            <button onclick="openNieuwePouleModal({{ $blok['nummer'] }})" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Poule') }}</button>
         </div>
 
         {{-- Categories within blok --}}
@@ -230,10 +230,10 @@
                         // Info tekst voor tooltip
                         $verwijderdeTekstElim = collect();
                         foreach ($afwezigeElim as $j) {
-                            $verwijderdeTekstElim->push($j->naam . ' (afwezig)');
+                            $verwijderdeTekstElim->push($j->naam . ' (' . __('afwezig') . ')');
                         }
                         foreach ($overpoulersElim as $j) {
-                            $verwijderdeTekstElim->push($j->naam . ' (afwijkend gewicht)');
+                            $verwijderdeTekstElim->push($j->naam . ' (' . __('afwijkend gewicht') . ')');
                         }
 
                         // Titel via model methode
@@ -244,8 +244,8 @@
                     <div id="poule-{{ $elimPoule->id }}" class="col-span-2 md:col-span-3 lg:col-span-4 border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}">
                         <div class="bg-orange-600 text-white px-4 py-2 flex justify-between items-center">
                             <div>
-                                <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimTitelFormatted }} <span class="font-normal text-orange-200">(Eliminatie)</span></div>
-                                <div class="text-sm text-orange-200">{{ $aantalActiefElim }} judoka's ~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</div>
+                                <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimTitelFormatted }} <span class="font-normal text-orange-200">({{ __('Eliminatie') }})</span></div>
+                                <div class="text-sm text-orange-200">{{ $aantalActiefElim }} {{ __("judoka's") }} ~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} {{ __('wedstrijden') }}</div>
                             </div>
                             <div class="flex items-center gap-1">
                                 @if($verwijderdeTekstElim->isNotEmpty())
@@ -257,13 +257,13 @@
                                 <button
                                     onclick="naarZaaloverzichtPoule({{ $elimPoule->id }}, this)"
                                     class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurdElim ? 'bg-green-500 hover:bg-green-600' : 'bg-orange-500 hover:bg-orange-400' }}"
-                                    title="{{ $isDoorgestuurdElim ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                                    title="{{ $isDoorgestuurdElim ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
                                 >{{ $isDoorgestuurdElim ? '✓' : '→' }}</button>
                                 <div class="relative" x-data="{ open: false }">
                                     <button @click="open = !open" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-0.5 rounded">⚙</button>
                                     <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
-                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">Naar poules</button>
-                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
+                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
+                                        <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ {{ __('kruisfinale') }}</button>
                                     </div>
                                 </div>
                             </div>
@@ -282,7 +282,7 @@
                                     <button
                                         onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
                                         class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Zoek geschikte poule"
+                                        title="{{ __('Zoek geschikte poule') }}"
                                     >🔍</button>
                                 </div>
                             </div>
@@ -322,20 +322,20 @@
                     <div class="flex items-center gap-3">
                         <h2 class="text-lg font-bold {{ $isEliminatie ? 'text-orange-800' : '' }}">
                             @if($isEliminatie)⚔️ @endif{{ $category['label'] }} {{ $category['gewichtsklasse'] }}
-                            @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">(Eliminatie)</span>@endif
+                            @if($isEliminatie)<span class="text-sm font-normal text-orange-600 ml-1">({{ __('Eliminatie') }})</span>@endif
                         </h2>
                         @if(!$isEliminatie)
-                        <button onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ Poule</button>
-                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="Nieuwe judoka aanmelden (laatkomer)">+ Laatkomer</button>
+                        <button onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ {{ __('Poule') }}</button>
+                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="{{ __('Nieuwe judoka aanmelden (laatkomer)') }}">+ {{ __('Laatkomer') }}</button>
                         @endif
                     </div>
                     @if($isEliminatie)
                     @php $elimPoule = $category['poules']->first(); @endphp
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">Omzetten naar poules ▾</button>
+                        <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-sm px-3 py-1.5 rounded">{{ __('Omzetten naar poules') }} ▾</button>
                         <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[200px]">
-                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">Alleen poules</button>
-                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">Poules + kruisfinale</button>
+                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">{{ __('Alleen poules') }}</button>
+                            <button onclick="zetOmNaarPoules({{ $elimPoule->id }}, 'poules_kruisfinale')" class="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm border-t">{{ __('Poules + kruisfinale') }}</button>
                         </div>
                         @endif
                     </div>
@@ -357,15 +357,15 @@
 
                         // Format removed for tooltip
                         $verwijderdeTekstElim = $verwijderdeElim->map(function($j) use ($tolerantie, $wegingGesloten) {
-                            if (!$j->isActief($wegingGesloten)) return $j->naam . ' (afwezig)';
-                            return $j->naam . ' (afwijkend gewicht)';
+                            if (!$j->isActief($wegingGesloten)) return $j->naam . ' (' . __('afwezig') . ')';
+                            return $j->naam . ' (' . __('afwijkend gewicht') . ')';
                         });
                     @endphp
                     <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
-                            <span class="font-bold">{{ $aantalActiefElim }} judoka's</span>
+                            <span class="font-bold">{{ $aantalActiefElim }} {{ __("judoka's") }}</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} wedstrijden</span>
+                                <span class="text-sm text-orange-200">~{{ $elimPoule->berekenAantalWedstrijden($aantalActiefElim) }} {{ __('wedstrijden') }}</span>
                                 @if($verwijderdeTekstElim->isNotEmpty())
                                 <div class="relative" x-data="{ show: false }">
                                     <span @click="show = !show" @click.away="show = false" class="info-icon cursor-pointer text-base opacity-80 hover:opacity-100">ⓘ</span>
@@ -392,7 +392,7 @@
                                     <button
                                         onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $elimPoule->id }})"
                                         class="text-gray-400 hover:text-blue-600 p-0.5 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Zoek geschikte poule"
+                                        title="{{ __('Zoek geschikte poule') }}"
                                     >🔍</button>
                                 </div>
                             </div>
@@ -434,14 +434,14 @@
                             >
                                 <div class="bg-purple-600 text-white px-3 py-2 flex justify-between items-center">
                                     <div>
-                                        <div class="font-bold text-sm">🏆 Kruisfinale</div>
-                                        <div class="text-xs text-purple-200 kruisfinale-stats">{{ $poule->aantal_judokas }} judoka's | {{ $poule->aantal_wedstrijden }} wedstrijden</div>
+                                        <div class="font-bold text-sm">🏆 {{ __('Kruisfinale') }}</div>
+                                        <div class="text-xs text-purple-200 kruisfinale-stats">{{ $poule->aantal_judokas }} {{ __("judoka's") }} | {{ $poule->aantal_wedstrijden }} {{ __('wedstrijden') }}</div>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <select
                                             onchange="updateKruisfinale({{ $poule->id }}, this.value)"
                                             class="text-xs bg-purple-500 text-white border border-purple-400 rounded px-1 py-0.5"
-                                            title="Aantal plaatsen per poule"
+                                            title="{{ __('Aantal plaatsen per poule') }}"
                                         >
                                             @for($i = 1; $i <= 3; $i++)
                                             <option value="{{ $i }}" {{ ($poule->kruisfinale_plaatsen ?? 2) == $i ? 'selected' : '' }}>Top {{ $i }}</option>
@@ -450,12 +450,12 @@
                                         <button
                                             onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                                             class="w-5 h-5 flex items-center justify-center bg-purple-800 hover:bg-purple-900 text-white rounded-full text-xs font-bold"
-                                            title="Verwijder kruisfinale"
+                                            title="{{ __('Verwijder kruisfinale') }}"
                                         >×</button>
                                     </div>
                                 </div>
                                 <div class="p-3 text-sm text-gray-600 kruisfinale-info">
-                                    {{ $aantalVoorrondes }} poules × top {{ $poule->kruisfinale_plaatsen ?? 2 }} = {{ $poule->aantal_judokas }} judoka's door
+                                    {{ $aantalVoorrondes }} {{ __('poules') }} × top {{ $poule->kruisfinale_plaatsen ?? 2 }} = {{ $poule->aantal_judokas }} {{ __("judoka's door") }}
                                 </div>
                             </div>
                             @continue
@@ -471,17 +471,17 @@
                             >
                                 <div class="bg-orange-600 text-white px-3 py-2 flex justify-between items-center">
                                     <div>
-                                        <div class="font-bold text-sm">⚔️ Eliminatie Finale</div>
-                                        <div class="text-xs text-orange-200">{{ $poule->aantal_judokas }} judoka's | {{ $poule->aantal_wedstrijden }} wedstrijden</div>
+                                        <div class="font-bold text-sm">⚔️ {{ __('Eliminatie Finale') }}</div>
+                                        <div class="text-xs text-orange-200">{{ $poule->aantal_judokas }} {{ __("judoka's") }} | {{ $poule->aantal_wedstrijden }} {{ __('wedstrijden') }}</div>
                                     </div>
                                     <button
                                         onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                                         class="w-5 h-5 flex items-center justify-center bg-orange-800 hover:bg-orange-900 text-white rounded-full text-xs font-bold"
-                                        title="Verwijder eliminatie finale"
+                                        title="{{ __('Verwijder eliminatie finale') }}"
                                     >×</button>
                                 </div>
                                 <div class="p-3 text-sm text-gray-600">
-                                    Winnaars uit voorronde poules
+                                    {{ __('Winnaars uit voorronde poules') }}
                                 </div>
                             </div>
                             @continue
@@ -504,10 +504,10 @@
                                 // Format afwezigen + overpoulers for tooltip
                                 $verwijderdeTekst = collect();
                                 foreach ($afwezigeJudokas as $j) {
-                                    $verwijderdeTekst->push($j->naam . ' (afwezig)');
+                                    $verwijderdeTekst->push($j->naam . ' (' . __('afwezig') . ')');
                                 }
                                 foreach ($overpoulers as $j) {
-                                    $verwijderdeTekst->push($j->naam . ' (afwijkend gewicht → ' . $j->gewichtsklasse . ')');
+                                    $verwijderdeTekst->push($j->naam . ' (' . __('afwijkend gewicht') . ' → ' . $j->gewichtsklasse . ')');
                                 }
                             @endphp
                             <div
@@ -526,7 +526,7 @@
                                 <div class="{{ $aantalActief === 0 ? 'bg-gray-500' : ($isProblematisch ? 'bg-red-600' : ($heeftGewichtsprobleem ? 'bg-orange-600' : 'bg-blue-700')) }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
                                     <div class="pointer-events-none flex-1">
                                         <div class="font-bold text-sm">#{{ $poule->nummer }} {{ $pouleTitel }}</div>
-                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')) }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+                                        <div class="text-xs {{ $aantalActief === 0 ? 'text-gray-300' : ($isProblematisch ? 'text-red-200' : ($heeftGewichtsprobleem ? 'text-orange-200' : 'text-blue-200')) }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> {{ __("judoka's") }} <span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> {{ __('wedstrijden') }}</div>
                                     </div>
                                     <div class="flex items-center gap-1 flex-shrink-0">
                                         @if($verwijderdeTekst->isNotEmpty())
@@ -540,13 +540,13 @@
                                         <button
                                             onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
                                             class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600' }}"
-                                            title="{{ $isDoorgestuurd ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                                            title="{{ $isDoorgestuurd ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
                                         >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
                                         @else
                                         <button
                                             onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                                             class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
-                                            title="Verwijder lege poule"
+                                            title="{{ __('Verwijder lege poule') }}"
                                         >×</button>
                                         @endif
                                     </div>
@@ -579,9 +579,9 @@
                                             <div class="flex items-center gap-1 flex-1 min-w-0">
                                                 {{-- Status marker: red = verdacht, orange = afwijkend, green = gewogen --}}
                                                 @if($isVerdachtGewicht)
-                                                    <span class="text-red-600 text-xs flex-shrink-0" title="Verdacht gewicht! {{ $judoka->gewicht_gewogen < 15 ? 'Te laag' : 'Grote afwijking van opgave' }}">🚨</span>
+                                                    <span class="text-red-600 text-xs flex-shrink-0" title="{{ __('Verdacht gewicht!') }} {{ $judoka->gewicht_gewogen < 15 ? __('Te laag') : __('Grote afwijking van opgave') }}">🚨</span>
                                                 @elseif($heeftProbleem)
-                                                    <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
+                                                    <span class="text-orange-500 text-xs flex-shrink-0" title="{{ __('Afwijkend gewicht') }}">⚠</span>
                                                 @elseif($isGewogen)
                                                     <span class="text-green-500 text-xs flex-shrink-0">●</span>
                                                 @endif
@@ -598,7 +598,7 @@
                                                 <button
                                                     onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
                                                     class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                    title="Zoek geschikte poule"
+                                                    title="{{ __('Zoek geschikte poule') }}"
                                                 >🔍</button>
                                             </div>
                                         </div>
@@ -620,7 +620,7 @@
                         @if(!$categorieIsDynamisch)
                         <div class="border-2 border-dashed border-orange-300 rounded-lg p-3 min-w-[200px] bg-orange-50 flex-shrink-0 wachtruimte-container" data-category="{{ $category['key'] }}">
                             <div class="font-medium text-sm text-orange-600 mb-2 flex justify-between">
-                                <span>Wachtruimte</span>
+                                <span>{{ __('Wachtruimte') }}</span>
                                 <span class="text-xs text-orange-400 wachtruimte-count">{{ count($category['wachtruimte']) }}</span>
                             </div>
                             <div class="divide-y divide-orange-200 sortable-wachtruimte min-h-[40px]" data-category="{{ $category['key'] }}">
@@ -645,13 +645,13 @@
                                             <button
                                                 onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, null)"
                                                 class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                title="Zoek geschikte poule"
+                                                title="{{ __('Zoek geschikte poule') }}"
                                             >🔍</button>
                                         </div>
                                     </div>
                                 </div>
                                 @empty
-                                <div class="text-sm text-gray-400 italic py-2 text-center">Leeg</div>
+                                <div class="text-sm text-gray-400 italic py-2 text-center">{{ __('Leeg') }}</div>
                                 @endforelse
                             </div>
                         </div>
@@ -663,7 +663,7 @@
             @endforeach
             </div>
             @empty
-            <div class="p-4 text-gray-500 text-center">Geen categorieën in dit blok</div>
+            <div class="p-4 text-gray-500 text-center">{{ __('Geen categorieën in dit blok') }}</div>
             @endforelse
             </div>
             @endif
@@ -671,7 +671,7 @@
     </div>
     @empty
     <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-        Geen blokken gevonden. Maak eerst blokken aan via de Blokken pagina.
+        {{ __('Geen blokken gevonden. Maak eerst blokken aan via de Blokken pagina.') }}
     </div>
     @endforelse
     </div>
@@ -680,13 +680,13 @@
 <!-- Modal nieuwe poule -->
 <div id="nieuwe-poule-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Nieuwe poule aanmaken</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">{{ __('Nieuwe poule aanmaken') }}</h2>
         <form id="nieuwe-poule-form">
             <input type="hidden" id="nieuwe-poule-blok" value="">
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Categorie') }}</label>
                 <select id="nieuwe-poule-categorie" class="w-full border rounded px-3 py-2" required>
-                    <option value="">Selecteer...</option>
+                    <option value="">{{ __('Selecteer...') }}</option>
                     @foreach($toernooi->getAlleGewichtsklassen() as $key => $klasse)
                     <option value="{{ $klasse['label'] }}">{{ $klasse['label'] }}</option>
                     @endforeach
@@ -694,10 +694,10 @@
             </div>
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Aanmaken
+                    {{ __('Aanmaken') }}
                 </button>
             </div>
         </form>
@@ -707,41 +707,41 @@
 {{-- Modal: Nieuwe judoka toevoegen --}}
 <div id="nieuwe-judoka-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">🆕 Laatkomer aanmelden</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">🆕 {{ __('Laatkomer aanmelden') }}</h2>
         <form id="nieuwe-judoka-form">
             <input type="hidden" id="nj-leeftijdsklasse" value="">
             <input type="hidden" id="nj-gewichtsklasse" value="">
             <div class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
-                    <input type="text" id="nj-naam" class="w-full border rounded px-3 py-2" required placeholder="Achternaam, Voornaam">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Naam') }} *</label>
+                    <input type="text" id="nj-naam" class="w-full border rounded px-3 py-2" required placeholder="{{ __('Achternaam, Voornaam') }}">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Geboortejaar</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Geboortejaar') }}</label>
                         <input type="number" id="nj-geboortejaar" class="w-full border rounded px-3 py-2" min="1990" max="{{ date('Y') }}" placeholder="{{ date('Y') - 10 }}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Band</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Band') }}</label>
                         <select id="nj-band" class="w-full border rounded px-3 py-2">
                             <option value="">-</option>
-                            <option value="wit">Wit</option>
-                            <option value="geel">Geel</option>
-                            <option value="oranje">Oranje</option>
-                            <option value="groen">Groen</option>
-                            <option value="blauw">Blauw</option>
-                            <option value="bruin">Bruin</option>
-                            <option value="zwart">Zwart</option>
+                            <option value="wit">{{ __('Wit') }}</option>
+                            <option value="geel">{{ __('Geel') }}</option>
+                            <option value="oranje">{{ __('Oranje') }}</option>
+                            <option value="groen">{{ __('Groen') }}</option>
+                            <option value="blauw">{{ __('Blauw') }}</option>
+                            <option value="bruin">{{ __('Bruin') }}</option>
+                            <option value="zwart">{{ __('Zwart') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Gewicht (kg)') }}</label>
                         <input type="number" id="nj-gewicht" class="w-full border rounded px-3 py-2" step="0.1" min="10" max="200" placeholder="32.5">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Judoschool</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Judoschool') }}</label>
                         <select id="nj-club" class="w-full border rounded px-3 py-2">
                             <option value="">-</option>
                             @foreach($clubs as $club)
@@ -751,7 +751,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Poule *</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Poule') }} *</label>
                     <select id="nj-poule" class="w-full border rounded px-3 py-2" required>
                         {{-- Options filled by JS --}}
                     </select>
@@ -759,10 +759,10 @@
             </div>
             <div class="flex justify-end space-x-3 mt-4">
                 <button type="button" onclick="closeNieuweJudokaModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Toevoegen
+                    {{ __('Toevoegen') }}
                 </button>
             </div>
         </form>
@@ -1644,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (problemSection) {
                         const newSection = document.createElement('div');
                         newSection.innerHTML = `
-                            <p class="text-purple-700 text-sm mb-2">Te veel judoka's (&ge; 6) - splitsen:</p>
+                            <p class="text-purple-700 text-sm mb-2">{{ __("Te veel judoka's") }} (&ge; 6) - {{ __('splitsen') }}:</p>
                             <div id="teveel-links" class="flex flex-wrap gap-2 mb-3"></div>
                         `;
                         // Voeg toe na "te weinig" sectie of aan begin
@@ -1894,13 +1894,13 @@ function closeZoekMatchModal() {
 <div id="zoek-match-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50" onclick="if(event.target === this) closeZoekMatchModal()">
     <div id="zoek-match-dialog" class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
         <div class="flex justify-between items-center px-4 py-3 border-b bg-blue-700 text-white rounded-t-lg cursor-move" id="zoek-match-header">
-            <h3 class="font-bold text-lg select-none">Zoek match (wedstrijddag)</h3>
+            <h3 class="font-bold text-lg select-none">{{ __('Zoek match (wedstrijddag)') }}</h3>
             <button onclick="closeZoekMatchModal()" class="text-white hover:text-gray-200 text-xl">&times;</button>
         </div>
         <div class="p-4 overflow-y-auto max-h-[60vh]">
             <div id="zoek-match-loading" class="text-center py-4">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="text-gray-500 mt-2">Laden...</p>
+                <p class="text-gray-500 mt-2">{{ __('Laden...') }}</p>
             </div>
             <div id="zoek-match-content"></div>
         </div>
