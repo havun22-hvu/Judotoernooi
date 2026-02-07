@@ -785,9 +785,53 @@ const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $t
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const meldAfUrl = '{{ route("toernooi.wedstrijddag.meld-judoka-af", $toernooi->routeParams()) }}';
 
+// i18n constants
+const __foutBijAfmelden = @json(__('Fout bij afmelden'));
+const __foutBijAanpassenKruisfinale = @json(__('Fout bij aanpassen kruisfinale'));
+const __foutBijOmzetten = @json(__('Fout bij omzetten'));
+const __foutBijVerwijderen = @json(__('Fout bij verwijderen'));
+const __verwijderUitPouleBevestiging = @json(__('Weet je zeker dat je deze judoka uit de poule wilt verwijderen?'));
+const __selecteerEenCategorie = @json(__('Selecteer een categorie'));
+const __naamIsVerplicht = @json(__('Naam is verplicht'));
+const __selecteerEenPoule = @json(__('Selecteer een poule'));
+const __foutBijVerplaatsen = @json(__('Fout bij verplaatsen'));
+const __foutBijVerificatie = @json(__('Fout bij verificatie'));
+const __bezigMetVerificatie = @json(__('Bezig met verificatie...'));
+const __verificatie = @json(__('Verificatie'));
+const __probleemenGevonden = @json(__('probleem(en) gevonden'));
+const __verificatieGeslaagd = @json(__('Verificatie geslaagd!'));
+const __totaal = @json(__('Totaal'));
+const __poules = @json(__('poules'));
+const __wedstrijden = @json(__('wedstrijden'));
+const __poulesHerberekend = @json(__('poules herberekend'));
+const __geenGeschiktePoules = @json(__('Geen geschikte poules gevonden'));
+const __foutBijLaden = @json(__('Fout bij laden'));
+const __afmelden = @json(__('Afmelden'));
+const __afmeldenBevestiging = @json(__('afmelden? Deze judoka kan dan niet meer deelnemen.'));
+const __huidigBlok = @json(__('Huidig blok'));
+const __eerderBlokWegingGesloten = @json(__('Eerder blok (weging gesloten)'));
+const __andereCategorie = @json(__('andere categorie'));
+const __nu = @json(__('Nu'));
+const __na = @json(__('Na'));
+const __judokas = @json(__("judoka's"));
+const __doorgestuurd = @json(__('Doorgestuurd'));
+const __foutBijDoorsturen = @json(__('Fout bij doorsturen'));
+const __netwerkFout = @json(__('Netwerk fout'));
+const __poule = @json(__('Poule'));
+const __bezig = @json(__('Bezig...'));
+const __toevoegen = @json(__('Toevoegen'));
+const __foutBijAanmakenPoule = @json(__('Fout bij aanmaken poule'));
+const __problematischePoules = @json(__('Problematische poules'));
+const __dezePoulesMinder3 = @json(__('Deze poules hebben minder dan 3 actieve judoka\'s:'));
+const __eliminatieOmzetten = @json(__('Eliminatie omzetten naar'));
+const __poulesKruisfinale = @json(__('poules + kruisfinale'));
+const __alleenPoules = @json(__('alleen poules'));
+const __pouleVerwijderen = @json(__('Poule verwijderen?'));
+const __foutBijVerplaatsenWachtruimte = @json(__('Fout bij verplaatsen naar wachtruimte'));
+
 // Meld judoka af (kan niet deelnemen) - moet vroeg gedefinieerd zijn voor poule-card buttons
 async function meldJudokaAf(judokaId, naam) {
-    if (!confirm(`${naam} afmelden? Deze judoka kan dan niet meer deelnemen.`)) return;
+    if (!confirm(`${naam} ${__afmeldenBevestiging}`)) return;
 
     try {
         const response = await fetch(meldAfUrl, {
@@ -808,7 +852,7 @@ async function meldJudokaAf(judokaId, naam) {
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij afmelden');
+        alert(__foutBijAfmelden);
     }
 }
 
@@ -832,25 +876,25 @@ async function updateKruisfinale(pouleId, plaatsen) {
             if (card) {
                 const statsDiv = card.querySelector('.kruisfinale-stats');
                 if (statsDiv) {
-                    statsDiv.textContent = `${data.aantal_judokas} judoka's | ${data.aantal_wedstrijden} wedstrijden`;
+                    statsDiv.textContent = `${data.aantal_judokas} ${__judokas} | ${data.aantal_wedstrijden} ${__wedstrijden}`;
                 }
                 const infoDiv = card.querySelector('.kruisfinale-info');
                 const aantalVoorrondes = card.dataset.aantalVoorrondes || '?';
                 if (infoDiv) {
-                    infoDiv.textContent = `${aantalVoorrondes} poules × top ${plaatsen} = ${data.aantal_judokas} judoka's door`;
+                    infoDiv.textContent = `${aantalVoorrondes} ${__poules} × top ${plaatsen} = ${data.aantal_judokas} ${__judokas} door`;
                 }
             }
         } else {
-            alert(data.message || 'Fout bij aanpassen kruisfinale');
+            alert(data.message || __foutBijAanpassenKruisfinale);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij aanpassen kruisfinale');
+        alert(__foutBijAanpassenKruisfinale);
     }
 }
 
 async function zetOmNaarPoules(pouleId, systeem) {
-    if (!confirm(`Eliminatie omzetten naar ${systeem === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'alleen poules'}?`)) return;
+    if (!confirm(`${__eliminatieOmzetten} ${systeem === 'poules_kruisfinale' ? __poulesKruisfinale : __alleenPoules}?`)) return;
 
     try {
         const response = await fetch(zetOmNaarPoulesUrl, {
@@ -869,11 +913,11 @@ async function zetOmNaarPoules(pouleId, systeem) {
             // Refresh page to show new poules
             window.location.reload();
         } else {
-            alert(data.message || 'Fout bij omzetten');
+            alert(data.message || __foutBijOmzetten);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij omzetten');
+        alert(__foutBijOmzetten);
     }
 }
 
@@ -906,7 +950,7 @@ function scrollToPoule(event, pouleId) {
 }
 
 async function verwijderPoule(pouleId, pouleNummer) {
-    if (!confirm(`Poule #${pouleNummer} verwijderen?`)) return;
+    if (!confirm(`${__poule} #${pouleNummer} ${__pouleVerwijderen}`)) return;
 
     try {
         const response = await fetch(verwijderPouleUrl.replace(':id', pouleId), {
@@ -926,18 +970,18 @@ async function verwijderPoule(pouleId, pouleNummer) {
                 pouleCard.remove();
             }
         } else {
-            alert(data.message || 'Fout bij verwijderen');
+            alert(data.message || __foutBijVerwijderen);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Fout bij verwijderen');
+        alert(__foutBijVerwijderen);
     }
 }
 
 async function verifieerPoules() {
     const resultaatDiv = document.getElementById('verificatie-resultaat');
     resultaatDiv.className = 'bg-blue-50 border border-blue-300 rounded-lg p-4';
-    resultaatDiv.innerHTML = '<p class="text-blue-700">Bezig met verificatie...</p>';
+    resultaatDiv.innerHTML = `<p class="text-blue-700">${__bezigMetVerificatie}</p>`;
 
     try {
         const response = await fetch(verifieerUrl, {
@@ -957,16 +1001,16 @@ async function verifieerPoules() {
 
             if (hasProblems) {
                 html = `<div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-                    <h3 class="font-bold text-yellow-800 mb-2">Verificatie: ${data.problemen.length} probleem(en) gevonden</h3>
+                    <h3 class="font-bold text-yellow-800 mb-2">${__verificatie}: ${data.problemen.length} ${__probleemenGevonden}</h3>
                     <ul class="list-disc list-inside text-yellow-700 text-sm mb-3">
                         ${data.problemen.map(p => `<li>${p.message}</li>`).join('')}
                     </ul>
-                    <p class="text-yellow-600 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                    <p class="text-yellow-600 text-sm">${__totaal}: ${data.totaal_poules} ${__poules}, ${data.totaal_wedstrijden} ${__wedstrijden}${data.herberekend > 0 ? `, ${data.herberekend} ${__poulesHerberekend}` : ''}</p>
                 </div>`;
             } else {
                 html = `<div class="bg-green-50 border border-green-300 rounded-lg p-4">
-                    <h3 class="font-bold text-green-800 mb-2">Verificatie geslaagd!</h3>
-                    <p class="text-green-700 text-sm">Totaal: ${data.totaal_poules} poules, ${data.totaal_wedstrijden} wedstrijden${data.herberekend > 0 ? `, ${data.herberekend} poules herberekend` : ''}</p>
+                    <h3 class="font-bold text-green-800 mb-2">${__verificatieGeslaagd}</h3>
+                    <p class="text-green-700 text-sm">${__totaal}: ${data.totaal_poules} ${__poules}, ${data.totaal_wedstrijden} ${__wedstrijden}${data.herberekend > 0 ? `, ${data.herberekend} ${__poulesHerberekend}` : ''}</p>
                 </div>`;
             }
 
@@ -1035,7 +1079,7 @@ async function naarZaaloverzichtPoule(pouleId, btn) {
         });
 
         if (response.ok) {
-            btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            btn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-orange-500', 'hover:bg-orange-400');
             btn.classList.add('bg-green-500', 'hover:bg-green-600');
             btn.innerHTML = '✓';
             btn.title = 'Doorgestuurd';
