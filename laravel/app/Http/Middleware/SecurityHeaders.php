@@ -46,7 +46,7 @@ class SecurityHeaders
                 "style-src 'self' 'unsafe-inline'",
                 "img-src 'self' data: blob:",
                 "font-src 'self'",
-                "connect-src 'self' wss: *.pusher.com",
+                "connect-src 'self' wss: *.pusher.com nominatim.openstreetmap.org",
                 "frame-ancestors 'self'",
             ]));
         }
