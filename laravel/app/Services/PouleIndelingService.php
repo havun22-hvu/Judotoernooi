@@ -275,6 +275,7 @@ class PouleIndelingService
                         [
                             'poule_grootte_voorkeur' => $pouleGrootteVoorkeur,
                             'verdeling_prioriteiten' => $this->prioriteiten,
+                            'gewicht_tolerantie' => $toernooi->gewicht_tolerantie ?? 0.5,
                         ]
                     );
 

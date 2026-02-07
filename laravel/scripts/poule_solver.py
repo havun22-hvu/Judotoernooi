@@ -349,7 +349,8 @@ def verdeel_judokas(
     max_lft: int,
     max_band: int,
     voorkeur: List[int],
-    prioriteiten: List[str]
+    prioriteiten: List[str],
+    gewicht_tolerantie: float = 0.5
 ) -> Tuple[List[Poule], List[Judoka]]:
     """
     Hoofdalgoritme:
@@ -357,6 +358,7 @@ def verdeel_judokas(
     2. Verdeel greedy
     3. Herverdeel kleine poules
     4. Markeer orphans
+    5. Soft placement: plaats resterende orphans met tolerantie
     """
     if not judokas:
         return [], []
@@ -366,7 +368,7 @@ def verdeel_judokas(
     min_grootte = min(voorkeur) if voorkeur else 3
 
     logging.debug(f"=== VERDEEL START ===")
-    logging.debug(f"Judokas: {len(judokas)}, max_kg={max_kg}, max_lft={max_lft}, max_band={max_band}")
+    logging.debug(f"Judokas: {len(judokas)}, max_kg={max_kg}, max_lft={max_lft}, max_band={max_band}, tolerantie={gewicht_tolerantie}")
     logging.debug(f"Prioriteiten: {prioriteiten}, voorkeur: {voorkeur}")
 
     # STAP 1: Sorteer
@@ -388,7 +390,47 @@ def verdeel_judokas(
     kleine_na = len([p for p in poules if p.size < min_grootte])
     logging.debug(f"Kleine poules na herverdeling: {kleine_na}")
 
-    # STAP 4: Identificeer orphans
+    # STAP 4: Soft placement - plaats orphans met tolerantie (max_kg + tolerantie)
+    if gewicht_tolerantie > 0:
+        max_kg_soft = max_kg + gewicht_tolerantie
+        orphan_poules = [p for p in poules if p.size < min_grootte]
+
+        for kleine in orphan_poules[:]:
+            if kleine not in poules or kleine.size == 0:
+                continue
+
+            for orphan in kleine.judokas[:]:
+                # Zoek beste poule met versoepelde gewichtsgrens
+                beste_target = None
+                beste_overshoot = float('inf')
+
+                for target in poules:
+                    if target is kleine or target.size < min_grootte:
+                        continue
+                    # Check leeftijd en band strikt
+                    if not all(abs(orphan.leeftijd - j.leeftijd) <= max_lft for j in target.judokas):
+                        continue
+                    if max_band > 0 and not all(abs(orphan.band - j.band) <= max_band for j in target.judokas):
+                        continue
+                    # Check gewicht met tolerantie
+                    if not all(abs(orphan.gewicht - j.gewicht) <= max_kg_soft for j in target.judokas):
+                        continue
+                    # Bereken hoe ver over de harde grens
+                    max_verschil = max(abs(orphan.gewicht - j.gewicht) for j in target.judokas)
+                    overshoot = max(0, max_verschil - max_kg)
+                    if overshoot < beste_overshoot:
+                        beste_overshoot = overshoot
+                        beste_target = target
+
+                if beste_target:
+                    kleine.judokas.remove(orphan)
+                    beste_target.judokas.append(orphan)
+                    logging.debug(f"    Soft placement: orphan J{orphan.id}({orphan.gewicht}kg) naar poule (overshoot {beste_overshoot:.1f}kg)")
+
+        # Verwijder lege poules
+        poules = [p for p in poules if p.size > 0]
+
+    # STAP 5: Identificeer overgebleven orphans
     orphans = []
     for poule in poules:
         if poule.size < min_grootte:
@@ -479,7 +521,8 @@ def solve(input_data: dict) -> dict:
                 }
             }
 
-        poules, orphans = verdeel_judokas(complete_judokas, max_kg, max_lft, max_band, voorkeur, prioriteiten)
+        gewicht_tolerantie = float(input_data.get('gewicht_tolerantie', 0.5))
+        poules, orphans = verdeel_judokas(complete_judokas, max_kg, max_lft, max_band, voorkeur, prioriteiten, gewicht_tolerantie)
 
         poules_output = []
         grootte_counts = {}
