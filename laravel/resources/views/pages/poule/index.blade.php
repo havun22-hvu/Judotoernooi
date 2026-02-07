@@ -349,7 +349,7 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
                             @if($isEliminatie)
-                                #{{ $poule->nummer }} ⚔️ {{ $poule->getDisplayTitel() }} <span class="font-normal">({{ __('Eliminatie') }})</span>
+                                <span data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} ⚔️ {{ $poule->getDisplayTitel() }}</span> <span class="font-normal">({{ __('Eliminatie') }})</span>
                             @elseif($isKruisfinale)
                                 #{{ $poule->nummer }} {{ __('Kruisfinale') }} {{ $poule->gewichtsklasse }} kg
                             @else
@@ -1019,10 +1019,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Update poule titel (ranges zitten in de titel zelf, bijv. "Jeugd 9-10j 28-32kg")
-        if (!isKruisfinale && !isEliminatie) {
+        if (!isKruisfinale) {
             const titelEl = pouleCard.querySelector(`[data-poule-titel="${pouleData.id}"]`);
             if (titelEl && pouleData.titel) {
-                titelEl.textContent = `#${pouleData.nummer} ${pouleData.titel}`;
+                const prefix = isEliminatie ? `#${pouleData.nummer} ⚔️ ` : `#${pouleData.nummer} `;
+                titelEl.textContent = `${prefix}${pouleData.titel}`;
             }
         }
 
