@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Poules')
+@section('title', __('Poules'))
 
 @section('content')
 @php
@@ -19,7 +19,7 @@
         $classifier = new \App\Services\CategorieClassifier($toernooi->gewichtsklassen);
         $overlaps = $classifier->detectOverlap();
         if (!empty($overlaps)) {
-            $overlapWarning = 'Overlappende categorieën gedetecteerd';
+            $overlapWarning = __('Overlappende categorieën gedetecteerd');
         }
     }
     $heeftCategorieProbleem = $nietGecategoriseerdAantal > 0 || $overlapWarning;
@@ -31,8 +31,8 @@
     <div class="flex items-center gap-3">
         <span class="text-2xl">🔒</span>
         <div>
-            <p class="font-bold text-gray-800">Voorbereiding afgesloten</p>
-            <p class="text-sm text-gray-600">De wedstrijddag is gestart. Wijzigingen aan poules kunnen alleen via <strong>Wedstrijddag > Poules</strong>.</p>
+            <p class="font-bold text-gray-800">{{ __('Voorbereiding afgesloten') }}</p>
+            <p class="text-sm text-gray-600">{!! __('De wedstrijddag is gestart. Wijzigingen aan poules kunnen alleen via <strong>Wedstrijddag > Poules</strong>.') !!}</p>
         </div>
     </div>
 </div>
@@ -47,12 +47,12 @@
             <div class="flex items-center gap-2">
                 <span class="text-xl">⚠️</span>
                 <div>
-                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
-                    <p class="text-sm text-red-700">Pas de categorie-instellingen aan voordat je poules genereert.</p>
+                    <p class="font-bold text-red-800">{{ __(':aantal judoka(\'s) niet gecategoriseerd!', ['aantal' => $nietGecategoriseerdAantal]) }}</p>
+                    <p class="text-sm text-red-700">{{ __('Pas de categorie-instellingen aan voordat je poules genereert.') }}</p>
                 </div>
             </div>
             <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi" class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                Naar instellingen
+                {{ __('Naar instellingen') }}
             </a>
         </div>
     </div>
@@ -64,11 +64,11 @@
                 <span class="text-xl">⚠️</span>
                 <div>
                     <p class="font-bold text-orange-800">{{ $overlapWarning }}</p>
-                    <p class="text-sm text-orange-700">Categorieën mogen niet overlappen.</p>
+                    <p class="text-sm text-orange-700">{{ __('Categorieën mogen niet overlappen.') }}</p>
                 </div>
             </div>
             <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi" class="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-medium">
-                Naar instellingen
+                {{ __('Naar instellingen') }}
             </a>
         </div>
     </div>
@@ -82,19 +82,19 @@
     <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md mx-4 animate-pulse-warning">
         <div class="text-center">
             <span class="text-6xl">⚠️</span>
-            <h2 class="text-2xl font-bold text-orange-600 mt-4">Inschrijving is gesloten!</h2>
-            <p class="text-gray-600 mt-3">De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.</p>
-            <p class="text-gray-700 font-medium mt-4">Gebruik op de wedstrijddag:</p>
+            <h2 class="text-2xl font-bold text-orange-600 mt-4">{{ __('Inschrijving is gesloten!') }}</h2>
+            <p class="text-gray-600 mt-3">{{ __('De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.') }}</p>
+            <p class="text-gray-700 font-medium mt-4">{{ __('Gebruik op de wedstrijddag:') }}</p>
             <div class="flex flex-col gap-2 mt-3">
                 <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
-                    Wedstrijddag Poules
+                    {{ __('Wedstrijddag Poules') }}
                 </a>
                 <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
-                    Zaaloverzicht
+                    {{ __('Zaaloverzicht') }}
                 </a>
             </div>
             <button onclick="sluitInschrijvingPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
-                Ik begrijp het, toch doorgaan
+                {{ __('Ik begrijp het, toch doorgaan') }}
             </button>
         </div>
     </div>
@@ -142,13 +142,13 @@
         <div class="flex items-center gap-3">
             <span class="text-2xl">⚠️</span>
             <div>
-                <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
-                <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
+                <p class="font-bold text-red-800">{{ __(':aantal judoka(\'s) niet gecategoriseerd!', ['aantal' => $nietGecategoriseerdAantal]) }}</p>
+                <p class="text-sm text-red-700">{{ __('Geen categorie past bij deze judoka(\'s). Pas de categorie-instellingen aan.') }}</p>
             </div>
         </div>
         <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-            Naar Instellingen
+            {{ __('Naar Instellingen') }}
         </a>
     </div>
 </div>
@@ -159,44 +159,44 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div>
             <div class="text-2xl font-bold text-blue-600" id="stat-poules">{{ $poules->count() }}</div>
-            <div class="text-sm text-gray-600">Poules</div>
+            <div class="text-sm text-gray-600">{{ __('Poules') }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold text-green-600" id="stat-wedstrijden">{{ $poules->sum('aantal_wedstrijden') }}</div>
-            <div class="text-sm text-gray-600">Wedstrijden</div>
+            <div class="text-sm text-gray-600">{{ __('Wedstrijden') }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold text-purple-600" id="stat-judokas">{{ $poules->sum('judokas_count') }}</div>
-            <div class="text-sm text-gray-600">Judoka's</div>
+            <div class="text-sm text-gray-600">{{ __('Judoka\'s') }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold text-orange-600" id="stat-problematisch">{{ $poules->filter(fn($p) => $isProblematischeGrootte($p->judokas_count) && $p->type !== 'eliminatie' && $p->type !== 'kruisfinale')->count() }}</div>
-            <div class="text-sm text-gray-600">Problemen</div>
+            <div class="text-sm text-gray-600">{{ __('Problemen') }}</div>
         </div>
     </div>
 </div>
 
 <div class="flex justify-between items-center mb-6 no-print">
-    <h1 class="text-3xl font-bold text-gray-800">Poules (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
+    <h1 class="text-3xl font-bold text-gray-800">{{ __('Poules') }} (<span id="poule-count">{{ $poules->count() }}</span>)</h1>
     @if(!$isLocked)
     <div class="flex items-center space-x-4">
-        <span class="text-sm text-gray-500">Sleep judoka's tussen poules</span>
+        <span class="text-sm text-gray-500">{{ __('Sleep judoka\'s tussen poules') }}</span>
         @if($heeftCategorieProbleem)
-        <span class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed opacity-60" title="Los eerst categorie-problemen op">
-            (her)Verdelen
+        <span class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed opacity-60" title="{{ __('Los eerst categorie-problemen op') }}">
+            {{ __('(her)Verdelen') }}
         </span>
         @else
         <form action="{{ route('toernooi.poule.genereer', $toernooi->routeParams()) }}" method="POST" class="inline"
-              data-loading="Poule-indeling genereren..."
-              onsubmit="return {{ $poules->count() }} === 0 || confirm('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?')">
+              data-loading="{{ __('Poule-indeling genereren...') }}"
+              onsubmit="return {{ $poules->count() }} === 0 || confirm('{{ __('WAARSCHUWING: Dit verwijdert ALLE huidige poules inclusief handmatige wijzigingen en maakt een nieuwe indeling. Weet je het zeker?') }}')">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
-                (her)Verdelen
+                {{ __('(her)Verdelen') }}
             </button>
         </form>
         @endif
         <button onclick="verifieerPoules()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            Verifieer poules
+            {{ __('Verifieer poules') }}
         </button>
     </div>
     @endif
@@ -233,8 +233,8 @@
 <div id="problematische-poules-container">
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
-    <h3 class="font-bold text-red-800 mb-2">Problematische poules (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-    <p class="text-red-700 text-sm mb-3">Poules met verkeerde grootte of te groot gewichtsverschil (>4kg). Klik om naar de poule te gaan:</p>
+    <h3 class="font-bold text-red-800 mb-2">{{ __('Problematische poules') }} (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
+    <p class="text-red-700 text-sm mb-3">{{ __('Poules met verkeerde grootte of te groot gewichtsverschil (>4kg). Klik om naar de poule te gaan:') }}</p>
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         @php
@@ -242,7 +242,7 @@
             $isGrootte = $isProblematischeGrootte($p->judokas_count);
             $isGewicht = $gVerschil > 4;
             $chipClass = $isGewicht ? 'bg-orange-100 text-orange-800 hover:bg-orange-200' : 'bg-red-100 text-red-800 hover:bg-red-200';
-            $probleem = $isGewicht ? round($gVerschil, 1) . 'kg verschil' : $p->judokas_count . ' judoka\'s';
+            $probleem = $isGewicht ? __(':verschil kg verschil', ['verschil' => round($gVerschil, 1)]) : __(':aantal judoka\'s', ['aantal' => $p->judokas_count]);
         @endphp
         <a href="#poule-{{ $p->id }}" data-probleem-poule="{{ $p->id }}" class="inline-flex items-center px-3 py-1 {{ $chipClass }} rounded-full text-sm cursor-pointer transition-colors">
             #{{ $p->nummer }} {{ $p->getDisplayTitel() }} ({{ $probleem }})
@@ -281,7 +281,7 @@
         </button>
         <button onclick="openNieuwePouleModal('{{ $categorieKey }}', '{{ $categorieLabel }}', {{ $heeftVasteGewichten ? 'true' : 'false' }})"
                 class="ml-3 bg-white text-blue-800 hover:bg-blue-100 text-sm font-bold py-1.5 px-3 rounded">
-            + Nieuwe poule
+            + {{ __('Nieuwe poule') }}
         </button>
     </div>
 
@@ -349,13 +349,13 @@
                     <div class="flex justify-between items-center">
                         <div class="font-bold text-sm {{ $isEliminatie ? 'text-orange-800' : ($isKruisfinale ? 'text-purple-800' : ($isProbleem ? 'text-red-800' : 'text-blue-800')) }}">
                             @if($isEliminatie)
-                                #{{ $poule->nummer }} ⚔️ {{ $poule->getDisplayTitel() }} <span class="font-normal">(Eliminatie)</span>
+                                #{{ $poule->nummer }} ⚔️ {{ $poule->getDisplayTitel() }} <span class="font-normal">({{ __('Eliminatie') }})</span>
                             @elseif($isKruisfinale)
-                                #{{ $poule->nummer }} Kruisfinale {{ $poule->gewichtsklasse }} kg
+                                #{{ $poule->nummer }} {{ __('Kruisfinale') }} {{ $poule->gewichtsklasse }} kg
                             @else
                                 <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->getDisplayTitel() }}</span>
                                 @if($heeftGewichtWaarschuwing)
-                                <span class="ml-1 text-orange-600" title="Gewichtsverschil te groot: {{ round($gewichtVerschil, 1) }}kg (max 4kg)">⚠️</span>
+                                <span class="ml-1 text-orange-600" title="{{ __('Gewichtsverschil te groot: :verschilkg (max 4kg)', ['verschil' => round($gewichtVerschil, 1)]) }}">⚠️</span>
                                 @endif
                             @endif
                         </div>
@@ -364,29 +364,29 @@
                             @if($isEliminatie || $isKruisfinale)
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open" class="bg-gray-500 hover:bg-gray-600 text-white text-xs px-2 py-1 rounded">
-                                    Omzetten ▾
+                                    {{ __('Omzetten') }} ▾
                                 </button>
                                 <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[180px]">
                                     @if($isEliminatie)
                                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
-                                        Alleen poules
+                                        {{ __('Alleen poules') }}
                                     </button>
                                     <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
-                                        Poules + kruisfinale
+                                        {{ __('Poules + kruisfinale') }}
                                     </button>
                                     @else
                                     <button onclick="zetOmNaar({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm">
-                                        Alleen poules
+                                        {{ __('Alleen poules') }}
                                     </button>
                                     <button onclick="zetOmNaar({{ $poule->id }}, 'eliminatie')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm border-t">
-                                        Eliminatie
+                                        {{ __('Eliminatie') }}
                                     </button>
                                     @endif
                                 </div>
                             </div>
                             @endif
                             @if($poule->judokas_count === 0)
-                            <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="Verwijder poule">&minus;</button>
+                            <button onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')" class="delete-empty-btn text-red-500 hover:text-red-700 font-bold text-lg leading-none" title="{{ __('Verwijder poule') }}">&minus;</button>
                             @endif
                         </div>
                     </div>
@@ -399,12 +399,12 @@
                                 <option value="{{ $i }}" {{ $poule->kruisfinale_plaatsen == $i ? 'selected' : '' }}>{{ $i }}</option>
                                 @endfor
                             </select>
-                            door → <span data-poule-count="{{ $poule->id }}">{{ $poule->aantal_judokas }}</span> judoka's
+                            {{ __('door') }} → <span data-poule-count="{{ $poule->id }}">{{ $poule->aantal_judokas }}</span> {{ __('judoka\'s') }}
                         </span>
                         @else
-                        <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> judoka's</span>
+                        <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> {{ __('judoka\'s') }}</span>
                         @endif
-                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->judokas_count < 2 && !$poule->isKruisfinale() ? '-' : $poule->aantal_wedstrijden }}</span> wedstrijden</span>
+                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->judokas_count < 2 && !$poule->isKruisfinale() ? '-' : $poule->aantal_wedstrijden }}</span> {{ __('wedstrijden') }}</span>
                     </div>
                 </div>
 
@@ -436,20 +436,20 @@
                                 <div class="text-xs text-gray-500 truncate">{{ $judoka->club?->naam ?? '-' }}</div>
                             </div>
                             <div class="text-right text-xs">
-                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}@if($isTeZwaar) <span title="Te zwaar voor {{ $poule->gewichtsklasse }}">⚠️</span>@endif</div>
+                                <div class="{{ $isGewogen ? 'text-green-600' : 'text-gray-600' }} font-medium">{{ $toonGewicht ?? '-' }}@if($isTeZwaar) <span title="{{ __('Te zwaar voor :klasse', ['klasse' => $poule->gewichtsklasse]) }}">⚠️</span>@endif</div>
                                 <div class="text-gray-400">{{ \App\Enums\Band::toKleur($judoka->band) }}</div>
                             </div>
                             <button
                                 onclick="event.stopPropagation(); openZoekMatchFor({{ $judoka->id }}, this.closest('.judoka-item'))"
                                 class="zoek-match-btn text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                                title="Zoek geschikte poule"
+                                title="{{ __('Zoek geschikte poule') }}"
                             >🔍</button>
                         </div>
                     </div>
                     @endforeach
 
                     @if($poule->judokas->isEmpty())
-                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-5' : '' }}">Leeg</div>
+                    <div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder {{ $isEliminatie ? 'col-span-5' : '' }}">{{ __('Leeg') }}</div>
                     @endif
                 </div>
             </div>
@@ -461,36 +461,36 @@
 </div>
 @empty
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-    Nog geen poules. Genereer eerst de poule-indeling.
+    {{ __('Nog geen poules. Genereer eerst de poule-indeling.') }}
 </div>
 @endforelse
 
 <!-- Modal nieuwe poule -->
 <div id="nieuwe-poule-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Nieuwe poule aanmaken</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4">{{ __('Nieuwe poule aanmaken') }}</h2>
         <form id="nieuwe-poule-form">
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Leeftijdsklasse</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Leeftijdsklasse') }}</label>
                 <select id="leeftijdsklasse" class="w-full border rounded px-3 py-2" required>
-                    <option value="">Selecteer...</option>
+                    <option value="">{{ __('Selecteer...') }}</option>
                     @foreach($toernooi->getAlleGewichtsklassen() as $key => $klasse)
                     <option value="{{ $key }}" data-label="{{ $klasse['label'] }}">{{ $klasse['label'] }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="mb-4" id="gewichtsklasse-container">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Gewichtsklasse</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Gewichtsklasse') }}</label>
                 <select id="gewichtsklasse" class="w-full border rounded px-3 py-2" disabled>
-                    <option value="">Selecteer eerst leeftijdsklasse</option>
+                    <option value="">{{ __('Selecteer eerst leeftijdsklasse') }}</option>
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="closeNieuwePouleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    Aanmaken
+                    {{ __('Aanmaken') }}
                 </button>
             </div>
         </form>
@@ -500,7 +500,7 @@
 <!-- Context menu voor judoka -->
 <div id="judoka-context-menu" class="fixed hidden bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-50 min-w-[160px]">
     <button onclick="openZoekMatch()" class="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 flex items-center gap-2">
-        <span>🔍</span> Zoek match
+        <span>🔍</span> {{ __('Zoek match') }}
     </button>
 </div>
 
@@ -654,11 +654,11 @@ async function verwijderPoule(pouleId, pouleNummer) {
             document.getElementById('stat-poules').textContent = pouleCount;
             document.getElementById('poule-count').textContent = pouleCount;
         } else {
-            showToast(data.message || 'Fout bij verwijderen', true);
+            showToast(data.message || '{{ __('Fout bij verwijderen') }}', true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Fout bij verwijderen', true);
+        showToast('{{ __('Fout bij verwijderen') }}', true);
     }
 }
 
@@ -684,11 +684,11 @@ async function updateKruisfinalesPlaatsen(pouleId, plaatsen) {
             if (wedstrijdenEl) wedstrijdenEl.textContent = data.aantal_wedstrijden;
             showToast(data.message);
         } else {
-            showToast(data.message || 'Fout bij opslaan', true);
+            showToast(data.message || '{{ __('Fout bij opslaan') }}', true);
         }
     } catch (error) {
         console.error('Error:', error);
-        showToast('Fout bij opslaan', true);
+        showToast('{{ __('Fout bij opslaan') }}', true);
     }
 }
 
