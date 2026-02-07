@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Import Preview')
+@section('title', __('Import Preview'))
 
 @section('content')
 @php
@@ -24,18 +24,18 @@
     })->map(fn($cat) => $cat['label'] ?? 'Onbekend')->values()->all();
 
     $veldInfo = [
-        'naam' => ['label' => 'Naam', 'verplicht' => true, 'uitleg' => 'Volledige naam judoka'],
-        'club' => ['label' => 'Club', 'verplicht' => false, 'uitleg' => 'Vereniging/sportclub'],
-        'geboortejaar' => ['label' => 'Geboortejaar', 'verplicht' => true, 'uitleg' => 'Bijv. 2015'],
-        'geslacht' => ['label' => 'Geslacht', 'verplicht' => true, 'uitleg' => 'M of V'],
-        'gewicht' => ['label' => 'Gewicht', 'verplicht' => false, 'uitleg' => 'In kg, bijv. 32.5'],
-        'band' => ['label' => 'Band', 'verplicht' => false, 'uitleg' => 'Wit, Geel, Oranje, etc.'],
-        'telefoon' => ['label' => 'Telefoon', 'verplicht' => false, 'uitleg' => 'Mobiel nummer voor WhatsApp'],
+        'naam' => ['label' => __('Naam'), 'verplicht' => true, 'uitleg' => __('Volledige naam judoka')],
+        'club' => ['label' => __('Club'), 'verplicht' => false, 'uitleg' => __('Vereniging/sportclub')],
+        'geboortejaar' => ['label' => __('Geboortejaar'), 'verplicht' => true, 'uitleg' => __('Bijv. 2015')],
+        'geslacht' => ['label' => __('Geslacht'), 'verplicht' => true, 'uitleg' => __('M of V')],
+        'gewicht' => ['label' => __('Gewicht'), 'verplicht' => false, 'uitleg' => __('In kg, bijv. 32.5')],
+        'band' => ['label' => __('Band'), 'verplicht' => false, 'uitleg' => __('Wit, Geel, Oranje, etc.')],
+        'telefoon' => ['label' => __('Telefoon'), 'verplicht' => false, 'uitleg' => __('Mobiel nummer voor WhatsApp')],
     ];
 
     // Gewichtsklasse veld alleen tonen als toernooi vaste gewichtsklassen heeft
     if ($heeftVasteGewichtsklassen) {
-        $veldInfo['gewichtsklasse'] = ['label' => 'Gewichtsklasse', 'verplicht' => false, 'uitleg' => '-30, +60, etc.'];
+        $veldInfo['gewichtsklasse'] = ['label' => __('Gewichtsklasse'), 'verplicht' => false, 'uitleg' => __('-30, +60, etc.')];
     }
 
     $heeftWaarschuwingen = collect($analyse['detectie'])->contains(fn($d) => $d['waarschuwing']);
@@ -47,21 +47,21 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div>
             <div class="text-2xl font-bold text-blue-600">{{ $analyse['totaal_rijen'] }}</div>
-            <div class="text-sm text-gray-600">Judoka's</div>
+            <div class="text-sm text-gray-600">{{ __("Judoka's") }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold text-green-600">{{ count($analyse['header']) }}</div>
-            <div class="text-sm text-gray-600">CSV Kolommen</div>
+            <div class="text-sm text-gray-600">{{ __('CSV Kolommen') }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold text-purple-600">{{ $gekoppeldeKolommen }}</div>
-            <div class="text-sm text-gray-600">Gekoppeld</div>
+            <div class="text-sm text-gray-600">{{ __('Gekoppeld') }}</div>
         </div>
         <div>
             <div class="text-2xl font-bold {{ $heeftWaarschuwingen ? 'text-orange-600' : 'text-green-600' }}">
-                {{ $heeftWaarschuwingen ? 'Check nodig' : 'OK' }}
+                {{ $heeftWaarschuwingen ? __('Check nodig') : __('OK') }}
             </div>
-            <div class="text-sm text-gray-600">Status</div>
+            <div class="text-sm text-gray-600">{{ __('Status') }}</div>
         </div>
     </div>
 </div>
@@ -69,49 +69,49 @@
 {{-- Header met titel en actie --}}
 <div class="flex justify-between items-center mb-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-800">Import Preview</h1>
-        <p class="text-gray-600">Controleer de kolom toewijzing voordat je importeert</p>
+        <h1 class="text-2xl font-bold text-gray-800">{{ __('Import Preview') }}</h1>
+        <p class="text-gray-600">{{ __('Controleer de kolom toewijzing voordat je importeert') }}</p>
     </div>
     <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
-        ← Ander bestand
+        ← {{ __('Ander bestand') }}
     </a>
 </div>
 
 {{-- Configuratiefout melding --}}
 @if(!empty($foutiefGeconfigureerdeCategorieen))
     <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6 rounded">
-        <p class="text-red-800 font-medium">⚠️ Configuratiefout: de volgende categorieën hebben Δkg=0 maar geen gewichtsklassen ingevuld:</p>
+        <p class="text-red-800 font-medium">{{ __('Configuratiefout: de volgende categorieën hebben Δkg=0 maar geen gewichtsklassen ingevuld:') }}</p>
         <p class="text-red-700 mt-1">{{ implode(', ', $foutiefGeconfigureerdeCategorieen) }}</p>
-        <p class="text-red-600 text-sm mt-2">Ga naar <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}#categorieën" class="underline font-medium">toernooi instellingen</a> om dit te corrigeren.</p>
+        <p class="text-red-600 text-sm mt-2">{!! __('Ga naar <a href=":url" class="underline font-medium">toernooi instellingen</a> om dit te corrigeren.', ['url' => route('toernooi.edit', $toernooi->routeParams()) . '#categorieën']) !!}</p>
     </div>
 @endif
 
 {{-- Status melding --}}
 @if($heeftWaarschuwingen)
     <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 rounded">
-        <p class="text-yellow-800 font-medium">Er zijn problemen gevonden. Sleep de kolom-knoppen om te corrigeren.</p>
+        <p class="text-yellow-800 font-medium">{{ __('Er zijn problemen gevonden. Sleep de kolom-knoppen om te corrigeren.') }}</p>
     </div>
 @else
     <div class="bg-green-100 border-l-4 border-green-500 p-4 mb-6 rounded">
-        <p class="text-green-700 font-medium">Alle kolommen automatisch herkend. Controleer of het klopt.</p>
+        <p class="text-green-700 font-medium">{{ __('Alle kolommen automatisch herkend. Controleer of het klopt.') }}</p>
     </div>
 @endif
 
-    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi->routeParams()) }}" method="POST" id="import-form" data-loading="Judoka's importeren...">
+    <form action="{{ route('toernooi.judoka.import.confirm', $toernooi->routeParams()) }}" method="POST" id="import-form" data-loading="{{ __("Judoka's importeren...") }}">
         @csrf
 
         {{-- Kolom Mapping Tabel --}}
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold mb-2">Kolom Toewijzing</h2>
-            <p class="text-gray-600 mb-4">Sleep een kolom-knop naar een andere rij om te verwisselen.</p>
+            <h2 class="text-xl font-bold mb-2">{{ __('Kolom Toewijzing') }}</h2>
+            <p class="text-gray-600 mb-4">{{ __('Sleep een kolom-knop naar een andere rij om te verwisselen.') }}</p>
 
             <table class="w-full text-sm">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="px-3 py-2 text-left border w-40">App veld</th>
-                        <th class="px-3 py-2 text-left border w-48">CSV kolom</th>
-                        <th class="px-3 py-2 text-left border">Voorbeeld data</th>
-                        <th class="px-3 py-2 text-left border w-48">Status</th>
+                        <th class="px-3 py-2 text-left border w-40">{{ __('App veld') }}</th>
+                        <th class="px-3 py-2 text-left border w-48">{{ __('CSV kolom') }}</th>
+                        <th class="px-3 py-2 text-left border">{{ __('Voorbeeld data') }}</th>
+                        <th class="px-3 py-2 text-left border w-48">{{ __('Status') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -137,7 +137,7 @@
                                 @endif
                                 <input type="hidden" name="mapping[{{ $veld }}]" value="{{ $detectie['csv_index'] }}" class="mapping-input">
                                 @if($veld === 'naam')
-                                <span class="text-xs text-gray-400 ml-2 multi-hint">(sleep meerdere kolommen)</span>
+                                <span class="text-xs text-gray-400 ml-2 multi-hint">({{ __('sleep meerdere kolommen') }})</span>
                                 @endif
                             </td>
                             <td class="px-3 py-2 border font-mono text-xs">
@@ -147,9 +147,9 @@
                                 @if($detectie['waarschuwing'])
                                     <span class="text-yellow-600 font-bold text-xs">{{ $detectie['waarschuwing'] }}</span>
                                 @elseif($detectie['csv_index'] !== null)
-                                    <span class="text-green-600">OK</span>
+                                    <span class="text-green-600">{{ __('OK') }}</span>
                                 @else
-                                    <span class="text-gray-400">Niet gekoppeld</span>
+                                    <span class="text-gray-400">{{ __('Niet gekoppeld') }}</span>
                                 @endif
                             </td>
                         </tr>
@@ -159,7 +159,7 @@
 
             {{-- Niet-gekoppelde kolommen --}}
             <div class="mt-4 pt-4 border-t">
-                <p class="text-sm text-gray-600 mb-2">Niet-gekoppelde CSV kolommen (sleep naar een veld hierboven):</p>
+                <p class="text-sm text-gray-600 mb-2">{{ __('Niet-gekoppelde CSV kolommen (sleep naar een veld hierboven):') }}</p>
                 <div id="unclaimed-chips" class="flex flex-wrap gap-2">
                     {{-- Wordt gevuld door JS --}}
                 </div>
@@ -168,8 +168,8 @@
 
         {{-- Preview tabel --}}
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-lg font-bold mb-2">Bestand Preview</h2>
-            <p class="text-gray-600 mb-4">Eerste 5 regels van je bestand ({{ $analyse['totaal_rijen'] }} rijen totaal)</p>
+            <h2 class="text-lg font-bold mb-2">{{ __('Bestand Preview') }}</h2>
+            <p class="text-gray-600 mb-4">{{ __('Eerste 5 regels van je bestand (:totaal rijen totaal)', ['totaal' => $analyse['totaal_rijen']]) }}</p>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border" id="preview-table">
                     <thead>
@@ -178,7 +178,7 @@
                             <th class="px-2 py-1 border text-left text-xs text-gray-500" rowspan="2">#</th>
                             @foreach($analyse['header'] as $index => $kolom)
                                 <th class="px-2 py-1 text-left border preview-header" data-col="{{ $index }}">
-                                    <span class="text-xs text-gray-500 block">CSV kolom:</span>
+                                    <span class="text-xs text-gray-500 block">{{ __('CSV kolom:') }}</span>
                                     {{ $kolom }}
                                 </th>
                             @endforeach
@@ -187,7 +187,7 @@
                         <tr class="bg-gray-100">
                             @foreach($analyse['header'] as $index => $kolom)
                                 <th class="px-2 py-1 text-left border mapped-to-cell" data-col="{{ $index }}">
-                                    <span class="text-xs text-gray-500 block">App veld:</span>
+                                    <span class="text-xs text-gray-500 block">{{ __('App veld:') }}</span>
                                     <span class="mapped-to text-gray-400">-</span>
                                 </th>
                             @endforeach
@@ -210,7 +210,7 @@
         {{-- Buttons --}}
         <div class="bg-white rounded-lg shadow p-4 flex justify-end">
             <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
-                Importeer {{ $analyse['totaal_rijen'] }} judoka's
+                {{ __("Importeer :aantal judoka's", ['aantal' => $analyse['totaal_rijen']]) }}
             </button>
         </div>
     </form>
@@ -581,7 +581,7 @@ function updateAlleVoorbeelden() {
 
         if (kolomIndex === null) {
             voorbeeldCell.textContent = '-';
-            statusCell.innerHTML = '<span class="text-gray-400">Niet gekoppeld</span>';
+            statusCell.innerHTML = '<span class="text-gray-400">{{ __("Niet gekoppeld") }}</span>';
             row.classList.remove('bg-yellow-50');
         } else {
             // Haal voorbeeld data
