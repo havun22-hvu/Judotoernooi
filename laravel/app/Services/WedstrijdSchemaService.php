@@ -102,10 +102,10 @@ class WedstrijdSchemaService
             };
         }
 
-        // Klok poule: fixed number of matches per judoka
-        if ($poule->isKlokPoule()) {
-            $wedstrijdenPerJudoka = $poule->getKlokPouleWedstrijden();
-            return $this->genereerKlokPouleSchema($aantal, $wedstrijdenPerJudoka);
+        // Punten competitie: fixed number of matches per judoka
+        if ($poule->isPuntenCompetitie()) {
+            $wedstrijdenPerJudoka = $poule->getPuntenCompetitieWedstrijden();
+            return $this->genereerPuntenCompetitieSchema($aantal, $wedstrijdenPerJudoka);
         }
 
         // Check if tournament has custom schemas (fresh load to avoid stale cache)
@@ -170,7 +170,7 @@ class WedstrijdSchemaService
     }
 
     /**
-     * Generate klok poule schema where each judoka plays exactly $wedstrijdenPerJudoka matches.
+     * Generate punten competitie schema where each judoka plays exactly $wedstrijdenPerJudoka matches.
      *
      * Algorithm:
      * - If matches needed == round-robin (n-1): use full round-robin
@@ -181,7 +181,7 @@ class WedstrijdSchemaService
      * @param int $wedstrijdenPerJudoka Target matches per judoka (3, 4, or 5)
      * @return array Array of [judoka1, judoka2] pairs (1-based)
      */
-    private function genereerKlokPouleSchema(int $n, int $wedstrijdenPerJudoka): array
+    private function genereerPuntenCompetitieSchema(int $n, int $wedstrijdenPerJudoka): array
     {
         if ($n < 2) {
             return [];
@@ -200,17 +200,17 @@ class WedstrijdSchemaService
 
         if ($wedstrijdenPerJudoka < $roundRobinMatches) {
             // Need fewer matches: remove pairs fairly
-            return $this->klokPouleMinderWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
+            return $this->puntenCompMinderWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
         }
 
         // Need more matches: add repeat pairs
-        return $this->klokPouleMeerWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
+        return $this->puntenCompMeerWedstrijden($n, $wedstrijdenPerJudoka, $roundRobin);
     }
 
     /**
      * Select subset of round-robin pairs so each judoka plays exactly $target matches.
      */
-    private function klokPouleMinderWedstrijden(int $n, int $target, array $roundRobin): array
+    private function puntenCompMinderWedstrijden(int $n, int $target, array $roundRobin): array
     {
         // Total matches needed: n * target / 2
         $totaalNodig = (int) (($n * $target) / 2);
@@ -266,7 +266,7 @@ class WedstrijdSchemaService
     /**
      * Add extra (repeat) matches to round-robin so each judoka plays exactly $target matches.
      */
-    private function klokPouleMeerWedstrijden(int $n, int $target, array $roundRobin): array
+    private function puntenCompMeerWedstrijden(int $n, int $target, array $roundRobin): array
     {
         $extraPerJudoka = $target - ($n - 1); // extra matches needed per judoka
         $totaalExtra = (int) (($n * $extraPerJudoka) / 2);
@@ -373,7 +373,7 @@ class WedstrijdSchemaService
                 'judoka_count' => $judokaCount,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
-                'is_klok_poule' => $poule->isKlokPoule(),
+                'is_punten_competitie' => $poule->isPuntenCompetitie(),
                 // DEPRECATED - kept for backwards compatibility during transition
                 'huidige_wedstrijd_id' => $poule->huidige_wedstrijd_id,
                 'actieve_wedstrijd_id' => $poule->actieve_wedstrijd_id,

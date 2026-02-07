@@ -41,7 +41,7 @@
                         </div>
                     </div>
                     <div class="text-right text-xs">
-                        @if($poule->is_klok_poule ?? false)
+                        @if($poule->is_punten_competitie ?? false)
                         <span class="font-bold text-green-600">{{ $standing['gewonnen'] }}</span>
                         <span class="text-gray-400">W</span>
                         @else
