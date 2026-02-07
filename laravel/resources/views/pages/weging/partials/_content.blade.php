@@ -157,8 +157,8 @@ async function startScanner() {
         console.error('Camera error:', err);
         document.getElementById('qr-reader').innerHTML = `
             <div class="bg-red-900 text-white p-4 rounded-lg text-center">
-                <p class="font-bold">Camera niet beschikbaar</p>
-                <p class="text-sm mt-1">Gebruik het zoekveld</p>
+                <p class="font-bold">{{ __('Camera niet beschikbaar') }}</p>
+                <p class="text-sm mt-1">{{ __('Gebruik het zoekveld') }}</p>
             </div>
         `;
         setTimeout(() => {
