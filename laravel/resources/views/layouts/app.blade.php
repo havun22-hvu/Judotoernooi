@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,18 +68,42 @@
                         $currentRoute = Route::currentRouteName();
                     @endphp
                     <div class="hidden md:flex space-x-4">
-                        <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Judoka's</a>
-                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Poules</a>
-                        <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.index' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Blokken</a>
-                        <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.weging') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Weging</a>
-                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.wedstrijddag') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Wedstrijddag</a>
-                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.zaaloverzicht' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Zaaloverzicht</a>
-                        <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.mat') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Matten</a>
-                        <a href="{{ route('toernooi.spreker.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.spreker') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">Spreker</a>
+                        <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.judoka') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __("Judoka's") }}</a>
+                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.poule') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Poules') }}</a>
+                        <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.index' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Blokken') }}</a>
+                        <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.weging') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Weging') }}</a>
+                        <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.wedstrijddag') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Wedstrijddag') }}</a>
+                        <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ $currentRoute === 'toernooi.blok.zaaloverzicht' ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Zaaloverzicht') }}</a>
+                        <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.mat') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Matten') }}</a>
+                        <a href="{{ route('toernooi.spreker.interface', $toernooi->routeParams()) }}" class="py-1 border-b-2 {{ str_starts_with($currentRoute, 'toernooi.spreker') ? 'text-white border-white' : 'border-transparent hover:text-blue-200' }}">{{ __('Spreker') }}</a>
                     </div>
                     @endif
                 </div>
                 <div class="flex items-center space-x-4">
+                    {{-- Taalkiezer --}}
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none" title="{{ __('Taal') }}">
+                            {{ app()->getLocale() === 'nl' ? '🇳🇱' : '🇬🇧' }}
+                            <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg py-1 z-50">
+                            <form action="{{ route('locale.switch', 'nl') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'nl' ? 'font-bold' : '' }}">
+                                    🇳🇱 Nederlands
+                                </button>
+                            </form>
+                            <form action="{{ route('locale.switch', 'en') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'en' ? 'font-bold' : '' }}">
+                                    🇬🇧 English
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
                     @if(Auth::guard('organisator')->check())
                     {{-- Organisator ingelogd - dropdown menu --}}
                     <div class="relative" x-data="{ open: false }">
@@ -96,15 +120,15 @@
                         </button>
                         <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
-                            <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Alle Toernooien</a>
+                            <a href="{{ route('admin.index') }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Alle Toernooien') }}</a>
                             @endif
-                            <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Mijn Toernooien</a>
-                            <a href="{{ route('organisator.instellingen', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Instellingen</a>
-                            <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Help & Handleiding ↗</a>
+                            <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Mijn Toernooien') }}</a>
+                            <a href="{{ route('organisator.instellingen', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Instellingen') }}</a>
+                            <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <hr class="my-1">
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Uitloggen</button>
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
                             </form>
                         </div>
                     </div>
@@ -122,13 +146,13 @@
                     </span>
                     <form action="{{ route('toernooi.auth.logout', $toernooi->routeParams()) }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" class="text-blue-200 hover:text-white text-sm">Uitloggen</button>
+                        <button type="submit" class="text-blue-200 hover:text-white text-sm">{{ __('Uitloggen') }}</button>
                     </form>
                     @else
                     @if(isset($toernooi) && !app()->environment('production'))
-                    <a href="{{ route('toernooi.auth.login', $toernooi->routeParams()) }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    <a href="{{ route('toernooi.auth.login', $toernooi->routeParams()) }}" class="text-blue-200 hover:text-white text-sm">{{ __('Inloggen') }}</a>
                     @elseif(!Auth::guard('organisator')->check())
-                    <a href="{{ route('login') }}" class="text-blue-200 hover:text-white text-sm">Inloggen</a>
+                    <a href="{{ route('login') }}" class="text-blue-200 hover:text-white text-sm">{{ __('Inloggen') }}</a>
                     @endif
                     @endif
                 </div>

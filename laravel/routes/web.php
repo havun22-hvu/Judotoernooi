@@ -44,6 +44,14 @@ Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => n
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
 
+// Locale switch
+Route::post('/locale/{locale}', function (\Illuminate\Http\Request $request, string $locale) {
+    if (in_array($locale, config('app.available_locales', ['nl', 'en']))) {
+        $request->session()->put('locale', $locale);
+    }
+    return redirect()->back();
+})->name('locale.switch');
+
 // Homepage
 Route::get('/', fn() => view('pages.home'))->name('home');
 
