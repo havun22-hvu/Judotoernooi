@@ -105,10 +105,9 @@
     $varianten = session('blok_varianten', []);
     $toonVarianten = request()->has('kies') && !empty($varianten);
 
-    // Haal alle poules op
+    // Haal alle poules op (incl. kruisfinale - die horen in hetzelfde blok)
     $allePoules = $toernooi->poules()
         ->with('blok:id,nummer')
-        ->where('type', '!=', 'kruisfinale')
         ->get();
 
     // VARIABELE CATEGORIEËN: elke poule apart
@@ -136,6 +135,7 @@
                     'min_lft' => $minLft,
                     'min_kg' => $minKg,
                     'is_poule' => true,
+                    'type' => $p->type,
                 ];
             })
             ->filter(fn($c) => $c['wedstrijden'] > 0)
@@ -166,6 +166,7 @@
                     'min_lft' => 99,
                     'min_kg' => $minKg,
                     'is_poule' => true,
+                    'type' => $p->type,
                 ];
             })
             ->toBase();  // Convert Eloquent Collection to base Collection (fixes merge error)

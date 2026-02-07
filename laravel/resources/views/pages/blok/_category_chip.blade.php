@@ -7,14 +7,26 @@
     // is_poule = true voor individuele poules (variabele categorieën)
     // is_poule = false voor gegroepeerde categorieën (vaste gewichtsklassen)
     $isPoule = $cat['is_poule'] ?? false;
+    $isKruisfinale = ($cat['type'] ?? '') === 'kruisfinale';
+    $isEliminatie = ($cat['type'] ?? '') === 'eliminatie';
 
-    // Sort value voor correcte volgorde
+    // Sort value voor correcte volgorde (kruisfinale na voorronde: +50000)
     $sortValue = ($pos !== false ? $pos : 99) * 100000
         + ($cat['min_lft'] ?? 99) * 1000
-        + ($cat['min_kg'] ?? 999);
+        + ($cat['min_kg'] ?? 999)
+        + ($isKruisfinale ? 50000 : 0)
+        + ($isEliminatie ? 40000 : 0);
 
-    // In sleepvak = purple, in blok vast = green, in blok niet vast = blue
-    if ($inSleepvak) {
+    // Kruisfinale = orange, eliminatie = orange, sleepvak = purple, vast = green, normaal = blue
+    if ($isKruisfinale) {
+        $chipClass = 'bg-gradient-to-b from-orange-50 to-orange-100 text-orange-800 border border-orange-400';
+        $textClass = 'text-orange-600';
+        $subClass = 'text-orange-400';
+    } elseif ($isEliminatie) {
+        $chipClass = 'bg-gradient-to-b from-orange-50 to-orange-100 text-orange-800 border border-orange-300';
+        $textClass = 'text-orange-600';
+        $subClass = 'text-orange-400';
+    } elseif ($inSleepvak) {
         $chipClass = 'bg-gradient-to-b from-purple-50 to-purple-100 text-purple-800 border border-purple-300 hover:from-purple-100 hover:to-purple-200';
         $textClass = 'text-purple-600';
         $subClass = 'text-purple-400';
@@ -30,7 +42,12 @@
 
     $titel = $cat['titel'] ?? '';
 
-    if ($isPoule) {
+    if ($isKruisfinale) {
+        // Kruisfinale poule: toon "KF #{nr} {gewicht}kg (Xw)"
+        $chipLabel = 'KF #' . ($cat['nummer'] ?? '?');
+        $chipGewicht = $cat['gewicht'];
+        $dataKey = 'poule_' . $cat['poule_id'];
+    } elseif ($isPoule) {
         // Individuele poule: toon "P{nr} {label} {lft}j {kg}kg (Xw)"
         // Extract label prefix (Mini's → M, Jeugd → J)
         // Skip prefix if leeftijd is a config key fallback (e.g. "standaard", "u11_jongens")
