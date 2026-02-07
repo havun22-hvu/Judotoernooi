@@ -1047,6 +1047,14 @@
 <script src="https://unpkg.com/trix@2.0.0/dist/trix.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
+const __confirmVerwijderHeader = @json(__('Weet je zeker dat je de header wilt verwijderen?'));
+const __confirmVerwijderFooter = @json(__('Weet je zeker dat je de footer wilt verwijderen?'));
+const __cellenZelfdeSectie = @json(__('Cellen moeten in dezelfde sectie zijn'));
+const __alleenAangrenzendeCellen = @json(__('Alleen aangrenzende cellen kunnen worden samengevoegd'));
+const __confirmVerwijderSectie = @json(__('Weet je zeker dat je deze sectie wilt verwijderen?'));
+const __confirmVervangInhoud = @json(__('Dit vervangt de huidige inhoud. Doorgaan?'));
+const __confirmAllesWissen = @json(__('Weet je zeker dat je alles wilt wissen?'));
+const __uploadMislukt = @json(__('Upload mislukt'));
 function paginaBuilderPro() {
     return {
         sections: @json($sections ?? []),
@@ -1099,7 +1107,7 @@ function paginaBuilderPro() {
         toggleHeaderFooter(type) {
             if (type === 'header') {
                 if (this.headerSection) {
-                    if (confirm('Weet je zeker dat je de header wilt verwijderen?')) {
+                    if (confirm(__confirmVerwijderHeader)) {
                         this.headerSection = null;
                     }
                 } else {
@@ -1115,7 +1123,7 @@ function paginaBuilderPro() {
                 }
             } else {
                 if (this.footerSection) {
-                    if (confirm('Weet je zeker dat je de footer wilt verwijderen?')) {
+                    if (confirm(__confirmVerwijderFooter)) {
                         this.footerSection = null;
                     }
                 } else {
@@ -1354,7 +1362,7 @@ function paginaBuilderPro() {
 
             // Must be in same section
             if (cell1.sectionId !== cell2.sectionId) {
-                alert('Cellen moeten in dezelfde sectie zijn');
+                alert(__cellenZelfdeSectie);
                 this.selectedCells = [];
                 return;
             }
@@ -1408,7 +1416,7 @@ function paginaBuilderPro() {
 
                 this.saveData();
             } else {
-                alert('Alleen aangrenzende cellen kunnen worden samengevoegd');
+                alert(__alleenAangrenzendeCellen);
             }
 
             this.selectedCells = [];
@@ -1438,7 +1446,7 @@ function paginaBuilderPro() {
         },
 
         removeSection(sectionId) {
-            if (confirm('Weet je zeker dat je deze sectie wilt verwijderen?')) {
+            if (confirm(__confirmVerwijderSectie)) {
                 this.sections = this.sections.filter(s => s.id !== sectionId);
                 this.saveData();
             }
@@ -2370,7 +2378,7 @@ function paginaBuilderPro() {
 
         // Templates
         loadTemplate(name) {
-            if (this.sections.length > 0 && !confirm('Dit vervangt de huidige inhoud. Doorgaan?')) return;
+            if (this.sections.length > 0 && !confirm(__confirmVervangInhoud)) return;
 
             const templates = {
                 'judo-basic': [
@@ -2477,7 +2485,7 @@ function paginaBuilderPro() {
         },
 
         clearAll() {
-            if (confirm('Weet je zeker dat je alles wilt wissen?')) {
+            if (confirm(__confirmAllesWissen)) {
                 this.sections = [];
                 this.saveData();
             }
@@ -2550,7 +2558,7 @@ function paginaBuilderPro() {
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
-                alert('Upload mislukt');
+                alert(__uploadMislukt);
             }
         },
 
@@ -2713,7 +2721,7 @@ function paginaBuilderPro() {
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
-                alert('Upload mislukt');
+                alert(__uploadMislukt);
             }
         },
 
