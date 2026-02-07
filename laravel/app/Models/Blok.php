@@ -62,8 +62,10 @@ class Blok extends Model
             'weging_gesloten_op' => now(),
         ]);
 
-        // Markeer alle niet-gewogen judoka's in dit blok als afwezig
-        $this->markeerNietGewogenAlsAfwezig();
+        // Only auto-mark non-weighed judokas as afwezig when weging is verplicht
+        if ($this->toernooi->weging_verplicht) {
+            $this->markeerNietGewogenAlsAfwezig();
+        }
 
         // Herbereken statistieken voor alle poules in dit blok
         $this->herberekenPouleStatistieken();
