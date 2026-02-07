@@ -94,7 +94,7 @@ class EliminatieService
                 if ($type === 'ijf') {
                     $this->genereerBGroepIJF($poule, $n, $aWedstrijden);
                 } else {
-                    $this->genereerBGroepDubbel($poule, $n, $aantalBrons);
+                    $this->genereerBGroepDubbel($poule, $n, $aantalBrons, $aWedstrijden);
                 }
             }
         });
@@ -387,7 +387,7 @@ class EliminatieService
      * - aantalBrons = 1: Eindigt met B-finale (1x brons)
      * - B-byes NIET aan A-bye judoka's geven (fairness)
      */
-    private function genereerBGroepDubbel(Poule $poule, int $n, int $aantalBrons = 2): void
+    private function genereerBGroepDubbel(Poule $poule, int $n, int $aantalBrons = 2, array $aWedstrijden = []): void
     {
         $volgorde = 1000;
         $wedstrijdenPerRonde = [];
@@ -406,6 +406,11 @@ class EliminatieService
         }
 
         $this->koppelBGroepWedstrijden($wedstrijdenPerRonde, $params['dubbelRondes']);
+
+        // Koppel A-wedstrijden aan B-wedstrijden voor deterministische verliezer-plaatsing
+        if (!empty($aWedstrijden)) {
+            $this->koppelAVerliezersAanB($aWedstrijden, $wedstrijdenPerRonde, $params);
+        }
     }
 
     /**
@@ -635,6 +640,145 @@ class EliminatieService
         }
     }
 
+    /**
+     * Koppel A-wedstrijden aan B-wedstrijden via herkansing_wedstrijd_id
+     *
+     * Dit maakt de verliezer-plaatsing deterministisch (net als IJF).
+     * Elke A-wedstrijd weet exact naar welke B-wedstrijd de verliezer gaat.
+     */
+    private function koppelAVerliezersAanB(array $aWedstrijden, array $bWedstrijden, array $params): void
+    {
+        $aRondes = array_keys($aWedstrijden);
+        if (count($aRondes) < 2) return;
+
+        $eersteARonde = $aRondes[0];
+        $tweedeARonde = $aRondes[1];
+        $dubbelRondes = $params['dubbelRondes'];
+
+        // Vind B-start ronde (eerste B-ronde)
+        $bRondes = array_keys($bWedstrijden);
+        if (empty($bRondes)) return;
+
+        $bStartRonde = $bRondes[0]; // Eerste B-ronde
+
+        Log::info("koppelAVerliezersAanB: eersteA={$eersteARonde}, tweedeA={$tweedeARonde}, bStart={$bStartRonde}, dubbel=" . ($dubbelRondes ? 'ja' : 'nee'));
+
+        // === EERSTE A-RONDE VERLIEZERS ===
+        if ($dubbelRondes) {
+            // DUBBEL: eerste A-ronde verliezers → B-start(1)
+            // (1) ronde = eerste B-ronde (bv. b_kwartfinale_1)
+            $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'eerste');
+        } else {
+            // SAMEN: eerste A-ronde verliezers → B-start WIT slots
+            $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_wit');
+        }
+
+        // === TWEEDE A-RONDE VERLIEZERS ===
+        if ($dubbelRondes) {
+            // DUBBEL: tweede A-ronde verliezers → B-start(2) BLAUW
+            $bStart2Ronde = str_replace('_1', '_2', $bStartRonde);
+            if (isset($bWedstrijden[$bStart2Ronde])) {
+                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStart2Ronde], 'dubbel_blauw');
+            }
+        } else {
+            // SAMEN: tweede A-ronde verliezers → B-start BLAUW slots
+            $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_blauw');
+        }
+
+        // === LATERE A-RONDES (kwartfinale, halve finale) → corresponderende B-(2) rondes ===
+        for ($r = 2; $r < count($aRondes); $r++) {
+            $aRonde = $aRondes[$r];
+            $aRondeNaam = $aRonde; // bv. 'kwartfinale', 'halve_finale'
+
+            if ($aRonde === 'finale') continue; // Finale verliezer = zilver, geen B-groep
+
+            if ($aRonde === 'halve_finale') {
+                // Halve finale verliezers → b_halve_finale_2 BLAUW
+                if (isset($bWedstrijden['b_halve_finale_2'])) {
+                    $this->koppelARondeAanBRonde($aWedstrijden[$aRonde], $bWedstrijden['b_halve_finale_2'], 'brons_blauw');
+                }
+            } else {
+                // Andere latere rondes → corresponderende B-ronde(2)
+                $bRondeNaam = $dubbelRondes ? "b_{$aRonde}_2" : "b_{$aRonde}";
+                if (isset($bWedstrijden[$bRondeNaam])) {
+                    $this->koppelARondeAanBRonde($aWedstrijden[$aRonde], $bWedstrijden[$bRondeNaam], 'dubbel_blauw');
+                }
+            }
+        }
+    }
+
+    /**
+     * Koppel wedstrijden van één A-ronde aan één B-ronde
+     *
+     * @param array $aWedstrijden Wedstrijden in deze A-ronde
+     * @param array $bWedstrijden Wedstrijden in de doel B-ronde
+     * @param string $type Type koppeling:
+     *   - 'eerste': eerste batch, 2:1 mapping naar WIT/BLAUW (voor (1) rondes)
+     *   - 'samen_wit': SAMEN mode, A-verliezers → WIT
+     *   - 'samen_blauw': SAMEN mode, A-verliezers → BLAUW
+     *   - 'dubbel_blauw': latere rondes, A-verliezers → BLAUW (1:1 mapping)
+     *   - 'brons_blauw': halve finale verliezers → brons matching BLAUW (1:1 mapping)
+     */
+    private function koppelARondeAanBRonde(array $aWedstrijden, array $bWedstrijden, string $type): void
+    {
+        if (empty($bWedstrijden)) return;
+
+        // Filter echte wedstrijden (skip byes: wit gevuld, blauw leeg)
+        $echteWedstrijden = [];
+        foreach ($aWedstrijden as $aWedstrijd) {
+            if (is_null($aWedstrijd->judoka_blauw_id) && $aWedstrijd->judoka_wit_id) {
+                continue; // Bye
+            }
+            $echteWedstrijden[] = $aWedstrijd;
+        }
+
+        foreach ($echteWedstrijden as $idx => $aWedstrijd) {
+            $bWedstrijd = null;
+            $slot = 'wit';
+
+            switch ($type) {
+                case 'eerste':
+                    // DUBBEL: 2:1 mapping naar (1) ronde
+                    $bIdx = (int) floor($idx / 2);
+                    $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
+                    $bWedstrijd = $bWedstrijden[$bIdx] ?? null;
+                    break;
+
+                case 'samen_wit':
+                    // SAMEN: 1:1 mapping op WIT slots
+                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
+                    $slot = 'wit';
+                    break;
+
+                case 'samen_blauw':
+                    // SAMEN: 1:1 mapping op BLAUW slots
+                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
+                    $slot = 'blauw';
+                    break;
+
+                case 'dubbel_blauw':
+                    // DUBBEL: 1:1 mapping op BLAUW in (2) rondes
+                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
+                    $slot = 'blauw';
+                    break;
+
+                case 'brons_blauw':
+                    // Halve finale verliezers → brons op BLAUW
+                    $bWedstrijd = $bWedstrijden[$idx] ?? null;
+                    $slot = 'blauw';
+                    break;
+            }
+
+            if ($bWedstrijd) {
+                $aWedstrijd->update([
+                    'herkansing_wedstrijd_id' => $bWedstrijd->id,
+                    'verliezer_naar_slot' => $slot,
+                ]);
+                Log::info("A-koppeling: {$aWedstrijd->ronde} pos {$aWedstrijd->bracket_positie} → B-wed {$bWedstrijd->id} ({$bWedstrijd->ronde} pos {$bWedstrijd->bracket_positie}) slot={$slot}");
+            }
+        }
+    }
+
     // =========================================================================
     // B-GROEP: IJF REPECHAGE
     // =========================================================================
@@ -759,11 +903,19 @@ class EliminatieService
         $d = $this->berekenDoel($n);
         $v1 = $n - $d;
 
-        // A1 verliezers = echte wedstrijden in eerste ronde
-        $a1Verliezers = ($v1 > 0) ? $v1 : (int)($d / 2);
-
-        // A2 verliezers = wedstrijden in tweede ronde
-        $a2Verliezers = ($v1 > 0) ? (int)($d / 2) : (int)($d / 4);
+        if ($v1 > 0) {
+            // Niet-exacte macht van 2 (N=12,24,etc.)
+            // Eerste ronde heeft V1 echte wedstrijden + byes
+            // Tweede ronde = eerste VOLLE ronde met D/2 wedstrijden
+            $a1Verliezers = $v1;
+            $a2Verliezers = (int)($d / 2);
+        } else {
+            // Exacte macht van 2 (N=8,16,32)
+            // Alle wedstrijden in eerste ronde zijn echt
+            // Eerste ronde = D/2 wedstrijden, tweede ronde = D/4 wedstrijden
+            $a1Verliezers = (int)($d / 2);
+            $a2Verliezers = (int)($d / 4);
+        }
 
         return [
             'd' => $d,
@@ -917,10 +1069,22 @@ class EliminatieService
      */
     private function plaatsVerliezerDubbel(Wedstrijd $wedstrijd, int $verliezerId): void
     {
+        // === NIEUW: Deterministische plaatsing via herkansing_wedstrijd_id ===
+        // Net als IJF systeem (lijn 1349-1357): bij generatie al gekoppeld
+        if ($wedstrijd->herkansing_wedstrijd_id) {
+            $bWedstrijd = Wedstrijd::find($wedstrijd->herkansing_wedstrijd_id);
+            if ($bWedstrijd) {
+                $slot = ($wedstrijd->verliezer_naar_slot === 'blauw') ? 'judoka_blauw_id' : 'judoka_wit_id';
+                $bWedstrijd->update([$slot => $verliezerId]);
+                Log::info("Verliezer {$verliezerId} deterministisch geplaatst: {$wedstrijd->ronde} → {$bWedstrijd->ronde} pos {$bWedstrijd->bracket_positie} ({$wedstrijd->verliezer_naar_slot})");
+                return;
+            }
+        }
+
+        // === FALLBACK: Oude runtime-lookup voor bestaande brackets ===
         $pouleId = $wedstrijd->poule_id;
         $aRonde = $wedstrijd->ronde;
 
-        // Bepaal naar welke B-ronde de verliezer moet
         $bRonde = $this->bepaalBRondeVoorVerliezer($pouleId, $aRonde);
 
         if (!$bRonde) {
@@ -928,36 +1092,26 @@ class EliminatieService
             return;
         }
 
-        Log::info("Verliezer {$verliezerId} van {$aRonde} → {$bRonde}");
+        Log::info("Verliezer {$verliezerId} van {$aRonde} → {$bRonde} (fallback)");
 
-        // Check of verliezer al een bye heeft gehad in A-groep
         $hadAlBye = $this->heeftByeGehad($pouleId, $verliezerId);
-
-        // Zoek beschikbare slot in de juiste B-ronde
         $bWedstrijd = null;
 
         if ($hadAlBye) {
-            // Bye-judoka: zoek slot waar al iemand staat (geen nieuwe bye)
             $bWedstrijd = $this->zoekSlotMetTegenstander($pouleId, $bRonde);
         }
 
         if (!$bWedstrijd) {
-            // Zoek eerste beschikbare lege slot
             $bWedstrijd = $this->zoekEersteLegeBSlot($pouleId, $bRonde);
         }
 
         if ($bWedstrijd) {
-            // Voor (2) rondes: A-verliezers komen op BLAUW slot
-            // Voor (1) rondes: eerste beschikbare slot
             if (str_ends_with($bRonde, '_2')) {
-                // (2) ronde: A-verliezers op blauw
                 $slot = 'judoka_blauw_id';
                 if (!is_null($bWedstrijd->judoka_blauw_id)) {
-                    // Blauw bezet, probeer wit
                     $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : null;
                 }
             } else {
-                // (1) ronde: eerste beschikbare
                 $slot = is_null($bWedstrijd->judoka_wit_id) ? 'judoka_wit_id' : 'judoka_blauw_id';
             }
 
