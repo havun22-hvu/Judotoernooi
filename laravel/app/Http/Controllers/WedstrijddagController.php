@@ -810,6 +810,9 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Type is al ' . $nieuwType], 400);
         }
 
+        // Update type FIRST (needed for correct wedstrijden calculation)
+        $poule->type = $nieuwType;
+
         // Bij kruisfinale → eliminatie: bereken aantal judokas (kruisfinale_plaatsen × voorronde poules)
         $skipUpdateStatistieken = false;
         if ($oudType === 'kruisfinale' && $nieuwType === 'eliminatie') {
@@ -822,12 +825,10 @@ class WedstrijddagController extends Controller
             $aantalJudokas = $aantalVoorrondes * $plaatsen;
 
             $poule->aantal_judokas = $aantalJudokas;
+            // type is already 'eliminatie', so berekenAantalWedstrijden uses elimination formula
             $poule->aantal_wedstrijden = $poule->berekenAantalWedstrijden($aantalJudokas);
             $skipUpdateStatistieken = true;
         }
-
-        // Update type
-        $poule->type = $nieuwType;
 
         // Update titel
         $basisTitel = $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse;
