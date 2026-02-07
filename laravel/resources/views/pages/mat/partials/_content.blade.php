@@ -80,7 +80,7 @@
 
                     <!-- Afgerond: toon klaar tijdstip -->
                     <div x-show="poule.spreker_klaar" class="bg-white px-3 py-1 rounded text-sm font-bold" :class="poule.type === 'eliminatie' ? 'text-purple-700' : 'text-green-700'">
-                        ✓ Klaar om: <span x-text="poule.spreker_klaar_tijd"></span>
+                        ✓ {{ __('Klaar om:') }} <span x-text="poule.spreker_klaar_tijd"></span>
                     </div>
                     <!-- Barrage knop: toon als er een 3-weg gelijkspel is -->
                     <button
