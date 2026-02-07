@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', "Leeg wedstrijdschema - {$aantal} judoka's")
+@section('title', __('Leeg wedstrijdschema') . " - {$aantal} " . __("judoka's"))
 
 @push('styles')
 <style>
@@ -113,11 +113,11 @@
     <!-- Header met invulvelden -->
     <div class="border-2 border-black px-4 py-2 mb-4">
         <div class="flex gap-8 text-sm">
-            <div>Poule: <span class="inline-block border-b border-black w-20"></span></div>
-            <div>Leeftijd: <span class="inline-block border-b border-black w-32"></span></div>
-            <div>Gewicht: <span class="inline-block border-b border-black w-28"></span></div>
-            <div>Blok: <span class="inline-block border-b border-black w-16"></span></div>
-            <div>Mat: <span class="inline-block border-b border-black w-16"></span></div>
+            <div>{{ __('Poule') }}: <span class="inline-block border-b border-black w-20"></span></div>
+            <div>{{ __('Leeftijd') }}: <span class="inline-block border-b border-black w-32"></span></div>
+            <div>{{ __('Gewicht') }}: <span class="inline-block border-b border-black w-28"></span></div>
+            <div>{{ __('Blok') }}: <span class="inline-block border-b border-black w-16"></span></div>
+            <div>{{ __('Mat') }}: <span class="inline-block border-b border-black w-16"></span></div>
         </div>
     </div>
 
@@ -125,8 +125,8 @@
     <table class="schema-table text-xs">
         <thead>
             <tr class="header-row">
-                <th class="px-1 py-1 text-center" style="width: 24px;">Nr</th>
-                <th class="px-2 py-1 text-left naam-cel">Naam</th>
+                <th class="px-1 py-1 text-center" style="width: 24px;">{{ __('Nr') }}</th>
+                <th class="px-2 py-1 text-left naam-cel">{{ __('Naam') }}</th>
                 @foreach($schema as $idx => $wedstrijd)
                 <th class="py-1 text-center" colspan="2" style="min-width: 36px;">
                     <div class="font-bold">{{ $idx + 1 }}</div>
@@ -162,14 +162,14 @@
 
     <!-- Legenda -->
     <div class="mt-3 text-xs text-gray-600">
-        <strong>W</strong> = Wedstrijdpunten (0 of 2) &nbsp;|&nbsp; <strong>J</strong> = Judopunten (Yuko=5, Waza-Ari=7, Ippon=10)
+        <strong>W</strong> = {{ __('Wedstrijdpunten (0 of 2)') }} &nbsp;|&nbsp; <strong>J</strong> = {{ __('Judopunten') }} (Yuko=5, Waza-Ari=7, Ippon=10)
     </div>
 </div>
 
 <!-- Info -->
 <div class="no-print mt-6 p-4 bg-blue-50 rounded">
     <p class="text-sm text-blue-800">
-        Schema voor {{ $aantal }} judoka's = {{ count($schema) }} wedstrijden.
+        {{ __("Schema voor :aantal judoka's = :wedstrijden wedstrijden.", ['aantal' => $aantal, 'wedstrijden' => count($schema)]) }}
     </p>
 </div>
 @endsection

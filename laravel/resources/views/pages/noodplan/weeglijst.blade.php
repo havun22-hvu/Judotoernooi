@@ -1,22 +1,22 @@
 @extends('layouts.print')
 
-@section('title', 'Weeglijst')
+@section('title', __('Weeglijst'))
 
 @section('content')
 @foreach($judokasPerBlok as $blokNummer => $judokas)
 <div class="{{ !$loop->last ? 'page-break' : '' }}">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Weeglijst Blok {{ $blokNummer }}</h1>
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">{{ __('Weeglijst') }} {{ __('Blok') }} {{ $blokNummer }}</h1>
 
     <table class="w-full text-sm border-collapse">
         <thead>
             <tr class="bg-blue-800 text-white">
                 <th class="px-2 py-2 text-left w-10">#</th>
-                <th class="px-2 py-2 text-left">Naam</th>
-                <th class="px-2 py-2 text-left">Club</th>
-                <th class="px-2 py-2 text-center w-20">Leeftijd</th>
-                <th class="px-2 py-2 text-center w-16">Gew.kl.</th>
-                <th class="px-2 py-2 text-center w-20">Opgegeven</th>
-                <th class="px-2 py-2 text-center w-20">Gewogen</th>
+                <th class="px-2 py-2 text-left">{{ __('Naam') }}</th>
+                <th class="px-2 py-2 text-left">{{ __('Club') }}</th>
+                <th class="px-2 py-2 text-center w-20">{{ __('Leeftijd') }}</th>
+                <th class="px-2 py-2 text-center w-16">{{ __('Gew.kl.') }}</th>
+                <th class="px-2 py-2 text-center w-20">{{ __('Opgegeven') }}</th>
+                <th class="px-2 py-2 text-center w-20">{{ __('Gewogen') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -41,12 +41,12 @@
     </table>
 
     <div class="mt-4 text-sm text-gray-600">
-        <strong>Totaal:</strong> {{ $judokas->count() }} judoka's
+        <strong>{{ __('Totaal') }}:</strong> {{ $judokas->count() }} {{ __("judoka's") }}
     </div>
 </div>
 @endforeach
 
 @if($judokasPerBlok->flatten()->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen judoka's gevonden</p>
+<p class="text-gray-500 text-center py-8">{{ __("Geen judoka's gevonden") }}</p>
 @endif
 @endsection

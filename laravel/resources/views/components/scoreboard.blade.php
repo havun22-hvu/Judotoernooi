@@ -57,7 +57,7 @@
         :class="{ 'absolute top-0 left-0 right-0 z-10': displayMode }"
     >
         <div class="flex items-center gap-4">
-            <span class="font-bold">🥋 Scorebord</span>
+            <span class="font-bold">🥋 {{ __('Scorebord') }}</span>
             <template x-if="wedstrijdId">
                 <span class="text-gray-400 text-sm">Wedstrijd #<span x-text="wedstrijdId"></span></span>
             </template>
@@ -80,10 +80,10 @@
             <button
                 @click="toggleFullscreen()"
                 class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
-                title="Volledig scherm (F11)"
+                title="{{ __('Volledig scherm') }} (F11)"
             >
-                <span x-show="!displayMode">⛶ Volledig scherm</span>
-                <span x-show="displayMode">✕ Sluiten</span>
+                <span x-show="!displayMode">⛶ {{ __('Volledig scherm') }}</span>
+                <span x-show="displayMode">✕ {{ __('Sluiten') }}</span>
             </button>
         </div>
     </div>
@@ -329,8 +329,8 @@
                 :class="winner === 'blauw' ? 'text-blue-500' : 'text-white'"
                 x-text="winner === 'blauw' ? blauwNaam : witNaam"
             ></div>
-            <div class="text-4xl text-yellow-400 font-bold">🏆 WINNAAR 🏆</div>
-            <div class="text-gray-400 mt-4">Klik om te sluiten</div>
+            <div class="text-4xl text-yellow-400 font-bold">🏆 {{ __('WINNAAR') }} 🏆</div>
+            <div class="text-gray-400 mt-4">{{ __('Klik om te sluiten') }}</div>
         </div>
     </div>
 </div>

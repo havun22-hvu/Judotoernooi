@@ -16,11 +16,11 @@
 
     // Type labels for UI
     $typeLabels = [
-        'hoofdjury' => 'Hoofdjury',
-        'mat' => 'Mat',
-        'weging' => 'Weging',
-        'spreker' => 'Spreker',
-        'dojo' => 'Dojo',
+        'hoofdjury' => __('Hoofdjury'),
+        'mat' => __('Mat'),
+        'weging' => __('Weging'),
+        'spreker' => __('Spreker'),
+        'dojo' => __('Dojo'),
     ];
 
     // Bepaal display naam voor chat header
@@ -78,7 +78,7 @@
             <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
-            <p>Nog geen berichten</p>
+            <p>{{ __('Nog geen berichten') }}</p>
         </div>
     </div>
 
@@ -87,7 +87,7 @@
         <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
             <input type="text"
                    id="chat-input"
-                   placeholder="Typ een bericht..."
+                   placeholder="{{ __('Typ een bericht...') }}"
                    class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                    autocomplete="off"
                    maxlength="1000">
@@ -98,7 +98,7 @@
                 </svg>
             </button>
         </form>
-        <p class="text-xs text-gray-400 mt-2 text-center">Berichten gaan naar Hoofdjury</p>
+        <p class="text-xs text-gray-400 mt-2 text-center">{{ __('Berichten gaan naar Hoofdjury') }}</p>
     </div>
 </div>
 
@@ -113,8 +113,8 @@
             </svg>
         </div>
         <div class="flex-1 min-w-0">
-            <p id="chat-toast-sender" class="font-bold text-sm">Hoofdjury</p>
-            <p id="chat-toast-message" class="text-blue-100 text-sm truncate">Nieuw bericht</p>
+            <p id="chat-toast-sender" class="font-bold text-sm">{{ __('Hoofdjury') }}</p>
+            <p id="chat-toast-message" class="text-blue-100 text-sm truncate">{{ __('Nieuw bericht') }}</p>
         </div>
         <button onclick="event.stopPropagation(); hideToast();" class="text-blue-200 hover:text-white">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@
 
         } catch (error) {
             console.error('Chat send error:', error);
-            alert('Bericht versturen mislukt. Probeer opnieuw.');
+            alert('{{ __('Bericht versturen mislukt. Probeer opnieuw.') }}');
         }
     }
 

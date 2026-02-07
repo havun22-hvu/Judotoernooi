@@ -16,35 +16,35 @@
             'manifest' => '/manifest-dojo.json',
             'device' => 'Smartphone',
             'deviceIcon' => '📱',
-            'deviceAdvice' => 'Deze app werkt het beste op een smartphone met camera.',
+            'deviceAdvice' => __('Deze app werkt het beste op een smartphone met camera.'),
         ],
         'weging' => [
             'name' => 'Weging',
             'manifest' => '/manifest-weging.json',
             'device' => 'Smartphone / Tablet',
             'deviceIcon' => '📱',
-            'deviceAdvice' => 'Gebruik een smartphone (met camera voor QR) of tablet.',
+            'deviceAdvice' => __('Gebruik een smartphone (met camera voor QR) of tablet.'),
         ],
         'mat' => [
             'name' => 'Mat Interface',
             'manifest' => '/manifest-mat.json',
             'device' => 'PC / Laptop / Tablet',
             'deviceIcon' => '💻',
-            'deviceAdvice' => 'Aanbevolen: laptop of tablet in landscape modus.',
+            'deviceAdvice' => __('Aanbevolen: laptop of tablet in landscape modus.'),
         ],
         'spreker' => [
             'name' => 'Spreker',
             'manifest' => '/manifest-spreker.json',
             'device' => 'iPad / Tablet',
             'deviceIcon' => '📋',
-            'deviceAdvice' => 'Aanbevolen: iPad of tablet in landscape modus.',
+            'deviceAdvice' => __('Aanbevolen: iPad of tablet in landscape modus.'),
         ],
         'admin' => [
             'name' => 'JudoToernooi',
             'manifest' => '/manifest.json',
             'device' => 'PC / Laptop',
             'deviceIcon' => '🖥️',
-            'deviceAdvice' => 'Admin interface werkt het beste op een groot scherm.',
+            'deviceAdvice' => __('Admin interface werkt het beste op een groot scherm.'),
         ],
     ];
 
@@ -54,7 +54,7 @@
 {{-- Settings Button (top right corner) --}}
 <button onclick="document.getElementById('pwa-settings-modal').classList.remove('hidden')"
         class="fixed top-3 right-3 z-40 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full"
-        title="Instellingen">
+        title="{{ __('Instellingen') }}">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -66,7 +66,7 @@
     <div class="bg-white rounded-xl w-full max-w-sm text-gray-800 overflow-hidden">
         <div class="bg-blue-800 text-white p-4">
             <h2 class="text-xl font-bold">{{ $config['name'] }}</h2>
-            <p class="text-blue-200 text-sm">Instellingen</p>
+            <p class="text-blue-200 text-sm">{{ __('Instellingen') }}</p>
         </div>
 
         <div class="p-4 space-y-4">
@@ -85,9 +85,9 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                     </svg>
-                    Installeer "{{ $config['name'] }}"
+                    {{ __('Installeer') }} "{{ $config['name'] }}"
                 </button>
-                <p class="text-sm text-gray-500 mt-2 text-center">Installeer als losse app op je device</p>
+                <p class="text-sm text-gray-500 mt-2 text-center">{{ __('Installeer als losse app op je device') }}</p>
             </div>
 
             {{-- Force Refresh (manual option in settings) --}}
@@ -95,7 +95,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                Forceer Update
+                {{ __('Forceer Update') }}
             </button>
 
             <hr>
@@ -103,7 +103,7 @@
             {{-- About --}}
             <div class="text-center">
                 <h3 class="font-bold text-lg">{{ $config['name'] }}</h3>
-                <p class="text-gray-600">Versie {{ $appVersion }}</p>
+                <p class="text-gray-600">{{ __('Versie') }} {{ $appVersion }}</p>
                 @if($appVersionDate)
                 <p class="text-gray-500 text-sm">{{ $appVersionDate }}</p>
                 @endif
@@ -114,7 +114,7 @@
         <div class="p-4 border-t">
             <button onclick="document.getElementById('pwa-settings-modal').classList.add('hidden')"
                     class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium">
-                Sluiten
+                {{ __('Sluiten') }}
             </button>
         </div>
     </div>
@@ -126,13 +126,13 @@
         <div class="flex items-center gap-3">
             <span class="text-2xl">{{ $config['deviceIcon'] }}</span>
             <div>
-                <p class="font-bold">Installeer {{ $config['name'] }}</p>
+                <p class="font-bold">{{ __('Installeer') }} {{ $config['name'] }}</p>
                 <p class="text-sm text-green-100">{{ $config['device'] }}</p>
             </div>
         </div>
         <div class="flex gap-2">
-            <button onclick="hidePwaInstallBanner()" class="px-3 py-1 text-green-200 hover:text-white">Later</button>
-            <button onclick="installPwa()" class="bg-white text-green-600 px-4 py-1 rounded font-medium">Installeer</button>
+            <button onclick="hidePwaInstallBanner()" class="px-3 py-1 text-green-200 hover:text-white">{{ __('Later') }}</button>
+            <button onclick="installPwa()" class="bg-white text-green-600 px-4 py-1 rounded font-medium">{{ __('Installeer') }}</button>
         </div>
     </div>
 </div>
@@ -144,7 +144,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="font-medium">Updaten... pagina herlaadt automatisch</p>
+        <p class="font-medium">{{ __('Updaten... pagina herlaadt automatisch') }}</p>
     </div>
 </div>
 

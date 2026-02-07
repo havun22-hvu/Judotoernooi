@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', isset($club) ? "Weegkaarten - {$club->naam}" : 'Weegkaarten')
+@section('title', isset($club) ? __('Weegkaarten') . " - {$club->naam}" : __('Weegkaarten'))
 
 @push('styles')
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
@@ -195,25 +195,25 @@
         {{-- Naam + club prominent --}}
         <div class="weegkaart-naam">
             <h3>{{ $judoka->naam }}</h3>
-            <p>{{ $judoka->club?->naam ?? 'Onbekend' }}</p>
+            <p>{{ $judoka->club?->naam ?? __('Onbekend') }}</p>
         </div>
 
         {{-- Classificatie: Leeftijd | Gewicht | Band | Geslacht --}}
         <div class="weegkaart-classificatie">
             <div>
-                <div class="label">Leeftijd</div>
+                <div class="label">{{ __('Leeftijd') }}</div>
                 <div class="value leeftijd">{{ $judoka->leeftijdsklasse ?? '?' }}</div>
             </div>
             <div>
-                <div class="label">Gewicht</div>
+                <div class="label">{{ __('Gewicht') }}</div>
                 <div class="value gewicht">{{ $gewichtDisplay }}</div>
             </div>
             <div>
-                <div class="label">Band</div>
+                <div class="label">{{ __('Band') }}</div>
                 <div class="value">{{ $bandLabel }}</div>
             </div>
             <div>
-                <div class="label">Geslacht</div>
+                <div class="label">{{ __('Geslacht') }}</div>
                 <div class="value geslacht-{{ strtolower($judoka->geslacht ?? 'm') }}">{{ $judoka->geslacht ?? '?' }}</div>
             </div>
         </div>
@@ -223,24 +223,24 @@
         <div class="weegkaart-blok">
             <div>
                 @if($aantalBlokken > 1 && $blok)
-                <span class="blok-badge">{{ $blok->naam ?? 'Blok ' . $blok->nummer }}</span>
+                <span class="blok-badge">{{ $blok->naam ?? __('Blok') . ' ' . $blok->nummer }}</span>
                 @endif
                 @if($mat)
-                <span class="mat-badge {{ $matKleur }}">Mat {{ $mat->nummer }}</span>
+                <span class="mat-badge {{ $matKleur }}">{{ __('Mat') }} {{ $mat->nummer }}</span>
                 @endif
             </div>
             <div class="tijden">
                 @if($blok?->weging_start && $blok?->weging_einde)
-                <div>Weging: <strong>{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</strong></div>
+                <div>{{ __('Weging') }}: <strong>{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</strong></div>
                 @endif
                 @if($blok?->starttijd)
-                <div>Start: <strong>{{ $blok->starttijd->format('H:i') }}</strong></div>
+                <div>{{ __('Start') }}: <strong>{{ $blok->starttijd->format('H:i') }}</strong></div>
                 @endif
             </div>
         </div>
         @else
         <div class="weegkaart-blok" style="background: #fef3c7; justify-content: center;">
-            <span style="color: #92400e; font-size: 10px;">Nog geen poule toegewezen</span>
+            <span style="color: #92400e; font-size: 10px;">{{ __('Nog geen poule toegewezen') }}</span>
         </div>
         @endif
 
@@ -252,7 +252,7 @@
 
         {{-- Footer --}}
         <div class="weegkaart-footer">
-            <span>📱 Toon bij weging</span>
+            <span>{{ __('Toon bij weging') }}</span>
             <span>{{ now()->format('d-m H:i') }}</span>
         </div>
     </div>
@@ -260,11 +260,11 @@
 </div>
 
 @if($judokas->isEmpty())
-<p class="text-gray-500 text-center py-8">Geen judoka's gevonden</p>
+<p class="text-gray-500 text-center py-8">{{ __("Geen judoka's gevonden") }}</p>
 @endif
 
 <div class="no-print mt-6 text-sm text-gray-600">
-    <p><strong>Totaal:</strong> {{ $judokas->count() }} weegkaarten</p>
+    <p><strong>{{ __('Totaal') }}:</strong> {{ $judokas->count() }} {{ __('weegkaarten') }}</p>
 </div>
 
 <script>

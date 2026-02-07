@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('title', 'Poule Schema - ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse)
+@section('title', __('Poule Schema') . ' - ' . $poule->leeftijdsklasse . ' ' . $poule->gewichtsklasse)
 
 @push('styles')
 <style>
@@ -37,14 +37,14 @@
                 </h2>
                 <p class="text-gray-600">
                     @if($poule->mat_nummer)
-                    <span class="font-bold">Mat {{ $poule->mat_nummer }}</span> •
+                    <span class="font-bold">{{ __('Mat') }} {{ $poule->mat_nummer }}</span> •
                     @endif
-                    {{ $poule->judokas->count() }} judoka's •
-                    {{ $poule->wedstrijden->count() }} wedstrijden
+                    {{ $poule->judokas->count() }} {{ __("judoka's") }} •
+                    {{ $poule->wedstrijden->count() }} {{ __('wedstrijden') }}
                 </p>
             </div>
             <div class="text-right">
-                <p class="text-sm text-gray-500">Momentopname</p>
+                <p class="text-sm text-gray-500">{{ __('Momentopname') }}</p>
                 <p class="font-mono font-bold">{{ now()->format('H:i:s') }}</p>
             </div>
         </div>
@@ -52,15 +52,15 @@
 
     <!-- Deelnemers -->
     <div class="mb-4 p-3 bg-gray-50 rounded">
-        <h3 class="font-bold mb-2">Deelnemers</h3>
+        <h3 class="font-bold mb-2">{{ __('Deelnemers') }}</h3>
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-200">
                     <th class="p-2 text-center w-8">#</th>
-                    <th class="p-2 text-left">Naam</th>
-                    <th class="p-2 text-left">Club</th>
-                    <th class="p-2 text-center">Band</th>
-                    <th class="p-2 text-center">Gewicht</th>
+                    <th class="p-2 text-left">{{ __('Naam') }}</th>
+                    <th class="p-2 text-left">{{ __('Club') }}</th>
+                    <th class="p-2 text-center">{{ __('Band') }}</th>
+                    <th class="p-2 text-center">{{ __('Gewicht') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -81,16 +81,16 @@
 
     <!-- Wedstrijden -->
     <div class="mb-4">
-        <h3 class="font-bold mb-2">Wedstrijden</h3>
+        <h3 class="font-bold mb-2">{{ __('Wedstrijden') }}</h3>
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-200">
                     <th class="p-2 text-center w-8">#</th>
-                    <th class="p-2 text-left">Wit</th>
-                    <th class="p-2 text-center w-16">Score</th>
-                    <th class="p-2 text-left">Blauw</th>
-                    <th class="p-2 text-center w-16">Score</th>
-                    <th class="p-2 text-center w-24">Status</th>
+                    <th class="p-2 text-left">{{ __('Wit') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Score') }}</th>
+                    <th class="p-2 text-left">{{ __('Blauw') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Score') }}</th>
+                    <th class="p-2 text-center w-24">{{ __('Status') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,7 +115,7 @@
                         @if($heeftUitslag)
                             {{ $wedstrijd->uitslag_wit }}
                         @elseif($isActief)
-                            <span class="text-yellow-600">BEZIG</span>
+                            <span class="text-yellow-600">{{ __('BEZIG') }}</span>
                         @else
                             -
                         @endif
@@ -127,18 +127,18 @@
                         @if($heeftUitslag)
                             {{ $wedstrijd->uitslag_blauw }}
                         @elseif($isActief)
-                            <span class="text-yellow-600">BEZIG</span>
+                            <span class="text-yellow-600">{{ __('BEZIG') }}</span>
                         @else
                             -
                         @endif
                     </td>
                     <td class="p-2 text-center">
                         @if($heeftUitslag)
-                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Klaar</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">{{ __('Klaar') }}</span>
                         @elseif($isActief)
-                            <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-bold">ACTIEF</span>
+                            <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-bold">{{ __('ACTIEF') }}</span>
                         @else
-                            <span class="text-gray-400 text-xs">Wachtend</span>
+                            <span class="text-gray-400 text-xs">{{ __('Wachtend') }}</span>
                         @endif
                     </td>
                 </tr>
@@ -149,15 +149,15 @@
 
     <!-- Klassement -->
     <div class="p-3 bg-gray-50 rounded">
-        <h3 class="font-bold mb-2">Huidige Stand</h3>
+        <h3 class="font-bold mb-2">{{ __('Huidige Stand') }}</h3>
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-200">
                     <th class="p-2 text-center w-8">#</th>
-                    <th class="p-2 text-left">Naam</th>
-                    <th class="p-2 text-center w-16">Gewonnen</th>
-                    <th class="p-2 text-center w-16">Verloren</th>
-                    <th class="p-2 text-center w-16">WP</th>
+                    <th class="p-2 text-left">{{ __('Naam') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Gewonnen') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('Verloren') }}</th>
+                    <th class="p-2 text-center w-16">{{ __('WP') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -192,6 +192,6 @@
 
 <!-- Ruimte voor handmatige notities -->
 <div class="mt-6 p-4 border-2 border-dashed border-gray-300 rounded min-h-32">
-    <p class="text-sm text-gray-400 mb-2">Notities:</p>
+    <p class="text-sm text-gray-400 mb-2">{{ __('Notities') }}:</p>
 </div>
 @endsection

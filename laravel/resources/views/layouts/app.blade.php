@@ -192,7 +192,7 @@
 
     <footer class="bg-gray-800 text-white py-4 mt-auto shrink-0">
         <div class="max-w-7xl mx-auto px-4 text-center text-sm">
-            &copy; {{ date('Y') }} Havun - Judo Toernooi Management Systeem
+            &copy; {{ date('Y') }} Havun - {{ __('Judo Toernooi Management Systeem') }}
         </div>
     </footer>
 
@@ -232,11 +232,11 @@
                 warning.innerHTML = `
                     <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
                         <div style="background:white;padding:24px;border-radius:8px;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">⚠️ Sessie verloopt bijna</h3>
-                            <p style="margin-bottom:16px;color:#374151;">Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.</p>
+                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">⚠️ {{ __('Sessie verloopt bijna') }}</h3>
+                            <p style="margin-bottom:16px;color:#374151;">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
                             <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
                                     style="background:#2563eb;color:white;padding:10px 24px;border-radius:6px;border:none;cursor:pointer;font-weight:500;">
-                                Actief blijven
+                                {{ __('Actief blijven') }}
                             </button>
                         </div>
                     </div>

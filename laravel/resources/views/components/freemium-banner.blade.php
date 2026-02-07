@@ -12,9 +12,9 @@
             <div class="flex-1">
                 <div class="flex items-center">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
-                        Gratis Tier
+                        {{ __('Gratis Tier') }}
                     </span>
-                    <span class="text-sm text-gray-600">{{ $huidige }}/{{ $max }} judoka's</span>
+                    <span class="text-sm text-gray-600">{{ $huidige }}/{{ $max }} {{ __("judoka's") }}</span>
                 </div>
 
                 {{-- Progress bar --}}
@@ -25,20 +25,20 @@
 
                 @if($percentage >= 80)
                     <p class="mt-2 text-sm text-orange-700">
-                        <strong>Let op:</strong> Je nadert de limiet van {{ $max }} judoka's.
-                        <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="underline font-medium">Upgrade nu</a> voor meer ruimte.
+                        <strong>{{ __('Let op:') }}</strong> {{ __("Je nadert de limiet van :max judoka's.", ['max' => $max]) }}
+                        <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="underline font-medium">{{ __('Upgrade nu') }}</a> {{ __('voor meer ruimte.') }}
                     </p>
                 @endif
 
                 <p class="mt-2 text-xs text-gray-500">
-                    Print/Noodplan functies zijn geblokkeerd.
-                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">Bekijk upgrade opties</a>
+                    {{ __('Print/Noodplan functies zijn geblokkeerd.') }}
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">{{ __('Bekijk upgrade opties') }}</a>
                 </p>
             </div>
 
             <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
                class="ml-4 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                Upgrade
+                {{ __('Upgrade') }}
             </a>
         </div>
     </div>
@@ -47,13 +47,13 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center">
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
-                    Betaald
+                    {{ __('Betaald') }}
                 </span>
                 <span class="text-sm text-gray-600">
-                    {{ $toernooi->paid_tier }} staffel - max {{ $toernooi->paid_max_judokas }} judoka's
+                    {{ __(':tier staffel - max :max judoka\'s', ['tier' => $toernooi->paid_tier, 'max' => $toernooi->paid_max_judokas]) }}
                 </span>
             </div>
-            <span class="text-xs text-green-600">Alle functies actief</span>
+            <span class="text-xs text-green-600">{{ __('Alle functies actief') }}</span>
         </div>
     </div>
 @endif

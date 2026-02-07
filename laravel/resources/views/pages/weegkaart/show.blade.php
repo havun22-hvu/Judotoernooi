@@ -35,25 +35,25 @@
     <div x-show="!fromPortal && !confirmed" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="text-5xl mb-4">⚠️</div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">Weegkaart opslaan?</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">{{ __('Weegkaart opslaan?') }}</h2>
             <p class="text-gray-600 mb-4">
-                Je gaat de weegkaart van <strong class="text-blue-700">{{ $judoka->naam }}</strong> op dit apparaat zetten.
+                {{ __('Je gaat de weegkaart van') }} <strong class="text-blue-700">{{ $judoka->naam }}</strong> {{ __('op dit apparaat zetten.') }}
             </p>
             <p class="text-sm text-gray-500 mb-6">
-                Is dit jouw kind of ben je de begeleider?
+                {{ __('Is dit jouw kind of ben je de begeleider?') }}
             </p>
             <div class="flex gap-3 justify-center">
                 <button
                     @click="window.history.back()"
                     class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium"
                 >
-                    Nee, terug
+                    {{ __('Nee, terug') }}
                 </button>
                 <button
                     @click="localStorage.setItem('weegkaart_{{ $judoka->qr_code }}', 'true'); confirmed = true"
                     class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
                 >
-                    Ja, doorgaan
+                    {{ __('Ja, doorgaan') }}
                 </button>
             </div>
         </div>
@@ -69,7 +69,7 @@
         {{-- NAAM PROMINENT --}}
         <div class="px-3 py-3 bg-gray-50 border-b-2 border-blue-200">
             <h1 class="text-2xl font-black text-gray-900 text-center leading-tight">{{ $judoka->naam }}</h1>
-            <p class="text-base font-medium text-blue-600 text-center mt-1">{{ $judoka->club?->naam ?? 'Geen club' }}</p>
+            <p class="text-base font-medium text-blue-600 text-center mt-1">{{ $judoka->club?->naam ?? __('Geen club') }}</p>
         </div>
 
         {{-- Classification row --}}
@@ -88,25 +88,25 @@
         @endphp
         <div class="px-3 py-2 grid grid-cols-4 gap-1 text-center border-b">
             <div class="flex flex-col">
-                <span class="text-[10px] text-gray-500 uppercase">Leeftijd</span>
+                <span class="text-[10px] text-gray-500 uppercase">{{ __('Leeftijd') }}</span>
                 <span class="text-sm font-bold text-purple-700">{{ $judoka->leeftijdsklasse ?? '?' }}</span>
             </div>
             <div class="flex flex-col">
-                <span class="text-[10px] text-gray-500 uppercase">Gewicht</span>
+                <span class="text-[10px] text-gray-500 uppercase">{{ __('Gewicht') }}</span>
                 <span class="text-sm font-bold text-green-700">
                     @if($judoka->gewichtsklasse === 'Variabel')
-                        {{ $judoka->gewicht ? $judoka->gewicht . ' kg' : 'Variabel' }}
+                        {{ $judoka->gewicht ? $judoka->gewicht . ' kg' : __('Variabel') }}
                     @else
                         {{ $judoka->gewichtsklasse ?? '?' }} kg
                     @endif
                 </span>
             </div>
             <div class="flex flex-col">
-                <span class="text-[10px] text-gray-500 uppercase">Band</span>
+                <span class="text-[10px] text-gray-500 uppercase">{{ __('Band') }}</span>
                 <span class="text-sm font-bold px-2 py-0.5 rounded {{ $bandClass }}">{{ $bandLabel }}</span>
             </div>
             <div class="flex flex-col">
-                <span class="text-[10px] text-gray-500 uppercase">Geslacht</span>
+                <span class="text-[10px] text-gray-500 uppercase">{{ __('Geslacht') }}</span>
                 <span class="text-sm font-bold {{ $judoka->geslacht === 'M' ? 'text-blue-600' : 'text-pink-600' }}">
 {{ $judoka->geslacht }}
                 </span>
@@ -147,7 +147,7 @@
             <div class="text-right text-xs">
                 @if($blok->weging_start && $blok->weging_einde)
                 <div class="text-gray-600">
-                    <span class="font-medium">Weging:</span>
+                    <span class="font-medium">{{ __('Weging:') }}</span>
                     <span class="font-bold text-gray-800">{{ $blok->weging_start->format('H:i') }}-{{ $blok->weging_einde->format('H:i') }}</span>
                 </div>
                 @endif
@@ -161,11 +161,11 @@
         </div>
         @elseif(!$judoka->toernooi->voorbereiding_klaar_op)
         <div class="px-3 py-2 bg-blue-50 border-b text-center">
-            <span class="text-sm text-blue-600">Indeling wordt later bekendgemaakt</span>
+            <span class="text-sm text-blue-600">{{ __('Indeling wordt later bekendgemaakt') }}</span>
         </div>
         @else
         <div class="px-3 py-2 bg-gray-100 border-b text-center">
-            <span class="text-sm text-gray-500">Nog niet ingedeeld</span>
+            <span class="text-sm text-gray-500">{{ __('Nog niet ingedeeld') }}</span>
         </div>
         @endif
 
@@ -176,7 +176,7 @@
         @if($moetMeldenBijJury)
         <div class="px-3 py-3 bg-red-600 text-white text-center">
             <div class="text-lg font-bold">⚠️ {{ $judoka->opmerking }}</div>
-            <div class="text-sm mt-1 font-medium">→ MELDEN BIJ JURYTAFEL</div>
+            <div class="text-sm mt-1 font-medium">→ {{ __('MELDEN BIJ JURYTAFEL') }}</div>
         </div>
         @endif
 
@@ -204,7 +204,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            Opslaan
+            {{ __('Opslaan') }}
         </button>
         <button
             onclick="shareWeegkaart()"
@@ -213,7 +213,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
             </svg>
-            Delen
+            {{ __('Delen') }}
         </button>
     </div>
 
@@ -264,7 +264,7 @@
                 link.click();
             } catch (error) {
                 console.error('Download failed:', error);
-                alert('Download mislukt. Probeer een screenshot te maken.');
+                alert('{{ __('Download mislukt. Probeer een screenshot te maken.') }}');
             } finally {
                 button.innerHTML = originalText;
                 button.disabled = false;
@@ -293,9 +293,9 @@
 
         function copyToClipboard() {
             navigator.clipboard.writeText(window.location.href).then(() => {
-                alert('Link gekopieerd naar klembord!');
+                alert('{{ __('Link gekopieerd naar klembord!') }}');
             }).catch(() => {
-                prompt('Kopieer deze link:', window.location.href);
+                prompt('{{ __('Kopieer deze link:') }}', window.location.href);
             });
         }
     </script>

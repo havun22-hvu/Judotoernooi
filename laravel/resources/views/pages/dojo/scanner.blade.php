@@ -34,7 +34,7 @@
         </div>
         <div class="text-right">
             <div class="text-2xl font-mono" id="clock"></div>
-            <div class="text-blue-200 text-sm" id="scan-count">0 gescand</div>
+            <div class="text-blue-200 text-sm" id="scan-count">0 {{ __('gescand') }}</div>
         </div>
     </header>
 
@@ -42,11 +42,11 @@
     <div class="flex border-b border-blue-700 bg-blue-800">
         <button onclick="showTab('scanner')" id="tab-scanner"
                 class="flex-1 py-3 text-center font-medium border-b-2 border-white">
-            Scanner
+            {{ __('Scanner') }}
         </button>
         <button onclick="showTab('overzicht')" id="tab-overzicht"
                 class="flex-1 py-3 text-center font-medium border-b-2 border-transparent text-blue-300">
-            Overzicht
+            {{ __('Overzicht') }}
         </button>
     </div>
 
@@ -58,13 +58,13 @@
                 <button id="scan-button" onclick="startScanner()"
                         class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                     <span class="text-3xl mb-1">📷</span>
-                    <span class="font-bold text-sm">Scan</span>
+                    <span class="font-bold text-sm">{{ __('Scan') }}</span>
                 </button>
 
                 <div id="scanner-container" class="text-center w-full" style="display: none;">
                     <div id="reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
                     <button onclick="stopScanner()" class="mt-1 px-4 py-1 bg-red-600 hover:bg-red-700 rounded text-sm">
-                        Stop
+                        {{ __('Stop') }}
                     </button>
                 </div>
             </div>
@@ -72,7 +72,7 @@
             <div class="mt-2">
                 <button onclick="showManualEntry()"
                         class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-4 py-2 text-center text-blue-300 hover:bg-blue-700">
-                    Of voer code handmatig in...
+                    {{ __('Of voer code handmatig in...') }}
                 </button>
             </div>
         </div>
@@ -80,17 +80,17 @@
         <!-- BOTTOM HALF: Info & Instructions -->
         <div class="flex-1 flex flex-col space-y-3 overflow-y-auto">
             <div class="bg-white rounded-lg shadow p-4 text-gray-800">
-                <h2 class="font-bold text-lg mb-2">Instructies</h2>
+                <h2 class="font-bold text-lg mb-2">{{ __('Instructies') }}</h2>
                 <ol class="list-decimal list-inside space-y-1 text-sm">
-                    <li>Scan de QR-code op de coach kaart</li>
-                    <li>Controleer de foto met de persoon</li>
-                    <li>Bevestig of weiger toegang</li>
+                    <li>{{ __('Scan de QR-code op de coach kaart') }}</li>
+                    <li>{{ __('Controleer de foto met de persoon') }}</li>
+                    <li>{{ __('Bevestig of weiger toegang') }}</li>
                 </ol>
             </div>
 
             <div class="bg-white rounded-lg shadow p-4 text-gray-800">
                 <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Coaches gescand vandaag</span>
+                    <span class="text-sm text-gray-600">{{ __('Coaches gescand vandaag') }}</span>
                     <span class="text-2xl font-bold text-green-600" id="total-scanned">0</span>
                 </div>
             </div>
@@ -101,14 +101,14 @@
     <main id="content-overzicht" class="hidden p-3" style="height: calc(100vh - 110px); overflow-y: auto;">
         <!-- Zoekbalk -->
         <div class="mb-3">
-            <input type="text" id="club-search" placeholder="Zoek budoschool..."
+            <input type="text" id="club-search" placeholder="{{ __('Zoek budoschool...') }}"
                    class="w-full bg-blue-800 border border-blue-600 rounded-lg px-4 py-3 text-white placeholder-blue-400"
                    oninput="filterClubs(this.value)">
         </div>
 
         <!-- Club lijst -->
         <div id="clubs-list" class="space-y-2">
-            <div class="text-center text-blue-300 py-8">Laden...</div>
+            <div class="text-center text-blue-300 py-8">{{ __('Laden...') }}</div>
         </div>
 
         <!-- Club detail (hidden by default) -->
@@ -132,8 +132,8 @@
     <!-- Manual entry modal -->
     <div id="manual-entry" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl p-6 w-full max-w-md text-gray-800">
-            <h2 class="text-xl font-bold mb-4">Handmatig invoeren</h2>
-            <p class="text-gray-600 mb-4">Voer de code onder de QR-code in:</p>
+            <h2 class="text-xl font-bold mb-4">{{ __('Handmatig invoeren') }}</h2>
+            <p class="text-gray-600 mb-4">{{ __('Voer de code onder de QR-code in:') }}</p>
             <input type="text" id="manual-code"
                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-lg font-mono text-center uppercase"
                    placeholder="XXXXXX" maxlength="32"
@@ -141,11 +141,11 @@
             <div class="flex gap-3 mt-4">
                 <button onclick="hideManualEntry()"
                         class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
                 <button onclick="submitManualCode()"
                         class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
-                    Controleren
+                    {{ __('Controleren') }}
                 </button>
             </div>
         </div>
@@ -155,7 +155,7 @@
     <div id="kaart-detail-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-md max-h-[80vh] overflow-y-auto text-gray-800">
             <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="font-bold" id="kaart-detail-title">Kaart Detail</h2>
+                <h2 class="font-bold" id="kaart-detail-title">{{ __('Kaart Detail') }}</h2>
                 <button onclick="hideKaartDetail()" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
             </div>
             <div id="kaart-detail-content" class="p-4">
@@ -200,14 +200,14 @@
                 renderClubs(allClubs);
             } catch (error) {
                 console.error('Error loading clubs:', error);
-                document.getElementById('clubs-list').innerHTML = '<div class="text-red-400 text-center py-4">Fout bij laden</div>';
+                document.getElementById('clubs-list').innerHTML = '<div class="text-red-400 text-center py-4">{{ __('Fout bij laden') }}</div>';
             }
         }
 
         function renderClubs(clubs) {
             const container = document.getElementById('clubs-list');
             if (clubs.length === 0) {
-                container.innerHTML = '<div class="text-blue-300 text-center py-4">Geen clubs gevonden</div>';
+                container.innerHTML = '<div class="text-blue-300 text-center py-4">{{ __('Geen clubs gevonden') }}</div>';
                 return;
             }
 
@@ -272,7 +272,7 @@
         // Kaart detail modal
         async function showKaartDetail(qrCode) {
             document.getElementById('kaart-detail-modal').classList.remove('hidden');
-            document.getElementById('kaart-detail-content').innerHTML = '<div class="text-center py-4">Laden...</div>';
+            document.getElementById('kaart-detail-content').innerHTML = '<div class="text-center py-4">{{ __('Laden...') }}</div>';
 
             try {
                 const response = await fetch(`/coach-kaart/${qrCode}/geschiedenis`);
@@ -280,13 +280,13 @@
                 // Extract just the content we need
                 document.getElementById('kaart-detail-content').innerHTML = `
                     <a href="/coach-kaart/${qrCode}/scan" class="block w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-center font-medium mb-4">
-                        Bekijk volledige kaart
+                        {{ __('Bekijk volledige kaart') }}
                     </a>
-                    <p class="text-sm text-gray-500 text-center">Klik om check-in/uit te doen</p>
+                    <p class="text-sm text-gray-500 text-center">{{ __('Klik om check-in/uit te doen') }}</p>
                 `;
             } catch (error) {
                 console.error('Error loading kaart detail:', error);
-                document.getElementById('kaart-detail-content').innerHTML = '<div class="text-red-500 text-center py-4">Fout bij laden</div>';
+                document.getElementById('kaart-detail-content').innerHTML = '<div class="text-red-500 text-center py-4">{{ __('Fout bij laden') }}</div>';
             }
         }
 
@@ -330,8 +330,8 @@
                 console.error("Camera error:", err);
                 document.getElementById('reader').innerHTML = `
                     <div class="bg-red-900 text-white p-4 rounded-lg text-center">
-                        <p class="font-bold">Camera niet beschikbaar</p>
-                        <p class="text-sm mt-1">Gebruik handmatig invoeren</p>
+                        <p class="font-bold">{{ __('Camera niet beschikbaar') }}</p>
+                        <p class="text-sm mt-1">{{ __('Gebruik handmatig invoeren') }}</p>
                     </div>
                 `;
                 setTimeout(() => {
