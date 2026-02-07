@@ -193,7 +193,7 @@
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
                     <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
-                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
+                    <button onclick="confirmDelete('{{ $organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>
             @endforeach
@@ -253,7 +253,7 @@
                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->updated_at?->diffForHumans() ?? '-' }}</td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
                     <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
-                    <button onclick="confirmDelete('{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
+                    <button onclick="confirmDelete('{{ $toernooi->organisator?->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
                 </td>
             </tr>
             @endforeach
@@ -270,10 +270,10 @@
 </form>
 
 <script>
-function confirmDelete(slug, naam) {
+function confirmDelete(orgSlug, slug, naam) {
     if (confirm(`🚨 VERWIJDER "${naam}" PERMANENT?\n\nDit verwijdert:\n• Alle judoka's\n• Alle poules en wedstrijden\n• Alle instellingen\n\nDIT KAN NIET ONGEDAAN WORDEN!`)) {
         const form = document.getElementById('delete-form');
-        form.action = `/toernooi/${slug}`;
+        form.action = `/${orgSlug}/toernooi/${slug}`;
         form.submit();
     }
 }
