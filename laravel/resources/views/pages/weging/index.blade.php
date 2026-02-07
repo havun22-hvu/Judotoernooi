@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Weeglijst')
+@section('title', __('Weeglijst'))
 
 @section('content')
 @php
@@ -16,15 +16,15 @@
 
 <div class="flex justify-between items-center mb-4">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Weeglijst ({{ $judokas->count() }})</h1>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Weeglijst') }} ({{ $judokas->count() }})</h1>
         <p class="text-sm text-gray-600 mt-1">
-            <span class="text-green-600">{{ $aanwezig }} aanwezig</span> ·
-            <span class="text-red-600">{{ $afwezig }} afwezig</span> ·
-            <span class="text-orange-600">{{ $nietGewogen }} niet gewogen</span>
+            <span class="text-green-600">{{ $aanwezig }} {{ __('aanwezig') }}</span> ·
+            <span class="text-red-600">{{ $afwezig }} {{ __('afwezig') }}</span> ·
+            <span class="text-orange-600">{{ $nietGewogen }} {{ __('niet gewogen') }}</span>
         </p>
     </div>
     <a href="{{ route('toernooi.weging.interface', $toernooi->routeParams()) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-        ⚖️ Weging Interface
+        ⚖️ {{ __('Weging Interface') }}
     </a>
 </div>
 
@@ -36,7 +36,7 @@
             <div class="relative flex-1 min-w-[200px]">
                 <input type="text"
                        x-model="zoekterm"
-                       placeholder="Zoek op naam, club, gewicht..."
+                       placeholder="{{ __('Zoek op naam, club, gewicht...') }}"
                        class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
                 <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -45,21 +45,21 @@
             <button @click="filterStatus = filterStatus === 'aanwezig' ? null : 'aanwezig'"
                     :class="filterStatus === 'aanwezig' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                Aanwezig ({{ $aanwezig }})
+                {{ __('Aanwezig') }} ({{ $aanwezig }})
             </button>
             <button @click="filterStatus = filterStatus === 'afwezig' ? null : 'afwezig'"
                     :class="filterStatus === 'afwezig' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                Afwezig ({{ $afwezig }})
+                {{ __('Afwezig') }} ({{ $afwezig }})
             </button>
             <button @click="filterStatus = filterStatus === 'niet_gewogen' ? null : 'niet_gewogen'"
                     :class="filterStatus === 'niet_gewogen' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                Niet gewogen ({{ $nietGewogen }})
+                {{ __('Niet gewogen') }} ({{ $nietGewogen }})
             </button>
             <div x-show="zoekterm || filterStatus" class="bg-blue-100 border border-blue-300 rounded-lg px-3 py-2 flex items-center gap-2">
                 <span class="text-blue-800 font-bold" x-text="filteredJudokas.length"></span>
-                <span class="text-blue-700 text-sm">resultaten</span>
+                <span class="text-blue-700 text-sm">{{ __('resultaten') }}</span>
             </div>
         </div>
     </div>
@@ -69,25 +69,25 @@
             <thead class="bg-blue-800 text-white sticky top-0 z-10">
                 <tr>
                     <th @click="sort('naam')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Naam <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Naam') }} <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('club')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Club') }} <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('leeftijdsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Categorie <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Categorie') }} <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('gewichtsklasse')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Klasse <template x-if="sortKey === 'gewichtsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Klasse') }} <template x-if="sortKey === 'gewichtsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('gewicht')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Ingeschreven <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Ingeschreven') }} <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('gewicht_gewogen')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Gewogen <template x-if="sortKey === 'gewicht_gewogen'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Gewogen') }} <template x-if="sortKey === 'gewicht_gewogen'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                     <th @click="sort('status')" class="px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                        <span class="flex items-center gap-1">Status <template x-if="sortKey === 'status'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                        <span class="flex items-center gap-1">{{ __('Status') }} <template x-if="sortKey === 'status'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                     </th>
                 </tr>
             </thead>
@@ -230,7 +230,7 @@ function weeglijstTable() {
 </script>
 @else
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-    Geen judoka's gevonden
+    {{ __("Geen judoka's gevonden") }}
 </div>
 @endif
 @endsection

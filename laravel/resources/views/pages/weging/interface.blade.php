@@ -10,7 +10,7 @@
     <link rel="manifest" href="/manifest-weging.json">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
-    <title>Weging - {{ $toernooi->naam }}</title>
+    <title>{{ __('Weging') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
@@ -25,7 +25,7 @@
     <!-- Standalone Header (device-bound PWA) -->
     <header class="bg-blue-800 px-4 py-2 flex items-center justify-between shadow-lg">
         <div>
-            <h1 class="text-lg font-bold">Weging</h1>
+            <h1 class="text-lg font-bold">{{ __('Weging') }}</h1>
             <p class="text-blue-200 text-xs">{{ $toernooi->naam }}</p>
         </div>
         <div class="flex items-center gap-2">
@@ -70,10 +70,10 @@
 <div id="weegtijd-alert" class="hidden fixed inset-0 bg-red-900/95 z-[100] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl p-6 max-w-sm text-center animate-pulse">
         <div class="text-6xl mb-4">⏰</div>
-        <h2 class="text-2xl font-bold text-red-600 mb-2">Weegtijd voorbij!</h2>
-        <p class="text-gray-600 mb-4">De weegtijd voor <span id="alert-blok" class="font-bold">Blok X</span> is verstreken.</p>
+        <h2 class="text-2xl font-bold text-red-600 mb-2">{{ __('Weegtijd voorbij!') }}</h2>
+        <p class="text-gray-600 mb-4">{{ __('De weegtijd voor') }} <span id="alert-blok" class="font-bold">{{ __('Blok') }} X</span> {{ __('is verstreken.') }}</p>
         <button onclick="sluitWeegtijdAlert()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg">
-            Begrepen
+            {{ __('Begrepen') }}
         </button>
     </div>
 </div>

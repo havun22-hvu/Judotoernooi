@@ -10,14 +10,14 @@
             <button id="scan-button" onclick="startScanner()"
                     class="bg-green-600 hover:bg-green-700 text-white rounded-full w-28 h-28 flex flex-col items-center justify-center shadow-lg">
                 <span class="text-3xl mb-1">📷</span>
-                <span class="font-bold text-sm">Scan</span>
+                <span class="font-bold text-sm">{{ __('Scan') }}</span>
             </button>
 
             <!-- Scanner (when scanning) -->
             <div id="scanner-container" class="text-center w-full" style="display: none;">
                 <div id="qr-reader" style="width: 100%; max-width: 300px; min-height: 200px; margin: 0 auto;"></div>
                 <button onclick="stopScanner()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold">
-                    Stop
+                    {{ __('Stop') }}
                 </button>
             </div>
         </div>
@@ -25,7 +25,7 @@
         <!-- Search input -->
         <div class="mt-1">
             <input type="text" id="search-input"
-                   placeholder="Of zoek op naam..."
+                   placeholder="{{ __('Of zoek op naam...') }}"
                    oninput="searchJudoka(this.value)"
                    class="w-full border-2 border-blue-500 bg-blue-800 rounded-lg px-3 py-2 text-center text-sm focus:border-white focus:outline-none placeholder-blue-300 text-white">
             <!-- Search results dropdown -->
@@ -37,11 +37,11 @@
     <!-- MIDDLE: Instructies (alleen zichtbaar als geen judoka geselecteerd) -->
     <div id="empty-state" class="flex-1 flex flex-col mb-2">
         <div class="bg-white rounded-lg shadow p-3 text-gray-800">
-            <h2 class="font-bold mb-1">Instructies</h2>
+            <h2 class="font-bold mb-1">{{ __('Instructies') }}</h2>
             <ol class="list-decimal list-inside text-sm space-y-0.5">
-                <li>Scan QR-code op weegkaart</li>
-                <li>Voer gewicht in</li>
-                <li>Bevestig met groene knop</li>
+                <li>{{ __('Scan QR-code op weegkaart') }}</li>
+                <li>{{ __('Voer gewicht in') }}</li>
+                <li>{{ __('Bevestig met groene knop') }}</li>
             </ol>
         </div>
     </div>
@@ -87,9 +87,9 @@
                 <!-- Register button -->
                 <button onclick="registreerGewicht()" id="register-btn"
                         class="w-full bg-green-600 active:bg-green-800 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg text-lg">
-                    ✓ Registreer
+                    ✓ {{ __('Registreer') }}
                 </button>
-                <p class="text-xs text-gray-400 text-center mt-1">Tip: 0 kg = kan niet deelnemen</p>
+                <p class="text-xs text-gray-400 text-center mt-1">{{ __('Tip: 0 kg = kan niet deelnemen') }}</p>
 
                 <!-- Feedback message -->
                 <div id="feedback" class="hidden mt-2 p-2 rounded-lg text-center text-sm font-medium"></div>
@@ -103,11 +103,11 @@
     <!-- BOTTOM: Stats + History (fixed at bottom) -->
     <div class="bg-white rounded-lg shadow p-2 text-gray-800">
         <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium">Recent gewogen</span>
+            <span class="text-sm font-medium">{{ __('Recent gewogen') }}</span>
             <span class="text-lg font-bold text-green-600" id="stats">0</span>
         </div>
         <div id="history-list" class="space-y-1 max-h-24 overflow-y-auto text-sm">
-            <p class="text-gray-400 text-center">Nog geen judoka's gewogen</p>
+            <p class="text-gray-400 text-center">{{ __("Nog geen judoka's gewogen") }}</p>
         </div>
     </div>
 </div>
