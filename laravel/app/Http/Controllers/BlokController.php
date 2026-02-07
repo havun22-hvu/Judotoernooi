@@ -747,15 +747,20 @@ class BlokController extends Controller
                     ->with(['wedstrijden', 'judokas'])
                     ->first();
 
-                // POULE: Calculate WP and JP from wedstrijden + barrage for each judoka
+                // POULE: Calculate WP/JP/gewonnen from wedstrijden + barrage for each judoka
                 // Filter out absent judokas (not weighed or marked afwezig)
-                $activeJudokas = $poule->judokas->filter(function ($judoka) {
-                    return $judoka->gewicht_gewogen > 0 && $judoka->aanwezigheid !== 'afwezig';
+                $wegingVerplicht = $toernooi->weging_verplicht;
+                $activeJudokas = $poule->judokas->filter(function ($judoka) use ($wegingVerplicht) {
+                    if ($judoka->aanwezigheid === 'afwezig') return false;
+                    if ($wegingVerplicht && !($judoka->gewicht_gewogen > 0)) return false;
+                    return true;
                 });
 
-                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage) {
+                $isPuntenComp = $poule->isPuntenCompetitie();
+                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isPuntenComp) {
                     $wp = 0;
                     $jp = 0;
+                    $gewonnen = 0;
 
                     // Points from original poule
                     foreach ($poule->wedstrijden as $w) {
@@ -763,28 +768,9 @@ class BlokController extends Controller
                         $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
                         if (!$isInWedstrijd) continue;
 
-                        // JP
-                        if ($w->judoka_wit_id === $judoka->id) {
-                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
-                        } else {
-                            $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
-                        }
+                        if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                        // WP: Win=2, Draw=1, Loss=0
-                        if ($w->winnaar_id === $judoka->id) {
-                            $wp += 2;
-                        } elseif ($w->winnaar_id === null) {
-                            $wp += 1; // Gelijkspel
-                        }
-                    }
-
-                    // ADD barrage points if judoka participated in barrage
-                    if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
-                        foreach ($barrage->wedstrijden as $w) {
-                            if (!$w->is_gespeeld) continue;
-                            $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
-                            if (!$isInWedstrijd) continue;
-
+                        if (!$isPuntenComp) {
                             // JP
                             if ($w->judoka_wit_id === $judoka->id) {
                                 $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
@@ -796,45 +782,62 @@ class BlokController extends Controller
                             if ($w->winnaar_id === $judoka->id) {
                                 $wp += 2;
                             } elseif ($w->winnaar_id === null) {
-                                $wp += 1;
+                                $wp += 1; // Gelijkspel
                             }
                         }
                     }
 
-                    return [
-                        'judoka' => $judoka,
-                        'wp' => (int) $wp,
-                        'jp' => (int) $jp,
-                    ];
-                });
+                    // ADD barrage points if judoka participated in barrage
+                    if ($barrage && $barrage->judokas->contains('id', $judoka->id)) {
+                        foreach ($barrage->wedstrijden as $w) {
+                            if (!$w->is_gespeeld) continue;
+                            $isInWedstrijd = $w->judoka_wit_id === $judoka->id || $w->judoka_blauw_id === $judoka->id;
+                            if (!$isInWedstrijd) continue;
 
-                // Sort by WP desc, then JP desc, then head-to-head
-                $wedstrijden = $poule->wedstrijden;
-                $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
-                    // First: compare WP (higher is better)
-                    $wpA = (int) $a['wp'];
-                    $wpB = (int) $b['wp'];
-                    if ($wpA !== $wpB) {
-                        return $wpB - $wpA;
-                    }
-                    // Second: compare JP (higher is better)
-                    $jpA = (int) $a['jp'];
-                    $jpB = (int) $b['jp'];
-                    if ($jpA !== $jpB) {
-                        return $jpB - $jpA;
-                    }
-                    // Third: head-to-head winner
-                    foreach ($wedstrijden as $w) {
-                        $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
-                                || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
-                        if ($isMatch && $w->winnaar_id) {
-                            return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
+                            if ($w->winnaar_id === $judoka->id) $gewonnen++;
+
+                            if (!$isPuntenComp) {
+                                // JP
+                                if ($w->judoka_wit_id === $judoka->id) {
+                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                                } else {
+                                    $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                                }
+
+                                // WP: Win=2, Draw=1, Loss=0
+                                if ($w->winnaar_id === $judoka->id) {
+                                    $wp += 2;
+                                } elseif ($w->winnaar_id === null) {
+                                    $wp += 1;
+                                }
+                            }
                         }
                     }
-                    return 0;
-                })->values();
+
+                    return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp, 'gewonnen' => (int) $gewonnen];
+                });
+
+                // Sort: punten competitie by gewonnen, normal by WP/JP/h2h
+                $wedstrijden = $poule->wedstrijden;
+                if ($isPuntenComp) {
+                    $poule->standings = $standings->sortByDesc('gewonnen')->values();
+                } else {
+                    $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
+                        if ($a['wp'] !== $b['wp']) return $b['wp'] - $a['wp'];
+                        if ($a['jp'] !== $b['jp']) return $b['jp'] - $a['jp'];
+                        foreach ($wedstrijden as $w) {
+                            $isMatch = ($w->judoka_wit_id === $a['judoka']->id && $w->judoka_blauw_id === $b['judoka']->id)
+                                    || ($w->judoka_wit_id === $b['judoka']->id && $w->judoka_blauw_id === $a['judoka']->id);
+                            if ($isMatch && $w->winnaar_id) {
+                                return $w->winnaar_id === $a['judoka']->id ? -1 : 1;
+                            }
+                        }
+                        return 0;
+                    })->values();
+                }
 
                 $poule->is_eliminatie = false;
+                $poule->is_punten_competitie = $isPuntenComp;
                 $poule->has_barrage = $barrage !== null;
                 return $poule;
             });
