@@ -99,23 +99,23 @@ class ToernooiController extends Controller
         if ($request->has('gewichtsklassen_json') && $request->input('gewichtsklassen_json')) {
             $jsonData = json_decode($request->input('gewichtsklassen_json'), true) ?? [];
 
-            // Extract wedstrijd_systeem and klok_poule_wedstrijden from each category
+            // Extract wedstrijd_systeem and punten_competitie_wedstrijden from each category
             $wedstrijdSysteem = [];
-            $klokPouleWedstrijden = [];
+            $puntenCompWedstrijden = [];
             foreach ($jsonData as $key => $categorie) {
                 if (is_array($categorie) && isset($categorie['wedstrijd_systeem'])) {
                     $wedstrijdSysteem[$key] = $categorie['wedstrijd_systeem'];
                     unset($jsonData[$key]['wedstrijd_systeem']);
                 }
-                if (is_array($categorie) && isset($categorie['klok_poule_wedstrijden'])) {
-                    $klokPouleWedstrijden[$key] = (int) $categorie['klok_poule_wedstrijden'];
-                    unset($jsonData[$key]['klok_poule_wedstrijden']);
+                if (is_array($categorie) && isset($categorie['punten_competitie_wedstrijden'])) {
+                    $puntenCompWedstrijden[$key] = (int) $categorie['punten_competitie_wedstrijden'];
+                    unset($jsonData[$key]['punten_competitie_wedstrijden']);
                 }
             }
             if (!empty($wedstrijdSysteem)) {
                 $data['wedstrijd_systeem'] = $wedstrijdSysteem;
             }
-            $data['klok_poule_wedstrijden'] = !empty($klokPouleWedstrijden) ? $klokPouleWedstrijden : null;
+            $data['punten_competitie_wedstrijden'] = !empty($puntenCompWedstrijden) ? $puntenCompWedstrijden : null;
 
             $data['gewichtsklassen'] = $jsonData;
         } elseif (isset($data['gewichtsklassen'])) {
@@ -360,10 +360,10 @@ class ToernooiController extends Controller
 
         if ($loggedIn->isSitebeheerder() && $loggedIn->id === $organisator->id) {
             // Sitebeheerder viewing own dashboard sees all toernooien
-            $toernooien = Toernooi::orderBy('datum', 'desc')->get();
+            $toernooien = Toernooi::with('organisator')->orderBy('datum', 'desc')->get();
         } else {
             // Regular organisator or sitebeheerder viewing another organisator
-            $toernooien = $organisator->toernooien()->orderBy('datum', 'desc')->get();
+            $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
         }
 
         return view('organisator.dashboard', compact('organisator', 'toernooien'));
