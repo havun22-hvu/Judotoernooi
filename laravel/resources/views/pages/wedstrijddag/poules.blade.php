@@ -194,6 +194,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
             </button>
+            @if($heeftVariabeleCategorieen)
+            @php
+                $blokPouleOpties = collect();
+                foreach ($blok['categories'] as $cat) {
+                    if ($cat['is_eliminatie'] ?? false) continue;
+                    foreach ($cat['poules'] as $p) {
+                        if ($p->type !== 'kruisfinale') {
+                            $blokPouleOpties->push(['id' => $p->id, 'nummer' => $p->nummer]);
+                        }
+                    }
+                }
+            @endphp
+            <button onclick="openNieuweJudokaModal('', '', {{ $blokPouleOpties->values()->toJson() }})" class="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Laatkomer') }}</button>
+            @endif
             <button onclick="openNieuwePouleModal({{ $blok['nummer'] }})" class="px-3 py-2 mr-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded font-medium">+ {{ __('Poule') }}</button>
         </div>
 
