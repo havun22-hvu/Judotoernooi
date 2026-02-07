@@ -9,7 +9,7 @@
     <link rel="manifest" href="/manifest-dojo.json">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
-    <title>Dojo Scanner - {{ $toernooi->naam }}</title>
+    <title>{{ __('Dojo Scanner') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <style>
@@ -29,7 +29,7 @@
     <!-- Header -->
     <header class="bg-blue-800 px-4 py-3 flex items-center justify-between shadow-lg">
         <div>
-            <h1 class="text-lg font-bold">Dojo Scanner</h1>
+            <h1 class="text-lg font-bold">{{ __('Dojo Scanner') }}</h1>
             <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
         <div class="text-right">
@@ -115,7 +115,7 @@
         <div id="club-detail" class="hidden">
             <button onclick="hideClubDetail()" class="flex items-center gap-2 text-blue-300 mb-3">
                 <span>←</span>
-                <span id="club-detail-naam">Club naam</span>
+                <span id="club-detail-naam">{{ __('Club naam') }}</span>
             </button>
 
             <div id="club-kaarten" class="space-y-2">

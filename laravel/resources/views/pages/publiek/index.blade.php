@@ -55,7 +55,7 @@
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <span class="bg-blue-500 px-2 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap">
-                        {{ $totaalJudokas }} <span class="hidden sm:inline">deelnemers</span>
+                        {{ $totaalJudokas }} <span class="hidden sm:inline">{{ __('deelnemers') }}</span>
                     </span>
                     @if($poulesGegenereerd)
                     <button @click="forceRefresh(); debugTapCount++"
@@ -97,7 +97,7 @@
                 <button @click="activeTab = 'live'"
                         :class="activeTab === 'live' ? 'bg-white text-blue-600' : 'text-blue-200 hover:text-white'"
                         class="px-3 sm:px-6 py-3 font-medium rounded-t-lg transition whitespace-nowrap text-sm sm:text-base">
-                    <span class="hidden sm:inline">Live </span>Matten
+                    <span class="hidden sm:inline">{{ __('Live') }} </span>{{ __('Matten') }}
                 </button>
                 @endif
                 @if(count($uitslagen) > 0)
@@ -267,7 +267,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
                                             @foreach($blokken as $tijdblok)
                                             <div class="bg-gray-50 rounded-lg p-4 border">
-                                                <div class="font-bold text-blue-600 mb-2">Blok {{ $tijdblok->nummer }}</div>
+                                                <div class="font-bold text-blue-600 mb-2">{{ __('Blok') }} {{ $tijdblok->nummer }}</div>
                                                 @if($tijdblok->weging_start && $tijdblok->weging_einde)
                                                 <div class="flex justify-between text-sm mb-1">
                                                     <span class="text-gray-600">Weging:</span>
@@ -351,7 +351,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-{{ min($blokken->count(), 4) }} gap-4">
                                 @foreach($blokken as $blok)
                                 <div class="bg-gray-50 rounded-lg p-4 border">
-                                    <div class="font-bold text-blue-600 mb-2">Blok {{ $blok->nummer }}</div>
+                                    <div class="font-bold text-blue-600 mb-2">{{ __('Blok') }} {{ $blok->nummer }}</div>
                                     @if($blok->weging_start && $blok->weging_einde)
                                     <div class="flex justify-between text-sm mb-1">
                                         <span class="text-gray-600">Weging:</span>
@@ -428,7 +428,7 @@
                         <!-- Mat Header -->
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3">
                             <div class="flex justify-between items-center">
-                                <span class="text-2xl font-bold" x-text="'Mat ' + mat.nummer"></span>
+                                <span class="text-2xl font-bold" x-text="'{{ __('Mat') }} ' + mat.nummer"></span>
                             </div>
                             <div x-show="mat.poule_titel" class="text-blue-200 text-sm mt-1" x-text="mat.poule_titel"></div>
                         </div>
@@ -602,7 +602,7 @@
             <div class="mb-6" x-data="{ openGewicht: null }">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded">{{ $leeftijdsklasse }}</span>
-                    <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} judoka's</span>
+                    <span class="text-gray-400 text-sm font-normal">{{ $alleJudokas->count() }} {{ __("judoka's") }}</span>
                 </h2>
 
                 @if($isDynamisch)
@@ -624,8 +624,8 @@
                                 <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
                                 @if($toernooi->voorbereiding_klaar_op && $judokaBlok)
                                 <div class="text-xs text-blue-600 mt-1">
-                                    <span class="font-medium">Blok {{ $judokaBlok->nummer }}</span>
-                                    @if($judokaMat) | Mat {{ $judokaMat->nummer }} @endif
+                                    <span class="font-medium">{{ __('Blok') }} {{ $judokaBlok->nummer }}</span>
+                                    @if($judokaMat) | {{ __('Mat') }} {{ $judokaMat->nummer }} @endif
                                 </div>
                                 @endif
                             </div>
@@ -666,7 +666,7 @@
                 <div x-show="openGewicht === '{{ $gewichtId }}'" x-collapse x-cloak
                      class="bg-white rounded-lg shadow overflow-hidden w-full sm:max-w-md mb-3">
                     <div class="bg-gray-50 px-4 py-2 border-b flex justify-between items-center">
-                        <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} judoka's</span>
+                        <span class="font-medium text-gray-700">{{ $gewichtsklasse }} - {{ $judokas->count() }} {{ __("judoka's") }}</span>
                         <button @click="openGewicht = null" class="text-gray-400 hover:text-gray-600">&times;</button>
                     </div>
                     <div class="divide-y">
@@ -684,8 +684,8 @@
                                 <span class="text-xs text-gray-500 block truncate">{{ $judoka->club?->naam }}</span>
                                 @if($toernooi->voorbereiding_klaar_op && $judokaBlok)
                                 <div class="text-xs text-blue-600 mt-1">
-                                    <span class="font-medium">Blok {{ $judokaBlok->nummer }}</span>
-                                    @if($judokaMat) | Mat {{ $judokaMat->nummer }} @endif
+                                    <span class="font-medium">{{ __('Blok') }} {{ $judokaBlok->nummer }}</span>
+                                    @if($judokaMat) | {{ __('Mat') }} {{ $judokaMat->nummer }} @endif
                                 </div>
                                 @endif
                             </div>
@@ -833,10 +833,10 @@
                                         <div class="text-sm">
                                             <span class="font-bold">P<span x-text="poule.nummer"></span></span>
                                             <span x-text="kortLeeftijd(poule.leeftijdsklasse) + (poule.gewichtsklasse && poule.gewichtsklasse !== 'onbekend' ? ' / ' + poule.gewichtsklasse : '')"></span>
-                                            <span x-show="poule.mat" class="text-blue-200 ml-1">Mat <span x-text="poule.mat"></span></span>
+                                            <span x-show="poule.mat" class="text-blue-200 ml-1">{{ __('Mat') }} <span x-text="poule.mat"></span></span>
                                         </div>
                                         <div x-show="poule.blok" class="text-blue-200 text-xs">
-                                            Blok <span x-text="poule.blok"></span>
+                                            {{ __('Blok') }} <span x-text="poule.blok"></span>
                                         </div>
                                     </div>
                                 </div>

@@ -68,7 +68,7 @@
             <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
-                        <span x-text="(poule.type === 'eliminatie' ? 'Eliminatie' : 'Poule ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
+                        <span x-text="(poule.type === 'eliminatie' ? __eliminatie : __poule + ' ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
                         <span x-show="poule.type === 'eliminatie'">(<span x-text="poule.judoka_count"></span> judoka's)</span>
                     </h2>
                 </div>
@@ -112,13 +112,13 @@
                             <button @click="activeTab = 'A'"
                                     :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                Groep A (Hoofdboom) <span x-text="'(' + poule.judoka_count + ')'"></span>
+                                {{ __('Groep A (Hoofdboom)') }} <span x-text="'(' + poule.judoka_count + ')'"></span>
                             </button>
                             <template x-if="heeftHerkansing(poule)">
                                 <button @click="activeTab = 'B'"
                                         :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                    Groep B (Herkansing) <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
+                                    {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
                                 </button>
                             </template>
                         </div>
@@ -157,7 +157,7 @@
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
                                  ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
-                                🗑️ verwijder
+                                🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
                         <div class="bracket-container overflow-x-auto pb-2" x-html="renderBracket(poule, 'A')"></div>
@@ -175,7 +175,7 @@
                                  ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
                                  ondragleave="this.classList.remove('text-red-600','font-bold')"
                                  ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
-                                🗑️ verwijder
+                                🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
                         <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
@@ -321,6 +321,21 @@
 </div>
 
 <script>
+// === TRANSLATION STRINGS ===
+const __eliminatie = @json(__('Eliminatie'));
+const __poule = @json(__('Poule'));
+const __finale = @json(__('Finale'));
+const __brons = @json(__('Brons'));
+const __correctieWinnaarWijzigen = @json(__('CORRECTIE: Winnaar wijzigen?'));
+const __wasNietWinnaar = @json(__(':naam was niet de winnaar van deze wedstrijd.'));
+const __wilJeAlsWinnaarInstellen = @json(__('Wil je :naam als nieuwe winnaar instellen?'));
+const __oudeWinnaarVerwijderd = @json(__('De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast'));
+const __bracketVergrendeld = @json(__('BRACKET VERGRENDELD'));
+const __probeertTeVerwijderen = @json(__('Je probeert :naam te verwijderen.'));
+const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door een admin.'));
+const __voerAdminWachtwoordIn = @json(__('Voer het admin wachtwoord in:'));
+const __onjuistWachtwoord = @json(__('Onjuist wachtwoord! Verwijdering geannuleerd.'));
+
 // === SWAP RUIMTE VOOR SEEDING ===
 // Tijdelijke opslag voor judoka's tijdens het seeden
 window.swapRuimte = {}; // { pouleId: [{ id, naam }, ...] }
@@ -606,10 +621,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
         if (!data.isAdminOverride && data.isGespeeld && !data.isWinnaar) {
             if (!confirm(
-                `⚠️ CORRECTIE: Winnaar wijzigen?\n\n` +
-                `${naam} was niet de winnaar van deze wedstrijd.\n\n` +
-                `Wil je ${naam} als nieuwe winnaar instellen?\n` +
-                `(De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast)`
+                `⚠️ ${__correctieWinnaarWijzigen}\n\n` +
+                `${__wasNietWinnaar.replace(':naam', naam)}\n\n` +
+                `${__wilJeAlsWinnaarInstellen.replace(':naam', naam)}\n` +
+                `(${__oudeWinnaarVerwijderd})`
             )) {
                 return; // Gebruiker annuleerde
             }
@@ -774,10 +789,10 @@ window.verwijderJudoka = async function(event) {
     // Als bracket locked is, vraag admin wachtwoord
     if (isLocked) {
         const wachtwoord = prompt(
-            '🔒 BRACKET VERGRENDELD\n\n' +
-            `Je probeert ${naam} te verwijderen.\n` +
-            'Dit kan alleen door een admin.\n\n' +
-            'Voer het admin wachtwoord in:'
+            `🔒 ${__bracketVergrendeld}\n\n` +
+            `${__probeertTeVerwijderen.replace(':naam', naam)}\n` +
+            `${__ditKanAlleenDoorAdmin}\n\n` +
+            `${__voerAdminWachtwoordIn}`
         );
 
         if (!wachtwoord) {
@@ -786,7 +801,7 @@ window.verwijderJudoka = async function(event) {
 
         const adminWachtwoord = '{{ $toernooi->admin_wachtwoord ?? "admin123" }}';
         if (wachtwoord !== adminWachtwoord) {
-            alert('❌ Onjuist wachtwoord!\n\nVerwijdering geannuleerd.');
+            alert(`❌ ${__onjuistWachtwoord}`);
             return;
         }
     }
@@ -1788,7 +1803,7 @@ function matInterface() {
             if (aantalSlots >= 16) return '1/8';
             if (aantalSlots >= 8) return '1/4';
             if (aantalSlots >= 4) return '1/2';
-            if (aantalSlots >= 2) return 'Finale';
+            if (aantalSlots >= 2) return __finale;
             // Fallback: gebruik key maar maak het leesbaar
             return rondeKey.replace('_', ' ').replace('ronde ', 'R');
         },
@@ -1862,7 +1877,7 @@ function matInterface() {
                 'achtste_finale': '1/8',
                 'kwartfinale': '1/4',
                 'halve_finale': '1/2',
-                'finale': 'Finale',
+                'finale': __finale,
                 // B-groep: (1)/(2) alleen als ronde 2x gespeeld wordt
                 'b_achtste_finale_1': '1/8 (1)',
                 'b_achtste_finale_2': '1/8 (2)',
@@ -1872,7 +1887,7 @@ function matInterface() {
                 'b_kwartfinale': '1/4',         // Zonder suffix
                 'b_halve_finale_1': '1/2 (1)',
                 'b_halve_finale_2': '1/2 (2)',
-                'b_brons': 'Brons',  // Legacy support (IJF)
+                'b_brons': __brons,  // Legacy support (IJF)
             };
             return namen[ronde] || ronde.replace('b_', 'B ').replace('_', ' ');
         },
