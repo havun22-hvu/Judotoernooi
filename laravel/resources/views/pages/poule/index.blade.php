@@ -402,9 +402,9 @@
                             {{ __('door') }} → <span data-poule-count="{{ $poule->id }}">{{ $poule->aantal_judokas }}</span> {{ __('judoka\'s') }}
                         </span>
                         @else
-                        <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count }}</span> {{ __('judoka\'s') }}</span>
+                        <span><span data-poule-count="{{ $poule->id }}">{{ $poule->judokas_count ?: $poule->aantal_judokas }}</span> {{ __('judoka\'s') }}</span>
                         @endif
-                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ $poule->judokas_count < 2 && !$poule->isKruisfinale() ? '-' : $poule->aantal_wedstrijden }}</span> {{ __('wedstrijden') }}</span>
+                        <span><span data-poule-wedstrijden="{{ $poule->id }}">{{ ($poule->judokas_count ?: $poule->aantal_judokas) < 2 && !$poule->isKruisfinale() ? '-' : $poule->aantal_wedstrijden }}</span> {{ __('wedstrijden') }}</span>
                     </div>
                 </div>
 
