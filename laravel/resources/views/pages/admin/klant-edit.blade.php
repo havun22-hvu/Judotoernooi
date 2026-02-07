@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Havun Admin - ' . $klant->naam . ' bewerken')
+@section('title', __('Havun Admin') . ' - ' . $klant->naam . ' ' . __('bewerken'))
 
 @section('content')
 <div class="flex justify-between items-center mb-8">

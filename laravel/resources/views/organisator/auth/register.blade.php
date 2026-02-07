@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registreren - JudoToernooi</title>
+    <title>{{ __('Registreren') }} - JudoToernooi</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">JudoToernooi</h1>
-            <p class="text-gray-600">Organisator Registratie</p>
+            <p class="text-gray-600">{{ __('Organisator Registratie') }}</p>
         </div>
 
         @if($errors->any())
@@ -28,7 +28,7 @@
 
             <div class="mb-4">
                 <label for="organisatie_naam" class="block text-sm font-medium text-gray-700 mb-1">
-                    Naam judoschool / organisatie
+                    {{ __('Naam judoschool / organisatie') }}
                 </label>
                 <input type="text"
                        id="organisatie_naam"
@@ -36,7 +36,7 @@
                        value="{{ old('organisatie_naam') }}"
                        required
                        autofocus
-                       placeholder="Naam van uw judoschool"
+                       placeholder="{{ __('Naam van uw judoschool') }}"
                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('organisatie_naam') border-red-500 @enderror">
                 @error('organisatie_naam')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -45,14 +45,14 @@
 
             <div class="mb-4">
                 <label for="naam" class="block text-sm font-medium text-gray-700 mb-1">
-                    Uw naam <span class="text-gray-400">(contactpersoon)</span>
+                    {{ __('Uw naam') }} <span class="text-gray-400">({{ __('contactpersoon') }})</span>
                 </label>
                 <input type="text"
                        id="naam"
                        name="naam"
                        value="{{ old('naam') }}"
                        required
-                       placeholder="bijv. Jan Jansen"
+                       placeholder="{{ __('bijv. Jan Jansen') }}"
                        class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:ring-blue-500 @error('naam') border-red-500 @enderror">
                 @error('naam')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -61,7 +61,7 @@
 
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                    E-mailadres
+                    {{ __('E-mailadres') }}
                 </label>
                 <input type="email"
                        id="email"

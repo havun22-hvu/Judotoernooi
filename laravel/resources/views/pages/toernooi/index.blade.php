@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'Havun Admin - Alle Organisatoren')
+@section('title', __('Havun Admin - Alle Organisatoren'))
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Havun Admin Dashboard</h1>
-        <p class="text-gray-500 mt-1">Overzicht van alle klanten (organisatoren) en hun toernooien</p>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Havun Admin Dashboard') }}</h1>
+        <p class="text-gray-500 mt-1">{{ __('Overzicht van alle klanten (organisatoren) en hun toernooien') }}</p>
     </div>
     <div class="flex gap-4">
         <a href="{{ route('admin.klanten') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-            Klantenbeheer
+            {{ __('Klantenbeheer') }}
         </a>
         <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-blue-600 hover:text-blue-800 flex items-center">
-            &larr; Terug naar Dashboard
+            &larr; {{ __('Terug naar Dashboard') }}
         </a>
     </div>
 </div>
@@ -22,22 +22,22 @@
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-white rounded-lg shadow p-4">
         <div class="text-3xl font-bold text-blue-600">{{ $organisatoren->where('is_sitebeheerder', false)->count() }}</div>
-        <div class="text-gray-500 text-sm">Klanten (organisatoren)</div>
+        <div class="text-gray-500 text-sm">{{ __('Klanten (organisatoren)') }}</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
         <div class="text-3xl font-bold text-green-600">{{ $organisatoren->sum(fn($o) => $o->toernooien->count()) + $toernooienZonderOrganisator->count() }}</div>
-        <div class="text-gray-500 text-sm">Toernooien totaal</div>
+        <div class="text-gray-500 text-sm">{{ __('Toernooien totaal') }}</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
         <div class="text-3xl font-bold text-purple-600">{{ $organisatoren->sum(fn($o) => $o->toernooien->sum('judokas_count')) + $toernooienZonderOrganisator->sum('judokas_count') }}</div>
-        <div class="text-gray-500 text-sm">Judoka's verwerkt</div>
+        <div class="text-gray-500 text-sm">{{ __('Judoka\'s verwerkt') }}</div>
     </div>
     <div class="bg-white rounded-lg shadow p-4">
         @php
             $afgeslotenCount = $organisatoren->sum(fn($o) => $o->toernooien->whereNotNull('afgesloten_at')->count());
         @endphp
         <div class="text-3xl font-bold text-orange-600">{{ $afgeslotenCount }}</div>
-        <div class="text-gray-500 text-sm">Toernooien afgerond</div>
+        <div class="text-gray-500 text-sm">{{ __('Toernooien afgerond') }}</div>
     </div>
 </div>
 
@@ -50,7 +50,7 @@
             <div>
                 <div class="flex items-center gap-3">
                     <h2 class="text-xl font-bold text-gray-800">{{ $organisator->naam }}</h2>
-                    <a href="{{ route('organisator.dashboard', ['organisator' => $organisator->slug]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">→ Open dashboard</a>
+                    <a href="{{ route('organisator.dashboard', ['organisator' => $organisator->slug]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">→ {{ __('Open dashboard') }}</a>
                 </div>
                 <div class="text-sm text-gray-500 mt-1">
                     <span class="inline-flex items-center">
@@ -73,15 +73,15 @@
                 <div class="grid grid-cols-3 gap-4 text-center">
                     <div>
                         <div class="text-2xl font-bold text-blue-600">{{ $organisator->toernooien->count() }}</div>
-                        <div class="text-xs text-gray-500">Toernooien</div>
+                        <div class="text-xs text-gray-500">{{ __('Toernooien') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-green-600">{{ $organisator->clubs_count ?? $organisator->clubs()->count() }}</div>
-                        <div class="text-xs text-gray-500">Clubs</div>
+                        <div class="text-xs text-gray-500">{{ __('Clubs') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-bold text-purple-600">{{ $organisator->toernooi_templates_count ?? $organisator->toernooiTemplates()->count() }}</div>
-                        <div class="text-xs text-gray-500">Templates</div>
+                        <div class="text-xs text-gray-500">{{ __('Templates') }}</div>
                     </div>
                 </div>
             </div>
@@ -89,14 +89,14 @@
         {{-- Extra info row --}}
         <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200 text-sm">
             <div class="flex gap-6 text-gray-500">
-                <span>Klant sinds: <strong>{{ $organisator->created_at?->format('d-m-Y') ?? '-' }}</strong></span>
-                <span>Laatste login:
+                <span>{{ __('Klant sinds') }}: <strong>{{ $organisator->created_at?->format('d-m-Y') ?? '-' }}</strong></span>
+                <span>{{ __('Laatste login') }}:
                     @if($organisator->laatste_login)
                         <strong class="{{ $organisator->laatste_login->diffInDays() > 30 ? 'text-orange-600' : 'text-green-600' }}">
                             {{ $organisator->laatste_login->diffForHumans() }}
                         </strong>
                     @else
-                        <strong class="text-gray-400">Nooit</strong>
+                        <strong class="text-gray-400">{{ __('Nooit') }}</strong>
                     @endif
                 </span>
             </div>
@@ -106,10 +106,10 @@
                     $afgerond = $organisator->toernooien->whereNotNull('afgesloten_at')->count();
                 @endphp
                 @if($actief > 0)
-                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">{{ $actief }} actief</span>
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">{{ $actief }} {{ __('actief') }}</span>
                 @endif
                 @if($afgerond > 0)
-                    <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ $afgerond }} afgerond</span>
+                    <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ $afgerond }} {{ __('afgerond') }}</span>
                 @endif
             </div>
         </div>
@@ -120,14 +120,14 @@
     <table class="min-w-full">
         <thead class="bg-gray-100">
             <tr>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Toernooi</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poules</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Pakket</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Laatst actief</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Toernooi') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Datum') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Judoka\'s') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Poules') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Status') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Pakket') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Laatst actief') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Acties') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -145,7 +145,7 @@
                             {{ $toernooi->datum->format('d-m-Y') }}
                         </span>
                         @if($toernooi->datum->isToday())
-                            <span class="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs animate-pulse">VANDAAG</span>
+                            <span class="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-xs animate-pulse">{{ __('VANDAAG') }}</span>
                         @elseif($toernooi->datum->isFuture())
                             @php
                                 $totalDagen = (int) now()->diffInDays($toernooi->datum);
@@ -169,38 +169,38 @@
                 <td class="px-6 py-3 whitespace-nowrap text-center text-sm">{{ $toernooi->poules_count }}</td>
                 <td class="px-6 py-3 whitespace-nowrap text-center">
                     @if($toernooi->afgesloten_at)
-                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs">Afgerond</span>
+                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs">{{ __('Afgerond') }}</span>
                     @elseif($toernooi->weegkaarten_gemaakt_op)
-                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">Wedstrijddag</span>
+                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">{{ __('Wedstrijddag') }}</span>
                     @elseif($toernooi->judokas_count > 0)
-                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">Voorbereiding</span>
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">{{ __('Voorbereiding') }}</span>
                     @else
-                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Nieuw</span>
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">{{ __('Nieuw') }}</span>
                     @endif
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap text-center">
                     @if($toernooi->isPaidTier())
                         <div class="inline-flex flex-col items-center">
                             <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">€{{ $toernooi->toernooiBetaling?->bedrag ?? '?' }}</span>
-                            <span class="text-xs text-gray-500">max {{ $toernooi->paid_max_judokas }}</span>
+                            <span class="text-xs text-gray-500">{{ __('max') }} {{ $toernooi->paid_max_judokas }}</span>
                         </div>
                     @else
-                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">Gratis</span>
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ __('Gratis') }}</span>
                     @endif
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">
                     {{ $toernooi->updated_at?->diffForHumans() ?? '-' }}
                 </td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
-                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
-                    <button onclick="confirmDelete('{{ $organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
+                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">{{ __('Open') }}</a>
+                    <button onclick="confirmDelete('{{ $organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
                 </td>
             </tr>
             @endforeach
         </tbody>
     </table>
     @else
-    <div class="px-6 py-4 text-gray-500 text-sm italic">Nog geen toernooien aangemaakt</div>
+    <div class="px-6 py-4 text-gray-500 text-sm italic">{{ __('Nog geen toernooien aangemaakt') }}</div>
     @endif
 </div>
 @endforeach
@@ -208,7 +208,7 @@
 {{-- Sitebeheerders apart --}}
 @if($organisatoren->where('is_sitebeheerder', true)->count() > 0)
 <div class="mt-8 pt-8 border-t border-gray-300">
-    <h2 class="text-lg font-semibold text-gray-600 mb-4">Sitebeheerders (Havun)</h2>
+    <h2 class="text-lg font-semibold text-gray-600 mb-4">{{ __('Sitebeheerders (Havun)') }}</h2>
     @foreach($organisatoren->where('is_sitebeheerder', true) as $organisator)
     <div class="bg-purple-50 rounded-lg shadow mb-4 p-4">
         <div class="flex justify-between items-center">
@@ -217,7 +217,7 @@
                 <span class="text-gray-500 text-sm ml-2">{{ $organisator->email }}</span>
             </div>
             <div class="text-sm text-gray-500">
-                Laatste login: {{ $organisator->laatste_login?->diffForHumans() ?? 'Nooit' }}
+                {{ __('Laatste login') }}: {{ $organisator->laatste_login?->diffForHumans() ?? __('Nooit') }}
             </div>
         </div>
     </div>
@@ -230,17 +230,17 @@
 <div class="bg-white rounded-lg shadow mb-6 overflow-hidden mt-8">
     <div class="bg-orange-50 px-6 py-4 border-b">
         <h2 class="text-lg font-bold text-orange-800">⚠️ Toernooien zonder organisator ({{ $toernooienZonderOrganisator->count() }})</h2>
-        <div class="text-sm text-orange-600">Deze toernooien hebben geen gekoppelde klant - mogelijk legacy data</div>
+        <div class="text-sm text-orange-600">{{ __('Deze toernooien hebben geen gekoppelde klant - mogelijk legacy data') }}</div>
     </div>
     <table class="min-w-full">
         <thead class="bg-gray-100">
             <tr>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Judoka's</th>
-                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">Poules</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Laatst gebruikt</th>
-                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Naam') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Datum') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Judoka\'s') }}</th>
+                <th class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Poules') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Laatst gebruikt') }}</th>
+                <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Acties') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -253,10 +253,10 @@
                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">{{ $toernooi->updated_at?->diffForHumans() ?? '-' }}</td>
                 <td class="px-6 py-3 whitespace-nowrap space-x-2">
                     @if($toernooi->organisator)
-                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">Open</a>
-                    <button onclick="confirmDelete('{{ $toernooi->organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">Verwijder</button>
+                    <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800 text-sm">{{ __('Open') }}</a>
+                    <button onclick="confirmDelete('{{ $toernooi->organisator->slug }}', '{{ $toernooi->slug }}', '{{ addslashes($toernooi->naam) }}')" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijder') }}</button>
                     @else
-                    <span class="text-gray-400 text-sm">Geen organisator</span>
+                    <span class="text-gray-400 text-sm">{{ __('Geen organisator') }}</span>
                     @endif
                 </td>
             </tr>

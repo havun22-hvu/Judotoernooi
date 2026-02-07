@@ -10,7 +10,7 @@
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
-            <p class="text-gray-600">Coach Portal</p>
+            <p class="text-gray-600">{{ __('Coach Portal') }}</p>
             <p class="text-sm text-gray-500 mt-1">{{ $toernooi->naam }}</p>
         </div>
 
@@ -30,7 +30,7 @@
             @csrf
             <div class="mb-6">
                 <label for="pincode" class="block text-sm font-medium text-gray-700 mb-2">
-                    PIN code (5 cijfers)
+                    {{ __('PIN code (5 cijfers)') }}
                 </label>
                 <input type="text"
                        id="pincode"
@@ -49,12 +49,12 @@
 
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                Inloggen
+                {{ __('Inloggen') }}
             </button>
         </form>
 
         <p class="mt-6 text-xs text-gray-500 text-center">
-            PIN vergeten? Neem contact op met de organisatie.
+            {{ __('PIN vergeten? Neem contact op met de organisatie.') }}
         </p>
 
         <!-- Security warning -->
@@ -62,8 +62,8 @@
             <div class="flex items-start gap-2">
                 <span class="text-amber-600 text-lg">⚠️</span>
                 <div class="text-xs text-amber-800">
-                    <p class="font-bold mb-1">Beveiligingswaarschuwing</p>
-                    <p>Deze PIN geeft toegang om judoka's aan te melden en te wijzigen. Deel deze code niet met anderen en bewaar hem veilig.</p>
+                    <p class="font-bold mb-1">{{ __('Beveiligingswaarschuwing') }}</p>
+                    <p>{{ __('Deze PIN geeft toegang om judoka\'s aan te melden en te wijzigen. Deel deze code niet met anderen en bewaar hem veilig.') }}</p>
                 </div>
             </div>
         </div>

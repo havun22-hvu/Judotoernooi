@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Mat Interface')
+@section('title', __('Mat Interface'))
 
 @push('styles')
 <style>
@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="mb-4">
-    <h1 class="text-2xl font-bold text-gray-800">🥋 Mat Interface</h1>
+    <h1 class="text-2xl font-bold text-gray-800">🥋 {{ __('Mat Interface') }}</h1>
 </div>
 
 @include('pages.mat.partials._content')

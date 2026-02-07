@@ -36,17 +36,17 @@
         <div class="flex items-center gap-3 text-xs">
             <span class="flex items-center gap-1">
                 <span class="w-3 h-3 rounded bg-green-500"></span>
-                <span class="text-gray-600">Speelt nu</span>
+                <span class="text-gray-600">{{ __('Speelt nu') }}</span>
             </span>
             <span class="flex items-center gap-1">
                 <span class="w-3 h-3 rounded bg-yellow-400"></span>
-                <span class="text-gray-600">Staat klaar</span>
+                <span class="text-gray-600">{{ __('Staat klaar') }}</span>
             </span>
             <span class="flex items-center gap-1">
                 <span class="w-3 h-3 rounded bg-blue-400"></span>
-                <span class="text-gray-600">Gereed maken</span>
+                <span class="text-gray-600">{{ __('Gereed maken') }}</span>
             </span>
-            <span class="text-gray-400 ml-2 cursor-help" title="Tip: Klik op wedstrijdnummer om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik op groen om over te slaan (geel schuift door).">ⓘ tip</span>
+            <span class="text-gray-400 ml-2 cursor-help" title="{{ __('Tip: Klik op wedstrijdnummer om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik op groen om over te slaan (geel schuift door).') }}">ⓘ tip</span>
         </div>
         <!-- Blok/Mat selectie + update knop rechts -->
         <div class="text-sm text-gray-600 flex items-center gap-3">
@@ -140,7 +140,7 @@
                                          x-text="judoka.naam">
                                     </div>
                                 </template>
-                                <span x-show="getSwapJudokas(poule.poule_id).length === 0" class="text-sm italic py-1 text-orange-400">Sleep judoka hierheen</span>
+                                <span x-show="getSwapJudokas(poule.poule_id).length === 0" class="text-sm italic py-1 text-orange-400">{{ __('Sleep judoka hierheen') }}</span>
                             </div>
                         </div>
                     </div>
@@ -190,7 +190,7 @@
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
-                                <th class="px-2 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[240px]">Naam</th>
+                                <th class="px-2 py-1 text-left font-bold text-gray-700 sticky left-0 bg-gray-200 min-w-[240px]">{{ __('Naam') }}</th>
                                 <template x-for="(w, idx) in poule.wedstrijden" :key="'h-' + idx">
                                     <th class="px-0 py-1 text-center font-bold w-14 border-l border-gray-300 cursor-pointer select-none transition-colors"
                                         :class="getWedstrijdKleurClass(poule, w, idx)"
@@ -289,28 +289,28 @@
     </template>
 
     <div x-show="poules.length === 0 && blokId && matId" class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-        Geen poules op deze mat in dit blok
+        {{ __('Geen poules op deze mat in dit blok') }}
     </div>
 
     <!-- Blok/Mat keuze onderaan -->
     <div id="blok-mat-keuze" class="bg-gray-100 rounded-lg p-4 mt-8 border border-gray-300">
-        <h3 class="text-sm font-bold text-gray-600 mb-3">Blok & Mat selectie</h3>
+        <h3 class="text-sm font-bold text-gray-600 mb-3">{{ __('Blok & Mat selectie') }}</h3>
         <div class="flex gap-4">
             <div class="w-40">
-                <label class="block text-gray-600 text-sm mb-1">Blok</label>
+                <label class="block text-gray-600 text-sm mb-1">{{ __('Blok') }}</label>
                 <select x-model="blokId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
-                    <option value="">Selecteer...</option>
+                    <option value="">{{ __('Selecteer...') }}</option>
                     @foreach($blokken as $blok)
-                    <option value="{{ $blok->id }}">Blok {{ $blok->nummer }}
-                        @if($blok->weging_gesloten) (gesloten) @endif
+                    <option value="{{ $blok->id }}">{{ __('Blok') }} {{ $blok->nummer }}
+                        @if($blok->weging_gesloten) ({{ __('gesloten') }}) @endif
                     </option>
                     @endforeach
                 </select>
             </div>
             <div class="w-40">
-                <label class="block text-gray-600 text-sm mb-1">Mat</label>
+                <label class="block text-gray-600 text-sm mb-1">{{ __('Mat') }}</label>
                 <select x-model="matId" @change="laadWedstrijden()" class="w-full border rounded px-3 py-2 text-sm">
-                    <option value="">Selecteer...</option>
+                    <option value="">{{ __('Selecteer...') }}</option>
                     @foreach($matten as $mat)
                     <option value="{{ $mat->id }}">Mat {{ $mat->nummer }}</option>
                     @endforeach

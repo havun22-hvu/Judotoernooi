@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Matten')
+@section('title', __('Matten'))
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Matten</h1>
+    <h1 class="text-3xl font-bold text-gray-800">{{ __('Matten') }}</h1>
     <a href="{{ route('toernooi.mat.interface', $toernooi->routeParams()) }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-        🥋 Mat Interface
+        🥋 {{ __('Mat Interface') }}
     </a>
 </div>
 
@@ -21,7 +21,7 @@
                class="block p-3 bg-gray-100 hover:bg-gray-200 rounded">
                 Blok {{ $blok->nummer }}
                 @if($blok->weging_gesloten)
-                <span class="text-xs text-red-600">(gesloten)</span>
+                <span class="text-xs text-red-600">({{ __('gesloten') }})</span>
                 @endif
             </a>
             @endforeach

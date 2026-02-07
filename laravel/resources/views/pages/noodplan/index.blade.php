@@ -1,32 +1,30 @@
 @extends('layouts.app')
 
-@section('title', 'Case of Emergency')
+@section('title', __('Case of Emergency'))
 
 @section('content')
 <div class="max-w-4xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">🆘 Noodplan</h1>
-            <p class="text-gray-600 mt-1">Exports, backups en prints voor als het mis gaat</p>
+            <h1 class="text-3xl font-bold text-gray-800">🆘 {{ __('Noodplan') }}</h1>
+            <p class="text-gray-600 mt-1">{{ __('Exports, backups en prints voor als het mis gaat') }}</p>
         </div>
         <div class="text-right text-sm text-gray-500">
-            <p>Momentopname: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
+            <p>{{ __('Momentopname') }}: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
             <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
-                &larr; Terug naar Dashboard
+                &larr; {{ __('Terug naar Dashboard') }}
             </a>
         </div>
     </div>
 
     <!-- Uitleg -->
     <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-        <h2 class="font-bold text-amber-800 mb-2">Wat is dit?</h2>
+        <h2 class="font-bold text-amber-800 mb-2">{{ __('Wat is dit?') }}</h2>
         <p class="text-sm text-amber-700 mb-2">
-            Dit is je vangnet bij stroomuitval, servercrash of internetstoring. Download vóór het toernooi begint
-            de belangrijkste exports en bewaar ze op een USB-stick of laptop.
+            {{ __('Dit is je vangnet bij stroomuitval, servercrash of internetstoring. Download vóór het toernooi begint de belangrijkste exports en bewaar ze op een USB-stick of laptop.') }}
         </p>
         <p class="text-sm text-amber-700">
-            <strong>Tip:</strong> De browser slaat automatisch uitslagen op in localStorage. Als de server crasht
-            maar je laptop nog werkt, kun je de "Live wedstrijd schema's" nog steeds printen met alle scores.
+            <strong>{{ __('Tip') }}:</strong> {{ __('De browser slaat automatisch uitslagen op in localStorage. Als de server crasht maar je laptop nog werkt, kun je de "Live wedstrijd schema\'s" nog steeds printen met alle scores.') }}
         </p>
     </div>
 
@@ -36,8 +34,8 @@
         <div class="flex items-center">
             <span class="text-2xl mr-3">⚠️</span>
             <div>
-                <h3 class="font-bold text-orange-800">Offline Modus</h3>
-                <p class="text-orange-700 text-sm">Server niet bereikbaar. Je kunt nog steeds printen vanuit de lokale backup (localStorage).</p>
+                <h3 class="font-bold text-orange-800">{{ __('Offline Modus') }}</h3>
+                <p class="text-orange-700 text-sm">{{ __('Server niet bereikbaar. Je kunt nog steeds printen vanuit de lokale backup (localStorage).') }}</p>
             </div>
         </div>
     </div>
@@ -71,14 +69,14 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">📋</span>
-            POULE EXPORT (backup)
+            {{ __('POULE EXPORT (backup)') }}
         </h2>
 
         <div class="space-y-4">
             <!-- Poule Export -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-medium text-green-800">Volledige poule-indeling</h3>
+                    <h3 class="font-medium text-green-800">{{ __('Volledige poule-indeling') }}</h3>
                     <div class="flex gap-2">
                         <a href="{{ route('toernooi.noodplan.export-poules', $toernooi->routeParamsWith(['format' => 'xlsx'])) }}"
                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium">
@@ -91,9 +89,9 @@
                     </div>
                 </div>
                 <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
-                    <li>Per blok een tab</li>
-                    <li>Gesorteerd op mat</li>
-                    <li>Met leeftijds-/gewichtsklasse</li>
+                    <li>{{ __('Per blok een tab') }}</li>
+                    <li>{{ __('Gesorteerd op mat') }}</li>
+                    <li>{{ __('Met leeftijds-/gewichtsklasse') }}</li>
                 </ul>
             </div>
 
@@ -101,12 +99,12 @@
             <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="jsonDownloader()">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-medium text-purple-800">Offline Backup (JSON)</h3>
-                        <p class="text-sm text-purple-600">Voor lokale server bij internetstoring - laad in via "Laad JSON backup" hieronder</p>
+                        <h3 class="font-medium text-purple-800">{{ __('Offline Backup (JSON)') }}</h3>
+                        <p class="text-sm text-purple-600">{{ __('Voor lokale server bij internetstoring - laad in via "Laad JSON backup" hieronder') }}</p>
                     </div>
                     <button @click="download()" type="button"
                             class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
-                        Download backup
+                        {{ __('Download backup') }}
                     </button>
                 </div>
             </div>
@@ -156,13 +154,13 @@
             <!-- Weeglijsten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium">Weeglijsten</h3>
-                    <p class="text-sm text-gray-500">Alfabetisch per blok, met invulvak</p>
+                    <h3 class="font-medium">{{ __('Weeglijsten') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Alfabetisch per blok, met invulvak') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                        Alle
+                        {{ __('Alle') }}
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
@@ -176,18 +174,18 @@
             <!-- Weegkaarten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
                 <div>
-                    <h3 class="font-medium">Weegkaarten</h3>
-                    <p class="text-sm text-gray-500">Per judoka (QR + gegevens)</p>
+                    <h3 class="font-medium">{{ __('Weegkaarten') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Per judoka (QR + gegevens)') }}</p>
                 </div>
                 <div class="flex gap-2 relative">
                     <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                        Alle
+                        {{ __('Alle') }}
                     </a>
                     <div class="relative">
                         <button @click="open = !open" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
-                            Per club ▼
+                            {{ __('Per club') }} ▼
                         </button>
                         <div x-show="open" @click.away="open = false" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
@@ -205,18 +203,18 @@
             <!-- Coachkaarten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
                 <div>
-                    <h3 class="font-medium">Coachkaarten</h3>
-                    <p class="text-sm text-gray-500">Toegang dojo</p>
+                    <h3 class="font-medium">{{ __('Coachkaarten') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Toegang dojo') }}</p>
                 </div>
                 <div class="flex gap-2 relative">
                     <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                        Alle
+                        {{ __('Alle') }}
                     </a>
                     <div class="relative">
                         <button @click="open = !open" type="button"
                                 class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
-                            Per club ▼
+                            {{ __('Per club') }} ▼
                         </button>
                         <div x-show="open" @click.away="open = false" x-cloak
                              class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
@@ -234,20 +232,20 @@
             <!-- Contactlijst -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium">Contactlijst</h3>
-                    <p class="text-sm text-gray-500">Coach contactgegevens per club</p>
+                    <h3 class="font-medium">{{ __('Contactlijst') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Coach contactgegevens per club') }}</p>
                 </div>
                 <a href="{{ route('toernooi.noodplan.contactlijst', $toernooi->routeParams()) }}" target="_blank"
                    class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                    Bekijken
+                    {{ __('Bekijken') }}
                 </a>
             </div>
 
             <!-- Lege wedstrijdschema's -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium">Lege wedstrijdschema's</h3>
-                    <p class="text-sm text-gray-500">Handmatig invullen</p>
+                    <h3 class="font-medium">{{ __('Lege wedstrijdschema\'s') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Handmatig invullen') }}</p>
                 </div>
                 <div class="flex gap-2">
                     @for($i = 2; $i <= 7; $i++)
@@ -265,9 +263,9 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">📋</span>
-            POULES PRINTEN (voorbereiding)
+            {{ __('POULES PRINTEN (voorbereiding)') }}
         </h2>
-        <p class="text-sm text-gray-600 mb-4">Print poule-overzichten per blok/mat vóór het toernooi begint. Handig om uit te delen aan tafelofficiëls.</p>
+        <p class="text-sm text-gray-600 mb-4">{{ __('Print poule-overzichten per blok/mat vóór het toernooi begint. Handig om uit te delen aan tafelofficiëls.') }}</p>
 
         <div class="space-y-4">
             @foreach($blokken as $blok)
@@ -287,7 +285,7 @@
                     @endforeach
                     <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}" target="_blank"
                        class="px-3 py-2 bg-blue-800 text-white rounded text-sm hover:bg-blue-900">
-                        Alle matten
+                        {{ __('Alle matten') }}
                     </a>
                 </div>
             </div>
@@ -299,14 +297,14 @@
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup()" x-init="init()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">🏆</span>
-            TIJDENS DE WEDSTRIJD
+            {{ __('TIJDENS DE WEDSTRIJD') }}
             <span x-show="syncStatus === 'connected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
                 <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
                 Live
             </span>
             <span x-show="syncStatus === 'disconnected'" class="ml-3 inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
                 <span class="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
-                Backup modus
+                {{ __('Backup modus') }}
             </span>
         </h2>
 
@@ -314,11 +312,11 @@
             <!-- Status info + laden van JSON backup -->
             <div class="p-3 rounded text-sm flex items-center justify-between" :class="syncStatus === 'connected' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-orange-50 border border-orange-200 text-orange-700'">
                 <div>
-                    <span x-text="uitslagCount"></span> uitslagen in backup | Laatste sync: <span x-text="laatsteSync || 'Nog geen data'"></span>
+                    <span x-text="uitslagCount"></span> {{ __('uitslagen in backup') }} | {{ __('Laatste sync') }}: <span x-text="laatsteSync || '{{ __('Nog geen data') }}'"></span>
                 </div>
                 <div class="flex gap-2">
                     <label class="px-3 py-1 bg-white border rounded text-xs cursor-pointer hover:bg-gray-50">
-                        📁 Laad JSON backup
+                        📁 {{ __('Laad JSON backup') }}
                         <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
                     </label>
                 </div>
@@ -327,13 +325,13 @@
             <!-- Ingevulde schema's (matrix) - judoka's ingevuld, uitslagen leeg -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium">Ingevulde schema's (matrix)</h3>
-                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg - voor handmatig invullen</p>
+                    <h3 class="font-medium">{{ __('Ingevulde schema\'s (matrix)') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Judoka\'s ingevuld, uitslagen leeg - voor handmatig invullen') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
-                        Alle
+                        {{ __('Alle') }}
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
@@ -347,13 +345,13 @@
             <!-- Live wedstrijd schema's - met uitslagen -->
             <div class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded">
                 <div>
-                    <h3 class="font-medium text-yellow-800">Live wedstrijd schema's</h3>
-                    <p class="text-sm text-yellow-600">Met alle al gespeelde wedstrijden + punten</p>
+                    <h3 class="font-medium text-yellow-800">{{ __('Live wedstrijd schema\'s') }}</h3>
+                    <p class="text-sm text-yellow-600">{{ __('Met alle al gespeelde wedstrijden + punten') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParams()) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">
-                        Alle
+                        {{ __('Alle') }}
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"

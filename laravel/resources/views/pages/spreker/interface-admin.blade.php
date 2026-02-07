@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Spreker Interface')
+@section('title', __('Spreker Interface'))
 
 @push('styles')
 <style>
@@ -10,7 +10,7 @@
 
 @section('content')
 <div class="mb-4">
-    <h1 class="text-2xl font-bold text-gray-800">📢 Spreker Interface</h1>
+    <h1 class="text-2xl font-bold text-gray-800">📢 {{ __('Spreker Interface') }}</h1>
 </div>
 
 @include('pages.spreker.partials._content')

@@ -43,7 +43,7 @@
             :class="activeTab === 'uitslagen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
         >
-            <span class="text-lg">🏆</span> Uitslagen
+            <span class="text-lg">🏆</span> {{ __('Uitslagen') }}
             <span x-show="klarePouleCount > 0" class="ml-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="klarePouleCount"></span>
         </button>
         <button
@@ -51,14 +51,14 @@
             :class="activeTab === 'oproepen' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
         >
-            <span class="text-lg">📣</span> Oproepen
+            <span class="text-lg">📣</span> {{ __('Oproepen') }}
         </button>
         <button
             @click="activeTab = 'notities'"
             :class="activeTab === 'notities' ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
             class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-sm transition-colors"
         >
-            <span class="text-lg">📝</span> Notities
+            <span class="text-lg">📝</span> {{ __('Notities') }}
         </button>
     </div>
 
@@ -69,7 +69,7 @@
                 @click="toonGeschiedenis = !toonGeschiedenis"
                 class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
             >
-                <span>📋</span> Vorige
+                <span>📋</span> {{ __('Vorige') }}
             </button>
             <button
                 @click="refreshUitslagen()"
@@ -84,11 +84,11 @@
         <!-- Geschiedenis van afgeroepen poules (opgeslagen in localStorage) -->
         <div x-show="toonGeschiedenis" x-cloak class="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div class="flex justify-between items-center mb-3">
-                <span class="text-gray-700 font-bold">📋 Eerder afgeroepen (vandaag)</span>
+                <span class="text-gray-700 font-bold">📋 {{ __('Eerder afgeroepen (vandaag)') }}</span>
                 <button @click="toonGeschiedenis = false" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <template x-if="geschiedenis.length === 0">
-                <p class="text-gray-500 text-sm">Nog geen prijsuitreikingen vandaag</p>
+                <p class="text-gray-500 text-sm">{{ __('Nog geen prijsuitreikingen vandaag') }}</p>
             </template>
             <template x-if="geschiedenis.length > 0">
                 <div class="grid gap-2 max-h-64 overflow-y-auto">
@@ -114,8 +114,8 @@
         @if($klarePoules->isEmpty())
         <div class="bg-white rounded-lg shadow p-12 text-center">
             <div class="text-6xl mb-4">🎙️</div>
-            <h2 class="text-2xl font-bold text-gray-600 mb-2">Wachten op uitslagen...</h2>
-            <p class="text-gray-500">Afgeronde poules verschijnen hier automatisch</p>
+            <h2 class="text-2xl font-bold text-gray-600 mb-2">{{ __('Wachten op uitslagen...') }}</h2>
+            <p class="text-gray-500">{{ __('Afgeronde poules verschijnen hier automatisch') }}</p>
         </div>
         @else
         <div class="space-y-6">
@@ -126,18 +126,18 @@
                     <div>
                         <div class="font-bold text-lg flex items-center gap-2">
                             @if($poule->is_eliminatie)
-                                Eliminatie - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                                {{ __('Eliminatie') }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @else
-                                Poule {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                                {{ __('Poule') }} {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @endif
                             @if(!empty($poule->has_barrage))
                                 <span class="bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">⚔️ BARRAGE</span>
                             @endif
                         </div>
                         <div class="{{ $poule->is_eliminatie ? 'text-purple-200' : 'text-green-200' }} text-sm">
-                            Blok {{ $poule->blok?->nummer ?? '?' }} - Mat {{ $poule->mat?->nummer ?? '?' }} | Klaar: {{ $poule->spreker_klaar->format('H:i') }}
+                            {{ __('Blok') }} {{ $poule->blok?->nummer ?? '?' }} - {{ __('Mat') }} {{ $poule->mat?->nummer ?? '?' }} | {{ __('Klaar') }}: {{ $poule->spreker_klaar->format('H:i') }}
                             @if(!empty($poule->has_barrage))
-                                <span class="text-yellow-300">• Incl. barrage punten</span>
+                                <span class="text-yellow-300">{{ __('• Incl. barrage punten') }}</span>
                             @endif
                         </div>
                     </div>
@@ -151,7 +151,7 @@
                         @click="markeerAfgeroepen({{ $poule->id }}, '{{ addslashes($pouleNaam) }}', '{{ $pouleType }}')"
                         class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2"
                     >
-                        ✓ Afgerond
+                        ✓ {{ __('Afgerond') }}
                     </button>
                 </div>
 
@@ -193,7 +193,7 @@
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
-                                <th class="px-3 py-2 text-left font-bold text-gray-700">Naam</th>
+                                <th class="px-3 py-2 text-left font-bold text-gray-700">{{ __('Naam') }}</th>
                                 @if($poule->is_punten_competitie ?? false)
                                 <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">W</th>
                                 @else
@@ -241,7 +241,7 @@
     <div x-show="activeTab === 'oproepen'">
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p class="text-blue-800 text-sm">
-                <span class="font-bold">📣 Oproep hulp:</span> Gebruik deze lijst om judoka's naar de juiste mat te roepen.
+                <span class="font-bold">📣 {{ __('Oproep hulp:') }}</span> {{ __("Gebruik deze lijst om judoka's naar de juiste mat te roepen.") }}
             </p>
         </div>
 
@@ -264,7 +264,7 @@
             <div x-show="selectedBlok === {{ $blokNr }}" class="space-y-4">
                 @if($data['matten']->isEmpty())
                 <div class="bg-gray-100 rounded-lg p-8 text-center">
-                    <p class="text-gray-500">Geen poules toegewezen aan matten in dit blok</p>
+                    <p class="text-gray-500">{{ __('Geen poules toegewezen aan matten in dit blok') }}</p>
                 </div>
                 @else
                     @foreach($data['matten'] as $matData)
@@ -316,7 +316,7 @@
             @endforeach
         @else
         <div class="bg-gray-100 rounded-lg p-8 text-center">
-            <p class="text-gray-500">Geen blokken/poules beschikbaar</p>
+            <p class="text-gray-500">{{ __('Geen blokken/poules beschikbaar') }}</p>
         </div>
         @endif
     </div>
@@ -547,7 +547,7 @@
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-gray-200 border-b-2 border-gray-400">
-                                <th class="px-3 py-2 text-left font-bold text-gray-700">Naam</th>
+                                <th class="px-3 py-2 text-left font-bold text-gray-700">{{ __('Naam') }}</th>
                                 <template x-if="selectedPouleData?.poule?.is_punten_competitie">
                                     <th class="px-2 py-2 text-center font-bold text-gray-700 w-12">W</th>
                                 </template>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Judoka\'s')
+@section('title', __('Judoka\'s'))
 
 @section('content')
 @php
@@ -15,23 +15,23 @@
         <div class="flex items-center gap-3">
             <span class="text-2xl">🚫</span>
             <div>
-                <p class="font-bold text-orange-800">{{ $nietInCategorie->count() }} judoka('s) niet in deelnemerslijst</p>
-                <p class="text-sm text-orange-700">Te oud/jong voor dit toernooi. Alleen zichtbaar in het club portal.</p>
+                <p class="font-bold text-orange-800">{{ __(':count judoka(\'s) niet in deelnemerslijst', ['count' => $nietInCategorie->count()]) }}</p>
+                <p class="text-sm text-orange-700">{{ __('Te oud/jong voor dit toernooi. Alleen zichtbaar in het club portal.') }}</p>
             </div>
         </div>
         <button @click="open = !open" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm font-medium">
-            <span x-text="open ? 'Verbergen' : 'Tonen'"></span>
+            <span x-text="open ? '{{ __('Verbergen') }}' : '{{ __('Tonen') }}'"></span>
         </button>
     </div>
     <div x-show="open" x-collapse class="mt-4 border-t border-orange-200 pt-3">
         <table class="w-full text-sm">
             <thead class="text-orange-800">
                 <tr>
-                    <th class="text-left py-1">Naam</th>
-                    <th class="text-left py-1">Geb.jaar</th>
-                    <th class="text-left py-1">Club</th>
-                    <th class="text-left py-1">Reden</th>
-                    <th class="text-right py-1">Acties</th>
+                    <th class="text-left py-1">{{ __('Naam') }}</th>
+                    <th class="text-left py-1">{{ __('Geb.jaar') }}</th>
+                    <th class="text-left py-1">{{ __('Club') }}</th>
+                    <th class="text-left py-1">{{ __('Reden') }}</th>
+                    <th class="text-right py-1">{{ __('Acties') }}</th>
                 </tr>
             </thead>
             <tbody class="text-orange-700">
@@ -53,14 +53,14 @@
                     <td class="py-1 text-right whitespace-nowrap">
                         <a href="{{ route('toernooi.judoka.show', $toernooi->routeParamsWith(['judoka' => $judoka])) }}"
                            class="text-blue-600 hover:text-blue-800 text-xs mr-2">
-                            Bekijken
+                            {{ __('Bekijken') }}
                         </a>
                         <form action="{{ route('toernooi.judoka.destroy', $toernooi->routeParamsWith(['judoka' => $judoka])) }}" method="POST" class="inline"
-                              onsubmit="return confirm('Weet je zeker dat je {{ $judoka->naam }} wilt verwijderen?')">
+                              onsubmit="return confirm('{{ __('Weet je zeker dat je :naam wilt verwijderen?', ['naam' => $judoka->naam]) }}')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-800 text-xs">
-                                Verwijderen
+                                {{ __('Verwijderen') }}
                             </button>
                         </form>
                     </td>
@@ -87,17 +87,17 @@
         <div class="flex items-center gap-3">
             <span class="text-2xl">⚠️</span>
             <div>
-                <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
-                <p class="text-sm text-red-700">Geen categorie past bij deze judoka('s). Pas de categorie-instellingen aan.</p>
+                <p class="font-bold text-red-800">{{ __(':count judoka(\'s) niet gecategoriseerd!', ['count' => $nietGecategoriseerdAantal]) }}</p>
+                <p class="text-sm text-red-700">{{ __('Geen categorie past bij deze judoka(\'s). Pas de categorie-instellingen aan.') }}</p>
             </div>
         </div>
         <div class="flex gap-2">
             <button @click="open = !open" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm font-medium">
-                <span x-text="open ? 'Verbergen' : 'Details'"></span>
+                <span x-text="open ? '{{ __('Verbergen') }}' : '{{ __('Details') }}'"></span>
             </button>
             <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}?tab=toernooi#categorieen"
                class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                Naar Instellingen
+                {{ __('Naar Instellingen') }}
             </a>
         </div>
     </div>
@@ -105,10 +105,10 @@
         <table class="w-full text-sm">
             <thead class="text-red-800">
                 <tr>
-                    <th class="text-left py-1">Naam</th>
-                    <th class="text-left py-1">Leeftijd</th>
-                    <th class="text-left py-1">Geslacht</th>
-                    <th class="text-left py-1">Club</th>
+                    <th class="text-left py-1">{{ __('Naam') }}</th>
+                    <th class="text-left py-1">{{ __('Leeftijd') }}</th>
+                    <th class="text-left py-1">{{ __('Geslacht') }}</th>
+                    <th class="text-left py-1">{{ __('Club') }}</th>
                 </tr>
             </thead>
             <tbody class="text-red-700">
@@ -134,21 +134,21 @@
     <div>
         <h1 class="text-3xl font-bold text-gray-800">Judoka's ({{ $judokas->count() }})</h1>
         @if($incompleteJudokas->count() > 0)
-        <p class="text-red-600 text-sm mt-1">{{ $incompleteJudokas->count() }} judoka's met ontbrekende gegevens</p>
+        <p class="text-red-600 text-sm mt-1">{{ __(':count judoka\'s met ontbrekende gegevens', ['count' => $incompleteJudokas->count()]) }}</p>
         @endif
     </div>
     <div class="flex space-x-2">
         <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-            Importeren
+            {{ __('Importeren') }}
         </a>
         <button onclick="document.getElementById('addJudokaModal').classList.remove('hidden')"
                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-            + Judoka toevoegen
+            + {{ __('Judoka toevoegen') }}
         </button>
         <form action="{{ route('toernooi.judoka.valideer', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                Valideren
+                {{ __('Valideren') }}
             </button>
         </form>
     </div>
@@ -156,7 +156,7 @@
 
 <!-- Rapportage per leeftijdsklasse -->
 <div class="bg-white rounded-lg shadow p-4 mb-6">
-    <h3 class="font-bold text-gray-700 mb-3">Overzicht per leeftijdsklasse</h3>
+    <h3 class="font-bold text-gray-700 mb-3">{{ __('Overzicht per leeftijdsklasse') }}</h3>
     <div class="flex flex-wrap gap-3">
         @foreach($judokasPerKlasse as $klasse => $klasseJudokas)
         <div class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
@@ -170,7 +170,7 @@
 
 @if(session('validatie_fouten'))
 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-    <h3 class="font-bold text-yellow-800 mb-2">Ontbrekende gegevens:</h3>
+    <h3 class="font-bold text-yellow-800 mb-2">{{ __('Ontbrekende gegevens:') }}</h3>
     <ul class="list-disc list-inside text-yellow-700 text-sm">
         @foreach(session('validatie_fouten') as $fout)
         <li>{{ $fout }}</li>
@@ -190,8 +190,8 @@
     <div class="flex items-center justify-between">
         <h3 class="font-bold text-orange-800">
             <span class="cursor-pointer hover:underline" @click="open = !open">
-                {{ count(session('import_fouten')) }} import fouten
-                <span class="text-sm font-normal ml-2">(klik voor details)</span>
+                {{ __(':count import fouten', ['count' => count(session('import_fouten'))]) }}
+                <span class="text-sm font-normal ml-2">{{ __('(klik voor details)') }}</span>
             </span>
         </h3>
         <button @click="open = !open" class="text-orange-600 hover:text-orange-800">
@@ -218,8 +218,8 @@
     <div class="flex items-center justify-between">
         <h3 class="font-bold text-red-800">
             <span class="cursor-pointer hover:underline" @click="open = !open">
-                ⚠️ {{ $importWarningsPerClub->flatten()->count() }} judoka's met import waarschuwingen
-                <span class="text-sm font-normal ml-2">(klik voor details per club)</span>
+                {{ __(':count judoka\'s met import waarschuwingen', ['count' => $importWarningsPerClub->flatten()->count()]) }}
+                <span class="text-sm font-normal ml-2">{{ __('(klik voor details per club)') }}</span>
             </span>
         </h3>
         <button @click="open = !open" class="text-red-600 hover:text-red-800">
@@ -271,7 +271,7 @@
             <div class="relative flex-1">
                 <input type="text"
                        x-model="zoekterm"
-                       placeholder="Filter: naam, club, -45kg, 20-30kg, +55kg..."
+                       placeholder="{{ __('Filter: naam, club, -45kg, 20-30kg, +55kg...') }}"
                        class="w-full border rounded-lg px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none">
                 <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -280,16 +280,16 @@
             <button @click="fuzzyLevel = fuzzyLevel ? 0 : 1"
                     :class="fuzzyLevel ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                Fuzzy <span x-text="fuzzyLevel ? 'aan' : 'uit'"></span>
+                {{ __('Fuzzy') }} <span x-text="fuzzyLevel ? '{{ __('aan') }}' : '{{ __('uit') }}'"></span>
             </button>
             <button @click="toonOnvolledig = !toonOnvolledig"
                     :class="toonOnvolledig ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'"
                     class="px-3 py-2 rounded text-sm font-medium whitespace-nowrap">
-                Onvolledig ({{ $incompleteJudokas->count() }})
+                {{ __('Onvolledig') }} ({{ $incompleteJudokas->count() }})
             </button>
             <div x-show="zoekterm" class="bg-green-100 border border-green-300 rounded-lg px-4 py-2 flex items-center gap-2">
                 <span class="text-green-800 font-bold text-lg" x-text="filteredJudokas.length"></span>
-                <span class="text-green-700 text-sm">resultaten</span>
+                <span class="text-green-700 text-sm">{{ __('resultaten') }}</span>
             </div>
         </div>
     </div>
@@ -297,27 +297,27 @@
         <thead class="bg-blue-800 text-white sticky top-0 z-10">
             <tr>
                 <th @click="sort('naam')" class="w-[18%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Naam <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Naam') }} <template x-if="sortKey === 'naam'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('leeftijdsklasse')" class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Categorie <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Categorie') }} <template x-if="sortKey === 'leeftijdsklasse'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('gewicht')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Gewicht <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Gewicht') }} <template x-if="sortKey === 'gewicht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('geboortejaar')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Geb.jaar <template x-if="sortKey === 'geboortejaar'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Geb.jaar') }} <template x-if="sortKey === 'geboortejaar'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('geslacht')" class="w-[8%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">M/V <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('M/V') }} <template x-if="sortKey === 'geslacht'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('band')" class="w-[10%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Band <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Band') }} <template x-if="sortKey === 'band'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
                 <th @click="sort('club')" class="w-[28%] px-4 py-3 text-left text-xs font-medium uppercase cursor-pointer hover:bg-blue-700 select-none">
-                    <span class="flex items-center gap-1">Club <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
+                    <span class="flex items-center gap-1">{{ __('Club') }} <template x-if="sortKey === 'club'"><span x-text="sortAsc ? '▲' : '▼'"></span></template></span>
                 </th>
-                <th class="w-[6%] px-4 py-3 text-left text-xs font-medium uppercase">Acties</th>
+                <th class="w-[6%] px-4 py-3 text-left text-xs font-medium uppercase">{{ __('Acties') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -334,11 +334,11 @@
                     <td class="px-4 py-2 text-sm truncate" :class="!judoka.band ? 'text-red-600' : ''" x-text="judoka.band || '-'"></td>
                     <td class="px-4 py-2 text-sm truncate" :class="!judoka.club ? 'text-red-600' : ''" x-text="judoka.club || '-'"></td>
                     <td class="px-4 py-2 whitespace-nowrap">
-                        <a :href="judoka.editUrl + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 mr-2" title="Bewerken">✏️</a>
-                        <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('Weet je zeker dat je ' + judoka.naam + ' wilt verwijderen?')) $el.submit()">
+                        <a :href="judoka.editUrl + (toonOnvolledig ? '?filter=onvolledig' : '')" class="text-blue-600 hover:text-blue-800 mr-2" title="{{ __('Bewerken') }}">✏️</a>
+                        <form :action="judoka.deleteUrl" method="POST" class="inline" @submit.prevent="if(confirm('{{ __('Weet je zeker dat je') }} ' + judoka.naam + ' {{ __('wilt verwijderen?') }}')) $el.submit()">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-lg" title="Verwijderen">×</button>
+                            <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-lg" title="{{ __('Verwijderen') }}">×</button>
                         </form>
                     </td>
                 </tr>
@@ -530,7 +530,7 @@ function judokaTable() {
 </script>
 @else
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-    Nog geen judoka's. <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="text-blue-600">Importeer deelnemers</a>.
+    {{ __('Nog geen judoka\'s.') }} <a href="{{ route('toernooi.judoka.import', $toernooi->routeParams()) }}" class="text-blue-600">{{ __('Importeer deelnemers') }}</a>.
 </div>
 @endif
 
@@ -538,7 +538,7 @@ function judokaTable() {
 <div id="addJudokaModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-xl shadow-lg rounded-lg bg-white">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-gray-800">Judoka toevoegen</h3>
+            <h3 class="text-xl font-bold text-gray-800">{{ __('Judoka toevoegen') }}</h3>
             <button onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
                     class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
@@ -548,14 +548,14 @@ function judokaTable() {
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Naam *</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Naam') }} *</label>
                         <input type="text" name="naam" required
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Club</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Club') }}</label>
                         <select name="club_id" class="w-full border rounded px-3 py-2">
-                            <option value="">-- Geen club --</option>
+                            <option value="">-- {{ __('Geen club') }} --</option>
                             @foreach($toernooi->clubs()->orderBy('naam')->get() as $club)
                             <option value="{{ $club->id }}">{{ $club->naam }}</option>
                             @endforeach
@@ -564,20 +564,20 @@ function judokaTable() {
                 </div>
                 <div class="grid grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geboortejaar</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geboortejaar') }}</label>
                         <input type="number" name="geboortejaar" min="1990" max="{{ date('Y') }}"
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geslacht</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geslacht') }}</label>
                         <select name="geslacht" class="w-full border rounded px-3 py-2">
                             <option value="">--</option>
-                            <option value="M">Man</option>
-                            <option value="V">Vrouw</option>
+                            <option value="M">{{ __('Man') }}</option>
+                            <option value="V">{{ __('Vrouw') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Band</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Band') }}</label>
                         <select name="band" class="w-full border rounded px-3 py-2">
                             <option value="">--</option>
                             @foreach(['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'] as $band)
@@ -588,12 +588,12 @@ function judokaTable() {
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Gewicht (kg)</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Gewicht (kg)') }}</label>
                         <input type="number" name="gewicht" step="0.1" min="10" max="200"
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Telefoon</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Telefoon') }}</label>
                         <input type="tel" name="telefoon"
                                class="w-full border rounded px-3 py-2">
                     </div>
@@ -604,10 +604,10 @@ function judokaTable() {
                 <button type="button"
                         onclick="document.getElementById('addJudokaModal').classList.add('hidden')"
                         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                    Toevoegen
+                    {{ __('Toevoegen') }}
                 </button>
             </div>
         </form>
