@@ -29,9 +29,9 @@ class VariabeleBlokVerdelingService
         }
 
         foreach ($config as $categorie) {
-            $maxLftVerschil = (int) ($categorie['max_leeftijd_verschil'] ?? 0);
             $maxKgVerschil = (float) ($categorie['max_kg_verschil'] ?? 0);
-            if ($maxLftVerschil > 0 || $maxKgVerschil > 0) {
+            // Alleen max_kg_verschil bepaalt variabel (niet max_leeftijd_verschil)
+            if ($maxKgVerschil > 0) {
                 return true;
             }
         }
@@ -619,8 +619,35 @@ class VariabeleBlokVerdelingService
                 }
             }
 
+            // Kruisfinale/eliminatie poules volgen hun voorronde blok
+            $this->fixKruisfinaleBlokken($toernooi);
+
             $toernooi->update(['blokken_verdeeld_op' => now()]);
         });
+    }
+
+    /**
+     * Wijs kruisfinale/eliminatie poules toe aan hetzelfde blok als hun voorronde
+     */
+    private function fixKruisfinaleBlokken(Toernooi $toernooi): void
+    {
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->where('type', '!=', 'voorronde')
+            ->whereNull('blok_id')
+            ->get();
+
+        foreach ($poules as $poule) {
+            $voorrondeBlokId = Poule::where('toernooi_id', $toernooi->id)
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('gewichtsklasse', $poule->gewichtsklasse)
+                ->where('type', 'voorronde')
+                ->whereNotNull('blok_id')
+                ->value('blok_id');
+
+            if ($voorrondeBlokId) {
+                $poule->update(['blok_id' => $voorrondeBlokId]);
+            }
+        }
     }
 
     /**

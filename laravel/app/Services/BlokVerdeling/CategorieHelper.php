@@ -158,7 +158,8 @@ class CategorieHelper
             $maxLftVerschil = (int) ($data['max_leeftijd_verschil'] ?? 0);
             $label = $data['label'] ?? $key;
 
-            if ($maxKgVerschil > 0 || $maxLftVerschil > 0) {
+            // Alleen max_kg_verschil bepaalt vast/variabel
+            if ($maxKgVerschil > 0) {
                 $variabeleKeys[$label] = true;
             } else {
                 $vasteKeys[$label] = true;

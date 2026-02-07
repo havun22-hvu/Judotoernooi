@@ -73,8 +73,8 @@
         $dataKey = $cat['leeftijd'] . '|' . $cat['gewicht'];
     }
 @endphp
-<div class="category-chip px-2 py-1 text-sm rounded cursor-move {{ $chipClass }} shadow-sm hover:shadow transition-all inline-flex items-center gap-1"
-     draggable="true"
+<div class="category-chip px-2 py-1 text-sm rounded {{ ($isKruisfinale || $isEliminatie) ? 'cursor-default' : 'cursor-move' }} {{ $chipClass }} shadow-sm hover:shadow transition-all inline-flex items-center gap-1"
+     draggable="{{ ($isKruisfinale || $isEliminatie) ? 'false' : 'true' }}"
      data-key="{{ $dataKey }}"
      data-leeftijd="{{ $cat['leeftijd'] }}"
      data-is-poule="{{ $isPoule ? '1' : '0' }}"
