@@ -1017,6 +1017,20 @@
                     gewichtenContainer?.classList.remove('hidden');
                     dynamischLabel?.classList.add('hidden');
                 }
+
+                // Kruisfinale niet beschikbaar bij variabel gewicht
+                const systeemSelect = item.querySelector('.systeem-select');
+                if (systeemSelect) {
+                    const kruisfinaleOption = systeemSelect.querySelector('option[value="poules_kruisfinale"]');
+                    if (kruisfinaleOption) {
+                        kruisfinaleOption.disabled = maxKg > 0;
+                        if (maxKg > 0 && systeemSelect.value === 'poules_kruisfinale') {
+                            systeemSelect.value = 'poules';
+                            togglePuntenCompSelect(systeemSelect);
+                        }
+                    }
+                }
+
                 // Check warning na toggle
                 const gewichtenInput = item.querySelector('.gewichten-input');
                 if (gewichtenInput) checkGewichtsklassenWarning(gewichtenInput);
@@ -1166,7 +1180,7 @@
                                     onchange="togglePuntenCompSelect(this)">
                                 <option value="punten_competitie" ${systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
-                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''}>Kruisfinale</option>
+                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale${maxKg > 0 ? ' (niet bij variabel gewicht)' : ''}</option>
                                 <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
                             </select>
                             <select name="punten_competitie_wedstrijden[${key}]"
