@@ -303,21 +303,26 @@ class WedstrijddagController extends Controller
         // Parse category key (leeftijdsklasse|gewichtsklasse)
         [$leeftijdsklasse, $gewichtsklasse] = explode('|', $validated['category']);
 
-        // Zorg dat kruisfinales een mat_id hebben (kopieer van voorrondepoule)
-        $voorrondeMatId = $toernooi->poules()
+        // Zorg dat niet-voorronde poules (kruisfinale, eliminatie) blok_id en mat_id hebben
+        $voorrondePoule = $toernooi->poules()
             ->where('leeftijdsklasse', $leeftijdsklasse)
             ->where('gewichtsklasse', $gewichtsklasse)
             ->where('type', 'voorronde')
             ->whereNotNull('mat_id')
-            ->value('mat_id');
+            ->first(['blok_id', 'mat_id']);
 
-        if ($voorrondeMatId) {
+        if ($voorrondePoule) {
             $toernooi->poules()
                 ->where('leeftijdsklasse', $leeftijdsklasse)
                 ->where('gewichtsklasse', $gewichtsklasse)
-                ->where('type', 'kruisfinale')
-                ->whereNull('mat_id')
-                ->update(['mat_id' => $voorrondeMatId]);
+                ->where('type', '!=', 'voorronde')
+                ->where(function ($q) {
+                    $q->whereNull('blok_id')->orWhereNull('mat_id');
+                })
+                ->update([
+                    'blok_id' => $voorrondePoule->blok_id,
+                    'mat_id' => $voorrondePoule->mat_id,
+                ]);
         }
 
         // Update all poules for this category with doorgestuurd_op timestamp
@@ -342,10 +347,27 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
         }
 
+        // Als blok_id of mat_id ontbreekt, kopieer van voorronde poule
+        if (!$poule->blok_id || !$poule->mat_id) {
+            $voorrondePoule = $toernooi->poules()
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('gewichtsklasse', $poule->gewichtsklasse)
+                ->where('type', 'voorronde')
+                ->whereNotNull('mat_id')
+                ->first(['blok_id', 'mat_id']);
+
+            if ($voorrondePoule) {
+                $poule->blok_id = $poule->blok_id ?: $voorrondePoule->blok_id;
+                $poule->mat_id = $poule->mat_id ?: $voorrondePoule->mat_id;
+            }
+        }
+
         // Update titel met dynamisch berekende display titel (incl. gewichtsrange)
         $poule->update([
             'doorgestuurd_op' => now(),
             'titel' => $poule->getDisplayTitel(),
+            'blok_id' => $poule->blok_id,
+            'mat_id' => $poule->mat_id,
         ]);
 
         return response()->json(['success' => true, 'poule_id' => $poule->id]);
