@@ -42,6 +42,7 @@ class ToernooiController extends Controller
 
         // Also get toernooien without organisator (legacy/orphaned)
         $toernooienZonderOrganisator = Toernooi::whereDoesntHave('organisatoren')
+            ->with('organisator')
             ->withCount(['judokas', 'poules'])
             ->orderByDesc('updated_at')
             ->get();
