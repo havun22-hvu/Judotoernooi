@@ -18,6 +18,11 @@
     {{ session('success') }}
 </div>
 @endif
+@if(session('error'))
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ session('error') }}
+</div>
+@endif
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
     <table class="min-w-full">
@@ -75,9 +80,19 @@
                     @endif
                 </td>
                 <td class="px-6 py-4">
-                    <a href="{{ route('admin.klanten.edit', $klant) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                        Bewerken
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('admin.klanten.edit', $klant) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                            Bewerken
+                        </a>
+                        <form action="{{ route('admin.klanten.destroy', $klant) }}" method="POST"
+                              onsubmit="return confirm('Weet je zeker dat je {{ addslashes($klant->naam) }} wilt verwijderen?\n\n{{ $klant->toernooien_count }} toernooi(en), {{ $klant->clubs_count }} club(s)\n\nALLE data wordt permanent verwijderd!')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty

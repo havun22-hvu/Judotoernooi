@@ -100,6 +100,7 @@ Route::middleware('auth:organisator')->group(function () {
     Route::get('admin/klanten', [AdminController::class, 'klanten'])->name('admin.klanten');
     Route::get('admin/klanten/{klant}', [AdminController::class, 'editKlant'])->name('admin.klanten.edit');
     Route::put('admin/klanten/{klant}', [AdminController::class, 'updateKlant'])->name('admin.klanten.update');
+    Route::delete('admin/klanten/{klant}', [AdminController::class, 'destroyKlant'])->name('admin.klanten.destroy');
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)
