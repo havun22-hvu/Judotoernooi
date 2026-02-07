@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Zaaloverzicht')
+@section('title', __('Zaaloverzicht'))
 
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <div class="flex items-center gap-4">
-        <h1 class="text-3xl font-bold text-gray-800">Zaaloverzicht</h1>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Zaaloverzicht') }}</h1>
         @if($toernooi->voorbereiding_klaar_op)
         <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-            Voorbereiding klaar
+            {{ __('Voorbereiding klaar') }}
         </span>
         @endif
     </div>
@@ -17,16 +17,16 @@
         <form action="{{ route('toernooi.blok.einde-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                    onclick="return confirm('Voorbereiding afronden?\n\nDit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.')">
-                Einde Voorbereiding
+                    onclick="return confirm('{{ __('Voorbereiding afronden?') }}\n\n{{ __('Dit controleert of alle judoka\'s een poule, blok en mat hebben, en herberekent de coachkaarten.') }}')">
+                {{ __('Einde Voorbereiding') }}
             </button>
         </form>
         @endif
         <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
-            Wedstrijddag Poules →
+            {{ __('Wedstrijddag Poules') }} →
         </a>
         <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:underline">
-            ← Terug naar Blokkenverdeling
+            ← {{ __('Terug naar Blokkenverdeling') }}
         </a>
     </div>
 </div>
@@ -39,7 +39,7 @@
 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4 text-sm">{{ session('success') }}</div>
 @endif
 
-<p class="text-sm text-gray-500 mb-4">💡 Sleep poules naar een andere mat om te verplaatsen</p>
+<p class="text-sm text-gray-500 mb-4">{{ __('Sleep poules naar een andere mat om te verplaatsen') }}</p>
 
 @php
     // Dynamisch uit toernooi config (ondersteunt eigen presets)
@@ -95,7 +95,7 @@
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-lg">
         <button @click="open = !open" class="w-full flex justify-between items-center hover:text-gray-200">
             <div class="flex items-center gap-4">
-                <span class="text-lg font-bold">Blok {{ $blok['nummer'] }}</span>
+                <span class="text-lg font-bold">{{ __('Blok') }} {{ $blok['nummer'] }}</span>
                 @php
                     $blokPoules = collect($blok['matten'])->sum(fn($m) => count($m['poules']));
                     $blokJudokas = collect($blok['matten'])->sum(fn($m) => collect($m['poules'])->sum('judokas'));
@@ -104,10 +104,10 @@
                     $gemPerMat = $aantalMatten > 0 ? round($blokWedstrijden / $aantalMatten, 1) : 0;
                 @endphp
                 <span class="text-gray-300 text-sm">
-                    {{ $blokJudokas }} judoka's | {{ $blokWedstrijden }} wedstrijden | {{ $blokPoules }} poules ({{ $gemPerMat }} wed/mat)
+                    {{ __(':judokas judoka\'s | :wedstrijden wedstrijden | :poules poules (:gem wed/mat)', ['judokas' => $blokJudokas, 'wedstrijden' => $blokWedstrijden, 'poules' => $blokPoules, 'gem' => $gemPerMat]) }}
                 </span>
                 @if($blok['weging_gesloten'])
-                <span class="px-2 py-1 text-xs bg-red-500 rounded">Weging gesloten</span>
+                <span class="px-2 py-1 text-xs bg-red-500 rounded">{{ __('Weging gesloten') }}</span>
                 @endif
             </div>
             <svg :class="{ 'rotate-180': open }" class="w-5 h-5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,14 +144,14 @@
                 <div x-show="dropdown" @click.away="dropdown = false" class="absolute left-0 mt-1 bg-white border rounded shadow-lg z-20 min-w-[140px]">
                     <a href="{{ route('toernooi.mat.interface', $toernooi->routeParamsWith(['blok' => $blok['nummer']])) }}"
                        class="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        🖥️ Mat Interface
+                        {{ __('Mat Interface') }}
                     </a>
                     <form action="{{ route('toernooi.blok.reset-poule', $toernooi->routeParams()) }}" method="POST">
                         @csrf
                         <input type="hidden" name="poule_id" value="{{ $pouleInfo['id'] }}">
                         <button type="submit" class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                                onclick="return confirm('Reset poule {{ $pouleInfo['nummer'] }}? Wedstrijden worden verwijderd.')">
-                            🔄 Reset
+                                onclick="return confirm('{{ __('Reset poule :nummer? Wedstrijden worden verwijderd.', ['nummer' => $pouleInfo['nummer']]) }}')">
+                            {{ __('Reset') }}
                         </button>
                     </form>
                 </div>
@@ -169,7 +169,7 @@
             {{-- Grijs: wacht op doorsturen, waarschuwing + link naar wedstrijddag --}}
             <button type="button"
                     class="px-2 py-0.5 text-xs rounded {{ $btnClass }} hover:opacity-80"
-                    onclick="if(confirm('⚠️ Poule {{ $pouleInfo['nummer'] }} is nog niet doorgestuurd naar de mat.\n\nGa naar Wedstrijddag om de poule eerst door te sturen.')) { window.location.href='{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}'; }">
+                    onclick="if(confirm('{{ __('Poule :nummer is nog niet doorgestuurd naar de mat.', ['nummer' => $pouleInfo['nummer']]) }}\n\n{{ __('Ga naar Wedstrijddag om de poule eerst door te sturen.') }}')) { window.location.href='{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}'; }">
                 {{ $chipNaam }}
             </button>
             @endif
@@ -188,7 +188,7 @@
                 @endphp
                 <div class="border rounded-lg overflow-hidden">
                     <div class="bg-blue-600 text-white px-3 py-2 flex justify-between items-center">
-                        <span class="font-bold">Mat {{ $matNr }}</span>
+                        <span class="font-bold">{{ __('Mat') }} {{ $matNr }}</span>
                         <span class="text-xs bg-blue-800 px-2 py-0.5 rounded mat-wedstrijden">{{ $matWedstrijden }}w</span>
                     </div>
                     @php
@@ -208,7 +208,7 @@
                             <div class="text-gray-500">({{ $stats }})</div>
                         </div>
                         @empty
-                        <div class="text-gray-400 text-xs italic empty-message">Geen poules</div>
+                        <div class="text-gray-400 text-xs italic empty-message">{{ __('Geen poules') }}</div>
                         @endforelse
                     </div>
                 </div>
@@ -223,6 +223,9 @@
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route('toernooi.blok.verplaats-poule', $toernooi->routeParams()) }}';
+const foutBijVerplaatsen = '{{ __('Fout bij verplaatsen:') }}';
+const onbekendeFout = '{{ __('Onbekende fout') }}';
+const geenPoulesText = '{{ __('Geen poules') }}';
 
 document.querySelectorAll('.mat-container').forEach(container => {
     new Sortable(container, {
@@ -245,7 +248,7 @@ document.querySelectorAll('.mat-container').forEach(container => {
 
             // Add empty message to old container if empty
             if (evt.from.querySelectorAll('.poule-item').length === 0) {
-                evt.from.innerHTML = '<div class="text-gray-400 text-xs italic empty-message">Geen poules</div>';
+                evt.from.innerHTML = '<div class="text-gray-400 text-xs italic empty-message">' + geenPoulesText + '</div>';
             }
 
             try {
@@ -264,14 +267,14 @@ document.querySelectorAll('.mat-container').forEach(container => {
 
                 const data = await response.json();
                 if (!data.success) {
-                    alert('Fout bij verplaatsen: ' + (data.message || 'Onbekende fout'));
+                    alert(foutBijVerplaatsen + ' ' + (data.message || onbekendeFout));
                     location.reload();
                 } else {
                     // Update wedstrijden counts
                     updateMatCounts();
                 }
             } catch (err) {
-                alert('Fout bij verplaatsen: ' + err.message);
+                alert(foutBijVerplaatsen + ' ' + err.message);
                 location.reload();
             }
         }

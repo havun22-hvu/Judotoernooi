@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#7c3aed">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="🥋 COACH {{ $coachKaart->club->naam }}">
-    <title>🥋 COACH - {{ $coachKaart->club->naam }}</title>
+    <meta name="apple-mobile-web-app-title" content="COACH {{ $coachKaart->club->naam }}">
+    <title>COACH - {{ $coachKaart->club->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <style>
@@ -29,7 +29,7 @@
     <div id="coachkaart" class="bg-white rounded-xl shadow-xl w-full overflow-hidden">
         {{-- Header --}}
         <div class="bg-purple-700 text-white px-3 py-2 flex justify-between items-center">
-            <span class="text-sm font-medium truncate">{{ $coachKaart->toernooi->naam ?? 'Judo Toernooi' }}</span>
+            <span class="text-sm font-medium truncate">{{ $coachKaart->toernooi->naam ?? __('Judo Toernooi') }}</span>
             <span class="text-purple-200 text-sm">{{ $coachKaart->toernooi->datum?->format('d-m-Y') ?? '' }}</span>
         </div>
 
@@ -38,12 +38,12 @@
             <div class="flex items-center justify-center gap-4">
                 {{-- Pasfoto --}}
                 @if($coachKaart->foto)
-                <img src="{{ $coachKaart->getFotoUrl() }}" alt="Foto {{ $coachKaart->naam }}"
+                <img src="{{ $coachKaart->getFotoUrl() }}" alt="{{ __('Foto :naam', ['naam' => $coachKaart->naam]) }}"
                      class="w-24 h-24 object-cover rounded-lg border-4 border-purple-300 shadow-lg">
                 @endif
 
                 <div class="text-center">
-                    <span class="bg-purple-600 text-white text-xl font-black px-4 py-1.5 rounded-lg tracking-wider inline-block mb-2">COACH</span>
+                    <span class="bg-purple-600 text-white text-xl font-black px-4 py-1.5 rounded-lg tracking-wider inline-block mb-2">{{ __('COACH') }}</span>
                     <p class="text-xl font-bold text-purple-900">{{ $coachKaart->naam }}</p>
                     <p class="text-sm font-medium text-purple-700">{{ $coachKaart->club->naam }}</p>
                     @if($coachKaart->club->plaats)
@@ -57,11 +57,11 @@
         <div class="px-3 py-3 bg-gray-50 border-b">
             <div class="flex justify-center gap-6 text-center">
                 <div>
-                    <span class="text-xs text-gray-500 uppercase">Judoka's</span>
+                    <span class="text-xs text-gray-500 uppercase">{{ __("Judoka's") }}</span>
                     <p class="text-lg font-bold text-purple-700">{{ $aantalJudokas }}</p>
                 </div>
                 <div>
-                    <span class="text-xs text-gray-500 uppercase">Kaart</span>
+                    <span class="text-xs text-gray-500 uppercase">{{ __('Kaart') }}</span>
                     <p class="text-lg font-bold text-gray-700">{{ $kaartNummer }} / {{ $totaalKaarten }}</p>
                 </div>
             </div>
@@ -78,45 +78,45 @@
         {{-- Info over overdracht als incheck systeem actief is --}}
         @if($coachKaart->toernooi->coach_incheck_actief && $coachKaart->isIngecheckt())
         <div class="px-4 py-3 bg-blue-50 border-t border-blue-200">
-            <p class="text-sm text-blue-800 font-medium mb-1">ℹ️ Wilt u deze kaart overdragen?</p>
+            <p class="text-sm text-blue-800 font-medium mb-1">{{ __('Wilt u deze kaart overdragen?') }}</p>
             <p class="text-xs text-blue-700">
-                Ga naar de dojo scanner en check uit. Daarna kan de nieuwe coach de kaart overnemen.
+                {{ __('Ga naar de dojo scanner en check uit. Daarna kan de nieuwe coach de kaart overnemen.') }}
             </p>
         </div>
         @endif
         @else
         <div class="p-6 bg-red-50 text-center">
-            <div class="text-red-600 text-4xl mb-3">🔒</div>
-            <h3 class="font-bold text-red-800 mb-2">Kaart overgedragen</h3>
+            <div class="text-red-600 text-4xl mb-3">&#x1F512;</div>
+            <h3 class="font-bold text-red-800 mb-2">{{ __('Kaart overgedragen') }}</h3>
             <p class="text-red-600 text-sm mb-4">
-                Deze coach kaart is nu actief op een ander apparaat.
+                {{ __('Deze coach kaart is nu actief op een ander apparaat.') }}
             </p>
 
             {{-- Show current coach info --}}
             <div class="bg-white rounded-lg p-4 mt-4 border border-red-200">
-                <p class="text-gray-500 text-xs uppercase mb-2">Huidige coach</p>
+                <p class="text-gray-500 text-xs uppercase mb-2">{{ __('Huidige coach') }}</p>
                 @if($coachKaart->foto)
                 <img src="{{ $coachKaart->getFotoUrl() }}" alt="{{ $coachKaart->naam }}"
                      class="w-20 h-20 object-cover rounded-lg mx-auto border-2 border-gray-200 mb-2">
                 @endif
                 <p class="font-bold text-gray-900">{{ $coachKaart->naam }}</p>
-                <p class="text-gray-500 text-sm">Sinds {{ $coachKaart->geactiveerd_op?->format('H:i') }}</p>
+                <p class="text-gray-500 text-sm">{{ __('Sinds :tijd', ['tijd' => $coachKaart->geactiveerd_op?->format('H:i')]) }}</p>
             </div>
 
             <a href="{{ route('coach-kaart.activeer', $coachKaart->qr_code) }}"
                class="mt-4 inline-block bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-lg">
-                Deze kaart overnemen
+                {{ __('Deze kaart overnemen') }}
             </a>
 
             <p class="text-xs text-gray-500 mt-3">
-                Je hebt de pincode nodig om over te nemen.
+                {{ __('Je hebt de pincode nodig om over te nemen.') }}
             </p>
         </div>
         @endif
 
         {{-- Footer --}}
         <div class="px-3 py-2 bg-purple-50 text-center border-t">
-            <p class="text-xs text-purple-700 font-medium">🥋 Toegang tot de Dojo • Scan QR-code</p>
+            <p class="text-xs text-purple-700 font-medium">{{ __('Toegang tot de Dojo') }} • {{ __('Scan QR-code') }}</p>
         </div>
     </div>
 
@@ -190,7 +190,7 @@
                 if (remaining <= 0) {
                     generateQR(); // Refresh QR
                 } else if (remaining <= 60) {
-                    timerEl.textContent = 'Ververst over ' + remaining + 's';
+                    timerEl.textContent = '{{ __('Ververst over') }} ' + remaining + 's';
                     timerEl.className = 'text-xs text-orange-500 mt-1';
                 } else {
                     timerEl.textContent = '';

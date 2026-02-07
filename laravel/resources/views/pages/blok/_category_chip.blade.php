@@ -70,9 +70,9 @@
     <span class="{{ $subClass }}">({{ $cat['wedstrijden'] }}w)</span>
     @if(!$inSleepvak)
         @if($cat['vast'])
-            <span class="pin-icon text-green-600 cursor-pointer ml-1" title="Vast - klik om los te maken">●</span>
+            <span class="pin-icon text-green-600 cursor-pointer ml-1" title="{{ __('Vast - klik om los te maken') }}">●</span>
         @else
-            <span class="pin-icon text-red-400 cursor-pointer ml-1" title="Niet vast - klik om vast te zetten">📌</span>
+            <span class="pin-icon text-red-400 cursor-pointer ml-1" title="{{ __('Niet vast - klik om vast te zetten') }}">📌</span>
         @endif
     @endif
 </div>

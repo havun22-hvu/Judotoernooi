@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Print') - {{ $toernooi->naam }}</title>
+    <title>@yield('title', __('Print')) - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <style>
         @media print {
@@ -83,17 +83,17 @@
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-4">
                     <a href="{{ route('toernooi.noodplan.index', $toernooi->routeParams()) }}" class="text-blue-200 hover:text-white">
-                        &larr; Terug naar Case of Emergency
+                        &larr; {{ __('Terug naar Case of Emergency') }}
                     </a>
                     <span class="text-blue-200">|</span>
                     <span class="font-bold">@yield('title')</span>
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-sm text-blue-200">
-                        Geprint: {{ now()->format('d-m-Y H:i') }}
+                        {{ __('Geprint:') }} {{ now()->format('d-m-Y H:i') }}
                     </span>
                     <button onclick="window.print()" class="bg-white text-blue-800 px-4 py-2 rounded font-bold hover:bg-blue-100">
-                        Print
+                        {{ __('Print') }}
                     </button>
                 </div>
             </div>
