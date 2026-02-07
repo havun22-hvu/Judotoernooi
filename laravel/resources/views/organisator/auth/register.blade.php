@@ -13,7 +13,17 @@
             <p class="text-gray-600">Organisator Registratie</p>
         </div>
 
-        <form action="{{ route('register.submit') }}" method="POST">
+        @if($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <ul class="list-disc list-inside text-sm">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <form action="{{ route('register.submit') }}" method="POST" id="registerForm">
             @csrf
 
             <div class="mb-4">
@@ -137,9 +147,15 @@
                     eyeClosed.classList.remove('hidden');
                 }
             }
+            document.getElementById('registerForm').addEventListener('submit', function() {
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.textContent = 'Bezig met registreren...';
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            });
             </script>
 
-            <button type="submit"
+            <button type="submit" id="submitBtn"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                 Account aanmaken
             </button>
