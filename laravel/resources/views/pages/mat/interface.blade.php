@@ -10,7 +10,7 @@
     <link rel="manifest" href="/manifest-mat.json">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icon-192x192.png">
-    <title>Mat Interface - {{ $toernooi->naam }}</title>
+    <title>{{ __('Mat Interface') }} - {{ $toernooi->naam }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <style>
         body { overscroll-behavior: none; }

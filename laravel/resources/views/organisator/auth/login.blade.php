@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inloggen - JudoToernooi</title>
+    <title>{{ __('Inloggen') }} - JudoToernooi</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">JudoToernooi</h1>
-            <p class="text-gray-600">Organisator Login</p>
+            <p class="text-gray-600">{{ __('Organisator Login') }}</p>
         </div>
 
         @if(session('success'))
@@ -36,7 +36,7 @@
 
             <div class="mb-4">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                    E-mailadres
+                    {{ __('E-mailadres') }}
                 </label>
                 <input type="email"
                        id="email"
@@ -52,7 +52,7 @@
 
             <div class="mb-4">
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-                    Wachtwoord
+                    {{ __('Wachtwoord') }}
                 </label>
                 <div class="relative">
                     <input type="password"
@@ -94,31 +94,31 @@
             <div class="flex items-center justify-between mb-6">
                 <label class="flex items-center">
                     <input type="checkbox" name="remember" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                    <span class="ml-2 text-sm text-gray-600">Onthoud mij</span>
+                    <span class="ml-2 text-sm text-gray-600">{{ __('Onthoud mij') }}</span>
                 </label>
                 <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:text-blue-800">
-                    Wachtwoord vergeten?
+                    {{ __('Wachtwoord vergeten?') }}
                 </a>
             </div>
 
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                Inloggen
+                {{ __('Inloggen') }}
             </button>
         </form>
 
         <div class="mt-6 text-center">
             <p class="text-gray-600">
-                Nog geen account?
+                {{ __('Nog geen account?') }}
                 <a href="{{ route('register') }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                    Registreer hier
+                    {{ __('Registreer hier') }}
                 </a>
             </p>
         </div>
 
         @if($showPinLogin ?? false)
         <div class="mt-6 pt-6 border-t">
-            <p class="text-xs text-gray-500 mb-3 text-center">Superadmin (alleen local/staging)</p>
+            <p class="text-xs text-gray-500 mb-3 text-center">{{ __('Superadmin (alleen local/staging)') }}</p>
             <form action="{{ route('pin-login') }}" method="POST" class="flex gap-2">
                 @csrf
                 <input type="text"

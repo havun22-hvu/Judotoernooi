@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - JudoToernooi</title>
+    <title>{{ __('Dashboard') }} - JudoToernooi</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -15,16 +15,16 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     @if($organisator->isSitebeheerder())
-                    <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">Alle Organisatoren</a>
+                    <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
                     @endif
                     <span class="text-gray-600">{{ $organisator->naam }}</span>
                     @if($organisator->isSitebeheerder())
-                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">Sitebeheerder</span>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ __('Sitebeheerder') }}</span>
                     @endif
                     <form action="{{ route('logout') }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="text-gray-600 hover:text-gray-800">
-                            Uitloggen
+                            {{ __('Uitloggen') }}
                         </button>
                     </form>
                 </div>
@@ -42,19 +42,19 @@
         <div class="mb-6 flex justify-between items-center">
             <h2 class="text-2xl font-bold text-gray-800">
                 @if($organisator->isSitebeheerder())
-                    Alle Toernooien
+                    {{ __('Alle Toernooien') }}
                 @else
-                    Mijn Toernooien
+                    {{ __('Mijn Toernooien') }}
                 @endif
             </h2>
             <div class="flex space-x-3">
                 <a href="{{ route('organisator.clubs.index', $organisator) }}"
                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
-                    Mijn Clubs
+                    {{ __('Mijn Clubs') }}
                 </a>
                 <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                    Nieuw Toernooi
+                    {{ __('Nieuw Toernooi') }}
                 </a>
             </div>
         </div>
@@ -62,16 +62,16 @@
         {{-- Templates Section --}}
         <div x-data="templateManager()" class="mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-700">Mijn Templates</h3>
+                <h3 class="text-lg font-semibold text-gray-700">{{ __('Mijn Templates') }}</h3>
                 <button @click="open = !open" class="text-blue-600 hover:text-blue-800 text-sm">
-                    <span x-show="!open">Toon templates</span>
-                    <span x-show="open">Verberg</span>
+                    <span x-show="!open">{{ __('Toon templates') }}</span>
+                    <span x-show="open">{{ __('Verberg') }}</span>
                 </button>
             </div>
 
             <div x-show="open" x-collapse class="bg-white rounded-lg shadow p-4">
                 <template x-if="templates.length === 0">
-                    <p class="text-gray-500 text-sm">Nog geen templates. Sla instellingen op vanuit een bestaand toernooi.</p>
+                    <p class="text-gray-500 text-sm">{{ __('Nog geen templates. Sla instellingen op vanuit een bestaand toernooi.') }}</p>
                 </template>
                 <template x-if="templates.length > 0">
                     <div class="space-y-3">
@@ -82,7 +82,7 @@
                                     <span x-show="template.beschrijving" class="text-gray-500 text-sm ml-2" x-text="'- ' + template.beschrijving"></span>
                                     <span x-show="template.max_judokas" class="text-gray-400 text-xs ml-2" x-text="'(max ' + template.max_judokas + ' judokas)'"></span>
                                 </div>
-                                <button @click="deleteTemplate(template.id)" class="text-red-500 hover:text-red-700 text-sm">Verwijderen</button>
+                                <button @click="deleteTemplate(template.id)" class="text-red-500 hover:text-red-700 text-sm">{{ __('Verwijderen') }}</button>
                             </div>
                         </template>
                     </div>
@@ -114,10 +114,10 @@
 
         @if($toernooien->isEmpty())
         <div class="bg-white rounded-lg shadow p-8 text-center">
-            <p class="text-gray-600 mb-4">Je hebt nog geen toernooien aangemaakt.</p>
+            <p class="text-gray-600 mb-4">{{ __('Je hebt nog geen toernooien aangemaakt.') }}</p>
             <a href="{{ route('toernooi.create', ['organisator' => $organisator]) }}"
                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors inline-block">
-                Maak je eerste toernooi aan
+                {{ __('Maak je eerste toernooi aan') }}
             </a>
         </div>
         @else
@@ -144,18 +144,18 @@
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span class="font-medium">{{ $toernooi->datum ? $toernooi->datum->format('d-m-Y') : 'Geen datum' }}</span>
+                    <span class="font-medium">{{ $toernooi->datum ? $toernooi->datum->format('d-m-Y') : __('Geen datum') }}</span>
                 </div>
 
                 {{-- Plan Badge --}}
                 <div class="mb-3">
                     @if($toernooi->isPaidTier())
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            ✓ Betaald ({{ $toernooi->paid_tier }})
+                            {{ __('Betaald') }} ({{ $toernooi->paid_tier }})
                         </span>
                     @else
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Gratis (max 50)
+                            {{ __('Gratis (max 50)') }}
                         </span>
                     @endif
                 </div>
@@ -179,11 +179,11 @@
                 {{-- Timestamps --}}
                 <div class="text-xs text-gray-400 border-t pt-3 space-y-1">
                     <div class="flex justify-between">
-                        <span>Aangemaakt:</span>
+                        <span>{{ __('Aangemaakt') }}:</span>
                         <span>{{ $toernooi->created_at ? $toernooi->created_at->format('d-m-Y H:i') : '-' }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Laatst bewerkt:</span>
+                        <span>{{ __('Laatst bewerkt') }}:</span>
                         <span>{{ $toernooi->updated_at ? $toernooi->updated_at->diffForHumans() : '-' }}</span>
                     </div>
                 </div>
@@ -192,14 +192,14 @@
                 <div class="flex items-center justify-between mt-4 pt-3 border-t">
                     <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}"
                        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded transition-colors">
-                        Start
+                        {{ __('Start') }}
                     </a>
                     <div class="flex items-center gap-2">
                         {{-- Reset knop --}}
                         <form action="{{ route('toernooi.reset', $toernooi->routeParams()) }}" method="POST" class="inline"
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt resetten?\n\nDit verwijdert:\n- Alle judoka\'s\n- Alle poules\n- Alle wedstrijden\n- Alle wegingen\n\nDe toernooi naam en instellingen blijven behouden.')">
                             @csrf
-                            <button type="submit" class="text-orange-400 hover:text-orange-600" title="Reset toernooi (verwijder judoka's en poules)">
+                            <button type="submit" class="text-orange-400 hover:text-orange-600" title="{{ __('Reset toernooi (verwijder judoka\'s en poules)') }}">
                                 🔄
                             </button>
                         </form>
@@ -208,7 +208,7 @@
                               onsubmit="return confirm('Weet je zeker dat je \'{{ $toernooi->naam }}\' wilt verwijderen?\n\nDit verwijdert ALLE data:\n- Judoka\'s\n- Poules\n- Wedstrijden\n\nDit kan niet ongedaan worden!')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="text-red-400 hover:text-red-600" title="Verwijder toernooi">
+                            <button type="submit" class="text-red-400 hover:text-red-600" title="{{ __('Verwijder toernooi') }}">
                                 🗑️
                             </button>
                         </form>
@@ -250,11 +250,11 @@
                 warning.innerHTML = `
                     <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
                         <div style="background:white;padding:24px;border-radius:8px;max-width:400px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">⚠️ Sessie verloopt bijna</h3>
-                            <p style="margin-bottom:16px;color:#374151;">Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.</p>
+                            <h3 style="font-size:18px;font-weight:bold;margin-bottom:12px;color:#b91c1c;">{{ __('Sessie verloopt bijna') }}</h3>
+                            <p style="margin-bottom:16px;color:#374151;">{{ __('Je wordt over 2 minuten automatisch uitgelogd wegens inactiviteit.') }}</p>
                             <button onclick="document.getElementById('idle-warning').remove();resetIdleTimers();"
                                     style="background:#2563eb;color:white;padding:10px 24px;border-radius:6px;border:none;cursor:pointer;font-weight:500;">
-                                Actief blijven
+                                {{ __('Actief blijven') }}
                             </button>
                         </div>
                     </div>

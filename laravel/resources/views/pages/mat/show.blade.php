@@ -38,7 +38,7 @@
     <div class="p-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h3 class="font-bold mb-2">Judoka's</h3>
+                <h3 class="font-bold mb-2">{{ __("Judoka's") }}</h3>
                 @foreach($pouleSchema['judokas'] as $judoka)
                 <div class="py-1">
                     {{ $judoka['naam'] }}
@@ -48,7 +48,7 @@
             </div>
 
             <div>
-                <h3 class="font-bold mb-2">Wedstrijden</h3>
+                <h3 class="font-bold mb-2">{{ __('Wedstrijden') }}</h3>
                 @foreach($pouleSchema['wedstrijden'] as $w)
                 <div class="py-1 border-b last:border-0 flex justify-between items-center">
                     <span>
@@ -68,18 +68,18 @@
 </div>
 @empty
 <div class="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-    Geen poules op deze mat in dit blok
+    {{ __('Geen poules op deze mat in dit blok') }}
 </div>
 @endforelse
 
 @if($isStandalone)
 @if(isset($toegang))
 <a href="{{ route('mat.interface', ['organisator' => $toernooi->organisator->slug, 'toernooi' => $toernooi->slug, 'toegang' => $toegang->id]) }}" class="text-blue-600 hover:text-blue-800">
-    ← Terug naar matten
+    ← {{ __('Terug naar matten') }}
 </a>
 @else
 <a href="{{ route('rol.mat') }}" class="text-blue-600 hover:text-blue-800">
-    ← Terug naar matten
+    ← {{ __('Terug naar matten') }}
 </a>
 @endif
     </main>
@@ -87,7 +87,7 @@
 </html>
 @else
 <a href="{{ route('toernooi.mat.index', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
-    ← Terug naar matten
+    ← {{ __('Terug naar matten') }}
 </a>
 @endsection
 @endif

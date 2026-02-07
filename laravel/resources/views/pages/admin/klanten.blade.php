@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Havun Admin - Klantenbeheer')
+@section('title', __('Havun Admin - Klantenbeheer'))
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Klantenbeheer</h1>
-        <p class="text-gray-500 mt-1">Beheer alle organisatoren en hun gegevens</p>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Klantenbeheer') }}</h1>
+        <p class="text-gray-500 mt-1">{{ __('Beheer alle organisatoren en hun gegevens') }}</p>
     </div>
     <a href="{{ route('admin.index') }}" class="text-blue-600 hover:text-blue-800">
-        &larr; Terug naar Dashboard
+        &larr; {{ __('Terug naar Dashboard') }}
     </a>
 </div>
 
@@ -28,12 +28,12 @@
     <table class="min-w-full">
         <thead class="bg-gray-100">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Organisator</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Toernooien</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laatste login</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acties</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Organisator') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Contact') }}</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Toernooien') }}</th>
+                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">{{ __('Status') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Laatste login') }}</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Acties') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -57,10 +57,10 @@
                 <td class="px-6 py-4 text-center">
                     <div class="flex justify-center gap-1 flex-wrap">
                         @if($klant->is_test)
-                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">Test</span>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs">{{ __('Test') }}</span>
                         @endif
                         @if($klant->kortingsregeling)
-                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">Korting</span>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">{{ __('Korting') }}</span>
                         @endif
                         @if($klant->kyc_compleet)
                             <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">KYC</span>
@@ -76,13 +76,13 @@
                             {{ $klant->laatste_login->diffForHumans() }}
                         </span>
                     @else
-                        <span class="text-gray-400">Nooit</span>
+                        <span class="text-gray-400">{{ __('Nooit') }}</span>
                     @endif
                 </td>
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                         <a href="{{ route('admin.klanten.edit', $klant) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                            Bewerken
+                            {{ __('Bewerken') }}
                         </a>
                         <form action="{{ route('admin.klanten.destroy', $klant) }}" method="POST"
                               onsubmit="return confirm('Weet je zeker dat je {{ addslashes($klant->naam) }} wilt verwijderen?\n\n{{ $klant->toernooien_count }} toernooi(en), {{ $klant->clubs_count }} club(s)\n\nALLE data wordt permanent verwijderd!')">
@@ -98,7 +98,7 @@
             @empty
             <tr>
                 <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                    Geen klanten gevonden
+                    {{ __('Geen klanten gevonden') }}
                 </td>
             </tr>
             @endforelse

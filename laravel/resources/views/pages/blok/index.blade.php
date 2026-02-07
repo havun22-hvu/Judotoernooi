@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Blokverdeling')
+@section('title', __('Blokverdeling'))
 
 @section('content')
 @php
@@ -18,19 +18,19 @@
     <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md mx-4 animate-pulse-warning">
         <div class="text-center">
             <span class="text-6xl">⚠️</span>
-            <h2 class="text-2xl font-bold text-orange-600 mt-4">Inschrijving is gesloten!</h2>
-            <p class="text-gray-600 mt-3">De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.</p>
-            <p class="text-gray-700 font-medium mt-4">Gebruik op de wedstrijddag:</p>
+            <h2 class="text-2xl font-bold text-orange-600 mt-4">{{ __('Inschrijving is gesloten!') }}</h2>
+            <p class="text-gray-600 mt-3">{{ __('De weegkaarten zijn al geprint met bloknummers. Wijzigingen hier kunnen problemen veroorzaken.') }}</p>
+            <p class="text-gray-700 font-medium mt-4">{{ __('Gebruik op de wedstrijddag:') }}</p>
             <div class="flex flex-col gap-2 mt-3">
                 <a href="{{ route('toernooi.wedstrijddag.poules', $toernooi->routeParams()) }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg">
-                    Wedstrijddag Poules
+                    {{ __('Wedstrijddag Poules') }}
                 </a>
                 <a href="{{ route('toernooi.blok.zaaloverzicht', $toernooi->routeParams()) }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">
-                    Zaaloverzicht
+                    {{ __('Zaaloverzicht') }}
                 </a>
             </div>
             <button onclick="sluitInschrijvingPopup()" class="mt-4 text-gray-500 hover:text-gray-700 text-sm underline">
-                Ik begrijp het, toch doorgaan
+                {{ __('Ik begrijp het, toch doorgaan') }}
             </button>
         </div>
     </div>
@@ -214,10 +214,10 @@
 <!-- Header -->
 <div class="flex justify-between items-center mb-4">
     <div class="flex items-center gap-4">
-        <h1 class="text-3xl font-bold text-gray-800">Blokverdeling</h1>
-        <span class="text-sm text-gray-500">{{ $blokken->count() }} blokken | {{ $totaalWedstrijden }} wed. | gem {{ $gemiddeldPerBlok }}/blok</span>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Blokverdeling') }}</h1>
+        <span class="text-sm text-gray-500">{{ $blokken->count() }} {{ __('blokken') }} | {{ $totaalWedstrijden }} {{ __('wed.') }} | {{ __('gem') }} {{ $gemiddeldPerBlok }}/{{ __('blok') }}</span>
         @if($nietVerdeeldCats->isNotEmpty())
-        <span class="text-sm text-red-600 font-bold" id="niet-verdeeld-header">{{ $nietVerdeeldCats->count() }} cat. niet verdeeld</span>
+        <span class="text-sm text-red-600 font-bold" id="niet-verdeeld-header">{{ $nietVerdeeldCats->count() }} {{ __('cat. niet verdeeld') }}</span>
         @endif
     </div>
     <div class="flex items-center gap-2">
@@ -226,7 +226,7 @@
         <form action="{{ route('toernooi.blok.genereer-variabele-verdeling', $toernooi->routeParams()) }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
-                Verdeel variabel
+                {{ __('Verdeel variabel') }}
             </button>
         </form>
         @else
@@ -235,28 +235,28 @@
             @csrf
             <input type="hidden" name="balans" id="balans-input" value="{{ session('blok_balans', 50) }}">
             <div class="flex items-center gap-2 text-xs bg-gray-100 px-3 py-1.5 rounded">
-                <span class="text-gray-600 whitespace-nowrap">Verdeling</span>
+                <span class="text-gray-600 whitespace-nowrap">{{ __('Verdeling') }}</span>
                 <input type="range" id="balans-slider-header" min="0" max="100" value="{{ session('blok_balans', 50) }}"
                        class="w-24 h-2 bg-gradient-to-r from-blue-400 to-green-400 rounded appearance-none cursor-pointer"
                        oninput="updateBalansSlider(this.value)">
-                <span class="text-gray-600 whitespace-nowrap">Aansluiting</span>
+                <span class="text-gray-600 whitespace-nowrap">{{ __('Aansluiting') }}</span>
             </div>
             <button type="submit" id="bereken-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded min-w-[160px]">
-                <span id="bereken-tekst">(her)Bereken</span>
+                <span id="bereken-tekst">{{ __('(her)Bereken') }}</span>
                 <span id="bereken-loading" style="display: none;">
                     <svg class="animate-spin inline-block w-4 h-4 align-middle" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Berekenen...
+                    {{ __('Berekenen...') }}
                 </span>
             </button>
         </form>
         @endif
         <form action="{{ route('toernooi.blok.zet-op-mat', $toernooi->routeParams()) }}" method="POST" class="inline" id="zet-op-mat-form">
             @csrf
-            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="Verdeel poules over matten en ga naar zaaloverzicht">
-                Verdeel over matten →
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" title="{{ __('Verdeel poules over matten en ga naar zaaloverzicht') }}">
+                {{ __('Verdeel over matten') }} →
             </button>
         </form>
     </div>
@@ -268,7 +268,7 @@
 
 @if($blokken->isEmpty())
 <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-6 text-center">
-    <p class="text-yellow-800">Nog geen blokken. Maak eerst blokken aan in toernooi instellingen.</p>
+    <p class="text-yellow-800">{{ __('Nog geen blokken. Maak eerst blokken aan in toernooi instellingen.') }}</p>
 </div>
 @else
 
@@ -281,13 +281,13 @@
             <div class="bg-purple-700 text-white px-4 py-2 rounded-t-lg flex justify-between items-center cursor-pointer" onclick="document.getElementById('niet-verdeeld-content').classList.toggle('hidden')">
                 <div class="flex items-center gap-3">
                     <span class="toggle-icon">▼</span>
-                    <span class="font-bold">Sleepvak</span>
+                    <span class="font-bold">{{ __('Sleepvak') }}</span>
                     <span class="text-purple-200" id="sleepvak-stats">({{ $nietVerdeeldCats->count() }} cat., {{ $nietVerdeeldCats->sum('wedstrijden') }}w)</span>
                 </div>
             </div>
             <div id="niet-verdeeld-content" class="p-2 blok-dropzone min-h-[40px]" data-blok="0">
                 @if($nietVerdeeldCats->isEmpty())
-                <span class="text-gray-400 text-xs italic dropzone-placeholder">Alle categorieën zijn verdeeld</span>
+                <span class="text-gray-400 text-xs italic dropzone-placeholder">{{ __('Alle categorieën zijn verdeeld') }}</span>
                 @else
                 <div class="flex flex-wrap gap-x-4 gap-y-1">
                     @foreach($leeftijdVolgorde as $leeftijd)
@@ -326,12 +326,12 @@
         <div class="bg-white rounded-lg shadow blok-container" data-blok="{{ $blok->nummer }}" data-blok-id="{{ $blok->id }}" data-gewenst="{{ $gewenstWedstrijden }}">
             <div class="bg-gray-800 text-white px-4 py-2 rounded-t-lg flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <span class="font-bold">Blok {{ $blok->nummer }}</span>
+                    <span class="font-bold">{{ __('Blok') }} {{ $blok->nummer }}</span>
                     @if($blok->blok_label)
                     <span class="text-orange-300 text-sm font-medium">{{ $blok->blok_label }}</span>
                     @endif
                     <div class="flex items-center gap-2 text-sm">
-                        <span class="text-gray-400">Gewenst:</span>
+                        <span class="text-gray-400">{{ __('Gewenst:') }}</span>
                         <input type="number" class="gewenst-input w-16 px-2 py-1 rounded text-gray-800 text-center text-sm"
                                value="{{ $blok->gewenst_wedstrijden ?? '' }}"
                                placeholder="{{ $gemiddeldPerBlok }}"
@@ -340,18 +340,18 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="blok-stats text-sm">Actueel: <strong class="blok-actueel">{{ $blokWedstrijden }}</strong> wed.</span>
+                    <span class="blok-stats text-sm">{{ __('Actueel:') }} <strong class="blok-actueel">{{ $blokWedstrijden }}</strong> {{ __('wed.') }}</span>
                     <span class="afwijking-badge text-xs px-2 py-0.5 rounded {{ abs($afwijkingPct) <= 10 ? 'bg-green-500' : (abs($afwijkingPct) <= 25 ? 'bg-yellow-500' : 'bg-red-500') }}">
                         {{ $afwijkingPct >= 0 ? '+' : '' }}{{ $afwijkingPct }}%
                     </span>
-                    @if($blok->weging_gesloten)<span class="text-xs bg-red-500 px-2 py-0.5 rounded">Gesloten</span>@endif
+                    @if($blok->weging_gesloten)<span class="text-xs bg-red-500 px-2 py-0.5 rounded">{{ __('Gesloten') }}</span>@endif
                 </div>
             </div>
             <div class="p-3 min-h-[50px] blok-dropzone flex flex-wrap gap-1.5 items-start content-start" data-blok="{{ $blok->nummer }}">
                 @foreach($blokCatsSorted as $cat)
                 @include('pages.blok._category_chip', ['cat' => $cat, 'inSleepvak' => false])
                 @endforeach
-                @if($blokCats->isEmpty())<span class="text-gray-400 text-xs italic dropzone-placeholder">Sleep categorieën hierheen</span>@endif
+                @if($blokCats->isEmpty())<span class="text-gray-400 text-xs italic dropzone-placeholder">{{ __('Sleep categorieën hierheen') }}</span>@endif
             </div>
         </div>
         @endforeach
@@ -365,9 +365,9 @@
             @if($toonVarianten)
             <div class="flex justify-end gap-3 mb-2">
                 <button type="button" onclick="pasVariantToe()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-1 rounded">
-                    ✓ Toepassen
+                    ✓ {{ __('Toepassen') }}
                 </button>
-                <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ Annuleer</a>
+                <a href="{{ route('toernooi.blok.index', $toernooi->routeParams()) }}" class="text-gray-400 hover:text-gray-600 text-xs">✕ {{ __('Annuleer') }}</a>
             </div>
             @endif
 
@@ -408,12 +408,12 @@
                     <span class="font-medium">{{ number_format($blokStats['pogingen'] ?? 0) }}</span>
                     <span class="text-gray-400 text-xs">({{ $blokStats['tijd_sec'] ?? 0 }}s, {{ number_format($blokStats['per_seconde'] ?? 0) }}/s)</span>
                     <span class="text-gray-400 mx-1">→</span>
-                    <span>{{ $blokStats['geldige_varianten'] ?? 0 }} geldig</span>
+                    <span>{{ $blokStats['geldige_varianten'] ?? 0 }} {{ __('geldig') }}</span>
                     <span class="text-gray-400 mx-1">→</span>
                     <span class="font-bold text-blue-600">top {{ $blokStats['getoond'] ?? 0 }}</span>
                     <span id="live-score-display" class="ml-3 hidden"></span>
                 @else
-                    Varianten (klik Bereken)
+                    {{ __('Varianten (klik Bereken)') }}
                 @endif
             </div>
         </div>
@@ -424,8 +424,8 @@
     <div class="w-80 flex-shrink-0">
         <div class="bg-white rounded-lg shadow sticky top-4">
             <div class="bg-gray-700 text-white px-3 py-2 rounded-t-lg flex justify-between items-center text-sm">
-                <span class="font-bold">Overzicht</span>
-                <span class="text-gray-300">Blok</span>
+                <span class="font-bold">{{ __('Overzicht') }}</span>
+                <span class="text-gray-300">{{ __('Blok') }}</span>
             </div>
             <div class="p-2 max-h-[calc(100vh-200px)] overflow-y-auto text-xs" id="overzicht-panel">
                 {{-- Alle categorieën gesorteerd op leeftijdVolgorde --}}

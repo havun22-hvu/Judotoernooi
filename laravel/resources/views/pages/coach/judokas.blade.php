@@ -22,7 +22,7 @@
                 </div>
                 <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
                     @csrf
-                    <button type="submit" class="text-gray-600 hover:text-gray-800">Uitloggen</button>
+                    <button type="submit" class="text-gray-600 hover:text-gray-800">{{ __('Uitloggen') }}</button>
                 </form>
             </div>
 
@@ -30,39 +30,39 @@
             <div class="mt-4 flex space-x-4 border-t pt-4 overflow-x-auto">
                 <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-1 whitespace-nowrap">
-                    Judoka's
+                    {{ __("Judoka's") }}
                 </a>
                 <a href="{{ route('coach.portal.coachkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Coach Kaarten
+                    {{ __('Coach Kaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.weegkaarten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Weegkaarten
+                    {{ __('Weegkaarten') }}
                 </a>
                 <a href="{{ route('coach.portal.resultaten', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
                    class="text-gray-600 hover:text-gray-800 px-3 py-1 whitespace-nowrap">
-                    Resultaten
+                    {{ __('Resultaten') }}
                 </a>
             </div>
 
             @if(!$inschrijvingOpen)
             <div class="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
-                <strong>Let op:</strong> De inschrijving is gesloten. Je kunt geen judoka's meer toevoegen of bewerken.
+                <strong>{{ __('Let op:') }}</strong> {{ __('De inschrijving is gesloten. Je kunt geen judoka\'s meer toevoegen of bewerken.') }}
             </div>
             @elseif($maxBereikt)
             <div class="mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
-                <strong>Vol:</strong> Het maximum aantal deelnemers ({{ $toernooi->max_judokas }}) is bereikt.
+                <strong>{{ __('Vol:') }}</strong> {{ __('Het maximum aantal deelnemers (:max) is bereikt.', ['max' => $toernooi->max_judokas]) }}
             </div>
             @elseif($bijna80ProcentVol)
             <div class="mt-4 bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded">
-                <strong>Bijna vol!</strong> Het toernooi is {{ $bezettingsPercentage }}% vol. Nog {{ $plaatsenOver }} {{ $plaatsenOver == 1 ? 'plek' : 'plekken' }} beschikbaar.
+                <strong>{{ __('Bijna vol!') }}</strong> {{ __('Het toernooi is :percentage% vol. Nog :plaatsen :plek beschikbaar.', ['percentage' => $bezettingsPercentage, 'plaatsen' => $plaatsenOver, 'plek' => $plaatsenOver == 1 ? __('plek') : __('plekken')]) }}
             </div>
             @endif
 
             @if($toernooi->max_judokas && !$maxBereikt && !$bijna80ProcentVol)
             <div class="mt-4 text-sm text-gray-600">
-                Totaal aangemeld: {{ $totaalJudokas }} / {{ $toernooi->max_judokas }} ({{ $bezettingsPercentage }}%)
+                {{ __('Totaal aangemeld:') }} {{ $totaalJudokas }} / {{ $toernooi->max_judokas }} ({{ $bezettingsPercentage }}%)
             </div>
             @endif
 
@@ -71,9 +71,9 @@
             @endphp
             @if($heeftEliminatie)
             <div class="mt-4 bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded text-sm">
-                <strong>Eliminatie (afvalsysteem):</strong> Bij sommige categorieën wordt er met eliminatie gespeeld i.p.v. poules.
+                <strong>{{ __('Eliminatie (afvalsysteem):') }}</strong> {{ __('Bij sommige categorieën wordt er met eliminatie gespeeld i.p.v. poules.') }}
                 <details class="mt-2">
-                    <summary class="cursor-pointer text-orange-700 hover:text-orange-900">Welke categorieën?</summary>
+                    <summary class="cursor-pointer text-orange-700 hover:text-orange-900">{{ __('Welke categorieën?') }}</summary>
                     <ul class="mt-2 ml-4 list-disc space-y-1">
                         @foreach($eliminatieGewichtsklassen as $lkKey => $gewichten)
                             @if(!empty($gewichten))
@@ -99,11 +99,11 @@
         <!-- Portal mode info banner -->
         @if(!($magInschrijven ?? true) && !($magWijzigen ?? true))
         <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
-            <strong>Alleen bekijken:</strong> De organisator beheert de inschrijvingen. Je kunt je judoka's hier bekijken maar niet wijzigen.
+            <strong>{{ __('Alleen bekijken:') }}</strong> {{ __('De organisator beheert de inschrijvingen. Je kunt je judoka\'s hier bekijken maar niet wijzigen.') }}
         </div>
         @elseif(!($magInschrijven ?? true) && ($magWijzigen ?? true))
         <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded mb-6">
-            <strong>Alleen mutaties:</strong> Je kunt bestaande judoka's wijzigen, maar geen nieuwe inschrijvingen doen.
+            <strong>{{ __('Alleen mutaties:') }}</strong> {{ __('Je kunt bestaande judoka\'s wijzigen, maar geen nieuwe inschrijvingen doen.') }}
         </div>
         @endif
 
@@ -111,7 +111,7 @@
         @if($inschrijvingOpen && !$maxBereikt && ($magInschrijven ?? true))
         <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="judokaForm()">
             <button @click="open = !open" class="flex justify-between items-center w-full text-left">
-                <h2 class="text-xl font-bold text-gray-800">+ Nieuwe Judoka Toevoegen</h2>
+                <h2 class="text-xl font-bold text-gray-800">+ {{ __('Nieuwe Judoka Toevoegen') }}</h2>
                 <span x-text="open ? '−' : '+'" class="text-2xl text-gray-500"></span>
             </button>
 
@@ -120,45 +120,45 @@
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Naam *</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Naam') }} *</label>
                         <input type="text" name="naam" required
                                class="w-full border rounded px-3 py-2 @error('naam') border-red-500 @enderror">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geboortejaar</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geboortejaar') }}</label>
                         <input type="number" name="geboortejaar" x-model="geboortejaar" @change="updateLeeftijdsklasse()" min="2000" max="{{ date('Y') }}"
                                class="w-full border rounded px-3 py-2">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Geslacht</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Geslacht') }}</label>
                         <select name="geslacht" x-model="geslacht" @change="updateLeeftijdsklasse()" class="w-full border rounded px-3 py-2">
-                            <option value="">Selecteer...</option>
-                            <option value="M">Man</option>
-                            <option value="V">Vrouw</option>
+                            <option value="">{{ __('Selecteer...') }}</option>
+                            <option value="M">{{ __('Man') }}</option>
+                            <option value="V">{{ __('Vrouw') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Band</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Band') }}</label>
                         <select name="band" class="w-full border rounded px-3 py-2">
-                            <option value="">Selecteer...</option>
-                            <option value="wit">Wit</option>
-                            <option value="geel">Geel</option>
-                            <option value="oranje">Oranje</option>
-                            <option value="groen">Groen</option>
-                            <option value="blauw">Blauw</option>
-                            <option value="bruin">Bruin</option>
-                            <option value="zwart">Zwart</option>
+                            <option value="">{{ __('Selecteer...') }}</option>
+                            <option value="wit">{{ __('Wit') }}</option>
+                            <option value="geel">{{ __('Geel') }}</option>
+                            <option value="oranje">{{ __('Oranje') }}</option>
+                            <option value="groen">{{ __('Groen') }}</option>
+                            <option value="blauw">{{ __('Blauw') }}</option>
+                            <option value="bruin">{{ __('Bruin') }}</option>
+                            <option value="zwart">{{ __('Zwart') }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Gewicht (kg)</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Gewicht (kg)') }}</label>
                         <input type="number" name="gewicht" x-model="gewicht" @input="updateGewichtsklasse()" step="0.1" min="10" max="200"
                                class="w-full border rounded px-3 py-2" placeholder="bijv. 32.5">
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Gewichtsklasse</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Gewichtsklasse') }}</label>
                         <select name="gewichtsklasse" x-model="gewichtsklasse" class="w-full border rounded px-3 py-2">
-                            <option value="">Automatisch bepaald</option>
+                            <option value="">{{ __('Automatisch bepaald') }}</option>
                             <template x-for="gw in gewichtsopties" :key="gw">
                                 <option :value="gw" x-text="gw + ' kg'"></option>
                             </template>
@@ -169,16 +169,16 @@
                         </p>
                     </div>
                     <div>
-                        <label class="block text-gray-700 font-medium mb-1">Telefoon</label>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('Telefoon') }}</label>
                         <input type="tel" name="telefoon"
                                class="w-full border rounded px-3 py-2" placeholder="06-12345678">
-                        <p class="text-xs text-gray-500 mt-1">Voor WhatsApp contact</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ __('Voor WhatsApp contact') }}</p>
                     </div>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.</p>
+                <p class="text-xs text-gray-500 mt-2">{{ __('* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.') }}</p>
                 <div class="mt-4">
                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded">
-                        Toevoegen
+                        {{ __('Toevoegen') }}
                     </button>
                 </div>
             </form>
@@ -210,14 +210,14 @@
                             :class="filter === 'synced' ? 'bg-green-100 font-medium' : 'hover:bg-gray-100'"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-green-500 rounded-full"></span>
-                        <span class="text-gray-600">{{ $syncedJudokas->count() }} gesynced</span>
+                        <span class="text-gray-600">{{ $syncedJudokas->count() }} {{ __('gesynced') }}</span>
                     </button>
                     @if($gewijzigdJudokas->count() > 0)
                     <button @click="filter = 'gewijzigd'; $dispatch('filter-changed', 'gewijzigd')"
                             :class="filter === 'gewijzigd' ? 'bg-orange-100 font-medium' : 'hover:bg-gray-100'"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
-                        <span class="text-gray-600">{{ $gewijzigdJudokas->count() }} gewijzigd</span>
+                        <span class="text-gray-600">{{ $gewijzigdJudokas->count() }} {{ __('gewijzigd') }}</span>
                     </button>
                     @endif
                     @if($onvolledigeJudokas->count() > 0)
@@ -225,7 +225,7 @@
                             :class="filter === 'incompleet' ? 'bg-yellow-100 font-medium' : 'hover:bg-gray-100'"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                        <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} incompleet</span>
+                        <span class="text-gray-600">{{ $onvolledigeJudokas->count() }} {{ __('incompleet') }}</span>
                     </button>
                     @endif
                     @if($nietSyncedVolledig->count() > 0)
@@ -233,7 +233,7 @@
                             :class="filter === 'klaar' ? 'bg-gray-300 font-medium' : 'hover:bg-gray-100'"
                             class="flex items-center gap-1 px-2 py-1 rounded transition-colors">
                         <span class="w-3 h-3 bg-gray-400 rounded-full"></span>
-                        <span class="text-gray-600">{{ $nietSyncedVolledig->count() }} klaar om te syncen</span>
+                        <span class="text-gray-600">{{ $nietSyncedVolledig->count() }} {{ __('klaar om te syncen') }}</span>
                     </button>
                     @endif
                 </div>
@@ -243,11 +243,11 @@
                             {{ $nietSyncedVolledig->count() === 0 ? 'disabled' : '' }}
                             @class(['opacity-50 cursor-not-allowed' => $nietSyncedVolledig->count() === 0])>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        Sync Judoka's
+                        {{ __("Sync Judoka's") }}
                     </button>
                 </form>
             </div>
-            <p class="text-xs text-gray-500 mt-2">Sync stuurt alleen volledige judoka's door naar de organisator. Na sync kun je nog wijzigen, maar dan moet je opnieuw syncen.</p>
+            <p class="text-xs text-gray-500 mt-2">{{ __('Sync stuurt alleen volledige judoka\'s door naar de organisator. Na sync kun je nog wijzigen, maar dan moet je opnieuw syncen.') }}</p>
         </div>
 
         @if($onvolledigeJudokas->count() > 0)
@@ -255,8 +255,8 @@
             <div class="flex items-start">
                 <span class="text-yellow-600 text-xl mr-2">⚠</span>
                 <div>
-                    <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} judoka('s) onvolledig</p>
-                    <p class="text-sm text-yellow-700">Onvolledige judoka's kunnen niet {{ ($betalingActief ?? false) ? 'afgerekend' : 'gesynced' }} worden. Vul de ontbrekende gegevens aan.</p>
+                    <p class="font-medium text-yellow-800">{{ $onvolledigeJudokas->count() }} {{ __("judoka('s) onvolledig") }}</p>
+                    <p class="text-sm text-yellow-700">{{ __("Onvolledige judoka's kunnen niet :actie worden. Vul de ontbrekende gegevens aan.", ['actie' => ($betalingActief ?? false) ? __('afgerekend') : __('gesynced')]) }}</p>
                 </div>
             </div>
         </div>
@@ -267,8 +267,8 @@
             <div class="flex items-start">
                 <span class="text-red-600 text-xl mr-2">🚫</span>
                 <div>
-                    <p class="font-medium text-red-800">{{ $nietInCategorie->count() }} judoka('s) passen niet in een categorie</p>
-                    <p class="text-sm text-red-700">Deze judoka's zijn te oud of te jong voor dit toernooi en kunnen niet worden ingeschreven.</p>
+                    <p class="font-medium text-red-800">{{ $nietInCategorie->count() }} {{ __("judoka('s) passen niet in een categorie") }}</p>
+                    <p class="text-sm text-red-700">{{ __("Deze judoka's zijn te oud of te jong voor dit toernooi en kunnen niet worden ingeschreven.") }}</p>
                 </div>
             </div>
         </div>
@@ -279,8 +279,8 @@
             <div class="flex items-start">
                 <span class="text-orange-600 text-xl mr-2">⚠️</span>
                 <div class="flex-1">
-                    <p class="font-bold text-orange-800">{{ $judokasTeCorrigeren->count() }} judoka('s) vereisen correctie</p>
-                    <p class="text-sm text-orange-700 mb-3">Bij de import zijn er problemen gedetecteerd. Pas de gegevens aan en sla op om de problemen op te lossen.</p>
+                    <p class="font-bold text-orange-800">{{ $judokasTeCorrigeren->count() }} {{ __("judoka('s) vereisen correctie") }}</p>
+                    <p class="text-sm text-orange-700 mb-3">{{ __('Bij de import zijn er problemen gedetecteerd. Pas de gegevens aan en sla op om de problemen op te lossen.') }}</p>
                     <ul class="text-sm text-orange-800 space-y-1">
                         @foreach($judokasTeCorrigeren as $j)
                         <li class="flex items-center gap-2">
@@ -297,8 +297,8 @@
             <div class="flex items-start">
                 <span class="text-red-600 text-xl mr-2">⚠️</span>
                 <div>
-                    <p class="font-medium text-red-800">{{ $judokasMetImportWarnings->count() }} judoka('s) met import waarschuwingen</p>
-                    <p class="text-sm text-red-700">Er waren problemen bij het importeren van deze judoka's. Controleer de gegevens en pas aan indien nodig.</p>
+                    <p class="font-medium text-red-800">{{ $judokasMetImportWarnings->count() }} {{ __("judoka('s) met import waarschuwingen") }}</p>
+                    <p class="text-sm text-red-700">{{ __("Er waren problemen bij het importeren van deze judoka's. Controleer de gegevens en pas aan indien nodig.") }}</p>
                 </div>
             </div>
         </div>

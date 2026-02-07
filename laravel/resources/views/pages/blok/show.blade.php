@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Blok ' . $blok->nummer)
+@section('title', __('Blok') . ' ' . $blok->nummer)
 
 @section('content')
 <div class="flex justify-between items-center mb-8">
     <div>
-        <h1 class="text-3xl font-bold text-gray-800">Blok {{ $blok->nummer }}</h1>
+        <h1 class="text-3xl font-bold text-gray-800">{{ __('Blok') }} {{ $blok->nummer }}</h1>
         @if($blok->weging_gesloten)
-        <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Weging gesloten</span>
+        <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Weging gesloten') }}</span>
         @endif
     </div>
     <div class="space-x-2">
