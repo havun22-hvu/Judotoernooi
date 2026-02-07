@@ -326,6 +326,7 @@
                         </h2>
                         @if(!$isEliminatie)
                         <button onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ Poule</button>
+                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="Nieuwe judoka aanmelden (laatkomer)">+ Laatkomer</button>
                         @endif
                     </div>
                     @if($isEliminatie)
@@ -703,6 +704,71 @@
     </div>
 </div>
 
+{{-- Modal: Nieuwe judoka toevoegen --}}
+<div id="nieuwe-judoka-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">🆕 Laatkomer aanmelden</h2>
+        <form id="nieuwe-judoka-form">
+            <input type="hidden" id="nj-leeftijdsklasse" value="">
+            <input type="hidden" id="nj-gewichtsklasse" value="">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
+                    <input type="text" id="nj-naam" class="w-full border rounded px-3 py-2" required placeholder="Achternaam, Voornaam">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Geboortejaar</label>
+                        <input type="number" id="nj-geboortejaar" class="w-full border rounded px-3 py-2" min="1990" max="{{ date('Y') }}" placeholder="{{ date('Y') - 10 }}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Band</label>
+                        <select id="nj-band" class="w-full border rounded px-3 py-2">
+                            <option value="">-</option>
+                            <option value="wit">Wit</option>
+                            <option value="geel">Geel</option>
+                            <option value="oranje">Oranje</option>
+                            <option value="groen">Groen</option>
+                            <option value="blauw">Blauw</option>
+                            <option value="bruin">Bruin</option>
+                            <option value="zwart">Zwart</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
+                        <input type="number" id="nj-gewicht" class="w-full border rounded px-3 py-2" step="0.1" min="10" max="200" placeholder="32.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Judoschool</label>
+                        <select id="nj-club" class="w-full border rounded px-3 py-2">
+                            <option value="">-</option>
+                            @foreach($clubs as $club)
+                            <option value="{{ $club->id }}">{{ $club->naam }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Poule *</label>
+                    <select id="nj-poule" class="w-full border rounded px-3 py-2" required>
+                        {{-- Options filled by JS --}}
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button type="button" onclick="closeNieuweJudokaModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    Annuleren
+                </button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Toevoegen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- SortableJS for drag and drop -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
@@ -1027,6 +1093,80 @@ async function nieuwePoule(leeftijdsklasse, gewichtsklasse, blokNummer) {
         alert('Fout bij aanmaken poule: ' + error.message);
     }
 }
+
+// Nieuwe judoka modal functies
+function openNieuweJudokaModal(leeftijdsklasse, gewichtsklasse, poules) {
+    document.getElementById('nj-leeftijdsklasse').value = leeftijdsklasse;
+    document.getElementById('nj-gewichtsklasse').value = gewichtsklasse;
+    document.getElementById('nj-naam').value = '';
+    document.getElementById('nj-geboortejaar').value = '';
+    document.getElementById('nj-band').value = '';
+    document.getElementById('nj-gewicht').value = '';
+    document.getElementById('nj-club').value = '';
+
+    const pouleSelect = document.getElementById('nj-poule');
+    pouleSelect.innerHTML = '';
+    poules.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = 'Poule ' + p.nummer;
+        pouleSelect.appendChild(opt);
+    });
+
+    document.getElementById('nieuwe-judoka-modal').classList.remove('hidden');
+    document.getElementById('nj-naam').focus();
+}
+
+function closeNieuweJudokaModal() {
+    document.getElementById('nieuwe-judoka-modal').classList.add('hidden');
+}
+
+document.getElementById('nieuwe-judoka-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const naam = document.getElementById('nj-naam').value.trim();
+    if (!naam) { alert('Naam is verplicht'); return; }
+
+    const pouleId = document.getElementById('nj-poule').value;
+    if (!pouleId) { alert('Selecteer een poule'); return; }
+
+    const btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Bezig...';
+
+    try {
+        const response = await fetch('{{ route("toernooi.wedstrijddag.nieuwe-judoka", $toernooi->routeParams()) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                naam: naam,
+                band: document.getElementById('nj-band').value || null,
+                gewicht: document.getElementById('nj-gewicht').value || null,
+                geboortejaar: document.getElementById('nj-geboortejaar').value || null,
+                club_id: document.getElementById('nj-club').value || null,
+                poule_id: pouleId,
+            }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok && data.success) {
+            closeNieuweJudokaModal();
+            window.location.reload();
+        } else {
+            alert('Fout: ' + (data.message || 'Onbekende fout'));
+            btn.disabled = false;
+            btn.textContent = 'Toevoegen';
+        }
+    } catch (error) {
+        alert('Netwerk fout: ' + error.message);
+        btn.disabled = false;
+        btn.textContent = 'Toevoegen';
+    }
+});
 
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verplaatsUrl = '{{ route("toernooi.wedstrijddag.verplaats-judoka", $toernooi->routeParams()) }}';
