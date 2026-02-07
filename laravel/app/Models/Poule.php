@@ -196,7 +196,7 @@ class Poule extends Model
         $aantalBrons = $this->toernooi?->aantal_brons ?? 2;
 
         // Formule: 2N-5 (dubbel brons) of 2N-4 (enkel brons)
-        return (2 * $aantal) - ($aantalBrons == 2 ? 5 : 4);
+        return max(0, (2 * $aantal) - ($aantalBrons == 2 ? 5 : 4));
     }
 
     /**
