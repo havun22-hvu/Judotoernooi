@@ -9,6 +9,7 @@ use App\Models\CoachKaart;
 use App\Models\Mat;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\BackupService;
 use App\Services\BlokMatVerdelingService;
 use App\Services\EliminatieService;
 use App\Services\VariabeleBlokVerdelingService;
@@ -24,7 +25,8 @@ class BlokController extends Controller
         private BlokMatVerdelingService $verdelingService,
         private VariabeleBlokVerdelingService $variabeleService,
         private WedstrijdSchemaService $wedstrijdService,
-        private EliminatieService $eliminatieService
+        private EliminatieService $eliminatieService,
+        private BackupService $backupService
     ) {}
 
     public function index(Organisator $organisator, Toernooi $toernooi): View
@@ -241,6 +243,9 @@ class BlokController extends Controller
      */
     public function zetOpMat(Organisator $organisator, Toernooi $toernooi): RedirectResponse
     {
+        // Milestone backup before destructive operations (production only)
+        $this->backupService->maakMilestoneBackup("voor-verdeling-matten-toernooi-{$toernooi->id}");
+
         // Remove all existing wedstrijden (categories should be INACTIVE in voorbereiding)
         // After overpoulen, judokas may have changed, so old wedstrijden are invalid
         \App\Models\Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))->delete();
