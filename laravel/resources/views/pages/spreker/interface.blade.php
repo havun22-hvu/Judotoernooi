@@ -22,7 +22,7 @@
     <!-- Standalone Header (device-bound PWA) -->
     <header class="bg-blue-800 text-white px-4 py-3 flex items-center justify-between shadow-lg sticky top-0 z-50">
         <div>
-            <h1 class="text-lg font-bold">📢 Spreker Interface</h1>
+            <h1 class="text-lg font-bold">📢 {{ __('Spreker Interface') }}</h1>
             <p class="text-blue-200 text-sm">{{ $toernooi->naam }}</p>
         </div>
         <div class="text-2xl font-mono" id="clock"></div>
