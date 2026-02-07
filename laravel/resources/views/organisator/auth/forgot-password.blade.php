@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wachtwoord vergeten - JudoToernooi</title>
+    <title>{{ __('Wachtwoord vergeten') }} - JudoToernooi</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">JudoToernooi</h1>
-            <p class="text-gray-600">Wachtwoord vergeten</p>
+            <p class="text-gray-600">{{ __('Wachtwoord vergeten') }}</p>
         </div>
 
         <p class="text-gray-600 mb-6 text-sm">
-            Vul uw e-mailadres in en we sturen u een link om uw wachtwoord te resetten.
+            {{ __('Vul uw e-mailadres in en we sturen u een link om uw wachtwoord te resetten.') }}
         </p>
 
         @if(session('status'))
@@ -28,7 +28,7 @@
 
             <div class="mb-6">
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-                    E-mailadres
+                    {{ __('E-mailadres') }}
                 </label>
                 <input type="email"
                        id="email"
@@ -44,13 +44,13 @@
 
             <button type="submit"
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                Verstuur reset link
+                {{ __('Verstuur reset link') }}
             </button>
         </form>
 
         <div class="mt-6 text-center">
             <a href="{{ route('login') }}" class="text-blue-600 hover:text-blue-800 font-medium">
-                Terug naar inloggen
+                {{ __('Terug naar inloggen') }}
             </a>
         </div>
     </div>
