@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Club;
 use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Judoka;
@@ -154,11 +155,15 @@ class WedstrijddagController extends Controller
             }
         }
 
+        // Clubs for quick-add judoka modal
+        $clubs = Club::where('organisator_id', $organisator->id)->orderBy('naam')->get();
+
         return view('pages.wedstrijddag.poules', compact(
             'toernooi',
             'blokken',
             'sentToZaaloverzicht',
-            'problematischeGewichtsPoules'
+            'problematischeGewichtsPoules',
+            'clubs'
         ));
     }
 
@@ -839,6 +844,75 @@ class WedstrijddagController extends Controller
         return response()->json([
             'success' => true,
             'message' => $judoka->naam . ' is afgemeld',
+        ]);
+    }
+
+    /**
+     * Quick-add judoka on match day and attach to poule
+     */
+    public function nieuweJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'naam' => 'required|string|max:255',
+            'band' => 'nullable|string|max:20',
+            'gewicht' => 'nullable|numeric|min:10|max:200',
+            'geboortejaar' => 'nullable|integer|min:1990|max:' . date('Y'),
+            'club_id' => 'nullable|exists:clubs,id',
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        // Check freemium limit
+        if (!$toernooi->canAddMoreJudokas()) {
+            return response()->json(['success' => false, 'message' => 'Maximum aantal judoka\'s bereikt'], 400);
+        }
+
+        $poule = Poule::where('toernooi_id', $toernooi->id)
+            ->where('id', $validated['poule_id'])
+            ->first();
+
+        if (!$poule) {
+            return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        // Calculate classification based on age/gender
+        $leeftijdsklasse = $poule->leeftijdsklasse;
+        $gewichtsklasse = $poule->gewichtsklasse;
+
+        if (!empty($validated['geboortejaar'])) {
+            $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
+            $leeftijd = $toernooiJaar - $validated['geboortejaar'];
+
+            // Try to determine gewichtsklasse from weight
+            if (!empty($validated['gewicht'])) {
+                $bepaaldeGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, null, $validated['band'] ?? null);
+                if ($bepaaldeGewichtsklasse) {
+                    $gewichtsklasse = $bepaaldeGewichtsklasse;
+                }
+            }
+        }
+
+        $judoka = Judoka::create([
+            'toernooi_id' => $toernooi->id,
+            'club_id' => $validated['club_id'] ?? null,
+            'naam' => $validated['naam'],
+            'geboortejaar' => $validated['geboortejaar'] ?? null,
+            'band' => $validated['band'] ?? null,
+            'gewicht' => $validated['gewicht'] ?? null,
+            'gewicht_gewogen' => $validated['gewicht'] ?? null,
+            'leeftijdsklasse' => $leeftijdsklasse,
+            'gewichtsklasse' => $gewichtsklasse,
+            'aanwezigheid' => 'aanwezig',
+        ]);
+
+        // Attach to poule at last position
+        $maxPositie = $poule->judokas()->max('positie') ?? 0;
+        $poule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
+        $poule->updateStatistieken();
+
+        return response()->json([
+            'success' => true,
+            'message' => $judoka->naam . ' toegevoegd aan poule ' . $poule->nummer,
+            'judoka' => $judoka,
         ]);
     }
 
