@@ -92,4 +92,55 @@ class AdminController extends Controller
             ->route('admin.klanten')
             ->with('success', 'Klantgegevens bijgewerkt');
     }
+
+    /**
+     * Delete a klant (organisator) and all related data
+     */
+    public function destroyKlant(Organisator $klant): RedirectResponse
+    {
+        $this->checkSitebeheerder();
+
+        if ($klant->isSitebeheerder()) {
+            return redirect()->route('admin.klanten')
+                ->with('error', 'Sitebeheerder kan niet verwijderd worden');
+        }
+
+        $naam = $klant->naam;
+
+        try {
+            \DB::transaction(function () use ($klant) {
+                foreach ($klant->toernooien as $toernooi) {
+                    $pouleIds = $toernooi->poules()->pluck('id');
+                    \App\Models\Wedstrijd::whereIn('poule_id', $pouleIds)->delete();
+                    \DB::table('poule_judoka')->whereIn('poule_id', $pouleIds)->delete();
+                    $toernooi->poules()->delete();
+                    $toernooi->judokas()->delete();
+                    $toernooi->blokken()->delete();
+                    $toernooi->matten()->delete();
+                    \DB::table('club_toernooi')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('club_uitnodigingen')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('betalingen')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('toernooi_betalingen')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('device_toegangen')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('coach_kaarten')->where('toernooi_id', $toernooi->id)->delete();
+                    \DB::table('coaches')->where('toernooi_id', $toernooi->id)->delete();
+                    $toernooi->delete();
+                }
+
+                $klant->clubs()->delete();
+                \DB::table('toernooi_templates')->where('organisator_id', $klant->id)->delete();
+                \DB::table('gewichtsklassen_presets')->where('organisator_id', $klant->id)->delete();
+
+                $klant->delete();
+            });
+        } catch (\Exception $e) {
+            \Log::error("Klant delete failed: {$e->getMessage()}", ['klant_id' => $klant->id]);
+
+            return redirect()->route('admin.klanten')
+                ->with('error', "Kon '{$naam}' niet verwijderen: {$e->getMessage()}");
+        }
+
+        return redirect()->route('admin.klanten')
+            ->with('success', "Klant '{$naam}' en alle bijbehorende data verwijderd");
+    }
 }
