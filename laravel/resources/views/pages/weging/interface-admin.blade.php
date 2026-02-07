@@ -55,7 +55,7 @@
                     </div>
                     @if($blok->weging_gesloten)
                     <div class="text-xs text-gray-500">{{ __('Gesloten') }}</div>
-                    @elseif($blok->weging_einde)
+                    @elseif($blok->weging_einde && $toernooi->datum?->isToday())
                     <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
                          class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
                          x-text="display"></div>
