@@ -1,6 +1,6 @@
 ﻿@extends('layouts.app')
 
-@section('title', 'Instellingen')
+@section('title', __('Instellingen'))
 
 @section('content')
 <!-- Fixed toast voor autosave status -->
@@ -21,14 +21,14 @@
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
                 <div>
-                    <p class="font-bold text-red-800">{{ $nietGecategoriseerdAantal }} judoka('s) niet gecategoriseerd!</p>
-                    <p class="text-sm text-red-700">Pas de categorie-instellingen aan.</p>
+                    <p class="font-bold text-red-800">{{ __(':aantal judoka(\'s) niet gecategoriseerd!', ['aantal' => $nietGecategoriseerdAantal]) }}</p>
+                    <p class="text-sm text-red-700">{{ __('Pas de categorie-instellingen aan.') }}</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('toernooi.judoka.index', $toernooi->routeParams()) }}?filter=niet_gecategoriseerd"
                    class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                    Bekijk lijst
+                    {{ __('Bekijk lijst') }}
                 </a>
                 <button type="button" @click="show = false" class="text-red-600 hover:text-red-800 text-xl px-2">&times;</button>
             </div>
@@ -45,7 +45,7 @@
             <div class="flex items-center gap-3">
                 <span class="text-xl">⚠️</span>
                 <div>
-                    <p class="font-bold text-orange-800">Overlappende categorieën!</p>
+                    <p class="font-bold text-orange-800">{{ __('Overlappende categorieën!') }}</p>
                     <p class="text-sm text-orange-700">{{ $overlapWarning }}</p>
                 </div>
             </div>
@@ -63,11 +63,11 @@
     <div class="sticky top-16 bg-white z-10 -mx-4 px-4 pt-4 pb-0 shadow-sm">
         <div class="flex justify-between items-center mb-4">
             <div class="flex items-center gap-3">
-                <h1 class="text-3xl font-bold text-gray-800">Instellingen</h1>
+                <h1 class="text-3xl font-bold text-gray-800">{{ __('Instellingen') }}</h1>
             </div>
             <div class="flex items-center gap-4">
                 <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
-                    &larr; Terug naar Dashboard
+                    &larr; {{ __('Terug naar Dashboard') }}
                 </a>
             </div>
         </div>
@@ -78,26 +78,26 @@
                 @click="activeTab = 'toernooi'"
                 :class="activeTab === 'toernooi' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
-            Toernooi
+            {{ __('Toernooi') }}
         </button>
         <button type="button"
                 @click="activeTab = 'organisatie'"
                 :class="activeTab === 'organisatie' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
-            Organisatie
+            {{ __('Organisatie') }}
         </button>
         <button type="button"
                 @click="activeTab = 'noodplan'"
                 :class="activeTab === 'noodplan' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
-            🚨 Noodplan
+            {{ __('Noodplan') }}
         </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
                 @click="activeTab = 'test'"
                 :class="activeTab === 'test' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
-            🧪 Test
+            {{ __('Test') }}
         </button>
         @endif
         </div>
@@ -105,17 +105,17 @@
 
     <!-- TAB: TOERNOOI -->
     <div x-show="activeTab === 'toernooi'" x-cloak>
-    <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="Instellingen opslaan...">
+    <form action="{{ route('toernooi.update', $toernooi->routeParams()) }}" method="POST" id="toernooi-form" data-loading="{{ __('Instellingen opslaan...') }}">
         @csrf
         @method('PUT')
 
         <!-- ALGEMEEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Algemeen</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Algemeen') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="naam" class="block text-gray-700 font-medium mb-1">Naam Toernooi *</label>
+                    <label for="naam" class="block text-gray-700 font-medium mb-1">{{ __('Naam Toernooi') }} *</label>
                     <input type="text" name="naam" id="naam" value="{{ old('naam', $toernooi->naam) }}"
                            class="w-full border rounded px-3 py-2 @error('naam') border-red-500 @enderror" required>
                     @error('naam')
@@ -124,13 +124,13 @@
                 </div>
 
                 <div>
-                    <label for="organisatie" class="block text-gray-700 font-medium mb-1">Organisatie</label>
+                    <label for="organisatie" class="block text-gray-700 font-medium mb-1">{{ __('Organisatie') }}</label>
                     <input type="text" name="organisatie" id="organisatie" value="{{ old('organisatie', $toernooi->organisatie) }}"
-                           placeholder="Naam van de organiserende club" class="w-full border rounded px-3 py-2">
+                           placeholder="{{ __('Naam van de organiserende club') }}" class="w-full border rounded px-3 py-2">
                 </div>
 
                 <div>
-                    <label for="datum" class="block text-gray-700 font-medium mb-1">Datum Toernooi *</label>
+                    <label for="datum" class="block text-gray-700 font-medium mb-1">{{ __('Datum Toernooi') }} *</label>
                     <input type="date" name="datum" id="datum" value="{{ old('datum', $toernooi->datum->format('Y-m-d')) }}"
                            class="w-full border rounded px-3 py-2 @error('datum') border-red-500 @enderror" required>
                     @error('datum')
@@ -139,54 +139,54 @@
                 </div>
 
                 <div>
-                    <label for="locatie" class="block text-gray-700 font-medium mb-1">Locatie</label>
-                    <x-location-autocomplete name="locatie" :value="old('locatie', $toernooi->locatie)" placeholder="Zoek sporthal of adres..." />
+                    <label for="locatie" class="block text-gray-700 font-medium mb-1">{{ __('Locatie') }}</label>
+                    <x-location-autocomplete name="locatie" :value="old('locatie', $toernooi->locatie)" placeholder="{{ __('Zoek sporthal of adres...') }}" />
                 </div>
             </div>
         </div>
 
         <!-- INSCHRIJVING -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Inschrijving</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Inschrijving') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="inschrijving_deadline" class="block text-gray-700 font-medium mb-1">Inschrijving Deadline</label>
+                    <label for="inschrijving_deadline" class="block text-gray-700 font-medium mb-1">{{ __('Inschrijving Deadline') }}</label>
                     <input type="date" name="inschrijving_deadline" id="inschrijving_deadline"
                            value="{{ old('inschrijving_deadline', $toernooi->inschrijving_deadline?->format('Y-m-d')) }}"
                            class="w-full border rounded px-3 py-2">
-                    <p class="text-gray-500 text-sm mt-1">Tot wanneer kunnen clubs judoka's opgeven?</p>
+                    <p class="text-gray-500 text-sm mt-1">{{ __('Tot wanneer kunnen clubs judoka\'s opgeven?') }}</p>
                 </div>
 
                 <div>
-                    <label for="max_judokas" class="block text-gray-700 font-medium mb-1">Maximum Aantal Deelnemers</label>
+                    <label for="max_judokas" class="block text-gray-700 font-medium mb-1">{{ __('Maximum Aantal Deelnemers') }}</label>
                     <input type="number" name="max_judokas" id="max_judokas"
                            value="{{ old('max_judokas', $toernooi->max_judokas) }}"
-                           placeholder="Leeg = onbeperkt" class="w-full border rounded px-3 py-2" min="1">
-                    <p class="text-gray-500 text-sm mt-1">Coaches krijgen waarschuwing bij 80%</p>
+                           placeholder="{{ __('Leeg = onbeperkt') }}" class="w-full border rounded px-3 py-2" min="1">
+                    <p class="text-gray-500 text-sm mt-1">{{ __('Coaches krijgen waarschuwing bij 80%') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- MATTEN & BLOKKEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Matten & Tijdsblokken</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Matten & Tijdsblokken') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label for="aantal_matten" class="block text-gray-700 font-medium mb-1">Aantal Matten</label>
+                    <label for="aantal_matten" class="block text-gray-700 font-medium mb-1">{{ __('Aantal Matten') }}</label>
                     <input type="number" name="aantal_matten" id="aantal_matten"
                            value="{{ old('aantal_matten', $toernooi->aantal_matten) }}"
                            class="w-full border rounded px-3 py-2" min="1" max="20">
-                    <p class="text-gray-500 text-sm mt-1">Hoeveel wedstrijdmatten zijn beschikbaar?</p>
+                    <p class="text-gray-500 text-sm mt-1">{{ __('Hoeveel wedstrijdmatten zijn beschikbaar?') }}</p>
                 </div>
 
                 <div>
-                    <label for="aantal_blokken" class="block text-gray-700 font-medium mb-1">Aantal Tijdsblokken</label>
+                    <label for="aantal_blokken" class="block text-gray-700 font-medium mb-1">{{ __('Aantal Tijdsblokken') }}</label>
                     <input type="number" name="aantal_blokken" id="aantal_blokken"
                            value="{{ old('aantal_blokken', $toernooi->aantal_blokken) }}"
                            class="w-full border rounded px-3 py-2" min="1" max="12">
-                    <p class="text-gray-500 text-sm mt-1">In hoeveel tijdsblokken wordt het toernooi verdeeld?</p>
+                    <p class="text-gray-500 text-sm mt-1">{{ __('In hoeveel tijdsblokken wordt het toernooi verdeeld?') }}</p>
                 </div>
             </div>
 
@@ -194,11 +194,11 @@
 
         <!-- POULE INSTELLINGEN -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Poule Instellingen</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Poule Instellingen') }}</h2>
 
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Voorkeursvolgorde Poule Grootte</label>
-                <p class="text-gray-500 text-sm mb-3">Sleep om de volgorde aan te passen. Eerste = meest gewenst, laagste = minimum, hoogste = maximum.</p>
+                <label class="block text-gray-700 font-medium mb-2">{{ __('Voorkeursvolgorde Poule Grootte') }}</label>
+                <p class="text-gray-500 text-sm mb-3">{{ __('Sleep om de volgorde aan te passen. Eerste = meest gewenst, laagste = minimum, hoogste = maximum.') }}</p>
 
                 @php
                     $voorkeur = old('poule_grootte_voorkeur', $toernooi->poule_grootte_voorkeur) ?? [5, 4, 6, 3];
@@ -211,8 +211,8 @@
                     @foreach($voorkeur as $index => $grootte)
                     <div class="voorkeur-item flex items-center bg-blue-100 border-2 border-blue-300 rounded-lg px-4 py-2 cursor-move" draggable="true" data-grootte="{{ $grootte }}">
                         <span class="font-bold text-blue-800 text-lg mr-2">{{ $grootte }}</span>
-                        <span class="text-blue-600 text-sm">judoka's</span>
-                        <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="Verwijder">&times;</button>
+                        <span class="text-blue-600 text-sm">{{ __('judoka\'s') }}</span>
+                        <button type="button" class="ml-3 text-gray-400 hover:text-red-500 remove-voorkeur" title="{{ __('Verwijder') }}">&times;</button>
                     </div>
                     @endforeach
                 </div>
@@ -220,31 +220,31 @@
                 <div class="flex items-center gap-2">
                     <select id="add-voorkeur-select" class="border rounded px-3 py-2 text-sm">
                         @for($i = 2; $i <= 8; $i++)
-                        <option value="{{ $i }}">{{ $i }} judoka's</option>
+                        <option value="{{ $i }}">{{ __(':aantal judoka\'s', ['aantal' => $i]) }}</option>
                         @endfor
                     </select>
                     <button type="button" id="add-voorkeur-btn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
-                        + Toevoegen
+                        {{ __('+ Toevoegen') }}
                     </button>
                 </div>
 
                 <input type="hidden" name="poule_grootte_voorkeur" id="poule_grootte_voorkeur_input" value="{{ json_encode($voorkeur) }}">
 
                 <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                    <strong>Voorbeeld:</strong> Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.
+                    <strong>{{ __('Voorbeeld:') }}</strong> {{ __('Bij [5, 4, 6, 3] krijg je liever 3 poules van 4 dan 2 poules van 6.') }}
                 </div>
             </div>
 
             <!-- Wedstrijden per poulegrootte -->
             <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-3">Wedstrijden per poulegrootte</h3>
+                <h3 class="font-medium text-gray-700 mb-3">{{ __('Wedstrijden per poulegrootte') }}</h3>
                 <div class="bg-gray-50 rounded-lg p-4">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="text-left text-gray-500 text-xs uppercase">
-                                <th class="pb-2 w-24">Poule</th>
-                                <th class="pb-2 w-20">Enkel</th>
-                                <th class="pb-2">Instelling</th>
+                                <th class="pb-2 w-24">{{ __('Poule') }}</th>
+                                <th class="pb-2 w-20">{{ __('Enkel') }}</th>
+                                <th class="pb-2">{{ __('Instelling') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -257,7 +257,7 @@
                                 }
                             @endphp
                             <tr>
-                                <td class="py-2 font-medium">2 judoka's</td>
+                                <td class="py-2 font-medium">{{ __('2 judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">1w</td>
                                 <td class="py-2">
                                     <div class="flex items-center gap-4" x-data="{ modus: '{{ $modus2 }}' }" x-init="$watch('modus', value => { $refs.dubbel2.value = value === 'dubbel' ? '1' : '0'; $refs.best3.value = value === 'best3' ? '1' : '0'; })">
@@ -266,23 +266,23 @@
                                         <label class="flex items-center cursor-pointer">
                                             <input type="radio" x-model="modus" value="enkel"
                                                    class="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500">
-                                            <span class="ml-2 text-gray-600">Enkel <span class="text-gray-400">(1w)</span></span>
+                                            <span class="ml-2 text-gray-600">{{ __('Enkel') }} <span class="text-gray-400">(1w)</span></span>
                                         </label>
                                         <label class="flex items-center cursor-pointer">
                                             <input type="radio" x-model="modus" value="dubbel"
                                                    class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                            <span class="ml-2">Dubbel <span class="text-gray-400">(2w)</span></span>
+                                            <span class="ml-2">{{ __('Dubbel') }} <span class="text-gray-400">(2w)</span></span>
                                         </label>
                                         <label class="flex items-center cursor-pointer">
                                             <input type="radio" x-model="modus" value="best3"
                                                    class="w-4 h-4 text-yellow-600 border-gray-300 focus:ring-yellow-500">
-                                            <span class="ml-2 text-yellow-700">Best of 3 <span class="text-yellow-500">(3w)</span></span>
+                                            <span class="ml-2 text-yellow-700">{{ __('Best of 3') }} <span class="text-yellow-500">(3w)</span></span>
                                         </label>
                                     </div>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="py-2 font-medium">3 judoka's</td>
+                                <td class="py-2 font-medium">{{ __('3 judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">3w</td>
                                 <td class="py-2">
                                     <label class="flex items-center cursor-pointer">
@@ -290,12 +290,12 @@
                                         <input type="checkbox" name="dubbel_bij_3_judokas" value="1"
                                                {{ old('dubbel_bij_3_judokas', $toernooi->dubbel_bij_3_judokas ?? true) ? 'checked' : '' }}
                                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="ml-2">Dubbel <span class="text-gray-400">(6w)</span></span>
+                                        <span class="ml-2">{{ __('Dubbel') }} <span class="text-gray-400">(6w)</span></span>
                                     </label>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="py-2 font-medium">4 judoka's</td>
+                                <td class="py-2 font-medium">{{ __('4 judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">6w</td>
                                 <td class="py-2">
                                     <label class="flex items-center cursor-pointer">
@@ -303,14 +303,14 @@
                                         <input type="checkbox" name="dubbel_bij_4_judokas" value="1"
                                                {{ old('dubbel_bij_4_judokas', $toernooi->dubbel_bij_4_judokas ?? false) ? 'checked' : '' }}
                                                class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                        <span class="ml-2">Dubbel <span class="text-gray-400">(12w)</span></span>
+                                        <span class="ml-2">{{ __('Dubbel') }} <span class="text-gray-400">(12w)</span></span>
                                     </label>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="py-2 font-medium text-gray-400">5+ judoka's</td>
+                                <td class="py-2 font-medium text-gray-400">{{ __('5+ judoka\'s') }}</td>
                                 <td class="py-2 text-gray-400">10w+</td>
-                                <td class="py-2 text-gray-400 text-xs">Altijd enkel (round-robin)</td>
+                                <td class="py-2 text-gray-400 text-xs">{{ __('Altijd enkel (round-robin)') }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -319,9 +319,9 @@
 
             <!-- Eliminatie Type (KO systeem) -->
             <div class="border-t pt-4 mt-4">
-                <h3 class="font-medium text-gray-700 mb-2">Knock-out Systeem</h3>
+                <h3 class="font-medium text-gray-700 mb-2">{{ __('Knock-out Systeem') }}</h3>
                 <p class="text-xs text-gray-500 mb-3">
-                    Kies het type eliminatie bracket voor gewichtsklassen met "Direct eliminatie"
+                    {{ __('Kies het type eliminatie bracket voor gewichtsklassen met "Direct eliminatie"') }}
                 </p>
 
                 @php
@@ -334,11 +334,11 @@
                                {{ $eliminatieType === 'dubbel' ? 'checked' : '' }}
                                class="mt-1 w-4 h-4 text-blue-600">
                         <div>
-                            <span class="font-medium text-sm">Dubbel Eliminatie</span>
+                            <span class="font-medium text-sm">{{ __('Dubbel Eliminatie') }}</span>
                             <span class="block text-xs text-gray-500 mt-1">
-                                Alle verliezers krijgen herkansing in B-groep.<br>
-                                Meer wedstrijden, iedereen minimaal 2x judoën.<br>
-                                <span class="text-blue-600">Aanbevolen voor jeugdtoernooien</span>
+                                {{ __('Alle verliezers krijgen herkansing in B-groep.') }}<br>
+                                {{ __('Meer wedstrijden, iedereen minimaal 2x judoën.') }}<br>
+                                <span class="text-blue-600">{{ __('Aanbevolen voor jeugdtoernooien') }}</span>
                             </span>
                         </div>
                     </label>
@@ -347,11 +347,11 @@
                                {{ $eliminatieType === 'ijf' ? 'checked' : '' }}
                                class="mt-1 w-4 h-4 text-blue-600">
                         <div>
-                            <span class="font-medium text-sm">IJF Repechage</span>
+                            <span class="font-medium text-sm">{{ __('IJF Repechage') }}</span>
                             <span class="block text-xs text-gray-500 mt-1">
-                                Officieel systeem: alleen verliezers van 1/4 finale<br>
-                                (die verloren van finalisten) krijgen herkansing.<br>
-                                <span class="text-orange-600">Minder wedstrijden, strenger</span>
+                                {{ __('Officieel systeem: alleen verliezers van 1/4 finale') }}<br>
+                                {{ __('(die verloren van finalisten) krijgen herkansing.') }}<br>
+                                <span class="text-orange-600">{{ __('Minder wedstrijden, strenger') }}</span>
                             </span>
                         </div>
                     </label>
@@ -360,7 +360,7 @@
                 <!-- Aantal bronzen medailles -->
                 <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p class="text-sm font-medium text-amber-800 mb-2">
-                        🥉 Aantal bronzen medailles
+                        {{ __('Aantal bronzen medailles') }}
                     </p>
                     @php
                         $aantalBrons = old('aantal_brons', $toernooi->aantal_brons) ?? 2;
@@ -371,8 +371,8 @@
                                    {{ $aantalBrons == 2 ? 'checked' : '' }}
                                    class="w-4 h-4 text-amber-600">
                             <span class="text-sm">
-                                <strong>2 bronzen</strong>
-                                <span class="text-gray-500">(2 brons wedstrijden, 2 winnaars)</span>
+                                <strong>{{ __('2 bronzen') }}</strong>
+                                <span class="text-gray-500">{{ __('(2 brons wedstrijden, 2 winnaars)') }}</span>
                             </span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
@@ -380,8 +380,8 @@
                                    {{ $aantalBrons == 1 ? 'checked' : '' }}
                                    class="w-4 h-4 text-amber-600">
                             <span class="text-sm">
-                                <strong>1 brons</strong>
-                                <span class="text-gray-500">(kleine finale, 1 winnaar)</span>
+                                <strong>{{ __('1 brons') }}</strong>
+                                <span class="text-gray-500">{{ __('(kleine finale, 1 winnaar)') }}</span>
                             </span>
                         </label>
                     </div>
@@ -392,9 +392,9 @@
 
         <!-- WEDSTRIJDSCHEMA'S -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Wedstrijdschema's</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Wedstrijdschema\'s') }}</h2>
             <p class="text-sm text-gray-600 mb-4">
-                Bepaal de volgorde van wedstrijden per poulegrootte. Sleep wedstrijden om de volgorde aan te passen.
+                {{ __('Bepaal de volgorde van wedstrijden per poulegrootte. Sleep wedstrijden om de volgorde aan te passen.') }}
             </p>
 
             @php
@@ -420,7 +420,7 @@
                             @click="activeTab = {{ $grootte }}"
                             :class="activeTab === {{ $grootte }} ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-gray-700'"
                             class="px-4 py-2 font-medium border-b-2 -mb-px transition-colors text-sm">
-                        {{ $grootte }} judoka's
+                        {{ __(':aantal judoka\'s', ['aantal' => $grootte]) }}
                     </button>
                     @endforeach
                 </div>
@@ -437,9 +437,9 @@
                         <!-- Visueel schema -->
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-3">
-                                <span class="text-sm font-medium text-gray-700">{{ $aantalWed }} wedstrijden</span>
+                                <span class="text-sm font-medium text-gray-700">{{ __(':aantal wedstrijden', ['aantal' => $aantalWed]) }}</span>
                                 <span class="text-xs text-gray-400">
-                                    @if($grootte <= 3)(dubbele round-robin)@else(enkelvoudige round-robin)@endif
+                                    @if($grootte <= 3){{ __('(dubbele round-robin)') }}@else{{ __('(enkelvoudige round-robin)') }}@endif
                                 </span>
                             </div>
                             <div class="schema-container grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2" data-grootte="{{ $grootte }}">
@@ -457,11 +457,11 @@
 
                         <!-- Legenda -->
                         <div class="w-32 flex-shrink-0">
-                            <div class="text-xs font-medium text-gray-500 mb-2">Positie in poule:</div>
+                            <div class="text-xs font-medium text-gray-500 mb-2">{{ __('Positie in poule:') }}</div>
                             @for($i = 1; $i <= $grootte; $i++)
                             <div class="flex items-center gap-2 text-sm py-0.5">
                                 <span class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded font-bold text-gray-700">{{ $i }}</span>
-                                <span class="text-gray-500">Judoka {{ $i }}</span>
+                                <span class="text-gray-500">{{ __('Judoka') }} {{ $i }}</span>
                             </div>
                             @endfor
                         </div>
@@ -474,7 +474,7 @@
                        value='@json($opgeslagenSchemas ?: $standaardSchemas)'>
 
                 <div class="text-xs text-gray-400 mt-2">
-                    💡 Tip: De volgorde is geoptimaliseerd zodat judoka's rust krijgen tussen wedstrijden.
+                    {{ __('Tip: De volgorde is geoptimaliseerd zodat judoka\'s rust krijgen tussen wedstrijden.') }}
                 </div>
             </div>
         </div>
@@ -686,7 +686,7 @@
 
         <!-- GEWICHT -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Weging</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Weging') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <!-- Weging verplicht checkbox -->
@@ -697,15 +697,15 @@
                                {{ old('weging_verplicht', $toernooi->weging_verplicht ?? true) ? 'checked' : '' }}
                                class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                         <span class="ml-3">
-                            <span class="font-medium text-gray-700">Weging verplicht</span>
-                            <span class="block text-sm text-gray-500">Uitschakelen voor toernooien zonder weegplicht</span>
+                            <span class="font-medium text-gray-700">{{ __('Weging verplicht') }}</span>
+                            <span class="block text-sm text-gray-500">{{ __('Uitschakelen voor toernooien zonder weegplicht') }}</span>
                         </span>
                     </label>
                 </div>
 
                 <!-- Max wegingen -->
                 <div class="flex items-center gap-2">
-                    <label for="max_wegingen" class="text-gray-700 font-medium">Max aantal wegingen:</label>
+                    <label for="max_wegingen" class="text-gray-700 font-medium">{{ __('Max aantal wegingen:') }}</label>
                     <input type="text" name="max_wegingen" id="max_wegingen"
                            value="{{ old('max_wegingen', $toernooi->max_wegingen) }}"
                            placeholder="-" class="w-12 border rounded px-2 py-1 text-center">
@@ -713,12 +713,12 @@
 
                 <!-- Judoka's per coach -->
                 <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
-                    <label for="judokas_per_coach" class="text-gray-700 font-medium">Judoka's per coach kaart:</label>
+                    <label for="judokas_per_coach" class="text-gray-700 font-medium">{{ __('Judoka\'s per coach kaart:') }}</label>
                     <input type="number" name="judokas_per_coach" id="judokas_per_coach"
                            x-model="value"
                            class="w-16 border rounded px-2 py-1 text-center" min="1">
-                    <span class="text-sm text-gray-500">(toegang tot dojo)</span>
-                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">⚠️ Hoog aantal</span>
+                    <span class="text-sm text-gray-500">{{ __('(toegang tot dojo)') }}</span>
+                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
                 </div>
 
                 <!-- Coach in/uitcheck systeem -->
@@ -727,20 +727,20 @@
                            value="1" {{ old('coach_incheck_actief', $toernooi->coach_incheck_actief) ? 'checked' : '' }}
                            class="w-5 h-5 text-blue-600 rounded">
                     <div>
-                        <label for="coach_incheck_actief" class="text-gray-700 font-medium">Coach in/uitcheck bij dojo</label>
-                        <p class="text-sm text-gray-500">Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen</p>
+                        <label for="coach_incheck_actief" class="text-gray-700 font-medium">{{ __('Coach in/uitcheck bij dojo') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen') }}</p>
                     </div>
                 </div>
             </div>
 
             <div class="max-w-md border-t pt-4">
-                <label for="gewicht_tolerantie" class="block text-gray-700 font-medium mb-1">Gewichtstolerantie (kg)</label>
+                <label for="gewicht_tolerantie" class="block text-gray-700 font-medium mb-1">{{ __('Gewichtstolerantie (kg)') }}</label>
                 <input type="number" name="gewicht_tolerantie" id="gewicht_tolerantie"
                        value="{{ old('gewicht_tolerantie', $toernooi->gewicht_tolerantie) }}"
                        class="w-full border rounded px-3 py-2" min="0" max="5" step="0.1">
                 <p class="text-gray-500 text-sm mt-1">
-                    Hoeveel kg mag een judoka boven de gewichtsklasse-limiet wegen?
-                    Standaard: 0.5 kg. Gebruik 0.3 voor strikter beleid.
+                    {{ __('Hoeveel kg mag een judoka boven de gewichtsklasse-limiet wegen?') }}
+                    {{ __('Standaard: 0.5 kg. Gebruik 0.3 voor strikter beleid.') }}
                 </p>
             </div>
         </div>
@@ -771,8 +771,8 @@
         <div id="categorieen" class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ categorieType: '{{ $categorieType }}' }">
             <div class="flex justify-between items-start mb-4 pb-2 border-b">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-800">Categorieën Instelling</h2>
-                    <p class="text-gray-600 text-sm mt-1">Kies een startpunt en pas categorieën aan.</p>
+                    <h2 class="text-xl font-bold text-gray-800">{{ __('Categorieën Instelling') }}</h2>
+                    <p class="text-gray-600 text-sm mt-1">{{ __('Kies een startpunt en pas categorieën aan.') }}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <!-- Hoofdkeuze: radio buttons -->
@@ -801,18 +801,18 @@
                                    @change="if($event.target.checked) loadEigenPreset()"
                                    class="sr-only peer">
                             <span class="block px-3 py-2 rounded text-sm text-gray-400 peer-checked:bg-green-100 peer-checked:shadow peer-checked:font-medium peer-checked:text-green-800" id="eigen-preset-naam-display">
-                                {{ $eigenPresetNaam ?? 'Eigen preset...' }}
+                                {{ $eigenPresetNaam ?? __('Eigen preset...') }}
                             </span>
                         </label>
                     </div>
                     <!-- Eigen presets -->
                     <select id="eigen-presets-dropdown" class="border rounded px-2 py-2 text-sm bg-white min-w-[120px]">
-                        <option value="">Preset...</option>
+                        <option value="">{{ __('Preset...') }}</option>
                     </select>
-                    <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="Huidige configuratie opslaan">
-                        💾 Opslaan
+                    <button type="button" id="btn-save-preset" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm" title="{{ __('Huidige configuratie opslaan') }}">
+                        {{ __('Opslaan') }}
                     </button>
-                    <button type="button" id="btn-delete-preset" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm" title="Geselecteerde preset verwijderen">
+                    <button type="button" id="btn-delete-preset" class="hidden bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm" title="{{ __('Geselecteerde preset verwijderen') }}">
                         🗑️
                     </button>
                 </div>
@@ -821,7 +821,7 @@
             <!-- Preset opslaan modal -->
             <div id="preset-save-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
                 <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-                    <h3 class="text-lg font-bold mb-4" id="preset-modal-title">Preset opslaan</h3>
+                    <h3 class="text-lg font-bold mb-4" id="preset-modal-title">{{ __('Preset opslaan') }}</h3>
                     <div id="preset-modal-content"></div>
                 </div>
             </div>
@@ -830,7 +830,7 @@
             <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <!-- Prioriteit drag & drop -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <span class="text-yellow-800 text-sm font-medium">Sorteer prioriteit:</span>
+                    <span class="text-yellow-800 text-sm font-medium">{{ __('Sorteer prioriteit:') }}</span>
                     <button type="button"
                             x-data="{ open: false }"
                             @click="open = !open"
@@ -840,12 +840,12 @@
                              @click.away="open = false"
                              x-transition
                              class="absolute left-0 top-6 z-50 w-72 p-3 bg-white border border-yellow-300 rounded-lg shadow-lg text-sm text-gray-700">
-                            <p class="font-medium mb-1">Sorteer volgorde binnen categorie</p>
-                            <p class="text-xs">Bepaalt hoe judoka's worden gesorteerd voordat ze over poules worden verdeeld.</p>
+                            <p class="font-medium mb-1">{{ __('Sorteer volgorde binnen categorie') }}</p>
+                            <p class="text-xs">{{ __('Bepaalt hoe judoka\'s worden gesorteerd voordat ze over poules worden verdeeld.') }}</p>
                             <ul class="text-xs mt-2 space-y-1">
-                                <li><strong>Leeftijd:</strong> Jongste judoka's eerst</li>
-                                <li><strong>Gewicht:</strong> Lichtste judoka's eerst</li>
-                                <li><strong>Band:</strong> Lagere banden eerst (wit → zwart)</li>
+                                <li><strong>{{ __('Leeftijd:') }}</strong> {{ __('Jongste judoka\'s eerst') }}</li>
+                                <li><strong>{{ __('Gewicht:') }}</strong> {{ __('Lichtste judoka\'s eerst') }}</li>
+                                <li><strong>{{ __('Band:') }}</strong> {{ __('Lagere banden eerst (wit → zwart)') }}</li>
                             </ul>
                         </div>
                     </button>
@@ -868,7 +868,7 @@
                         <div class="prioriteit-item bg-yellow-100 border border-yellow-300 rounded px-3 py-1 cursor-move text-sm" draggable="true" data-key="{{ $key }}">{{ $idx + 1 }}. {{ $labels[$key] ?? $key }}</div>
                         @endforeach
                     </div>
-                    <span class="text-yellow-600 text-xs">(sleep om te wisselen)</span>
+                    <span class="text-yellow-600 text-xs">{{ __('(sleep om te wisselen)') }}</span>
                 </div>
                 <input type="hidden" name="verdeling_prioriteiten" id="prioriteit_input" value='@json($prioriteiten)'>
 
@@ -890,13 +890,13 @@
 
             <div class="mt-4 flex gap-2">
                 <button type="button" id="add-categorie" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm">
-                    + Categorie toevoegen
+                    {{ __('+ Categorie toevoegen') }}
                 </button>
             </div>
 
             <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>JBN 2025:</strong> U8, U10, U12, U15, U18, U21 (vaste gewichtsklassen)<br>
-                <strong>JBN 2026:</strong> U7/U9 dynamisch, U11+ vaste klassen (M/V gescheiden)
+                <strong>{{ __('JBN 2025:') }}</strong> {{ __('U8, U10, U12, U15, U18, U21 (vaste gewichtsklassen)') }}<br>
+                <strong>{{ __('JBN 2026:') }}</strong> {{ __('U7/U9 dynamisch, U11+ vaste klassen (M/V gescheiden)') }}
             </div>
 
             <input type="hidden" name="gewichtsklassen_json" id="gewichtsklassen_json_input">
@@ -1672,10 +1672,10 @@
         <!-- ACTIES -->
         <div class="flex justify-between items-center">
             <a href="{{ route('toernooi.show', $toernooi->routeParams()) }}" class="text-gray-600 hover:text-gray-800">
-                Annuleren
+                {{ __('Annuleren') }}
             </a>
             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">
-                Instellingen Opslaan
+                {{ __('Instellingen Opslaan') }}
             </button>
         </div>
     </form>
@@ -1687,32 +1687,32 @@
     <!-- TOERNOOI PAKKET -->
     @auth('organisator')
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Toernooi Pakket</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Toernooi Pakket') }}</h2>
 
         @if($toernooi->isPaidTier())
             {{-- Betaald pakket info --}}
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <div class="flex items-center gap-2 mb-3">
                     <span class="text-green-600 text-xl">✓</span>
-                    <span class="font-bold text-green-800">Betaald Pakket</span>
+                    <span class="font-bold text-green-800">{{ __('Betaald Pakket') }}</span>
                     <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">{{ $toernooi->paid_tier }}</span>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                        <span class="text-gray-600">Maximum judoka's</span>
+                        <span class="text-gray-600">{{ __('Maximum judoka\'s') }}</span>
                         <p class="text-xl font-bold text-green-700">{{ $toernooi->paid_max_judokas }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Huidige judoka's</span>
+                        <span class="text-gray-600">{{ __('Huidige judoka\'s') }}</span>
                         <p class="text-xl font-bold text-gray-700">{{ $toernooi->judokas()->count() }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Betaald op</span>
+                        <span class="text-gray-600">{{ __('Betaald op') }}</span>
                         <p class="text-xl font-bold text-gray-700">{{ $toernooi->paid_at?->format('d-m-Y') ?? '-' }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Print/Noodplan</span>
-                        <p class="text-xl font-bold text-green-600">Beschikbaar</p>
+                        <span class="text-gray-600">{{ __('Print/Noodplan') }}</span>
+                        <p class="text-xl font-bold text-green-600">{{ __('Beschikbaar') }}</p>
                     </div>
                 </div>
             </div>
@@ -1726,12 +1726,12 @@
 
             @if($upgradeOptions->isNotEmpty())
             <div class="mt-4 pt-4 border-t">
-                <p class="text-gray-600 mb-3">Meer judoka's nodig? Upgrade naar een hoger pakket:</p>
+                <p class="text-gray-600 mb-3">{{ __('Meer judoka\'s nodig? Upgrade naar een hoger pakket:') }}</p>
                 <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
                     </svg>
-                    Upgraden
+                    {{ __('Upgraden') }}
                 </a>
             </div>
             @endif
@@ -1741,25 +1741,25 @@
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div class="flex items-center gap-2 mb-3">
                     <span class="text-blue-600 text-xl">ℹ</span>
-                    <span class="font-bold text-blue-800">Gratis Pakket</span>
+                    <span class="font-bold text-blue-800">{{ __('Gratis Pakket') }}</span>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                        <span class="text-gray-600">Maximum judoka's</span>
+                        <span class="text-gray-600">{{ __('Maximum judoka\'s') }}</span>
                         <p class="text-xl font-bold text-blue-700">{{ \App\Services\FreemiumService::FREE_MAX_JUDOKAS }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Huidige judoka's</span>
+                        <span class="text-gray-600">{{ __('Huidige judoka\'s') }}</span>
                         <p class="text-xl font-bold text-gray-700">{{ $toernooi->judokas()->count() }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Plaatsen over</span>
+                        <span class="text-gray-600">{{ __('Plaatsen over') }}</span>
                         @php $remaining = \App\Services\FreemiumService::FREE_MAX_JUDOKAS - $toernooi->judokas()->count(); @endphp
                         <p class="text-xl font-bold {{ $remaining <= 10 ? 'text-orange-600' : 'text-gray-700' }}">{{ max(0, $remaining) }}</p>
                     </div>
                     <div>
-                        <span class="text-gray-600">Print/Noodplan</span>
-                        <p class="text-xl font-bold text-red-600">Geblokkeerd</p>
+                        <span class="text-gray-600">{{ __('Print/Noodplan') }}</span>
+                        <p class="text-xl font-bold text-red-600">{{ __('Geblokkeerd') }}</p>
                     </div>
                 </div>
             </div>
@@ -1768,11 +1768,11 @@
             <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg p-4 text-white">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="font-bold text-lg">Meer judoka's nodig?</p>
-                        <p class="text-blue-100 text-sm">Upgrade naar een betaald pakket vanaf €20</p>
+                        <p class="font-bold text-lg">{{ __('Meer judoka\'s nodig?') }}</p>
+                        <p class="text-blue-100 text-sm">{{ __('Upgrade naar een betaald pakket vanaf €20') }}</p>
                     </div>
                     <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}" class="px-4 py-2 bg-white text-blue-600 rounded font-bold hover:bg-blue-50">
-                        Upgraden
+                        {{ __('Upgraden') }}
                     </a>
                 </div>
             </div>
@@ -1786,34 +1786,34 @@
     <!-- TEMPLATE OPSLAAN -->
     @auth('organisator')
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="templateSave()">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Opslaan als Template</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Opslaan als Template') }}</h2>
         <p class="text-gray-600 mb-4">
-            Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.
+            {{ __('Sla de huidige toernooi-instellingen op als template voor toekomstige toernooien.') }}
         </p>
 
         <div x-show="!showForm" class="flex gap-4">
             <button type="button" @click="showForm = true" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                Nieuwe template maken
+                {{ __('Nieuwe template maken') }}
             </button>
         </div>
 
         <div x-show="showForm" x-cloak class="space-y-4">
             <div>
-                <label class="block text-gray-700 font-medium mb-1">Template naam *</label>
-                <input type="text" x-model="naam" placeholder="Bijv. Intern toernooi, Open toernooi" class="w-full border rounded px-3 py-2">
+                <label class="block text-gray-700 font-medium mb-1">{{ __('Template naam') }} *</label>
+                <input type="text" x-model="naam" placeholder="{{ __('Bijv. Intern toernooi, Open toernooi') }}" class="w-full border rounded px-3 py-2">
             </div>
             <div>
-                <label class="block text-gray-700 font-medium mb-1">Beschrijving (optioneel)</label>
-                <input type="text" x-model="beschrijving" placeholder="Korte omschrijving van dit type toernooi" class="w-full border rounded px-3 py-2">
+                <label class="block text-gray-700 font-medium mb-1">{{ __('Beschrijving (optioneel)') }}</label>
+                <input type="text" x-model="beschrijving" placeholder="{{ __('Korte omschrijving van dit type toernooi') }}" class="w-full border rounded px-3 py-2">
             </div>
             <div class="flex gap-2">
                 <button type="button" @click="save()" :disabled="loading || !naam.trim()"
                         class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                    <span x-show="!loading">Opslaan</span>
-                    <span x-show="loading">Bezig...</span>
+                    <span x-show="!loading">{{ __('Opslaan') }}</span>
+                    <span x-show="loading">{{ __('Bezig...') }}</span>
                 </button>
                 <button type="button" @click="showForm = false; naam = ''; beschrijving = ''" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
             </div>
             <p x-show="message" x-text="message" :class="success ? 'text-green-600' : 'text-red-600'" class="text-sm"></p>
@@ -1866,13 +1866,13 @@
 
     <!-- PUBLIEKE APP -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Publieke app</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Publieke app') }}</h2>
         <div class="flex flex-wrap gap-4">
             <a href="{{ route('toernooi.pagina-builder.index', $toernooi->routeParams()) }}" target="_blank" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
-                Pagina Builder
+                {{ __('Pagina Builder') }}
             </a>
             <form action="{{ route('toernooi.portaal.instellingen', $toernooi->routeParams()) }}" method="POST" class="inline">
                 @csrf
@@ -1883,7 +1883,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15A2.25 2.25 0 002.25 6.75v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z"/>
                     </svg>
-                    Weegkaarten {{ $toernooi->weegkaarten_publiek ? 'aan' : 'uit' }}
+                    {{ __('Weegkaarten') }} {{ $toernooi->weegkaarten_publiek ? __('aan') : __('uit') }}
                 </button>
             </form>
         </div>
@@ -1891,9 +1891,9 @@
 
     <!-- CHAT SERVER (Reverb) -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="reverbStatus()">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Chat Server</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Chat Server') }}</h2>
         <p class="text-gray-600 mb-4">
-            Realtime chat tussen hoofdjury en vrijwilligers (matten, weging, spreker, dojo).
+            {{ __('Realtime chat tussen hoofdjury en vrijwilligers (matten, weging, spreker, dojo).') }}
         </p>
 
         <div class="flex items-center gap-4">
@@ -1906,19 +1906,19 @@
                 <div class="flex gap-2">
                     <button type="button" @click="start()" :disabled="running || loading"
                             class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        <span x-show="!loading">Start</span>
+                        <span x-show="!loading">{{ __('Start') }}</span>
                         <span x-show="loading">...</span>
                     </button>
                     <button type="button" @click="stop()" :disabled="!running || loading"
                             class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
-                        <span x-show="!loading">Stop</span>
+                        <span x-show="!loading">{{ __('Stop') }}</span>
                         <span x-show="loading">...</span>
                     </button>
                 </div>
             </template>
 
             <template x-if="local">
-                <span class="text-sm text-gray-500">(Alleen beschikbaar op production server)</span>
+                <span class="text-sm text-gray-500">{{ __('(Alleen beschikbaar op production server)') }}</span>
             </template>
         </div>
 
@@ -1983,9 +1983,9 @@
 
     <!-- INSCHRIJVING & PORTAAL -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Inschrijving & Portaal</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Inschrijving & Portaal') }}</h2>
         <p class="text-gray-600 mb-4">
-            Bepaal hoe judoka's in het systeem komen en wat budoscholen zelf kunnen doen via het portaal.
+            {{ __('Bepaal hoe judoka\'s in het systeem komen en wat budoscholen zelf kunnen doen via het portaal.') }}
         </p>
 
         <form action="{{ route('toernooi.portaal.instellingen', $toernooi->routeParams()) }}" method="POST">
@@ -1995,38 +1995,38 @@
             <div class="space-y-4">
                 <!-- Portaal Modus -->
                 <div class="p-4 border rounded-lg bg-gray-50">
-                    <label for="portaal_modus" class="block font-bold text-gray-800 mb-2">Portaal modus</label>
+                    <label for="portaal_modus" class="block font-bold text-gray-800 mb-2">{{ __('Portaal modus') }}</label>
                     <select name="portaal_modus" id="portaal_modus"
                             class="w-full md:w-1/2 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onchange="toggleMollieOptie()">
                         <option value="uit" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'uit' ? 'selected' : '' }}>
-                            Uit - Alleen bekijken (organisator beheert alles)
+                            {{ __('Uit - Alleen bekijken (organisator beheert alles)') }}
                         </option>
                         <option value="mutaties" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'mutaties' ? 'selected' : '' }}>
-                            Alleen mutaties - Budoscholen kunnen wijzigen, niet inschrijven
+                            {{ __('Alleen mutaties - Budoscholen kunnen wijzigen, niet inschrijven') }}
                         </option>
                         <option value="volledig" {{ ($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'selected' : '' }}>
-                            Volledig - Budoscholen kunnen inschrijven én wijzigen
+                            {{ __('Volledig - Budoscholen kunnen inschrijven én wijzigen') }}
                         </option>
                     </select>
                     <p class="text-sm text-gray-500 mt-2">
-                        <strong>Tip:</strong> Budoscholen kunnen hun judoka's altijd <em>bekijken</em>, ongeacht deze instelling.
+                        <strong>{{ __('Tip:') }}</strong> {{ __('Budoscholen kunnen hun judoka\'s altijd bekijken, ongeacht deze instelling.') }}
                     </p>
                 </div>
 
                 <!-- Uitleg per modus -->
                 <div class="text-sm text-gray-600 p-3 bg-blue-50 rounded-lg">
-                    <strong>Wanneer welke modus?</strong>
+                    <strong>{{ __('Wanneer welke modus?') }}</strong>
                     <ul class="list-disc ml-5 mt-1 space-y-1">
-                        <li><strong>Uit:</strong> Je importeert zelf via CSV of voegt handmatig judoka's toe</li>
-                        <li><strong>Alleen mutaties:</strong> Inschrijving via extern systeem, budoscholen corrigeren gewicht/band via portaal</li>
-                        <li><strong>Volledig:</strong> Budoscholen schrijven zelf in via het portaal</li>
+                        <li><strong>{{ __('Uit:') }}</strong> {{ __('Je importeert zelf via CSV of voegt handmatig judoka\'s toe') }}</li>
+                        <li><strong>{{ __('Alleen mutaties:') }}</strong> {{ __('Inschrijving via extern systeem, budoscholen corrigeren gewicht/band via portaal') }}</li>
+                        <li><strong>{{ __('Volledig:') }}</strong> {{ __('Budoscholen schrijven zelf in via het portaal') }}</li>
                     </ul>
                 </div>
 
                 <div class="flex justify-end">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg">
-                        Opslaan
+                        {{ __('Opslaan') }}
                     </button>
                 </div>
             </div>
@@ -2051,18 +2051,18 @@
 
     <!-- ONLINE BETALINGEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" id="mollie-section">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Online Betalingen</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Online Betalingen') }}</h2>
 
         <!-- Hint als portaal niet op volledig staat -->
         <div class="mollie-hint p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4 {{ ($toernooi->portaal_modus ?? 'mutaties') === 'volledig' ? 'hidden' : '' }}">
             <p class="text-yellow-800 text-sm">
-                <strong>Let op:</strong> Online betalingen zijn alleen zinvol als het portaal op "Volledig" staat (nieuwe inschrijvingen).
-                Bij "Uit" of "Alleen mutaties" regel je de betaling extern.
+                <strong>{{ __('Let op:') }}</strong> {{ __('Online betalingen zijn alleen zinvol als het portaal op "Volledig" staat (nieuwe inschrijvingen).') }}
+                {{ __('Bij "Uit" of "Alleen mutaties" regel je de betaling extern.') }}
             </p>
         </div>
 
         <p class="text-gray-600 mb-4">
-            Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka's definitief ingeschreven zijn.
+            {{ __('Activeer online betalingen via iDEAL. Coaches moeten dan eerst betalen voordat judoka\'s definitief ingeschreven zijn.') }}
         </p>
 
         <form action="{{ route('toernooi.betalingen.instellingen', $toernooi->routeParams()) }}" method="POST">
@@ -2072,8 +2072,8 @@
             <div class="space-y-4">
                 <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
                     <div>
-                        <h3 class="font-bold">Online betalingen actief</h3>
-                        <p class="text-sm text-gray-500">Coaches moeten betalen bij inschrijving</p>
+                        <h3 class="font-bold">{{ __('Online betalingen actief') }}</h3>
+                        <p class="text-sm text-gray-500">{{ __('Coaches moeten betalen bij inschrijving') }}</p>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" name="betaling_actief" value="1" class="sr-only peer"
@@ -2084,14 +2084,14 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="inschrijfgeld" class="block text-gray-700 font-medium mb-1">Inschrijfgeld per judoka</label>
+                        <label for="inschrijfgeld" class="block text-gray-700 font-medium mb-1">{{ __('Inschrijfgeld per judoka') }}</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2 text-gray-500">€</span>
                             <input type="number" name="inschrijfgeld" id="inschrijfgeld" step="0.01" min="0"
                                    value="{{ old('inschrijfgeld', $toernooi->inschrijfgeld ?? '15.00') }}"
                                    class="w-full border rounded px-3 py-2 pl-8" placeholder="15.00">
                         </div>
-                        <p class="text-sm text-gray-500 mt-1">Bijv. 15.00 voor €15 per judoka</p>
+                        <p class="text-sm text-gray-500 mt-1">{{ __('Bijv. 15.00 voor €15 per judoka') }}</p>
                     </div>
                 </div>
 
@@ -2107,11 +2107,11 @@
                             </h3>
                             @if($toernooi->mollie_onboarded)
                             <p class="text-sm text-green-700">
-                                Gekoppeld: {{ $toernooi->mollie_organization_name ?? 'Onbekend' }}
+                                {{ __('Gekoppeld:') }} {{ $toernooi->mollie_organization_name ?? __('Onbekend') }}
                                 <span class="text-gray-500">({{ $toernooi->mollie_mode }})</span>
                             </p>
                             @else
-                            <p class="text-sm text-gray-500">Koppel je Mollie account om betalingen te ontvangen</p>
+                            <p class="text-sm text-gray-500">{{ __('Koppel je Mollie account om betalingen te ontvangen') }}</p>
                             @endif
                         </div>
                         <div>
@@ -2120,13 +2120,13 @@
                                   onsubmit="return confirm('Weet je zeker dat je de Mollie koppeling wilt verbreken?')">
                                 @csrf
                                 <button type="submit" class="text-red-600 hover:text-red-800 text-sm">
-                                    Ontkoppelen
+                                    {{ __('Ontkoppelen') }}
                                 </button>
                             </form>
                             @else
                             <a href="{{ route('toernooi.mollie.authorize', $toernooi->routeParams()) }}" target="_blank"
                                class="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center gap-2">
-                                <span>Koppel Mollie</span>
+                                <span>{{ __('Koppel Mollie') }}</span>
                             </a>
                             @endif
                         </div>
@@ -2135,7 +2135,7 @@
 
                 @if($toernooi->betaling_actief)
                 <div class="p-4 bg-green-50 rounded-lg">
-                    <h4 class="font-bold text-green-800 mb-2">Betalingen overzicht</h4>
+                    <h4 class="font-bold text-green-800 mb-2">{{ __('Betalingen overzicht') }}</h4>
                     @php
                         $totaalBetaald = $toernooi->betalingen()->where('status', 'paid')->sum('bedrag');
                         $aantalBetaaldeJudokas = $toernooi->judokas()->whereNotNull('betaald_op')->count();
@@ -2149,15 +2149,15 @@
                     <div class="grid grid-cols-3 gap-4 text-center">
                         <div>
                             <p class="text-2xl font-bold text-green-600">€{{ number_format($totaalBetaald, 2, ',', '.') }}</p>
-                            <p class="text-sm text-gray-600">Totaal ontvangen</p>
+                            <p class="text-sm text-gray-600">{{ __('Totaal ontvangen') }}</p>
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-green-600">{{ $aantalBetaaldeJudokas }}</p>
-                            <p class="text-sm text-gray-600">Betaalde judoka's</p>
+                            <p class="text-sm text-gray-600">{{ __('Betaalde judoka\'s') }}</p>
                         </div>
                         <div>
                             <p class="text-2xl font-bold text-orange-600">{{ $aantalOnbetaaldeJudokas }}</p>
-                            <p class="text-sm text-gray-600">Wachtend op betaling</p>
+                            <p class="text-sm text-gray-600">{{ __('Wachtend op betaling') }}</p>
                         </div>
                     </div>
                 </div>
@@ -2166,7 +2166,7 @@
 
             <div class="mt-4 text-right">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
-                    Betaling Instellingen Opslaan
+                    {{ __('Betaling Instellingen Opslaan') }}
                 </button>
             </div>
         </form>
@@ -2174,9 +2174,9 @@
 
     <!-- BLOKTIJDEN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">Bloktijden</h2>
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Bloktijden') }}</h2>
         <p class="text-gray-600 mb-4">
-            Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.
+            {{ __('Stel de weeg- en starttijden in per blok. Deze tijden worden getoond op weegkaarten.') }}
         </p>
 
         <form action="{{ route('toernooi.bloktijden', $toernooi->routeParams()) }}" method="POST">
@@ -2187,16 +2187,16 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b bg-gray-50">
-                            <th class="text-left py-2 px-3 font-medium">Blok</th>
-                            <th class="text-left py-2 px-3 font-medium">Weging Start</th>
-                            <th class="text-left py-2 px-3 font-medium">Weging Einde</th>
-                            <th class="text-left py-2 px-3 font-medium">Start Wedstrijden</th>
+                            <th class="text-left py-2 px-3 font-medium">{{ __('Blok') }}</th>
+                            <th class="text-left py-2 px-3 font-medium">{{ __('Weging Start') }}</th>
+                            <th class="text-left py-2 px-3 font-medium">{{ __('Weging Einde') }}</th>
+                            <th class="text-left py-2 px-3 font-medium">{{ __('Start Wedstrijden') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($blokken as $blok)
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-3 font-medium">Blok {{ $blok->nummer }}</td>
+                            <td class="py-2 px-3 font-medium">{{ __('Blok') }} {{ $blok->nummer }}</td>
                             <td class="py-2 px-3">
                                 <input type="time" name="blokken[{{ $blok->id }}][weging_start]"
                                        value="{{ $blok->weging_start?->format('H:i') ?? '08:00' }}"
@@ -2222,12 +2222,12 @@
             </div>
 
             <div class="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <strong>Tip:</strong> De weger ziet een countdown timer en krijgt een rode waarschuwing wanneer de weegtijd voorbij is. De weging wordt handmatig gesloten via de knop in de weging interface.
+                <strong>{{ __('Tip:') }}</strong> {{ __('De weger ziet een countdown timer en krijgt een rode waarschuwing wanneer de weegtijd voorbij is. De weging wordt handmatig gesloten via de knop in de weging interface.') }}
             </div>
 
             <div class="mt-4 text-right">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">
-                    Bloktijden Opslaan
+                    {{ __('Bloktijden Opslaan') }}
                 </button>
             </div>
         </form>
@@ -2236,23 +2236,23 @@
     <!-- TOERNOOI AFRONDEN -->
     <div class="bg-green-50 border-2 border-green-300 rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-green-800 mb-2 flex items-center gap-2">
-            <span class="text-2xl">🏆</span> Toernooi Afronden
+            <span class="text-2xl">🏆</span> {{ __('Toernooi Afronden') }}
         </h2>
         @if($toernooi->isAfgesloten())
         <p class="text-green-700 mb-4">
-            Dit toernooi is afgesloten op <strong>{{ $toernooi->afgesloten_at->format('d-m-Y H:i') }}</strong>.
+            {{ __('Dit toernooi is afgesloten op') }} <strong>{{ $toernooi->afgesloten_at->format('d-m-Y H:i') }}</strong>.
         </p>
         <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
            class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
-            🏆 Bekijk Resultaten & Statistieken
+            {{ __('Bekijk Resultaten & Statistieken') }}
         </a>
         @else
         <p class="text-green-700 mb-4">
-            Na afloop van het toernooi kun je hier alles afronden. Je krijgt een overzicht van alle resultaten, statistieken en club rankings.
+            {{ __('Na afloop van het toernooi kun je hier alles afronden. Je krijgt een overzicht van alle resultaten, statistieken en club rankings.') }}
         </p>
         <a href="{{ route('toernooi.afsluiten', $toernooi->routeParams()) }}"
            class="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg">
-            🔒 Toernooi Afronden & Resultaten Bekijken
+            {{ __('Toernooi Afronden & Resultaten Bekijken') }}
         </a>
         @endif
     </div>
@@ -2261,44 +2261,44 @@
     @if($toernooi->weegkaarten_gemaakt_op)
     <div class="bg-red-50 border-2 border-red-300 rounded-lg shadow p-6 mb-6" x-data="{ showConfirm: false, wachtwoord: '' }">
         <h2 class="text-xl font-bold text-red-800 mb-2 flex items-center gap-2">
-            <span class="text-2xl">⚠️</span> Noodknop: Heropen Voorbereiding
+            <span class="text-2xl">⚠️</span> {{ __('Noodknop: Heropen Voorbereiding') }}
         </h2>
         <p class="text-red-700 mb-4">
-            Voorbereiding is afgerond op <strong>{{ $toernooi->weegkaarten_gemaakt_op->format('d-m-Y H:i') }}</strong>.
-            Judoka's, poules en blokken zijn nu read-only.
+            {{ __('Voorbereiding is afgerond op') }} <strong>{{ $toernooi->weegkaarten_gemaakt_op->format('d-m-Y H:i') }}</strong>.
+            {{ __('Judoka\'s, poules en blokken zijn nu read-only.') }}
         </p>
 
         <div class="bg-red-100 border border-red-300 rounded p-3 mb-4 text-sm text-red-800">
-            <strong>⚠️ LET OP - ALLEEN GEBRUIKEN BIJ NOOD!</strong>
+            <strong>{{ __('LET OP - ALLEEN GEBRUIKEN BIJ NOOD!') }}</strong>
             <ul class="list-disc list-inside mt-2">
-                <li>Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!</li>
-                <li>Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden</li>
-                <li>Na wijzigingen: opnieuw "Maak weegkaarten" klikken</li>
-                <li>Oude geprinte weegkaarten zijn dan ONGELDIG</li>
+                <li>{{ __('Er kunnen 2 sets weegkaarten ontstaan (oud vs nieuw) → VERWARREND!') }}</li>
+                <li>{{ __('Weegkaarten tonen aanmaakdatum/tijd om versies te onderscheiden') }}</li>
+                <li>{{ __('Na wijzigingen: opnieuw "Maak weegkaarten" klikken') }}</li>
+                <li>{{ __('Oude geprinte weegkaarten zijn dan ONGELDIG') }}</li>
             </ul>
         </div>
 
         <button @click="showConfirm = true" x-show="!showConfirm"
                 class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
-            Heropen Voorbereiding
+            {{ __('Heropen Voorbereiding') }}
         </button>
 
         <div x-show="showConfirm" x-cloak class="bg-white border border-red-300 rounded-lg p-4 mt-4">
-            <p class="font-medium text-red-800 mb-3">Bevestig met het organisator wachtwoord:</p>
+            <p class="font-medium text-red-800 mb-3">{{ __('Bevestig met het organisator wachtwoord:') }}</p>
             <form action="{{ route('toernooi.heropen-voorbereiding', $toernooi->routeParams()) }}" method="POST" class="flex items-end gap-3">
                 @csrf
                 <div class="flex-1">
-                    <label class="block text-sm text-gray-600 mb-1">Wachtwoord</label>
+                    <label class="block text-sm text-gray-600 mb-1">{{ __('Wachtwoord') }}</label>
                     <input type="password" name="wachtwoord" x-model="wachtwoord" required
-                           class="w-full border rounded px-3 py-2" placeholder="Voer wachtwoord in">
+                           class="w-full border rounded px-3 py-2" placeholder="{{ __('Voer wachtwoord in') }}">
                 </div>
                 <button type="submit" :disabled="!wachtwoord"
                         class="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold rounded-lg">
-                    Bevestig Heropenen
+                    {{ __('Bevestig Heropenen') }}
                 </button>
                 <button type="button" @click="showConfirm = false; wachtwoord = ''"
                         class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                    Annuleren
+                    {{ __('Annuleren') }}
                 </button>
             </form>
         </div>
@@ -2309,19 +2309,19 @@
     @if($toernooi->blokken->isNotEmpty())
     <div class="bg-orange-50 border-2 border-orange-300 rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-orange-800 mb-2 flex items-center gap-2">
-            <span class="text-2xl">🔄</span> Noodknop: Reset Blok naar Eind Voorbereiding
+            <span class="text-2xl">🔄</span> {{ __('Noodknop: Reset Blok naar Eind Voorbereiding') }}
         </h2>
         <p class="text-orange-700 mb-4">
-            Reset een blok naar de status aan het einde van de voorbereiding. Handig als er iets mis is gegaan tijdens de wedstrijddag.
+            {{ __('Reset een blok naar de status aan het einde van de voorbereiding. Handig als er iets mis is gegaan tijdens de wedstrijddag.') }}
         </p>
 
         <div class="bg-orange-100 border border-orange-300 rounded p-3 mb-4 text-sm text-orange-800">
-            <strong>Dit doet de reset:</strong>
+            <strong>{{ __('Dit doet de reset:') }}</strong>
             <ul class="list-disc list-inside mt-2">
-                <li>Verwijdert alle wedstrijden van poules in dit blok</li>
-                <li>Reset doorstuur-status (poules worden weer grijs)</li>
-                <li>Reset zaalindeling (zaaloverzicht wordt leeg)</li>
-                <li>Judoka's en poule-indelingen blijven intact</li>
+                <li>{{ __('Verwijdert alle wedstrijden van poules in dit blok') }}</li>
+                <li>{{ __('Reset doorstuur-status (poules worden weer grijs)') }}</li>
+                <li>{{ __('Reset zaalindeling (zaaloverzicht wordt leeg)') }}</li>
+                <li>{{ __('Judoka\'s en poule-indelingen blijven intact') }}</li>
             </ul>
         </div>
 
@@ -2341,7 +2341,7 @@
                         class="px-4 py-2 {{ $blokWedstrijden > 0 ? 'bg-orange-600 hover:bg-orange-700' : 'bg-gray-400 cursor-not-allowed' }} text-white font-bold rounded-lg"
                         {{ $blokWedstrijden == 0 ? 'disabled' : '' }}
                         onclick="return confirm('Reset Blok {{ $blok->nummer }}?\n\n{{ $blokWedstrijden }} wedstrijden worden verwijderd.\nPoules blijven op hun mat.\nStatus wordt teruggezet naar eind voorbereiding.')">
-                    Blok {{ $blok->nummer }} {{ $blokWedstrijden > 0 ? "({$blokWedstrijden}w)" : '(geen wed.)' }}
+                    {{ __('Blok') }} {{ $blok->nummer }} {{ $blokWedstrijden > 0 ? "({$blokWedstrijden}w)" : __('(geen wed.)') }}
                 </button>
             </form>
             @endforeach
@@ -2357,21 +2357,21 @@
     <!-- ==================== VOORBEREIDING ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📋</span> VOORBEREIDING
+            <span class="mr-2">📋</span> {{ __('VOORBEREIDING') }}
         </h2>
 
         <!-- Printen -->
-        <h3 class="font-semibold text-gray-700 mb-3">Printen</h3>
+        <h3 class="font-semibold text-gray-700 mb-3">{{ __('Printen') }}</h3>
         <div class="space-y-3 mb-6">
             <!-- 1. Poules printen -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">1. Poules printen (na voorbereiding)</h4>
-                    <p class="text-sm text-gray-500">Per blok, per mat</p>
+                    <h4 class="font-medium">{{ __('1. Poules printen (na voorbereiding)') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Per blok, per mat') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Alle</a>
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ $blok->nummer }}</a>
@@ -2382,12 +2382,12 @@
             <!-- 2. Weeglijsten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">2. Weeglijsten</h4>
-                    <p class="text-sm text-gray-500">Alfabetisch per blok, met invulvak</p>
+                    <h4 class="font-medium">{{ __('2. Weeglijsten') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Alfabetisch per blok, met invulvak') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Alle</a>
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.weeglijst', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ $blok->nummer }}</a>
@@ -2398,14 +2398,14 @@
             <!-- 3. Weegkaarten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
                 <div>
-                    <h4 class="font-medium">3. Weegkaarten</h4>
-                    <p class="text-sm text-gray-500">Per judoka (QR + gegevens)</p>
+                    <h4 class="font-medium">{{ __('3. Weegkaarten') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Per judoka (QR + gegevens)') }}</p>
                 </div>
                 <div class="flex gap-2 relative">
                     <a href="{{ route('toernooi.noodplan.weegkaarten', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Alle</a>
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Per club ▼</button>
+                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
                         <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.weegkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
@@ -2418,14 +2418,14 @@
             <!-- 4. Coachkaarten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded" x-data="{ open: false }">
                 <div>
-                    <h4 class="font-medium">4. Coachkaarten</h4>
-                    <p class="text-sm text-gray-500">Toegang dojo (alle en per club)</p>
+                    <h4 class="font-medium">{{ __('4. Coachkaarten') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Toegang dojo (alle en per club)') }}</p>
                 </div>
                 <div class="flex gap-2 relative">
                     <a href="{{ route('toernooi.noodplan.coachkaarten', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Alle</a>
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Alle') }}</a>
                     <div class="relative">
-                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Per club ▼</button>
+                        <button @click="open = !open" type="button" class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">{{ __('Per club') }} ▼</button>
                         <div x-show="open" @click.away="open = false" x-cloak class="absolute right-0 mt-1 w-48 bg-white border rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                             @foreach($clubs ?? [] as $club)
                             <a href="{{ route('toernooi.noodplan.coachkaarten.club', $toernooi->routeParamsWith(['club' => $club])) }}" target="_blank" class="block px-4 py-2 text-sm hover:bg-gray-100">{{ $club->naam }}</a>
@@ -2438,18 +2438,18 @@
             <!-- 5. Contactlijst -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">5. Contactlijst</h4>
-                    <p class="text-sm text-gray-500">Coach contactgegevens per club</p>
+                    <h4 class="font-medium">{{ __('5. Contactlijst') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Coach contactgegevens per club') }}</p>
                 </div>
                 <a href="{{ route('toernooi.noodplan.contactlijst', $toernooi->routeParams()) }}" target="_blank"
-                   class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Bekijken</a>
+                   class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">{{ __('Bekijken') }}</a>
             </div>
 
             <!-- 6. Lege wedstrijdschema's -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">6. Lege wedstrijdschema's</h4>
-                    <p class="text-sm text-gray-500">Handmatig invullen bij noodgeval</p>
+                    <h4 class="font-medium">{{ __('6. Lege wedstrijdschema\'s') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Handmatig invullen bij noodgeval') }}</p>
                 </div>
                 <div class="flex gap-2">
                     @for($i = 2; $i <= 7; $i++)
@@ -2465,20 +2465,20 @@
     <!-- ==================== WEDSTRIJDDAG ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🏆</span> WEDSTRIJDDAG
+            <span class="mr-2">🏆</span> {{ __('WEDSTRIJDDAG') }}
         </h2>
 
-        <h3 class="font-semibold text-gray-700 mb-3">Printen</h3>
+        <h3 class="font-semibold text-gray-700 mb-3">{{ __('Printen') }}</h3>
         <div class="space-y-3">
             <!-- 1. Poules matrix -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">1. Poules printen (matrix)</h4>
-                    <p class="text-sm text-gray-500">Per blok, per mat (na overpoulen)</p>
+                    <h4 class="font-medium">{{ __('1. Poules printen (matrix)') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Per blok, per mat (na overpoulen)') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">Alle</a>
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">{{ __('Alle') }}</a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">{{ $blok->nummer }}</a>
@@ -2489,12 +2489,12 @@
             <!-- 2. Wedstrijdschema's matrix -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">2. Wedstrijdschema's (matrix)</h4>
-                    <p class="text-sm text-gray-500">Judoka's ingevuld, uitslagen leeg</p>
+                    <h4 class="font-medium">{{ __('2. Wedstrijdschema\'s (matrix)') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Judoka\'s ingevuld, uitslagen leeg') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">Alle</a>
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">{{ __('Alle') }}</a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.ingevuld-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">{{ $blok->nummer }}</a>
@@ -2505,12 +2505,12 @@
             <!-- 3. Live wedstrijd schema's -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h4 class="font-medium">3. Wedstrijdschema's (live)</h4>
-                    <p class="text-sm text-gray-500">Met alle gespeelde wedstrijden + scores</p>
+                    <h4 class="font-medium">{{ __('3. Wedstrijdschema\'s (live)') }}</h4>
+                    <p class="text-sm text-gray-500">{{ __('Met alle gespeelde wedstrijden + scores') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">Alle</a>
+                       class="px-3 py-2 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700">{{ __('Alle') }}</a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.live-schemas', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
                        class="px-3 py-2 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600">{{ $blok->nummer }}</a>
@@ -2523,19 +2523,19 @@
     <!-- ==================== NETWERK CONFIGURATIE ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="netwerkConfig()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🌐</span> NETWERK CONFIGURATIE
+            <span class="mr-2">🌐</span> {{ __('NETWERK CONFIGURATIE') }}
         </h2>
 
         <!-- Uitleg WiFi vs Internet met live status -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" x-data="verbindingStatus()">
             <div class="flex items-center justify-between mb-2">
-                <h3 class="font-bold text-blue-800">📡 Lokaal netwerk vs Internet - wat is het verschil?</h3>
-                <span class="text-xs text-gray-500">Laatst gecontroleerd: <span x-text="laatsteCheck"></span></span>
+                <h3 class="font-bold text-blue-800">{{ __('Lokaal netwerk vs Internet - wat is het verschil?') }}</h3>
+                <span class="text-xs text-gray-500">{{ __('Laatst gecontroleerd:') }} <span x-text="laatsteCheck"></span></span>
             </div>
             <div class="grid md:grid-cols-2 gap-4 text-sm">
                 <div class="bg-white p-3 rounded border">
                     <div class="flex items-center justify-between">
-                        <strong class="text-blue-700">Lokaal netwerk</strong>
+                        <strong class="text-blue-700">{{ __('Lokaal netwerk') }}</strong>
                         <span class="text-xs px-2 py-0.5 rounded"
                               :class="wifiStatus === 'connected' ? 'bg-green-200 text-green-800' : (wifiStatus === 'no-server' || wifiStatus === 'no-ip' ? 'bg-gray-200 text-gray-600' : 'bg-red-200 text-red-800')">
                             <span x-show="wifiStatus === 'connected'" x-text="'🟢 ' + wifiLatency + 'ms'"></span>
@@ -2545,11 +2545,11 @@
                             <span x-show="wifiStatus === 'checking'">⏳</span>
                         </span>
                     </div>
-                    <p class="text-gray-600 mt-1">Verbinding tussen tablets en laptop (WiFi of LAN). Werkt ook zonder internet!</p>
+                    <p class="text-gray-600 mt-1">{{ __('Verbinding tussen tablets en laptop (WiFi of LAN). Werkt ook zonder internet!') }}</p>
                 </div>
                 <div class="bg-white p-3 rounded border">
                     <div class="flex items-center justify-between">
-                        <strong class="text-green-700">Internet (cloud)</strong>
+                        <strong class="text-green-700">{{ __('Internet (cloud)') }}</strong>
                         <span class="text-xs px-2 py-0.5 rounded"
                               :class="internetStatus === 'connected' ? 'bg-green-200 text-green-800' : (internetStatus === 'slow' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800')">
                             <span x-show="internetStatus === 'connected'" x-text="'🟢 ' + latency + 'ms'"></span>
@@ -2557,14 +2557,14 @@
                             <span x-show="internetStatus === 'offline'">🔴 Offline</span>
                         </span>
                     </div>
-                    <p class="text-gray-600 mt-1">Verbinding met judotournament.org voor live sync. Vereist werkend internet.</p>
+                    <p class="text-gray-600 mt-1">{{ __('Verbinding met judotournament.org voor live sync. Vereist werkend internet.') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Netwerk modus keuze -->
         <div class="mb-6">
-            <h3 class="font-bold text-gray-800 mb-3">Welke setup gebruik je?</h3>
+            <h3 class="font-bold text-gray-800 mb-3">{{ __('Welke setup gebruik je?') }}</h3>
             <div class="grid md:grid-cols-2 gap-4">
                 <div @click="heeftEigenRouter = true; saveNetwerkConfig()"
                      class="block p-4 border-2 rounded-lg cursor-pointer transition-all"
@@ -2572,8 +2572,8 @@
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">📡</span>
                         <div>
-                            <strong class="text-gray-800">MET eigen router (Deco)</strong>
-                            <p class="text-sm text-gray-600">Tablets blijven op eigen WiFi, alleen bron wisselt</p>
+                            <strong class="text-gray-800">{{ __('MET eigen router (Deco)') }}</strong>
+                            <p class="text-sm text-gray-600">{{ __('Tablets blijven op eigen WiFi, alleen bron wisselt') }}</p>
                         </div>
                     </div>
                 </div>
@@ -2583,8 +2583,8 @@
                     <div class="flex items-center gap-3">
                         <span class="text-2xl">📱</span>
                         <div>
-                            <strong class="text-gray-800">ZONDER eigen router</strong>
-                            <p class="text-sm text-gray-600">Sporthal WiFi + mobiele hotspot als backup</p>
+                            <strong class="text-gray-800">{{ __('ZONDER eigen router') }}</strong>
+                            <p class="text-sm text-gray-600">{{ __('Sporthal WiFi + mobiele hotspot als backup') }}</p>
                         </div>
                     </div>
                 </div>
@@ -2593,11 +2593,11 @@
 
         <!-- IP Adressen configuratie -->
         <div class="mb-6" x-data="{ showHelp: false }">
-            <h3 class="font-bold text-gray-800 mb-3">IP-adressen configureren</h3>
+            <h3 class="font-bold text-gray-800 mb-3">{{ __('IP-adressen configureren') }}</h3>
 
             <div class="grid md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Primaire laptop IP</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Primaire laptop IP') }}</label>
                     <div class="flex">
                         <input type="text" x-model="primaryIp" @change="saveNetwerkConfig()"
                                placeholder="192.168.1.100"
@@ -2609,7 +2609,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Standby laptop IP</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Standby laptop IP') }}</label>
                     <div class="flex">
                         <input type="text" x-model="standbyIp" @change="saveNetwerkConfig()"
                                placeholder="192.168.1.101"
@@ -2621,7 +2621,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Hotspot IP (backup)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Hotspot IP (backup)') }}</label>
                     <div class="flex">
                         <input type="text" x-model="hotspotIp" @change="saveNetwerkConfig()"
                                placeholder="192.168.43.1"
@@ -2634,66 +2634,66 @@
                 </div>
             </div>
             <div class="flex items-center gap-4 mt-2">
-                <p class="text-xs text-gray-500">💡 Tip: Noteer deze IP's ook op papier voor noodgevallen</p>
+                <p class="text-xs text-gray-500">{{ __('Tip: Noteer deze IP\'s ook op papier voor noodgevallen') }}</p>
                 <button type="button" @click="showHelp = !showHelp" class="text-xs text-blue-600 hover:text-blue-800 underline">
-                    📍 Hoe vind ik mijn IP?
+                    {{ __('Hoe vind ik mijn IP?') }}
                 </button>
             </div>
 
             <!-- Uitleg IP vinden (inklapbaar) -->
             <div x-show="showHelp" x-collapse class="bg-blue-50 border border-blue-200 rounded p-4 mt-3">
-                <p class="text-sm text-blue-800 font-medium mb-2">Hoe vind je het IP-adres van een laptop?</p>
+                <p class="text-sm text-blue-800 font-medium mb-2">{{ __('Hoe vind je het IP-adres van een laptop?') }}</p>
                 <div class="text-sm text-blue-700 space-y-1">
-                    <p><strong>Windows:</strong> Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"</p>
-                    <p><strong>Of:</strong> Instellingen → Netwerk → WiFi → Hardware-eigenschappen</p>
-                    <p class="text-xs text-blue-600 mt-2">Het IP begint meestal met 192.168.x.x (lokaal netwerk)</p>
+                    <p><strong>{{ __('Windows:') }}</strong> {{ __('Klik op WiFi icoon → bekijk eigenschappen → "IPv4-adres"') }}</p>
+                    <p><strong>{{ __('Of:') }}</strong> {{ __('Instellingen → Netwerk → WiFi → Hardware-eigenschappen') }}</p>
+                    <p class="text-xs text-blue-600 mt-2">{{ __('Het IP begint meestal met 192.168.x.x (lokaal netwerk)') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Scenario tabel: MET eigen router -->
         <div x-show="heeftEigenRouter" class="mb-6">
-            <h3 class="font-bold text-gray-800 mb-3">📋 Wat te doen bij storingen (MET eigen router)</h3>
+            <h3 class="font-bold text-gray-800 mb-3">{{ __('Wat te doen bij storingen (MET eigen router)') }}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border p-2 text-left">Situatie</th>
-                            <th class="border p-2 text-left">WiFi</th>
-                            <th class="border p-2 text-left">Internet</th>
-                            <th class="border p-2 text-left">Actie</th>
+                            <th class="border p-2 text-left">{{ __('Situatie') }}</th>
+                            <th class="border p-2 text-left">{{ __('WiFi') }}</th>
+                            <th class="border p-2 text-left">{{ __('Internet') }}</th>
+                            <th class="border p-2 text-left">{{ __('Actie') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="bg-green-50">
-                            <td class="border p-2 font-medium">✅ Alles werkt</td>
-                            <td class="border p-2">🟢 Eigen router</td>
-                            <td class="border p-2">🟢 Via sporthal</td>
-                            <td class="border p-2">Niets doen, cloud sync actief</td>
+                            <td class="border p-2 font-medium">{{ __('Alles werkt') }}</td>
+                            <td class="border p-2">{{ __('Eigen router') }}</td>
+                            <td class="border p-2">{{ __('Via sporthal') }}</td>
+                            <td class="border p-2">{{ __('Niets doen, cloud sync actief') }}</td>
                         </tr>
                         <tr class="bg-yellow-50">
-                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
-                            <td class="border p-2">🟢 Eigen router</td>
-                            <td class="border p-2">🔴 Uitgevallen</td>
+                            <td class="border p-2 font-medium">{{ __('Internet weg') }}</td>
+                            <td class="border p-2">{{ __('Eigen router') }}</td>
+                            <td class="border p-2">{{ __('Uitgevallen') }}</td>
                             <td class="border p-2">
-                                <strong>1. Maak hotspot op mobiel</strong><br>
-                                <strong>2. Verbind primaire server met hotspot</strong><br>
-                                <span class="text-xs text-gray-600">Tablets blijven op eigen WiFi!</span>
+                                <strong>{{ __('1. Maak hotspot op mobiel') }}</strong><br>
+                                <strong>{{ __('2. Verbind primaire server met hotspot') }}</strong><br>
+                                <span class="text-xs text-gray-600">{{ __('Tablets blijven op eigen WiFi!') }}</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">⚠️ Hotspot niet mogelijk</td>
-                            <td class="border p-2">🟢 Eigen router</td>
-                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2 font-medium">{{ __('Hotspot niet mogelijk') }}</td>
+                            <td class="border p-2">{{ __('Eigen router') }}</td>
+                            <td class="border p-2">{{ __('Geen') }}</td>
                             <td class="border p-2">
-                                <strong>Start lokale server</strong><br>
-                                <span class="text-xs text-gray-600">Tablets blijven op eigen WiFi, geen cloud sync</span>
+                                <strong>{{ __('Start lokale server') }}</strong><br>
+                                <span class="text-xs text-gray-600">{{ __('Tablets blijven op eigen WiFi, geen cloud sync') }}</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
-                            <td class="border p-2 text-center" colspan="2">🔴 WiFi én internet uitgevallen</td>
-                            <td class="border p-2">Print schema's, verder op papier</td>
+                            <td class="border p-2 font-medium">{{ __('Noodgeval') }}</td>
+                            <td class="border p-2 text-center" colspan="2">{{ __('WiFi én internet uitgevallen') }}</td>
+                            <td class="border p-2">{{ __('Print schema\'s, verder op papier') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2702,49 +2702,49 @@
 
         <!-- Scenario tabel: ZONDER eigen router -->
         <div x-show="!heeftEigenRouter" class="mb-6">
-            <h3 class="font-bold text-gray-800 mb-3">📋 Wat te doen bij storingen (ZONDER eigen router)</h3>
+            <h3 class="font-bold text-gray-800 mb-3">{{ __('Wat te doen bij storingen (ZONDER eigen router)') }}</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border p-2 text-left">Situatie</th>
-                            <th class="border p-2 text-left">WiFi</th>
-                            <th class="border p-2 text-left">Internet</th>
-                            <th class="border p-2 text-left">Actie</th>
+                            <th class="border p-2 text-left">{{ __('Situatie') }}</th>
+                            <th class="border p-2 text-left">{{ __('WiFi') }}</th>
+                            <th class="border p-2 text-left">{{ __('Internet') }}</th>
+                            <th class="border p-2 text-left">{{ __('Actie') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="bg-green-50">
-                            <td class="border p-2 font-medium">✅ Alles werkt</td>
-                            <td class="border p-2">🟢 Sporthal WiFi</td>
-                            <td class="border p-2">🟢 Via sporthal</td>
-                            <td class="border p-2">Niets doen, cloud sync actief</td>
+                            <td class="border p-2 font-medium">{{ __('Alles werkt') }}</td>
+                            <td class="border p-2">{{ __('Sporthal WiFi') }}</td>
+                            <td class="border p-2">{{ __('Via sporthal') }}</td>
+                            <td class="border p-2">{{ __('Niets doen, cloud sync actief') }}</td>
                         </tr>
                         <tr class="bg-yellow-50">
-                            <td class="border p-2 font-medium">⚠️ Internet weg</td>
-                            <td class="border p-2">🟢 Sporthal WiFi</td>
-                            <td class="border p-2">🔴 Uitgevallen</td>
+                            <td class="border p-2 font-medium">{{ __('Internet weg') }}</td>
+                            <td class="border p-2">{{ __('Sporthal WiFi') }}</td>
+                            <td class="border p-2">{{ __('Uitgevallen') }}</td>
                             <td class="border p-2">
-                                <strong>1. Maak hotspot op mobiel</strong><br>
-                                <strong>2. Verbind primaire server met hotspot</strong><br>
-                                <span class="text-xs text-gray-600">Tablets blijven op sporthal WiFi!</span>
+                                <strong>{{ __('1. Maak hotspot op mobiel') }}</strong><br>
+                                <strong>{{ __('2. Verbind primaire server met hotspot') }}</strong><br>
+                                <span class="text-xs text-gray-600">{{ __('Tablets blijven op sporthal WiFi!') }}</span>
                             </td>
                         </tr>
                         <tr class="bg-orange-50">
-                            <td class="border p-2 font-medium">⚠️ Sporthal WiFi weg</td>
-                            <td class="border p-2">🔴 Uitgevallen</td>
-                            <td class="border p-2">🔴 Geen</td>
+                            <td class="border p-2 font-medium">{{ __('Sporthal WiFi weg') }}</td>
+                            <td class="border p-2">{{ __('Uitgevallen') }}</td>
+                            <td class="border p-2">{{ __('Geen') }}</td>
                             <td class="border p-2">
-                                <strong>1. Maak hotspot op mobiel</strong><br>
-                                <strong>2. Verbind primaire server met hotspot</strong><br>
-                                <strong>3. Zet tablets op hotspot</strong><br>
-                                <span class="text-xs text-gray-600">Alle tablets moeten wisselen!</span>
+                                <strong>{{ __('1. Maak hotspot op mobiel') }}</strong><br>
+                                <strong>{{ __('2. Verbind primaire server met hotspot') }}</strong><br>
+                                <strong>{{ __('3. Zet tablets op hotspot') }}</strong><br>
+                                <span class="text-xs text-gray-600">{{ __('Alle tablets moeten wisselen!') }}</span>
                             </td>
                         </tr>
                         <tr class="bg-red-50">
-                            <td class="border p-2 font-medium">🔴 Noodgeval</td>
-                            <td class="border p-2 text-center" colspan="2">🔴 WiFi én internet uitgevallen</td>
-                            <td class="border p-2">Print schema's, verder op papier</td>
+                            <td class="border p-2 font-medium">{{ __('Noodgeval') }}</td>
+                            <td class="border p-2 text-center" colspan="2">{{ __('WiFi én internet uitgevallen') }}</td>
+                            <td class="border p-2">{{ __('Print schema\'s, verder op papier') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2753,32 +2753,32 @@
 
         <!-- Gekopieerd feedback -->
         <div x-show="copied" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg">
-            ✓ Gekopieerd!
+            {{ __('Gekopieerd!') }}
         </div>
     </div>
 
     <!-- ==================== OVERSTAPPEN NAAR LOKALE SERVER ==================== -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanLocalServer()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">🔄</span> BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER
+            <span class="mr-2">🔄</span> {{ __('BIJ STORING: OVERSTAPPEN NAAR LOKALE SERVER') }}
         </h2>
-        <p class="text-sm text-gray-600 mb-4">Alleen uitvoeren als internet uitvalt tijdens het toernooi.</p>
+        <p class="text-sm text-gray-600 mb-4">{{ __('Alleen uitvoeren als internet uitvalt tijdens het toernooi.') }}</p>
 
         <div class="space-y-4">
             <!-- Stap 1: Laptop starten -->
             <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-bold text-green-800 mb-2">1. Open de JudoToernooi app op je laptop</h3>
+                <h3 class="font-bold text-green-800 mb-2">{{ __('1. Open de JudoToernooi app op je laptop') }}</h3>
                 <p class="text-sm text-green-700">
-                    Dubbelklik op het <strong>JudoToernooi</strong> icoon op je bureaublad.
-                    De lokale server start automatisch.
+                    {{ __('Dubbelklik op het') }} <strong>JudoToernooi</strong> {{ __('icoon op je bureaublad.') }}
+                    {{ __('De lokale server start automatisch.') }}
                 </p>
             </div>
 
             <!-- Stap 2: Tablets verbinden -->
             <div class="p-4 bg-blue-50 border border-blue-200 rounded">
-                <h3 class="font-bold text-blue-800 mb-2">2. Verbind de tablets met de laptop</h3>
+                <h3 class="font-bold text-blue-800 mb-2">{{ __('2. Verbind de tablets met de laptop') }}</h3>
                 <p class="text-sm text-blue-700 mb-2">
-                    Open op elke tablet de browser en ga naar:
+                    {{ __('Open op elke tablet de browser en ga naar:') }}
                 </p>
                 <div class="flex items-center gap-2 bg-blue-100 p-3 rounded">
                     <template x-if="!editingIp">
@@ -2797,7 +2797,7 @@
                     </template>
                     <template x-if="!editingIp">
                         <button @click="copyUrl()" type="button" class="px-2 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                            📋 Kopieer
+                            📋 {{ __('Kopieer') }}
                         </button>
                     </template>
                     <template x-if="!editingIp">
@@ -2807,7 +2807,7 @@
                     </template>
                     <template x-if="editingIp">
                         <button @click="saveIp()" type="button" class="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
-                            ✓ Opslaan
+                            ✓ {{ __('Opslaan') }}
                         </button>
                     </template>
                     <template x-if="editingIp">
@@ -2821,17 +2821,17 @@
             <!-- Stap 3: Backup inladen -->
             <div class="p-4 bg-purple-50 border border-purple-200 rounded">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-bold text-purple-800">3. Laad de noodbackup in (indien nodig)</h3>
+                    <h3 class="font-bold text-purple-800">{{ __('3. Laad de noodbackup in (indien nodig)') }}</h3>
                     <label class="px-4 py-2 bg-purple-600 text-white rounded cursor-pointer hover:bg-purple-700 font-medium">
-                        📂 Selecteer bestand
+                        {{ __('Selecteer bestand') }}
                         <input type="file" accept=".json" @change="loadJsonBackup($event)" class="hidden">
                     </label>
                 </div>
                 <p class="text-sm text-purple-700">
-                    Alleen nodig als de laptop geen recente data heeft.
+                    {{ __('Alleen nodig als de laptop geen recente data heeft.') }}
                 </p>
                 <p class="text-xs text-purple-600 mt-2" x-show="uitslagCount > 0">
-                    ✓ <span x-text="uitslagCount"></span> wedstrijden geladen
+                    ✓ <span x-text="uitslagCount"></span> {{ __('wedstrijden geladen') }}
                 </p>
             </div>
         </div>
@@ -2840,7 +2840,7 @@
     <!-- Voorbereiding avond ervoor -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="noodplanBackup()">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📦</span> VOORBEREIDING (avond ervoor)
+            <span class="mr-2">📦</span> {{ __('VOORBEREIDING (avond ervoor)') }}
         </h2>
 
         <div class="grid md:grid-cols-2 gap-4 mb-4">
@@ -2848,12 +2848,12 @@
             <div class="p-4 bg-purple-50 border border-purple-200 rounded-lg">
                 <div class="flex items-center justify-between mb-2">
                     <div>
-                        <h3 class="font-bold text-purple-800">Download noodbackup</h3>
-                        <p class="text-sm text-purple-600">Alle gegevens voor als internet uitvalt</p>
+                        <h3 class="font-bold text-purple-800">{{ __('Download noodbackup') }}</h3>
+                        <p class="text-sm text-purple-600">{{ __('Alle gegevens voor als internet uitvalt') }}</p>
                     </div>
                     <button @click="downloadBackup()" type="button"
                             class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium whitespace-nowrap">
-                        📥 Download
+                        📥 {{ __('Download') }}
                     </button>
                 </div>
             </div>
@@ -2862,20 +2862,20 @@
             <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div class="flex items-center justify-between mb-2">
                     <div>
-                        <h3 class="font-bold text-green-800">Download poule-indeling</h3>
-                        <p class="text-sm text-green-600">Excel met alle poules (voor printen)</p>
+                        <h3 class="font-bold text-green-800">{{ __('Download poule-indeling') }}</h3>
+                        <p class="text-sm text-green-600">{{ __('Excel met alle poules (voor printen)') }}</p>
                     </div>
                     <a href="{{ route('toernooi.noodplan.export-poules', array_merge($toernooi->routeParams(), ['format' => 'excel'])) }}"
                        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium whitespace-nowrap">
-                        📥 Download
+                        📥 {{ __('Download') }}
                     </a>
                 </div>
             </div>
         </div>
 
         <div class="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-            <strong class="text-yellow-800">💡 Tip:</strong>
-            <span class="text-yellow-700">Bewaar deze bestanden op een USB-stick én op de laptop die je meeneemt.</span>
+            <strong class="text-yellow-800">{{ __('Tip:') }}</strong>
+            <span class="text-yellow-700">{{ __('Bewaar deze bestanden op een USB-stick én op de laptop die je meeneemt.') }}</span>
         </div>
     </div>
 
@@ -3173,10 +3173,10 @@
     <!-- RESET ALLES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
-            <span class="text-2xl">💥</span> Reset Alles
+            <span class="text-2xl">💥</span> {{ __('Reset Alles') }}
         </h2>
         <p class="text-gray-600 mb-4">
-            Verwijder ALLE wedstrijden van ALLE categorieën en haal alles van de matten. Terug naar start!
+            {{ __('Verwijder ALLE wedstrijden van ALLE categorieën en haal alles van de matten. Terug naar start!') }}
         </p>
 
         <form action="{{ route('toernooi.blok.reset-alles', $toernooi->routeParams()) }}" method="POST"
@@ -3188,37 +3188,37 @@
         </form>
 
         <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
-            <strong>⚠️ Dit verwijdert:</strong>
+            <strong>{{ __('Dit verwijdert:') }}</strong>
             <ul class="list-disc list-inside mt-1">
-                <li>Alle wedstrijden (alle blokken, alle matten)</li>
-                <li>Alle mat-toewijzingen</li>
-                <li>Alle doorstuur-status</li>
+                <li>{{ __('Alle wedstrijden (alle blokken, alle matten)') }}</li>
+                <li>{{ __('Alle mat-toewijzingen') }}</li>
+                <li>{{ __('Alle doorstuur-status') }}</li>
             </ul>
-            <strong class="block mt-2">✓ Dit blijft behouden:</strong> Judoka's, clubs, poule-indelingen
+            <strong class="block mt-2">{{ __('Dit blijft behouden:') }}</strong> {{ __('Judoka\'s, clubs, poule-indelingen') }}
         </div>
     </div>
 
     <!-- DEBUG INFO -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center gap-2">
-            <span class="text-2xl">🐛</span> Debug Info
+            <span class="text-2xl">🐛</span> {{ __('Debug Info') }}
         </h2>
 
         <div class="grid grid-cols-2 gap-4 text-sm">
             <div class="p-3 bg-gray-50 rounded">
-                <span class="font-medium">Totaal judoka's:</span>
+                <span class="font-medium">{{ __('Totaal judoka\'s:') }}</span>
                 <span class="float-right">{{ $toernooi->judokas()->count() }}</span>
             </div>
             <div class="p-3 bg-gray-50 rounded">
-                <span class="font-medium">Totaal poules:</span>
+                <span class="font-medium">{{ __('Totaal poules:') }}</span>
                 <span class="float-right">{{ $toernooi->poules()->count() }}</span>
             </div>
             <div class="p-3 bg-gray-50 rounded">
-                <span class="font-medium">Totaal wedstrijden:</span>
+                <span class="font-medium">{{ __('Totaal wedstrijden:') }}</span>
                 <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->count() }}</span>
             </div>
             <div class="p-3 bg-gray-50 rounded">
-                <span class="font-medium">Gespeelde wedstrijden:</span>
+                <span class="font-medium">{{ __('Gespeelde wedstrijden:') }}</span>
                 <span class="float-right">{{ \App\Models\Wedstrijd::whereIn('poule_id', $toernooi->poules()->pluck('id'))->where('is_gespeeld', true)->count() }}</span>
             </div>
         </div>
@@ -3227,11 +3227,11 @@
     <!-- TOERNOOI VERWIJDEREN -->
     <div class="bg-white rounded-lg shadow p-6 mb-6 border-2 border-red-300">
         <h2 class="text-xl font-bold text-red-800 mb-4 pb-2 border-b border-red-200 flex items-center gap-2">
-            <span class="text-2xl">🗑️</span> Toernooi Verwijderen
+            <span class="text-2xl">🗑️</span> {{ __('Toernooi Verwijderen') }}
         </h2>
 
         <p class="text-gray-700 mb-4">
-            Verwijder dit toernooi permanent. <strong class="text-red-600">Dit kan niet ongedaan gemaakt worden!</strong>
+            {{ __('Verwijder dit toernooi permanent.') }} <strong class="text-red-600">{{ __('Dit kan niet ongedaan gemaakt worden!') }}</strong>
         </p>
 
         <form action="{{ route('toernooi.destroy', $toernooi->routeParams()) }}" method="POST"
@@ -3244,12 +3244,12 @@
         </form>
 
         <div class="mt-4 p-3 bg-red-50 rounded text-sm text-red-800">
-            <strong>⚠️ Dit verwijdert ALLES:</strong>
+            <strong>{{ __('Dit verwijdert ALLES:') }}</strong>
             <ul class="list-disc list-inside mt-1">
-                <li>Alle judoka's en hun gegevens</li>
-                <li>Alle clubs</li>
-                <li>Alle poules en wedstrijden</li>
-                <li>Alle resultaten en statistieken</li>
+                <li>{{ __('Alle judoka\'s en hun gegevens') }}</li>
+                <li>{{ __('Alle clubs') }}</li>
+                <li>{{ __('Alle poules en wedstrijden') }}</li>
+                <li>{{ __('Alle resultaten en statistieken') }}</li>
             </ul>
         </div>
     </div>

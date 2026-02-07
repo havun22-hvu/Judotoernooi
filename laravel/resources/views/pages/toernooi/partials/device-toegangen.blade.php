@@ -1,17 +1,17 @@
 {{-- Device Toegangen Beheer --}}
 <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="deviceToegangen()">
     <div class="flex items-center justify-between mb-4 pb-2 border-b">
-        <h2 class="text-xl font-bold text-gray-800">Device Toegangen</h2>
+        <h2 class="text-xl font-bold text-gray-800">{{ __('Device Toegangen') }}</h2>
         <button type="button"
                 @click="showVrijwilligersModal = true"
                 class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1">
             <span>👥</span>
-            <span>Vrijwilligers beheren</span>
+            <span>{{ __('Vrijwilligers beheren') }}</span>
         </button>
     </div>
     <p class="text-gray-600 mb-4">
-        Maak toegangen aan voor vrijwilligers. Elke toegang heeft een unieke URL en PIN.
-        <br><span class="text-sm text-gray-500">Het device wordt gekoppeld bij eerste login - zo kunnen alleen geautoriseerde devices de interface gebruiken.</span>
+        {{ __('Maak toegangen aan voor vrijwilligers. Elke toegang heeft een unieke URL en PIN.') }}
+        <br><span class="text-sm text-gray-500">{{ __('Het device wordt gekoppeld bij eerste login - zo kunnen alleen geautoriseerde devices de interface gebruiken.') }}</span>
     </p>
 
     {{-- Tabs per rol --}}
@@ -33,7 +33,7 @@
         <div x-show="activeRol === rol.key" x-cloak>
             <div class="space-y-3 mb-4">
                 <template x-if="toegangenPerRol[rol.key]?.length === 0">
-                    <p class="text-gray-400 italic py-4 text-center">Nog geen toegangen aangemaakt</p>
+                    <p class="text-gray-400 italic py-4 text-center">{{ __('Nog geen toegangen aangemaakt') }}</p>
                 </template>
                 <template x-for="toegang in toegangenPerRol[rol.key]" :key="toegang.id">
                     <div class="p-4 border rounded-lg bg-gray-50">
@@ -48,14 +48,14 @@
                                 <div class="flex-1 max-w-xs flex items-center gap-2" x-show="rol.key !== 'mat'">
                                     <select @change="selectVrijwilliger(toegang, $event.target.value)"
                                             class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">-- Selecteer vrijwilliger --</option>
+                                        <option value="">{{ __('-- Selecteer vrijwilliger --') }}</option>
                                         <template x-for="v in vrijwilligersPerFunctie[rol.key] || []" :key="v.id">
                                             <option :value="v.id" :selected="toegang.naam === v.voornaam" x-text="v.voornaam + (v.telefoonnummer ? ' (' + v.telefoonnummer + ')' : '')"></option>
                                         </template>
                                     </select>
                                     <span x-show="savedId === toegang.id" x-cloak
                                           class="text-green-600 text-xs font-medium whitespace-nowrap">
-                                        ✓ Opgeslagen
+                                        ✓ {{ __('Opgeslagen') }}
                                     </span>
                                 </div>
                                 {{-- PIN --}}
@@ -70,7 +70,7 @@
                                    :href="getWhatsAppUrl(toegang)"
                                    target="_blank"
                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm"
-                                   title="Stuur via WhatsApp">
+                                   title="{{ __('Stuur via WhatsApp') }}">
                                     <span>📱 WhatsApp</span>
                                 </a>
                                 {{-- Copy URL --}}
@@ -89,20 +89,20 @@
                                 </button>
                                 {{-- Test link --}}
                                 <a :href="toegang.url" target="_blank"
-                                   class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm" title="Test">
-                                    Test
+                                   class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-sm" title="{{ __('Test') }}">
+                                    {{ __('Test') }}
                                 </a>
                                 {{-- Reset --}}
                                 <button type="button"
                                         @click="resetToegang(toegang)"
                                         x-show="toegang.is_gebonden"
-                                        class="text-orange-600 hover:text-orange-800 text-sm px-2" title="Reset device binding">
-                                    Reset
+                                        class="text-orange-600 hover:text-orange-800 text-sm px-2" title="{{ __('Reset device binding') }}">
+                                    {{ __('Reset') }}
                                 </button>
                                 {{-- Delete --}}
                                 <button type="button"
                                         @click="deleteToegang(toegang)"
-                                        class="text-red-400 hover:text-red-600 text-lg px-1" title="Verwijder">
+                                        class="text-red-400 hover:text-red-600 text-lg px-1" title="{{ __('Verwijder') }}">
                                     &times;
                                 </button>
                             </div>
@@ -116,7 +116,7 @@
                     @click="addToegang(rol.key)"
                     class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm flex items-center gap-1">
                 <span>+</span>
-                <span x-text="rol.key === 'mat' ? 'Mat toegang toevoegen' : rol.naam + ' toegang toevoegen'"></span>
+                <span x-text="rol.key === 'mat' ? '{{ __('Mat toegang toevoegen') }}' : rol.naam + ' {{ __('toegang toevoegen') }}'"></span>
             </button>
         </div>
     </template>
@@ -126,17 +126,17 @@
         <button type="button"
                 @click="resetAll()"
                 class="text-red-600 hover:text-red-800 text-sm">
-            Alle device bindings resetten
+            {{ __('Alle device bindings resetten') }}
         </button>
-        <span class="text-xs text-gray-400 ml-2">(voor nieuw toernooi of bij problemen)</span>
+        <span class="text-xs text-gray-400 ml-2">{{ __('(voor nieuw toernooi of bij problemen)') }}</span>
     </div>
 
     {{-- WhatsApp voorbeeld --}}
     <div class="mt-6 p-4 bg-blue-50 rounded-lg" x-show="Object.values(toegangenPerRol).flat().length > 0">
-        <h4 class="font-bold text-blue-800 mb-2">Voorbeeld bericht voor WhatsApp:</h4>
+        <h4 class="font-bold text-blue-800 mb-2">{{ __('Voorbeeld bericht voor WhatsApp:') }}</h4>
         <div class="bg-white p-3 rounded border text-sm text-gray-700">
-            Hoi! Morgen is het toernooi. Klik op je link en voer de PIN in om in te loggen.<br><br>
-            <em class="text-gray-500">Stuur elke vrijwilliger zijn/haar eigen link + PIN!</em>
+            {{ __('Hoi! Morgen is het toernooi. Klik op je link en voer de PIN in om in te loggen.') }}<br><br>
+            <em class="text-gray-500">{{ __('Stuur elke vrijwilliger zijn/haar eigen link + PIN!') }}</em>
         </div>
     </div>
 
@@ -147,7 +147,7 @@
          @click.self="showVrijwilligersModal = false">
         <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
             <div class="p-4 border-b flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800">Vrijwilligers</h3>
+                <h3 class="text-lg font-bold text-gray-800">{{ __('Vrijwilligers') }}</h3>
                 <button type="button" @click="showVrijwilligersModal = false" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
 
@@ -157,11 +157,11 @@
                     <div class="grid grid-cols-12 gap-2">
                         <input type="text"
                                x-model="newVrijwilliger.voornaam"
-                               placeholder="Voornaam"
+                               placeholder="{{ __('Voornaam') }}"
                                class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <input type="text"
                                x-model="newVrijwilliger.telefoonnummer"
-                               placeholder="Telefoonnummer"
+                               placeholder="{{ __('Telefoonnummer') }}"
                                class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <select x-model="newVrijwilliger.functie"
                                 class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
@@ -181,7 +181,7 @@
                 {{-- List vrijwilligers --}}
                 <div class="space-y-2">
                     <template x-if="vrijwilligers.length === 0">
-                        <p class="text-gray-400 italic text-center py-4">Nog geen vrijwilligers toegevoegd</p>
+                        <p class="text-gray-400 italic text-center py-4">{{ __('Nog geen vrijwilligers toegevoegd') }}</p>
                     </template>
                     <template x-for="v in vrijwilligers" :key="v.id">
                         <div class="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
@@ -201,7 +201,7 @@
             </div>
 
             <div class="p-4 border-t bg-gray-50">
-                <p class="text-xs text-gray-500">Vrijwilligers worden bewaard en zijn beschikbaar voor al je toernooien.</p>
+                <p class="text-xs text-gray-500">{{ __('Vrijwilligers worden bewaard en zijn beschikbaar voor al je toernooien.') }}</p>
             </div>
         </div>
     </div>
@@ -220,11 +220,11 @@ function deviceToegangen() {
         newVrijwilliger: { voornaam: '', telefoonnummer: '', functie: 'mat' },
         toernooiNaam: '{{ $toernooi->naam }}',
         rollen: [
-            { key: 'hoofdjury', naam: 'Hoofdjury', icon: '⚖️' },
-            { key: 'mat', naam: 'Mat', icon: '🥋' },
-            { key: 'weging', naam: 'Weging', icon: '⚖️' },
-            { key: 'spreker', naam: 'Spreker', icon: '🎙️' },
-            { key: 'dojo', naam: 'Dojo', icon: '🚪' },
+            { key: 'hoofdjury', naam: '{{ __('Hoofdjury') }}', icon: '⚖️' },
+            { key: 'mat', naam: '{{ __('Mat') }}', icon: '🥋' },
+            { key: 'weging', naam: '{{ __('Weging') }}', icon: '⚖️' },
+            { key: 'spreker', naam: '{{ __('Spreker') }}', icon: '🎙️' },
+            { key: 'dojo', naam: '{{ __('Dojo') }}', icon: '🚪' },
         ],
 
         get toegangenPerRol() {
@@ -297,7 +297,7 @@ function deviceToegangen() {
         },
 
         async deleteVrijwilliger(v) {
-            if (!confirm(`${v.voornaam} verwijderen?`)) return;
+            if (!confirm(`${v.voornaam} {{ __('verwijderen?') }}`)) return;
             try {
                 const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/vrijwilligers') }}/${v.id}`, {
                     method: 'DELETE',
@@ -345,7 +345,7 @@ function deviceToegangen() {
             } else if (nummer.startsWith('0')) {
                 nummer = '+31' + nummer.substring(1);
             }
-            const bericht = `Hoi ${toegang.naam || 'daar'}! Hier is je link voor ${toegang.label} op ${this.toernooiNaam}:\n${toegang.url}\nPIN: ${toegang.pincode}`;
+            const bericht = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}! {{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\nPIN: ${toegang.pincode}`;
             return 'https://wa.me/' + nummer.replace('+', '') + '?text=' + encodeURIComponent(bericht);
         },
 
@@ -381,7 +381,7 @@ function deviceToegangen() {
         },
 
         async resetToegang(toegang) {
-            if (!confirm('Device binding resetten? Het device moet opnieuw de PIN invoeren.')) return;
+            if (!confirm('{{ __('Device binding resetten? Het device moet opnieuw de PIN invoeren.') }}')) return;
             try {
                 const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}/reset`, {
                     method: 'POST',
@@ -391,14 +391,14 @@ function deviceToegangen() {
                 if (response.ok) {
                     toegang.is_gebonden = false;
                     toegang.device_info = null;
-                    toegang.status = 'Wacht op binding';
+                    toegang.status = '{{ __('Wacht op binding') }}';
                     window.dispatchEvent(new CustomEvent('toegangen-updated'));
                 }
             } catch (e) {}
         },
 
         async deleteToegang(toegang) {
-            if (!confirm('Deze toegang verwijderen?')) return;
+            if (!confirm('{{ __('Deze toegang verwijderen?') }}')) return;
             try {
                 const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
                     method: 'DELETE',
@@ -413,7 +413,7 @@ function deviceToegangen() {
         },
 
         async resetAll() {
-            if (!confirm('ALLE device bindings resetten?')) return;
+            if (!confirm('{{ __('ALLE device bindings resetten?') }}')) return;
             try {
                 const response = await fetch('{{ route("toernooi.device-toegang.reset-all", $toernooi->routeParams()) }}', {
                     method: 'POST',
@@ -424,7 +424,7 @@ function deviceToegangen() {
                     this.toegangen.forEach(t => {
                         t.is_gebonden = false;
                         t.device_info = null;
-                        t.status = 'Wacht op binding';
+                        t.status = '{{ __('Wacht op binding') }}';
                     });
                     window.dispatchEvent(new CustomEvent('toegangen-updated'));
                 }

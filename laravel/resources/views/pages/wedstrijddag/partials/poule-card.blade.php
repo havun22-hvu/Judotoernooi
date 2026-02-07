@@ -43,10 +43,10 @@
     );
     $verwijderdeTekst = collect();
     foreach ($afwezigeJudokas as $j) {
-        $verwijderdeTekst->push($j->naam . ' (afwezig)');
+        $verwijderdeTekst->push($j->naam . ' (' . __('afwezig') . ')');
     }
     foreach ($overpoulers as $j) {
-        $verwijderdeTekst->push($j->naam . ' (afwijkend gewicht)');
+        $verwijderdeTekst->push($j->naam . ' (' . __('afwijkend gewicht') . ')');
     }
 
     // Poule titel - gebruik model methode die dynamisch range berekent
@@ -70,7 +70,7 @@
     <div class="{{ $headerBg }} text-white px-3 py-2 poule-header flex justify-between items-start rounded-t-lg">
         <div class="flex-1">
             <div class="font-bold text-sm">@if($isEliminatie)⚔️ @endif#{{ $poule->nummer }} {{ $pouleTitel }}</div>
-            <div class="text-xs {{ $headerSubtext }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> judoka's ~<span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> wedstrijden</div>
+            <div class="text-xs {{ $headerSubtext }} poule-stats"><span class="poule-actief">{{ $aantalActief }}</span> {{ __('judoka\'s') }} ~<span class="poule-wedstrijden">{{ $aantalWedstrijden }}</span> {{ __('wedstrijden') }}</div>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
             @if($verwijderdeTekst->isNotEmpty())
@@ -84,8 +84,8 @@
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" class="bg-orange-500 hover:bg-orange-400 text-white text-xs px-2 py-0.5 rounded">⚙</button>
                 <div x-show="open" @click.away="open = false" class="absolute right-0 mt-1 bg-white border rounded-lg shadow-lg z-10 min-w-[160px]">
-                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">Naar poules</button>
-                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">+ kruisfinale</button>
+                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700">{{ __('Naar poules') }}</button>
+                    <button onclick="zetOmNaarPoules({{ $poule->id }}, 'poules_kruisfinale')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm text-gray-700 border-t">{{ __('+ kruisfinale') }}</button>
                 </div>
             </div>
             @elseif($aantalTotaal > 0)
@@ -93,13 +93,13 @@
             <button
                 onclick="naarZaaloverzichtPoule({{ $poule->id }}, this)"
                 class="px-2 py-0.5 text-xs rounded transition-all {{ $isDoorgestuurd ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600' }}"
-                title="{{ $isDoorgestuurd ? 'Doorgestuurd' : 'Naar zaaloverzicht' }}"
+                title="{{ $isDoorgestuurd ? __('Doorgestuurd') : __('Naar zaaloverzicht') }}"
             >{{ $isDoorgestuurd ? '✓' : '→' }}</button>
             @else
             <button
                 onclick="verwijderPoule({{ $poule->id }}, '{{ $poule->nummer }}')"
                 class="delete-poule-btn w-6 h-6 flex items-center justify-center bg-black hover:bg-gray-800 text-white rounded-full text-sm font-bold"
-                title="Verwijder lege poule"
+                title="{{ __('Verwijder lege poule') }}"
             >×</button>
             @endif
         </div>
@@ -129,9 +129,9 @@
             <div class="flex justify-between items-start">
                 <div class="flex items-center gap-1 flex-1 min-w-0">
                     @if($isVerdachtGewicht)
-                        <span class="text-red-600 text-xs flex-shrink-0" title="Verdacht gewicht! {{ $judoka->gewicht_gewogen < 15 ? 'Te laag' : 'Grote afwijking van opgave' }}">🚨</span>
+                        <span class="text-red-600 text-xs flex-shrink-0" title="{{ __('Verdacht gewicht!') }} {{ $judoka->gewicht_gewogen < 15 ? __('Te laag') : __('Grote afwijking van opgave') }}">🚨</span>
                     @elseif($heeftProbleem)
-                        <span class="text-orange-500 text-xs flex-shrink-0" title="Afwijkend gewicht">⚠</span>
+                        <span class="text-orange-500 text-xs flex-shrink-0" title="{{ __('Afwijkend gewicht') }}">⚠</span>
                     @elseif($isGewogen)
                         <span class="text-green-500 text-xs flex-shrink-0">●</span>
                     @endif
@@ -148,12 +148,12 @@
                     <button
                         onclick="event.stopPropagation(); openZoekMatchWedstrijddag({{ $judoka->id }}, {{ $poule->id }})"
                         class="text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Zoek geschikte poule"
+                        title="{{ __('Zoek geschikte poule') }}"
                     >🔍</button>
                     <button
                         onclick="event.stopPropagation(); meldJudokaAf({{ $judoka->id }}, '{{ addslashes($judoka->naam) }}')"
                         class="text-gray-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Afmelden (kan niet deelnemen)"
+                        title="{{ __('Afmelden (kan niet deelnemen)') }}"
                     >✕</button>
                 </div>
             </div>

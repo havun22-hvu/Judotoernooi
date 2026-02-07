@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pagina Builder')
+@section('title', __('Pagina Builder'))
 
 @push('styles')
 <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0/dist/trix.css">
@@ -17,52 +17,52 @@
 <div class="max-w-5xl mx-auto" x-data="paginaBuilder()">
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
-            <h1 class="text-3xl font-bold text-gray-800">Pagina Builder</h1>
-            <span x-show="saving" class="text-sm text-blue-600">Opslaan...</span>
-            <span x-show="saved" x-transition class="text-sm text-green-600">Opgeslagen!</span>
+            <h1 class="text-3xl font-bold text-gray-800">{{ __('Pagina Builder') }}</h1>
+            <span x-show="saving" class="text-sm text-blue-600">{{ __('Opslaan...') }}</span>
+            <span x-show="saved" x-transition class="text-sm text-green-600">{{ __('Opgeslagen!') }}</span>
         </div>
         <div class="flex gap-3">
             <a href="{{ route('publiek.index', $toernooi->routeParams()) }}" target="_blank"
                class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
-                Preview
+                {{ __('Preview') }}
             </a>
             <a href="{{ route('toernooi.edit', $toernooi->routeParams()) }}" class="text-blue-600 hover:text-blue-800">
-                &larr; Terug naar Instellingen
+                &larr; {{ __('Terug naar Instellingen') }}
             </a>
         </div>
     </div>
 
     <!-- Toolbar -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <p class="text-sm text-gray-600 mb-3">Voeg blokken toe aan je publieke toernooi pagina:</p>
+        <p class="text-sm text-gray-600 mb-3">{{ __('Voeg blokken toe aan je publieke toernooi pagina:') }}</p>
         <div class="flex flex-wrap gap-2">
             <button @click="addBlok('header')" type="button"
                     class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                Header
+                {{ __('Header') }}
             </button>
             <button @click="addBlok('tekst')" type="button"
                     class="px-4 py-2 bg-green-100 text-green-700 rounded hover:bg-green-200 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
                 </svg>
-                Tekst
+                {{ __('Tekst') }}
             </button>
             <button @click="addBlok('afbeelding')" type="button"
                     class="px-4 py-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                Afbeelding
+                {{ __('Afbeelding') }}
             </button>
             <button @click="addBlok('sponsors')" type="button"
                     class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                 </svg>
-                Sponsors
+                {{ __('Sponsors') }}
             </button>
             <button @click="addBlok('video')" type="button"
                     class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 flex items-center gap-2">
@@ -70,14 +70,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Video
+                {{ __('Video') }}
             </button>
             <button @click="addBlok('info_kaart')" type="button"
                     class="px-4 py-2 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Info Kaart
+                {{ __('Info Kaart') }}
             </button>
         </div>
     </div>
@@ -109,7 +109,7 @@
                     <template x-if="blok.type === 'header'">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Logo</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Logo') }}</label>
                                 <div class="flex items-center gap-4">
                                     <template x-if="blok.data.logo">
                                         <img :src="'/storage/' + blok.data.logo" class="h-20 object-contain rounded border">
@@ -119,14 +119,14 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Titel</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Titel') }}</label>
                                 <input type="text" x-model="blok.data.titel" @input.debounce.500ms="saveBlokken()"
-                                       class="w-full border rounded px-3 py-2" placeholder="Titel van het toernooi">
+                                       class="w-full border rounded px-3 py-2" placeholder="{{ __('Titel van het toernooi') }}">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Subtitel</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Subtitel') }}</label>
                                 <input type="text" x-model="blok.data.subtitel" @input.debounce.500ms="saveBlokken()"
-                                       class="w-full border rounded px-3 py-2" placeholder="Welkomstbericht of slogan">
+                                       class="w-full border rounded px-3 py-2" placeholder="{{ __('Welkomstbericht of slogan') }}">
                             </div>
                         </div>
                     </template>
@@ -145,7 +145,7 @@
                     <template x-if="blok.type === 'afbeelding'">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Afbeelding</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Afbeelding') }}</label>
                                 <template x-if="blok.data.src">
                                     <img :src="'/storage/' + blok.data.src" class="max-h-48 object-contain rounded border mb-2">
                                 </template>
@@ -153,9 +153,9 @@
                                        class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Onderschrift</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Onderschrift') }}</label>
                                 <input type="text" x-model="blok.data.caption" @input.debounce.500ms="saveBlokken()"
-                                       class="w-full border rounded px-3 py-2" placeholder="Optioneel onderschrift">
+                                       class="w-full border rounded px-3 py-2" placeholder="{{ __('Optioneel onderschrift') }}">
                             </div>
                         </div>
                     </template>
@@ -171,9 +171,9 @@
                                     <input type="file" @change="uploadSponsorLogo($event, blok, index)" accept="image/*"
                                            class="text-sm flex-shrink-0">
                                     <input type="text" x-model="sponsor.naam" @input.debounce.500ms="saveBlokken()"
-                                           class="flex-1 border rounded px-2 py-1 text-sm" placeholder="Naam">
+                                           class="flex-1 border rounded px-2 py-1 text-sm" placeholder="{{ __('Naam') }}">
                                     <input type="url" x-model="sponsor.url" @input.debounce.500ms="saveBlokken()"
-                                           class="flex-1 border rounded px-2 py-1 text-sm" placeholder="Website URL">
+                                           class="flex-1 border rounded px-2 py-1 text-sm" placeholder="{{ __('Website URL') }}">
                                     <button @click="removeSponsor(blok, index)" type="button" class="text-red-500 hover:text-red-700">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -183,7 +183,7 @@
                             </template>
                             <button @click="addSponsor(blok)" type="button"
                                     class="px-4 py-2 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 text-sm">
-                                + Sponsor toevoegen
+                                {{ __('+ Sponsor toevoegen') }}
                             </button>
                         </div>
                     </template>
@@ -192,14 +192,14 @@
                     <template x-if="blok.type === 'video'">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Video URL (YouTube of Vimeo)</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Video URL (YouTube of Vimeo)') }}</label>
                                 <input type="url" x-model="blok.data.url" @input.debounce.500ms="saveBlokken()"
                                        class="w-full border rounded px-3 py-2" placeholder="https://www.youtube.com/watch?v=...">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Titel</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Titel') }}</label>
                                 <input type="text" x-model="blok.data.titel" @input.debounce.500ms="saveBlokken()"
-                                       class="w-full border rounded px-3 py-2" placeholder="Optionele titel">
+                                       class="w-full border rounded px-3 py-2" placeholder="{{ __('Optionele titel') }}">
                             </div>
                         </div>
                     </template>
@@ -207,7 +207,7 @@
                     <!-- Info Kaart Blok -->
                     <template x-if="blok.type === 'info_kaart'">
                         <div class="bg-blue-50 p-4 rounded text-blue-800">
-                            <p class="text-sm">Dit blok toont automatisch de toernooi informatie (datum, locatie, tijdschema) uit de instellingen.</p>
+                            <p class="text-sm">{{ __('Dit blok toont automatisch de toernooi informatie (datum, locatie, tijdschema) uit de instellingen.') }}</p>
                         </div>
                     </template>
                 </div>
@@ -219,7 +219,7 @@
             <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <p class="text-gray-500">Nog geen blokken. Klik hierboven om te beginnen.</p>
+            <p class="text-gray-500">{{ __('Nog geen blokken. Klik hierboven om te beginnen.') }}</p>
         </div>
     </div>
 
@@ -227,7 +227,7 @@
     <div class="fixed bottom-4 right-4 md:hidden">
         <button @click="saveBlokken()" type="button"
                 class="px-6 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700">
-            Opslaan
+            {{ __('Opslaan') }}
         </button>
     </div>
 </div>
@@ -309,7 +309,7 @@ function paginaBuilder() {
         },
 
         removeBlok(id) {
-            if (confirm('Weet je zeker dat je dit blok wilt verwijderen?')) {
+            if (confirm(@json(__('Weet je zeker dat je dit blok wilt verwijderen?')))) {
                 this.blokken = this.blokken.filter(b => b.id !== id);
                 this.saveBlokken();
             }
@@ -317,12 +317,12 @@ function paginaBuilder() {
 
         getBlokLabel(type) {
             const labels = {
-                header: 'Header',
-                tekst: 'Tekst',
-                afbeelding: 'Afbeelding',
-                sponsors: 'Sponsors',
-                video: 'Video',
-                info_kaart: 'Info Kaart'
+                header: @json(__('Header')),
+                tekst: @json(__('Tekst')),
+                afbeelding: @json(__('Afbeelding')),
+                sponsors: @json(__('Sponsors')),
+                video: @json(__('Video')),
+                info_kaart: @json(__('Info Kaart'))
             };
             return labels[type] || type;
         },
@@ -360,7 +360,7 @@ function paginaBuilder() {
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
-                alert('Upload mislukt. Probeer opnieuw.');
+                alert(@json(__('Upload mislukt. Probeer opnieuw.')));
             }
         },
 
@@ -387,7 +387,7 @@ function paginaBuilder() {
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
-                alert('Upload mislukt. Probeer opnieuw.');
+                alert(@json(__('Upload mislukt. Probeer opnieuw.')));
             }
         },
 
@@ -417,7 +417,7 @@ function paginaBuilder() {
                 }
             } catch (error) {
                 console.error('Save failed:', error);
-                alert('Opslaan mislukt. Probeer opnieuw.');
+                alert(@json(__('Opslaan mislukt. Probeer opnieuw.')));
             }
 
             this.saving = false;
