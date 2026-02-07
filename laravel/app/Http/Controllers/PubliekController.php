@@ -252,9 +252,9 @@ class PubliekController extends Controller
 
         // Calculate standings for each poule (exclude absent judokas)
         $poules = $poules->map(function ($poule) {
-            $isKlokPoule = $poule->isKlokPoule();
+            $isPuntenComp = $poule->isPuntenCompetitie();
             $activeJudokas = $poule->judokas->filter(fn($j) => $j->gewicht_gewogen > 0 && $j->aanwezigheid !== 'afwezig');
-            $standings = $activeJudokas->map(function ($judoka) use ($poule, $isKlokPoule) {
+            $standings = $activeJudokas->map(function ($judoka) use ($poule, $isPuntenComp) {
                 $gewonnen = 0;
                 $wp = 0;
                 $jp = 0;
@@ -268,7 +268,7 @@ class PubliekController extends Controller
                         $gewonnen++;
                     }
 
-                    if (!$isKlokPoule) {
+                    if (!$isPuntenComp) {
                         // JP
                         if ($w->judoka_wit_id === $judoka->id) {
                             $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
@@ -287,8 +287,8 @@ class PubliekController extends Controller
                 return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp, 'gewonnen' => (int) $gewonnen];
             });
 
-            // Sort: klok poule by gewonnen, normal by WP/JP
-            if ($isKlokPoule) {
+            // Sort: punten competitie by gewonnen, normal by WP/JP
+            if ($isPuntenComp) {
                 $poule->standings = $standings->sortByDesc('gewonnen')->values();
             } else {
                 $poule->standings = $standings->sortByDesc('wp')->sortByDesc(function ($s) {
@@ -296,7 +296,7 @@ class PubliekController extends Controller
                 })->values();
             }
 
-            $poule->is_klok_poule = $isKlokPoule;
+            $poule->is_punten_competitie = $isPuntenComp;
 
             return $poule;
         });

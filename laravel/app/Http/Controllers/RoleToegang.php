@@ -299,8 +299,8 @@ class RoleToegang extends Controller
                     return true;
                 });
 
-                $isKlokPoule = $poule->isKlokPoule();
-                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isKlokPoule) {
+                $isPuntenComp = $poule->isPuntenCompetitie();
+                $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isPuntenComp) {
                     $wp = 0;
                     $jp = 0;
                     $gewonnen = 0;
@@ -313,7 +313,7 @@ class RoleToegang extends Controller
 
                         if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                        if (!$isKlokPoule) {
+                        if (!$isPuntenComp) {
                             // JP score
                             if ($w->judoka_wit_id === $judoka->id) {
                                 $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
@@ -339,7 +339,7 @@ class RoleToegang extends Controller
 
                             if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                            if (!$isKlokPoule) {
+                            if (!$isPuntenComp) {
                                 // JP
                                 if ($w->judoka_wit_id === $judoka->id) {
                                     $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
@@ -360,9 +360,9 @@ class RoleToegang extends Controller
                     return ['judoka' => $judoka, 'wp' => (int) $wp, 'jp' => (int) $jp, 'gewonnen' => (int) $gewonnen];
                 });
 
-                // Sort: klok poule by gewonnen, normal by WP/JP/h2h
+                // Sort: punten competitie by gewonnen, normal by WP/JP/h2h
                 $wedstrijden = $poule->wedstrijden;
-                if ($isKlokPoule) {
+                if ($isPuntenComp) {
                     $poule->standings = $standings->sortByDesc('gewonnen')->values();
                 } else {
                     $poule->standings = $standings->sort(function ($a, $b) use ($wedstrijden) {
@@ -384,7 +384,7 @@ class RoleToegang extends Controller
                 }
 
                 $poule->is_eliminatie = false;
-                $poule->is_klok_poule = $isKlokPoule;
+                $poule->is_punten_competitie = $isPuntenComp;
                 $poule->has_barrage = $barrage !== null;
                 return $poule;
             });
@@ -538,7 +538,7 @@ class RoleToegang extends Controller
             $standings = $this->berekenPouleStand($poule);
         }
 
-        $isKlokPoule = !$isEliminatie && $poule->isKlokPoule();
+        $isPuntenComp = !$isEliminatie && $poule->isPuntenCompetitie();
 
         return response()->json([
             'success' => true,
@@ -549,7 +549,7 @@ class RoleToegang extends Controller
                 'gewichtsklasse' => $poule->gewichtsklasse,
                 'type' => $poule->type,
                 'is_eliminatie' => $isEliminatie,
-                'is_klok_poule' => $isKlokPoule,
+                'is_punten_competitie' => $isPuntenComp,
             ],
             'standings' => $standings->map(fn($s) => [
                 'naam' => $s['judoka']->naam,
@@ -575,8 +575,8 @@ class RoleToegang extends Controller
             return true;
         });
 
-        $isKlokPoule = $poule->isKlokPoule();
-        $standings = $activeJudokas->map(function ($judoka) use ($poule, $isKlokPoule) {
+        $isPuntenComp = $poule->isPuntenCompetitie();
+        $standings = $activeJudokas->map(function ($judoka) use ($poule, $isPuntenComp) {
             $wp = 0;
             $jp = 0;
             $gewonnen = 0;
@@ -588,7 +588,7 @@ class RoleToegang extends Controller
 
                 if ($w->winnaar_id === $judoka->id) $gewonnen++;
 
-                if (!$isKlokPoule) {
+                if (!$isPuntenComp) {
                     // JP
                     if ($w->judoka_wit_id === $judoka->id) {
                         $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
@@ -613,7 +613,7 @@ class RoleToegang extends Controller
             ];
         });
 
-        if ($isKlokPoule) {
+        if ($isPuntenComp) {
             return $standings->sortByDesc('gewonnen')->values();
         }
 

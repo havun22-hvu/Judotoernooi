@@ -885,7 +885,7 @@
             <script>
                 window.initieleGewichtsklassen = @json($gewichtsklassen);
                 window.initieleWedstrijdSysteem = @json(old('wedstrijd_systeem', $toernooi->wedstrijd_systeem) ?? []);
-                window.initieleKlokPouleWedstrijden = @json(old('klok_poule_wedstrijden', $toernooi->klok_poule_wedstrijden) ?? []);
+                window.initialePuntenCompWedstrijden = @json(old('punten_competitie_wedstrijden', $toernooi->punten_competitie_wedstrijden) ?? []);
             </script>
 
             <div class="mt-4 flex gap-2">
@@ -946,13 +946,13 @@
                         .map(g => g.trim())
                         .filter(g => g) || [];
                     const systeem = item.querySelector('.systeem-select')?.value || 'poules';
-                    const klokAantal = parseInt(item.querySelector('.klok-aantal-select')?.value) || 4;
+                    const pcAantal = parseInt(item.querySelector('.pc-aantal-select')?.value) || 4;
                     const maxBand = parseInt(item.querySelector('.max-band-input')?.value) || 0;
                     const bandGrens = item.querySelector('.band-grens-select')?.value || '';
                     const bandVerschil1 = parseInt(item.querySelector('.band-verschil-1-input')?.value) || 1;
                     const entry = { label, toon_label_in_titel: toonLabel, max_leeftijd: leeftijd, geslacht, max_kg_verschil: maxKg, max_leeftijd_verschil: maxLft, max_band_verschil: maxBand, band_grens: bandGrens, band_verschil_beginners: bandVerschil1, band_filter: bandFilter, gewichten, wedstrijd_systeem: systeem };
-                    if (systeem === 'klok_poule') {
-                        entry.klok_poule_wedstrijden = klokAantal;
+                    if (systeem === 'punten_competitie') {
+                        entry.punten_competitie_wedstrijden = pcAantal;
                     }
                     data[key] = entry;
                 });
@@ -1017,13 +1017,13 @@
                 updateJsonInput();
             }
 
-            window.toggleKlokPouleSelect = function(select) {
+            window.togglePuntenCompSelect = function(select) {
                 const item = select.closest('.gewichtsklasse-item');
-                const klokSelect = item.querySelector('.klok-aantal-select');
-                if (select.value === 'klok_poule') {
-                    klokSelect?.classList.remove('hidden');
+                const pcSelect = item.querySelector('.pc-aantal-select');
+                if (select.value === 'punten_competitie') {
+                    pcSelect?.classList.remove('hidden');
                 } else {
-                    klokSelect?.classList.add('hidden');
+                    pcSelect?.classList.add('hidden');
                 }
                 updateJsonInput();
             }
@@ -1101,7 +1101,7 @@
 
                 // Get wedstrijd systeem from initieleWedstrijdSysteem
                 const systeem = window.initieleWedstrijdSysteem?.[key] || 'poules';
-                const klokAantal = window.initieleKlokPouleWedstrijden?.[key] || 4;
+                const pcAantal = window.initialePuntenCompWedstrijden?.[key] || 4;
 
                 const gewichtenHidden = maxKg > 0 ? 'hidden' : '';
                 const dynamischHidden = maxKg > 0 ? '' : 'hidden';
@@ -1157,18 +1157,18 @@
                         <div class="flex items-center gap-2">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
-                                    onchange="toggleKlokPouleSelect(this)">
+                                    onchange="togglePuntenCompSelect(this)">
+                                <option value="punten_competitie" ${systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
                                 <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''}>Kruisfinale</option>
-                                <option value="klok_poule" ${systeem === 'klok_poule' ? 'selected' : ''}>Klok Poule</option>
                                 <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
                             </select>
-                            <select name="klok_poule_wedstrijden[${key}]"
-                                    class="klok-aantal-select border rounded px-1 py-1 text-xs bg-white ${systeem === 'klok_poule' ? '' : 'hidden'}"
+                            <select name="punten_competitie_wedstrijden[${key}]"
+                                    class="pc-aantal-select border rounded px-1 py-1 text-xs bg-white ${systeem === 'punten_competitie' ? '' : 'hidden'}"
                                     title="Aantal wedstrijden per judoka">
-                                <option value="3" ${klokAantal == 3 ? 'selected' : ''}>3x</option>
-                                <option value="4" ${klokAantal == 4 ? 'selected' : ''}>4x</option>
-                                <option value="5" ${klokAantal == 5 ? 'selected' : ''}>5x</option>
+                                <option value="3" ${pcAantal == 3 ? 'selected' : ''}>3x</option>
+                                <option value="4" ${pcAantal == 4 ? 'selected' : ''}>4x</option>
+                                <option value="5" ${pcAantal == 5 ? 'selected' : ''}>5x</option>
                             </select>
                         </div>
                         <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
@@ -1398,7 +1398,7 @@
                         band_filter: item.querySelector('.band-filter-select')?.value || '',
                         gewichten: (item.querySelector('.gewichten-input')?.value || '').split(',').map(s => s.trim()).filter(s => s),
                         wedstrijd_systeem: item.querySelector('.systeem-select')?.value || 'poules',
-                        klok_poule_wedstrijden: parseInt(item.querySelector('.klok-aantal-select')?.value) || 4,
+                        punten_competitie_wedstrijden: parseInt(item.querySelector('.pc-aantal-select')?.value) || 4,
                     };
                 });
                 return configuratie;

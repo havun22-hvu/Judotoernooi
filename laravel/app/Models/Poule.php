@@ -56,20 +56,20 @@ class Poule extends Model
     }
 
     /**
-     * Check if this poule uses the klok poule system.
+     * Check if this poule uses the punten competitie system.
      */
-    public function isKlokPoule(): bool
+    public function isPuntenCompetitie(): bool
     {
         $systeem = $this->toernooi?->wedstrijd_systeem[$this->categorie_key] ?? 'poules';
-        return $systeem === 'klok_poule';
+        return $systeem === 'punten_competitie';
     }
 
     /**
-     * Get the number of matches per judoka for klok poule (default 4).
+     * Get the number of matches per judoka for punten competitie (default 4).
      */
-    public function getKlokPouleWedstrijden(): int
+    public function getPuntenCompetitieWedstrijden(): int
     {
-        return (int) ($this->toernooi?->klok_poule_wedstrijden[$this->categorie_key] ?? 4);
+        return (int) ($this->toernooi?->punten_competitie_wedstrijden[$this->categorie_key] ?? 4);
     }
 
     /**
@@ -157,9 +157,9 @@ class Poule extends Model
             return $this->berekenEliminatieWedstrijden($aantal);
         }
 
-        // Klok poule: fixed number of matches per judoka
-        if ($this->isKlokPoule() && $aantal >= 2) {
-            $wedstrijdenPerJudoka = $this->getKlokPouleWedstrijden();
+        // Punten competitie: fixed number of matches per judoka
+        if ($this->isPuntenCompetitie() && $aantal >= 2) {
+            $wedstrijdenPerJudoka = $this->getPuntenCompetitieWedstrijden();
             return (int) ceil(($aantal * $wedstrijdenPerJudoka) / 2);
         }
 
