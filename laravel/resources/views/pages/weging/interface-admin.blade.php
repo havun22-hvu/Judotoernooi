@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Weeglijst Live')
+@section('title', __('Weeglijst Live'))
 
 @section('content')
 <div class="flex justify-between items-center mb-4">
-    <h1 class="text-2xl font-bold text-gray-800">⚖️ Weeglijst Live</h1>
-    <div class="text-sm text-gray-500">Auto-refresh 10s</div>
+    <h1 class="text-2xl font-bold text-gray-800">⚖️ {{ __('Weeglijst Live') }}</h1>
+    <div class="text-sm text-gray-500">{{ __('Auto-refresh 10s') }}</div>
 </div>
 
 <div x-data="weeglijst()" x-init="init()">
@@ -14,19 +14,19 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <input type="text" x-model="zoekterm" @input="filterJudokas()"
-                       placeholder="Zoek naam of club..."
+                       placeholder="{{ __('Zoek naam of club...') }}"
                        class="border-2 border-gray-300 rounded px-3 py-2 w-48">
                 <select x-model="blokFilter" @change="filterJudokas()" class="border-2 border-gray-300 rounded px-3 py-2 font-medium">
-                    <option value="">Alle blokken</option>
+                    <option value="">{{ __('Alle blokken') }}</option>
                     @foreach($toernooi->blokken as $blok)
-                    <option value="{{ $blok->nummer }}" data-gesloten="{{ $blok->weging_gesloten ? '1' : '0' }}">Blok {{ $blok->nummer }}</option>
+                    <option value="{{ $blok->nummer }}" data-gesloten="{{ $blok->weging_gesloten ? '1' : '0' }}">{{ __('Blok') }} {{ $blok->nummer }}</option>
                     @endforeach
                 </select>
                 <select x-model="statusFilter" @change="filterJudokas()" class="border-2 border-gray-300 rounded px-3 py-2">
-                    <option value="">Alle status</option>
-                    <option value="gewogen">Gewogen</option>
-                    <option value="niet_gewogen">Niet gewogen</option>
-                    <option value="afwezig">Afwezig</option>
+                    <option value="">{{ __('Alle status') }}</option>
+                    <option value="gewogen">{{ __('Gewogen') }}</option>
+                    <option value="niet_gewogen">{{ __('Niet gewogen') }}</option>
+                    <option value="afwezig">{{ __('Afwezig') }}</option>
                 </select>
 
                 <!-- Einde weegtijd knop - alleen zichtbaar als blok geselecteerd en niet gesloten -->
@@ -34,11 +34,11 @@
                     <button type="button"
                             @click="sluitWeegtijd()"
                             class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded">
-                        Blok <span x-text="blokFilter"></span>: Einde weegtijd
+                        {{ __('Blok') }} <span x-text="blokFilter"></span>: {{ __('Einde weegtijd') }}
                     </button>
                 </template>
                 <template x-if="blokFilter !== '' && blokGesloten[blokFilter]">
-                    <span class="text-gray-500 px-4 py-2">Blok <span x-text="blokFilter"></span>: Gesloten</span>
+                    <span class="text-gray-500 px-4 py-2">{{ __('Blok') }} <span x-text="blokFilter"></span>: {{ __('Gesloten') }}</span>
                 </template>
             </div>
 
@@ -47,14 +47,14 @@
                 @foreach($toernooi->blokken as $blok)
                 <div class="text-center w-28 transition-opacity"
                      :class="blokFilter !== '' && blokFilter != '{{ $blok->nummer }}' ? 'opacity-40' : ''">
-                    <div class="text-xs text-gray-500">Blok {{ $blok->nummer }}</div>
+                    <div class="text-xs text-gray-500">{{ __('Blok') }} {{ $blok->nummer }}</div>
                     <div class="text-lg font-bold">
                         <span class="text-green-600" x-text="stats.blok{{ $blok->nummer }}?.gewogen || 0"></span>
                         <span class="text-gray-400">/</span>
                         <span class="text-gray-600" x-text="stats.blok{{ $blok->nummer }}?.totaal || 0"></span>
                     </div>
                     @if($blok->weging_gesloten)
-                    <div class="text-xs text-gray-500">Gesloten</div>
+                    <div class="text-xs text-gray-500">{{ __('Gesloten') }}</div>
                     @elseif($blok->weging_einde)
                     <div x-data="countdown('{{ $blok->weging_start?->toISOString() }}', '{{ $blok->weging_einde->toISOString() }}', {{ $blok->nummer }})" x-init="start()"
                          class="text-xs font-mono" :class="expired ? 'text-red-600 font-bold' : (warning ? 'text-yellow-600' : 'text-blue-600')"
@@ -64,7 +64,7 @@
                 @endforeach
 
                 <div class="text-center border-l pl-4 w-20">
-                    <div class="text-xs text-gray-500">Totaal</div>
+                    <div class="text-xs text-gray-500">{{ __('Totaal') }}</div>
                     <div class="text-xl font-bold">
                         <span class="text-green-600" x-text="stats.totaalGewogen"></span>
                         <span class="text-gray-400">/</span>
@@ -82,14 +82,14 @@
         <table class="w-full table-fixed">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Club</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Leeftijd</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Opgegeven</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Blok</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gewogen</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijd</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actie</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Naam') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Club') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Leeftijd') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Opgegeven') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Blok') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Gewogen') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Tijd') }}</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{{ __('Actie') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -119,7 +119,7 @@
                 </template>
                 <tr x-show="gefilterd.length === 0">
                     <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                        Geen judoka's gevonden
+                        {{ __("Geen judoka's gevonden") }}
                     </td>
                 </tr>
             </tbody>
@@ -135,7 +135,7 @@
                  @mousedown="startDrag($event)"
                  @touchstart.prevent="startDrag($event)">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg font-bold text-gray-800">Gewicht wijzigen</h3>
+                    <h3 class="text-lg font-bold text-gray-800">{{ __('Gewicht wijzigen') }}</h3>
                     <button @click="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
                 </div>
                 <p class="text-sm text-gray-600">
@@ -148,22 +148,22 @@
                 </p>
             </div>
             <div class="p-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Gewogen gewicht (kg)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('Gewogen gewicht') }} (kg)</label>
                 <input type="number" step="0.1" min="0" max="150" x-model="editGewicht"
                        class="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-lg font-bold text-center"
                        placeholder="0.0"
                        @keyup.enter="saveGewicht()">
-                <p class="text-xs text-gray-500 mt-1">Tip: 0 = afmelden (kan niet deelnemen)</p>
+                <p class="text-xs text-gray-500 mt-1">{{ __('Tip: 0 = afmelden (kan niet deelnemen)') }}</p>
             </div>
             <div class="p-4 border-t flex gap-2">
                 <button @click="markeerAfwezig()" :disabled="editSaving"
                         class="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
-                    Afmelden
+                    {{ __('Afmelden (kan niet deelnemen)') }}
                 </button>
                 <button @click="saveGewicht()" :disabled="editSaving"
                         class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-bold py-2 px-4 rounded">
-                    <span x-show="!editSaving">Opslaan</span>
-                    <span x-show="editSaving">Bezig...</span>
+                    <span x-show="!editSaving">{{ __('Opslaan') }}</span>
+                    <span x-show="editSaving">{{ __('Bezig...') }}</span>
                 </button>
             </div>
         </div>
