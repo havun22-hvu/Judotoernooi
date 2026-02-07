@@ -97,6 +97,7 @@ class DynamischeIndelingService
             'max_band_verschil' => $maxBand,
             'band_grens' => $this->bandNaarNummer($bandGrens ?: 'wit') - 1, // -1 als geen grens
             'band_verschil_beginners' => $bandVerschilBeginners,
+            'gewicht_tolerantie' => (float) ($this->config['gewicht_tolerantie'] ?? 0.5),
             'poule_grootte_voorkeur' => $this->config['poule_grootte_voorkeur'],
             'verdeling_prioriteiten' => $this->config['verdeling_prioriteiten'] ?? ['band', 'gewicht', 'leeftijd'],
             'judokas' => [],
@@ -343,6 +344,60 @@ class DynamischeIndelingService
 
         if (!empty($huidigePoule)) {
             $poules[] = $this->maakPouleData($huidigePoule);
+        }
+
+        // Soft placement: plaats orphans (poules van 1-2) met tolerantie
+        $tolerantie = (float) ($this->config['gewicht_tolerantie'] ?? 0.5);
+        if ($tolerantie > 0) {
+            $maxKgSoft = $maxKg + $tolerantie;
+            $minSize = min($this->config['poule_grootte_voorkeur'] ?? [3]);
+
+            foreach ($poules as $ki => &$kleine) {
+                if (count($kleine['judokas']) >= $minSize) continue;
+
+                foreach ($kleine['judokas'] as $oi => $orphan) {
+                    $orphanGewicht = $this->getEffectiefGewicht($orphan);
+                    $orphanLeeftijd = $orphan->leeftijd ?? 0;
+                    $orphanBand = $this->bandNaarNummer($orphan->band ?? 'wit');
+                    $besteTarget = null;
+                    $besteOvershoot = PHP_FLOAT_MAX;
+
+                    foreach ($poules as $ti => &$target) {
+                        if ($ti === $ki || count($target['judokas']) < $minSize) continue;
+
+                        $past = true;
+                        $maxVerschil = 0;
+                        foreach ($target['judokas'] as $tj) {
+                            $tjGewicht = $this->getEffectiefGewicht($tj);
+                            $verschil = abs($orphanGewicht - $tjGewicht);
+                            if ($verschil > $maxKgSoft) { $past = false; break; }
+                            if (abs($orphanLeeftijd - ($tj->leeftijd ?? 0)) > $maxLeeftijd) { $past = false; break; }
+                            if ($maxBand > 0 && abs($orphanBand - $this->bandNaarNummer($tj->band ?? 'wit')) > $maxBand) { $past = false; break; }
+                            $maxVerschil = max($maxVerschil, $verschil);
+                        }
+
+                        if ($past) {
+                            $overshoot = max(0, $maxVerschil - $maxKg);
+                            if ($overshoot < $besteOvershoot) {
+                                $besteOvershoot = $overshoot;
+                                $besteTarget = $ti;
+                            }
+                        }
+                    }
+                    unset($target);
+
+                    if ($besteTarget !== null) {
+                        $poules[$besteTarget]['judokas'][] = $orphan;
+                        unset($kleine['judokas'][$oi]);
+                        $kleine['judokas'] = array_values($kleine['judokas']);
+                    }
+                }
+            }
+            unset($kleine);
+
+            // Verwijder lege poules en herbereken data
+            $poules = array_values(array_filter($poules, fn($p) => !empty($p['judokas'])));
+            $poules = array_map(fn($p) => $this->maakPouleData($p['judokas']), $poules);
         }
 
         return $poules;
