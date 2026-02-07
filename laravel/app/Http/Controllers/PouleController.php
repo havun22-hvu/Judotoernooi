@@ -665,7 +665,7 @@ class PouleController extends Controller
                 'nummer' => $vanPoule->nummer,
                 'judokas_count' => $vanPoule->aantal_judokas,
                 'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
-                'titel' => $vanPoule->titel,
+                'titel' => $vanPoule->getDisplayTitel(),
                 ...$vanRanges,
             ],
             'naar_poule' => [
@@ -673,7 +673,7 @@ class PouleController extends Controller
                 'nummer' => $naarPoule->nummer,
                 'judokas_count' => $naarPoule->aantal_judokas,
                 'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
-                'titel' => $naarPoule->titel,
+                'titel' => $naarPoule->getDisplayTitel(),
                 ...$naarRanges,
             ],
         ]);
