@@ -688,7 +688,14 @@
                 <select id="nieuwe-poule-categorie" class="w-full border rounded px-3 py-2" required>
                     <option value="">{{ __('Selecteer...') }}</option>
                     @foreach($toernooi->getAlleGewichtsklassen() as $key => $klasse)
-                    <option value="{{ $klasse['label'] }}">{{ $klasse['label'] }}</option>
+                    @php
+                        $catLabel = !empty($klasse['label']) ? $klasse['label'] : $key;
+                        $catDisplay = $catLabel;
+                        if (!empty($klasse['max_leeftijd']) && $klasse['max_leeftijd'] < 99) {
+                            $catDisplay .= ' (t/m ' . $klasse['max_leeftijd'] . ' jr)';
+                        }
+                    @endphp
+                    <option value="{{ $catLabel }}">{{ $catDisplay }}</option>
                     @endforeach
                 </select>
             </div>
