@@ -361,7 +361,7 @@ class ToernooiController extends Controller
 
         if ($loggedIn->isSitebeheerder() && $loggedIn->id === $organisator->id) {
             // Sitebeheerder viewing own dashboard sees all toernooien
-            $toernooien = Toernooi::with('organisator')->orderBy('datum', 'desc')->get();
+            $toernooien = Toernooi::with('organisator')->whereNotNull('organisator_id')->orderBy('datum', 'desc')->get();
         } else {
             // Regular organisator or sitebeheerder viewing another organisator
             $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
