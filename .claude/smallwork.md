@@ -691,6 +691,40 @@
 
 ---
 
+## Sessie: 7 februari 2026
+
+### Feat: Geboortejaar parser compleet herschreven
+- **Type:** Feature improvement
+- **Wat:** `parseGeboortejaar()` (PHP) en `extractJaar()` (JS) ondersteunen nu alle denkbare datumformaten
+- **Bestanden:** ImportService.php, import-preview.blade.php
+- **Ondersteund:**
+  - Gewoon jaar (2015), 2-digit jaar (15), Excel serial (43831, 43831.5, 43831,5)
+  - Alle separators: `-` `/` `.` `\` en spaties
+  - Spaties rond separators: `24 - 01 - 2015`
+  - Compact zonder separators: YYYYMMDD (20150124), DDMMYYYY (24012015), DDMMYY (240115)
+  - Haakjes/brackets: (2015), [24-01-2015]
+  - Nederlandse maandnamen: januari, februari, mrt, okt, etc.
+  - Nederlandse ordinals: 24ste, 1e, 2de
+  - Engelse natural language, ISO 8601, datetime strings
+
+### Fix: CSP blokkeert Nominatim API
+- **Type:** Bug fix
+- **Wat:** `nominatim.openstreetmap.org` toegevoegd aan CSP `connect-src` directive
+- **Bestanden:** SecurityHeaders.php
+- **Symptoom:** Locatie zoeken bij toernooi aanmaken/bewerken werkte niet op staging/production
+
+### Feat: Automatische milestone backup bij poule→mat verdeling
+- **Type:** Feature
+- **Wat:** BackupService maakt mysqldump vóór destructieve operaties in zetOpMat()
+- **Bestanden:** BackupService.php (nieuw), BlokController.php
+- **Details:**
+  - Alleen op production/staging (MySQL), skip op local (SQLite)
+  - Backup in `/var/backups/havun/milestones/` met label + timestamp
+  - Max 20 backups bewaard, auto-cleanup
+  - Herbruikbaar voor andere mijlpalen: `$backupService->maakMilestoneBackup('label')`
+
+---
+
 <!--
 TEMPLATE:
 
