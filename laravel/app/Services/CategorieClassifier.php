@@ -230,7 +230,9 @@ class CategorieClassifier
             }
 
             // Minus category (maximum weight)
-            $maxGewicht = abs((float) $klasseStr);
+            // Handle combined classes like "-20 -23": use highest number
+            preg_match_all('/[\d.]+/', $klasseStr, $matches);
+            $maxGewicht = !empty($matches[0]) ? max(array_map('floatval', $matches[0])) : abs((float) $klasseStr);
             if ($gewicht <= $maxGewicht + $this->tolerantie) {
                 return $klasseStr;
             }
