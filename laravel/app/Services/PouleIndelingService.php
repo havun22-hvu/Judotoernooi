@@ -178,12 +178,19 @@ class PouleIndelingService
                 if ($isEliminatie) {
                     $aantalDeelnemers = $judokas->count();
 
-                    // Warn if less than 8 participants (ideal for elimination)
-                    if ($aantalDeelnemers < 8) {
+                    // Warn if less than 8 participants for elimination
+                    if ($aantalDeelnemers < 7) {
+                        $statistieken['waarschuwingen'][] = [
+                            'type' => 'error',
+                            'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
+                            'bericht' => "Te weinig deelnemers voor eliminatie: {$leeftijdsklasse} {$gewichtsklasse} ({$aantalDeelnemers}). Minimaal 7 nodig.",
+                            'aantal' => $aantalDeelnemers,
+                        ];
+                    } elseif ($aantalDeelnemers === 7) {
                         $statistieken['waarschuwingen'][] = [
                             'type' => 'warning',
                             'categorie' => "{$leeftijdsklasse} {$gewichtsklasse}",
-                            'bericht' => "Weinig deelnemers voor eliminatie ({$aantalDeelnemers}). Ideaal is 8+.",
+                            'bericht' => "Weinig deelnemers voor eliminatie: {$leeftijdsklasse} {$gewichtsklasse} (7). Ideaal is 8+.",
                             'aantal' => $aantalDeelnemers,
                         ];
                     }
