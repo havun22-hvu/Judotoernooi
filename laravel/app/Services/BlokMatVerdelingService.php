@@ -567,25 +567,25 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Fix kruisfinales without blok_id
+     * Fix non-voorronde poules (kruisfinale, eliminatie) without blok_id
      */
     private function fixKruisfinaleBlokken(Toernooi $toernooi): void
     {
-        $kruisfinales = Poule::where('toernooi_id', $toernooi->id)
-            ->where('type', 'kruisfinale')
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->where('type', '!=', 'voorronde')
             ->whereNull('blok_id')
             ->get();
 
-        foreach ($kruisfinales as $kruisfinale) {
+        foreach ($poules as $poule) {
             $voorrondeBlokId = Poule::where('toernooi_id', $toernooi->id)
-                ->where('leeftijdsklasse', $kruisfinale->leeftijdsklasse)
-                ->where('gewichtsklasse', $kruisfinale->gewichtsklasse)
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('gewichtsklasse', $poule->gewichtsklasse)
                 ->where('type', 'voorronde')
                 ->whereNotNull('blok_id')
                 ->value('blok_id');
 
             if ($voorrondeBlokId) {
-                $kruisfinale->update(['blok_id' => $voorrondeBlokId]);
+                $poule->update(['blok_id' => $voorrondeBlokId]);
             }
         }
     }
@@ -791,25 +791,25 @@ class BlokMatVerdelingService
     }
 
     /**
-     * Fix kruisfinales without mat_id
+     * Fix non-voorronde poules (kruisfinale, eliminatie) without mat_id
      */
     private function fixKruisfinaleMatten(Toernooi $toernooi): void
     {
-        $kruisfinales = Poule::where('toernooi_id', $toernooi->id)
-            ->where('type', 'kruisfinale')
+        $poules = Poule::where('toernooi_id', $toernooi->id)
+            ->where('type', '!=', 'voorronde')
             ->whereNull('mat_id')
             ->get();
 
-        foreach ($kruisfinales as $kruisfinale) {
+        foreach ($poules as $poule) {
             $voorrondeMatId = Poule::where('toernooi_id', $toernooi->id)
-                ->where('leeftijdsklasse', $kruisfinale->leeftijdsklasse)
-                ->where('gewichtsklasse', $kruisfinale->gewichtsklasse)
+                ->where('leeftijdsklasse', $poule->leeftijdsklasse)
+                ->where('gewichtsklasse', $poule->gewichtsklasse)
                 ->where('type', 'voorronde')
                 ->whereNotNull('mat_id')
                 ->value('mat_id');
 
             if ($voorrondeMatId) {
-                $kruisfinale->update(['mat_id' => $voorrondeMatId]);
+                $poule->update(['mat_id' => $voorrondeMatId]);
             }
         }
     }
@@ -944,14 +944,15 @@ class BlokMatVerdelingService
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
                     'poules' => $poules->map(function($p) use ($tolerantie) {
-                        if ($p->type === 'kruisfinale') {
+                        // Kruisfinale and eliminatie: use stored aantal_judokas (no pivot table entries)
+                        if (in_array($p->type, ['kruisfinale', 'eliminatie'])) {
                             return [
                                 'id' => $p->id,
                                 'nummer' => $p->nummer,
                                 'titel' => $p->getDisplayTitel(),
                                 'leeftijdsklasse' => $p->leeftijdsklasse,
                                 'gewichtsklasse' => $p->gewichtsklasse,
-                                'type' => 'kruisfinale',
+                                'type' => $p->type,
                                 'judokas' => $p->aantal_judokas,
                                 'wedstrijden' => $p->aantal_wedstrijden,
                             ];
@@ -972,7 +973,7 @@ class BlokMatVerdelingService
                             'wedstrijden' => $p->berekenAantalWedstrijden($actieveJudokas),
                         ];
                     })
-                    ->filter(fn($p) => $p['judokas'] > 1 || ($p['type'] ?? null) === 'kruisfinale')
+                    ->filter(fn($p) => $p['judokas'] > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']))
                     ->values()
                     ->toArray(),
                 ];
