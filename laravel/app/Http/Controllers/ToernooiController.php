@@ -146,6 +146,24 @@ class ToernooiController extends Controller
             $data['gewichtsklassen'] = $gewichtsklassen;
         }
 
+        // Validate gewichtsklassen entries: detect missing commas (e.g. "-20 -23" should be "-20, -23")
+        if (!empty($data['gewichtsklassen']) && is_array($data['gewichtsklassen'])) {
+            foreach ($data['gewichtsklassen'] as $key => $categorie) {
+                if (!is_array($categorie)) continue;
+                foreach ($categorie['gewichten'] ?? [] as $gewicht) {
+                    if (preg_match('/[+-]?\d+(\.\d+)?\s+[+-]?\d/', (string) $gewicht)) {
+                        $label = $categorie['label'] ?? $key;
+                        return back()->withErrors([
+                            'gewichtsklassen' => __('Komma vergeten bij :label: ":gewicht". Gebruik komma\'s tussen gewichtsklassen (bijv. -20, -23).', [
+                                'label' => $label,
+                                'gewicht' => $gewicht,
+                            ]),
+                        ])->withInput();
+                    }
+                }
+            }
+        }
+
         // Sort categories by max_leeftijd (youngest first)
         if (!empty($data['gewichtsklassen']) && is_array($data['gewichtsklassen'])) {
             uasort($data['gewichtsklassen'], function ($a, $b) {

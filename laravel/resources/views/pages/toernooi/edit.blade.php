@@ -1048,11 +1048,12 @@
                 updateJsonInput();
             }
 
-            // Check of Δkg=0 maar geen gewichtsklassen ingevuld
+            // Check of Δkg=0 maar geen gewichtsklassen ingevuld + komma vergeten
             window.checkGewichtsklassenWarning = function(input) {
                 const item = input.closest('.gewichtsklasse-item');
                 const maxKgInput = item.querySelector('.max-kg-input');
                 const warning = item.querySelector('.gewichten-warning');
+                const kommaWarning = item.querySelector('.komma-warning');
                 const maxKg = parseFloat(maxKgInput?.value) || 0;
                 const gewichten = input.value.trim();
 
@@ -1064,6 +1065,32 @@
                     warning?.classList.add('hidden');
                     input.classList.remove('border-red-400');
                 }
+
+                // Check op vergeten komma: "-20 -23" of "20 23" in een enkele entry
+                let kommaFout = false;
+                if (gewichten) {
+                    const entries = gewichten.split(',').map(g => g.trim()).filter(g => g);
+                    for (const entry of entries) {
+                        if (/[+-]?\d+(\.\d+)?\s+[+-]?\d/.test(entry)) {
+                            kommaFout = true;
+                            break;
+                        }
+                    }
+                }
+                if (kommaFout) {
+                    if (!kommaWarning) {
+                        const warn = document.createElement('p');
+                        warn.className = 'komma-warning text-red-600 text-xs mt-1 font-bold';
+                        warn.textContent = '⚠ Komma vergeten? Gebruik komma\'s: -20, -23 (niet: -20 -23)';
+                        input.parentNode.appendChild(warn);
+                    } else {
+                        kommaWarning.classList.remove('hidden');
+                    }
+                    input.classList.add('border-red-400');
+                } else if (kommaWarning) {
+                    kommaWarning.classList.add('hidden');
+                }
+
                 updateJsonInput();
             }
 
