@@ -265,34 +265,52 @@ class WedstrijdSchemaService
 
     /**
      * Add extra (repeat) matches to round-robin so each judoka plays exactly $target matches.
+     * Matches are grouped in rounds: all first encounters, then all second encounters, etc.
+     * This prevents the same pair from fighting twice in a row.
      */
     private function puntenCompMeerWedstrijden(int $n, int $target, array $roundRobin): array
     {
-        $extraPerJudoka = $target - ($n - 1); // extra matches needed per judoka
-        $totaalExtra = (int) (($n * $extraPerJudoka) / 2);
+        $roundRobinMatches = $n - 1;
+        $aantalRondes = (int) ceil($target / $roundRobinMatches);
 
-        $matchCount = array_fill(1, $n, $n - 1); // already have round-robin
-        $extra = [];
+        // Build rounds: each round is a full (or partial) round-robin
+        $rondes = [];
+        $matchCount = array_fill(1, $n, 0);
 
-        // Add repeat matches from round-robin (cycle through)
-        $index = 0;
-        while (count($extra) < $totaalExtra && $index < count($roundRobin) * 3) {
-            $paar = $roundRobin[$index % count($roundRobin)];
-            $j1 = $paar[0];
-            $j2 = $paar[1];
+        for ($ronde = 0; $ronde < $aantalRondes; $ronde++) {
+            $rondeMatches = [];
+            $matchesNodigInRonde = min($roundRobinMatches, $target - ($ronde * $roundRobinMatches));
 
-            if ($matchCount[$j1] < $target && $matchCount[$j2] < $target) {
-                // Swap sides for repeat match (wit/blauw swap)
-                $extra[] = [$paar[1], $paar[0]];
-                $matchCount[$j1]++;
-                $matchCount[$j2]++;
+            foreach ($roundRobin as $paar) {
+                if (count($rondeMatches) >= (int)(($n * $matchesNodigInRonde) / 2)) {
+                    break;
+                }
+
+                $j1 = $paar[0];
+                $j2 = $paar[1];
+                $maxInRonde = $ronde * $roundRobinMatches + $matchesNodigInRonde;
+
+                if ($matchCount[$j1] < $maxInRonde && $matchCount[$j2] < $maxInRonde) {
+                    // Swap sides on even repeat rounds for fairness
+                    $rondeMatches[] = $ronde % 2 === 0 ? $paar : [$paar[1], $paar[0]];
+                    $matchCount[$j1]++;
+                    $matchCount[$j2]++;
+                }
             }
 
-            $index++;
+            // Optimize order within this round
+            $rondes[] = $this->optimaliseerVolgorde($rondeMatches, $n);
         }
 
-        $allMatches = array_merge($roundRobin, $extra);
-        return $this->optimaliseerVolgorde($allMatches, $n);
+        // Flatten rounds into final schedule (round 1 first, then round 2, etc.)
+        $result = [];
+        foreach ($rondes as $ronde) {
+            foreach ($ronde as $match) {
+                $result[] = $match;
+            }
+        }
+
+        return $result;
     }
 
     /**
