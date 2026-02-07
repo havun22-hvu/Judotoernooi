@@ -10,6 +10,7 @@ use App\Models\Mat;
 use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
+use App\Services\ActivityLogger;
 use App\Services\EliminatieService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
@@ -147,6 +148,12 @@ class MatController extends Controller
                 $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
             }
 
+            ActivityLogger::log($toernooi, 'registreer_uitslag', "Eliminatie uitslag: wedstrijd #{$wedstrijd->id}" . ($validated['winnaar_id'] ? " winnaar #{$validated['winnaar_id']}" : ' gereset'), [
+                'model' => $wedstrijd,
+                'properties' => ['winnaar_id' => $validated['winnaar_id'], 'groep' => $wedstrijd->groep, 'ronde' => $wedstrijd->ronde],
+                'interface' => 'mat',
+            ]);
+
             return response()->json([
                 'success' => true,
                 'correcties' => $correcties,
@@ -160,6 +167,15 @@ class MatController extends Controller
                 (string) ($validated['score_blauw'] ?? ''),
                 $validated['uitslag_type'] ?? 'beslissing'
             );
+        }
+
+        $uitslagToernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
+        if ($uitslagToernooi) {
+            ActivityLogger::log($uitslagToernooi, 'registreer_uitslag', "Poule uitslag: wedstrijd #{$wedstrijd->id}" . ($validated['winnaar_id'] ? " winnaar #{$validated['winnaar_id']}" : ' gereset'), [
+                'model' => $wedstrijd,
+                'properties' => ['winnaar_id' => $validated['winnaar_id'], 'score_wit' => $validated['score_wit'] ?? null, 'score_blauw' => $validated['score_blauw'] ?? null],
+                'interface' => 'mat',
+            ]);
         }
 
         // Broadcast score update to all listeners (jurytafel, publiek, spreker)
@@ -302,6 +318,14 @@ class MatController extends Controller
         }
 
         $poule->update(['spreker_klaar' => now()]);
+
+        $klaarToernooi = Toernooi::find($toernooiId);
+        if ($klaarToernooi) {
+            ActivityLogger::log($klaarToernooi, 'poule_klaar', "Poule {$poule->nummer} klaar voor spreker", [
+                'model' => $poule,
+                'interface' => 'mat',
+            ]);
+        }
 
         // Broadcast poule klaar to spreker
         if ($poule->mat_id) {
@@ -621,6 +645,12 @@ class MatController extends Controller
             }
         }
 
+        ActivityLogger::log($toernooi, 'plaats_judoka', "Judoka #{$validated['judoka_id']} geplaatst op {$validated['positie']} in wedstrijd #{$wedstrijd->id}", [
+            'model' => $wedstrijd,
+            'properties' => ['judoka_id' => $validated['judoka_id'], 'positie' => $validated['positie'], 'is_correctie' => $isCorrectie],
+            'interface' => 'mat',
+        ]);
+
         return response()->json([
             'success' => true,
             'correcties' => $correcties,
@@ -763,6 +793,15 @@ class MatController extends Controller
 
         // Verwijder judoka ook uit B-groep als die daar stond (voor het geval dat)
         $this->eliminatieService->verwijderUitB($wedstrijd->poule_id, $judokaId);
+
+        $verwijderToernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
+        if ($verwijderToernooi) {
+            ActivityLogger::log($verwijderToernooi, 'verwijder_judoka', "Judoka #{$judokaId} verwijderd uit wedstrijd #{$wedstrijd->id}", [
+                'model' => $wedstrijd,
+                'properties' => ['judoka_id' => $judokaId],
+                'interface' => 'mat',
+            ]);
+        }
 
         return response()->json(['success' => true]);
     }

@@ -9,6 +9,7 @@ use App\Models\CoachKaart;
 use App\Models\Mat;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Services\ActivityLogger;
 use App\Services\BackupService;
 use App\Services\BlokMatVerdelingService;
 use App\Services\EliminatieService;
@@ -277,6 +278,11 @@ class BlokController extends Controller
     {
         $blok->sluitWeging();
 
+        ActivityLogger::log($toernooi, 'sluit_weging', "Weging gesloten voor {$blok->naam}", [
+            'model' => $blok,
+            'interface' => 'dashboard',
+        ]);
+
         return redirect()
             ->route('toernooi.weging.interface', $toernooi->routeParams())
             ->with('success', "Weging voor {$blok->naam} gesloten. Niet-gewogen judoka's zijn als afwezig gemarkeerd.");
@@ -453,6 +459,13 @@ class BlokController extends Controller
             }
         }
 
+        ActivityLogger::log($toernooi, 'activeer_categorie', "{$leeftijdsklasse} {$gewichtsklasse} geactiveerd (blok {$blokNummer}, {$totaalWedstrijden} wedstrijden)", [
+            'model_type' => 'Toernooi',
+            'model_id' => $toernooi->id,
+            'properties' => ['leeftijdsklasse' => $leeftijdsklasse, 'gewichtsklasse' => $gewichtsklasse, 'blok' => $blokNummer, 'totaal_wedstrijden' => $totaalWedstrijden],
+            'interface' => 'dashboard',
+        ]);
+
         // Stay on zaaloverzicht (chip turns green to indicate activation)
         $typeLabel = $isEliminatie ? 'Eliminatie bracket' : 'Poules';
         return redirect()
@@ -498,6 +511,13 @@ class BlokController extends Controller
                 'aantal_wedstrijden' => 0,
             ]);
         }
+
+        ActivityLogger::log($toernooi, 'reset_categorie', "{$leeftijdsklasse} {$gewichtsklasse} gereset (blok {$blokNummer}, {$totaalVerwijderd} wedstrijden verwijderd)", [
+            'model_type' => 'Toernooi',
+            'model_id' => $toernooi->id,
+            'properties' => ['leeftijdsklasse' => $leeftijdsklasse, 'gewichtsklasse' => $gewichtsklasse, 'blok' => $blokNummer, 'wedstrijden_verwijderd' => $totaalVerwijderd],
+            'interface' => 'dashboard',
+        ]);
 
         return redirect()
             ->route('toernooi.blok.zaaloverzicht', $toernooi->routeParams())
@@ -645,6 +665,12 @@ class BlokController extends Controller
             'weging_gesloten_op' => null,
         ]);
 
+        ActivityLogger::log($toernooi, 'reset_blok', "Blok {$blokNummer} gereset: {$totaalWedstrijden} wedstrijden verwijderd, {$totaalPoules} poules terug", [
+            'model' => $blok,
+            'properties' => ['blok_nummer' => $blokNummer, 'wedstrijden_verwijderd' => $totaalWedstrijden, 'poules_gereset' => $totaalPoules, 'poules_verwijderd' => $verwijderdePoules],
+            'interface' => 'dashboard',
+        ]);
+
         $message = "✓ Blok {$blokNummer} gereset - {$totaalWedstrijden} wedstrijden verwijderd, {$totaalPoules} poules terug naar eind voorbereiding";
         if ($verwijderdePoules > 0) {
             $message .= ", {$verwijderdePoules} wedstrijddag-poules verwijderd";
@@ -677,6 +703,13 @@ class BlokController extends Controller
                 'aantal_wedstrijden' => 0,
             ]);
         }
+
+        ActivityLogger::log($toernooi, 'reset_alles', "ALLES GERESET: {$totaalVerwijderd} wedstrijden verwijderd, alle matten leeg", [
+            'model_type' => 'Toernooi',
+            'model_id' => $toernooi->id,
+            'properties' => ['wedstrijden_verwijderd' => $totaalVerwijderd],
+            'interface' => 'dashboard',
+        ]);
 
         return redirect()
             ->route('toernooi.edit', $toernooi->routeParams())

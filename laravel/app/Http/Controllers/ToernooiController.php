@@ -7,6 +7,7 @@ use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Toernooi;
 use App\Models\ToernooiTemplate;
+use App\Services\ActivityLogger;
 use App\Services\CategorieClassifier;
 use App\Services\PouleIndelingService;
 use App\Services\ToernooiService;
@@ -201,7 +202,19 @@ class ToernooiController extends Controller
         $nieuweGewichtsklassen = $data['gewichtsklassen'] ?? [];
         $categorieenGewijzigd = json_encode($oudeGewichtsklassen) !== json_encode($nieuweGewichtsklassen);
 
+        // Bepaal gewijzigde velden voor logging
+        $gewijzigdeVelden = array_keys(array_diff_assoc(
+            array_map('json_encode', array_intersect_key($data, $toernooi->getAttributes())),
+            array_map('json_encode', array_intersect_key($toernooi->getAttributes(), $data))
+        ));
+
         $toernooi->update($data);
+
+        ActivityLogger::log($toernooi, 'update_toernooi', "Toernooi-instellingen bijgewerkt" . (!empty($gewijzigdeVelden) ? ": " . implode(', ', array_slice($gewijzigdeVelden, 0, 5)) : ''), [
+            'model' => $toernooi,
+            'properties' => ['gewijzigde_velden' => $gewijzigdeVelden],
+            'interface' => 'dashboard',
+        ]);
 
         // Auto-valideer judoka's als categorieën gewijzigd zijn
         if ($categorieenGewijzigd && $toernooi->judokas()->count() > 0) {
@@ -264,6 +277,11 @@ class ToernooiController extends Controller
 
         $naam = $toernooi->naam;
         $bewaarPresets = $request->boolean('bewaar_presets');
+
+        ActivityLogger::log($toernooi, 'verwijder_toernooi', "Toernooi '{$naam}' verwijderd", [
+            'model' => $toernooi,
+            'interface' => 'dashboard',
+        ]);
 
         // Delete all related data explicitly
         $pouleIds = $toernooi->poules()->pluck('id');
@@ -618,6 +636,11 @@ class ToernooiController extends Controller
         // Calculate reminder date (3 months before next year's tournament)
         $volgendJaar = $toernooi->datum->addYear();
         $herinneringDatum = $volgendJaar->subMonths(3);
+
+        ActivityLogger::log($toernooi, 'toernooi_afgesloten', "Toernooi '{$toernooi->naam}' afgesloten", [
+            'model' => $toernooi,
+            'interface' => 'dashboard',
+        ]);
 
         $toernooi->update([
             'afgesloten_at' => now(),
