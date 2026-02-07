@@ -109,10 +109,10 @@
                         </td>
                         <td class="px-4 py-2">
                             <template x-if="j.status === 'aanwezig'">
-                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aanwezig</span>
+                                <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">{{ __('Aanwezig') }}</span>
                             </template>
                             <template x-if="j.status === 'afwezig'">
-                                <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Afwezig</span>
+                                <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">{{ __('Afwezig') }}</span>
                             </template>
                             <template x-if="!j.status || (j.status !== 'aanwezig' && j.status !== 'afwezig')">
                                 <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">-</span>
