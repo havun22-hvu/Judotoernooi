@@ -10,6 +10,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class WedstrijddagController extends Controller
@@ -180,7 +181,6 @@ class WedstrijddagController extends Controller
 
         $judoka = Judoka::findOrFail($validated['judoka_id']);
         $nieuwePoule = Poule::with('blok')->findOrFail($validated['poule_id']);
-        $oudePouleData = null;
 
         // Validatie: bij verplaatsen naar eerder blok, check of weging nog open is
         if (!empty($validated['from_poule_id'])) {
@@ -188,7 +188,6 @@ class WedstrijddagController extends Controller
 
             if ($oudePoule->blok && $nieuwePoule->blok) {
                 if ($nieuwePoule->blok->nummer < $oudePoule->blok->nummer) {
-                    // Verplaatsen naar eerder blok - check weging status
                     if ($nieuwePoule->blok->weging_gesloten) {
                         return response()->json([
                             'success' => false,
@@ -201,94 +200,97 @@ class WedstrijddagController extends Controller
 
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
 
-        // Remove from old poule(s)
-        if (!empty($validated['from_poule_id'])) {
-            // Gebruik de eerder geladen oudePoule (met blok) of laad opnieuw
-            if (!isset($oudePoule)) {
+        // Wrap entire operation in transaction to prevent partial state
+        $result = DB::transaction(function () use ($validated, $judoka, $nieuwePoule, $toernooi, $tolerantie) {
+            $oudePouleData = null;
+
+            // Remove from old poule(s)
+            if (!empty($validated['from_poule_id'])) {
                 $oudePoule = Poule::findOrFail($validated['from_poule_id']);
-            }
-            $oudePoule->judokas()->detach($judoka->id);
-            $oudePoule->updateStatistieken();
-            $oudePoule->load('judokas'); // Refresh judokas collection
-
-            // Calculate active count for old poule (only exclude absent, not deviant weight)
-            $actieveJudokasOud = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
-
-            $oudePouleData = [
-                'id' => $oudePoule->id,
-                'aantal_judokas' => $actieveJudokasOud,
-                'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokasOud),
-            ];
-        } else {
-            // From wachtruimte - detach from ALL current poules
-            foreach ($judoka->poules as $oudePoule) {
                 $oudePoule->judokas()->detach($judoka->id);
                 $oudePoule->updateStatistieken();
+                $oudePoule->load('judokas');
+
+                $actieveJudokasOud = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+
+                $oudePouleData = [
+                    'id' => $oudePoule->id,
+                    'aantal_judokas' => $actieveJudokasOud,
+                    'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokasOud),
+                ];
+            } else {
+                // From wachtruimte - detach from ALL current poules
+                foreach ($judoka->poules as $oudePoule) {
+                    $oudePoule->judokas()->detach($judoka->id);
+                    $oudePoule->updateStatistieken();
+                }
             }
-        }
 
-        // Update judoka's gewichtsklasse FIRST to match new poule (removes strikethrough)
-        $judoka->update([
-            'gewichtsklasse' => $nieuwePoule->gewichtsklasse,
-            'opmerking' => 'Overgepouled',
-        ]);
+            // Update judoka's gewichtsklasse to match new poule (removes strikethrough)
+            $judoka->update([
+                'gewichtsklasse' => $nieuwePoule->gewichtsklasse,
+                'opmerking' => 'Overgepouled',
+            ]);
 
-        // Check if judoka already in target poule (reordering within same poule)
-        $alreadyInPoule = $nieuwePoule->judokas()->where('judoka_id', $judoka->id)->exists();
+            // Check if judoka already in target poule (reordering within same poule)
+            $alreadyInPoule = $nieuwePoule->judokas()->where('judoka_id', $judoka->id)->exists();
 
-        if (!$alreadyInPoule) {
-            // Add to new poule
-            $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $nieuwePoule->judokas()->count() + 1]);
-        }
-
-        // Update positions if provided
-        if (!empty($validated['positions'])) {
-            foreach ($validated['positions'] as $pos) {
-                $nieuwePoule->judokas()->updateExistingPivot($pos['id'], ['positie' => $pos['positie']]);
+            if (!$alreadyInPoule) {
+                $nieuwePoule->judokas()->attach($judoka->id, ['positie' => $nieuwePoule->judokas()->count() + 1]);
             }
-        }
 
-        $nieuwePoule->updateStatistieken();
-        $nieuwePoule->load('judokas'); // Refresh judokas collection
+            // Update positions if provided
+            if (!empty($validated['positions'])) {
+                foreach ($validated['positions'] as $pos) {
+                    $nieuwePoule->judokas()->updateExistingPivot($pos['id'], ['positie' => $pos['positie']]);
+                }
+            }
 
-        // Calculate active count (only exclude absent, not deviant weight)
-        $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+            $nieuwePoule->updateStatistieken();
+            $nieuwePoule->load('judokas');
 
-        // Check gewichtsrange probleem voor beide poules (variabele categorieën)
-        $maxKgVerschil = $toernooi->max_kg_verschil ?? 0;
+            $actieveJudokasNieuw = $nieuwePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
-        // Nieuwe poule gewichtsrange check
-        $nieuweGewichtsRange = $nieuwePoule->getGewichtsRange();
-        $nieuweRangeVerschil = ($nieuweGewichtsRange['max_kg'] ?? 0) - ($nieuweGewichtsRange['min_kg'] ?? 0);
-        $nieuweIsProblematisch = $maxKgVerschil > 0 && $nieuweRangeVerschil > $maxKgVerschil;
+            $maxKgVerschil = $toernooi->max_kg_verschil ?? 0;
 
-        // Oude poule gewichtsrange check (indien van toepassing)
-        if ($oudePouleData && isset($oudePoule)) {
-            $oudeGewichtsRange = $oudePoule->getGewichtsRange();
-            $oudeRangeVerschil = ($oudeGewichtsRange['max_kg'] ?? 0) - ($oudeGewichtsRange['min_kg'] ?? 0);
-            $oudeIsProblematisch = $maxKgVerschil > 0 && $oudeRangeVerschil > $maxKgVerschil;
-            $oudePouleData['gewichts_range'] = $oudeGewichtsRange;
-            $oudePouleData['is_gewicht_problematisch'] = $oudeIsProblematisch;
-            $oudePouleData['titel'] = $oudePoule->titel;
-        }
+            $nieuweGewichtsRange = $nieuwePoule->getGewichtsRange();
+            $nieuweRangeVerschil = ($nieuweGewichtsRange['max_kg'] ?? 0) - ($nieuweGewichtsRange['min_kg'] ?? 0);
+            $nieuweIsProblematisch = $maxKgVerschil > 0 && $nieuweRangeVerschil > $maxKgVerschil;
 
-        // Check of judoka past in de nieuwe poule (voor vaste gewichtsklassen)
-        // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
-        $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
+            if ($oudePouleData && isset($oudePoule)) {
+                $oudeGewichtsRange = $oudePoule->getGewichtsRange();
+                $oudeRangeVerschil = ($oudeGewichtsRange['max_kg'] ?? 0) - ($oudeGewichtsRange['min_kg'] ?? 0);
+                $oudeIsProblematisch = $maxKgVerschil > 0 && $oudeRangeVerschil > $maxKgVerschil;
+                $oudePouleData['gewichts_range'] = $oudeGewichtsRange;
+                $oudePouleData['is_gewicht_problematisch'] = $oudeIsProblematisch;
+                $oudePouleData['titel'] = $oudePoule->titel;
+            }
+
+            $judokaPastInPoule = $judoka->isGewichtBinnenKlasse(null, $tolerantie, $nieuwePoule->gewichtsklasse);
+
+            return [
+                'oudePouleData' => $oudePouleData,
+                'nieuwePoule' => $nieuwePoule,
+                'actieveJudokasNieuw' => $actieveJudokasNieuw,
+                'nieuweGewichtsRange' => $nieuweGewichtsRange,
+                'nieuweIsProblematisch' => $nieuweIsProblematisch,
+                'judokaPastInPoule' => $judokaPastInPoule,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'van_poule' => $oudePouleData,
+            'van_poule' => $result['oudePouleData'],
             'naar_poule' => [
-                'id' => $nieuwePoule->id,
-                'titel' => $nieuwePoule->getDisplayTitel(),
-                'aantal_judokas' => $actieveJudokasNieuw,
-                'aantal_wedstrijden' => $nieuwePoule->berekenAantalWedstrijden($actieveJudokasNieuw),
-                'gewichts_range' => $nieuweGewichtsRange,
-                'is_gewicht_problematisch' => $nieuweIsProblematisch,
+                'id' => $result['nieuwePoule']->id,
+                'titel' => $result['nieuwePoule']->getDisplayTitel(),
+                'aantal_judokas' => $result['actieveJudokasNieuw'],
+                'aantal_wedstrijden' => $result['nieuwePoule']->berekenAantalWedstrijden($result['actieveJudokasNieuw']),
+                'gewichts_range' => $result['nieuweGewichtsRange'],
+                'is_gewicht_problematisch' => $result['nieuweIsProblematisch'],
             ],
             'judoka_id' => $judoka->id,
-            'judoka_past_in_poule' => $judokaPastInPoule,
+            'judoka_past_in_poule' => $result['judokaPastInPoule'],
         ]);
     }
 
