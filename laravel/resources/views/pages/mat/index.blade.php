@@ -16,6 +16,12 @@
         <h2 class="text-xl font-bold mb-4">Mat {{ $mat->nummer }}</h2>
 
         <div class="space-y-2">
+            @if($blokken->count() === 1)
+            <a href="{{ route('toernooi.mat.show', $toernooi->routeParamsWith(['mat' => $mat, 'blok' => $blokken->first()])) }}"
+               class="block p-3 bg-blue-100 hover:bg-blue-200 rounded font-medium text-blue-800">
+                Blok 1 — {{ __('Bekijk schema') }}
+            </a>
+            @else
             @foreach($blokken as $blok)
             <a href="{{ route('toernooi.mat.show', $toernooi->routeParamsWith(['mat' => $mat, 'blok' => $blok])) }}"
                class="block p-3 bg-gray-100 hover:bg-gray-200 rounded">
@@ -25,6 +31,7 @@
                 @endif
             </a>
             @endforeach
+            @endif
         </div>
     </div>
     @endforeach
