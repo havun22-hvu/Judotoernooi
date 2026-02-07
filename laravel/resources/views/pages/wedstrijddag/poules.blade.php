@@ -340,8 +340,8 @@
                         </h2>
                         @if(!$isEliminatie)
                         <button onclick="nieuwePoule('{{ $jsLeeftijd }}', '{{ $jsGewicht }}')" class="text-gray-500 hover:text-gray-700 hover:bg-gray-200 px-2 py-0.5 rounded text-sm font-medium">+ {{ __('Poule') }}</button>
-                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="{{ __('Nieuwe judoka aanmelden (laatkomer)') }}">+ {{ __('Laatkomer') }}</button>
                         @endif
+                        <button onclick="openNieuweJudokaModal('{{ $jsLeeftijd }}', '{{ $jsGewicht }}', {{ json_encode($category['poules']->where('type', '!=', 'kruisfinale')->map(fn($p) => ['id' => $p->id, 'nummer' => $p->nummer])->values()) }})" class="text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-0.5 rounded text-sm font-medium" title="{{ __('Nieuwe judoka aanmelden (laatkomer)') }}">+ {{ __('Laatkomer') }}</button>
                     </div>
                     @if($isEliminatie)
                     @php $elimPoule = $category['poules']->first(); @endphp
