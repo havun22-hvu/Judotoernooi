@@ -19,8 +19,10 @@ class WegingController extends Controller
     public function index(Organisator $organisator, Toernooi $toernooi, ?int $blok = null): View
     {
         $judokas = $this->wegingService->getWeeglijst($toernooi, $blok);
+        $toernooi->load('blokken');
+        $blokGesloten = $toernooi->blokken->pluck('weging_gesloten', 'nummer')->toArray();
 
-        return view('pages.weging.index', compact('toernooi', 'judokas', 'blok'));
+        return view('pages.weging.index', compact('toernooi', 'judokas', 'blok', 'blokGesloten'));
     }
 
     public function registreer(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
@@ -153,19 +155,30 @@ class WegingController extends Controller
     {
         $judokas = $this->wegingService->getWeeglijst($toernooi);
 
-        return $judokas->map(fn($j) => [
-            'id' => $j->id,
-            'naam' => $j->naam,
-            'club' => $j->club?->naam,
-            'leeftijdsklasse' => $j->leeftijdsklasse,
-            'gewicht' => $j->gewicht, // opgegeven gewicht
-            'gewichtsklasse' => $j->gewichtsklasse,
-            'is_vaste_klasse' => $j->isVasteGewichtsklasse(),
-            'blok' => $j->poules->first()?->blok?->nummer,
-            'gewogen' => $j->gewicht_gewogen > 0,
-            'gewicht_gewogen' => $j->gewicht_gewogen,
-            'gewogen_om' => $j->wegingen->first()?->created_at?->format('H:i'),
-            'afwezig' => !$j->isAanwezig(),
-        ])->toArray();
+        // Build lookup: which blokken are closed?
+        $blokGesloten = $toernooi->blokken->pluck('weging_gesloten', 'nummer')->toArray();
+
+        return $judokas->map(function ($j) use ($blokGesloten) {
+            $blokNummer = $j->poules->first()?->blok?->nummer;
+            $blokIsClosed = $blokNummer ? ($blokGesloten[$blokNummer] ?? false) : false;
+
+            // Only show as afwezig if explicitly marked AND blok is closed
+            $isAfwezig = $j->aanwezigheid === 'afwezig' && $blokIsClosed;
+
+            return [
+                'id' => $j->id,
+                'naam' => $j->naam,
+                'club' => $j->club?->naam,
+                'leeftijdsklasse' => $j->leeftijdsklasse,
+                'gewicht' => $j->gewicht,
+                'gewichtsklasse' => $j->gewichtsklasse,
+                'is_vaste_klasse' => $j->isVasteGewichtsklasse(),
+                'blok' => $blokNummer,
+                'gewogen' => $j->gewicht_gewogen > 0,
+                'gewicht_gewogen' => $j->gewicht_gewogen,
+                'gewogen_om' => $j->wegingen->first()?->created_at?->format('H:i'),
+                'afwezig' => $isAfwezig,
+            ];
+        })->toArray();
     }
 }

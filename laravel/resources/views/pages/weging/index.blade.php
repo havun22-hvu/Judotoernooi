@@ -4,8 +4,13 @@
 
 @section('content')
 @php
+    $blokGesloten = $blokGesloten ?? [];
     $aanwezig = $judokas->where('aanwezigheid', 'aanwezig')->count();
-    $afwezig = $judokas->where('aanwezigheid', 'afwezig')->count();
+    // Only count afwezig if their blok is closed
+    $afwezig = $judokas->where('aanwezigheid', 'afwezig')->filter(function($j) use ($blokGesloten) {
+        $blokNr = $j->poules->first()?->blok?->nummer;
+        return $blokNr && ($blokGesloten[$blokNr] ?? false);
+    })->count();
     $nietGewogen = $judokas->whereNull('gewicht_gewogen')->count();
 @endphp
 
@@ -129,6 +134,12 @@ function weeglijstTable() {
         filterStatus: null,
         judokas: [
             @foreach($judokas as $judoka)
+            @php
+                $blokNr = $judoka->poules->first()?->blok?->nummer;
+                $blokIsClosed = $blokNr && ($blokGesloten[$blokNr] ?? false);
+                // Only show 'afwezig' status if blok is closed
+                $effectiveStatus = ($judoka->aanwezigheid === 'afwezig' && !$blokIsClosed) ? null : $judoka->aanwezigheid;
+            @endphp
             {
                 id: {{ $judoka->id }},
                 naam: @json($judoka->naam),
@@ -138,7 +149,7 @@ function weeglijstTable() {
                 gewichtsklasse: @json($judoka->gewichtsklasse),
                 gewicht: {{ $judoka->gewicht ?? 'null' }},
                 gewicht_gewogen: {{ $judoka->gewicht_gewogen ?? 'null' }},
-                status: @json($judoka->aanwezigheid),
+                status: @json($effectiveStatus),
                 overpouler: {{ ($judoka->isVasteGewichtsklasse() && !$judoka->isGewichtBinnenKlasse()) ? 'true' : 'false' }}
             },
             @endforeach
