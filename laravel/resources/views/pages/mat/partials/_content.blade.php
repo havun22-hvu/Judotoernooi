@@ -68,7 +68,7 @@
             <div :class="poule.type === 'eliminatie' ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-3 py-1.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <h2 class="text-sm font-bold">
-                        <span x-text="(poule.type === 'eliminatie' ? __eliminatie : __poule + ' ' + poule.poule_nummer) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
+                        <span x-text="'P#' + poule.poule_nummer + ' ' + (poule.type === 'eliminatie' ? __eliminatie : __poule) + ' - ' + poule.leeftijdsklasse + ' ' + poule.gewichtsklasse + ' | Blok ' + poule.blok_nummer + ' - Mat ' + poule.mat_nummer"></span>
                         <span x-show="poule.type === 'eliminatie'">(<span x-text="poule.judoka_count"></span> judoka's)</span>
                     </h2>
                 </div>
