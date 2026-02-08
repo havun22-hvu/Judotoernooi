@@ -80,6 +80,7 @@
                 'leeftijdsklasse' => $lk,
                 'gewichtsklasse' => $gk,
                 'titel' => $p['titel'] ?? ($lk . ' ' . $gk),
+                'wedstrijden' => $p['wedstrijden'] ?? 0,
                 'leeftijd_sort' => $leeftijdVolgorde[$lk] ?? 99,
                 'gewicht_sort' => $gewichtNum + ($isPlus ? 1000 : 0),
                 'is_sent' => $pouleStatus['is_sent'] ?? false,
@@ -120,9 +121,10 @@
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
             @foreach($blokPoulesList as $pouleInfo)
             @php
-                // Korte chip naam: #nummer + titel (+ groep suffix voor split eliminatie)
+                // Korte chip naam: #nummer + titel (+ groep suffix voor split eliminatie) + wedstrijden
                 $groepSuffix = isset($pouleInfo['groep']) ? ' - ' . $pouleInfo['groep'] : '';
-                $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'];
+                $wedstrijdenCount = $pouleInfo['wedstrijden'] ?? 0;
+                $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'] . ($wedstrijdenCount > 0 ? ' (' . $wedstrijdenCount . 'w)' : '');
                 $isSent = $pouleInfo['is_sent'];
                 $isActivated = $pouleInfo['is_activated'];
 
