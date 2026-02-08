@@ -135,6 +135,7 @@ tr:hover { background: #f9fafb; }
         <button class="tab" onclick="switchTab('zaaloverzicht')">Zaaloverzicht</button>
         <button class="tab" onclick="switchTab('schemas')">Wedstrijdschema's</button>
         <button class="tab" onclick="switchTab('scores')">Score Invoer</button>
+        <button class="tab" onclick="switchTab('vrijwilligers')">Vrijwilligers</button>
     </div>
 
     <!-- WEEGLIJST -->
@@ -179,6 +180,11 @@ tr:hover { background: #f9fafb; }
             </select>
         </div>
         <div id="scores-content"></div>
+    </div>
+
+    <!-- VRIJWILLIGERS -->
+    <div id="tab-vrijwilligers" class="tab-content">
+        <div id="vrijwilligers-content"></div>
     </div>
 </div>
 
@@ -710,11 +716,94 @@ function abbreviate(name) {
     return abbr.length > 15 ? abbr.substring(0, 14) + '\u2026' : abbr;
 }
 
+// =================== VRIJWILLIGERS ===================
+
+function renderVrijwilligers() {
+    const toegangen = DATA.device_toegangen || [];
+    if (toegangen.length === 0) {
+        document.getElementById('vrijwilligers-content').innerHTML = '<p class="text-muted">Geen device-toegangen geconfigureerd.</p>';
+        return;
+    }
+
+    // Warning about PWA reset
+    let html = '<div class="card" style="border: 2px solid #f59e0b; background: #fffbeb;">';
+    html += '<div class="card-body" style="display:flex;gap:12px;align-items:flex-start;">';
+    html += '<span style="font-size:24px">&#9888;&#65039;</span>';
+    html += '<div>';
+    html += '<strong style="color:#92400e">LET OP: Bij overschakeling naar lokale server / Deco WiFi</strong>';
+    html += '<ul style="margin-top:6px;font-size:13px;color:#78350f;list-style:disc;padding-left:20px;">';
+    html += '<li>Alle PWA\'s op tablets moeten <strong>gereset</strong> worden (cache wissen of opnieuw installeren)</li>';
+    html += '<li>Nieuwe toegangs-URL\'s moeten worden uitgedeeld (de URL wijst dan naar het lokale IP i.p.v. cloud)</li>';
+    html += '<li>De codes en pincodes hieronder blijven wel geldig</li>';
+    html += '</ul>';
+    html += '</div></div></div>';
+
+    // Group by role
+    const rolVolgorde = ['hoofdjury', 'mat', 'weging', 'spreker', 'dojo'];
+    const rolLabels = { hoofdjury: 'Hoofdjury', mat: 'Matten', weging: 'Weging', spreker: 'Spreker', dojo: 'Dojo' };
+    const rolKleuren = { hoofdjury: '#7c3aed', mat: '#2563eb', weging: '#059669', spreker: '#d97706', dojo: '#dc2626' };
+
+    const perRol = {};
+    rolVolgorde.forEach(r => perRol[r] = []);
+    toegangen.forEach(t => {
+        const rol = t.rol || 'mat';
+        if (!perRol[rol]) perRol[rol] = [];
+        perRol[rol].push(t);
+    });
+
+    rolVolgorde.forEach(rol => {
+        const items = perRol[rol];
+        if (items.length === 0) return;
+
+        const kleur = rolKleuren[rol] || '#6b7280';
+
+        html += '<div class="card">';
+        html += '<div class="card-header" style="background:' + kleur + ';color:white;">' + (rolLabels[rol] || rol) + ' <span style="opacity:0.7;font-size:13px">(' + items.length + ')</span></div>';
+        html += '<div class="card-body"><table>';
+        html += '<thead><tr><th>Functie</th><th>Naam</th><th>Telefoon</th><th>Code</th><th>PIN</th><th>Status</th></tr></thead>';
+        html += '<tbody>';
+
+        items.forEach(t => {
+            html += '<tr>';
+            html += '<td><strong>' + esc(t.label) + '</strong></td>';
+            html += '<td>' + esc(t.naam || '-') + '</td>';
+            html += '<td class="text-sm">' + esc(t.telefoon || '-') + '</td>';
+            html += '<td><code style="background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:12px">' + esc(t.code) + '</code></td>';
+            html += '<td><strong style="font-size:16px;letter-spacing:2px">' + esc(t.pincode) + '</strong></td>';
+            html += '<td>';
+            if (t.is_gebonden) {
+                html += '<span class="badge badge-green">' + esc(t.device_info || 'Gebonden') + '</span>';
+            } else {
+                html += '<span class="badge badge-gray">Niet gebonden</span>';
+            }
+            html += '</td>';
+            html += '</tr>';
+        });
+
+        html += '</tbody></table></div></div>';
+    });
+
+    // Cloud URL reference
+    html += '<div class="card">';
+    html += '<div class="card-header">Toegangs-URL\'s (cloud)</div>';
+    html += '<div class="card-body">';
+    html += '<p class="text-sm text-muted" style="margin-bottom:8px">Deze URL\'s werken alleen als de cloud server bereikbaar is. Bij lokale server moeten nieuwe URL\'s worden aangemaakt.</p>';
+    html += '<table><thead><tr><th>Functie</th><th>URL</th></tr></thead><tbody>';
+    toegangen.forEach(t => {
+        html += '<tr><td><strong>' + esc(t.label) + '</strong> ' + esc(t.naam || '') + '</td>';
+        html += '<td class="text-sm" style="word-break:break-all">' + esc(t.url) + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+
+    document.getElementById('vrijwilligers-content').innerHTML = html;
+}
+
 // Initial render
 renderWeeglijst();
 renderZaaloverzicht();
 renderSchemas();
 renderScores();
+renderVrijwilligers();
 </script>
 </body>
 </html>
