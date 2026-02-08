@@ -2288,18 +2288,17 @@ function matInterface() {
 
                     // Geen horizon lijn in B-groep (was verwarrend)
 
-                    // Onderste helft (wedstrijden halfCount tot einde) - gespiegeld
-                    // De wedstrijden worden visueel gespiegeld, maar slot nummers komen uit database
+                    // Onderste helft (wedstrijden halfCount tot einde)
+                    // Slot nummers tellen gewoon door van boven naar beneden
                     for (let i = halfCount; i < sortedWeds.length; i++) {
                         const wed = sortedWeds[i];
                         if (!wed) continue;
 
-                        // Bereken positie binnen onderste helft (gespiegeld)
-                        // Voor (1) rondes: offset omlaag (tegenovergestelde richting van bovenste helft)
-                        const mirroredIdx = sortedWeds.length - 1 - i;
+                        // Bereken positie binnen onderste helft (gewoon doorlopend, niet gespiegeld)
+                        const lowerIdx = i - halfCount;
                         const spacing = helftHoogte / halfCount;
-                        const mirroredOffset = isRonde1 ? h / 2 : 0; // Halve slot hoogte omlaag voor spiegeling
-                        const topPos = helftHoogte + horizonHoogte + mirroredIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
+                        const mirroredOffset = isRonde1 ? h / 2 : 0;
+                        const topPos = helftHoogte + horizonHoogte + lowerIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
 
                         // Gebruik database slot nummers (locatie_wit, locatie_blauw)
                         html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, null, null);
