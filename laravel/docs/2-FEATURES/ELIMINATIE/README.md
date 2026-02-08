@@ -152,6 +152,31 @@ Eliminatie poules kunnen de B-groep (herkansing) op een **andere mat** draaien d
 | `zaaloverzicht.blade.php` | A/B chips + drag-drop |
 | `_content.blade.php` | Tab filtering op `groep_filter` |
 
+## Poule Weergave per Pagina
+
+Welke poules worden waar getoond, afhankelijk van type en vulling:
+
+| Type poule | Judoka's | Blokverdeling | Zaaloverzicht | Wedstrijddag |
+|------------|----------|---------------|---------------|--------------|
+| **Normaal** | >0 | Ja | Ja | Ja |
+| **Normaal** | 0 | Nee | Nee | Ja* |
+| **Eliminatie** | >0 | Ja (geheel) | Ja (geheel) | Ja |
+| **Eliminatie** | 0 | Nee | Nee | Ja* |
+| **Kruisfinale** | virtueel | Ja | Ja | Ja |
+
+*\* Lege poules bij vaste gewichtsklassen blijven op wedstrijddag zichtbaar voor overpoulen*
+
+**Eliminatie A/B split** (aparte mat) → alleen op wedstrijddag, niet in blokverdeling/zaaloverzicht.
+
+### Filter logica
+
+| Locatie | Filter | Bestand |
+|---------|--------|---------|
+| Service (data) | `judokas > 1 \|\| type === 'kruisfinale'` | `BlokMatVerdelingService:1025` |
+| Zaaloverzicht chips | `judokas > 1 \|\| type === 'kruisfinale'` | `zaaloverzicht.blade.php:63` |
+| Zaaloverzicht matten | `judokas > 1 \|\| type === 'kruisfinale'` | `zaaloverzicht.blade.php:199` |
+| Poule.updateStatistieken | Bewaar virtueel count alleen voor `kruisfinale` | `Poule.php:222` |
+
 ## Gerelateerde Bestanden
 
 - `app/Services/EliminatieService.php` - Business logic
