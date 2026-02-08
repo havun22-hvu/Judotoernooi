@@ -1830,19 +1830,23 @@ function matInterface() {
             'halve_finale': 4,
             'finale': 5,
             // B-groep: dynamische structuur op basis van aantal judoka's
-            // 25+ j: B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
+            // 33+ j: B-1/16(1) → B-1/16(2) → B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-brons
+            // 25-32 j: B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
             // 17-24 j: B-1/8 → B-1/4 → B-brons
             // 13-16 j: B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
             // 9-12 j: B-1/4 → B-brons
-            'b_achtste_finale_1': 1,
-            'b_achtste_finale_2': 2,
-            'b_achtste_finale': 1,     // Zonder suffix (17-24 j)
-            'b_kwartfinale_1': 3,
-            'b_kwartfinale_2': 4,
-            'b_kwartfinale': 3,        // Zonder suffix (9-12 j)
-            'b_halve_finale_1': 5,
-            'b_halve_finale_2': 6,
-            'b_brons': 6,  // Legacy support
+            'b_zestiende_finale_1': 1,
+            'b_zestiende_finale_2': 2,
+            'b_zestiende_finale': 1,   // Zonder suffix
+            'b_achtste_finale_1': 3,
+            'b_achtste_finale_2': 4,
+            'b_achtste_finale': 3,     // Zonder suffix (17-24 j)
+            'b_kwartfinale_1': 5,
+            'b_kwartfinale_2': 6,
+            'b_kwartfinale': 5,        // Zonder suffix (9-12 j)
+            'b_halve_finale_1': 7,
+            'b_halve_finale_2': 8,
+            'b_brons': 8,  // Legacy support
         },
 
         // Get bracket als array van rondes met wedstrijden
@@ -1891,6 +1895,9 @@ function matInterface() {
                 'halve_finale': '1/2',
                 'finale': __finale,
                 // B-groep: (1)/(2) alleen als ronde 2x gespeeld wordt
+                'b_zestiende_finale_1': '1/16 (1)',
+                'b_zestiende_finale_2': '1/16 (2)',
+                'b_zestiende_finale': '1/16',    // Zonder suffix
                 'b_achtste_finale_1': '1/8 (1)',
                 'b_achtste_finale_2': '1/8 (2)',
                 'b_achtste_finale': '1/8',      // Zonder suffix
@@ -1980,6 +1987,9 @@ function matInterface() {
                 'halve_finale': 3,
                 'finale': 4,
                 // B-groep: elke ronde eigen niveau (opeenvolgend)
+                'b_zestiende_finale_1': 0,
+                'b_zestiende_finale_2': 1,
+                'b_zestiende_finale': 0,  // Zonder suffix
                 'b_achtste_finale_1': 0,
                 'b_achtste_finale_2': 1,
                 'b_achtste_finale': 0,    // Zonder suffix
@@ -2266,7 +2276,8 @@ function matInterface() {
                     // Bepaal A-ronde naam voor placeholder (b_achtste_finale_2 → A-1/8)
                     let aRondeNaam = '';
                     if (isRonde2) {
-                        if (ronde.ronde.includes('achtste')) aRondeNaam = 'A-1/8';
+                        if (ronde.ronde.includes('zestiende')) aRondeNaam = 'A-1/16';
+                        else if (ronde.ronde.includes('achtste')) aRondeNaam = 'A-1/8';
                         else if (ronde.ronde.includes('kwart')) aRondeNaam = 'A-1/4';
                         else if (ronde.ronde.includes('halve')) aRondeNaam = 'A-1/2';
                     }
