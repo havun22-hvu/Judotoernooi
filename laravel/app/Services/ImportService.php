@@ -47,7 +47,6 @@ class ImportService
             'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
             'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
             'band' => ['band', 'gordel', 'belt', 'kyu', 'graad'],
-            'telefoon' => ['telefoon', 'tel', 'phone', 'mobiel', 'gsm', 'telefoonnummer', 'mobile'],
         ];
 
         // Gewichtsklasse veld alleen detecteren als toernooi vaste gewichtsklassen heeft
@@ -190,7 +189,6 @@ class ImportService
                     'gewichtsklasse' => 'gewichtsklasse',
                     'geslacht' => 'geslacht',
                     'geboortejaar' => 'geboortejaar',
-                    'telefoon' => 'telefoon',
                 ], $kolomMapping);
 
                 foreach ($data as $index => $rij) {
@@ -271,8 +269,6 @@ class ImportService
         $gewichtsklasseRaw = $this->getWaarde($rij, $mapping['gewichtsklasse']);
         $geslachtRaw = $this->getWaarde($rij, $mapping['geslacht']);
         $geboortejaarRaw = $this->getWaarde($rij, $mapping['geboortejaar']);
-        $telefoon = $this->getWaarde($rij, $mapping['telefoon']);
-
         // Skip rows without name (name is required)
         if (empty($naam)) {
             return null;
@@ -408,7 +404,6 @@ class ImportService
                 'is_onvolledig' => $isOnvolledig,
                 'import_warnings' => $importWarnings,
                 'import_status' => $importStatus,
-                'telefoon' => $this->parseTelefoon($telefoon),
             ]);
             return null; // Return null to count as skipped
         }
@@ -429,7 +424,6 @@ class ImportService
             'is_onvolledig' => $isOnvolledig,
             'import_warnings' => $importWarnings,
             'import_status' => $importStatus,
-            'telefoon' => $this->parseTelefoon($telefoon),
         ]);
 
         return $judoka;
@@ -684,30 +678,6 @@ class ImportService
         }
 
         return null;
-    }
-
-    /**
-     * Parse phone number (clean up formatting)
-     */
-    private function parseTelefoon(mixed $waarde): ?string
-    {
-        if (empty($waarde)) {
-            return null;
-        }
-
-        // Remove all non-numeric characters except +
-        $telefoon = preg_replace('/[^0-9+]/', '', (string)$waarde);
-
-        // Convert 06 to +316
-        if (str_starts_with($telefoon, '06')) {
-            $telefoon = '+31' . substr($telefoon, 1);
-        }
-        // Convert 0031 to +31
-        elseif (str_starts_with($telefoon, '0031')) {
-            $telefoon = '+31' . substr($telefoon, 4);
-        }
-
-        return $telefoon ?: null;
     }
 
     /**

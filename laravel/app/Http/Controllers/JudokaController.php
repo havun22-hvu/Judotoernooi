@@ -201,7 +201,6 @@ class JudokaController extends Controller
             'gewicht' => $validated['gewicht'] ?? null,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse ?? 'Onbekend',
-            'telefoon' => $validated['telefoon'] ?? null,
         ]);
 
         return redirect()

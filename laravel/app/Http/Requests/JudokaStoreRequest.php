@@ -20,7 +20,6 @@ class JudokaStoreRequest extends FormRequest
             'geslacht' => 'nullable|in:M,V',
             'band' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
-            'telefoon' => 'nullable|string|max:20',
         ];
     }
 
