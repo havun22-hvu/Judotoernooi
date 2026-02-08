@@ -3,7 +3,7 @@
 @section('title', __('Help & Handleiding'))
 
 @section('content')
-<div x-data="helpPage()" class="max-w-4xl mx-auto">
+<div x-data="helpPage()" class="max-w-4xl mx-auto" style="min-width: 56rem;">
     {{-- Header --}}
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Help & Handleiding') }}</h1>
@@ -105,6 +105,7 @@
             <a href="#spreker" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">{{ __('Spreker') }}</a>
             <a href="#dojo" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">{{ __('Dojo Scanner') }}</a>
             <a href="#publiek" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">{{ __('Publieke PWA') }}</a>
+            <a href="#puntencompetitie" class="px-3 py-2 bg-gray-100 hover:bg-blue-100 rounded text-center text-sm">{{ __('Puntencompetitie') }}</a>
         </div>
     </div>
 
@@ -813,6 +814,37 @@
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Notificaties') }}</h4>
                 <p>{{ __('Bij favorieten: alerts wanneer judoka bijna aan de beurt is of speelt.') }}</p>
+            </div>
+        </section>
+
+        {{-- Puntencompetitie (Wimpeltoernooi) --}}
+        <section id="puntencompetitie" class="help-section bg-white rounded-lg shadow p-6" data-keywords="puntencompetitie wimpel wimpeltoernooi punten milestone prijsje badge nieuw">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="text-2xl">&#127942;</span> {{ __('Puntencompetitie (Wimpeltoernooi)') }}
+            </h2>
+            <div class="prose prose-sm max-w-none text-gray-600">
+                <h4 class="font-semibold text-gray-800">{{ __('Wat is het?') }}</h4>
+                <p>{{ __('Een doorlopend puntensysteem waarbij judoka\'s over meerdere toernooien punten sparen. Per gewonnen wedstrijd krijgt een judoka 1 punt. Bij het bereiken van milestones ontvangt de judoka een prijsje.') }}</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Punten bijschrijven') }}</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>{!! __('<strong>Automatisch</strong> - Zodra een poule klaar is op de mat worden punten direct bijgeschreven') !!}</li>
+                    <li>{!! __('<strong>Bulk verwerking</strong> - Via het wimpeltoernooi overzicht kun je onverwerkte toernooien in één keer verwerken') !!}</li>
+                    <li>{!! __('<strong>Handmatig</strong> - Punten toevoegen of aftrekken bij een individuele judoka (bijv. correcties of oude standen)') !!}</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Nieuwe judoka\'s') }}</h4>
+                <p>{!! __('Judoka\'s die voor het eerst verschijnen krijgen een <span class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">NIEUW</span> badge. Controleer of er oude punten bijgeschreven moeten worden. Klik op <strong>Bevestigd</strong> om de badge te verwijderen.') !!}</p>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Milestones') }}</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>{{ __('Configureer milestones bij Instellingen (bijv. 10, 20, 30 punten)') }}</li>
+                    <li>{{ __('Per milestone: puntenaantal + omschrijving van het prijsje') }}</li>
+                    <li>{{ __('Bij het bereiken van een milestone verschijnt een melding op het overzicht') }}</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Export') }}</h4>
+                <p>{{ __('Download de volledige puntenstand als Excel of CSV via de instellingen pagina.') }}</p>
             </div>
         </section>
 

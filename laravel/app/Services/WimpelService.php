@@ -14,10 +14,6 @@ use Illuminate\Support\Facades\DB;
 class WimpelService
 {
     /**
-     * Verwerk een toernooi: tel gewonnen wedstrijden per judoka in puntencompetitie-poules.
-     * Returns array van milestone-waarschuwingen.
-     */
-    /**
      * Verwerk een heel toernooi: alle onverwerkte puntencompetitie-poules.
      * Used for bulk processing (manual or on tournament close).
      */
