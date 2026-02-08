@@ -7,13 +7,15 @@
     @vite(["resources/css/app.css", "resources/js/app.js"])
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <nav class="bg-white shadow-sm">
+    <nav class="bg-white shadow-sm" x-data="{ mobileOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <h1 class="text-xl font-bold text-gray-800">JudoToernooi</h1>
                 </div>
-                <div class="flex items-center space-x-4">
+
+                {{-- Desktop menu --}}
+                <div class="hidden sm:flex items-center space-x-4">
                     @if($organisator->isSitebeheerder())
                     <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
                     @endif
@@ -51,6 +53,46 @@
                         </button>
                     </form>
                 </div>
+
+                {{-- Hamburger button (mobile) --}}
+                <div class="flex items-center sm:hidden">
+                    <button @click="mobileOpen = !mobileOpen" class="text-gray-600 hover:text-gray-800 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path x-show="!mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            <path x-show="mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Mobile menu --}}
+        <div x-show="mobileOpen" x-transition class="sm:hidden border-t bg-white">
+            <div class="px-4 py-3 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-600 font-medium">{{ $organisator->naam }}</span>
+                    @if($organisator->isSitebeheerder())
+                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ __('Sitebeheerder') }}</span>
+                    @endif
+                </div>
+                @if($organisator->isSitebeheerder())
+                <a href="{{ route('admin.index') }}" class="block text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
+                @endif
+                <div class="flex items-center gap-3">
+                    <span class="text-gray-500 text-sm">{{ __('Taal') }}:</span>
+                    <form action="{{ route('locale.switch', 'nl') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="{{ app()->getLocale() === 'nl' ? 'font-bold' : 'opacity-60' }}">🇳🇱</button>
+                    </form>
+                    <form action="{{ route('locale.switch', 'en') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="{{ app()->getLocale() === 'en' ? 'font-bold' : 'opacity-60' }}">🇬🇧</button>
+                    </form>
+                </div>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="text-red-600 hover:text-red-800 font-medium">{{ __('Uitloggen') }}</button>
+                </form>
             </div>
         </div>
     </nav>
