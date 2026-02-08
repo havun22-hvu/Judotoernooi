@@ -57,6 +57,12 @@ Import van judoka's via CSV/Excel bestand door de organisator.
 - Geboortejaar ontbreekt
 - Gewicht ontbreekt
 
+### Zonder club melding
+- Na import wordt geteld hoeveel judoka's **geen club** hebben
+- Gele waarschuwingsbanner op judoka index: "X judoka('s) zonder club geïmporteerd"
+- Organisator kan per judoka de club alsnog invullen via de deelnemerslijst
+- Club is **niet verplicht** — judoka's worden altijd geïmporteerd, ook zonder club
+
 ## Kolom detectie
 
 ### Automatische detectie
