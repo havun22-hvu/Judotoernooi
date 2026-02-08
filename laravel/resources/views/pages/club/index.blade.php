@@ -14,26 +14,30 @@ function clubToggle() {
         },
 
         async toggle(clubId, clubNaam, judokasCount) {
+            console.log('toggle called', clubId, clubNaam, 'active:', this.isActive(clubId));
+
             if (this.isActive(clubId) && judokasCount > 0) {
                 if (!confirm(clubNaam + ' heeft nog ' + judokasCount + " judoka's. Toch deselecteren?")) {
                     return;
                 }
             }
 
-            try {
-                const response = await fetch(
-                    '{{ url($organisator->slug . '/toernooi/' . $toernooi->slug) }}/club/' + clubId + '/toggle',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                    }
-                );
+            const url = '{{ url($organisator->slug . '/toernooi/' . $toernooi->slug) }}/club/' + clubId + '/toggle';
+            console.log('fetch url:', url);
 
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+
+                console.log('response status:', response.status);
                 const data = await response.json();
+                console.log('response data:', data);
 
                 if (data.success) {
                     const updated = Object.assign({}, this.clubs);
@@ -43,16 +47,18 @@ function clubToggle() {
                         delete updated[clubId];
                     }
                     this.clubs = updated;
+                    console.log('clubs updated:', JSON.stringify(this.clubs));
 
                     if (data.warning) {
                         alert(data.warning);
                     }
                 } else {
+                    console.error('toggle failed response:', data);
                     alert(data.error || 'Fout bij toggle');
                 }
             } catch (e) {
                 console.error('Toggle failed:', e);
-                alert('Er ging iets mis. Probeer het opnieuw.');
+                alert('Er ging iets mis: ' + e.message);
             }
         }
     };
