@@ -3,69 +3,56 @@
 @section('title', __('Clubs uitnodigen'))
 
 @section('content')
-<script>
-function clubToggle() {
-    return {
-        clubs: @json(array_fill_keys($uitgenodigdeClubIds, true)),
-        copiedUrl: null,
+<div x-data="{
+    clubs: @json(array_fill_keys($uitgenodigdeClubIds, true)),
+    copiedUrl: null,
 
-        isActive(id) {
-            return !!this.clubs[id];
-        },
+    isActive(id) {
+        return !!this.clubs[id];
+    },
 
-        async toggle(clubId, clubNaam, judokasCount) {
-            console.log('toggle called', clubId, clubNaam, 'active:', this.isActive(clubId));
-
-            if (this.isActive(clubId) && judokasCount > 0) {
-                if (!confirm(clubNaam + ' heeft nog ' + judokasCount + " judoka's. Toch deselecteren?")) {
-                    return;
-                }
+    async toggle(clubId, clubNaam, judokasCount) {
+        if (this.isActive(clubId) && judokasCount > 0) {
+            if (!confirm(clubNaam + ' heeft nog ' + judokasCount + &quot;judoka's. Toch deselecteren?&quot;)) {
+                return;
             }
+        }
 
-            const url = '{{ url($organisator->slug . '/toernooi/' . $toernooi->slug) }}/club/' + clubId + '/toggle';
-            console.log('fetch url:', url);
-
-            try {
-                const response = await fetch(url, {
+        try {
+            const response = await fetch(
+                '{{ url($organisator->slug . '/toernooi/' . $toernooi->slug) }}/club/' + clubId + '/toggle',
+                {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=&quot;csrf-token&quot;]')?.content,
                         'Accept': 'application/json',
                     },
-                });
-
-                console.log('response status:', response.status);
-                const data = await response.json();
-                console.log('response data:', data);
-
-                if (data.success) {
-                    const updated = Object.assign({}, this.clubs);
-                    if (data.is_uitgenodigd) {
-                        updated[clubId] = true;
-                    } else {
-                        delete updated[clubId];
-                    }
-                    this.clubs = updated;
-                    console.log('clubs updated:', JSON.stringify(this.clubs));
-
-                    if (data.warning) {
-                        alert(data.warning);
-                    }
-                } else {
-                    console.error('toggle failed response:', data);
-                    alert(data.error || 'Fout bij toggle');
                 }
-            } catch (e) {
-                console.error('Toggle failed:', e);
-                alert('Er ging iets mis: ' + e.message);
-            }
-        }
-    };
-}
-</script>
+            );
 
-<div x-data="clubToggle()">
+            const data = await response.json();
+
+            if (data.success) {
+                const updated = Object.assign({}, this.clubs);
+                if (data.is_uitgenodigd) {
+                    updated[clubId] = true;
+                } else {
+                    delete updated[clubId];
+                }
+                this.clubs = updated;
+
+                if (data.warning) {
+                    alert(data.warning);
+                }
+            } else {
+                alert(data.error || 'Fout bij toggle');
+            }
+        } catch (e) {
+            alert('Er ging iets mis. Probeer het opnieuw.');
+        }
+    }
+}">
 
 <div class="flex justify-between items-center mb-6">
     <div>
