@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('wimpel_punten_log') || Schema::hasColumn('wimpel_punten_log', 'poule_id')) {
+            return;
+        }
+
         Schema::table('wimpel_punten_log', function (Blueprint $table) {
             $table->unsignedBigInteger('poule_id')->nullable()->after('toernooi_id');
             $table->foreign('poule_id')->references('id')->on('poules')->nullOnDelete();
