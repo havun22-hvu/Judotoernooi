@@ -41,6 +41,7 @@ docs/
   - [Formules](./2-FEATURES/ELIMINATIE/FORMULES.md)
   - [Slot Systeem](./2-FEATURES/ELIMINATIE/SLOT-SYSTEEM.md)
   - [Test Matrix](./2-FEATURES/ELIMINATIE/TEST-MATRIX.md)
+- [Wimpeltoernooi](./2-FEATURES/WIMPELTOERNOOI.md) - Doorlopend puntensysteem per organisator
 
 ### 3a. Technical
 - [URL Structuur](./URL-STRUCTUUR.md) - Routes en authenticatie schema

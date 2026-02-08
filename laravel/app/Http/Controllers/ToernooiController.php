@@ -693,6 +693,22 @@ class ToernooiController extends Controller
                 'gebonden_op' => null,
             ]);
 
+        // Auto-score wimpeltoernooi punten (non-blocking)
+        try {
+            $wimpelWarnings = app(\App\Services\WimpelService::class)->verwerkToernooi($toernooi);
+            if (!empty($wimpelWarnings)) {
+                $namen = collect($wimpelWarnings)->pluck('judoka')->implode(', ');
+                return redirect()
+                    ->route('toernooi.afsluiten', $toernooi->routeParams())
+                    ->with('success', "Toernooi afgesloten! Wimpelpunten bijgeschreven. Milestone bereikt: {$namen}");
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Wimpel auto-scoring failed', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()
             ->route('toernooi.afsluiten', $toernooi->routeParams())
             ->with('success', 'Toernooi succesvol afgesloten! Alle device bindings zijn gereset.');

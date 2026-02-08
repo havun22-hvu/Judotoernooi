@@ -113,6 +113,10 @@
                 @endif
             </h2>
             <div class="flex space-x-3">
+                <a href="{{ route('organisator.wimpel.index', $organisator) }}"
+                   class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Wimpeltoernooi
+                </a>
                 <a href="{{ route('organisator.clubs.index', $organisator) }}"
                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
                     {{ __('Mijn Clubs') }}

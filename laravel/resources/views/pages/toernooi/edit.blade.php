@@ -1154,14 +1154,14 @@
                 const dynamischHidden = maxKg > 0 ? '' : 'hidden';
 
                 div.innerHTML = `
-                    <div class="flex flex-wrap items-center gap-3 mb-2">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
                         <div class="drag-handle text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing" title="Sleep om te verplaatsen">☰</div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1">
                             <label class="text-gray-600 text-sm">Naam:</label>
                             <input type="text" name="gewichtsklassen_label[${key}]"
                                    value="${label}"
                                    placeholder="Categorie naam"
-                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-44">
+                                   class="label-input border rounded px-2 py-1 font-medium text-gray-800 w-40">
                         </div>
                         <div class="flex items-center gap-1">
                             <input type="checkbox" name="gewichtsklassen_toon_label[${key}]"
@@ -1201,13 +1201,13 @@
                                 <option value="vanaf_blauw" ${bandFilter === 'vanaf_blauw' ? 'selected' : ''}>≥blauw</option>
                             </select>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
                                     onchange="togglePuntenCompSelect(this)">
                                 <option value="punten_competitie" ${systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
-                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale${maxKg > 0 ? ' (niet bij variabel gewicht)' : ''}</option>
+                                <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale</option>
                                 <option value="eliminatie" ${systeem === 'eliminatie' ? 'selected' : ''}>Eliminatie</option>
                             </select>
                             <select name="punten_competitie_wedstrijden[${key}]"
@@ -1217,8 +1217,8 @@
                                 <option value="4" ${pcAantal == 4 ? 'selected' : ''}>4x</option>
                                 <option value="5" ${pcAantal == 5 ? 'selected' : ''}>5x</option>
                             </select>
+                            <button type="button" class="remove-categorie text-red-400 hover:text-red-600 text-lg ml-1" title="Verwijder categorie">&times;</button>
                         </div>
-                        <button type="button" class="remove-categorie ml-auto text-red-400 hover:text-red-600 text-lg" title="Verwijder categorie">&times;</button>
                     </div>
                     <div class="flex flex-wrap items-center gap-4">
                         <div class="flex items-center gap-2">
