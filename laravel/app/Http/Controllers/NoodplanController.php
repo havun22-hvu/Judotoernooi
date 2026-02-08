@@ -7,6 +7,7 @@ use App\Models\Blok;
 use App\Models\Club;
 use App\Models\Coach;
 use App\Models\CoachKaart;
+use App\Models\DeviceToegang;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
@@ -502,6 +503,23 @@ class NoodplanController extends Controller
                     'score_blauw' => $w->score_blauw,
                     'groep' => $w->groep,
                     'ronde' => $w->ronde,
+                ])->toArray(),
+            'device_toegangen' => $toernooi->deviceToegangen()
+                ->orderBy('rol')
+                ->orderBy('mat_nummer')
+                ->get()
+                ->map(fn($d) => [
+                    'id' => $d->id,
+                    'naam' => $d->naam,
+                    'telefoon' => $d->telefoon,
+                    'rol' => $d->rol,
+                    'mat_nummer' => $d->mat_nummer,
+                    'label' => $d->getLabel(),
+                    'code' => $d->code,
+                    'pincode' => $d->pincode,
+                    'url' => $d->getUrl(),
+                    'is_gebonden' => $d->isGebonden(),
+                    'device_info' => $d->device_info,
                 ])->toArray(),
             'generated_at' => now()->format('Y-m-d H:i:s'),
         ];
