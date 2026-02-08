@@ -28,6 +28,17 @@
     </a>
 </div>
 
+{{-- Waarschuwing: poules niet in zaaloverzicht --}}
+@if($zaaloverzichtWaarschuwing ?? false)
+    <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
+        <h3 class="font-bold text-yellow-800 mb-1">{{ __('Poules staan nog niet in het zaaloverzicht') }}</h3>
+        <p class="text-yellow-700 text-sm">
+            {{ __('De poules zijn nog niet aan matten toegewezen. Ga naar') }} <strong>{{ __('Blokken') }}</strong> → <strong>{{ __('Verdeel over matten') }}</strong>
+            {{ __('zodat de weeglijst, weegkaarten en het zaaloverzicht correct werken.') }}
+        </p>
+    </div>
+@endif
+
 @if($judokas->count() > 0)
 <div class="bg-white rounded-lg shadow overflow-hidden" x-data="weeglijstTable()">
     <!-- Zoekbalk -->

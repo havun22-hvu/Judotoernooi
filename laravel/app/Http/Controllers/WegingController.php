@@ -23,7 +23,14 @@ class WegingController extends Controller
         $toernooi->load('blokken');
         $blokGesloten = $toernooi->blokken->pluck('weging_gesloten', 'nummer')->toArray();
 
-        return view('pages.weging.index', compact('toernooi', 'judokas', 'blok', 'blokGesloten'));
+        // Check of poules al in zaaloverzicht staan (mat + blok toegewezen)
+        $poulesZonderMat = $toernooi->poules()
+            ->where('type', '!=', 'kruisfinale')
+            ->whereNull('mat_id')
+            ->count();
+        $zaaloverzichtWaarschuwing = $poulesZonderMat > 0;
+
+        return view('pages.weging.index', compact('toernooi', 'judokas', 'blok', 'blokGesloten', 'zaaloverzichtWaarschuwing'));
     }
 
     public function registreer(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse

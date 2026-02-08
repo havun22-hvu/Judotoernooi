@@ -157,6 +157,10 @@ class WedstrijddagController extends Controller
             }
         }
 
+        // Check of poules al op matten staan (vanuit voorbereiding)
+        $poulesZonderMat = $poules->filter(fn($p) => $p->type !== 'kruisfinale' && $p->mat_id === null);
+        $matWaarschuwing = $poulesZonderMat->isNotEmpty();
+
         // Clubs for quick-add judoka modal
         $clubs = Club::where('organisator_id', $organisator->id)->orderBy('naam')->get();
 
@@ -165,7 +169,8 @@ class WedstrijddagController extends Controller
             'blokken',
             'sentToZaaloverzicht',
             'problematischeGewichtsPoules',
-            'clubs'
+            'clubs',
+            'matWaarschuwing'
         ));
     }
 
