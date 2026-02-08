@@ -327,6 +327,17 @@ class MatController extends Controller
             ]);
         }
 
+        // Wimpel: schrijf punten bij voor puntencompetitie poules
+        $wimpelResult = [];
+        try {
+            $wimpelResult = app(\App\Services\WimpelService::class)->verwerkPoule($poule);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Wimpel poule scoring failed', [
+                'poule_id' => $poule->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Broadcast poule klaar to spreker
         if ($poule->mat_id) {
             MatUpdate::dispatch($toernooiId, $poule->mat_id, 'poule_klaar', [
@@ -335,7 +346,14 @@ class MatController extends Controller
             ]);
         }
 
-        return response()->json(['success' => true]);
+        $response = ['success' => true];
+        if (!empty($wimpelResult['nieuwe_judokas'])) {
+            $response['wimpel_nieuw'] = $wimpelResult['nieuwe_judokas'];
+        }
+        if (!empty($wimpelResult['milestones'])) {
+            $response['wimpel_milestones'] = $wimpelResult['milestones'];
+        }
+        return response()->json($response);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Judoka;
 use App\Models\Organisator;
+use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\WimpelJudoka;
 use App\Models\WimpelMilestone;
@@ -16,13 +17,12 @@ class WimpelService
      * Verwerk een toernooi: tel gewonnen wedstrijden per judoka in puntencompetitie-poules.
      * Returns array van milestone-waarschuwingen.
      */
+    /**
+     * Verwerk een heel toernooi: alle onverwerkte puntencompetitie-poules.
+     * Used for bulk processing (manual or on tournament close).
+     */
     public function verwerkToernooi(Toernooi $toernooi): array
     {
-        if ($this->isAlVerwerkt($toernooi)) {
-            return [];
-        }
-
-        $organisator = $toernooi->organisator;
         $milestoneWarnings = [];
 
         // Haal alle puntencompetitie poules op
@@ -31,56 +31,87 @@ class WimpelService
             ->get()
             ->filter(fn($p) => $p->isPuntenCompetitie());
 
-        if ($poules->isEmpty()) {
-            return [];
-        }
-
-        // Tel gewonnen wedstrijden per judoka (over alle poules)
-        $winsTellingPerJudoka = [];
-
         foreach ($poules as $poule) {
-            foreach ($poule->wedstrijden as $wedstrijd) {
-                if (!$wedstrijd->is_gespeeld || !$wedstrijd->winnaar_id) {
-                    continue;
-                }
-                $winsTellingPerJudoka[$wedstrijd->winnaar_id] =
-                    ($winsTellingPerJudoka[$wedstrijd->winnaar_id] ?? 0) + 1;
+            $result = $this->verwerkPoule($poule);
+            if (!empty($result['milestones'])) {
+                $milestoneWarnings = array_merge($milestoneWarnings, $result['milestones']);
             }
         }
 
-        if (empty($winsTellingPerJudoka)) {
+        return $milestoneWarnings;
+    }
+
+    /**
+     * Verwerk een enkele poule: tel gewonnen wedstrijden en schrijf bij.
+     * Called when poule is marked as spreker_klaar on the mat interface.
+     * Returns array with milestone warnings and new judoka info.
+     */
+    public function verwerkPoule(Poule $poule): array
+    {
+        if (!$poule->isPuntenCompetitie()) {
             return [];
         }
 
-        // Laad alle judoka's in één query
-        $judokaIds = array_keys($winsTellingPerJudoka);
-        $judokas = Judoka::whereIn('id', $judokaIds)->get()->keyBy('id');
+        // Already processed?
+        if ($this->isPouleAlVerwerkt($poule)) {
+            return [];
+        }
 
-        DB::transaction(function () use ($organisator, $toernooi, $winsTellingPerJudoka, $judokas, &$milestoneWarnings) {
-            foreach ($winsTellingPerJudoka as $judokaId => $aantalWins) {
+        $toernooi = $poule->toernooi;
+        $organisator = $toernooi->organisator;
+
+        $poule->loadMissing('wedstrijden');
+
+        // Count wins per judoka
+        $winsPerJudoka = [];
+        foreach ($poule->wedstrijden as $wedstrijd) {
+            if (!$wedstrijd->is_gespeeld || !$wedstrijd->winnaar_id) {
+                continue;
+            }
+            $winsPerJudoka[$wedstrijd->winnaar_id] =
+                ($winsPerJudoka[$wedstrijd->winnaar_id] ?? 0) + 1;
+        }
+
+        if (empty($winsPerJudoka)) {
+            return [];
+        }
+
+        $judokas = Judoka::whereIn('id', array_keys($winsPerJudoka))->get()->keyBy('id');
+
+        $result = ['milestones' => [], 'nieuwe_judokas' => []];
+
+        DB::transaction(function () use ($organisator, $toernooi, $poule, $winsPerJudoka, $judokas, &$result) {
+            foreach ($winsPerJudoka as $judokaId => $aantalWins) {
                 $judoka = $judokas->get($judokaId);
                 if (!$judoka) {
                     continue;
                 }
 
                 $wimpelJudoka = $this->matchJudoka($organisator, $judoka);
+                $isNieuw = $wimpelJudoka->wasRecentlyCreated;
                 $oudePunten = $wimpelJudoka->punten_totaal;
 
-                // Log entry aanmaken
                 WimpelPuntenLog::create([
                     'wimpel_judoka_id' => $wimpelJudoka->id,
                     'toernooi_id' => $toernooi->id,
+                    'poule_id' => $poule->id,
                     'punten' => $aantalWins,
                     'type' => 'automatisch',
                 ]);
 
-                // Totaal bijwerken
                 $wimpelJudoka->increment('punten_totaal', $aantalWins);
 
-                // Check milestones
+                if ($isNieuw) {
+                    $result['nieuwe_judokas'][] = [
+                        'naam' => $wimpelJudoka->naam,
+                        'geboortejaar' => $wimpelJudoka->geboortejaar,
+                        'punten' => $aantalWins,
+                    ];
+                }
+
                 $bereikt = $this->checkMilestones($wimpelJudoka, $oudePunten);
                 if (!empty($bereikt)) {
-                    $milestoneWarnings[] = [
+                    $result['milestones'][] = [
                         'judoka' => $wimpelJudoka->naam,
                         'punten' => $wimpelJudoka->punten_totaal,
                         'milestones' => $bereikt,
@@ -89,7 +120,17 @@ class WimpelService
             }
         });
 
-        return $milestoneWarnings;
+        return $result;
+    }
+
+    /**
+     * Check of een poule al verwerkt is voor wimpel
+     */
+    public function isPouleAlVerwerkt(Poule $poule): bool
+    {
+        return WimpelPuntenLog::where('poule_id', $poule->id)
+            ->where('type', 'automatisch')
+            ->exists();
     }
 
     /**
@@ -110,13 +151,17 @@ class WimpelService
     }
 
     /**
-     * Check of toernooi al verwerkt is (voorkom dubbel bijschrijven)
+     * Check of toernooi al volledig verwerkt is
      */
     public function isAlVerwerkt(Toernooi $toernooi): bool
     {
-        return WimpelPuntenLog::where('toernooi_id', $toernooi->id)
-            ->where('type', 'automatisch')
-            ->exists();
+        $pcPoules = $toernooi->poules()->get()->filter(fn($p) => $p->isPuntenCompetitie());
+        if ($pcPoules->isEmpty()) {
+            return true;
+        }
+
+        // Alle poules verwerkt?
+        return $pcPoules->every(fn($p) => $this->isPouleAlVerwerkt($p));
     }
 
     /**
