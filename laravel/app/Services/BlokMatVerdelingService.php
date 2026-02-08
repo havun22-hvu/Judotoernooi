@@ -1022,7 +1022,7 @@ class BlokMatVerdelingService
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
                     'poules' => $pouleEntries
-                        ->filter(fn($p) => $p['judokas'] > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']))
+                        ->filter(fn($p) => $p['judokas'] > 1 || ($p['type'] ?? null) === 'kruisfinale')
                         ->values()
                         ->toArray(),
                 ];
