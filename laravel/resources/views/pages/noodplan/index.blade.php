@@ -65,6 +65,47 @@
         }
     </script>
 
+    <!-- OFFLINE PAKKET -->
+    @if(!$isFreeTier)
+    <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-indigo-800 flex items-center gap-2">
+                    <span>📦</span> {{ __('OFFLINE PAKKET') }}
+                </h2>
+                <p class="text-sm text-indigo-600 mt-1">
+                    {{ __('Download een standalone HTML bestand met alle toernooi data. Werkt zonder internet - dubbelklik om te openen in een browser.') }}
+                </p>
+                <ul class="mt-2 text-sm text-indigo-500 list-disc list-inside">
+                    <li>{{ __('Weeglijst, zaaloverzicht, wedstrijdschema\'s') }}</li>
+                    <li>{{ __('Score invoer (opslaat lokaal in browser)') }}</li>
+                    <li>{{ __('Upload resultaten terug naar server als weer online') }}</li>
+                </ul>
+            </div>
+            <a href="{{ route('toernooi.noodplan.offline-pakket', $toernooi->routeParams()) }}"
+               class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-lg whitespace-nowrap ml-4">
+                {{ __('Download (.html)') }}
+            </a>
+        </div>
+    </div>
+    @else
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6 opacity-75">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-gray-500 flex items-center gap-2">
+                    <span>🔒</span> {{ __('OFFLINE PAKKET') }}
+                    <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
+                </h2>
+                <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
+            </div>
+            <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
+               class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium whitespace-nowrap ml-4">
+                {{ __('Upgrade') }}
+            </a>
+        </div>
+    </div>
+    @endif
+
     <!-- POULE EXPORT -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">

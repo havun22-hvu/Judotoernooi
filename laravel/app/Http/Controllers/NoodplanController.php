@@ -10,8 +10,11 @@ use App\Models\CoachKaart;
 use App\Models\Judoka;
 use App\Models\Poule;
 use App\Models\Toernooi;
+use App\Models\Wedstrijd;
 use App\Exports\PouleExport;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -428,6 +431,144 @@ class NoodplanController extends Controller
             'csv' => Excel::download(new PouleExport($toernooi), "{$filename}.csv", \Maatwebsite\Excel\Excel::CSV),
             default => Excel::download(new PouleExport($toernooi), "{$filename}.xlsx"),
         };
+    }
+
+    /**
+     * Download offline pakket - standalone HTML bestand met alle toernooi data
+     */
+    public function downloadOfflinePakket(Organisator $organisator, Toernooi $toernooi)
+    {
+        // Free tier: not available
+        if ($toernooi->isFreeTier()) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => 'Offline Pakket',
+            ]);
+        }
+
+        // Collect all tournament data
+        $data = [
+            'toernooi' => [
+                'id' => $toernooi->id,
+                'naam' => $toernooi->naam,
+                'datum' => $toernooi->datum?->format('d-m-Y'),
+                'slug' => $toernooi->slug,
+                'wedstrijd_schemas' => $toernooi->wedstrijd_schemas ?? [],
+                'best_of_three_bij_2' => $toernooi->best_of_three_bij_2 ?? false,
+            ],
+            'clubs' => $toernooi->clubs()->orderBy('naam')->get(['clubs.id', 'clubs.naam'])->toArray(),
+            'blokken' => $toernooi->blokken()->orderBy('nummer')->get(['id', 'nummer'])->toArray(),
+            'matten' => $toernooi->matten()->orderBy('nummer')->get(['id', 'nummer'])->toArray(),
+            'judokas' => $toernooi->judokas()->with('club:id,naam')->get()->map(fn($j) => [
+                'id' => $j->id,
+                'naam' => $j->naam,
+                'club_id' => $j->club_id,
+                'club_naam' => $j->club?->naam,
+                'geboortejaar' => $j->geboortejaar,
+                'geslacht' => $j->geslacht,
+                'band' => $j->band,
+                'gewicht' => $j->gewicht,
+                'gewicht_gewogen' => $j->gewicht_gewogen,
+                'leeftijdsklasse' => $j->leeftijdsklasse,
+                'gewichtsklasse' => $j->gewichtsklasse,
+                'aanwezigheid' => $j->aanwezigheid,
+            ])->toArray(),
+            'poules' => $toernooi->poules()
+                ->with(['judokas:id', 'blok:id,nummer', 'mat:id,nummer'])
+                ->get()
+                ->map(fn($p) => [
+                    'id' => $p->id,
+                    'nummer' => $p->nummer,
+                    'type' => $p->type,
+                    'blok_id' => $p->blok_id,
+                    'blok_nummer' => $p->blok?->nummer,
+                    'mat_id' => $p->mat_id,
+                    'mat_nummer' => $p->mat?->nummer,
+                    'leeftijdsklasse' => $p->leeftijdsklasse,
+                    'gewichtsklasse' => $p->gewichtsklasse,
+                    'judoka_ids' => $p->judokas->pluck('id')->toArray(),
+                ])->toArray(),
+            'wedstrijden' => Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))
+                ->get()
+                ->map(fn($w) => [
+                    'id' => $w->id,
+                    'poule_id' => $w->poule_id,
+                    'volgorde' => $w->volgorde,
+                    'judoka_wit_id' => $w->judoka_wit_id,
+                    'judoka_blauw_id' => $w->judoka_blauw_id,
+                    'is_gespeeld' => $w->is_gespeeld,
+                    'winnaar_id' => $w->winnaar_id,
+                    'score_wit' => $w->score_wit,
+                    'score_blauw' => $w->score_blauw,
+                    'groep' => $w->groep,
+                    'ronde' => $w->ronde,
+                ])->toArray(),
+            'generated_at' => now()->format('Y-m-d H:i:s'),
+        ];
+
+        $html = view('pages.noodplan.offline-pakket', ['jsonData' => json_encode($data, JSON_UNESCAPED_UNICODE)])->render();
+
+        $filename = sprintf('%s_offline_%s.html',
+            preg_replace('/[^a-zA-Z0-9_-]/', '_', $toernooi->naam),
+            now()->format('Y-m-d_Hi')
+        );
+
+        return response($html)
+            ->header('Content-Type', 'text/html; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Upload offline resultaten terug naar server
+     */
+    public function uploadOfflineResultaten(Organisator $organisator, Toernooi $toernooi, Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'resultaten' => 'required|array',
+            'resultaten.*.wedstrijd_id' => 'required|integer',
+            'resultaten.*.winnaar_id' => 'required|integer',
+            'resultaten.*.score_wit' => 'required|integer|min:0',
+            'resultaten.*.score_blauw' => 'required|integer|min:0',
+        ]);
+
+        $synced = 0;
+        $skipped = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($validated['resultaten'] as $resultaat) {
+                $wedstrijd = Wedstrijd::whereHas('poule', fn($q) => $q->where('toernooi_id', $toernooi->id))
+                    ->where('id', $resultaat['wedstrijd_id'])
+                    ->first();
+
+                if (!$wedstrijd) continue;
+
+                // Only overwrite if not already played on server
+                if ($wedstrijd->is_gespeeld) {
+                    $skipped++;
+                    continue;
+                }
+
+                $wedstrijd->update([
+                    'winnaar_id' => $resultaat['winnaar_id'],
+                    'score_wit' => $resultaat['score_wit'],
+                    'score_blauw' => $resultaat['score_blauw'],
+                    'is_gespeeld' => true,
+                    'gespeeld_op' => now(),
+                ]);
+                $synced++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'synced' => $synced,
+            'skipped' => $skipped,
+        ]);
     }
 
     /**

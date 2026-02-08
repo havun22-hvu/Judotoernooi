@@ -395,6 +395,10 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         // Live backup sync (SSE)
         Route::get('/stream', [NoodplanController::class, 'stream'])->name('stream');
         Route::get('/sync-data', [NoodplanController::class, 'syncData'])->name('sync-data');
+
+        // Offline pakket
+        Route::get('/offline-pakket', [NoodplanController::class, 'downloadOfflinePakket'])->name('offline-pakket');
+        Route::post('/upload-resultaten', [NoodplanController::class, 'uploadOfflineResultaten'])->name('upload-resultaten');
     });
 
     // Jury + Admin routes
