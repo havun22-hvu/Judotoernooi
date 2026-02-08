@@ -29,7 +29,7 @@
             $pouleKlaarUrl = route('toernooi.mat.poule-klaar', $toernooi->routeParams());
         }
     @endphp
-<div x-data="matInterface()" x-init="init()">
+<div id="mat-interface" x-data="matInterface()" x-init="init()">
     <!-- Huidige selectie + Legenda -->
     <div class="flex items-center justify-between mb-1" x-show="blokId && matId">
         <!-- Legenda links met uitleg -->
@@ -416,7 +416,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     }
 
     // Refresh display
-    Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
+    Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
 };
 
 // Start drag vanuit swap ruimte
@@ -722,7 +722,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
         }
 
-        Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
+        Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
     } catch (err) {
         console.error('Drop error:', err);
         alert('❌ Fout bij plaatsen: ' + err.message);
@@ -773,7 +773,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
         }
 
         // Refresh bracket
-        Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
+        Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
     } catch (err) {
         console.error('Medaille drop error:', err);
         alert('❌ Fout bij medaille plaatsing: ' + err.message);
@@ -821,7 +821,7 @@ window.verwijderJudoka = async function(event) {
         });
 
         if (response.ok) {
-            Alpine.evaluate(document.querySelector('[x-data]'), 'laadWedstrijden()');
+            Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
         }
     } catch (err) {
         console.error('Verwijder error:', err);
@@ -2558,8 +2558,8 @@ setInterval(updateClock, 1000);
 
 // Auto-refresh poules elke 30 seconden (voor verplaatste poules van andere matten)
 setInterval(() => {
-    const component = document.querySelector('[x-data]');
-    if (component && component.__x) {
+    const component = document.getElementById('mat-interface');
+    if (component) {
         Alpine.evaluate(component, 'laadWedstrijden()');
     }
 }, 30000);
