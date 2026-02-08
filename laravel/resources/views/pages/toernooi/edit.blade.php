@@ -1087,43 +1087,52 @@
                 updateJsonInput();
             }
 
-            // Check of eliminatie/kruisfinale beschikbaar zijn (vereisen vaste gewichtsklassen)
+            // Check of eliminatie/kruisfinale beschikbaar zijn (vereisen vaste gewichtsklassen + Δlft=0)
             window.checkSysteemBeschikbaarheid = function(item) {
                 const maxKgInput = item.querySelector('.max-kg-input');
+                const maxLftInput = item.querySelector('.max-lft-input');
                 const gewichtenInput = item.querySelector('.gewichten-input');
                 const systeemSelect = item.querySelector('.systeem-select');
                 if (!systeemSelect) return;
 
                 const maxKg = parseFloat(maxKgInput?.value) || 0;
+                const maxLft = parseInt(maxLftInput?.value) || 0;
                 const gewichten = gewichtenInput?.value?.trim() || '';
-                const heeftVasteKlassen = maxKg === 0 && gewichten.length > 0;
+                const beschikbaar = maxKg === 0 && maxLft === 0 && gewichten.length > 0;
 
                 // Eliminatie en kruisfinale options
                 const eliminatieOption = systeemSelect.querySelector('option[value="eliminatie"]');
                 const kruisfinaleOption = systeemSelect.querySelector('option[value="poules_kruisfinale"]');
 
                 if (eliminatieOption) {
-                    eliminatieOption.disabled = !heeftVasteKlassen;
+                    eliminatieOption.disabled = !beschikbaar;
                 }
                 if (kruisfinaleOption) {
-                    kruisfinaleOption.disabled = !heeftVasteKlassen;
+                    kruisfinaleOption.disabled = !beschikbaar;
                 }
 
                 // Als huidig geselecteerd systeem niet meer beschikbaar is → terugzetten naar poules
-                if (!heeftVasteKlassen && (systeemSelect.value === 'eliminatie' || systeemSelect.value === 'poules_kruisfinale')) {
+                if (!beschikbaar && (systeemSelect.value === 'eliminatie' || systeemSelect.value === 'poules_kruisfinale')) {
                     systeemSelect.value = 'poules';
                     togglePuntenCompSelect(systeemSelect);
                 }
 
                 // Warning tonen/verbergen
                 let systeemWarning = item.querySelector('.systeem-warning');
-                if (!heeftVasteKlassen && (eliminatieOption || kruisfinaleOption)) {
+                if (!beschikbaar && (eliminatieOption || kruisfinaleOption)) {
+                    // Build specific warning message
+                    const redenen = [];
+                    if (maxKg > 0) redenen.push('Δkg=0');
+                    if (maxLft > 0) redenen.push('Δlft=0');
+                    if (!gewichten) redenen.push('gewichtsklassen ingevuld');
+                    const msg = 'Eliminatie en kruisfinale vereisen: ' + redenen.join(', ');
+
                     if (!systeemWarning) {
                         systeemWarning = document.createElement('p');
                         systeemWarning.className = 'systeem-warning text-amber-600 text-xs mt-1';
-                        systeemWarning.textContent = 'Eliminatie en kruisfinale vereisen vaste gewichtsklassen (Δkg=0 + klassen ingevuld)';
                         systeemSelect.parentNode.appendChild(systeemWarning);
                     }
+                    systeemWarning.textContent = msg;
                     systeemWarning.classList.remove('hidden');
                 } else if (systeemWarning) {
                     systeemWarning.classList.add('hidden');
@@ -1271,7 +1280,8 @@
                                    value="${maxLft}"
                                    class="max-lft-input w-14 border rounded px-2 py-1.5 text-center text-sm"
                                    min="0" max="5" step="1"
-                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule">
+                                   title="0 = categorie limiet, 1-2 = max jaren verschil in poule"
+                                   onchange="checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item')); updateJsonInput()">
                         </div>
                         <div class="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
                             <label class="text-gray-600 text-sm whitespace-nowrap">tot</label>
