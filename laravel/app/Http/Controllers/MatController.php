@@ -317,6 +317,19 @@ class MatController extends Controller
             ]);
         }
 
+        // Eliminatie with split mats: check if ALL matches (A+B) are played
+        if ($poule->type === 'eliminatie' && $poule->b_mat_id && $poule->b_mat_id != $poule->mat_id) {
+            $alleWedstrijden = $poule->wedstrijden()->get();
+            $ongespeeld = $alleWedstrijden->filter(fn($w) => !$w->is_gespeeld && ($w->judoka_wit_id || $w->judoka_blauw_id));
+            if ($ongespeeld->isNotEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Niet alle wedstrijden (A+B) zijn gespeeld. Wacht tot beide groepen klaar zijn.',
+                    'ongespeeld' => $ongespeeld->count(),
+                ]);
+            }
+        }
+
         $poule->update(['spreker_klaar' => now()]);
 
         $klaarToernooi = Toernooi::find($toernooiId);
@@ -338,9 +351,15 @@ class MatController extends Controller
             ]);
         }
 
-        // Broadcast poule klaar to spreker
+        // Broadcast poule klaar to spreker (both mats if B-groep on separate mat)
         if ($poule->mat_id) {
             MatUpdate::dispatch($toernooiId, $poule->mat_id, 'poule_klaar', [
+                'poule_id' => $poule->id,
+                'poule_nummer' => $poule->nummer,
+            ]);
+        }
+        if ($poule->b_mat_id && $poule->b_mat_id != $poule->mat_id) {
+            MatUpdate::dispatch($toernooiId, $poule->b_mat_id, 'poule_klaar', [
                 'poule_id' => $poule->id,
                 'poule_nummer' => $poule->nummer,
             ]);

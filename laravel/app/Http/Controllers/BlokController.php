@@ -1121,11 +1121,21 @@ class BlokController extends Controller
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
             'mat_id' => 'required|exists:matten,id',
+            'groep' => 'nullable|in:A,B',
         ]);
 
         $poule = Poule::findOrFail($validated['poule_id']);
-        $oudeMatId = $poule->mat_id;
+        $groep = $validated['groep'] ?? null;
         $nieuweMatId = $validated['mat_id'];
+
+        // Determine which mat field to update
+        if ($groep === 'B') {
+            $oudeMatId = $poule->b_mat_id;
+            $updateField = 'b_mat_id';
+        } else {
+            $oudeMatId = $poule->mat_id;
+            $updateField = 'mat_id';
+        }
 
         // Reset geel (volgende_wedstrijd) op oude mat als het een wedstrijd van deze poule was
         // Groen blijft staan - mat-jury moet handmatig stoppen
@@ -1136,12 +1146,13 @@ class BlokController extends Controller
             }
         }
 
-        // Mat_id wijzigen - wedstrijden en scores blijven intact
-        $poule->update(['mat_id' => $nieuweMatId]);
+        // Mat_id of b_mat_id wijzigen - wedstrijden en scores blijven intact
+        $poule->update([$updateField => $nieuweMatId]);
 
+        $suffix = $groep ? " ({$groep})" : '';
         return response()->json([
             'success' => true,
-            'message' => "Poule {$poule->nummer} verplaatst",
+            'message' => "Poule {$poule->nummer}{$suffix} verplaatst",
         ]);
     }
 

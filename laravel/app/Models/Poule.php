@@ -17,6 +17,7 @@ class Poule extends Model
         'toernooi_id',
         'blok_id',
         'mat_id',
+        'b_mat_id',
         'nummer',
         'titel',
         'type', // voorronde, kruisfinale
@@ -108,6 +109,11 @@ class Poule extends Model
     public function mat(): BelongsTo
     {
         return $this->belongsTo(Mat::class);
+    }
+
+    public function bMat(): BelongsTo
+    {
+        return $this->belongsTo(Mat::class, 'b_mat_id');
     }
 
     public function judokas(): BelongsToMany

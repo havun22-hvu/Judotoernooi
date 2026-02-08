@@ -364,8 +364,15 @@ class WedstrijdSchemaService
 
         // Alleen poules die doorgestuurd zijn EN wedstrijden hebben
         // Poules zonder wedstrijden mogen niet op mat interface verschijnen
+        // Also include eliminatie poules where b_mat_id = this mat
         $poules = Poule::where('blok_id', $blok->id)
-            ->where('mat_id', $mat->id)
+            ->where(function ($q) use ($mat) {
+                $q->where('mat_id', $mat->id)
+                  ->orWhere(function ($q2) use ($mat) {
+                      $q2->where('b_mat_id', $mat->id)
+                         ->where('type', 'eliminatie');
+                  });
+            })
             ->whereNotNull('doorgestuurd_op')
             ->whereHas('wedstrijden')  // Moet minimaal 1 wedstrijd hebben
             ->with(['judokas', 'wedstrijden.judokaWit', 'wedstrijden.judokaBlauw', 'wedstrijden.winnaar', 'mat'])
@@ -376,8 +383,24 @@ class WedstrijdSchemaService
         foreach ($poules as $poule) {
             $isEliminatie = $poule->type === 'eliminatie';
 
+            // Determine groep_filter for eliminatie poules with split mats
+            $groepFilter = null;
+            if ($isEliminatie && $poule->b_mat_id && $poule->b_mat_id != $poule->mat_id) {
+                if ($poule->mat_id == $mat->id) {
+                    $groepFilter = 'A';
+                } elseif ($poule->b_mat_id == $mat->id) {
+                    $groepFilter = 'B';
+                }
+            }
+
             // Tel alleen aanwezige judoka's (niet afwezig)
             $judokaCount = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+
+            // Filter wedstrijden based on groep_filter
+            $wedstrijden = $poule->wedstrijden;
+            if ($groepFilter) {
+                $wedstrijden = $wedstrijden->where('groep', $groepFilter)->values();
+            }
 
             $pouleSchema = [
                 'poule_id' => $poule->id,
@@ -389,6 +412,7 @@ class WedstrijdSchemaService
                 'mat_nummer' => $mat->nummer,
                 'titel' => $poule->getDisplayTitel(),
                 'judoka_count' => $judokaCount,
+                'groep_filter' => $groepFilter,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
                 'is_punten_competitie' => $poule->isPuntenCompetitie(),
@@ -404,7 +428,7 @@ class WedstrijdSchemaService
                         'club' => $j->club?->naam,
                         'band' => $j->band,
                     ])->values()->toArray(),
-                'wedstrijden' => $poule->wedstrijden->map(function ($w) use ($isEliminatie) {
+                'wedstrijden' => $wedstrijden->map(function ($w) use ($isEliminatie) {
                     $wedstrijd = [
                         'id' => $w->id,
                         'volgorde' => $w->volgorde,

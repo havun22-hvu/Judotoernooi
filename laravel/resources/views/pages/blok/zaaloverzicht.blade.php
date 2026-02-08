@@ -64,6 +64,7 @@
         ->map(function($p) use ($leeftijdVolgorde, $categories) {
             $lk = $p['leeftijdsklasse'] ?? '';
             $gk = $p['gewichtsklasse'] ?? '';
+            $groep = $p['groep'] ?? null;
             // Sorteer: nummer + 1000 als het een + categorie is (zodat +60 na -60 komt)
             $gewichtNum = floatval(preg_replace('/[^0-9.]/', '', $gk));
             $isPlus = str_starts_with($gk, '+');
@@ -75,6 +76,7 @@
             return [
                 'id' => $p['id'],
                 'nummer' => $p['nummer'] ?? '',
+                'groep' => $groep,
                 'leeftijdsklasse' => $lk,
                 'gewichtsklasse' => $gk,
                 'titel' => $p['titel'] ?? ($lk . ' ' . $gk),
@@ -118,8 +120,9 @@
         <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-700">
             @foreach($blokPoulesList as $pouleInfo)
             @php
-                // Korte chip naam: #nummer + titel
-                $chipNaam = '#' . $pouleInfo['nummer'] . ' ' . $pouleInfo['titel'];
+                // Korte chip naam: #nummer + titel (+ groep suffix voor split eliminatie)
+                $groepSuffix = isset($pouleInfo['groep']) ? ' - ' . $pouleInfo['groep'] : '';
+                $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'];
                 $isSent = $pouleInfo['is_sent'];
                 $isActivated = $pouleInfo['is_activated'];
 
@@ -201,10 +204,12 @@
                             $heeftWedstrijden = $poule['wedstrijden'] > 0;
                             $stats = $heeftWedstrijden ? $poule['wedstrijden'] . 'w' : $poule['judokas'] . 'j';
                         @endphp
+                        @php $pouleGroep = $poule['groep'] ?? null; @endphp
                         <div class="poule-item text-xs border rounded p-1 {{ $heeftWedstrijden ? 'bg-gray-50' : 'bg-gray-100' }} cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
+                             data-groep="{{ $pouleGroep ?? '' }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
-                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }} {{ $poule['titel'] }}</div>
+                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }}{{ $pouleGroep ? ' - ' . $pouleGroep : '' }} {{ $poule['titel'] }}</div>
                             <div class="text-gray-500">({{ $stats }})</div>
                         </div>
                         @empty
@@ -237,6 +242,7 @@ document.querySelectorAll('.mat-container').forEach(container => {
         onEnd: async function(evt) {
             const pouleEl = evt.item;
             const pouleId = pouleEl.dataset.pouleId;
+            const groep = pouleEl.dataset.groep || null;
             const newMatId = evt.to.dataset.matId;
             const oldMatId = evt.from.dataset.matId;
 
@@ -261,7 +267,8 @@ document.querySelectorAll('.mat-container').forEach(container => {
                     },
                     body: JSON.stringify({
                         poule_id: pouleId,
-                        mat_id: newMatId
+                        mat_id: newMatId,
+                        groep: groep
                     })
                 });
 
