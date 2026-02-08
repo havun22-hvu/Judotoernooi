@@ -70,11 +70,11 @@
             </li>
             <li class="flex items-start gap-3">
                 <span class="bg-white text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold shrink-0">8</span>
-                <span>{!! __('<strong>Wedstrijddag Poules</strong> - Overpoelen (te zware/afwezige judoka\'s)') !!}</span>
+                <span>{!! __('<strong>Wedstrijddag Poules</strong> - Overpoelen (te zware/afwezige judoka\'s) - zet op de mat') !!}</span>
             </li>
             <li class="flex items-start gap-3">
                 <span class="bg-white text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold shrink-0">9</span>
-                <span>{!! __('<strong>Zaaloverzicht</strong> - Witte chip klikken = wedstrijdschema genereren') !!}</span>
+                <span>{!! __('<strong>Zaaloverzicht</strong> - Verdeel over de matten - Witte chip klikken = wedstrijdschema genereren') !!}</span>
             </li>
             <li class="flex items-start gap-3">
                 <span class="bg-white text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold shrink-0">10</span>
