@@ -335,6 +335,21 @@ class WedstrijddagController extends Controller
                 ]);
         }
 
+        // Weging check: bij verplichte weging moet weging gesloten zijn OF alle judoka's gewogen
+        if ($toernooi->weging_verplicht) {
+            $poules = $toernooi->poules()
+                ->where('leeftijdsklasse', $leeftijdsklasse)
+                ->where('gewichtsklasse', $gewichtsklasse)
+                ->with(['blok', 'judokas'])
+                ->get();
+
+            foreach ($poules as $poule) {
+                if ($error = $this->checkWegingVoorDoorsturen($toernooi, $poule)) {
+                    return response()->json(['success' => false, 'message' => $error], 422);
+                }
+            }
+        }
+
         // Update all poules for this category with doorgestuurd_op timestamp
         $updated = $toernooi->poules()
             ->where('leeftijdsklasse', $leeftijdsklasse)
@@ -355,6 +370,11 @@ class WedstrijddagController extends Controller
         // Verify poule belongs to this tournament
         if ($poule->toernooi_id !== $toernooi->id) {
             return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
+        }
+
+        // Weging check: bij verplichte weging moet weging gesloten zijn OF alle judoka's gewogen
+        if ($error = $this->checkWegingVoorDoorsturen($toernooi, $poule)) {
+            return response()->json(['success' => false, 'message' => $error], 422);
         }
 
         // Als blok_id of mat_id ontbreekt, kopieer van voorronde poule
@@ -1003,5 +1023,34 @@ class WedstrijddagController extends Controller
             'success' => true,
             'message' => $judoka->naam . ' is hersteld',
         ]);
+    }
+
+    /**
+     * Check if weging allows doorsturen for a poule.
+     * Returns error message if blocked, null if OK.
+     */
+    private function checkWegingVoorDoorsturen(Toernooi $toernooi, Poule $poule): ?string
+    {
+        if (!$toernooi->weging_verplicht) {
+            return null;
+        }
+
+        $blok = $poule->blok;
+        if ($blok && $blok->weging_gesloten) {
+            return null; // Weging gesloten → niet-gewogen zijn al afwezig
+        }
+
+        // Weging open: check of alle judoka's (niet-afwezig) gewogen zijn
+        $judokas = $poule->relationLoaded('judokas') ? $poule->judokas : $poule->judokas()->get();
+        $nietGewogen = $judokas
+            ->filter(fn($j) => $j->aanwezigheid !== 'afwezig')
+            ->filter(fn($j) => !($j->gewicht_gewogen > 0));
+
+        if ($nietGewogen->isNotEmpty()) {
+            $namen = $nietGewogen->pluck('naam')->implode(', ');
+            return "Poule {$poule->nummer}: niet alle judoka's zijn gewogen ({$namen}). Sluit eerst de weging of weeg alle judoka's.";
+        }
+
+        return null; // Alle judoka's gewogen → mag door
     }
 }

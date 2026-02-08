@@ -276,12 +276,8 @@
                         <div class="divide-y divide-gray-100">
                             @foreach($matData['poules'] as $poule)
                             @php
-                                // Filter judoka's: niet afwezig, en bij verplichte weging ook gewogen
-                                $pouleActiveJudokas = $poule->judokas->filter(function($j) use ($toernooi) {
-                                    if ($j->aanwezigheid === 'afwezig') return false;
-                                    if ($toernooi->weging_verplicht && $j->gewicht_gewogen === null) return false;
-                                    return true;
-                                });
+                                // Filter judoka's: afwezigen eruit (weging check bij doorsturen)
+                                $pouleActiveJudokas = $poule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig');
                             @endphp
                             <div class="px-4 py-3 hover:bg-gray-50 cursor-pointer" @click="togglePouleDetail({{ $poule->id }})">
                                 <div class="flex justify-between items-center">

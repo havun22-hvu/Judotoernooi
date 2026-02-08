@@ -691,6 +691,17 @@ Wanneer een poule klaar is (overgepouled):
 | **→** (blauw) | Nog niet doorgestuurd |
 | **✓** (groen) | Doorgestuurd naar zaaloverzicht |
 
+**Weging-check bij doorsturen:**
+
+| Weging verplicht? | Alle judoka's gewogen? | Weging gesloten? | Resultaat |
+|-------------------|------------------------|------------------|-----------|
+| Nee | n.v.t. | n.v.t. | **OK** - direct doorsturen |
+| Ja | Ja | n.v.t. | **OK** - poule mag alvast beginnen |
+| Ja | Nee | Ja | **OK** - niet-gewogen zijn al afwezig |
+| Ja | Nee | Nee | **BLOKKEER** - eerst weging sluiten of alle judoka's wegen |
+
+Als de organisator toch verder wil zonder weging: wijzig `weging verplicht` in toernooi instellingen.
+
 ## Zaaloverzicht & Activatie
 
 ### Chip Kleuren in Zaaloverzicht
