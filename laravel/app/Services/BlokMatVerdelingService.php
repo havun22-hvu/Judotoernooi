@@ -945,18 +945,17 @@ class BlokMatVerdelingService
             foreach ($toernooi->matten as $mat) {
                 // Poules op deze mat (via mat_id)
                 $poules = $blok->poules->where('mat_id', $mat->id);
-                // Eliminatie poules die alleen via b_mat_id op deze mat staan
+                // Eliminatie B-groep entries: poules where b_mat_id points to this mat
+                // (either same mat or different mat via split)
                 $bPoules = $blok->poules
                     ->where('type', 'eliminatie')
-                    ->whereNotNull('b_mat_id')
-                    ->where('b_mat_id', $mat->id)
-                    ->where('mat_id', '!=', $mat->id);
+                    ->where('b_mat_id', $mat->id);
 
                 $pouleEntries = collect();
 
                 foreach ($poules as $p) {
-                    // Eliminatie met b_mat_id op andere mat: split A/B
-                    if ($p->type === 'eliminatie' && $p->b_mat_id && $p->b_mat_id != $p->mat_id) {
+                    // Eliminatie: always show as A-groep entry (B is added separately below)
+                    if ($p->type === 'eliminatie') {
                         $aWedstrijden = $p->wedstrijden->where('groep', 'A')->count();
                         $pouleEntries->push([
                             'id' => $p->id,
@@ -972,8 +971,8 @@ class BlokMatVerdelingService
                         continue;
                     }
 
-                    // Kruisfinale and eliminatie (geen split): use stored values
-                    if (in_array($p->type, ['kruisfinale', 'eliminatie'])) {
+                    // Kruisfinale: use stored values
+                    if ($p->type === 'kruisfinale') {
                         $pouleEntries->push([
                             'id' => $p->id,
                             'nummer' => $p->nummer,
@@ -1003,7 +1002,7 @@ class BlokMatVerdelingService
                     ]);
                 }
 
-                // B-groep entries voor eliminatie poules op deze mat via b_mat_id
+                // B-groep entries for eliminatie poules where b_mat_id = this mat
                 foreach ($bPoules as $p) {
                     $bWedstrijden = $p->wedstrijden->where('groep', 'B')->count();
                     $pouleEntries->push([
@@ -1022,7 +1021,7 @@ class BlokMatVerdelingService
                 $blokData['matten'][$mat->nummer] = [
                     'mat_naam' => $mat->label,
                     'poules' => $pouleEntries
-                        ->filter(fn($p) => $p['judokas'] > 1 || ($p['type'] ?? null) === 'kruisfinale')
+                        ->filter(fn($p) => ($p['judokas'] ?? 0) > 1 || ($p['type'] ?? null) === 'kruisfinale')
                         ->values()
                         ->toArray(),
                 ];
