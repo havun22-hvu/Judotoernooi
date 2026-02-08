@@ -60,7 +60,7 @@
     // Get ALL poules in this blok (not grouped by category)
     $blokPoulesList = collect($blok['matten'])
         ->flatMap(fn($m) => $m['poules'])
-        ->filter(fn($p) => ($p['judokas'] ?? 0) > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']))  // Skip empty poules
+        ->filter(fn($p) => ($p['judokas'] ?? 0) > 1 || ($p['type'] ?? null) === 'kruisfinale')  // Skip empty poules
         ->map(function($p) use ($leeftijdVolgorde, $categories) {
             $lk = $p['leeftijdsklasse'] ?? '';
             $gk = $p['gewichtsklasse'] ?? '';
@@ -196,7 +196,7 @@
                     </div>
                     @php
                         // Filter poules zonder judoka's (lege poules)
-                        $allePoules = collect($matData['poules'])->filter(fn($p) => ($p['judokas'] ?? 0) > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']));
+                        $allePoules = collect($matData['poules'])->filter(fn($p) => ($p['judokas'] ?? 0) > 1 || ($p['type'] ?? null) === 'kruisfinale');
                     @endphp
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
                         @forelse($allePoules as $poule)
