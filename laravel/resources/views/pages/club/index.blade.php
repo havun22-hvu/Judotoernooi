@@ -238,11 +238,14 @@ function clubToggle() {
                 const data = await response.json();
 
                 if (data.success) {
+                    // Create new object to trigger Alpine reactivity
+                    const updated = { ...this.clubs };
                     if (data.is_uitgenodigd) {
-                        this.clubs[clubId] = true;
+                        updated[clubId] = true;
                     } else {
-                        delete this.clubs[clubId];
+                        delete updated[clubId];
                     }
+                    this.clubs = updated;
 
                     if (data.warning) {
                         alert(data.warning);
