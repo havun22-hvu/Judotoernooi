@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,10 +15,13 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ __('Afrekenen') }}</h1>
                     <p class="text-gray-600">{{ $club->naam }} - {{ $toernooi->naam }}</p>
                 </div>
-                <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
-                   class="text-gray-600 hover:text-gray-800">
-                    &larr; {{ __('Terug') }}
-                </a>
+                <div class="flex items-center gap-3">
+                    @include('partials.coach-locale-switcher')
+                    <a href="{{ route('coach.portal.judokas', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}"
+                       class="text-gray-600 hover:text-gray-800">
+                        &larr; {{ __('Terug') }}
+                    </a>
+                </div>
             </div>
         </div>
 

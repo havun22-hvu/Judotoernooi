@@ -25,6 +25,7 @@ class Club extends Model
         'website',
         'portal_code',
         'pincode',
+        'locale',
     ];
 
     protected $hidden = [

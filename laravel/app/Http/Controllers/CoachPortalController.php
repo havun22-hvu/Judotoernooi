@@ -159,6 +159,12 @@ class CoachPortalController extends Controller
 
         $request->session()->put("club_logged_in_{$toernooiModel->id}_{$code}", true);
 
+        // Restore saved locale preference (club → toernooi → default)
+        $locale = $club->locale ?? $toernooiModel->locale;
+        if ($locale) {
+            $request->session()->put('locale', $locale);
+        }
+
         return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code));
     }
 

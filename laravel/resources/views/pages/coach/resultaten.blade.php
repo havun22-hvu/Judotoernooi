@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +23,7 @@
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
                 <div class="flex items-center gap-3">
+                    @include('partials.coach-locale-switcher')
                     <button onclick="window.print()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm">
                         {{ __('Printen') }}
                     </button>

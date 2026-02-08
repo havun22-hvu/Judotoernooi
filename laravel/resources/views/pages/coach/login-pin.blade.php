@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
         <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
             <p class="text-gray-600">{{ __('Coach Portal') }}</p>
+            <div class="mt-2">@include('partials.coach-locale-switcher')</div>
             <p class="text-sm text-gray-500 mt-1">{{ $toernooi->naam }}</p>
         </div>
 
