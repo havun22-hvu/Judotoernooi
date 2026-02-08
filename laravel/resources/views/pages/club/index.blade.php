@@ -3,7 +3,7 @@
 @section('title', __('Clubs uitnodigen'))
 
 @section('content')
-<div x-data="clubPage()">
+<div x-data="{ copiedUrl: null }">
 
 <div class="flex justify-between items-center mb-6">
     <div>
@@ -90,16 +90,16 @@
 
 <!-- Clubs tabel -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="w-full table-fixed">
+    <table class="w-full">
         <thead class="bg-gray-50 border-b">
             <tr>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-16">{{ __('Actief') }}</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-48">{{ __('Club') }}</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-28">{{ __('Plaats') }}</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-40">{{ __('Email') }}</th>
-                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 w-20">{{ __("Judoka's") }}</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">{{ __('Club') }}</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">{{ __('Plaats') }}</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">{{ __('Email') }}</th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">{{ __("Judoka's") }}</th>
                 <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600">{{ __('Coach Portal') }}</th>
-                <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600 w-24">{{ __('Email') }}</th>
+                <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600">{{ __('Email') }}</th>
             </tr>
         </thead>
         <tbody class="divide-y">
@@ -108,45 +108,59 @@
                 $isUitgenodigd = in_array($club->id, $uitgenodigdeClubIds);
                 $portalUrl = $club->getPortalUrl($toernooi);
                 $pivotPincode = $uitgenodigdeClubs[$club->id]->pivot->pincode ?? null;
-                $telefoon = preg_replace('/[^0-9]/', '', $club->telefoon ?? '');
-                if (str_starts_with($telefoon, '06')) {
-                    $telefoon = '31' . substr($telefoon, 1);
-                } elseif (str_starts_with($telefoon, '0')) {
-                    $telefoon = '31' . substr($telefoon, 1);
-                }
-                $whatsappTekst = __('Uitnodiging :naam', ['naam' => $toernooi->naam]) . "\n\n" . __('Inschrijflink:') . " {$portalUrl}\nPIN: " . ($pivotPincode ?? $club->pincode);
-                $whatsappUrl = $telefoon
-                    ? 'https://wa.me/' . $telefoon . '?text=' . urlencode($whatsappTekst)
-                    : 'https://wa.me/?text=' . urlencode($whatsappTekst);
+                $heeftJudokas = $club->judokas_count > 0;
+                $kanUitschakelen = !$heeftJudokas;
             @endphp
-            <tr class="hover:bg-gray-50 transition-colors"
-                :class="clubs[{{ $club->id }}] ? 'bg-green-50' : ''">
+            <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
-                    <button @click="toggle({{ $club->id }}, '{{ addslashes($club->naam) }}', {{ $club->judokas_count }})"
-                            class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors cursor-pointer"
-                            :class="clubs[{{ $club->id }}] ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'">
-                        <svg x-show="clubs[{{ $club->id }}]" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                    </button>
+                    {{-- DEBUG: Club ID = {{ $club->id }}, Naam = {{ $club->naam }} --}}
+                    <form action="{{ route('toernooi.club.toggle', ['organisator' => $organisator->slug, 'toernooi' => $toernooi->slug, 'club' => $club->id]) }}" method="POST"
+                          @if($isUitgenodigd && $club->judokas_count > 0)
+                          onsubmit="return confirm('{{ __(':club heeft nog :count judoka\'s. Toch deselecteren?', ['club' => $club->naam, 'count' => $club->judokas_count]) }}');"
+                          @endif>
+                        @csrf
+                        <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors
+                            {{ $isUitgenodigd ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400' }}"
+                            title="Club ID: {{ $club->id }}">
+                            @if($isUitgenodigd)
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            @endif
+                        </button>
+                    </form>
                 </td>
                 <td class="px-4 py-3">
                     <span class="font-medium text-gray-800">{{ $club->naam }}</span>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600">{{ $club->plaats ?? '-' }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600 truncate">{{ $club->email ?? '-' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-600">{{ $club->email ?? '-' }}</td>
                 <td class="px-4 py-3">
                     <span class="px-2 py-1 text-xs {{ $club->judokas_count > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }} rounded">
                         {{ $club->judokas_count }}
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <div x-show="clubs[{{ $club->id }}]" class="space-y-1">
+                    @if($isUitgenodigd)
+                    @php
+                        $whatsappTekst = __('Uitnodiging :naam', ['naam' => $toernooi->naam]) . "\n\n" . __('Inschrijflink:') . " {$portalUrl}\nPIN: {$pivotPincode}";
+                        // Telefoon opschonen: alleen cijfers, 06 → 316
+                        $telefoon = preg_replace('/[^0-9]/', '', $club->telefoon ?? '');
+                        if (str_starts_with($telefoon, '06')) {
+                            $telefoon = '31' . substr($telefoon, 1);
+                        } elseif (str_starts_with($telefoon, '0')) {
+                            $telefoon = '31' . substr($telefoon, 1);
+                        }
+                        $whatsappUrl = $telefoon
+                            ? 'https://wa.me/' . $telefoon . '?text=' . urlencode($whatsappTekst)
+                            : 'https://wa.me/?text=' . urlencode($whatsappTekst);
+                    @endphp
+                    <div class="space-y-1">
                         <div class="flex items-center gap-1">
                             <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600 max-w-[180px] truncate" title="{{ $portalUrl }}">
                                 {{ $portalUrl }}
                             </code>
-                            <button @click.stop="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <button @click="navigator.clipboard.writeText('{{ $portalUrl }}'); copiedUrl = 'url-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
                                     class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
                                     :class="copiedUrl === 'url-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'"
                                     title="{{ __('Kopieer URL') }}">
@@ -154,8 +168,8 @@
                             </button>
                         </div>
                         <div class="flex items-center gap-1">
-                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $pivotPincode ?? $club->pincode }}</span>
-                            <button @click.stop="navigator.clipboard.writeText('{{ $pivotPincode ?? $club->pincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
+                            <span class="text-xs font-mono bg-amber-50 px-1.5 py-0.5 rounded text-amber-800">PIN: {{ $pivotPincode }}</span>
+                            <button @click="navigator.clipboard.writeText('{{ $pivotPincode }}'); copiedUrl = 'pin-{{ $club->id }}'; setTimeout(() => copiedUrl = null, 2000)"
                                     class="px-1.5 py-0.5 text-xs rounded flex-shrink-0"
                                     :class="copiedUrl === 'pin-{{ $club->id }}' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'"
                                     title="{{ __('Kopieer PIN') }}">
@@ -168,19 +182,22 @@
                             </a>
                         </div>
                     </div>
-                    <span x-show="!clubs[{{ $club->id }}]" class="text-gray-400 text-sm">{{ __('Eerst selecteren') }}</span>
+                    @else
+                    <span class="text-gray-400 text-sm">{{ __('Eerst selecteren') }}</span>
+                    @endif
                 </td>
                 <td class="px-4 py-3 text-right">
-                    @if($club->email)
-                    <form x-show="clubs[{{ $club->id }}]" action="{{ route('toernooi.club.verstuur', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST" class="inline">
+                    @if($isUitgenodigd && $club->email)
+                    <form action="{{ route('toernooi.club.verstuur', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="px-3 py-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded">
                             {{ __('Verstuur') }}
                         </button>
                     </form>
-                    <span x-show="!clubs[{{ $club->id }}]" class="text-gray-400 text-sm">-</span>
-                    @else
+                    @elseif(!$club->email)
                     <span class="text-gray-400 text-sm">{{ __('Geen email') }}</span>
+                    @else
+                    <span class="text-gray-400 text-sm">-</span>
                     @endif
                 </td>
             </tr>
@@ -196,53 +213,4 @@
 @endif
 
 </div>
-
-<script>
-function clubPage() {
-    return {
-        clubs: @json(array_fill_keys($uitgenodigdeClubIds, true)),
-        copiedUrl: null,
-
-        async toggle(clubId, clubNaam, judokasCount) {
-            if (this.clubs[clubId] && judokasCount > 0) {
-                if (!confirm(clubNaam + " heeft nog " + judokasCount + " judoka's. Toch deselecteren?")) {
-                    return;
-                }
-            }
-
-            try {
-                const response = await fetch(
-                    '{{ url($organisator->slug . "/toernooi/" . $toernooi->slug) }}/club/' + clubId + '/toggle',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
-                        },
-                    }
-                );
-
-                const data = await response.json();
-
-                if (data.success) {
-                    const updated = Object.assign({}, this.clubs);
-                    if (data.is_uitgenodigd) {
-                        updated[clubId] = true;
-                    } else {
-                        delete updated[clubId];
-                    }
-                    this.clubs = updated;
-
-                    if (data.warning) {
-                        alert(data.warning);
-                    }
-                }
-            } catch (e) {
-                alert('Er ging iets mis. Probeer het opnieuw.');
-            }
-        }
-    };
-}
-</script>
 @endsection
