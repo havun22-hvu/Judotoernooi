@@ -2154,11 +2154,11 @@ function matInterface() {
                 const finale = laatsteRondeWedstrijden[0];
                 const winnaar = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw) : null;
                 const verliezer = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.blauw : finale.wit) : null;
-                // Winnaar (goud) en verliezer (zilver) naast finale
-                const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, 0) + h / 2 - 16; // Iets hoger voor goud
+                // Winnaar (goud) en verliezer (zilver) naast finale - uitgelijnd op wit/blauw slots
+                const finaleTop = berekenPotjeTop(laatsteRondeNiveau, 0);
                 html += `<div class="relative flex-shrink-0 w-32">`;
                 // Goud (1e plaats) - drop target voor finale winnaar
-                html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
+                html += `<div class="absolute w-32" style="top: ${finaleTop}px;">`;
                 html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate ${!winnaar ? 'cursor-pointer' : ''}"
                               ondragover="event.preventDefault(); if(!${!!winnaar}) this.classList.add('ring-2','ring-yellow-500')"
                               ondragleave="this.classList.remove('ring-2','ring-yellow-500')"
@@ -2166,7 +2166,7 @@ function matInterface() {
                 html += winnaar ? `🥇 ${winnaar.naam}` : '🥇 Sleep winnaar hier';
                 html += '</div></div>';
                 // Zilver (2e plaats) - drop target voor finale verliezer
-                html += `<div class="absolute w-32" style="top: ${winnaarTop + 30}px;">`;
+                html += `<div class="absolute w-32" style="top: ${finaleTop + h}px;">`;
                 html += `<div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate ${!verliezer ? 'cursor-pointer' : ''}"
                               ondragover="event.preventDefault(); if(!${!!verliezer}) this.classList.add('ring-2','ring-gray-500')"
                               ondragleave="this.classList.remove('ring-2','ring-gray-500')"
