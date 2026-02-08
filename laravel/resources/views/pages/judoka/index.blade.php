@@ -634,11 +634,6 @@ function judokaTable() {
                         <input type="number" name="gewicht" step="0.1" min="10" max="200"
                                class="w-full border rounded px-3 py-2">
                     </div>
-                    <div>
-                        <label class="block text-gray-700 font-medium mb-1">{{ __('Telefoon') }}</label>
-                        <input type="tel" name="telefoon"
-                               class="w-full border rounded px-3 py-2">
-                    </div>
                 </div>
             </div>
 

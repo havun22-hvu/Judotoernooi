@@ -30,7 +30,6 @@
         'geslacht' => ['label' => __('Geslacht'), 'verplicht' => true, 'uitleg' => __('M of V')],
         'gewicht' => ['label' => __('Gewicht'), 'verplicht' => false, 'uitleg' => __('In kg, bijv. 32.5')],
         'band' => ['label' => __('Band'), 'verplicht' => false, 'uitleg' => __('Wit, Geel, Oranje, etc.')],
-        'telefoon' => ['label' => __('Telefoon'), 'verplicht' => false, 'uitleg' => __('Mobiel nummer voor WhatsApp')],
     ];
 
     // Gewichtsklasse veld alleen tonen als toernooi vaste gewichtsklassen heeft
