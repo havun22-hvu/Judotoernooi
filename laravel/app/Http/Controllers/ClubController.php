@@ -224,21 +224,13 @@ class ClubController extends Controller
     /**
      * Toggle club selection for this toernooi
      */
-    public function toggleClub(Organisator $organisator, Toernooi $toernooi, Club $club): RedirectResponse
+    public function toggleClub(Organisator $organisator, Toernooi $toernooi, Club $club)
     {
-        // Debug logging
-        \Log::info('toggleClub called', [
-            'organisator_slug' => $organisator->slug,
-            'toernooi_slug' => $toernooi->slug,
-            'club_id' => $club->id,
-            'club_naam' => $club->naam,
-            'club_organisator_id' => $club->organisator_id,
-            'toernooi_organisator_id' => $toernooi->organisator_id,
-        ]);
-
         // Verify club belongs to this toernooi's organisator
         if ($club->organisator_id !== $toernooi->organisator_id) {
-            \Log::warning('toggleClub 403: club does not belong to organisator');
+            if (request()->expectsJson()) {
+                return response()->json(['error' => 'Geen toegang'], 403);
+            }
             abort(403);
         }
 
@@ -247,22 +239,32 @@ class ClubController extends Controller
         $warning = null;
 
         if ($isLinked) {
-            // Warn if club has judokas, but still allow deselect
             if ($judokasCount > 0) {
                 $warning = "Let op: {$club->naam} heeft nog {$judokasCount} judoka's ingeschreven!";
             }
             $toernooi->clubs()->detach($club->id);
-            $message = "{$club->naam} verwijderd uit dit toernooi";
-            \Log::info('toggleClub: club detached', ['club_id' => $club->id]);
+            $newState = false;
         } else {
-            // Add club to toernooi with portal credentials
             $toernooi->clubs()->attach($club->id, [
                 'portal_code' => $club->portal_code,
                 'pincode' => $club->pincode,
             ]);
-            $message = "{$club->naam} toegevoegd aan dit toernooi";
-            \Log::info('toggleClub: club attached', ['club_id' => $club->id]);
+            $newState = true;
         }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'is_uitgenodigd' => $newState,
+                'warning' => $warning,
+                'pincode' => $club->pincode,
+                'portal_url' => $club->getPortalUrl($toernooi),
+            ]);
+        }
+
+        $message = $newState
+            ? "{$club->naam} toegevoegd aan dit toernooi"
+            : "{$club->naam} verwijderd uit dit toernooi";
 
         $redirect = redirect()->route('toernooi.club.index', $toernooi->routeParams());
 
