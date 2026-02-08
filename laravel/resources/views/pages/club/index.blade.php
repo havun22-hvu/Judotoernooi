@@ -3,56 +3,7 @@
 @section('title', __('Clubs uitnodigen'))
 
 @section('content')
-<div x-data="{
-    clubs: @json(array_fill_keys($uitgenodigdeClubIds, true)),
-    copiedUrl: null,
-
-    isActive(id) {
-        return !!this.clubs[id];
-    },
-
-    async toggle(clubId, clubNaam, judokasCount) {
-        if (this.isActive(clubId) && judokasCount > 0) {
-            if (!confirm(clubNaam + ' heeft nog ' + judokasCount + &quot;judoka's. Toch deselecteren?&quot;)) {
-                return;
-            }
-        }
-
-        try {
-            const response = await fetch(
-                '{{ url($organisator->slug . '/toernooi/' . $toernooi->slug) }}/club/' + clubId + '/toggle',
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=&quot;csrf-token&quot;]')?.content,
-                        'Accept': 'application/json',
-                    },
-                }
-            );
-
-            const data = await response.json();
-
-            if (data.success) {
-                const updated = Object.assign({}, this.clubs);
-                if (data.is_uitgenodigd) {
-                    updated[clubId] = true;
-                } else {
-                    delete updated[clubId];
-                }
-                this.clubs = updated;
-
-                if (data.warning) {
-                    alert(data.warning);
-                }
-            } else {
-                alert(data.error || 'Fout bij toggle');
-            }
-        } catch (e) {
-            alert('Er ging iets mis. Probeer het opnieuw.');
-        }
-    }
-}">
+<div x-data="clubPage()">
 
 <div class="flex justify-between items-center mb-6">
     <div>
@@ -169,12 +120,12 @@
                     : 'https://wa.me/?text=' . urlencode($whatsappTekst);
             @endphp
             <tr class="hover:bg-gray-50 transition-colors"
-                :class="isActive({{ $club->id }}) ? 'bg-green-50' : ''">
+                :class="clubs[{{ $club->id }}] ? 'bg-green-50' : ''">
                 <td class="px-4 py-3">
                     <button @click="toggle({{ $club->id }}, '{{ addslashes($club->naam) }}', {{ $club->judokas_count }})"
                             class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors cursor-pointer"
-                            :class="isActive({{ $club->id }}) ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'">
-                        <svg x-show="isActive({{ $club->id }})" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            :class="clubs[{{ $club->id }}] ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'">
+                        <svg x-show="clubs[{{ $club->id }}]" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                         </svg>
                     </button>
@@ -190,7 +141,7 @@
                     </span>
                 </td>
                 <td class="px-4 py-3">
-                    <div x-show="isActive({{ $club->id }})" class="space-y-1">
+                    <div x-show="clubs[{{ $club->id }}]" class="space-y-1">
                         <div class="flex items-center gap-1">
                             <code class="text-xs bg-gray-100 px-1 py-0.5 rounded text-gray-600 max-w-[180px] truncate" title="{{ $portalUrl }}">
                                 {{ $portalUrl }}
@@ -217,17 +168,17 @@
                             </a>
                         </div>
                     </div>
-                    <span x-show="!isActive({{ $club->id }})" class="text-gray-400 text-sm">{{ __('Eerst selecteren') }}</span>
+                    <span x-show="!clubs[{{ $club->id }}]" class="text-gray-400 text-sm">{{ __('Eerst selecteren') }}</span>
                 </td>
                 <td class="px-4 py-3 text-right">
                     @if($club->email)
-                    <form x-show="isActive({{ $club->id }})" action="{{ route('toernooi.club.verstuur', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST" class="inline">
+                    <form x-show="clubs[{{ $club->id }}]" action="{{ route('toernooi.club.verstuur', $toernooi->routeParamsWith(['club' => $club])) }}" method="POST" class="inline">
                         @csrf
                         <button type="submit" class="px-3 py-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded">
                             {{ __('Verstuur') }}
                         </button>
                     </form>
-                    <span x-show="!isActive({{ $club->id }})" class="text-gray-400 text-sm">-</span>
+                    <span x-show="!clubs[{{ $club->id }}]" class="text-gray-400 text-sm">-</span>
                     @else
                     <span class="text-gray-400 text-sm">{{ __('Geen email') }}</span>
                     @endif
@@ -245,4 +196,53 @@
 @endif
 
 </div>
+
+<script>
+function clubPage() {
+    return {
+        clubs: @json(array_fill_keys($uitgenodigdeClubIds, true)),
+        copiedUrl: null,
+
+        async toggle(clubId, clubNaam, judokasCount) {
+            if (this.clubs[clubId] && judokasCount > 0) {
+                if (!confirm(clubNaam + " heeft nog " + judokasCount + " judoka's. Toch deselecteren?")) {
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(
+                    '{{ url($organisator->slug . "/toernooi/" . $toernooi->slug) }}/club/' + clubId + '/toggle',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json',
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const updated = Object.assign({}, this.clubs);
+                    if (data.is_uitgenodigd) {
+                        updated[clubId] = true;
+                    } else {
+                        delete updated[clubId];
+                    }
+                    this.clubs = updated;
+
+                    if (data.warning) {
+                        alert(data.warning);
+                    }
+                }
+            } catch (e) {
+                alert('Er ging iets mis. Probeer het opnieuw.');
+            }
+        }
+    };
+}
+</script>
 @endsection
