@@ -136,6 +136,7 @@ tr:hover { background: #f9fafb; }
         <button class="tab" onclick="switchTab('schemas')">Wedstrijdschema's</button>
         <button class="tab" onclick="switchTab('scores')">Score Invoer</button>
         <button class="tab" onclick="switchTab('vrijwilligers')">Vrijwilligers</button>
+        <button class="tab" onclick="switchTab('noodplan')" style="background:#fef3c7;color:#92400e;font-weight:600">Noodplan</button>
     </div>
 
     <!-- WEEGLIJST -->
@@ -185,6 +186,11 @@ tr:hover { background: #f9fafb; }
     <!-- VRIJWILLIGERS -->
     <div id="tab-vrijwilligers" class="tab-content">
         <div id="vrijwilligers-content"></div>
+    </div>
+
+    <!-- NOODPLAN -->
+    <div id="tab-noodplan" class="tab-content">
+        <div id="noodplan-content"></div>
     </div>
 </div>
 
@@ -798,12 +804,182 @@ function renderVrijwilligers() {
     document.getElementById('vrijwilligers-content').innerHTML = html;
 }
 
+// =================== NOODPLAN ===================
+
+function renderNoodplan() {
+    const t = DATA.toernooi;
+    const heeftRouter = t.heeft_eigen_router;
+    let html = '';
+
+    // Netwerk configuratie
+    html += '<div class="card" style="border:2px solid #1e3a5f">';
+    html += '<div class="card-header" style="background:#1e3a5f;color:white">Netwerk Configuratie</div>';
+    html += '<div class="card-body">';
+
+    if (heeftRouter) {
+        html += '<div style="background:#dbeafe;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Configuratie: MET eigen router (TP-Link Deco)</strong>';
+        html += '<p style="font-size:13px;color:#1e40af;margin-top:4px">Tablets blijven altijd op dezelfde WiFi, alleen de bron verandert.</p>';
+        html += '</div>';
+
+        if (t.eigen_router_ssid) {
+            html += '<table style="width:auto">';
+            html += '<tr><td style="padding-right:16px"><strong>Router SSID:</strong></td><td><code style="background:#dbeafe;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.eigen_router_ssid) + '</code></td></tr>';
+            if (t.eigen_router_wachtwoord) {
+                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code style="background:#dbeafe;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.eigen_router_wachtwoord) + '</code></td></tr>';
+            }
+            html += '</table>';
+        }
+    } else {
+        html += '<div style="background:#ffedd5;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Configuratie: ZONDER eigen router (mobiele hotspot als backup)</strong>';
+        html += '<p style="font-size:13px;color:#9a3412;margin-top:4px">Bij storing: tablets overzetten naar hotspot.</p>';
+        html += '</div>';
+
+        if (t.hotspot_ssid) {
+            html += '<table style="width:auto">';
+            html += '<tr><td style="padding-right:16px"><strong>Hotspot SSID:</strong></td><td><code style="background:#ffedd5;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.hotspot_ssid) + '</code></td></tr>';
+            if (t.hotspot_wachtwoord) {
+                html += '<tr><td><strong>Wachtwoord:</strong></td><td><code style="background:#ffedd5;padding:4px 8px;border-radius:4px;font-size:16px">' + esc(t.hotspot_wachtwoord) + '</code></td></tr>';
+            }
+            html += '</table>';
+        }
+    }
+
+    // Server IPs
+    html += '<div style="margin-top:16px;padding:12px;background:#d1fae5;border-radius:8px">';
+    html += '<strong>Lokale Server IP\'s</strong>';
+    html += '<table style="width:auto;margin-top:8px">';
+    html += '<tr><td style="padding-right:16px">Primary:</td><td><code style="font-size:16px;background:#a7f3d0;padding:4px 8px;border-radius:4px">' + (t.local_server_primary_ip ? 'http://' + esc(t.local_server_primary_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
+    html += '<tr><td>Standby:</td><td><code style="font-size:16px;background:#a7f3d0;padding:4px 8px;border-radius:4px">' + (t.local_server_standby_ip ? 'http://' + esc(t.local_server_standby_ip) + ':8000' : 'Niet ingesteld') + '</code></td></tr>';
+    html += '</table></div>';
+
+    html += '</div></div>';
+
+    // Scenario tabel
+    html += '<div class="card">';
+    html += '<div class="card-header" style="background:#f59e0b;color:white">Wat te doen bij storingen?</div>';
+    html += '<div class="card-body"><table>';
+    html += '<thead><tr><th>Situatie</th><th>Wat te doen</th><th>Tablets verbinden met</th></tr></thead>';
+    html += '<tbody>';
+
+    html += '<tr style="background:#d1fae5"><td><strong>Normaal</strong></td><td>Niets, alles werkt</td>';
+    if (heeftRouter) {
+        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Cloud</td>';
+    } else {
+        html += '<td><strong>Sporthal WiFi</strong> &rarr; Cloud</td>';
+    }
+    html += '</tr>';
+
+    html += '<tr style="background:#fef9c3"><td><strong>Internet weg</strong></td>';
+    html += '<td>1. Maak hotspot op mobiel<br>2. Verbind ' + (heeftRouter ? 'router' : 'server') + ' met hotspot</td>';
+    if (heeftRouter) {
+        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Cloud via hotspot<br><small style="color:#666">(tablets hoeven niet te wisselen!)</small></td>';
+    } else {
+        html += '<td><strong>Sporthal WiFi</strong> &rarr; Cloud via hotspot</td>';
+    }
+    html += '</tr>';
+
+    if (!heeftRouter) {
+        html += '<tr style="background:#ffedd5"><td><strong>Sporthal WiFi weg</strong></td>';
+        html += '<td>1. Maak hotspot op mobiel<br>2. Verbind server met hotspot<br>3. Zet tablets op hotspot</td>';
+        html += '<td><strong>' + esc(t.hotspot_ssid || 'Mobiele hotspot') + '</strong> &rarr; Cloud via hotspot<br><small style="color:#666">(alle tablets moeten wisselen!)</small></td>';
+        html += '</tr>';
+    }
+
+    html += '<tr style="background:#ffedd5"><td><strong>' + (heeftRouter ? 'Hotspot niet mogelijk' : 'Cloud server crash') + '</strong></td>';
+    html += '<td>Start lokale server op laptop</td>';
+    if (heeftRouter) {
+        html += '<td><strong>' + esc(t.eigen_router_ssid || 'Eigen router WiFi') + '</strong> &rarr; Lokale server<br><small style="color:#666">(tablets hoeven niet te wisselen, geen cloud sync)</small></td>';
+    } else {
+        html += '<td>Verbind alles met eigen router/hotspot &rarr; Lokale server</td>';
+    }
+    html += '</tr>';
+
+    html += '<tr style="background:#fee2e2"><td><strong>Noodgeval</strong></td>';
+    html += '<td>Print schema\'s uit dit bestand, verder op papier</td><td style="color:#666">N.v.t.</td></tr>';
+
+    html += '</tbody></table></div></div>';
+
+    // Stap-voor-stap: lokale server starten
+    html += '<div class="card">';
+    html += '<div class="card-header" style="background:#dc2626;color:white">STAP-VOOR-STAP: LOKALE SERVER STARTEN</div>';
+    html += '<div class="card-body">';
+
+    if (heeftRouter) {
+        html += '<div style="background:#fef9c3;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Bij internet storing:</strong>';
+        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<li>Zet <strong>5G hotspot</strong> aan op telefoon</li>';
+        html += '<li>Verbind router met hotspot:<br>';
+        html += '&nbsp;&nbsp;&bull; <strong>USB-tethering</strong> (makkelijkst): telefoon via USB aan router<br>';
+        html += '&nbsp;&nbsp;&bull; <strong>WiFi-bridge</strong>: in router-app hotspot als bron instellen</li>';
+        html += '<li>Klaar! Tablets blijven op dezelfde WiFi, internet loopt nu via 5G</li>';
+        html += '</ol></div>';
+
+        html += '<div style="background:#fee2e2;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Bij cloud server crash:</strong>';
+        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<li>Start lokale server op laptop:<br>';
+        html += '<code style="display:block;background:#fecaca;padding:8px;border-radius:4px;margin-top:4px;font-size:12px">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
+        html += '<li>Tablets gaan automatisch naar lokale server (zelfde WiFi!)</li>';
+        html += '<li><strong>PWA\'s moeten gereset worden!</strong> Cache wissen of opnieuw installeren</li>';
+        html += '<li>Deel nieuwe toegangs-URL\'s uit (zie Vrijwilligers tab)</li>';
+        html += '</ol></div>';
+    } else {
+        html += '<div style="background:#fef9c3;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Bij internet/WiFi storing:</strong>';
+        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<li>Zet <strong>5G hotspot</strong> aan op telefoon</li>';
+        html += '<li>Verbind alle tablets met de hotspot</li>';
+        html += '<li>Klaar! Cloud server werkt gewoon via 5G</li>';
+        html += '</ol></div>';
+
+        html += '<div style="background:#fee2e2;padding:12px;border-radius:8px;margin-bottom:12px">';
+        html += '<strong>Bij cloud server crash:</strong>';
+        html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+        html += '<li>Start eigen router (bijv. Deco)</li>';
+        html += '<li>Verbind laptop + tablets met router WiFi</li>';
+        html += '<li>Start lokale server op laptop:<br>';
+        html += '<code style="display:block;background:#fecaca;padding:8px;border-radius:4px;margin-top:4px;font-size:12px">cd judotoernooi/laravel && php artisan serve --host=0.0.0.0 --port=8000</code></li>';
+        html += '<li>Open op tablets: <code style="background:#fecaca;padding:2px 6px;border-radius:4px">http://[laptop-ip]:8000</code></li>';
+        html += '<li><strong>PWA\'s moeten gereset worden!</strong> Cache wissen of opnieuw installeren</li>';
+        html += '<li>Deel nieuwe toegangs-URL\'s uit (zie Vrijwilligers tab)</li>';
+        html += '</ol></div>';
+    }
+
+    html += '<div style="background:#ede9fe;padding:12px;border-radius:8px">';
+    html += '<strong>Noodgeval: verder op papier</strong>';
+    html += '<ol style="margin-top:8px;padding-left:20px;font-size:13px">';
+    html += '<li>Gebruik de Wedstrijdschema\'s tab in dit bestand om schema\'s te printen</li>';
+    html += '<li>Vul scores handmatig in op papier</li>';
+    html += '<li>Na afloop: voer alles in via de cloud wanneer internet weer werkt, of gebruik de Score Invoer tab + Upload</li>';
+    html += '</ol></div>';
+
+    html += '</div></div>';
+
+    // Printen checklist
+    html += '<div class="card">';
+    html += '<div class="card-header">Wat printen vanuit dit bestand?</div>';
+    html += '<div class="card-body">';
+    html += '<ul style="list-style:none;padding:0;font-size:14px">';
+    html += '<li style="padding:6px 0">&#9744; <strong>Weeglijst</strong> tab &rarr; print per blok voor weging</li>';
+    html += '<li style="padding:6px 0">&#9744; <strong>Zaaloverzicht</strong> tab &rarr; print voor overzicht matten/poules</li>';
+    html += '<li style="padding:6px 0">&#9744; <strong>Wedstrijdschema\'s</strong> tab &rarr; print matrix schema\'s voor handmatig invullen</li>';
+    html += '<li style="padding:6px 0">&#9744; <strong>Vrijwilligers</strong> tab &rarr; print voor contactgegevens + codes</li>';
+    html += '<li style="padding:6px 0">&#9744; <strong>Deze pagina</strong> &rarr; print als noodplan instructies</li>';
+    html += '</ul></div></div>';
+
+    document.getElementById('noodplan-content').innerHTML = html;
+}
+
 // Initial render
 renderWeeglijst();
 renderZaaloverzicht();
 renderSchemas();
 renderScores();
 renderVrijwilligers();
+renderNoodplan();
 </script>
 </body>
 </html>
