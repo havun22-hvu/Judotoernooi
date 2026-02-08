@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **8 feb 2026** | Blokverdeling fix: vaste categorieën classificatie, sortering, kruisfinale blokken | smallwork.md |
 | **7 feb 2026 avond** | Club delete fix, backup restore, registratie fix, weeglijst AFWEZIG logica, admin klant delete | smallwork.md |
 | **7 feb 2026** | Geboortejaar parser compleet, CSP fix, milestone backups | smallwork.md |
 | **5 feb 2026** | Suspicious weight warnings, organisator instellingen, clubs constraint | smallwork.md |

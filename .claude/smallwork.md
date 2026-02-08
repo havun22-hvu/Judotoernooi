@@ -725,6 +725,32 @@
 
 ---
 
+## Sessie: 8 februari 2026
+
+### Fix: Blokverdeling vaste categorieën classificatie
+- **Type:** Bug fix
+- **Wat:** Alleen `max_kg_verschil` bepaalt nu of categorie vast/variabel is. `max_leeftijd_verschil` is irrelevant voor vaste categorieën met gewichten.
+- **Bestanden:** blok/index.blade.php, CategorieHelper.php, VariabeleBlokVerdelingService.php
+- **Was:** `max_kg == 0 && max_lft == 0` → vast. Nu: `max_kg == 0` → vast.
+
+### Fix: Blokverdeling sortering op categorie_key
+- **Type:** Bug fix
+- **Wat:** Sortering gebruikt nu `categorie_key` (config positie) ipv `leeftijdsklasse` label matching voor robuustere volgorde (jong→oud, licht→zwaar).
+- **Bestanden:** blok/index.blade.php
+- **Details:** `categorie_key` toegevoegd aan chip data arrays
+
+### Feat: Kruisfinale/eliminatie volgen voorronde blok
+- **Type:** Feature
+- **Wat:** `fixKruisfinaleBlokken()` wist kruisfinale/eliminatie poules toe aan hetzelfde blok als hun voorronde
+- **Bestanden:** VariabeleBlokVerdelingService.php
+
+### Fix: Kruisfinale/eliminatie chips niet sleepbaar
+- **Type:** UI fix
+- **Wat:** Kruisfinale/eliminatie chips `draggable="false"` + `cursor-default` (volgen automatisch voorronde)
+- **Bestanden:** _category_chip.blade.php
+
+---
+
 <!--
 TEMPLATE:
 
