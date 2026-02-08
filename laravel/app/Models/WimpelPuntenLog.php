@@ -14,6 +14,7 @@ class WimpelPuntenLog extends Model
     protected $fillable = [
         'wimpel_judoka_id',
         'toernooi_id',
+        'poule_id',
         'punten',
         'type',
         'notitie',

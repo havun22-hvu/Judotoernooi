@@ -25,9 +25,12 @@ Een doorlopend puntensysteem per organisator, waarbij judoka's over meerdere **p
 - Waarschuwingen voor judoka's die een milestone bereiken
 
 ### Punten bijschrijven
-- **Automatisch** na afloop van een puntencompetitie toernooi
+- **Automatisch per poule** — zodra een poule klaar is op de mat (spreker_klaar) worden punten direct bijgeschreven
+- **Bulk verwerking** — bij toernooi afsluiten worden alle nog niet-verwerkte poules verwerkt
+- **Handmatig vanuit wimpeltoernooi pagina** — via "Punten bijschrijven" voor onverwerkte toernooien
 - 1 punt per gewonnen wedstrijd wordt bijgeschreven
 - **Handmatig aanpasbaar** door organisator (voor bestaande standen én foutcorrecties)
+- Nieuwe judoka's worden gemarkeerd zodat eventuele oude punten erbij gezet kunnen worden
 
 ### Milestone Waarschuwingen
 - Bij het bereiken van een geconfigureerd puntenaantal → melding
@@ -69,6 +72,7 @@ Een doorlopend puntensysteem per organisator, waarbij judoka's over meerdere **p
 | id | int | PK |
 | wimpel_judoka_id | int | FK naar wimpel_judokas |
 | toernooi_id | int | FK (nullable, null bij handmatig) |
+| poule_id | int | FK (nullable, voor per-poule tracking) |
 | punten | int | Aantal punten (+/-) |
 | type | enum | 'automatisch' / 'handmatig' |
 | notitie | string | Optionele toelichting |
