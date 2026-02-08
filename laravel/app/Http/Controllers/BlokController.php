@@ -781,12 +781,9 @@ class BlokController extends Controller
                     ->first();
 
                 // POULE: Calculate WP/JP/gewonnen from wedstrijden + barrage for each judoka
-                // Filter out absent judokas (not weighed or marked afwezig)
-                $wegingVerplicht = $toernooi->weging_verplicht;
-                $activeJudokas = $poule->judokas->filter(function ($judoka) use ($wegingVerplicht) {
-                    if ($judoka->aanwezigheid === 'afwezig') return false;
-                    if ($wegingVerplicht && !($judoka->gewicht_gewogen > 0)) return false;
-                    return true;
+                // Filter out absent judokas (weging check happens at doorsturen, not here)
+                $activeJudokas = $poule->judokas->filter(function ($judoka) {
+                    return $judoka->aanwezigheid !== 'afwezig';
                 });
 
                 $isPuntenComp = $poule->isPuntenCompetitie();
