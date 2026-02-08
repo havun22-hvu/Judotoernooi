@@ -2296,8 +2296,10 @@ function matInterface() {
                         const spacing = helftHoogte / halfCount;
                         const topPos = i * spacing + (spacing - potjeHeight) / 2 + verticalOffset;
 
-                        // Gebruik database slot nummers (locatie_wit, locatie_blauw)
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, null, null);
+                        // Visuele slotnummers: doorlopend van boven naar beneden (zoals A-bracket)
+                        const vSlotWit = i * 2 + 1;
+                        const vSlotBlauw = i * 2 + 2;
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, vSlotWit, vSlotBlauw);
                     }
 
                     // Geen horizon lijn in B-groep (was verwarrend)
@@ -2314,8 +2316,10 @@ function matInterface() {
                         const mirroredOffset = isRonde1 ? h / 2 : 0;
                         const topPos = helftHoogte + horizonHoogte + lowerIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
 
-                        // Gebruik database slot nummers (locatie_wit, locatie_blauw)
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, null, null);
+                        // Visuele slotnummers: doorlopend (bovenste helft had 0..halfCount-1, deze begint bij halfCount)
+                        const vSlotWit = i * 2 + 1;
+                        const vSlotBlauw = i * 2 + 2;
+                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, vSlotWit, vSlotBlauw);
                     }
 
                     html += '</div>';
