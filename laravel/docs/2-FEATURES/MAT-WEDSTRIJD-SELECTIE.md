@@ -283,6 +283,15 @@ Schema::table('matten', function (Blueprint $table) {
 | 3 poules op mat, selecteer uit elke poule 1 | 1 groen, 1 geel, 1 blauw |
 | Verplaats poule met gele wedstrijd | Blauw → geel, groen blijft |
 
+### Eliminatie A/B Split
+
+| Test | Verwacht resultaat |
+|------|-------------------|
+| B-chip naar mat 2 gesleept | Mat 1 toont alleen A-tab, mat 2 alleen B-tab |
+| Groen/geel/blauw op mat 1 | Onafhankelijk van mat 2 selecties |
+| A-finale gespeeld, B nog niet | "Afronden" knop verschijnt op mat 1, backend blokkeert tot B ook klaar |
+| Alle A+B gespeeld, afronden | Broadcast naar beide mats, spreker_klaar gezet |
+
 ---
 
 ## Plaatsbepaling in Poule (Standings)

@@ -99,6 +99,37 @@ $stats = $service->berekenStatistieken($n);
 | `slot_wit` | int | Slotnummer voor wit (2N-1) |
 | `slot_blauw` | int | Slotnummer voor blauw (2N) |
 
+## B-groep op Aparte Mat
+
+Eliminatie poules kunnen de B-groep (herkansing) op een **andere mat** draaien dan de A-groep (hoofdboom). Dit maakt parallel spelen mogelijk.
+
+### Database
+
+| Veld | Tabel | Beschrijving |
+|------|-------|--------------|
+| `mat_id` | poules | Mat voor A-groep (of beide als geen split) |
+| `b_mat_id` | poules | Mat voor B-groep (nullable, FK naar matten) |
+
+### Werking
+
+- **Standaard**: `b_mat_id = mat_id` (beide groepen op zelfde mat)
+- **Split**: Sleep B-chip in zaaloverzicht naar andere mat → `b_mat_id` wordt geüpdatet
+- **Mat interface**: Toont alleen relevante groep (`groep_filter` = A, B of null)
+- **Afronden**: Pas na ALLE wedstrijden (A+B) klaar, broadcast naar beide mats
+- **Zaaloverzicht**: Eliminatie poule met split toont 2 chips: `#N - A` en `#N - B`
+
+### Bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `BlokMatVerdelingService::getZaalOverzicht()` | Split A/B entries per mat |
+| `BlokMatVerdelingService::verdeelOverMatten()` | Default `b_mat_id = mat_id` |
+| `BlokController::verplaatsPoule()` | `groep` parameter (A/B) |
+| `WedstrijdSchemaService::getSchemaVoorMat()` | Query op `b_mat_id`, `groep_filter` |
+| `MatController::doPouleKlaar()` | Cross-mat check + dual broadcast |
+| `zaaloverzicht.blade.php` | A/B chips + drag-drop |
+| `_content.blade.php` | Tab filtering op `groep_filter` |
+
 ## Gerelateerde Bestanden
 
 - `app/Services/EliminatieService.php` - Business logic

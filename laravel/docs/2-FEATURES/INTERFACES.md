@@ -981,6 +981,20 @@ De Mat Interface heeft **2 versies** afhankelijk van wie het opent:
 - Stand bijhouden
 - Poule afronden → naar spreker
 
+### Eliminatie A/B Split Mats
+
+Eliminatie poules kunnen de B-groep op een aparte mat draaien. De mat interface past zich automatisch aan:
+
+| `groep_filter` | Gedrag |
+|----------------|--------|
+| `null` | Beide tabs (A+B) zichtbaar (standaard, zelfde mat) |
+| `'A'` | Alleen A-tab (Hoofdboom) zichtbaar |
+| `'B'` | Alleen B-tab (Herkansing) zichtbaar, direct actief |
+
+De "Afronden" knop verschijnt als alle wedstrijden van de zichtbare groep gespeeld zijn. Backend controleert of ALLE wedstrijden (A+B) klaar zijn voordat `spreker_klaar` wordt gezet.
+
+> **Zie:** `ELIMINATIE/README.md` → "B-groep op Aparte Mat"
+
 ---
 
 ## Spreker Interface
