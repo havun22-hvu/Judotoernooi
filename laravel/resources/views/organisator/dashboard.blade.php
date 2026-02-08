@@ -17,6 +17,29 @@
                     @if($organisator->isSitebeheerder())
                     <a href="{{ route('admin.index') }}" class="text-purple-600 hover:text-purple-800 font-medium">{{ __('Alle Organisatoren') }}</a>
                     @endif
+                    {{-- Taalkiezer --}}
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" class="text-gray-500 hover:text-gray-700 text-sm focus:outline-none" title="{{ __('Taal') }}">
+                            {{ app()->getLocale() === 'nl' ? '🇳🇱' : '🇬🇧' }}
+                            <svg class="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg py-1 z-50">
+                            <form action="{{ route('locale.switch', 'nl') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'nl' ? 'font-bold' : '' }}">
+                                    🇳🇱 Nederlands
+                                </button>
+                            </form>
+                            <form action="{{ route('locale.switch', 'en') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'en' ? 'font-bold' : '' }}">
+                                    🇬🇧 English
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                     <span class="text-gray-600">{{ $organisator->naam }}</span>
                     @if($organisator->isSitebeheerder())
                     <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded">{{ __('Sitebeheerder') }}</span>

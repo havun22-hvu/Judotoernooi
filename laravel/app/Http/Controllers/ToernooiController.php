@@ -69,11 +69,10 @@ class ToernooiController extends Controller
 
     public function show(Organisator $organisator, Toernooi $toernooi): View
     {
-        // Switch to toernooi's saved locale if set
-        if ($toernooi->locale) {
-            session()->put('locale', $toernooi->locale);
-            app()->setLocale($toernooi->locale);
-        }
+        // Switch to toernooi's saved locale, or fall back to organisator's locale
+        $locale = $toernooi->locale ?? $organisator->locale ?? config('app.locale');
+        session()->put('locale', $locale);
+        app()->setLocale($locale);
 
         $statistieken = $this->toernooiService->getStatistieken($toernooi);
 
@@ -410,6 +409,11 @@ class ToernooiController extends Controller
             // Regular organisator or sitebeheerder viewing another organisator
             $toernooien = $organisator->toernooien()->with('organisator')->orderBy('datum', 'desc')->get();
         }
+
+        // Restore organisator's locale when returning to dashboard
+        $locale = $organisator->locale ?? config('app.locale');
+        session()->put('locale', $locale);
+        app()->setLocale($locale);
 
         return view('organisator.dashboard', compact('organisator', 'toernooien'));
     }
