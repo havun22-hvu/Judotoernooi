@@ -134,11 +134,12 @@ Eliminatie poules kunnen de B-groep (herkansing) op een **andere mat** draaien d
 
 ### Werking
 
+- **Zaaloverzicht**: Eliminatie poule toont ALTIJD 2 entries: `#N - A` en `#N - B`
 - **Standaard**: `b_mat_id = mat_id` (beide groepen op zelfde mat)
 - **Split**: Sleep B-chip in zaaloverzicht naar andere mat → `b_mat_id` wordt geüpdatet
 - **Mat interface**: Toont alleen relevante groep (`groep_filter` = A, B of null)
+- **Aan de beurt**: A+B op zelfde mat → 1 groen/geel/blauw. Gesplitst → apart per mat
 - **Afronden**: Pas na ALLE wedstrijden (A+B) klaar, broadcast naar beide mats
-- **Zaaloverzicht**: Eliminatie poule met split toont 2 chips: `#N - A` en `#N - B`
 
 ### Bestanden
 
@@ -160,13 +161,13 @@ Welke poules worden waar getoond, afhankelijk van type en vulling:
 |------------|----------|---------------|---------------|--------------|
 | **Normaal** | >0 | Ja | Ja | Ja |
 | **Normaal** | 0 | Nee | Nee | Ja* |
-| **Eliminatie** | >0 | Ja (geheel) | Ja (geheel) | Ja |
+| **Eliminatie** | >0 | Ja (geheel) | Ja (A+B split) | Ja |
 | **Eliminatie** | 0 | Nee | Nee | Ja* |
 | **Kruisfinale** | virtueel | Ja | Ja | Ja |
 
 *\* Lege poules bij vaste gewichtsklassen blijven op wedstrijddag zichtbaar voor overpoulen*
 
-**Eliminatie A/B split** (aparte mat) → alleen op wedstrijddag, niet in blokverdeling/zaaloverzicht.
+**Eliminatie A/B split** → altijd in zaaloverzicht (2 chips), altijd in wedstrijddag (2 tabs of 1 tab per mat). Niet in blokverdeling (geheel).
 
 ### Filter logica
 
