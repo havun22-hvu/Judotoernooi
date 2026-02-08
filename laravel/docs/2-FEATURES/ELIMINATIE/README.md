@@ -90,6 +90,22 @@ Dubbele B-rondes als: V1 > V2
 
 Zie [FORMULES.md](./FORMULES.md) voor de correcte berekening.
 
+### B-Start Byes (Dubbele Rondes)
+
+Bij dubbele rondes wordt de eerste A-ronde verliezers verspreid over alle B-start(1) wedstrijden. Als er minder verliezers zijn dan 2× B-capaciteit, krijgen sommige B(1) wedstrijden maar 1 judoka (bye).
+
+```
+B-capaciteit = berekenMinimaleBWedstrijden(V1)
+Volle wedstrijden = V1 - B-capaciteit
+Bye wedstrijden = B-capaciteit - volle wedstrijden
+
+Voorbeeld N=54: V1=22, B-cap=16
+→ 6 volle wedstrijden (12 verliezers, 2:1)
+→ 10 bye wedstrijden (10 verliezers, alleen WIT)
+```
+
+Bye wedstrijden worden handmatig door de hoofdjury geregistreerd → winnaar schuift door naar B(2) WIT.
+
 ## Implementatie
 
 ### Service
