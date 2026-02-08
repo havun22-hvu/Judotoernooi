@@ -178,6 +178,7 @@ class ImportService
                     'overgeslagen' => 0,
                     'fouten' => [],
                     'codes_bijgewerkt' => 0,
+                    'zonder_club' => 0,
                 ];
 
                 // Default column mapping
@@ -204,6 +205,9 @@ class ImportService
                         $judoka = $this->verwerkRij($toernooi, $rij, $mapping);
                         if ($judoka) {
                             $resultaat['geimporteerd']++;
+                            if (!$judoka->club_id) {
+                                $resultaat['zonder_club']++;
+                            }
                         } else {
                             $resultaat['overgeslagen']++;
                         }

@@ -221,6 +221,12 @@
 </div>
 @endif
 
+@if(session('zonder_club'))
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <p class="text-yellow-800">{{ session('zonder_club') }}</p>
+</div>
+@endif
+
 @if(session('import_fouten'))
 <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6" x-data="{ open: false }">
     <div class="flex items-center justify-between">

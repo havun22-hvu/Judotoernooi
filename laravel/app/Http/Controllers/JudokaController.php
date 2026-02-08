@@ -346,6 +346,11 @@ class JudokaController extends Controller
             $redirect = $redirect->with('warning', "⚠️ {$nietGecategoriseerd} judoka('s) niet gecategoriseerd! Pas de categorie-instellingen aan.");
         }
 
+        $zonderClub = $resultaat['zonder_club'] ?? 0;
+        if ($zonderClub > 0) {
+            $redirect = $redirect->with('zonder_club', "{$zonderClub} judoka('s) zonder club geïmporteerd. Je kunt de club alsnog invullen via de deelnemerslijst.");
+        }
+
         // Send correction emails to clubs with judokas that need correction
         $correctieMailsVerstuurd = $this->verstuurCorrectieMails($toernooi);
         if ($correctieMailsVerstuurd > 0) {
