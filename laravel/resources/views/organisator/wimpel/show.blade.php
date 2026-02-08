@@ -7,7 +7,12 @@
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">{{ $wimpelJudoka->naam }}</h1>
+            <h1 class="text-2xl font-bold text-gray-800">
+                {{ $wimpelJudoka->naam }}
+                @if($wimpelJudoka->is_nieuw)
+                    <span class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1 align-middle">NIEUW</span>
+                @endif
+            </h1>
             <p class="text-gray-500">Geboortejaar: {{ $wimpelJudoka->geboortejaar }}</p>
         </div>
         <a href="{{ route('organisator.wimpel.index', $organisator) }}"

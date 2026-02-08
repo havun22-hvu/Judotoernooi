@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\WimpelExport;
 use App\Models\Organisator;
 use App\Models\WimpelJudoka;
 use App\Models\WimpelMilestone;
@@ -10,6 +11,7 @@ use App\Services\WimpelService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class WimpelController extends Controller
 {
@@ -132,11 +134,38 @@ class WimpelController extends Controller
             $validated['notitie'] ?? null
         );
 
+        // Handmatig aanpassen = bevestigd (niet meer nieuw)
+        if ($wimpelJudoka->is_nieuw) {
+            $wimpelJudoka->update(['is_nieuw' => false]);
+        }
+
         return response()->json([
             'success' => true,
             'punten_totaal' => $wimpelJudoka->fresh()->punten_totaal,
             'milestones_bereikt' => $bereikt,
         ]);
+    }
+
+    public function export(Organisator $organisator, string $format = 'xlsx')
+    {
+        $this->authorizeAccess($organisator);
+
+        $filename = sprintf('wimpel_%s_%s', $organisator->slug, now()->format('Y-m-d'));
+
+        return match ($format) {
+            'csv' => Excel::download(new WimpelExport($organisator), "{$filename}.csv", \Maatwebsite\Excel\Excel::CSV),
+            default => Excel::download(new WimpelExport($organisator), "{$filename}.xlsx"),
+        };
+    }
+
+    public function bevestigJudoka(Organisator $organisator, WimpelJudoka $wimpelJudoka): JsonResponse
+    {
+        $this->authorizeAccess($organisator);
+        $this->authorizeJudoka($organisator, $wimpelJudoka);
+
+        $wimpelJudoka->update(['is_nieuw' => false]);
+
+        return response()->json(['success' => true]);
     }
 
     public function verwerkToernooi(Request $request, Organisator $organisator): JsonResponse
