@@ -76,6 +76,11 @@
 │                                                                 │
 │   Aan einde: merge kleine poules (< 4) als binnen limieten      │
 │                                                                 │
+│   ⚠️ UITZONDERING: Eliminatie & Kruisfinale                      │
+│   Bij eliminatie/kruisfinale: GEEN splitsen in poules van 5!    │
+│   Hele gewichtsklasse = 1 poule (alle judoka's samen).          │
+│   Vereist: Δkg=0, Δlft=0, gewichtsklassen ingevuld.            │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
