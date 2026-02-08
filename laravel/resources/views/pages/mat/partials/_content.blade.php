@@ -1823,7 +1823,8 @@ function matInterface() {
         // Ronde volgorde voor sorteren (kleinste eerst = meeste wedstrijden)
         // B-groep: deel 1 en deel 2 rondes op volgorde
         rondeVolgordeLookup: {
-            // A-groep (1/16 met byes als nodig)
+            // A-groep (1/32, 1/16 met byes als nodig)
+            'tweeendertigste_finale': 0,
             'zestiende_finale': 1,
             'achtste_finale': 2,
             'kwartfinale': 3,
@@ -1889,6 +1890,7 @@ function matInterface() {
         getRondeDisplayNaam(ronde, aantalWeds) {
             const namen = {
                 // A-groep
+                'tweeendertigste_finale': '1/32',
                 'zestiende_finale': '1/16',
                 'achtste_finale': '1/8',
                 'kwartfinale': '1/4',
@@ -1981,11 +1983,12 @@ function matInterface() {
             // (1) en (2) rondes krijgen NIET hetzelfde niveau - ze zijn opeenvolgend
             const rondeNiveauMap = {
                 // A-groep: standaard bracket
-                'zestiende_finale': 0,
-                'achtste_finale': 1,
-                'kwartfinale': 2,
-                'halve_finale': 3,
-                'finale': 4,
+                'tweeendertigste_finale': 0,
+                'zestiende_finale': 1,
+                'achtste_finale': 2,
+                'kwartfinale': 3,
+                'halve_finale': 4,
+                'finale': 5,
                 // B-groep: elke ronde eigen niveau (opeenvolgend)
                 'b_zestiende_finale_1': 0,
                 'b_zestiende_finale_2': 1,
