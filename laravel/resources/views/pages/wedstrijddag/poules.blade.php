@@ -52,6 +52,17 @@
         </button>
     </div>
 
+    {{-- Waarschuwing: poules niet op matten --}}
+    @if($matWaarschuwing ?? false)
+        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+            <h3 class="font-bold text-yellow-800 mb-1">{{ __('Poules staan nog niet op matten') }}</h3>
+            <p class="text-yellow-700 text-sm">
+                {{ __('Ga naar') }} <strong>{{ __('Blokken') }}</strong> → <strong>{{ __('Verdeel over matten') }}</strong>
+                {{ __('om de poules eerst aan matten toe te wijzen. Daarna verschijnen ze in het zaaloverzicht.') }}
+            </p>
+        </div>
+    @endif
+
     <!-- Verificatie resultaat -->
     <div id="verificatie-resultaat" class="hidden"></div>
 
