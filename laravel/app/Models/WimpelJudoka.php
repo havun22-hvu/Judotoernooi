@@ -15,11 +15,13 @@ class WimpelJudoka extends Model
         'naam',
         'geboortejaar',
         'punten_totaal',
+        'is_nieuw',
     ];
 
     protected $casts = [
         'geboortejaar' => 'integer',
         'punten_totaal' => 'integer',
+        'is_nieuw' => 'boolean',
     ];
 
     public function organisator(): BelongsTo

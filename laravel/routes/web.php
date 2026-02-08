@@ -175,8 +175,10 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::put('wimpeltoernooi/milestones/{milestone}', [WimpelController::class, 'updateMilestone'])->name('organisator.wimpel.milestones.update');
     Route::delete('wimpeltoernooi/milestones/{milestone}', [WimpelController::class, 'destroyMilestone'])->name('organisator.wimpel.milestones.destroy');
     Route::post('wimpeltoernooi/verwerk-toernooi', [WimpelController::class, 'verwerkToernooi'])->name('organisator.wimpel.verwerk');
+    Route::get('wimpeltoernooi/export/{format}', [WimpelController::class, 'export'])->name('organisator.wimpel.export');
     Route::get('wimpeltoernooi/{wimpelJudoka}', [WimpelController::class, 'show'])->name('organisator.wimpel.show');
     Route::post('wimpeltoernooi/{wimpelJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
+    Route::post('wimpeltoernooi/{wimpelJudoka}/bevestig', [WimpelController::class, 'bevestigJudoka'])->name('organisator.wimpel.bevestig');
 });
 
 // Mollie webhooks & callbacks (no auth, called by Mollie)

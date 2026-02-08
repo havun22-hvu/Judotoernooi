@@ -104,6 +104,9 @@
                                        class="text-blue-600 hover:text-blue-800">
                                         {{ $judoka->naam }}
                                     </a>
+                                    @if($judoka->is_nieuw)
+                                        <span class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1">NIEUW</span>
+                                    @endif
                                 </td>
                                 <td class="px-4 py-3 text-center text-gray-600">{{ $judoka->geboortejaar }}</td>
                                 <td class="px-4 py-3 text-center">
@@ -122,7 +125,14 @@
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
+                                    @if($judoka->is_nieuw)
+                                        <button @click="bevestigJudoka({{ $judoka->id }})"
+                                                class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1 rounded"
+                                                :disabled="verwerking">
+                                            &#10003; Bevestigd
+                                        </button>
+                                    @endif
                                     <a href="{{ route('organisator.wimpel.show', [$organisator, $judoka]) }}"
                                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded">
                                         Details
@@ -144,6 +154,25 @@ function wimpelPage() {
         verwerking: false,
         feedback: '',
         feedbackType: 'success',
+
+        async bevestigJudoka(judokaId) {
+            try {
+                const response = await fetch(`{{ url($organisator->slug . '/wimpeltoernooi') }}/${judokaId}/bevestig`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                });
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                }
+            } catch (e) {
+                this.feedback = 'Verbindingsfout';
+                this.feedbackType = 'error';
+            }
+        },
 
         async verwerkToernooi(toernooiId, naam) {
             if (!confirm(`Punten bijschrijven van "${naam}"?`)) return;
