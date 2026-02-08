@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('naam');
             $table->unsignedSmallInteger('geboortejaar');
             $table->unsignedInteger('punten_totaal')->default(0);
+            $table->boolean('is_nieuw')->default(true);
             $table->timestamps();
 
             $table->unique(['organisator_id', 'naam', 'geboortejaar']);
