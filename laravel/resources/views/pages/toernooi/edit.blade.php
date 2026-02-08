@@ -1018,22 +1018,12 @@
                     dynamischLabel?.classList.add('hidden');
                 }
 
-                // Kruisfinale niet beschikbaar bij variabel gewicht
-                const systeemSelect = item.querySelector('.systeem-select');
-                if (systeemSelect) {
-                    const kruisfinaleOption = systeemSelect.querySelector('option[value="poules_kruisfinale"]');
-                    if (kruisfinaleOption) {
-                        kruisfinaleOption.disabled = maxKg > 0;
-                        if (maxKg > 0 && systeemSelect.value === 'poules_kruisfinale') {
-                            systeemSelect.value = 'poules';
-                            togglePuntenCompSelect(systeemSelect);
-                        }
-                    }
-                }
-
                 // Check warning na toggle
                 const gewichtenInput = item.querySelector('.gewichten-input');
                 if (gewichtenInput) checkGewichtsklassenWarning(gewichtenInput);
+
+                // Check of eliminatie/kruisfinale beschikbaar zijn
+                checkSysteemBeschikbaarheid(item);
                 updateJsonInput();
             }
 
@@ -1091,7 +1081,53 @@
                     kommaWarning.classList.add('hidden');
                 }
 
+                // Update ook systeem-beschikbaarheid (gewichten gewijzigd)
+                checkSysteemBeschikbaarheid(item);
+
                 updateJsonInput();
+            }
+
+            // Check of eliminatie/kruisfinale beschikbaar zijn (vereisen vaste gewichtsklassen)
+            window.checkSysteemBeschikbaarheid = function(item) {
+                const maxKgInput = item.querySelector('.max-kg-input');
+                const gewichtenInput = item.querySelector('.gewichten-input');
+                const systeemSelect = item.querySelector('.systeem-select');
+                if (!systeemSelect) return;
+
+                const maxKg = parseFloat(maxKgInput?.value) || 0;
+                const gewichten = gewichtenInput?.value?.trim() || '';
+                const heeftVasteKlassen = maxKg === 0 && gewichten.length > 0;
+
+                // Eliminatie en kruisfinale options
+                const eliminatieOption = systeemSelect.querySelector('option[value="eliminatie"]');
+                const kruisfinaleOption = systeemSelect.querySelector('option[value="poules_kruisfinale"]');
+
+                if (eliminatieOption) {
+                    eliminatieOption.disabled = !heeftVasteKlassen;
+                }
+                if (kruisfinaleOption) {
+                    kruisfinaleOption.disabled = !heeftVasteKlassen;
+                }
+
+                // Als huidig geselecteerd systeem niet meer beschikbaar is → terugzetten naar poules
+                if (!heeftVasteKlassen && (systeemSelect.value === 'eliminatie' || systeemSelect.value === 'poules_kruisfinale')) {
+                    systeemSelect.value = 'poules';
+                    togglePuntenCompSelect(systeemSelect);
+                }
+
+                // Warning tonen/verbergen
+                let systeemWarning = item.querySelector('.systeem-warning');
+                if (!heeftVasteKlassen && (eliminatieOption || kruisfinaleOption)) {
+                    if (!systeemWarning) {
+                        systeemWarning = document.createElement('p');
+                        systeemWarning.className = 'systeem-warning text-amber-600 text-xs mt-1';
+                        systeemWarning.textContent = 'Eliminatie en kruisfinale vereisen vaste gewichtsklassen (Δkg=0 + klassen ingevuld)';
+                        systeemSelect.parentNode.appendChild(systeemWarning);
+                    }
+                    systeemWarning.classList.remove('hidden');
+                } else if (systeemWarning) {
+                    systeemWarning.classList.add('hidden');
+                }
             }
 
             // Sorteer categorieën: jong→oud, gewicht licht→zwaar, band laag→hoog
@@ -1204,7 +1240,7 @@
                         <div class="flex items-center gap-1">
                             <select name="wedstrijd_systeem[${key}]"
                                     class="systeem-select border rounded px-2 py-1 text-sm bg-white"
-                                    onchange="togglePuntenCompSelect(this)">
+                                    onchange="togglePuntenCompSelect(this); checkSysteemBeschikbaarheid(this.closest('.gewichtsklasse-item'))">
                                 <option value="punten_competitie" ${systeem === 'punten_competitie' ? 'selected' : ''}>Puntencompetitie</option>
                                 <option value="poules" ${systeem === 'poules' ? 'selected' : ''}>Poules</option>
                                 <option value="poules_kruisfinale" ${systeem === 'poules_kruisfinale' ? 'selected' : ''} ${maxKg > 0 ? 'disabled' : ''}>Kruisfinale</option>
@@ -1289,6 +1325,10 @@
                 // Check alle gewichtsklassen warnings na render
                 container.querySelectorAll('.gewichten-input').forEach(input => {
                     checkGewichtsklassenWarning(input);
+                });
+                // Check systeem beschikbaarheid na render
+                container.querySelectorAll('.gewichtsklasse-item').forEach(item => {
+                    checkSysteemBeschikbaarheid(item);
                 });
                 updateJsonInput();
             }
