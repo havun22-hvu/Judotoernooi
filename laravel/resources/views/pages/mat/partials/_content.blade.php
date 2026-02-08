@@ -1381,6 +1381,7 @@ function matInterface() {
         // Detecteer of er een barrage nodig is (3+ judoka's met gelijke WP+JP die cirkel vormen)
         heeftBarrageNodig(poule) {
             if (poule.type === 'eliminatie' || poule.type === 'barrage') return false;
+            if (poule.is_punten_competitie) return false;
             if (!this.isPouleAfgerond(poule)) return false;
 
             const barrageJudokas = this.getBarrageJudokas(poule);
