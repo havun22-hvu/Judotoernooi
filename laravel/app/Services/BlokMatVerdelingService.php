@@ -660,8 +660,12 @@ class BlokMatVerdelingService
                     $doelVoorDezeMat = floor($doelVoorDezeMat * 0.85);
                 }
 
-                // Assign poule to current mat
-                $poule->update(['mat_id' => $huidigeMat]);
+                // Assign poule to current mat (eliminatie: b_mat_id defaults to same mat)
+                $updateData = ['mat_id' => $huidigeMat];
+                if ($poule->type === 'eliminatie') {
+                    $updateData['b_mat_id'] = $huidigeMat;
+                }
+                $poule->update($updateData);
                 $wedstrijdenPerMat[$huidigeMat] += $poule->aantal_wedstrijden;
 
                 // Move to next mat when target reached
@@ -930,7 +934,7 @@ class BlokMatVerdelingService
         $overzicht = [];
         $tolerantie = $toernooi->gewicht_tolerantie ?? 0;
 
-        foreach ($toernooi->blokken()->with('poules.mat', 'poules.judokas')->get() as $blok) {
+        foreach ($toernooi->blokken()->with('poules.mat', 'poules.judokas', 'poules.wedstrijden')->get() as $blok) {
             $blokData = [
                 'nummer' => $blok->nummer,
                 'naam' => $blok->naam,
@@ -939,43 +943,88 @@ class BlokMatVerdelingService
             ];
 
             foreach ($toernooi->matten as $mat) {
+                // Poules op deze mat (via mat_id)
                 $poules = $blok->poules->where('mat_id', $mat->id);
+                // Eliminatie poules die alleen via b_mat_id op deze mat staan
+                $bPoules = $blok->poules
+                    ->where('type', 'eliminatie')
+                    ->whereNotNull('b_mat_id')
+                    ->where('b_mat_id', $mat->id)
+                    ->where('mat_id', '!=', $mat->id);
 
-                $blokData['matten'][$mat->nummer] = [
-                    'mat_naam' => $mat->label,
-                    'poules' => $poules->map(function($p) use ($tolerantie) {
-                        // Kruisfinale and eliminatie: use stored aantal_judokas (no pivot table entries)
-                        if (in_array($p->type, ['kruisfinale', 'eliminatie'])) {
-                            return [
-                                'id' => $p->id,
-                                'nummer' => $p->nummer,
-                                'titel' => $p->getDisplayTitel(),
-                                'leeftijdsklasse' => $p->leeftijdsklasse,
-                                'gewichtsklasse' => $p->gewichtsklasse,
-                                'type' => $p->type,
-                                'judokas' => $p->aantal_judokas,
-                                'wedstrijden' => $p->aantal_wedstrijden,
-                            ];
-                        }
+                $pouleEntries = collect();
 
-                        $actieveJudokas = $p->judokas->filter(
-                            fn($j) => !$j->moetUitPouleVerwijderd($tolerantie)
-                        )->count();
-
-                        return [
+                foreach ($poules as $p) {
+                    // Eliminatie met b_mat_id op andere mat: split A/B
+                    if ($p->type === 'eliminatie' && $p->b_mat_id && $p->b_mat_id != $p->mat_id) {
+                        $aWedstrijden = $p->wedstrijden->where('groep', 'A')->count();
+                        $pouleEntries->push([
                             'id' => $p->id,
                             'nummer' => $p->nummer,
                             'titel' => $p->getDisplayTitel(),
                             'leeftijdsklasse' => $p->leeftijdsklasse,
                             'gewichtsklasse' => $p->gewichtsklasse,
                             'type' => $p->type,
-                            'judokas' => $actieveJudokas,
-                            'wedstrijden' => $p->berekenAantalWedstrijden($actieveJudokas),
-                        ];
-                    })
-                    ->filter(fn($p) => $p['judokas'] > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']))
-                    ->values()
-                    ->toArray(),
+                            'groep' => 'A',
+                            'judokas' => $p->aantal_judokas,
+                            'wedstrijden' => $aWedstrijden,
+                        ]);
+                        continue;
+                    }
+
+                    // Kruisfinale and eliminatie (geen split): use stored values
+                    if (in_array($p->type, ['kruisfinale', 'eliminatie'])) {
+                        $pouleEntries->push([
+                            'id' => $p->id,
+                            'nummer' => $p->nummer,
+                            'titel' => $p->getDisplayTitel(),
+                            'leeftijdsklasse' => $p->leeftijdsklasse,
+                            'gewichtsklasse' => $p->gewichtsklasse,
+                            'type' => $p->type,
+                            'judokas' => $p->aantal_judokas,
+                            'wedstrijden' => $p->aantal_wedstrijden,
+                        ]);
+                        continue;
+                    }
+
+                    $actieveJudokas = $p->judokas->filter(
+                        fn($j) => !$j->moetUitPouleVerwijderd($tolerantie)
+                    )->count();
+
+                    $pouleEntries->push([
+                        'id' => $p->id,
+                        'nummer' => $p->nummer,
+                        'titel' => $p->getDisplayTitel(),
+                        'leeftijdsklasse' => $p->leeftijdsklasse,
+                        'gewichtsklasse' => $p->gewichtsklasse,
+                        'type' => $p->type,
+                        'judokas' => $actieveJudokas,
+                        'wedstrijden' => $p->berekenAantalWedstrijden($actieveJudokas),
+                    ]);
+                }
+
+                // B-groep entries voor eliminatie poules op deze mat via b_mat_id
+                foreach ($bPoules as $p) {
+                    $bWedstrijden = $p->wedstrijden->where('groep', 'B')->count();
+                    $pouleEntries->push([
+                        'id' => $p->id,
+                        'nummer' => $p->nummer,
+                        'titel' => $p->getDisplayTitel(),
+                        'leeftijdsklasse' => $p->leeftijdsklasse,
+                        'gewichtsklasse' => $p->gewichtsklasse,
+                        'type' => $p->type,
+                        'groep' => 'B',
+                        'judokas' => max(0, $p->aantal_judokas - 2),
+                        'wedstrijden' => $bWedstrijden,
+                    ]);
+                }
+
+                $blokData['matten'][$mat->nummer] = [
+                    'mat_naam' => $mat->label,
+                    'poules' => $pouleEntries
+                        ->filter(fn($p) => $p['judokas'] > 1 || in_array($p['type'] ?? null, ['kruisfinale', 'eliminatie']))
+                        ->values()
+                        ->toArray(),
                 ];
             }
 

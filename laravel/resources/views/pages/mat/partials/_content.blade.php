@@ -105,16 +105,17 @@
 
             <!-- ELIMINATIE WEERGAVE - Drag & Drop Bracket met A/B Tabs -->
             <template x-if="poule.type === 'eliminatie'">
-                <div class="p-1" x-data="{ activeTab: 'A' }">
+                <div class="p-1" x-data="{ activeTab: poule.groep_filter || 'A' }">
                     <!-- Tabs + Swap Ruimte -->
                     <div class="flex mb-1 border-b border-gray-200 justify-between">
                         <div class="flex">
-                            <button @click="activeTab = 'A'"
+                            <button x-show="!poule.groep_filter || poule.groep_filter === 'A'"
+                                    @click="activeTab = 'A'"
                                     :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
                                 {{ __('Groep A (Hoofdboom)') }} <span x-text="'(' + poule.judoka_count + ')'"></span>
                             </button>
-                            <template x-if="heeftHerkansing(poule)">
+                            <template x-if="heeftHerkansing(poule) && (!poule.groep_filter || poule.groep_filter === 'B')">
                                 <button @click="activeTab = 'B'"
                                         :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
@@ -1335,7 +1336,17 @@ function matInterface() {
         // Afgerond = finale gespeeld (met winnaar) + alle brons wedstrijden gespeeld (met winnaar)
         // ROBUUST: gebruik winnaar_id check, niet alleen is_gespeeld
         isEliminatieAfgerond(poule) {
-            // Check finale (A-groep) - moet winnaar hebben
+            // Split mat: only check the group visible on this mat
+            if (poule.groep_filter === 'A') {
+                const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
+                return finale && !!finale.winnaar_id;
+            }
+            if (poule.groep_filter === 'B') {
+                const bWedstrijden = poule.wedstrijden.filter(w => w.groep === 'B');
+                return bWedstrijden.length > 0 && bWedstrijden.every(w => w.is_gespeeld);
+            }
+
+            // No split: check all (finale + brons)
             const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
             if (!finale || !finale.winnaar_id) return false;
 
