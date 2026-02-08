@@ -738,9 +738,26 @@ class EliminatieService
 
             switch ($type) {
                 case 'eerste':
-                    // DUBBEL: 2:1 mapping naar (1) ronde
-                    $bIdx = (int) floor($idx / 2);
-                    $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
+                    // DUBBEL: verliezers spreiden over alle B(1) wedstrijden
+                    // Als er minder verliezers zijn dan 2x B-capaciteit,
+                    // krijgen sommige B-wedstrijden maar 1 judoka (bye)
+                    $bCapaciteit = count($bWedstrijden);
+                    $totaalVerliezers = count($echteWedstrijden);
+                    $volleWedstrijden = $totaalVerliezers - $bCapaciteit; // B-weds met 2 judoka's
+
+                    if ($volleWedstrijden <= 0) {
+                        // Alle verliezers krijgen eigen B-wedstrijd (allemaal byes)
+                        $bIdx = $idx;
+                        $slot = 'wit';
+                    } elseif ($idx < $volleWedstrijden * 2) {
+                        // Eerste batch: 2:1 mapping (volle wedstrijden)
+                        $bIdx = (int) floor($idx / 2);
+                        $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
+                    } else {
+                        // Rest: 1:1 mapping op WIT (bye wedstrijden, blauw blijft null)
+                        $bIdx = $volleWedstrijden + ($idx - $volleWedstrijden * 2);
+                        $slot = 'wit';
+                    }
                     $bWedstrijd = $bWedstrijden[$bIdx] ?? null;
                     break;
 
