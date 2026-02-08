@@ -18,6 +18,7 @@ use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Controllers\MollieController;
+use App\Http\Controllers\WimpelController;
 use App\Http\Controllers\DeviceToegangController;
 use App\Http\Controllers\DeviceToegangBeheerController;
 use App\Http\Controllers\VrijwilligerController;
@@ -166,6 +167,16 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     // Organisator instellingen
     Route::get('instellingen', [ToernooiController::class, 'organisatorInstellingen'])->name('organisator.instellingen');
     Route::put('instellingen', [ToernooiController::class, 'organisatorInstellingenUpdate'])->name('organisator.instellingen.update');
+
+    // Wimpeltoernooi (organisator level - persistent across tournaments)
+    Route::get('wimpeltoernooi', [WimpelController::class, 'index'])->name('organisator.wimpel.index');
+    Route::get('wimpeltoernooi/instellingen', [WimpelController::class, 'instellingen'])->name('organisator.wimpel.instellingen');
+    Route::post('wimpeltoernooi/milestones', [WimpelController::class, 'storeMilestone'])->name('organisator.wimpel.milestones.store');
+    Route::put('wimpeltoernooi/milestones/{milestone}', [WimpelController::class, 'updateMilestone'])->name('organisator.wimpel.milestones.update');
+    Route::delete('wimpeltoernooi/milestones/{milestone}', [WimpelController::class, 'destroyMilestone'])->name('organisator.wimpel.milestones.destroy');
+    Route::post('wimpeltoernooi/verwerk-toernooi', [WimpelController::class, 'verwerkToernooi'])->name('organisator.wimpel.verwerk');
+    Route::get('wimpeltoernooi/{wimpelJudoka}', [WimpelController::class, 'show'])->name('organisator.wimpel.show');
+    Route::post('wimpeltoernooi/{wimpelJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
 });
 
 // Mollie webhooks & callbacks (no auth, called by Mollie)

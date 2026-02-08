@@ -209,6 +209,16 @@ class Organisator extends Authenticatable
         return $this->hasMany(Vrijwilliger::class);
     }
 
+    public function wimpelJudokas(): HasMany
+    {
+        return $this->hasMany(WimpelJudoka::class);
+    }
+
+    public function wimpelMilestones(): HasMany
+    {
+        return $this->hasMany(WimpelMilestone::class)->orderBy('volgorde');
+    }
+
     /**
      * Get all toernooi betalingen for this organisator
      */
