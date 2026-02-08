@@ -5,8 +5,11 @@ namespace App\Providers;
 use App\Models\Judoka;
 use App\Models\Wedstrijd;
 use App\Observers\SyncQueueObserver;
+use App\Services\BackupService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Events\MigrationsStarted;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
         // Only observes score/weight changes to push to cloud
         Wedstrijd::observe(SyncQueueObserver::class);
         Judoka::observe(SyncQueueObserver::class);
+
+        // Auto-backup before migrations (staging/production only)
+        Event::listen(MigrationsStarted::class, function () {
+            app(BackupService::class)->maakMilestoneBackup('voor-migratie');
+        });
 
         // Configure rate limiters
         $this->configureRateLimiting();
