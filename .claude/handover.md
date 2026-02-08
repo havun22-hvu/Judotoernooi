@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 7 februari 2026
+> **Laatste update:** 8 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **8 feb 2026** | B-groep aparte mat (eliminatie): `b_mat_id`, zaaloverzicht A/B split, mat interface groep filter | ELIMINATIE/README.md |
 | **8 feb 2026** | Blokverdeling fix: vaste categorieën classificatie, sortering, kruisfinale blokken | smallwork.md |
 | **7 feb 2026 avond** | Club delete fix, backup restore, registratie fix, weeglijst AFWEZIG logica, admin klant delete | smallwork.md |
 | **7 feb 2026** | Geboortejaar parser compleet, CSP fix, milestone backups | smallwork.md |

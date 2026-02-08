@@ -102,6 +102,18 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 1. Sorteer alle poules op **gewicht oplopend** (lichtste eerst)
 2. Verdeel over matten met **load balancing**: poule gaat naar mat met minste wedstrijden
 3. Resultaat: lichtste poules tendensen naar mat 1, zwaarste naar laatste mat
+4. **Eliminatie poules**: `b_mat_id` wordt standaard gelijk aan `mat_id` (beide groepen op zelfde mat)
+
+#### Eliminatie A/B Split (Zaaloverzicht)
+
+Eliminatie poules hebben A-groep (hoofdboom) en B-groep (herkansing). De B-groep kan op een **aparte mat** worden gezet:
+
+- **Zaaloverzicht**: Eliminatie poule met `b_mat_id ≠ mat_id` toont **2 chips**: `#N - A` en `#N - B`
+- **Drag & drop**: Elk chip is apart sleepbaar naar een andere mat
+- **API**: `verplaatsPoule` accepteert `groep` parameter (A of B) → update `mat_id` of `b_mat_id`
+- **Mat interface**: Toont alleen de relevante groep (A of B) per mat
+
+> **Zie:** `ELIMINATIE/README.md` → "B-groep op Aparte Mat" voor technische details
 
 **Tussen blokken:**
 - Blok 1 = jongste/lichtste categorieën
@@ -449,6 +461,8 @@ M 6j 22kg (10w)
 ```
 blok_id         - FK naar blokken (null = niet verdeeld)
 blok_vast       - boolean (true = handmatig vastgezet met 📍)
+mat_id          - FK naar matten (A-groep bij eliminatie split)
+b_mat_id        - FK naar matten, nullable (B-groep eliminatie, standaard = mat_id)
 ```
 
 ### Blokken tabel

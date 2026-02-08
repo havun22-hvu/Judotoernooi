@@ -37,6 +37,7 @@
 │ toernooi_id                            ──┼──────┘
 │ blok_id                                ──┼──────┐
 │ mat_id                                 ──┼──────┤
+│ b_mat_id (nullable, eliminatie B-groep)──┼──────┤
 │ nummer                                   │      │
 │ titel                                    │      │
 │ leeftijdsklasse                         │      │
@@ -163,7 +164,8 @@ Poules met judoka's.
 | id | bigint | Primary key |
 | toernooi_id | bigint | FK naar toernooien |
 | blok_id | bigint | FK naar blokken |
-| mat_id | bigint | FK naar matten |
+| mat_id | bigint | FK naar matten (A-groep bij eliminatie split) |
+| b_mat_id | bigint NULL | FK naar matten (B-groep eliminatie, nullable) |
 | nummer | int | Poulenummer |
 | titel | varchar(255) | Beschrijvende titel |
 | leeftijdsklasse | varchar(20) | Leeftijdsklasse |
