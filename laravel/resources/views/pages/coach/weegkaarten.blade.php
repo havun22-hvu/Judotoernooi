@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,10 +16,13 @@
                     <h1 class="text-2xl font-bold text-gray-800">{{ $club->naam }}</h1>
                     <p class="text-gray-600">{{ $toernooi->naam }} - {{ $toernooi->datum->format('d F Y') }}</p>
                 </div>
-                <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-gray-600 hover:text-gray-800">{{ __('Uitloggen') }}</button>
-                </form>
+                <div class="flex items-center gap-3">
+                    @include('partials.coach-locale-switcher')
+                    <form action="{{ route('coach.portal.logout', ['organisator' => $organisator, 'toernooi' => $toernooiSlug, 'code' => $code]) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="text-gray-600 hover:text-gray-800">{{ __('Uitloggen') }}</button>
+                    </form>
+                </div>
             </div>
 
             <!-- Navigation tabs -->

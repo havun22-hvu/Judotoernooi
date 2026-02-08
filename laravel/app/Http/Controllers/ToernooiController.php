@@ -69,6 +69,12 @@ class ToernooiController extends Controller
 
     public function show(Organisator $organisator, Toernooi $toernooi): View
     {
+        // Switch to toernooi's saved locale if set
+        if ($toernooi->locale) {
+            session()->put('locale', $toernooi->locale);
+            app()->setLocale($toernooi->locale);
+        }
+
         $statistieken = $this->toernooiService->getStatistieken($toernooi);
 
         return view('pages.toernooi.show', compact('toernooi', 'statistieken'));

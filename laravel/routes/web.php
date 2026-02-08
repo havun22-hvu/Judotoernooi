@@ -45,11 +45,30 @@ Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => n
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
 
-// Locale switch
+// Locale switch - context-aware: saves to club, toernooi, or organisator
 Route::post('/locale/{locale}', function (\Illuminate\Http\Request $request, string $locale) {
-    if (in_array($locale, config('app.available_locales', ['nl', 'en']))) {
-        $request->session()->put('locale', $locale);
+    if (!in_array($locale, config('app.available_locales', ['nl', 'en']))) {
+        return redirect()->back();
     }
+
+    // Always save in session
+    $request->session()->put('locale', $locale);
+
+    // Save to club if club_id provided (coach portal context)
+    if ($clubId = $request->input('club_id')) {
+        \App\Models\Club::where('id', $clubId)->update(['locale' => $locale]);
+    }
+
+    // Save to toernooi if toernooi_id provided
+    if ($toernooiId = $request->input('toernooi_id')) {
+        \App\Models\Toernooi::where('id', $toernooiId)->update(['locale' => $locale]);
+    }
+
+    // Save to organisator if logged in (and no club/toernooi context)
+    if (!$clubId && !$toernooiId && \Illuminate\Support\Facades\Auth::guard('organisator')->check()) {
+        \Illuminate\Support\Facades\Auth::guard('organisator')->user()->update(['locale' => $locale]);
+    }
+
     return redirect()->back();
 })->name('locale.switch');
 

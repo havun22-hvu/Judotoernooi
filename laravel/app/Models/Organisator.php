@@ -41,6 +41,7 @@ class Organisator extends Authenticatable
         'kyc_ingevuld_op',
         'is_premium',
         'live_refresh_interval',
+        'locale',
     ];
 
     protected $casts = [

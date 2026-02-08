@@ -54,6 +54,11 @@ class OrganisatorAuthController extends Controller
             $organisator = Auth::guard('organisator')->user();
             $organisator->updateLaatsteLogin();
 
+            // Restore saved locale preference
+            if ($organisator->locale) {
+                $request->session()->put('locale', $organisator->locale);
+            }
+
             // Sitebeheerder goes to admin dashboard, regular organisator to their dashboard
             if ($organisator->isSitebeheerder()) {
                 return redirect()->intended(route('admin.index'));
