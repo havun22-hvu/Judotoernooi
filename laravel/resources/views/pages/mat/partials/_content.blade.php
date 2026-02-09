@@ -46,7 +46,7 @@
                 <span class="w-3 h-3 rounded bg-blue-400"></span>
                 <span class="text-gray-600">{{ __('Gereed maken') }}</span>
             </span>
-            <span class="text-gray-400 ml-2 cursor-help" title="{{ __('Tip: Klik op wedstrijdnummer om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik op groen om over te slaan (geel schuift door).') }}">ⓘ tip</span>
+            <span class="text-gray-400 ml-2 cursor-help" title="{{ __('Tip: Poule: klik op wedstrijdnummer om te selecteren. Eliminatie: dubbelklik op een potje om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik/dubbelklik op groen om over te slaan (geel schuift door).') }}">ⓘ tip</span>
         </div>
         <!-- Blok/Mat selectie + update knop rechts -->
         <div class="text-sm text-gray-600 flex items-center gap-3">
@@ -2715,16 +2715,15 @@ setInterval(() => {
         if (s.ghost) s.ghost.remove();
         s.source.style.opacity = '';
 
+        // Use the drop target that was highlighted during touchmove
+        // (elementFromPoint is unreliable on touchend after DOM changes)
+        const dropTarget = lastDropTarget;
+
         if (lastDropTarget) {
             lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
                 'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
+            lastDropTarget = null;
         }
-
-        // Find drop target at release point
-        const touch = e.changedTouches[0];
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
-        const dropTarget = el?.closest('[ondrop]');
-        lastDropTarget = null;
 
         if (dropTarget && s.dragData) {
             const fakeEvent = {
