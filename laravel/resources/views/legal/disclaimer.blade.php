@@ -177,7 +177,7 @@
                 </section>
 
                 <!-- Contact -->
-                <section class="pt-6 border-t border-gray-200">
+                <section id="contact" class="pt-6 border-t border-gray-200">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">Contact</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p>
