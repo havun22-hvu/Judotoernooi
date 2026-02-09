@@ -1639,20 +1639,15 @@ function matInterface() {
             return 'Klik om te selecteren';
         },
 
-        // Kleur-class voor eliminatie potjes (outline rond het hele potje)
-        getEliminatiePotjeKleur(wedstrijdId) {
+        // Inline style voor eliminatie potje-slots (border-color + border-width op de wit/blauw slots)
+        getEliminatiePotjeStyle(wedstrijdId) {
             const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            // Debug: type check (=== vereist zelfde type)
-            if (matActieveId && wedstrijdId == matActieveId) {
-                console.log('[Bracket kleur] wed:', wedstrijdId, typeof wedstrijdId, 'actief:', matActieveId, typeof matActieveId, 'strict:', wedstrijdId === matActieveId);
-            }
-
-            if (wedstrijdId == matActieveId && matActieveId != null) return 'elim-sel-groen';
-            if (wedstrijdId == matVolgendeId && matVolgendeId != null) return 'elim-sel-geel';
-            if (wedstrijdId == matGereedmakenId && matGereedmakenId != null) return 'elim-sel-blauw';
+            if (wedstrijdId == matActieveId && matActieveId != null) return 'border: 2px solid #16a34a; background-color: #dcfce7;';
+            if (wedstrijdId == matVolgendeId && matVolgendeId != null) return 'border: 2px solid #ca8a04; background-color: #fef9c3;';
+            if (wedstrijdId == matGereedmakenId && matGereedmakenId != null) return 'border: 2px solid #2563eb; background-color: #dbeafe;';
             return '';
         },
 
@@ -2113,8 +2108,8 @@ function matInterface() {
                         const topPos = berekenPotjeTop(niveau, wedIdx);
 
                         // Potje container met absolute positie + double-click beurtaanduiding
-                        const potjeKleur = this.getEliminatiePotjeKleur(wed.id);
-                        html += `<div class="absolute w-32 rounded ${potjeKleur}" style="top: ${topPos}px;"
+                        const potjeStyle = this.getEliminatiePotjeStyle(wed.id);
+                        html += `<div class="absolute w-32" style="top: ${topPos}px;"
                                       ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
 
                         // Helper: groen cirkeltje voor winnaar (niet bij bye)
@@ -2166,6 +2161,7 @@ function matInterface() {
                         // Wit slot
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                                      style="${potjeStyle}"
                                       ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit', ${poule.poule_id}, ${witBewoner})">`;
@@ -2188,6 +2184,7 @@ function matInterface() {
                         // Blauw slot
                         html += `<div class="relative">`;
                         html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                                      style="${potjeStyle}"
                                       ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                                       ondragleave="this.classList.remove('ring-2','${ringColor}')"
                                       ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw', ${poule.poule_id}, ${blauwBewoner})">`;
@@ -2491,13 +2488,14 @@ function matInterface() {
             const topBewoner = topJudoka ? escapeForHtml(JSON.stringify({id: topJudoka.id, naam: topJudoka.naam})) : 'null';
             const bottomBewoner = bottomJudoka ? escapeForHtml(JSON.stringify({id: bottomJudoka.id, naam: bottomJudoka.naam})) : 'null';
 
-            const potjeKleur = this.getEliminatiePotjeKleur(wed.id);
-            let html = `<div class="absolute w-32 rounded ${potjeKleur}" style="top: ${topPos}px;"
+            const potjeStyle = this.getEliminatiePotjeStyle(wed.id);
+            let html = `<div class="absolute w-32" style="top: ${topPos}px;"
                               ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
 
             // Top slot = WIT (altijd)
             html += `<div class="relative">`;
             html += `<div class="w-32 h-7 ${topBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
+                          style="${potjeStyle}"
                           ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                           ondragleave="this.classList.remove('ring-2','${ringColor}')"
                           ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, '${topSlot}', ${poule.poule_id}, ${topBewoner})">`;
@@ -2519,6 +2517,7 @@ function matInterface() {
             // Bottom slot = BLAUW (altijd)
             html += `<div class="relative">`;
             html += `<div class="w-32 h-7 ${bottomBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
+                          style="${potjeStyle}"
                           ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
                           ondragleave="this.classList.remove('ring-2','${ringColor}')"
                           ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, '${bottomSlot}', ${poule.poule_id}, ${bottomBewoner})">`;
