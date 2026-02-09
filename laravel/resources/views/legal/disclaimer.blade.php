@@ -158,8 +158,9 @@
                             <li>Ongeautoriseerde toegang tot accounts</li>
                         </ul>
                         <p class="mt-3">
-                            De maximale aansprakelijkheid is in alle gevallen beperkt tot het bedrag dat u heeft betaald voor de dienst
-                            in de afgelopen 12 maanden.
+                            De maximale aansprakelijkheid is in alle gevallen beperkt tot het bedrag dat u heeft betaald voor het
+                            betreffende toernooi, en geldt uitsluitend voor de periode vanaf betaling tot en met de afsluiting
+                            van dat toernooi (voorbereiding en wedstrijddag).
                         </p>
                     </div>
                 </section>
