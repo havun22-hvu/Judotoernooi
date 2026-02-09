@@ -2632,6 +2632,21 @@ setInterval(() => {
     let state = null;
     let lastDropTarget = null;
 
+    // Find drop target by checking bounding rects of all [ondrop] elements
+    // More reliable than elementFromPoint which misses absolute-positioned elements
+    function findDropTarget(x, y) {
+        const targets = document.querySelectorAll('[ondrop]');
+        let best = null, bestArea = Infinity;
+        for (const t of targets) {
+            const r = t.getBoundingClientRect();
+            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+                const area = r.width * r.height;
+                if (area < bestArea) { best = t; bestArea = area; }
+            }
+        }
+        return best;
+    }
+
     document.addEventListener('touchstart', function(e) {
         const draggable = e.target.closest('[draggable="true"]');
         if (!draggable) return;
@@ -2686,15 +2701,11 @@ setInterval(() => {
         }
 
         if (state.dragging) {
-            e.preventDefault();
             state.ghost.style.left = touch.clientX + 'px';
             state.ghost.style.top = touch.clientY + 'px';
 
-            // Find drop target under finger
-            state.ghost.style.display = 'none';
-            const el = document.elementFromPoint(touch.clientX, touch.clientY);
-            state.ghost.style.display = '';
-            const dropTarget = el?.closest('[ondrop]');
+            // Find drop target by bounding rect (reliable for absolute-positioned elements)
+            const dropTarget = findDropTarget(touch.clientX, touch.clientY);
 
             if (lastDropTarget && lastDropTarget !== dropTarget) {
                 lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
