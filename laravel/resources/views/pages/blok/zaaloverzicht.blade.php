@@ -123,8 +123,9 @@
             @php
                 // Korte chip naam: #nummer + titel (+ groep suffix voor split eliminatie) + wedstrijden
                 $groepSuffix = isset($pouleInfo['groep']) ? ' - ' . $pouleInfo['groep'] : '';
+                $judokasCount = $pouleInfo['judokas'] ?? 0;
                 $wedstrijdenCount = $pouleInfo['wedstrijden'] ?? 0;
-                $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'] . ($wedstrijdenCount > 0 ? ' (' . $wedstrijdenCount . 'w)' : '');
+                $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'] . ' (' . $judokasCount . 'j, ' . $wedstrijdenCount . 'w)';
                 $isSent = $pouleInfo['is_sent'];
                 $isActivated = $pouleInfo['is_activated'];
 
@@ -203,11 +204,10 @@
                     <div class="p-2 space-y-1 min-h-[100px] mat-container" data-mat-id="{{ $matId }}" data-blok-nummer="{{ $blok['nummer'] }}">
                         @forelse($allePoules as $poule)
                         @php
-                            $heeftWedstrijden = $poule['wedstrijden'] > 0;
-                            $stats = $heeftWedstrijden ? $poule['wedstrijden'] . 'w' : $poule['judokas'] . 'j';
+                            $stats = $poule['judokas'] . 'j, ' . $poule['wedstrijden'] . 'w';
                         @endphp
                         @php $pouleGroep = $poule['groep'] ?? null; @endphp
-                        <div class="poule-item text-xs border rounded p-1 {{ $heeftWedstrijden ? 'bg-gray-50' : 'bg-gray-100' }} cursor-move hover:bg-blue-50"
+                        <div class="poule-item text-xs border rounded p-1 {{ $poule['wedstrijden'] > 0 ? 'bg-gray-50' : 'bg-gray-100' }} cursor-move hover:bg-blue-50"
                              data-poule-id="{{ $poule['id'] }}"
                              data-groep="{{ $pouleGroep ?? '' }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
