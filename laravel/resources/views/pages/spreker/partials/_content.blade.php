@@ -221,7 +221,7 @@
                                 @elseif($plaats === 2) text-gray-700
                                 @else text-orange-700
                                 @endif">
-                                {{ $plaats }}e
+                                {{ $plaats }}
                             </div>
                         </div>
                         @endforeach
