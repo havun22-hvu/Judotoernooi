@@ -118,7 +118,7 @@
                 <span class="text-blue-500">•</span>
                 <a href="{{ route('legal.cookies') }}" class="hover:text-white">Cookies</a>
                 <span class="text-blue-500">•</span>
-                <a href="{{ route('legal.disclaimer') }}#contact" class="hover:text-white">Contact</a>
+                <a href="mailto:havun22@gmail.com" class="hover:text-white">Contact</a>
             </div>
             <div class="text-center text-xs text-blue-400">
                 &copy; {{ date('Y') }} Havun
