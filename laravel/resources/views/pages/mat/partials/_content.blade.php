@@ -2624,6 +2624,9 @@ window.initBracketSortable = function() {
 
     // Shared onEnd handler - revert DOM + route to correct handler
     function onEndHandler(evt) {
+        // Save the highlighted target (set during onMove) BEFORE cleanup
+        const dropTarget = highlightedTarget;
+
         // Remove highlight
         if (highlightedTarget) {
             highlightedTarget.classList.remove('sortable-drop-highlight');
@@ -2639,11 +2642,17 @@ window.initBracketSortable = function() {
         const dragAttr = evt.item.getAttribute('data-drag');
         if (!dragAttr) return;
 
-        // Use elementFromPoint for accurate target detection (SortableJS is unreliable for small absolute-positioned slots)
-        const oe = evt.originalEvent;
-        const cx = oe?.changedTouches?.[0]?.clientX ?? oe?.clientX;
-        const cy = oe?.changedTouches?.[0]?.clientY ?? oe?.clientY;
-        const target = (cx != null) ? document.elementFromPoint(cx, cy)?.closest('.bracket-drop') : evt.to;
+        // Target detection: prefer onMove highlight (most reliable) > elementFromPoint > evt.to
+        let target = (dropTarget && dropTarget.getAttribute('data-drop-handler')) ? dropTarget : null;
+        if (!target) {
+            const oe = evt.originalEvent;
+            const cx = oe?.changedTouches?.[0]?.clientX ?? oe?.clientX;
+            const cy = oe?.changedTouches?.[0]?.clientY ?? oe?.clientY;
+            if (cx != null && (cx !== 0 || cy !== 0)) {
+                target = document.elementFromPoint(cx, cy)?.closest('.bracket-drop');
+            }
+        }
+        if (!target) target = (evt.to !== evt.from) ? evt.to : null;
         if (!target) return;
 
         const handler = target.getAttribute('data-drop-handler');
