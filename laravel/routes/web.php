@@ -28,6 +28,7 @@ use App\Http\Controllers\ReverbController;
 use App\Http\Controllers\ToernooiBetalingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocalSyncController;
 use App\Http\Middleware\CheckToernooiRol;
 use App\Http\Middleware\CheckFreemiumPrint;
@@ -78,6 +79,12 @@ Route::get('/', fn() => view('pages.home'))->name('home');
 
 // Help pagina
 Route::get('/help', fn() => view('pages.help'))->name('help');
+
+// Legal Pages (public, no auth required)
+Route::get('/algemene-voorwaarden', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/privacyverklaring', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/cookiebeleid', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::get('/disclaimer', [LegalController::class, 'disclaimer'])->name('legal.disclaimer');
 
 /*
 |--------------------------------------------------------------------------
