@@ -6,6 +6,7 @@ use App\Exports\WimpelExport;
 use App\Models\Organisator;
 use App\Models\WimpelJudoka;
 use App\Models\WimpelMilestone;
+use App\Models\WimpelUitreiking;
 use App\Models\Toernooi;
 use App\Services\WimpelService;
 use Illuminate\Http\JsonResponse;
@@ -30,8 +31,6 @@ class WimpelController extends Controller
         $milestones = $organisator->wimpelMilestones()->get();
         $onverwerkteToernooien = $this->wimpelService->getOnverwerkteToernooien($organisator);
 
-        // Milestone-alerts: judoka's die recent een milestone hebben bereikt
-        $milestoneAlerts = [];
         foreach ($judokas as $judoka) {
             $bereikt = $judoka->getBereikteMilestones();
             $volgende = $judoka->getEerstvolgeneMilestone();
@@ -39,8 +38,16 @@ class WimpelController extends Controller
             $judoka->volgendeMilestone = $volgende;
         }
 
+        // Open uitreikingen (milestone bereikt maar nog niet uitgereikt)
+        $openUitreikingen = WimpelUitreiking::where('uitgereikt', false)
+            ->whereHas('wimpelJudoka', fn($q) => $q->where('organisator_id', $organisator->id))
+            ->with(['wimpelJudoka', 'milestone'])
+            ->get()
+            ->sortBy('milestone.punten')
+            ->values();
+
         return view('organisator.wimpel.index', compact(
-            'organisator', 'judokas', 'milestones', 'onverwerkteToernooien'
+            'organisator', 'judokas', 'milestones', 'onverwerkteToernooien', 'openUitreikingen'
         ));
     }
 
