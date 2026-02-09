@@ -1638,15 +1638,20 @@ function matInterface() {
             return 'Klik om te selecteren';
         },
 
-        // Kleur-class voor eliminatie potjes (ring rond het hele potje)
+        // Kleur-class voor eliminatie potjes (outline rond het hele potje)
         getEliminatiePotjeKleur(wedstrijdId) {
             const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            if (wedstrijdId === matActieveId) return 'elim-sel-groen';
-            if (wedstrijdId === matVolgendeId) return 'elim-sel-geel';
-            if (wedstrijdId === matGereedmakenId) return 'elim-sel-blauw';
+            // Debug: type check (=== vereist zelfde type)
+            if (matActieveId && wedstrijdId == matActieveId) {
+                console.log('[Bracket kleur] wed:', wedstrijdId, typeof wedstrijdId, 'actief:', matActieveId, typeof matActieveId, 'strict:', wedstrijdId === matActieveId);
+            }
+
+            if (wedstrijdId == matActieveId && matActieveId != null) return 'elim-sel-groen';
+            if (wedstrijdId == matVolgendeId && matVolgendeId != null) return 'elim-sel-geel';
+            if (wedstrijdId == matGereedmakenId && matGereedmakenId != null) return 'elim-sel-blauw';
             return '';
         },
 
