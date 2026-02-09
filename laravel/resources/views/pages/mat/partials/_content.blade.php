@@ -2621,4 +2621,134 @@ setInterval(() => {
         Alpine.evaluate(component, 'laadWedstrijden()');
     }
 }, 30000);
+
+// ========================================
+// Touch Drag & Drop Polyfill voor Tablet
+// HTML5 DnD toont geen ghost op touch devices
+// ========================================
+(function() {
+    if (!('ontouchstart' in window)) return;
+
+    let state = null;
+    let lastDropTarget = null;
+
+    document.addEventListener('touchstart', function(e) {
+        const draggable = e.target.closest('[draggable="true"]');
+        if (!draggable) return;
+        const ondragstart = draggable.getAttribute('ondragstart');
+        if (!ondragstart) return;
+
+        const touch = e.touches[0];
+        state = {
+            dragging: false,
+            startX: touch.clientX,
+            startY: touch.clientY,
+            source: draggable,
+            ondragstart: ondragstart,
+            ghost: null,
+            dragData: null
+        };
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!state) return;
+        const touch = e.touches[0];
+
+        if (!state.dragging) {
+            const dx = Math.abs(touch.clientX - state.startX);
+            const dy = Math.abs(touch.clientY - state.startY);
+            if (dx + dy < 12) return;
+
+            // Execute ondragstart to capture drag data
+            const ft = { _d: {}, setData(t, v) { this._d[t] = v; }, getData(t) { return this._d[t] || ''; }, setDragImage() {} };
+            const fe = { preventDefault() {}, dataTransfer: ft };
+            try { new Function('event', state.ondragstart).call(state.source, fe); }
+            catch(err) { console.error('Touch drag init:', err); state = null; return; }
+
+            state.dragData = ft._d['text/plain'] || '';
+            if (!state.dragData) { state = null; return; }
+
+            const naam = state.source.querySelector('.truncate')?.textContent.trim()
+                       || state.source.textContent.trim();
+
+            state.dragging = true;
+            state.ghost = document.createElement('div');
+            state.ghost.textContent = naam;
+            state.ghost.style.cssText =
+                'position:fixed;z-index:99999;pointer-events:none;' +
+                'padding:6px 14px;background:#3b82f6;color:white;' +
+                'border-radius:8px;font-size:14px;font-weight:600;' +
+                'white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
+                'transform:translate(-50%,-130%);';
+            document.body.appendChild(state.ghost);
+            state.source.style.opacity = '0.3';
+        }
+
+        if (state.dragging) {
+            e.preventDefault();
+            state.ghost.style.left = touch.clientX + 'px';
+            state.ghost.style.top = touch.clientY + 'px';
+
+            // Find drop target under finger
+            state.ghost.style.display = 'none';
+            const el = document.elementFromPoint(touch.clientX, touch.clientY);
+            state.ghost.style.display = '';
+            const dropTarget = el?.closest('[ondrop]');
+
+            if (lastDropTarget && lastDropTarget !== dropTarget) {
+                lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
+                    'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
+            }
+            if (dropTarget && dropTarget !== lastDropTarget) {
+                dropTarget.classList.add('ring-2', 'ring-blue-500');
+            }
+            lastDropTarget = dropTarget;
+        }
+    }, { passive: false });
+
+    document.addEventListener('touchend', function(e) {
+        if (!state) return;
+        const s = state;
+        state = null;
+        if (!s.dragging) return;
+
+        if (s.ghost) s.ghost.remove();
+        s.source.style.opacity = '';
+
+        if (lastDropTarget) {
+            lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
+                'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
+        }
+
+        // Find drop target at release point
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const dropTarget = el?.closest('[ondrop]');
+        lastDropTarget = null;
+
+        if (dropTarget && s.dragData) {
+            const fakeEvent = {
+                preventDefault() {},
+                dataTransfer: { getData() { return s.dragData; } }
+            };
+            const ondrop = dropTarget.getAttribute('ondrop');
+            if (ondrop) {
+                try { new Function('event', ondrop).call(dropTarget, fakeEvent); }
+                catch(err) { console.error('Touch drop error:', err); }
+            }
+        }
+    });
+
+    document.addEventListener('touchcancel', function() {
+        if (!state) return;
+        if (state.ghost) state.ghost.remove();
+        if (state.source) state.source.style.opacity = '';
+        state = null;
+        if (lastDropTarget) {
+            lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
+                'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
+            lastDropTarget = null;
+        }
+    });
+})();
 </script>
