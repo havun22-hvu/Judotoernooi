@@ -10,6 +10,8 @@
     .elim-sel-groen { outline: 3px solid #22c55e; outline-offset: -1px; }
     .elim-sel-geel { outline: 3px solid #eab308; outline-offset: -1px; }
     .elim-sel-blauw { outline: 3px solid #3b82f6; outline-offset: -1px; }
+    .sortable-bracket-ghost { opacity: 0.5; background: #dbeafe !important; }
+    .sortable-bracket-chosen { opacity: 0.3; }
 </style>
 @endpush
 
@@ -19,4 +21,7 @@
 </div>
 
 @include('pages.mat.partials._content')
+
+<!-- SortableJS for touch drag & drop in bracket -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 @endsection
