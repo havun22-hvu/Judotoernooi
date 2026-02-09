@@ -839,6 +839,17 @@ window.verwijderJudoka = async function(event) {
     }
 };
 
+// Global double-click handler - beurtaanduiding in eliminatie bracket
+// Triggert hetzelfde 3-kleuren systeem als bij poules (groen/geel/blauw)
+window.dblClickBracket = function(wedstrijdId, pouleId) {
+    const comp = document.getElementById('mat-interface').__x.$data;
+    const poule = comp.poules.find(p => p.poule_id === pouleId);
+    if (!poule) return;
+    const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
+    if (!wedstrijd) return;
+    comp.toggleVolgendeWedstrijd(poule, wedstrijd);
+};
+
 function matInterface() {
     const urlParams = new URLSearchParams(window.location.search);
     const blokNummer = urlParams.get('blok');
@@ -1617,6 +1628,18 @@ function matInterface() {
             return 'Klik om te selecteren';
         },
 
+        // Kleur-class voor eliminatie potjes (ring rond het hele potje)
+        getEliminatiePotjeKleur(wedstrijdId) {
+            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
+            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
+            const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
+
+            if (wedstrijdId === matActieveId) return 'ring-2 ring-green-500';
+            if (wedstrijdId === matVolgendeId) return 'ring-2 ring-yellow-400';
+            if (wedstrijdId === matGereedmakenId) return 'ring-2 ring-blue-400';
+            return '';
+        },
+
         // Toggle wedstrijd selectie (groen/geel/blauw systeem) - MAT NIVEAU
         // Documentatie: MAT-WEDSTRIJD-SELECTIE.md
         // - 1 groen, 1 geel en 1 blauw per mat (ongeacht aantal poules)
@@ -2070,8 +2093,10 @@ function matInterface() {
                         const niveau = getNiveau(ronde.ronde, rondeIdx);
                         const topPos = berekenPotjeTop(niveau, wedIdx);
 
-                        // Potje container met absolute positie
-                        html += `<div class="absolute w-32" style="top: ${topPos}px;">`;
+                        // Potje container met absolute positie + double-click beurtaanduiding
+                        const potjeKleur = this.getEliminatiePotjeKleur(wed.id);
+                        html += `<div class="absolute w-32 rounded ${potjeKleur}" style="top: ${topPos}px;"
+                                      ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
 
                         // Helper: groen cirkeltje voor winnaar (niet bij bye)
                         const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
@@ -2447,7 +2472,9 @@ function matInterface() {
             const topBewoner = topJudoka ? escapeForHtml(JSON.stringify({id: topJudoka.id, naam: topJudoka.naam})) : 'null';
             const bottomBewoner = bottomJudoka ? escapeForHtml(JSON.stringify({id: bottomJudoka.id, naam: bottomJudoka.naam})) : 'null';
 
-            let html = `<div class="absolute w-32" style="top: ${topPos}px;">`;
+            const potjeKleur = this.getEliminatiePotjeKleur(wed.id);
+            let html = `<div class="absolute w-32 rounded ${potjeKleur}" style="top: ${topPos}px;"
+                              ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
 
             // Top slot = WIT (altijd)
             html += `<div class="relative">`;
