@@ -205,7 +205,7 @@
                 <span class="text-gray-500">•</span>
                 <a href="{{ route('legal.cookies') }}" class="hover:text-white">Cookies</a>
                 <span class="text-gray-500">•</span>
-                <a href="mailto:havun22@gmail.com" class="hover:text-white">Contact</a>
+                <span>havun22@gmail.com</span>
             </div>
             <div class="text-center text-xs text-gray-400">
                 &copy; {{ date('Y') }} Havun
