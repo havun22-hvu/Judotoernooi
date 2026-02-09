@@ -2647,6 +2647,24 @@ window.initBracketSortable = function() {
     const matEl = document.getElementById('mat-interface');
     if (!matEl) return;
 
+    // Inject CSS via JS (bypasses browser cache)
+    if (!document.getElementById('sortable-bracket-css')) {
+        const s = document.createElement('style');
+        s.id = 'sortable-bracket-css';
+        s.textContent = `
+            .sortable-bracket-ghost { opacity: 0.4; background: #dbeafe !important; }
+            .sortable-bracket-chosen { opacity: 0.3; }
+            .sortable-fallback { padding:4px 10px !important; background:white !important;
+                border:2px solid #9ca3af !important; border-radius:6px !important;
+                font-size:13px !important; white-space:nowrap !important;
+                box-shadow:0 2px 8px rgba(0,0,0,0.2) !important;
+                width:auto !important; height:auto !important; min-height:0 !important; }
+            .sortable-fallback span:not(.truncate) { display:none !important; }
+            .sortable-drop-highlight { outline:3px solid #a855f7; outline-offset:-1px; background:#f3e8ff !important; }
+        `;
+        document.head.appendChild(s);
+    }
+
     // Destroy previous instances
     matEl.querySelectorAll('[data-sortable-bracket]').forEach(el => {
         if (el._sortable) el._sortable.destroy();
@@ -2662,16 +2680,16 @@ window.initBracketSortable = function() {
         container._sortable = new Sortable(container, {
             group: 'bracket',
             sort: false,
-            animation: 150,
-            delay: 80,
+            animation: 0,
+            delay: 50,
             delayOnTouchOnly: true,
-            touchStartThreshold: 5,
+            touchStartThreshold: 3,
             ghostClass: 'sortable-bracket-ghost',
             chosenClass: 'sortable-bracket-chosen',
             fallbackOnBody: true,
-            forceFallback: true, // Use JS-based drag for consistent behavior
+            forceFallback: true,
+            emptyInsertThreshold: 30, // Larger hit zone for small bracket slots
             onMove(evt) {
-                // Highlight drop target (purple ring like native DnD)
                 if (highlightedTarget && highlightedTarget !== evt.to) {
                     highlightedTarget.classList.remove('sortable-drop-highlight');
                 }
