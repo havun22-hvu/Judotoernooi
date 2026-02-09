@@ -122,7 +122,7 @@
             @foreach($blokPoulesList as $pouleInfo)
             @php
                 // Korte chip naam: #nummer + titel (+ groep suffix voor split eliminatie) + wedstrijden
-                $groepSuffix = isset($pouleInfo['groep']) ? ' - ' . $pouleInfo['groep'] : '';
+                $groepSuffix = isset($pouleInfo['groep']) ? '-' . $pouleInfo['groep'] : '';
                 $judokasCount = $pouleInfo['judokas'] ?? 0;
                 $wedstrijdenCount = $pouleInfo['wedstrijden'] ?? 0;
                 $chipNaam = '#' . $pouleInfo['nummer'] . $groepSuffix . ' ' . $pouleInfo['titel'] . ' (' . $judokasCount . 'j, ' . $wedstrijdenCount . 'w)';
@@ -211,7 +211,7 @@
                              data-poule-id="{{ $poule['id'] }}"
                              data-groep="{{ $pouleGroep ?? '' }}"
                              data-wedstrijden="{{ $poule['wedstrijden'] }}">
-                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }}{{ $pouleGroep ? ' - ' . $pouleGroep : '' }} {{ $poule['titel'] }}</div>
+                            <div class="font-medium text-gray-800">#{{ $poule['nummer'] }}{{ $pouleGroep ? '-' . $pouleGroep : '' }} {{ $poule['titel'] }}</div>
                             <div class="text-gray-500">({{ $stats }})</div>
                         </div>
                         @empty
