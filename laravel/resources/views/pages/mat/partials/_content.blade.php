@@ -1634,9 +1634,9 @@ function matInterface() {
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            if (wedstrijdId === matActieveId) return 'ring-2 ring-green-500';
-            if (wedstrijdId === matVolgendeId) return 'ring-2 ring-yellow-400';
-            if (wedstrijdId === matGereedmakenId) return 'ring-2 ring-blue-400';
+            if (wedstrijdId === matActieveId) return 'ring-4 ring-green-500';
+            if (wedstrijdId === matVolgendeId) return 'ring-4 ring-yellow-400';
+            if (wedstrijdId === matGereedmakenId) return 'ring-4 ring-blue-400';
             return '';
         },
 
@@ -1967,6 +1967,9 @@ function matInterface() {
 
         // Render bracket als HTML met draggable chips
         renderBracket(poule, groep) {
+            // Expliciete read zodat Alpine x-html herrendert bij matSelectie wijziging
+            const _ms = this.matSelectie;
+
             const rondes = this.getEliminatieBracket(poule, groep);
             if (rondes.length === 0) return '<div class="text-gray-500">Geen wedstrijden</div>';
 
