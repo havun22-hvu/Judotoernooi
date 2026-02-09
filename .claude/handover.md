@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **8 feb 2026 avond** | Offline Pakket MVP: standalone HTML download met 6 tabs (weeglijst, zaaloverzicht, schema's, scores, vrijwilligers, noodplan) | `memory/offline-pakket.md` |
 | **8 feb 2026** | B-groep aparte mat (eliminatie): `b_mat_id`, zaaloverzicht A/B split, mat interface groep filter | ELIMINATIE/README.md |
 | **8 feb 2026** | Blokverdeling fix: vaste categorieën classificatie, sortering, kruisfinale blokken | smallwork.md |
 | **7 feb 2026 avond** | Club delete fix, backup restore, registratie fix, weeglijst AFWEZIG logica, admin klant delete | smallwork.md |
@@ -43,6 +44,9 @@
 - **Core features** - Import, weging, mat, spreker, live, eliminatie
 - **Real-time sync** - Reverb WebSockets voor scores, beurten, poule status
 - **Production deploy** - Alle 3 omgevingen in sync (commit 7458156)
+
+### 🔧 In Progress
+- **Offline Pakket** - MVP klaar, nog visueel testen in browser nodig → `memory/offline-pakket.md`
 
 ### 🎯 Volgende Stap
 - **Live toernooi** - Klaar voor eerste echte toernooi
