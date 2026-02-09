@@ -9,6 +9,7 @@ use App\Models\Toernooi;
 use App\Models\WimpelJudoka;
 use App\Models\WimpelMilestone;
 use App\Models\WimpelPuntenLog;
+use App\Models\WimpelUitreiking;
 use Illuminate\Support\Facades\DB;
 
 class WimpelService
@@ -105,7 +106,7 @@ class WimpelService
                     ];
                 }
 
-                $bereikt = $this->checkMilestones($wimpelJudoka, $oudePunten);
+                $bereikt = $this->checkMilestones($wimpelJudoka, $oudePunten, $toernooi->id);
                 if (!empty($bereikt)) {
                     $result['milestones'][] = [
                         'judoka' => $wimpelJudoka->naam,
@@ -179,20 +180,36 @@ class WimpelService
             $wimpelJudoka->increment('punten_totaal', $punten);
         });
 
-        return $this->checkMilestones($wimpelJudoka->fresh(), $oudePunten);
+        return $this->checkMilestones($wimpelJudoka->fresh(), $oudePunten, null);
     }
 
     /**
-     * Check welke milestones gepasseerd zijn tussen oud en nieuw puntentotaal
+     * Check welke milestones gepasseerd zijn tussen oud en nieuw puntentotaal.
+     * Maakt wimpel_uitreikingen records aan voor de spreker queue.
      */
-    public function checkMilestones(WimpelJudoka $wimpelJudoka, int $oudePunten): array
+    public function checkMilestones(WimpelJudoka $wimpelJudoka, int $oudePunten, ?int $toernooiId = null): array
     {
-        return WimpelMilestone::where('organisator_id', $wimpelJudoka->organisator_id)
+        $milestones = WimpelMilestone::where('organisator_id', $wimpelJudoka->organisator_id)
             ->where('punten', '>', $oudePunten)
             ->where('punten', '<=', $wimpelJudoka->punten_totaal)
             ->orderBy('punten')
-            ->get()
-            ->toArray();
+            ->get();
+
+        // Create uitreiking records for spreker queue
+        foreach ($milestones as $milestone) {
+            WimpelUitreiking::firstOrCreate(
+                [
+                    'wimpel_judoka_id' => $wimpelJudoka->id,
+                    'wimpel_milestone_id' => $milestone->id,
+                ],
+                [
+                    'toernooi_id' => $toernooiId,
+                    'uitgereikt' => false,
+                ]
+            );
+        }
+
+        return $milestones->toArray();
     }
 
     /**

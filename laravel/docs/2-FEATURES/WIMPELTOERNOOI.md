@@ -19,11 +19,19 @@ Een doorlopend puntensysteem per organisator, waarbij judoka's over meerdere **p
 
 ## Functionaliteit
 
-### Dashboard
+### Dashboard / Overzicht (`/{slug}/wimpeltoernooi`)
 - **Wimpeltoernooi** link op het organisator dashboard
 - Overzicht van alle judoka's met hun puntentotaal
 - Zoekfunctie om judoka's snel te vinden
+- **Sorteerbaar** op: naam, geboortejaar, punten (klikbare kolomheaders, vergelijkbaar met judokalijst)
 - Waarschuwingen voor judoka's die een milestone bereiken
+
+#### Milestone-bereikt sectie (bovenaan)
+- Toont judoka's die een milestone hebben bereikt maar **nog niet uitgereikt** (`wimpel_uitreikingen.uitgereikt = false`)
+- Per judoka: naam + milestone omschrijving (bijv. "Jan Jansen — gele wimpel")
+- Gesorteerd op milestone-waarde: laag (10 pnt) → hoog (50 pnt)
+- Organisator kan hier ook zien welke uitreikingen nog open staan
+- Na uitreiking door spreker verdwijnt het uit deze lijst
 
 ### Punten bijschrijven
 - **Automatisch per poule** — zodra een poule klaar is op de mat (spreker_klaar) worden punten direct bijgeschreven

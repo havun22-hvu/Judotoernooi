@@ -276,6 +276,10 @@ class RoleToegang extends Controller
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
             ->orderBy('spreker_klaar', 'asc')
             ->get()
+            ->filter(function ($poule) {
+                // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)
+                return !$poule->isPuntenCompetitie();
+            })
             ->map(function ($poule) use ($toernooi) {
                 if ($poule->type === 'eliminatie') {
                     $poule->standings = $this->getEliminatieStandings($poule);
@@ -299,7 +303,7 @@ class RoleToegang extends Controller
                     return true;
                 });
 
-                $isPuntenComp = $poule->isPuntenCompetitie();
+                $isPuntenComp = false; // Puntencompetitie poules are already filtered out above
                 $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isPuntenComp) {
                     $wp = 0;
                     $jp = 0;
@@ -426,7 +430,18 @@ class RoleToegang extends Controller
             return [$blok->nummer => ['blok' => $blok, 'matten' => $poulesPerMat]];
         });
 
-        return view('pages.spreker.interface', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok', 'toegang'));
+        // Wimpel milestone-uitreikingen voor spreker (puntencompetitie)
+        $wimpelUitreikingen = \App\Models\WimpelUitreiking::where('uitgereikt', false)
+            ->whereHas('wimpelJudoka', function ($q) use ($toernooi) {
+                $q->where('organisator_id', $toernooi->organisator_id);
+            })
+            ->where('toernooi_id', $toernooi->id)
+            ->with(['wimpelJudoka', 'milestone'])
+            ->get()
+            ->sortBy('milestone.punten')
+            ->values();
+
+        return view('pages.spreker.interface', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok', 'toegang', 'wimpelUitreikingen'));
     }
 
     /**
@@ -466,6 +481,27 @@ class RoleToegang extends Controller
     /**
      * Mark poule as announced (device-bound PWA)
      */
+    /**
+     * Wimpel milestone uitgereikt markeren (device-bound spreker)
+     */
+    public function sprekerWimpelUitgereikt(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validate([
+            'uitreiking_id' => 'required|exists:wimpel_uitreikingen,id',
+        ]);
+
+        $uitreiking = \App\Models\WimpelUitreiking::findOrFail($validated['uitreiking_id']);
+        $uitreiking->update([
+            'uitgereikt' => true,
+            'uitgereikt_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Uitreiking geregistreerd',
+        ]);
+    }
+
     public function sprekerAfgeroepen(Request $request): \Illuminate\Http\JsonResponse
     {
         $toegang = $request->get('device_toegang');

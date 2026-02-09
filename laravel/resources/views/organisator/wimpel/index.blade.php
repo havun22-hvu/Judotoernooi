@@ -22,23 +22,26 @@
         </div>
     </div>
 
-    {{-- Milestone alerts --}}
-    @foreach($judokas as $judoka)
-        @if($judoka->bereikteMilestones->isNotEmpty())
-            @php $laatsteMilestone = $judoka->bereikteMilestones->last(); @endphp
-            @if($judoka->punten_totaal == $laatsteMilestone->punten || $judoka->punten_totaal - $laatsteMilestone->punten <= 2)
-                <div class="bg-yellow-50 border border-yellow-300 rounded-lg px-4 py-3 mb-2 flex items-center gap-2">
-                    <span class="text-yellow-600 font-bold">&#9733;</span>
-                    <span>
-                        <strong>{{ $judoka->naam }}</strong> heeft {{ $judoka->punten_totaal }} punten bereikt
-                        &rarr; <em>{{ $laatsteMilestone->omschrijving }}</em>
-                    </span>
-                    <a href="{{ route('organisator.wimpel.show', [$organisator, $judoka]) }}"
-                       class="ml-auto text-blue-600 hover:text-blue-800 text-sm">Bekijk</a>
-                </div>
-            @endif
-        @endif
-    @endforeach
+    {{-- Open uitreikingen (milestone bereikt, nog niet uitgereikt) --}}
+    @if($openUitreikingen->isNotEmpty())
+        <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+            <h3 class="font-semibold text-yellow-800 mb-2">&#9733; Milestone uitreikingen</h3>
+            <div class="space-y-2">
+                @foreach($openUitreikingen as $uitreiking)
+                    <div class="flex items-center gap-3 bg-white rounded px-3 py-2 border border-yellow-200">
+                        <span class="text-yellow-600 font-bold text-lg">&#9733;</span>
+                        <span class="font-medium">{{ $uitreiking->wimpelJudoka->naam }}</span>
+                        <span class="text-gray-400">&mdash;</span>
+                        <span class="text-yellow-700 font-medium">{{ $uitreiking->milestone->omschrijving }}</span>
+                        <span class="text-xs text-gray-400">({{ $uitreiking->milestone->punten }} pt)</span>
+                        <a href="{{ route('organisator.wimpel.show', [$organisator, $uitreiking->wimpelJudoka]) }}"
+                           class="ml-auto text-blue-600 hover:text-blue-800 text-sm">Bekijk</a>
+                    </div>
+                @endforeach
+            </div>
+            <p class="text-xs text-yellow-600 mt-2">Uitreikingen worden door de spreker afgevinkt tijdens het toernooi</p>
+        </div>
+    @endif
 
     {{-- Punten bijschrijven --}}
     @if($onverwerkteToernooien->isNotEmpty())
@@ -76,74 +79,78 @@
     {{-- Judoka tabel --}}
     <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b">
-            <h2 class="text-lg font-semibold">Judoka's ({{ $judokas->count() }})</h2>
+            <h2 class="text-lg font-semibold">Judoka's (<span x-text="gefilterd.length"></span>)</h2>
         </div>
 
-        @if($judokas->isEmpty())
+        <template x-if="judokas.length === 0">
             <div class="p-6 text-center text-gray-500">
                 Nog geen judoka's. Punten worden automatisch bijgeschreven na een puntencompetitie toernooi.
             </div>
-        @else
+        </template>
+
+        <template x-if="judokas.length > 0">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Naam</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Geb.jaar</th>
-                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Punten</th>
+                            <th @click="sorteer('naam')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                                Naam
+                                <span x-show="sortKolom === 'naam'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                            </th>
+                            <th @click="sorteer('geboortejaar')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                                Geb.jaar
+                                <span x-show="sortKolom === 'geboortejaar'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                            </th>
+                            <th @click="sorteer('punten_totaal')" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700">
+                                Punten
+                                <span x-show="sortKolom === 'punten_totaal'" x-text="sortRichting === 'asc' ? ' ▲' : ' ▼'"></span>
+                            </th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Volgende milestone</th>
                             <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acties</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @foreach($judokas as $judoka)
-                            <tr class="hover:bg-gray-50"
-                                x-show="!zoek || '{{ strtolower($judoka->naam) }}'.includes(zoek.toLowerCase())">
+                        <template x-for="judoka in gefilterd" :key="judoka.id">
+                            <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-medium">
-                                    <a href="{{ route('organisator.wimpel.show', [$organisator, $judoka]) }}"
-                                       class="text-blue-600 hover:text-blue-800">
-                                        {{ $judoka->naam }}
-                                    </a>
-                                    @if($judoka->is_nieuw)
-                                        <span class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1">NIEUW</span>
-                                    @endif
+                                    <a :href="judoka.url" class="text-blue-600 hover:text-blue-800" x-text="judoka.naam"></a>
+                                    <span x-show="judoka.is_nieuw" class="bg-orange-500 text-white text-xs font-bold px-1.5 py-0.5 rounded ml-1">NIEUW</span>
                                 </td>
-                                <td class="px-4 py-3 text-center text-gray-600">{{ $judoka->geboortejaar }}</td>
+                                <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geboortejaar"></td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
-                                        {{ $judoka->punten_totaal }}
-                                    </span>
+                                    <span class="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full" x-text="judoka.punten_totaal"></span>
                                 </td>
                                 <td class="px-4 py-3 text-gray-600 text-sm">
-                                    @if($judoka->volgendeMilestone)
-                                        {{ $judoka->volgendeMilestone->punten }} pt
-                                        &rarr; {{ $judoka->volgendeMilestone->omschrijving }}
-                                        <span class="text-xs text-gray-400">
-                                            (nog {{ $judoka->volgendeMilestone->punten - $judoka->punten_totaal }})
+                                    <template x-if="judoka.volgende">
+                                        <span>
+                                            <span x-text="judoka.volgende.punten + ' pt'"></span>
+                                            &rarr; <span x-text="judoka.volgende.omschrijving"></span>
+                                            <span class="text-xs text-gray-400" x-text="'(nog ' + (judoka.volgende.punten - judoka.punten_totaal) + ')'"></span>
                                         </span>
-                                    @else
+                                    </template>
+                                    <template x-if="!judoka.volgende">
                                         <span class="text-gray-400">-</span>
-                                    @endif
+                                    </template>
                                 </td>
                                 <td class="px-4 py-3 text-right flex items-center justify-end gap-2">
-                                    @if($judoka->is_nieuw)
-                                        <button @click="bevestigJudoka({{ $judoka->id }})"
+                                    <template x-if="judoka.is_nieuw">
+                                        <button @click="bevestigJudoka(judoka.id)"
                                                 class="bg-green-500 hover:bg-green-600 text-white text-xs font-medium px-3 py-1 rounded"
                                                 :disabled="verwerking">
                                             &#10003; Bevestigd
                                         </button>
-                                    @endif
-                                    <a href="{{ route('organisator.wimpel.show', [$organisator, $judoka]) }}"
+                                    </template>
+                                    <a :href="judoka.url"
                                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded">
                                         Details
                                     </a>
                                 </td>
                             </tr>
-                        @endforeach
+                        </template>
                     </tbody>
                 </table>
             </div>
-        @endif
+        </template>
     </div>
 </div>
 
@@ -154,6 +161,50 @@ function wimpelPage() {
         verwerking: false,
         feedback: '',
         feedbackType: 'success',
+        sortKolom: 'punten_totaal',
+        sortRichting: 'desc',
+        judokas: @json($judokas->map(fn($j) => [
+            'id' => $j->id,
+            'naam' => $j->naam,
+            'geboortejaar' => $j->geboortejaar,
+            'punten_totaal' => $j->punten_totaal,
+            'is_nieuw' => $j->is_nieuw,
+            'url' => route('organisator.wimpel.show', [$organisator, $j]),
+            'volgende' => $j->volgendeMilestone ? [
+                'punten' => $j->volgendeMilestone->punten,
+                'omschrijving' => $j->volgendeMilestone->omschrijving,
+            ] : null,
+        ])->values()),
+
+        get gefilterd() {
+            let lijst = this.judokas;
+
+            if (this.zoek) {
+                const z = this.zoek.toLowerCase();
+                lijst = lijst.filter(j => j.naam.toLowerCase().includes(z));
+            }
+
+            const kolom = this.sortKolom;
+            const richting = this.sortRichting === 'asc' ? 1 : -1;
+
+            return [...lijst].sort((a, b) => {
+                let va = a[kolom];
+                let vb = b[kolom];
+                if (typeof va === 'string') {
+                    return va.localeCompare(vb, 'nl') * richting;
+                }
+                return ((va ?? 0) - (vb ?? 0)) * richting;
+            });
+        },
+
+        sorteer(kolom) {
+            if (this.sortKolom === kolom) {
+                this.sortRichting = this.sortRichting === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortKolom = kolom;
+                this.sortRichting = kolom === 'naam' ? 'asc' : 'desc';
+            }
+        },
 
         async bevestigJudoka(judokaId) {
             try {

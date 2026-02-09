@@ -765,6 +765,10 @@ class BlokController extends Controller
             ->with(['mat', 'blok', 'judokas.club', 'wedstrijden'])
             ->orderBy('spreker_klaar', 'asc')  // Oldest first (longest waiting at top)
             ->get()
+            ->filter(function ($poule) {
+                // PUNTENCOMPETITIE: geen uitslagen naar spreker (geen directe winnaar)
+                return !$poule->isPuntenCompetitie();
+            })
             ->map(function ($poule) use ($toernooi) {
                 // ELIMINATIE: Haal medaille winnaars direct uit bracket
                 if ($poule->type === 'eliminatie') {
@@ -786,7 +790,7 @@ class BlokController extends Controller
                     return $judoka->aanwezigheid !== 'afwezig';
                 });
 
-                $isPuntenComp = $poule->isPuntenCompetitie();
+                $isPuntenComp = false; // Puntencompetitie poules are already filtered out above
                 $standings = $activeJudokas->map(function ($judoka) use ($poule, $barrage, $isPuntenComp) {
                     $wp = 0;
                     $jp = 0;
@@ -910,8 +914,19 @@ class BlokController extends Controller
             return [$blok->nummer => ['blok' => $blok, 'matten' => $poulesPerMat]];
         });
 
+        // Wimpel milestone-uitreikingen voor spreker (puntencompetitie)
+        $wimpelUitreikingen = \App\Models\WimpelUitreiking::where('uitgereikt', false)
+            ->whereHas('wimpelJudoka', function ($q) use ($toernooi) {
+                $q->where('organisator_id', $toernooi->organisator_id);
+            })
+            ->where('toernooi_id', $toernooi->id)
+            ->with(['wimpelJudoka', 'milestone'])
+            ->get()
+            ->sortBy('milestone.punten')
+            ->values();
+
         // Admin versie met layouts.app menu (zie docs: INTERFACES.md)
-        return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok'));
+        return view('pages.spreker.interface-admin', compact('toernooi', 'klarePoules', 'afgeroepen', 'poulesPerBlok', 'wimpelUitreikingen'));
     }
 
     /**
@@ -1017,6 +1032,27 @@ class BlokController extends Controller
     /**
      * Mark poule as announced (prizes awarded) - moves to archive
      */
+    /**
+     * Wimpel milestone uitgereikt markeren (spreker vinkt af)
+     */
+    public function wimpelUitgereikt(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'uitreiking_id' => 'required|exists:wimpel_uitreikingen,id',
+        ]);
+
+        $uitreiking = \App\Models\WimpelUitreiking::findOrFail($validated['uitreiking_id']);
+        $uitreiking->update([
+            'uitgereikt' => true,
+            'uitgereikt_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Uitreiking geregistreerd',
+        ]);
+    }
+
     public function markeerAfgeroepen(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([

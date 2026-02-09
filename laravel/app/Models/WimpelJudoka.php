@@ -34,6 +34,16 @@ class WimpelJudoka extends Model
         return $this->hasMany(WimpelPuntenLog::class)->orderByDesc('created_at');
     }
 
+    public function uitreikingen(): HasMany
+    {
+        return $this->hasMany(WimpelUitreiking::class);
+    }
+
+    public function openUitreikingen(): HasMany
+    {
+        return $this->hasMany(WimpelUitreiking::class)->where('uitgereikt', false);
+    }
+
     /**
      * Herbereken punten_totaal uit alle log entries
      */

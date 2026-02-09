@@ -469,6 +469,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('spreker/notities', [BlokController::class, 'saveNotities'])->name('spreker.notities.save');
         Route::get('spreker/notities', [BlokController::class, 'getNotities'])->name('spreker.notities.get');
         Route::post('spreker/standings', [BlokController::class, 'getPouleStandings'])->name('spreker.standings');
+        Route::post('spreker/wimpel-uitgereikt', [BlokController::class, 'wimpelUitgereikt'])->name('spreker.wimpel-uitgereikt');
     });
 
 });
@@ -540,6 +541,7 @@ Route::prefix('{organisator}/{toernooi}')->group(function () {
         Route::post('spreker/{toegang}/afgeroepen', [RoleToegang::class, 'sprekerAfgeroepen'])->name('spreker.afgeroepen');
         Route::post('spreker/{toegang}/terug', [RoleToegang::class, 'sprekerTerug'])->name('spreker.terug');
         Route::post('spreker/{toegang}/standings', [RoleToegang::class, 'sprekerStandings'])->name('spreker.standings');
+        Route::post('spreker/{toegang}/wimpel-uitgereikt', [RoleToegang::class, 'sprekerWimpelUitgereikt'])->name('spreker.wimpel-uitgereikt');
         Route::get('dojo/{toegang}', [RoleToegang::class, 'dojoDeviceBound'])->name('dojo.scanner');
     });
 });

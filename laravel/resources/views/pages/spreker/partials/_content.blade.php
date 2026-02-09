@@ -12,12 +12,14 @@
         $notitiesSaveUrl = route('spreker.notities.save', $routeParams);
         $afgeroepenUrl = route('spreker.afgeroepen', $routeParams);
         $standingsUrl = route('spreker.standings', $routeParams);
+        $wimpelUitgereiktUrl = route('spreker.wimpel-uitgereikt', $routeParams);
     } else {
         $terugUrl = route('toernooi.spreker.terug', $toernooi->routeParams());
         $notitiesGetUrl = route('toernooi.spreker.notities.get', $toernooi->routeParams());
         $notitiesSaveUrl = route('toernooi.spreker.notities.save', $toernooi->routeParams());
         $afgeroepenUrl = route('toernooi.spreker.afgeroepen', $toernooi->routeParams());
         $standingsUrl = route('toernooi.spreker.standings', $toernooi->routeParams());
+        $wimpelUitgereiktUrl = route('toernooi.spreker.wimpel-uitgereikt', $toernooi->routeParams());
     }
 @endphp
 <div x-data="sprekerInterface()" x-cloak>
@@ -111,7 +113,45 @@
         </div>
 
 
-        @if($klarePoules->isEmpty())
+        {{-- Wimpel milestone-uitreikingen --}}
+        @if(isset($wimpelUitreikingen) && $wimpelUitreikingen->isNotEmpty())
+        <div class="space-y-3 mb-6">
+            @foreach($wimpelUitreikingen as $uitreiking)
+            <div class="bg-white rounded-lg shadow overflow-hidden" id="uitreiking-{{ $uitreiking->id }}">
+                <div class="bg-yellow-500 text-white px-4 py-3 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-lg flex items-center gap-2">
+                            &#9733; {{ __('Wimpel uitreiking') }}
+                        </div>
+                        <div class="text-yellow-100 text-sm">
+                            {{ $uitreiking->milestone->punten }} {{ __('punten bereikt') }}
+                        </div>
+                    </div>
+                    <button
+                        @click="markeerUitgereikt({{ $uitreiking->id }})"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold flex items-center gap-2"
+                    >
+                        &#10003; {{ __('Uitgereikt') }}
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-yellow-100 to-yellow-200 border-2 border-yellow-400">
+                        <div class="text-3xl">&#9733;</div>
+                        <div>
+                            <div class="font-bold text-lg">{{ $uitreiking->wimpelJudoka->naam }}</div>
+                            <div class="text-sm text-gray-600">{{ $uitreiking->wimpelJudoka->punten_totaal }} {{ __('punten totaal') }}</div>
+                        </div>
+                        <div class="ml-auto text-right">
+                            <div class="text-lg font-bold text-yellow-700">{{ $uitreiking->milestone->omschrijving }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        @if($klarePoules->isEmpty() && (!isset($wimpelUitreikingen) || $wimpelUitreikingen->isEmpty()))
         <div class="bg-white rounded-lg shadow p-12 text-center">
             <div class="text-6xl mb-4">🎙️</div>
             <h2 class="text-2xl font-bold text-gray-600 mb-2">{{ __('Wachten op uitslagen...') }}</h2>
@@ -775,6 +815,33 @@ function sprekerInterface() {
                         element.style.transform = 'translateX(100px)';
                         setTimeout(() => element.remove(), 300);
                     }
+                }
+            } catch (err) {
+                alert(__fout + ' ' + err.message);
+            }
+        },
+
+        async markeerUitgereikt(uitreikingId) {
+            try {
+                const response = await fetch('{{ $wimpelUitgereiktUrl }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ uitreiking_id: uitreikingId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const element = document.getElementById('uitreiking-' + uitreikingId);
+                    if (element) {
+                        element.style.transition = 'opacity 0.3s, transform 0.3s';
+                        element.style.opacity = '0';
+                        element.style.transform = 'translateX(100px)';
+                        setTimeout(() => element.remove(), 300);
+                    }
+                    this.showFeedback('Uitreiking geregistreerd');
                 }
             } catch (err) {
                 alert(__fout + ' ' + err.message);
