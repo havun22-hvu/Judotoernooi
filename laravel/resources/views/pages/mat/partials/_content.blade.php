@@ -419,8 +419,19 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
 };
 
+// Custom drag image helper - voorkomt dat browser meerdere elementen in ghost meepakt
+window.setCleanDragImage = function(event, naam) {
+    const ghost = document.createElement('div');
+    ghost.textContent = naam;
+    ghost.style.cssText = 'position:fixed;top:-1000px;left:-1000px;padding:2px 8px;background:#fff;border:1px solid #9ca3af;border-radius:4px;font-size:12px;white-space:nowrap;z-index:9999;';
+    document.body.appendChild(ghost);
+    event.dataTransfer.setDragImage(ghost, 0, 0);
+    requestAnimationFrame(() => ghost.remove());
+};
+
 // Start drag vanuit swap ruimte
 window.startDragFromSwap = function(event, judoka, pouleId) {
+    window.setCleanDragImage(event, judoka.naam);
     event.dataTransfer.setData('text/plain', JSON.stringify({
         judokaId: judoka.id,
         judokaNaam: judoka.naam,
@@ -2117,7 +2128,7 @@ function matInterface() {
                         if (wed.wit) {
                             const displayName = DEBUG_SLOTS ? `[${visualSlotWit}] ${wed.wit.naam}` : wed.wit.naam;
                             html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                          ondragstart="event.dataTransfer.setData('text/plain', '${witDragData}')">
+                                          ondragstart="window.setCleanDragImage(event, '${wed.wit.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${witDragData}')">
                                         <span class="truncate">${displayName}</span>${isWitWinnaar ? winnaarIcon : ''}
                                      </div>`;
                         } else if (DEBUG_SLOTS) {
@@ -2139,7 +2150,7 @@ function matInterface() {
                         if (wed.blauw) {
                             const displayName = DEBUG_SLOTS ? `[${visualSlotBlauw}] ${wed.blauw.naam}` : wed.blauw.naam;
                             html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                          ondragstart="event.dataTransfer.setData('text/plain', '${blauwDragData}')">
+                                          ondragstart="window.setCleanDragImage(event, '${wed.blauw.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${blauwDragData}')">
                                         <span class="truncate">${displayName}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                      </div>`;
                         } else if (DEBUG_SLOTS) {
@@ -2447,7 +2458,7 @@ function matInterface() {
             if (topJudoka) {
                 const displayName = DEBUG_SLOTS ? `[${topSlotNr}] ${topJudoka.naam}` : topJudoka.naam;
                 html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                              ondragstart="event.dataTransfer.setData('text/plain', '${topDragData}')">
+                              ondragstart="window.setCleanDragImage(event, '${topJudoka.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${topDragData}')">
                             <span class="truncate">${displayName}</span>${topIsWinnaar ? winnaarIcon : ''}
                          </div>`;
             } else if (DEBUG_SLOTS) {
@@ -2468,7 +2479,7 @@ function matInterface() {
             if (bottomJudoka) {
                 const displayName = DEBUG_SLOTS ? `[${bottomSlotNr}] ${bottomJudoka.naam}` : bottomJudoka.naam;
                 html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                              ondragstart="event.dataTransfer.setData('text/plain', '${bottomDragData}')">
+                              ondragstart="window.setCleanDragImage(event, '${bottomJudoka.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${bottomDragData}')">
                             <span class="truncate">${displayName}</span>${bottomIsWinnaar ? winnaarIcon : ''}
                          </div>`;
             } else if (isRonde2 && aRondeNaam) {
