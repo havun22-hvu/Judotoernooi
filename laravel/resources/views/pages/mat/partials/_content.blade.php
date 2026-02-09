@@ -2634,17 +2634,22 @@ window.initBracketSortable = function() {
         if (evt.from !== evt.to) {
             evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
         }
-        if (evt.from === evt.to) return; // No actual move
 
         // Read drag data from data-drag attribute
         const dragAttr = evt.item.getAttribute('data-drag');
         if (!dragAttr) return;
 
-        const target = evt.to;
+        // Use elementFromPoint for accurate target detection (SortableJS is unreliable for small absolute-positioned slots)
+        const oe = evt.originalEvent;
+        const cx = oe?.changedTouches?.[0]?.clientX ?? oe?.clientX;
+        const cy = oe?.changedTouches?.[0]?.clientY ?? oe?.clientY;
+        const target = (cx != null) ? document.elementFromPoint(cx, cy)?.closest('.bracket-drop') : evt.to;
+        if (!target) return;
+
         const handler = target.getAttribute('data-drop-handler');
         if (!handler) return;
 
-        // Optimistic UI: show judoka name in target slot immediately
+        // Optimistic UI: show judoka name immediately
         try {
             const d = JSON.parse(dragAttr);
             if (d.judokaNaam && handler !== 'verwijderJudoka') {
@@ -2662,7 +2667,7 @@ window.initBracketSortable = function() {
             dataTransfer: { getData() { return dragAttr; } }
         };
 
-        // Route to handler - same calls as the old inline ondrop handlers
+        // Route to handler
         if (handler === 'dropJudoka') {
             const wId = parseInt(target.getAttribute('data-wedstrijd-id'));
             const pos = target.getAttribute('data-positie');
