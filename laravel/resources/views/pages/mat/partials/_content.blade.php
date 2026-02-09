@@ -2159,7 +2159,7 @@ function matInterface() {
                         if (wed.blauw) {
                             const displayName = DEBUG_SLOTS ? `[${visualSlotBlauw}] ${wed.blauw.naam}` : wed.blauw.naam;
                             html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                                          data-drag="${blauwDragData}">`;
+                                          data-drag="${blauwDragData}">
                                         <span class="truncate">${displayName}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                      </div>`;
                         } else if (DEBUG_SLOTS) {
@@ -2478,7 +2478,7 @@ function matInterface() {
             if (bottomJudoka) {
                 const displayName = DEBUG_SLOTS ? `[${bottomSlotNr}] ${bottomJudoka.naam}` : bottomJudoka.naam;
                 html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                              data-drag="${bottomDragData}">`;
+                              data-drag="${bottomDragData}">
                             <span class="truncate">${displayName}</span>${bottomIsWinnaar ? winnaarIcon : ''}
                          </div>`;
             } else if (isRonde2 && aRondeNaam) {
