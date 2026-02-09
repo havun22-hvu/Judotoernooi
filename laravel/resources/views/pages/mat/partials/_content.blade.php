@@ -2641,6 +2641,9 @@ window.initBracketSortable = function() {
         el.removeAttribute('data-sortable-bracket');
     });
 
+    // Track highlighted drop target for cleanup
+    let highlightedTarget = null;
+
     // Initialize SortableJS on every [ondrop] container
     matEl.querySelectorAll('[ondrop]').forEach(container => {
         container.setAttribute('data-sortable-bracket', '1');
@@ -2655,7 +2658,24 @@ window.initBracketSortable = function() {
             chosenClass: 'sortable-bracket-chosen',
             fallbackOnBody: true,
             forceFallback: true, // Use JS-based drag for consistent behavior
+            onMove(evt) {
+                // Highlight drop target (purple ring like native DnD)
+                if (highlightedTarget && highlightedTarget !== evt.to) {
+                    highlightedTarget.classList.remove('sortable-drop-highlight');
+                }
+                if (evt.to !== evt.from) {
+                    evt.to.classList.add('sortable-drop-highlight');
+                    highlightedTarget = evt.to;
+                }
+                return true;
+            },
             onEnd(evt) {
+                // Remove highlight
+                if (highlightedTarget) {
+                    highlightedTarget.classList.remove('sortable-drop-highlight');
+                    highlightedTarget = null;
+                }
+
                 // Always revert DOM - API call + laadWedstrijden handles visual update
                 if (evt.from !== evt.to) {
                     evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
