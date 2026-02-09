@@ -706,10 +706,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
         }
 
-        Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
     } catch (err) {
         console.error('Drop error:', err);
         alert('❌ Fout bij plaatsen: ' + err.message);
+        location.reload();
     }
 };
 
@@ -756,11 +756,10 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
             return;
         }
 
-        // Refresh bracket
-        Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
     } catch (err) {
         console.error('Medaille drop error:', err);
         alert('❌ Fout bij medaille plaatsing: ' + err.message);
+        location.reload();
     }
 };
 
@@ -804,11 +803,13 @@ window.verwijderJudoka = async function(event) {
             })
         });
 
-        if (response.ok) {
-            Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
+        if (!response.ok) {
+            alert('❌ Fout bij verwijderen');
+            location.reload();
         }
     } catch (err) {
         console.error('Verwijder error:', err);
+        location.reload();
     }
 };
 
@@ -2592,160 +2593,82 @@ setInterval(() => {
 }, 30000);
 
 // ========================================
-// SortableJS bracket initialization for touch drag & drop
-// Replaces HTML5 DnD which doesn't work on touch devices
+// SortableJS bracket - zaaloverzicht patroon
+// SortableJS verplaatst element direct, API op achtergrond
 // ========================================
 window.initBracketSortable = function() {
-    if (typeof Sortable === 'undefined') return;
+    if (typeof Sortable === 'undefined') { console.warn('[DnD] Sortable niet geladen'); return; }
 
     const matEl = document.getElementById('mat-interface');
     if (!matEl) return;
 
-    // Destroy previous instances
+    // Destroy previous
     matEl.querySelectorAll('[data-sortable-bracket]').forEach(el => {
         if (el._sortable) el._sortable.destroy();
         el.removeAttribute('data-sortable-bracket');
     });
 
-    // Track highlighted drop target for cleanup
-    let highlightedTarget = null;
+    const containers = matEl.querySelectorAll('.bracket-drop');
+    console.log(`[DnD] init: ${containers.length} containers`);
 
-    // Shared onMove handler - purple highlight on drop target
-    function onMoveHandler(evt) {
-        if (highlightedTarget && highlightedTarget !== evt.to) {
-            highlightedTarget.classList.remove('sortable-drop-highlight');
-        }
-        if (evt.to !== evt.from) {
-            evt.to.classList.add('sortable-drop-highlight');
-            highlightedTarget = evt.to;
-        }
-        return true;
-    }
-
-    // Shared onStart handler - prevent text selection
-    function onStartHandler(evt) {
-        document.body.style.userSelect = 'none';
-        document.body.style.webkitUserSelect = 'none';
-        const dragAttr = evt.item.getAttribute('data-drag');
-        try {
-            const d = JSON.parse(dragAttr);
-            console.log(`[DnD] 🟢 START drag: ${d.judokaNaam || 'onbekend'} (judoka ${d.judokaId})`);
-        } catch(e) { console.log('[DnD] 🟢 START drag'); }
-    }
-
-    // Shared onEnd handler - revert DOM + route to correct handler
-    function onEndHandler(evt) {
-        // Re-enable text selection
-        document.body.style.userSelect = '';
-        document.body.style.webkitUserSelect = '';
-
-        // Save the highlighted target (set during onMove) BEFORE cleanup
-        const dropTarget = highlightedTarget;
-
-        // Remove highlight
-        if (highlightedTarget) {
-            highlightedTarget.classList.remove('sortable-drop-highlight');
-            highlightedTarget = null;
-        }
-
-        // Revert DOM - laadWedstrijden will do full re-render
-        if (evt.from !== evt.to) {
-            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
-        }
-
-        // Read drag data from data-drag attribute
-        const dragAttr = evt.item.getAttribute('data-drag');
-        if (!dragAttr) { console.log('[DnD] 🔴 END: geen drag data'); return; }
-
-        // Target detection: prefer onMove highlight (most reliable) > elementFromPoint > evt.to
-        let target = (dropTarget && dropTarget.getAttribute('data-drop-handler')) ? dropTarget : null;
-        let targetSource = target ? 'highlight' : null;
-        if (!target) {
-            const oe = evt.originalEvent;
-            const cx = oe?.changedTouches?.[0]?.clientX ?? oe?.clientX;
-            const cy = oe?.changedTouches?.[0]?.clientY ?? oe?.clientY;
-            if (cx != null && (cx !== 0 || cy !== 0)) {
-                target = document.elementFromPoint(cx, cy)?.closest('.bracket-drop');
-                if (target) targetSource = `elementFromPoint(${Math.round(cx)},${Math.round(cy)})`;
-            }
-        }
-        if (!target) {
-            target = (evt.to !== evt.from) ? evt.to : null;
-            if (target) targetSource = 'evt.to';
-        }
-        if (!target) { console.log('[DnD] 🔴 END: geen target gevonden (highlight=null, elementFromPoint=null, evt.to=from)'); return; }
-
-        const handler = target.getAttribute('data-drop-handler');
-        if (!handler) { console.log('[DnD] 🔴 END: target heeft geen data-drop-handler'); return; }
-
-        try {
-            const d = JSON.parse(dragAttr);
-            console.log(`[DnD] 🎯 DROP: ${d.judokaNaam || '?'} → ${handler} (target via ${targetSource})`);
-
-            // Optimistic UI: show judoka name immediately
-            if (d.judokaNaam && handler !== 'verwijderJudoka') {
-                const p = document.createElement('div');
-                p.className = 'w-full h-full px-1 flex items-center text-xs text-purple-500 italic animate-pulse';
-                p.innerHTML = `<span class="truncate">${d.judokaNaam}</span>`;
-                target.querySelectorAll('.bracket-judoka, span:not(.truncate)').forEach(el => el.remove());
-                target.appendChild(p);
-                console.log(`[DnD] ✅ Optimistic UI: "${d.judokaNaam}" getoond`);
-            }
-        } catch(e) { console.log('[DnD] ⚠️ Optimistic UI error:', e.message); }
-
-        // Build fake event identical to old HTML5 DnD flow
-        const fakeEvent = {
-            preventDefault() {},
-            dataTransfer: { getData() { return dragAttr; } }
-        };
-
-        // Route to handler
-        if (handler === 'dropJudoka') {
-            const wId = parseInt(target.getAttribute('data-wedstrijd-id'));
-            const pos = target.getAttribute('data-positie');
-            const pId = parseInt(target.getAttribute('data-poule-id'));
-            let bew = null;
-            try { const b = target.getAttribute('data-bewoner'); if (b && b !== 'null') bew = JSON.parse(b); } catch(e) {}
-            console.log(`[DnD] 📡 → dropJudoka(wedstrijd=${wId}, positie=${pos}, poule=${pId})`);
-            window.dropJudoka(fakeEvent, wId, pos, pId, bew);
-        } else if (handler === 'dropInSwap') {
-            console.log(`[DnD] 📡 → dropInSwap(poule=${target.getAttribute('data-poule-id')})`);
-            window.dropInSwap(fakeEvent, parseInt(target.getAttribute('data-poule-id')), false);
-        } else if (handler === 'dropOpMedaille') {
-            const fId = target.getAttribute('data-finale-id');
-            console.log(`[DnD] 📡 → dropOpMedaille(finale=${fId}, medaille=${target.getAttribute('data-medaille')})`);
-            window.dropOpMedaille(fakeEvent, fId === 'null' ? null : parseInt(fId), target.getAttribute('data-medaille'), parseInt(target.getAttribute('data-poule-id')));
-        } else if (handler === 'verwijderJudoka') {
-            console.log(`[DnD] 📡 → verwijderJudoka`);
-            window.verwijderJudoka(fakeEvent);
-        }
-    }
-
-    // Initialize SortableJS on all .bracket-drop containers (drop targets)
-    matEl.querySelectorAll('.bracket-drop').forEach(container => {
-        // Determine group config based on container type
-        const isSwap = container.classList.contains('bracket-swap');
-        const isMedal = container.classList.contains('bracket-medal');
-        const isDelete = container.classList.contains('bracket-delete');
-
-        const groupConfig = (isMedal || isDelete)
-            ? { name: 'bracket', pull: false, put: true }
-            : { name: 'bracket', pull: true, put: true };
-
+    containers.forEach(container => {
         container.setAttribute('data-sortable-bracket', '1');
-        container._sortable = new Sortable(container, {
-            group: groupConfig,
-            sort: false,
-            forceFallback: true,
+        new Sortable(container, {
+            group: { name: 'bracket', pull: 'clone', put: true },
             animation: 150,
-            ghostClass: 'sortable-bracket-ghost',
-            chosenClass: 'sortable-bracket-chosen',
-            fallbackClass: 'sortable-bracket-ghost',
-            emptyInsertThreshold: 15,
+            ghostClass: 'bg-blue-100',
+            chosenClass: 'bg-blue-200',
+            dragClass: 'shadow-lg',
             draggable: '.bracket-judoka',
-            onStart: onStartHandler,
-            onMove: onMoveHandler,
-            onEnd: onEndHandler
+            onEnd: async function(evt) {
+                const dragAttr = evt.item.getAttribute('data-drag');
+                if (!dragAttr) return;
+                if (evt.from === evt.to) return;
+
+                const target = evt.to;
+                const handler = target.getAttribute('data-drop-handler');
+                if (!handler) { console.warn('[DnD] geen handler op target'); return; }
+
+                const data = JSON.parse(dragAttr);
+                console.log(`[DnD] ${data.judokaNaam} → ${handler}`);
+
+                // Groene stip op origineel (winnaar markering)
+                const original = evt.clone || evt.from.querySelector(`[data-drag*='"judokaId":${data.judokaId}']`);
+                if (original && !original.querySelector('.bg-green-500')) {
+                    original.querySelector('.truncate')?.insertAdjacentHTML('afterend',
+                        '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>');
+                }
+
+                // SortableJS heeft element al verplaatst = instant zichtbaar
+                // API call op achtergrond (zoals zaaloverzicht)
+                const fakeEvent = {
+                    preventDefault() {},
+                    dataTransfer: { getData() { return dragAttr; } }
+                };
+
+                try {
+                    if (handler === 'dropJudoka') {
+                        const wId = parseInt(target.getAttribute('data-wedstrijd-id'));
+                        const pos = target.getAttribute('data-positie');
+                        const pId = parseInt(target.getAttribute('data-poule-id'));
+                        let bew = null;
+                        try { const b = target.getAttribute('data-bewoner'); if (b && b !== 'null') bew = JSON.parse(b); } catch(e) {}
+                        await window.dropJudoka(fakeEvent, wId, pos, pId, bew);
+                    } else if (handler === 'dropInSwap') {
+                        await window.dropInSwap(fakeEvent, parseInt(target.getAttribute('data-poule-id')), false);
+                    } else if (handler === 'dropOpMedaille') {
+                        const fId = target.getAttribute('data-finale-id');
+                        await window.dropOpMedaille(fakeEvent, fId === 'null' ? null : parseInt(fId), target.getAttribute('data-medaille'), parseInt(target.getAttribute('data-poule-id')));
+                    } else if (handler === 'verwijderJudoka') {
+                        await window.verwijderJudoka(fakeEvent);
+                    }
+                    // API klaar, sync bracket op achtergrond
+                    Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
+                } catch(err) {
+                    console.error('[DnD] Fout:', err);
+                    location.reload();
+                }
+            }
         });
     });
 };
