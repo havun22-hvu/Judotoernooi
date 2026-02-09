@@ -17,9 +17,9 @@
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .elim-sel-groen { outline: 3px solid #22c55e; outline-offset: -1px; }
-        .elim-sel-geel { outline: 3px solid #eab308; outline-offset: -1px; }
-        .elim-sel-blauw { outline: 3px solid #3b82f6; outline-offset: -1px; }
+        .elim-sel-groen { outline: 3px solid #22c55e; outline-offset: -3px; }
+        .elim-sel-geel { outline: 3px solid #eab308; outline-offset: -3px; }
+        .elim-sel-blauw { outline: 3px solid #3b82f6; outline-offset: -3px; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
