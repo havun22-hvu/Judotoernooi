@@ -2709,9 +2709,11 @@ window.initBracketSortable = function() {
         container._sortable = new Sortable(container, {
             group: groupConfig,
             sort: false,
+            forceFallback: true,
             animation: 150,
             ghostClass: 'sortable-bracket-ghost',
             chosenClass: 'sortable-bracket-chosen',
+            fallbackClass: 'sortable-bracket-ghost',
             emptyInsertThreshold: 15,
             draggable: '.bracket-judoka',
             onMove: onMoveHandler,
