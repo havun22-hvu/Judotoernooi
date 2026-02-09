@@ -2704,8 +2704,12 @@ setInterval(() => {
             state.ghost.style.left = touch.clientX + 'px';
             state.ghost.style.top = touch.clientY + 'px';
 
-            // Find drop target by bounding rect (reliable for absolute-positioned elements)
-            const dropTarget = findDropTarget(touch.clientX, touch.clientY);
+            // Hit-test at ghost chip center (not finger position)
+            // Ghost is above finger via transform, user aims with the chip
+            const gr = state.ghost.getBoundingClientRect();
+            const hitX = gr.left + gr.width / 2;
+            const hitY = gr.top + gr.height / 2;
+            const dropTarget = findDropTarget(hitX, hitY);
 
             if (lastDropTarget && lastDropTarget !== dropTarget) {
                 lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
