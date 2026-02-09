@@ -2630,7 +2630,7 @@ window.initBracketSortable = function() {
             highlightedTarget = null;
         }
 
-        // Always revert DOM - API call + laadWedstrijden handles visual update
+        // Revert DOM - laadWedstrijden will do full re-render
         if (evt.from !== evt.to) {
             evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
         }
@@ -2649,6 +2649,16 @@ window.initBracketSortable = function() {
         const target = evt.to;
         const handler = target.getAttribute('data-drop-handler');
         if (!handler) return;
+
+        // Optimistic UI: show judoka name in target slot immediately
+        if (dragData.judokaNaam && handler !== 'verwijderJudoka') {
+            const preview = document.createElement('div');
+            preview.className = 'w-full h-full px-1 flex items-center text-xs text-purple-500 italic animate-pulse';
+            preview.innerHTML = `<span class="truncate">${dragData.judokaNaam}</span>`;
+            // Clear existing content and show preview
+            target.querySelectorAll('.bracket-judoka, span:not(.truncate)').forEach(el => el.remove());
+            target.appendChild(preview);
+        }
 
         console.log('[Sortable] handler:', handler, 'dragData:', dragData);
 
