@@ -751,6 +751,42 @@
 
 ---
 
+## Sessie: 8 februari 2026 (avond)
+
+### Fix: Eliminatie bracket rendering - ontbrekende rondes
+- **Type:** Bug fix
+- **Wat:** `tweeendertigste_finale` en `b_zestiende_finale_1/2` misten in lookup tabellen → order 99 → bracket kapot
+- **Bestanden:** mat/partials/_content.blade.php
+- **Oplossing:** Toegevoegd aan `rondeVolgordeLookup`, `getRondeDisplayNaam`, `rondeNiveauMap`
+- **Regel:** Bij nieuwe ronde-namen ALTIJD alle 3 lookups bijwerken!
+
+### Fix: B-bracket slot nummers omgekeerd in onderste helft
+- **Type:** Bug fix
+- **Wat:** `mirroredIdx = sortedWeds.length - 1 - i` draaide volgorde om
+- **Bestanden:** mat/partials/_content.blade.php
+- **Oplossing:** Expliciete visuele slot nummers `i * 2 + 1` / `i * 2 + 2` meegeven
+
+### Fix: A-bracket finale slot [1]/[2] positionering
+- **Type:** UI fix
+- **Wat:** Goud/zilver slots niet goed uitgelijnd achter finale wedstrijd
+- **Bestanden:** mat/partials/_content.blade.php
+- **Oplossing:** `finaleTop = berekenPotjeTop(...)`, zilver op `finaleTop + h`
+
+### Feat: Wedstrijdentelling in poule titel
+- **Type:** UI improvement
+- **Wat:** Poule titel toont nu `(54 judoka's, 103w)` i.p.v. alleen judoka's
+- **Bestanden:** mat/partials/_content.blade.php
+
+### Fix: B-bracket byes niet verspreid
+- **Type:** Bug fix
+- **Wat:** B-start(1) wedstrijden werden 2:1 gevuld, lege wedstrijden bleven leeg
+- **Bestanden:** EliminatieService.php (`koppelARondeAanBRonde` type 'eerste')
+- **Oplossing:** Verliezers verspreid: eerste batch 2:1, rest 1:1 op WIT (bye)
+- **Voorbeeld:** N=54: 22 verliezers in 16 B(1) weds → 6 vol + 10 byes
+- **Regel:** B-bracket byes worden handmatig door hoofdjury geregistreerd (GEEN auto-doorschuif)
+
+---
+
 <!--
 TEMPLATE:
 
