@@ -843,11 +843,18 @@ window.verwijderJudoka = async function(event) {
 // Global double-click handler - beurtaanduiding in eliminatie bracket
 // Triggert hetzelfde 3-kleuren systeem als bij poules (groen/geel/blauw)
 window.dblClickBracket = function(wedstrijdId, pouleId) {
-    const comp = Alpine.$data(document.getElementById('mat-interface'));
+    console.log('[Bracket] dblclick:', wedstrijdId, 'poule:', pouleId);
+    const el = document.getElementById('mat-interface');
+    if (!el) { console.error('[Bracket] mat-interface element niet gevonden'); return; }
+    const comp = Alpine.$data(el);
+    if (!comp) { console.error('[Bracket] Alpine.$data returned null'); return; }
+    console.log('[Bracket] poules:', comp.poules?.length, 'poule_ids:', comp.poules?.map(p => p.poule_id));
     const poule = comp.poules.find(p => p.poule_id === pouleId);
-    if (!poule) return;
+    if (!poule) { console.error('[Bracket] Poule niet gevonden:', pouleId); return; }
+    console.log('[Bracket] wedstrijden in poule:', poule.wedstrijden?.length);
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
-    if (!wedstrijd) return;
+    if (!wedstrijd) { console.error('[Bracket] Wedstrijd niet gevonden:', wedstrijdId); return; }
+    console.log('[Bracket] Calling toggleVolgendeWedstrijd');
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
 
