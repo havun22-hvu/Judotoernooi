@@ -1,7 +1,7 @@
 # Eliminatie Systeem (Double Elimination)
 
 > **Status**: Actief
-> **Laatste update**: 2026-01-01
+> **Laatste update**: 2026-02-08
 > **Verantwoordelijke**: EliminatieService.php
 
 ## Overzicht
@@ -92,19 +92,23 @@ Zie [FORMULES.md](./FORMULES.md) voor de correcte berekening.
 
 ### B-Start Byes (Dubbele Rondes)
 
-Bij dubbele rondes wordt de eerste A-ronde verliezers verspreid over alle B-start(1) wedstrijden. Als er minder verliezers zijn dan 2× B-capaciteit, krijgen sommige B(1) wedstrijden maar 1 judoka (bye).
+Bij dubbele rondes worden de eerste A-ronde verliezers verspreid over **alle** B-start(1) wedstrijden. Elke B(1) wedstrijd krijgt minimaal 1 judoka. Als er minder verliezers zijn dan 2× B-capaciteit, krijgen sommige B(1) wedstrijden maar 1 judoka (bye).
 
 ```
 B-capaciteit = berekenMinimaleBWedstrijden(V1)
-Volle wedstrijden = V1 - B-capaciteit
-Bye wedstrijden = B-capaciteit - volle wedstrijden
+Volle weds    = V1 - B-capaciteit     (krijgen 2 judoka's, 2:1 mapping)
+Bye weds      = 2 × B-cap - V1        (krijgen 1 judoka op WIT, blauw=null)
 
-Voorbeeld N=54: V1=22, B-cap=16
-→ 6 volle wedstrijden (12 verliezers, 2:1)
-→ 10 bye wedstrijden (10 verliezers, alleen WIT)
+Voorbeeld N=54: V1=22, B-cap=16, slots=32
+→ Volle weds = 22 - 16 = 6   (idx 0-11: 12 verliezers, 2:1)
+→ Bye weds   = 32 - 22 = 10  (idx 12-21: 10 verliezers, alleen WIT)
 ```
 
-Bye wedstrijden worden handmatig door de hoofdjury geregistreerd → winnaar schuift door naar B(2) WIT.
+**Spreiding in `koppelARondeAanBRonde` type 'eerste':**
+1. Eerste `volle × 2` verliezers → 2:1 mapping (normaal, wit+blauw)
+2. Resterende verliezers → 1:1 op WIT (bye, blauw blijft null)
+
+Bye wedstrijden worden **handmatig door de hoofdjury** geregistreerd → winnaar schuift door naar B(2) WIT.
 
 ## Implementatie
 
@@ -194,10 +198,29 @@ Welke poules worden waar getoond, afhankelijk van type en vulling:
 | Zaaloverzicht matten | `judokas > 1 \|\| type === 'kruisfinale'` | `zaaloverzicht.blade.php:199` |
 | Poule.updateStatistieken | Bewaar virtueel count alleen voor `kruisfinale` | `Poule.php:222` |
 
+## Bracket Rendering (Mat Interface)
+
+De bracket wordt gerenderd in `_content.blade.php` met drie lookup-tabellen:
+
+| Lookup | Doel |
+|--------|------|
+| `rondeVolgordeLookup` | Kolom-volgorde (links→rechts) |
+| `getRondeDisplayNaam` | Leesbare namen (1/32, 1/16, etc.) |
+| `rondeNiveauMap` | Verticale positie-level |
+
+**Ondersteunde rondes (A-groep):**
+`tweeendertigste_finale`, `zestiende_finale`, `achtste_finale`, `kwartfinale`, `halve_finale`, `finale`
+
+**Ondersteunde rondes (B-groep):**
+`b_zestiende_finale_1/_2`, `b_achtste_finale_1/_2`, `b_kwartfinale_1/_2`, `b_halve_finale_1/_2`, `b_finale`
+Plus enkele varianten zonder suffix (SAMEN modus).
+
+**Bij nieuwe ronde-namen:** altijd alle 3 lookups bijwerken!
+
 ## Gerelateerde Bestanden
 
 - `app/Services/EliminatieService.php` - Business logic
-- `resources/views/pages/poule/interface.blade.php` - UI rendering
+- `resources/views/pages/mat/partials/_content.blade.php` - Bracket rendering
 - `database/migrations/*_eliminatie_*.php` - Schema
 
 ## Changelog

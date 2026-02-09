@@ -175,7 +175,20 @@ A-byes = 2D - N
 | Situatie | Instroom | B-byes |
 |----------|----------|--------|
 | SAMEN | A1 + A2 | 2×A2 - (A1+A2) |
-| DUBBEL | alleen A1 | 2×A2 - A1 |
+| DUBBEL | alleen A1 | 2×B-cap - A1 |
+
+**DUBBEL spreiding (`koppelARondeAanBRonde` type 'eerste'):**
+
+```
+B-capaciteit = berekenMinimaleBWedstrijden(A1)  // Kleinste 2^x >= A1/2
+Volle weds   = A1 - B-capaciteit
+Bye weds     = 2 × B-cap - A1
+
+Eerste (volle × 2) verliezers → 2:1 mapping (wit + blauw)
+Resterende verliezers         → 1:1 op WIT (bye, blauw=null)
+```
+
+Bye wedstrijden worden handmatig door de hoofdjury geregistreerd.
 
 ### Fairness Regel
 
