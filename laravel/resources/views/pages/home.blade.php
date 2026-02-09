@@ -109,11 +109,24 @@
     </main>
 
     <!-- Footer -->
-    <footer class="absolute bottom-0 left-0 right-0 py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-blue-300 text-sm">
-                &copy; {{ date('Y') }} Havun - JudoToernooi Management Systeem
-            </p>
+    <footer class="absolute bottom-0 left-0 right-0 py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-wrap justify-center items-center gap-x-3 gap-y-1 text-xs text-blue-300 mb-1">
+                <a href="{{ route('legal.terms') }}" class="hover:text-white">Voorwaarden</a>
+                <span class="text-blue-500">•</span>
+                <a href="{{ route('legal.privacy') }}" class="hover:text-white">Privacy</a>
+                <span class="text-blue-500">•</span>
+                <a href="{{ route('legal.cookies') }}" class="hover:text-white">Cookies</a>
+                <span class="text-blue-500">•</span>
+                <a href="mailto:havun22@gmail.com" class="hover:text-white">Contact</a>
+            </div>
+            <div class="text-center text-xs text-blue-400">
+                &copy; {{ date('Y') }} Havun
+                <span class="mx-1">•</span>
+                KvK 98516000
+                <span class="mx-1">•</span>
+                BTW-vrij (KOR)
+            </div>
         </div>
     </footer>
 </body>

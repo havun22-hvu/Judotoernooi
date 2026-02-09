@@ -74,6 +74,47 @@ php artisan serve --port=8007
 - `betaling_actief = false` → handmatig syncen als gegevens volledig zijn
 - `betaling_actief = true` → sync via Mollie webhook na succesvolle betaling
 
+## Juridische Pagina's (Publicatie-gereed)
+
+**Structuur:** Zelfde als Herdenkingsportaal
+
+| Pagina | Route | View |
+|--------|-------|------|
+| Voorwaarden | `/algemene-voorwaarden` | `legal/terms.blade.php` |
+| Privacy | `/privacyverklaring` | `legal/privacy.blade.php` |
+| Cookies | `/cookiebeleid` | `legal/cookies.blade.php` |
+| Disclaimer | `/disclaimer` | `legal/disclaimer.blade.php` |
+
+**Controller:** `LegalController` (4 simpele view-methods)
+**Layout:** `legal-layout` component (header + footer + slot)
+**Contact:** `havun22@gmail.com`
+
+**Footer (alle pagina's):**
+```
+Voorwaarden • Privacy • Cookies • Contact
+© 2026 Havun • KvK 98516000 • BTW-vrij (KOR)
+```
+
+**Footers bijwerken in:**
+- `resources/views/layouts/app.blade.php` (ingelogde gebruikers)
+- `resources/views/pages/home.blade.php` (homepage)
+
+**Inhoud aangepast voor judo-context:**
+- Deelnemersgegevens (naam, geboortejaar, gewicht, band)
+- Toernooi-specifieke data (poules, uitslagen, eliminatie)
+- Mollie betalingen (inschrijfgeld)
+- Multi-tenant: organisatoren als klanten
+- Coach portal (club data)
+- Real-time interfaces (mat, weging)
+
+**Disclaimer - extra clausules (KRITIEK):**
+- Havun is NIET aansprakelijk voor internet-, server- of siteproblemen tijdens toernooien
+- Organisatoren worden GEWAARSCHUWD om:
+  1. Altijd een lokale server op het lokaal netwerk te installeren (hot standby)
+  2. Altijd een schaduwadministratie op papier bij te houden
+  3. Het noodplan uit te printen vóór het toernooi (offline pakket)
+- Platform wordt aangeboden "as is" zonder uptime-garantie
+
 ## Gerelateerde Docs
 
 - `laravel/docs/` - Project documentatie
