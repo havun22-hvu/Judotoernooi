@@ -1044,6 +1044,8 @@ function matInterface() {
                 });
                 return poule;
             });
+            // Initialize SortableJS on bracket after render
+            this.$nextTick(() => window.initBracketSortable?.());
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
                 alert('Fout bij laden: ' + err.message);
@@ -2624,147 +2626,67 @@ setInterval(() => {
 }, 30000);
 
 // ========================================
-// Touch Drag & Drop Polyfill voor Tablet
-// HTML5 DnD toont geen ghost op touch devices
+// SortableJS bracket initialization for touch drag & drop
+// Replaces HTML5 DnD which doesn't work on touch devices
 // ========================================
-(function() {
-    if (!('ontouchstart' in window)) return;
+window.initBracketSortable = function() {
+    if (typeof Sortable === 'undefined') return;
 
-    let state = null;
-    let lastDropTarget = null;
+    const matEl = document.getElementById('mat-interface');
+    if (!matEl) return;
 
-    // Find drop target by checking bounding rects of all [ondrop] elements
-    // More reliable than elementFromPoint which misses absolute-positioned elements
-    function findDropTarget(x, y) {
-        const targets = document.querySelectorAll('[ondrop]');
-        let best = null, bestArea = Infinity;
-        for (const t of targets) {
-            const r = t.getBoundingClientRect();
-            if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
-                const area = r.width * r.height;
-                if (area < bestArea) { best = t; bestArea = area; }
-            }
-        }
-        return best;
-    }
-
-    document.addEventListener('touchstart', function(e) {
-        const draggable = e.target.closest('[draggable="true"]');
-        if (!draggable) return;
-        const ondragstart = draggable.getAttribute('ondragstart');
-        if (!ondragstart) return;
-
-        const touch = e.touches[0];
-        state = {
-            dragging: false,
-            startX: touch.clientX,
-            startY: touch.clientY,
-            source: draggable,
-            ondragstart: ondragstart,
-            ghost: null,
-            dragData: null
-        };
-    }, { passive: true });
-
-    document.addEventListener('touchmove', function(e) {
-        if (!state) return;
-        e.preventDefault(); // Block scroll immediately when touching a draggable
-        const touch = e.touches[0];
-
-        if (!state.dragging) {
-            const dx = Math.abs(touch.clientX - state.startX);
-            const dy = Math.abs(touch.clientY - state.startY);
-            if (dx + dy < 12) return;
-
-            // Execute ondragstart to capture drag data
-            const ft = { _d: {}, setData(t, v) { this._d[t] = v; }, getData(t) { return this._d[t] || ''; }, setDragImage() {} };
-            const fe = { preventDefault() {}, dataTransfer: ft };
-            try { new Function('event', state.ondragstart).call(state.source, fe); }
-            catch(err) { console.error('Touch drag init:', err); state = null; return; }
-
-            state.dragData = ft._d['text/plain'] || '';
-            if (!state.dragData) { state = null; return; }
-
-            const naam = state.source.querySelector('.truncate')?.textContent.trim()
-                       || state.source.textContent.trim();
-
-            state.dragging = true;
-            state.ghost = document.createElement('div');
-            state.ghost.textContent = naam;
-            state.ghost.style.cssText =
-                'position:fixed;z-index:99999;pointer-events:none;' +
-                'padding:6px 14px;background:#3b82f6;color:white;' +
-                'border-radius:8px;font-size:14px;font-weight:600;' +
-                'white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3);' +
-                'transform:translate(-50%,-130%);';
-            document.body.appendChild(state.ghost);
-            state.source.style.opacity = '0.3';
-        }
-
-        if (state.dragging) {
-            state.ghost.style.left = touch.clientX + 'px';
-            state.ghost.style.top = touch.clientY + 'px';
-
-            // Hit-test at ghost chip center (not finger position)
-            // Ghost is above finger via transform, user aims with the chip
-            const gr = state.ghost.getBoundingClientRect();
-            const hitX = gr.left + gr.width / 2;
-            const hitY = gr.top + gr.height / 2;
-            const dropTarget = findDropTarget(hitX, hitY);
-
-            if (lastDropTarget && lastDropTarget !== dropTarget) {
-                lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
-                    'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
-            }
-            if (dropTarget && dropTarget !== lastDropTarget) {
-                dropTarget.classList.add('ring-2', 'ring-blue-500');
-            }
-            lastDropTarget = dropTarget;
-        }
-    }, { passive: false });
-
-    document.addEventListener('touchend', function(e) {
-        if (!state) return;
-        const s = state;
-        state = null;
-        if (!s.dragging) return;
-
-        if (s.ghost) s.ghost.remove();
-        s.source.style.opacity = '';
-
-        // Use the drop target that was highlighted during touchmove
-        // (elementFromPoint is unreliable on touchend after DOM changes)
-        const dropTarget = lastDropTarget;
-
-        if (lastDropTarget) {
-            lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
-                'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
-            lastDropTarget = null;
-        }
-
-        if (dropTarget && s.dragData) {
-            const fakeEvent = {
-                preventDefault() {},
-                dataTransfer: { getData() { return s.dragData; } }
-            };
-            const ondrop = dropTarget.getAttribute('ondrop');
-            if (ondrop) {
-                try { new Function('event', ondrop).call(dropTarget, fakeEvent); }
-                catch(err) { console.error('Touch drop error:', err); }
-            }
-        }
+    // Destroy previous instances
+    matEl.querySelectorAll('[data-sortable-bracket]').forEach(el => {
+        if (el._sortable) el._sortable.destroy();
+        el.removeAttribute('data-sortable-bracket');
     });
 
-    document.addEventListener('touchcancel', function() {
-        if (!state) return;
-        if (state.ghost) state.ghost.remove();
-        if (state.source) state.source.style.opacity = '';
-        state = null;
-        if (lastDropTarget) {
-            lastDropTarget.classList.remove('ring-2', 'ring-blue-500', 'ring-orange-500',
-                'ring-yellow-500', 'ring-amber-500', 'bg-orange-200', 'border-orange-600');
-            lastDropTarget = null;
-        }
+    // Initialize SortableJS on every [ondrop] container
+    matEl.querySelectorAll('[ondrop]').forEach(container => {
+        container.setAttribute('data-sortable-bracket', '1');
+        container._sortable = new Sortable(container, {
+            group: 'bracket',
+            sort: false,
+            animation: 150,
+            delay: 80,
+            delayOnTouchOnly: true,
+            touchStartThreshold: 5,
+            ghostClass: 'sortable-bracket-ghost',
+            chosenClass: 'sortable-bracket-chosen',
+            fallbackOnBody: true,
+            forceFallback: true, // Use JS-based drag for consistent behavior
+            onEnd(evt) {
+                // Always revert DOM - API call + laadWedstrijden handles visual update
+                if (evt.from !== evt.to) {
+                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+                }
+                if (evt.from === evt.to) return; // No actual move
+
+                // Extract drag data by executing ondragstart
+                const item = evt.item;
+                const ondragstart = item.getAttribute('ondragstart');
+                if (!ondragstart) return;
+
+                const ft = { _d: {}, setData(t, v) { this._d[t] = v; }, getData(t) { return this._d[t] || ''; }, setDragImage() {} };
+                const fe = { preventDefault() {}, dataTransfer: ft };
+                try { new Function('event', ondragstart).call(item, fe); }
+                catch(e) { console.error('Sortable drag data error:', e); return; }
+
+                const dragData = ft._d['text/plain'];
+                if (!dragData) return;
+
+                // Execute ondrop handler on target container
+                const ondrop = evt.to.getAttribute('ondrop');
+                if (!ondrop) return;
+
+                const dropEvt = {
+                    preventDefault() {},
+                    dataTransfer: { getData() { return dragData; } }
+                };
+                try { new Function('event', ondrop).call(evt.to, dropEvt); }
+                catch(e) { console.error('Sortable drop error:', e); }
+            }
+        });
     });
-})();
+};
 </script>
