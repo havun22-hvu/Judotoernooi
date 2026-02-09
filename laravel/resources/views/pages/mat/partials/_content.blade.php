@@ -47,7 +47,7 @@
                 <span class="text-gray-600">{{ __('Gereed maken') }}</span>
             </span>
             <span class="text-gray-400 ml-2">|</span>
-            <span class="text-gray-400">{{ __('Poule: klik op nr. Eliminatie: dubbelklik op potje.') }}</span>
+            <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
         </div>
         <!-- Blok/Mat selectie + update knop rechts -->
         <div class="text-sm text-gray-600 flex items-center gap-3">
