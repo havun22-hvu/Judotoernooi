@@ -46,7 +46,8 @@
                 <span class="w-3 h-3 rounded bg-blue-400"></span>
                 <span class="text-gray-600">{{ __('Gereed maken') }}</span>
             </span>
-            <span class="text-gray-400 ml-2 cursor-help" title="{{ __('Tip: Poule: klik op wedstrijdnummer om te selecteren. Eliminatie: dubbelklik op een potje om te selecteren. Punten alleen bij groene wedstrijd invullen. Klik/dubbelklik op groen om over te slaan (geel schuift door).') }}">ⓘ tip</span>
+            <span class="text-gray-400 ml-2">|</span>
+            <span class="text-gray-400">{{ __('Poule: klik op nr. Eliminatie: dubbelklik op potje.') }}</span>
         </div>
         <!-- Blok/Mat selectie + update knop rechts -->
         <div class="text-sm text-gray-600 flex items-center gap-3">
