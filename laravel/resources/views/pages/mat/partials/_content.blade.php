@@ -360,9 +360,9 @@ window.removeFromSwap = function(pouleId, judokaId) {
 };
 
 // Drop handler voor swap ruimte
-window.dropInSwap = async function(event, pouleId, isLocked = false, dragDataObj = null) {
-    if (event?.preventDefault) event.preventDefault();
-    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
+window.dropInSwap = async function(event, pouleId, isLocked = false) {
+    event.preventDefault();
+    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
     console.log('DROP IN SWAP:', data, 'isLocked:', isLocked);
 
@@ -418,9 +418,9 @@ window.dropInSwap = async function(event, pouleId, isLocked = false, dragDataObj
 // Als judoka vanuit een vorige wedstrijd komt, stuur bron_wedstrijd_id mee
 // Check of positie correct is volgens schema, anders waarschuwing
 // pouleId en huidigeBewoner zijn optioneel voor seeding functionaliteit
-window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null, dragDataObj = null) {
-    if (event?.preventDefault) event.preventDefault();
-    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
+window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
+    event.preventDefault();
+    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
     // Voeg target info toe aan data voor seeding logica
     if (pouleId) data.pouleId = pouleId;
@@ -714,14 +714,14 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 };
 
 // Global drop handler - medaille plaatsing (goud/zilver)
-window.dropOpMedaille = async function(event, finaleId, medaille, pouleId, dragDataObj = null) {
-    if (event?.preventDefault) event.preventDefault();
+window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
+    event.preventDefault();
     if (!finaleId) {
         alert('❌ Geen finale gevonden!');
         return;
     }
 
-    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
+    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
 
     // Check of judoka uit de finale komt
@@ -765,9 +765,9 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId, dragD
 };
 
 // Global drop handler - verwijder judoka uit slot
-window.verwijderJudoka = async function(event, dragDataObj = null) {
-    if (event?.preventDefault) event.preventDefault();
-    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
+window.verwijderJudoka = async function(event) {
+    event.preventDefault();
+    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const isLocked = data.pouleIsLocked === true;
     const naam = data.judokaNaam || 'Deze judoka';
 
@@ -2637,63 +2637,46 @@ window.initBracketSortable = function() {
         if (evt.from === evt.to) return; // No actual move
 
         // Read drag data from data-drag attribute
-        const item = evt.item;
-        const dragAttr = item.getAttribute('data-drag');
+        const dragAttr = evt.item.getAttribute('data-drag');
         if (!dragAttr) return;
 
-        let dragData;
-        try { dragData = JSON.parse(dragAttr); }
-        catch(e) { console.error('Sortable: invalid data-drag JSON:', e); return; }
-
-        // Route to correct handler via data-drop-handler on target container
         const target = evt.to;
         const handler = target.getAttribute('data-drop-handler');
         if (!handler) return;
 
         // Optimistic UI: show judoka name in target slot immediately
-        if (dragData.judokaNaam && handler !== 'verwijderJudoka') {
-            const preview = document.createElement('div');
-            preview.className = 'w-full h-full px-1 flex items-center text-xs text-purple-500 italic animate-pulse';
-            preview.innerHTML = `<span class="truncate">${dragData.judokaNaam}</span>`;
-            // Clear existing content and show preview
-            target.querySelectorAll('.bracket-judoka, span:not(.truncate)').forEach(el => el.remove());
-            target.appendChild(preview);
-        }
+        try {
+            const d = JSON.parse(dragAttr);
+            if (d.judokaNaam && handler !== 'verwijderJudoka') {
+                const p = document.createElement('div');
+                p.className = 'w-full h-full px-1 flex items-center text-xs text-purple-500 italic animate-pulse';
+                p.innerHTML = `<span class="truncate">${d.judokaNaam}</span>`;
+                target.querySelectorAll('.bracket-judoka, span:not(.truncate)').forEach(el => el.remove());
+                target.appendChild(p);
+            }
+        } catch(e) {}
 
-        console.log('[Sortable] handler:', handler, 'dragData:', dragData);
+        // Build fake event identical to old HTML5 DnD flow
+        const fakeEvent = {
+            preventDefault() {},
+            dataTransfer: { getData() { return dragAttr; } }
+        };
 
-        switch (handler) {
-            case 'dropJudoka': {
-                const wedstrijdId = parseInt(target.getAttribute('data-wedstrijd-id'));
-                const positie = target.getAttribute('data-positie');
-                const pouleId = parseInt(target.getAttribute('data-poule-id'));
-                let bewoner = null;
-                try {
-                    const b = target.getAttribute('data-bewoner');
-                    if (b && b !== 'null') bewoner = JSON.parse(b);
-                } catch(e) {}
-                window.dropJudoka(null, wedstrijdId, positie, pouleId, bewoner, dragData);
-                break;
-            }
-            case 'dropInSwap': {
-                const pouleId = parseInt(target.getAttribute('data-poule-id'));
-                window.dropInSwap(null, pouleId, false, dragData);
-                break;
-            }
-            case 'dropOpMedaille': {
-                const finaleId = target.getAttribute('data-finale-id');
-                const fId = finaleId === 'null' ? null : parseInt(finaleId);
-                const medaille = target.getAttribute('data-medaille');
-                const pouleId = parseInt(target.getAttribute('data-poule-id'));
-                window.dropOpMedaille(null, fId, medaille, pouleId, dragData);
-                break;
-            }
-            case 'verwijderJudoka': {
-                window.verwijderJudoka(null, dragData);
-                break;
-            }
-            default:
-                console.warn('[Sortable] Unknown drop handler:', handler);
+        // Route to handler - same calls as the old inline ondrop handlers
+        if (handler === 'dropJudoka') {
+            const wId = parseInt(target.getAttribute('data-wedstrijd-id'));
+            const pos = target.getAttribute('data-positie');
+            const pId = parseInt(target.getAttribute('data-poule-id'));
+            let bew = null;
+            try { const b = target.getAttribute('data-bewoner'); if (b && b !== 'null') bew = JSON.parse(b); } catch(e) {}
+            window.dropJudoka(fakeEvent, wId, pos, pId, bew);
+        } else if (handler === 'dropInSwap') {
+            window.dropInSwap(fakeEvent, parseInt(target.getAttribute('data-poule-id')), false);
+        } else if (handler === 'dropOpMedaille') {
+            const fId = target.getAttribute('data-finale-id');
+            window.dropOpMedaille(fakeEvent, fId === 'null' ? null : parseInt(fId), target.getAttribute('data-medaille'), parseInt(target.getAttribute('data-poule-id')));
+        } else if (handler === 'verwijderJudoka') {
+            window.verwijderJudoka(fakeEvent);
         }
     }
 
