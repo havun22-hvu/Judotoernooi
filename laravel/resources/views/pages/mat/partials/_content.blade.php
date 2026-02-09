@@ -1634,9 +1634,9 @@ function matInterface() {
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            if (wedstrijdId === matActieveId) return 'outline outline-3 outline-green-500';
-            if (wedstrijdId === matVolgendeId) return 'outline outline-3 outline-yellow-400';
-            if (wedstrijdId === matGereedmakenId) return 'outline outline-3 outline-blue-500';
+            if (wedstrijdId === matActieveId) return 'elim-sel-groen';
+            if (wedstrijdId === matVolgendeId) return 'elim-sel-geel';
+            if (wedstrijdId === matGereedmakenId) return 'elim-sel-blauw';
             return '';
         },
 
