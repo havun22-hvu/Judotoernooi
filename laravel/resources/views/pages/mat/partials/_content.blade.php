@@ -2662,8 +2662,7 @@ window.initBracketSortable = function() {
                     } else if (handler === 'verwijderJudoka') {
                         await window.verwijderJudoka(fakeEvent);
                     }
-                    // API klaar, sync bracket op achtergrond
-                    Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
+
                 } catch(err) {
                     console.error('[DnD] Fout:', err);
                     location.reload();
