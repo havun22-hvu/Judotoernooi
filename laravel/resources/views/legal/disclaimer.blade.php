@@ -30,10 +30,11 @@
                     <h2 class="text-xl font-semibold text-gray-900 mb-4">2. Platform Beschikbaarheid</h2>
                     <div class="prose prose-sm max-w-none text-gray-700">
                         <p class="mb-3">
-                            <strong>Geen uptime-garantie:</strong><br>
-                            JudoToernooi wordt zo betrouwbaar mogelijk aangeboden, maar er wordt <strong>geen enkele garantie</strong>
-                            gegeven op beschikbaarheid of uptime. Wij behouden ons het recht voor om de dienst op elk moment te wijzigen,
-                            onderbreken of staken zonder voorafgaande kennisgeving.
+                            <strong>Beschikbaarheid:</strong><br>
+                            JudoToernooi wordt zo betrouwbaar mogelijk aangeboden. Wij ondersteunen organisatoren maximaal
+                            tijdens de voorbereiding en op wedstrijddagen. Er kan echter <strong>geen garantie</strong> worden gegeven
+                            op 100% beschikbaarheid of uptime. Bij overmacht (stroomuitval, internetstoring, serveruitval)
+                            kunnen wij niet aansprakelijk worden gesteld voor onderbrekingen.
                         </p>
                         <p class="mb-3">
                             <strong>Redenen voor onderbreking kunnen zijn:</strong>
