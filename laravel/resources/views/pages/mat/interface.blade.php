@@ -17,9 +17,10 @@
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        .elim-sel-groen { outline: 3px solid #22c55e; outline-offset: -3px; }
-        .elim-sel-geel { outline: 3px solid #eab308; outline-offset: -3px; }
-        .elim-sel-blauw { outline: 3px solid #3b82f6; outline-offset: -3px; }
+
+        .sortable-bracket-ghost { opacity: 0.4; background: #dbeafe !important; }
+        .sortable-bracket-chosen { opacity: 0.3; }
+        .sortable-drop-highlight { outline: 3px solid #a855f7; outline-offset: -1px; background: #f3e8ff !important; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -35,6 +36,9 @@
     <main class="p-3 max-w-5xl mx-auto">
         @include('pages.mat.partials._content')
     </main>
+
+    <!-- SortableJS for drag & drop in bracket -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     @include('partials.pwa-mobile', ['pwaApp' => 'mat'])
 

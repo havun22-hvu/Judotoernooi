@@ -129,16 +129,14 @@
                             <span class="text-sm font-medium text-gray-600">
                                 Swap:
                             </span>
-                            <div class="flex flex-wrap gap-1 min-w-[200px] max-w-[400px] min-h-[32px] border-2 border-dashed rounded-lg px-2 py-1 bg-orange-50 border-orange-400"
+                            <div class="flex flex-wrap gap-1 min-w-[200px] max-w-[400px] min-h-[32px] border-2 border-dashed rounded-lg px-2 py-1 bg-orange-50 border-orange-400 bracket-drop bracket-swap"
                                  :id="'swap-ruimte-' + poule.poule_id"
-                                 ondragover="event.preventDefault(); this.classList.add('bg-orange-200', 'border-orange-600')"
-                                 ondragleave="this.classList.remove('bg-orange-200', 'border-orange-600')"
-                                 :ondrop="'this.classList.remove(\'bg-orange-200\', \'border-orange-600\'); window.dropInSwap(event, ' + poule.poule_id + ', false)'">
+                                 data-drop-handler="dropInSwap"
+                                 :data-poule-id="poule.poule_id">
                                 <template x-for="judoka in getSwapJudokas(poule.poule_id)" :key="judoka.id">
-                                    <div class="bg-orange-500 text-white text-sm px-2 py-1 rounded cursor-move shadow-sm hover:bg-orange-600"
-                                         draggable="true"
+                                    <div class="bg-orange-500 text-white text-sm px-2 py-1 rounded cursor-move shadow-sm hover:bg-orange-600 bracket-judoka"
                                          :title="judoka.naam"
-                                         :ondragstart="'window.startDragFromSwap(event, ' + JSON.stringify(judoka) + ', ' + poule.poule_id + ')'"
+                                         :data-drag="JSON.stringify({judokaId: judoka.id, judokaNaam: judoka.naam, fromSwap: true, pouleId: poule.poule_id, pouleIsLocked: false})"
                                          x-text="judoka.naam">
                                     </div>
                                 </template>
@@ -155,10 +153,8 @@
                                     class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
                                 🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
                             </button>
-                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
-                                 ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
-                                 ondragleave="this.classList.remove('text-red-600','font-bold')"
-                                 ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
+                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                                 data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
@@ -173,10 +169,8 @@
                                     class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
                                 🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
                             </button>
-                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800"
-                                 ondragover="event.preventDefault(); this.classList.add('text-red-600','font-bold')"
-                                 ondragleave="this.classList.remove('text-red-600','font-bold')"
-                                 ondrop="this.classList.remove('text-red-600','font-bold'); window.verwijderJudoka(event)">
+                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                                 data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
@@ -366,9 +360,9 @@ window.removeFromSwap = function(pouleId, judokaId) {
 };
 
 // Drop handler voor swap ruimte
-window.dropInSwap = async function(event, pouleId, isLocked = false) {
-    event.preventDefault();
-    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+window.dropInSwap = async function(event, pouleId, isLocked = false, dragDataObj = null) {
+    if (event?.preventDefault) event.preventDefault();
+    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
 
     console.log('DROP IN SWAP:', data, 'isLocked:', isLocked);
 
@@ -420,35 +414,13 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
 };
 
-// Custom drag image helper - voorkomt dat browser meerdere elementen in ghost meepakt
-window.setCleanDragImage = function(event, naam) {
-    const ghost = document.createElement('div');
-    ghost.textContent = naam;
-    ghost.style.cssText = 'position:fixed;top:-1000px;left:-1000px;padding:2px 8px;background:#fff;border:1px solid #9ca3af;border-radius:4px;font-size:12px;white-space:nowrap;z-index:9999;';
-    document.body.appendChild(ghost);
-    event.dataTransfer.setDragImage(ghost, 0, 0);
-    requestAnimationFrame(() => ghost.remove());
-};
-
-// Start drag vanuit swap ruimte
-window.startDragFromSwap = function(event, judoka, pouleId) {
-    window.setCleanDragImage(event, judoka.naam);
-    event.dataTransfer.setData('text/plain', JSON.stringify({
-        judokaId: judoka.id,
-        judokaNaam: judoka.naam,
-        fromSwap: true,
-        pouleId: pouleId,
-        pouleIsLocked: false // Swap is alleen actief tijdens seeding
-    }));
-};
-
 // Global drop handler - plaats judoka in slot
 // Als judoka vanuit een vorige wedstrijd komt, stuur bron_wedstrijd_id mee
 // Check of positie correct is volgens schema, anders waarschuwing
 // pouleId en huidigeBewoner zijn optioneel voor seeding functionaliteit
-window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
-    event.preventDefault();
-    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null, dragDataObj = null) {
+    if (event?.preventDefault) event.preventDefault();
+    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
 
     // Voeg target info toe aan data voor seeding logica
     if (pouleId) data.pouleId = pouleId;
@@ -742,14 +714,14 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 };
 
 // Global drop handler - medaille plaatsing (goud/zilver)
-window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
-    event.preventDefault();
+window.dropOpMedaille = async function(event, finaleId, medaille, pouleId, dragDataObj = null) {
+    if (event?.preventDefault) event.preventDefault();
     if (!finaleId) {
         alert('❌ Geen finale gevonden!');
         return;
     }
 
-    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
 
     // Check of judoka uit de finale komt
@@ -793,9 +765,9 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
 };
 
 // Global drop handler - verwijder judoka uit slot
-window.verwijderJudoka = async function(event) {
-    event.preventDefault();
-    const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+window.verwijderJudoka = async function(event, dragDataObj = null) {
+    if (event?.preventDefault) event.preventDefault();
+    const data = dragDataObj || JSON.parse(event.dataTransfer.getData('text/plain'));
     const isLocked = data.pouleIsLocked === true;
     const naam = data.judokaNaam || 'Deze judoka';
 
@@ -843,18 +815,14 @@ window.verwijderJudoka = async function(event) {
 // Global double-click handler - beurtaanduiding in eliminatie bracket
 // Triggert hetzelfde 3-kleuren systeem als bij poules (groen/geel/blauw)
 window.dblClickBracket = function(wedstrijdId, pouleId) {
-    console.log('[Bracket] dblclick:', wedstrijdId, 'poule:', pouleId);
     const el = document.getElementById('mat-interface');
-    if (!el) { console.error('[Bracket] mat-interface element niet gevonden'); return; }
+    if (!el) return;
     const comp = Alpine.$data(el);
-    if (!comp) { console.error('[Bracket] Alpine.$data returned null'); return; }
-    console.log('[Bracket] poules:', comp.poules?.length, 'poule_ids:', comp.poules?.map(p => p.poule_id));
+    if (!comp) return;
     const poule = comp.poules.find(p => p.poule_id === pouleId);
-    if (!poule) { console.error('[Bracket] Poule niet gevonden:', pouleId); return; }
-    console.log('[Bracket] wedstrijden in poule:', poule.wedstrijden?.length);
+    if (!poule) return;
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
-    if (!wedstrijd) { console.error('[Bracket] Wedstrijd niet gevonden:', wedstrijdId); return; }
-    console.log('[Bracket] Calling toggleVolgendeWedstrijd');
+    if (!wedstrijd) return;
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
 
@@ -910,6 +878,7 @@ function matInterface() {
         gebondenMatNummer,
         debugSlots: false,  // Toggle om slot nummers te tonen
         isRefreshing: false, // Loading state voor update knop
+        _isLoadingWedstrijden: false, // Guard tegen dubbele API calls
 
         init() {
             // Device-bound: always pre-select the bound mat (but allow switching)
@@ -966,10 +935,12 @@ function matInterface() {
         },
 
         async laadWedstrijden() {
+            if (this._isLoadingWedstrijden) return;
             if (!this.blokId || !this.matId) {
                 this.poules = [];
                 return;
             }
+            this._isLoadingWedstrijden = true;
 
             // Sla selectie op voor volgende keer
             this.opslaanSelectie();
@@ -1051,13 +1022,14 @@ function matInterface() {
                 });
                 return poule;
             });
-            // Initialize SortableJS on bracket after render
-            // SortableJS only for touch devices - desktop uses native HTML5 DnD
-            if ('ontouchstart' in window) this.$nextTick(() => window.initBracketSortable?.());
+            // Initialize SortableJS on bracket after render (all devices)
+            this.$nextTick(() => window.initBracketSortable?.());
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
                 alert('Fout bij laden: ' + err.message);
                 this.poules = [];
+            } finally {
+                this._isLoadingWedstrijden = false;
             }
         },
 
@@ -2120,8 +2092,8 @@ function matInterface() {
 
                         // Drag data met volgende wedstrijd info voor validatie
                         // isWinnaar en isGespeeld toegevoegd om te checken of doorschuiven toegestaan is
-                        // Escape voor JS string (backslash en single quote) en HTML attribute (double quote)
-                        const escapeForHtml = (str) => str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        // Escape for double-quoted HTML attributes
+                        const escapeForHtml = (str) => str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
                         const witDragData = escapeForHtml(JSON.stringify({
                             judokaId: wed.wit?.id,
@@ -2160,15 +2132,13 @@ function matInterface() {
 
                         // Wit slot
                         html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastRound ? 'border-r-0' : ''}"
                                       style="${potjeStyle}"
-                                      ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                                      ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                                      ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'wit', ${poule.poule_id}, ${witBewoner})">`;
+                                      data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="wit" data-poule-id="${poule.poule_id}" data-bewoner="${witBewoner}">`;
                         if (wed.wit) {
                             const displayName = DEBUG_SLOTS ? `[${visualSlotWit}] ${wed.wit.naam}` : wed.wit.naam;
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                          ondragstart="window.setCleanDragImage(event, '${wed.wit.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${witDragData}')">
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
+                                          data-drag="${witDragData}">
                                         <span class="truncate">${displayName}</span>${isWitWinnaar ? winnaarIcon : ''}
                                      </div>`;
                         } else if (DEBUG_SLOTS) {
@@ -2183,15 +2153,13 @@ function matInterface() {
 
                         // Blauw slot
                         html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastRound ? 'border-r-0' : ''}"
+                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastRound ? 'border-r-0' : ''}"
                                       style="${potjeStyle}"
-                                      ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                                      ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                                      ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, 'blauw', ${poule.poule_id}, ${blauwBewoner})">`;
+                                      data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="blauw" data-poule-id="${poule.poule_id}" data-bewoner="${blauwBewoner}">`;
                         if (wed.blauw) {
                             const displayName = DEBUG_SLOTS ? `[${visualSlotBlauw}] ${wed.blauw.naam}` : wed.blauw.naam;
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                                          ondragstart="window.setCleanDragImage(event, '${wed.blauw.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${blauwDragData}')">
+                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
+                                          data-drag="${blauwDragData}">`;
                                         <span class="truncate">${displayName}</span>${isBlauwWinnaar ? winnaarIcon : ''}
                                      </div>`;
                         } else if (DEBUG_SLOTS) {
@@ -2224,18 +2192,14 @@ function matInterface() {
                 html += `<div class="relative flex-shrink-0 w-32">`;
                 // Goud (1e plaats) - drop target voor finale winnaar
                 html += `<div class="absolute w-32" style="top: ${finaleTop}px;">`;
-                html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate ${!winnaar ? 'cursor-pointer' : ''}"
-                              ondragover="event.preventDefault(); if(!${!!winnaar}) this.classList.add('ring-2','ring-yellow-500')"
-                              ondragleave="this.classList.remove('ring-2','ring-yellow-500')"
-                              ondrop="this.classList.remove('ring-2','ring-yellow-500'); window.dropOpMedaille(event, ${finale?.id || 'null'}, 'goud', ${poule.poule_id})">`;
+                html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate bracket-drop bracket-medal ${!winnaar ? 'cursor-pointer' : ''}"
+                              data-drop-handler="dropOpMedaille" data-finale-id="${finale?.id || 'null'}" data-medaille="goud" data-poule-id="${poule.poule_id}">`;
                 html += winnaar ? `🥇 ${winnaar.naam}` : '🥇 Sleep winnaar hier';
                 html += '</div></div>';
                 // Zilver (2e plaats) - drop target voor finale verliezer
                 html += `<div class="absolute w-32" style="top: ${finaleTop + h}px;">`;
-                html += `<div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate ${!verliezer ? 'cursor-pointer' : ''}"
-                              ondragover="event.preventDefault(); if(!${!!verliezer}) this.classList.add('ring-2','ring-gray-500')"
-                              ondragleave="this.classList.remove('ring-2','ring-gray-500')"
-                              ondrop="this.classList.remove('ring-2','ring-gray-500'); window.dropOpMedaille(event, ${finale?.id || 'null'}, 'zilver', ${poule.poule_id})">`;
+                html += `<div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal ${!verliezer ? 'cursor-pointer' : ''}"
+                              data-drop-handler="dropOpMedaille" data-finale-id="${finale?.id || 'null'}" data-medaille="zilver" data-poule-id="${poule.poule_id}">`;
                 html += verliezer ? `🥈 ${verliezer.naam}` : '🥈 Sleep verliezer hier';
                 html += '</div></div>';
                 html += '</div>';
@@ -2246,10 +2210,8 @@ function matInterface() {
                     const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
                     const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, wedIdx) + h / 2;
                     html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
-                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate ${!winnaar ? 'cursor-pointer' : ''}"
-                                  ondragover="event.preventDefault(); if(!${!!winnaar}) this.classList.add('ring-2','ring-amber-500')"
-                                  ondragleave="this.classList.remove('ring-2','ring-amber-500')"
-                                  ondrop="this.classList.remove('ring-2','ring-amber-500'); window.dropOpMedaille(event, ${wed.id}, 'brons', ${poule.poule_id})">`;
+                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal ${!winnaar ? 'cursor-pointer' : ''}"
+                                  data-drop-handler="dropOpMedaille" data-finale-id="${wed.id}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
                     html += winnaar ? `🥉 ${winnaar.naam}` : '🥉 Sleep winnaar';
                     html += '</div></div>';
                 });
@@ -2399,10 +2361,8 @@ function matInterface() {
                 const bronPos1 = 0 * spacing + (spacing - potjeHeight) / 2 + h / 2;
 
                 html += `<div class="absolute w-32" style="top: ${bronPos1}px;">`;
-                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate"
-                              ondragover="event.preventDefault(); this.classList.add('ring-2','ring-amber-500')"
-                              ondragleave="this.classList.remove('ring-2','ring-amber-500')"
-                              ondrop="this.classList.remove('ring-2','ring-amber-500'); window.dropOpMedaille(event, ${wed1?.id || 'null'}, 'brons', ${poule.poule_id})">`;
+                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
+                              data-drop-handler="dropOpMedaille" data-finale-id="${wed1?.id || 'null'}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
                 html += winnaar1 ? `🥉 ${winnaar1.naam}` : '🥉 Sleep winnaar hier';
                 html += '</div></div>';
             }
@@ -2416,10 +2376,8 @@ function matInterface() {
                 const bronPos2 = helftHoogte + horizonHoogte + 0 * spacing + (spacing - potjeHeight) / 2 + h / 2;
 
                 html += `<div class="absolute w-32" style="top: ${bronPos2}px;">`;
-                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate"
-                              ondragover="event.preventDefault(); this.classList.add('ring-2','ring-amber-500')"
-                              ondragleave="this.classList.remove('ring-2','ring-amber-500')"
-                              ondrop="this.classList.remove('ring-2','ring-amber-500'); window.dropOpMedaille(event, ${wed2?.id || 'null'}, 'brons', ${poule.poule_id})">`;
+                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
+                              data-drop-handler="dropOpMedaille" data-finale-id="${wed2?.id || 'null'}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
                 html += winnaar2 ? `🥉 ${winnaar2.naam}` : '🥉 Sleep winnaar hier';
                 html += '</div></div>';
             }
@@ -2456,8 +2414,8 @@ function matInterface() {
             const topBgColor = 'bg-white';
             const bottomBgColor = 'bg-blue-50';
 
-            // Escape functie voor HTML attributes (quotes en single quotes)
-            const escapeForHtml = (str) => str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            // Escape for double-quoted HTML attributes
+            const escapeForHtml = (str) => str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
             const topDragData = escapeForHtml(JSON.stringify({
                 judokaId: topJudoka?.id,
@@ -2494,15 +2452,13 @@ function matInterface() {
 
             // Top slot = WIT (altijd)
             html += `<div class="relative">`;
-            html += `<div class="w-32 h-7 ${topBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
+            html += `<div class="w-32 h-7 ${topBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastColumn ? 'border-r-0' : ''}"
                           style="${potjeStyle}"
-                          ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                          ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                          ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, '${topSlot}', ${poule.poule_id}, ${topBewoner})">`;
+                          data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="${topSlot}" data-poule-id="${poule.poule_id}" data-bewoner="${topBewoner}">`;
             if (topJudoka) {
                 const displayName = DEBUG_SLOTS ? `[${topSlotNr}] ${topJudoka.naam}` : topJudoka.naam;
-                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                              ondragstart="window.setCleanDragImage(event, '${topJudoka.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${topDragData}')">
+                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
+                              data-drag="${topDragData}">
                             <span class="truncate">${displayName}</span>${topIsWinnaar ? winnaarIcon : ''}
                          </div>`;
             } else if (DEBUG_SLOTS) {
@@ -2516,15 +2472,13 @@ function matInterface() {
 
             // Bottom slot = BLAUW (altijd)
             html += `<div class="relative">`;
-            html += `<div class="w-32 h-7 ${bottomBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot ${!isLastColumn ? 'border-r-0' : ''}"
+            html += `<div class="w-32 h-7 ${bottomBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastColumn ? 'border-r-0' : ''}"
                           style="${potjeStyle}"
-                          ondragover="event.preventDefault(); this.classList.add('ring-2','${ringColor}')"
-                          ondragleave="this.classList.remove('ring-2','${ringColor}')"
-                          ondrop="this.classList.remove('ring-2','${ringColor}'); window.dropJudoka(event, ${wed.id}, '${bottomSlot}', ${poule.poule_id}, ${bottomBewoner})">`;
+                          data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="${bottomSlot}" data-poule-id="${poule.poule_id}" data-bewoner="${bottomBewoner}">`;
             if (bottomJudoka) {
                 const displayName = DEBUG_SLOTS ? `[${bottomSlotNr}] ${bottomJudoka.naam}` : bottomJudoka.naam;
-                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50" draggable="true"
-                              ondragstart="window.setCleanDragImage(event, '${bottomJudoka.naam.replace(/'/g, "\\'")}'); event.dataTransfer.setData('text/plain', '${bottomDragData}')">
+                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
+                              data-drag="${bottomDragData}">`;
                             <span class="truncate">${displayName}</span>${bottomIsWinnaar ? winnaarIcon : ''}
                          </div>`;
             } else if (isRonde2 && aRondeNaam) {
@@ -2647,24 +2601,6 @@ window.initBracketSortable = function() {
     const matEl = document.getElementById('mat-interface');
     if (!matEl) return;
 
-    // Inject CSS via JS (bypasses browser cache)
-    if (!document.getElementById('sortable-bracket-css')) {
-        const s = document.createElement('style');
-        s.id = 'sortable-bracket-css';
-        s.textContent = `
-            .sortable-bracket-ghost { opacity: 0.4; background: #dbeafe !important; }
-            .sortable-bracket-chosen { opacity: 0.3; }
-            .sortable-fallback { padding:4px 10px !important; background:white !important;
-                border:2px solid #9ca3af !important; border-radius:6px !important;
-                font-size:13px !important; white-space:nowrap !important;
-                box-shadow:0 2px 8px rgba(0,0,0,0.2) !important;
-                width:auto !important; height:auto !important; min-height:0 !important; }
-            .sortable-fallback span:not(.truncate) { display:none !important; }
-            .sortable-drop-highlight { outline:3px solid #a855f7; outline-offset:-1px; background:#f3e8ff !important; }
-        `;
-        document.head.appendChild(s);
-    }
-
     // Destroy previous instances
     matEl.querySelectorAll('[data-sortable-bracket]').forEach(el => {
         if (el._sortable) el._sortable.destroy();
@@ -2674,68 +2610,105 @@ window.initBracketSortable = function() {
     // Track highlighted drop target for cleanup
     let highlightedTarget = null;
 
-    // Initialize SortableJS on every [ondrop] container
-    matEl.querySelectorAll('[ondrop]').forEach(container => {
+    // Shared onMove handler - purple highlight on drop target
+    function onMoveHandler(evt) {
+        if (highlightedTarget && highlightedTarget !== evt.to) {
+            highlightedTarget.classList.remove('sortable-drop-highlight');
+        }
+        if (evt.to !== evt.from) {
+            evt.to.classList.add('sortable-drop-highlight');
+            highlightedTarget = evt.to;
+        }
+        return true;
+    }
+
+    // Shared onEnd handler - revert DOM + route to correct handler
+    function onEndHandler(evt) {
+        // Remove highlight
+        if (highlightedTarget) {
+            highlightedTarget.classList.remove('sortable-drop-highlight');
+            highlightedTarget = null;
+        }
+
+        // Always revert DOM - API call + laadWedstrijden handles visual update
+        if (evt.from !== evt.to) {
+            evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
+        }
+        if (evt.from === evt.to) return; // No actual move
+
+        // Read drag data from data-drag attribute
+        const item = evt.item;
+        const dragAttr = item.getAttribute('data-drag');
+        if (!dragAttr) return;
+
+        let dragData;
+        try { dragData = JSON.parse(dragAttr); }
+        catch(e) { console.error('Sortable: invalid data-drag JSON:', e); return; }
+
+        // Route to correct handler via data-drop-handler on target container
+        const target = evt.to;
+        const handler = target.getAttribute('data-drop-handler');
+        if (!handler) return;
+
+        console.log('[Sortable] handler:', handler, 'dragData:', dragData);
+
+        switch (handler) {
+            case 'dropJudoka': {
+                const wedstrijdId = parseInt(target.getAttribute('data-wedstrijd-id'));
+                const positie = target.getAttribute('data-positie');
+                const pouleId = parseInt(target.getAttribute('data-poule-id'));
+                let bewoner = null;
+                try {
+                    const b = target.getAttribute('data-bewoner');
+                    if (b && b !== 'null') bewoner = JSON.parse(b);
+                } catch(e) {}
+                window.dropJudoka(null, wedstrijdId, positie, pouleId, bewoner, dragData);
+                break;
+            }
+            case 'dropInSwap': {
+                const pouleId = parseInt(target.getAttribute('data-poule-id'));
+                window.dropInSwap(null, pouleId, false, dragData);
+                break;
+            }
+            case 'dropOpMedaille': {
+                const finaleId = target.getAttribute('data-finale-id');
+                const fId = finaleId === 'null' ? null : parseInt(finaleId);
+                const medaille = target.getAttribute('data-medaille');
+                const pouleId = parseInt(target.getAttribute('data-poule-id'));
+                window.dropOpMedaille(null, fId, medaille, pouleId, dragData);
+                break;
+            }
+            case 'verwijderJudoka': {
+                window.verwijderJudoka(null, dragData);
+                break;
+            }
+            default:
+                console.warn('[Sortable] Unknown drop handler:', handler);
+        }
+    }
+
+    // Initialize SortableJS on all .bracket-drop containers (drop targets)
+    matEl.querySelectorAll('.bracket-drop').forEach(container => {
+        // Determine group config based on container type
+        const isSwap = container.classList.contains('bracket-swap');
+        const isMedal = container.classList.contains('bracket-medal');
+        const isDelete = container.classList.contains('bracket-delete');
+
+        const groupConfig = (isMedal || isDelete)
+            ? { name: 'bracket', pull: false, put: true }
+            : { name: 'bracket', pull: true, put: true };
+
         container.setAttribute('data-sortable-bracket', '1');
         container._sortable = new Sortable(container, {
-            group: 'bracket',
+            group: groupConfig,
             sort: false,
-            animation: 0,
-            delay: 50,
-            delayOnTouchOnly: true,
-            touchStartThreshold: 3,
+            animation: 150,
             ghostClass: 'sortable-bracket-ghost',
             chosenClass: 'sortable-bracket-chosen',
-            fallbackOnBody: true,
-            forceFallback: true,
-            emptyInsertThreshold: 30, // Larger hit zone for small bracket slots
-            onMove(evt) {
-                if (highlightedTarget && highlightedTarget !== evt.to) {
-                    highlightedTarget.classList.remove('sortable-drop-highlight');
-                }
-                if (evt.to !== evt.from) {
-                    evt.to.classList.add('sortable-drop-highlight');
-                    highlightedTarget = evt.to;
-                }
-                return true;
-            },
-            onEnd(evt) {
-                // Remove highlight
-                if (highlightedTarget) {
-                    highlightedTarget.classList.remove('sortable-drop-highlight');
-                    highlightedTarget = null;
-                }
-
-                // Always revert DOM - API call + laadWedstrijden handles visual update
-                if (evt.from !== evt.to) {
-                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex] || null);
-                }
-                if (evt.from === evt.to) return; // No actual move
-
-                // Extract drag data by executing ondragstart
-                const item = evt.item;
-                const ondragstart = item.getAttribute('ondragstart');
-                if (!ondragstart) return;
-
-                const ft = { _d: {}, setData(t, v) { this._d[t] = v; }, getData(t) { return this._d[t] || ''; }, setDragImage() {} };
-                const fe = { preventDefault() {}, dataTransfer: ft };
-                try { new Function('event', ondragstart).call(item, fe); }
-                catch(e) { console.error('Sortable drag data error:', e); return; }
-
-                const dragData = ft._d['text/plain'];
-                if (!dragData) return;
-
-                // Execute ondrop handler on target container
-                const ondrop = evt.to.getAttribute('ondrop');
-                if (!ondrop) return;
-
-                const dropEvt = {
-                    preventDefault() {},
-                    dataTransfer: { getData() { return dragData; } }
-                };
-                try { new Function('event', ondrop).call(evt.to, dropEvt); }
-                catch(e) { console.error('Sortable drop error:', e); }
-            }
+            emptyInsertThreshold: 15,
+            draggable: '.bracket-judoka',
+            onMove: onMoveHandler,
+            onEnd: onEndHandler
         });
     });
 };
