@@ -1052,7 +1052,8 @@ function matInterface() {
                 return poule;
             });
             // Initialize SortableJS on bracket after render
-            this.$nextTick(() => window.initBracketSortable?.());
+            // SortableJS only for touch devices - desktop uses native HTML5 DnD
+            if ('ontouchstart' in window) this.$nextTick(() => window.initBracketSortable?.());
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
                 alert('Fout bij laden: ' + err.message);
