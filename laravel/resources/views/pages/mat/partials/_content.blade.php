@@ -2652,6 +2652,7 @@ setInterval(() => {
 
     document.addEventListener('touchmove', function(e) {
         if (!state) return;
+        e.preventDefault(); // Block scroll immediately when touching a draggable
         const touch = e.touches[0];
 
         if (!state.dragging) {
