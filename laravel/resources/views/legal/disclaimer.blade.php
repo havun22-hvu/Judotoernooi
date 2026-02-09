@@ -71,7 +71,7 @@
                             Wij raden <strong>dringend</strong> aan om voor elk toernooi een <strong>lokale server op het lokaal netwerk</strong>
                             te installeren als hot standby. Dit zorgt ervoor dat het toernooi kan doorgaan bij uitval van de internetverbinding.
                             <br><br>
-                            Zie de documentatie over de <strong>Lokale Server Handleiding</strong> in het platform voor installatie-instructies.
+                            Zie de <a href="{{ route('help') }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">Lokale Server Handleiding</a> voor installatie-instructies.
                         </div>
 
                         <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg">
