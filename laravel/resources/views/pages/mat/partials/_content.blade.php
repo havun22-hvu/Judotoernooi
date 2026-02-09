@@ -1634,9 +1634,9 @@ function matInterface() {
             const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
             const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
 
-            if (wedstrijdId === matActieveId) return 'border-2 border-green-600 bg-green-300';
-            if (wedstrijdId === matVolgendeId) return 'border-2 border-yellow-500 bg-yellow-200';
-            if (wedstrijdId === matGereedmakenId) return 'border-2 border-blue-500 bg-blue-200';
+            if (wedstrijdId === matActieveId) return 'outline outline-3 outline-green-500';
+            if (wedstrijdId === matVolgendeId) return 'outline outline-3 outline-yellow-400';
+            if (wedstrijdId === matGereedmakenId) return 'outline outline-3 outline-blue-500';
             return '';
         },
 
