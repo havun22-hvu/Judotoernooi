@@ -17,9 +17,34 @@
     <header class="absolute top-0 left-0 right-0 z-10">
         <div class="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
             <div class="text-white font-bold text-xl">JudoToernooi</div>
-            <a href="{{ route('login') }}" class="text-white hover:text-blue-200 transition">
-                {{ __('Inloggen') }}
-            </a>
+            <div class="flex items-center gap-4">
+                {{-- Taalkiezer --}}
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
+                        @include('partials.flag-icon', ['lang' => app()->getLocale()])
+                        <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open" x-transition class="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50">
+                        <form action="{{ route('locale.switch', 'nl') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'nl' ? 'font-bold' : '' }}">
+                                @include('partials.flag-icon', ['lang' => 'nl']) Nederlands
+                            </button>
+                        </form>
+                        <form action="{{ route('locale.switch', 'en') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="flex items-center gap-2 w-full px-4 py-2 text-gray-700 hover:bg-gray-100 {{ app()->getLocale() === 'en' ? 'font-bold' : '' }}">
+                                @include('partials.flag-icon', ['lang' => 'en']) English
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <a href="{{ route('login') }}" class="text-white hover:text-blue-200 transition">
+                    {{ __('Inloggen') }}
+                </a>
+            </div>
         </div>
     </header>
 
