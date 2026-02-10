@@ -215,6 +215,7 @@ mat.{toernooi_id}.{mat_id}              - Specifieke mat updates (jurytafel)
 | `score` | Score geregistreerd | wedstrijd_id, jp_wit, jp_blauw, winnaar |
 | `beurt` | Groen/geel/blauw wijzigt | mat_id, groen_wedstrijd_id, geel_wedstrijd_id, blauw_wedstrijd_id |
 | `poule_klaar` | Poule afgerond | poule_id, mat_id |
+| `bracket` | Judoka geplaatst/verwijderd in bracket | poule_id, wedstrijd_id, actie |
 
 ## Client-side events
 
@@ -226,6 +227,7 @@ window.addEventListener('mat-update', (e) => { /* alle updates */ });
 window.addEventListener('mat-score-update', (e) => { /* score wijziging */ });
 window.addEventListener('mat-beurt-update', (e) => { /* groen/geel/blauw */ });
 window.addEventListener('mat-poule-klaar', (e) => { /* poule afgerond */ });
+window.addEventListener('mat-bracket-update', (e) => { /* bracket judoka geplaatst/verwijderd */ });
 
 // Connectie status (voor LIVE/OFFLINE indicator)
 window.addEventListener('reverb-connected', () => { /* WebSocket verbonden */ });
@@ -238,7 +240,7 @@ window.addEventListener('reverb-disconnected', () => { /* WebSocket verbroken */
 |------|---------------|-------|
 | **Publiek** | score, beurt, poule_klaar | Herlaadt matten + favorieten |
 | **Spreker** | poule_klaar | Pagina reload (nieuwe uitslag) |
-| **Jurytafel** | (toekomstig) | Sync met andere tabs |
+| **Mat Interface** | score, beurt, poule_klaar, bracket | Herlaadt wedstrijden (vervangt polling) |
 
 ## Key files (Mat Updates)
 
@@ -277,6 +279,7 @@ Real-time updates verminderen de noodzaak voor polling, maar polling blijft als 
 |------|-------------|----------------|-----------|
 | Publiek | 15 sec | 60 sec | ✓ |
 | Spreker | 10 sec | 10 sec | ✓ (poule_klaar) |
+| Mat Interface | 30 sec | Geen | ✓ (score, beurt, poule_klaar, bracket) |
 
 ---
 

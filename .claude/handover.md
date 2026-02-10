@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 9 februari 2026
+> **Laatste update:** 10 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **10 feb 2026** | Mat interface polling → Reverb push: 30sec polling vervangen door WebSocket events (score, beurt, poule_klaar, bracket). MatUpdate::dispatch in plaatsJudoka/verwijderJudoka. | CHAT.md, INTERFACES.md |
 | **9 feb 2026 ochtend** | Puntencompetitie spreker integratie: docs bijgewerkt, geen poule-uitslagen naar spreker, wél milestone-uitreikingen met afvinken. **WIP - alleen docs, nog geen code** | WIMPELTOERNOOI.md |
 | **8 feb 2026 nacht** | Eliminatie B-bracket byes: spread verliezers over alle B(1) wedstrijden, bracket rendering fixes (slots, lookup tables) | ELIMINATIE/README.md, smallwork.md |
 | **8 feb 2026 avond** | Offline Pakket MVP: standalone HTML download met 6 tabs (weeglijst, zaaloverzicht, schema's, scores, vrijwilligers, noodplan) | `memory/offline-pakket.md` |
