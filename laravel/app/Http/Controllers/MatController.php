@@ -680,7 +680,15 @@ class MatController extends Controller
                 // Gebruik EliminatieService voor correcte afhandeling (incl. correcties)
                 // Dit plaatst ook de verliezer in de B-groep
                 $eliminatieType = $toernooi->eliminatie_type ?? 'dubbel';
-                $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId, $eliminatieType);
+                try {
+                    $correcties = $this->eliminatieService->verwerkUitslag($bronWedstrijd, $winnaarId, $oudeWinnaarId, $eliminatieType);
+                } catch (\Throwable $e) {
+                    report($e);
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Fout bij verwerken eliminatie uitslag: ' . $e->getMessage(),
+                    ], 500);
+                }
             }
         }
 
@@ -978,21 +986,27 @@ class MatController extends Controller
             ->values()
             ->toArray();
 
-        if ($groep === 'A') {
-            $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden);
-            $view = 'pages.mat.partials._bracket';
-        } else {
-            $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden);
-            $view = 'pages.mat.partials._bracket-b';
+        try {
+            if ($groep === 'A') {
+                $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden);
+                $view = 'pages.mat.partials._bracket';
+            } else {
+                $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden);
+                $view = 'pages.mat.partials._bracket-b';
+            }
+
+            $html = view($view, [
+                'layout' => $layout,
+                'pouleId' => $poule->id,
+                'isLocked' => $isLocked,
+                'debugSlots' => (bool) ($validated['debug_slots'] ?? false),
+            ])->render();
+
+            return response($html, 200)->header('Content-Type', 'text/html');
+        } catch (\Throwable $e) {
+            report($e);
+            return response('<div class="text-red-500 text-sm py-2">Fout bij bracket rendering</div>', 500)
+                ->header('Content-Type', 'text/html');
         }
-
-        $html = view($view, [
-            'layout' => $layout,
-            'pouleId' => $poule->id,
-            'isLocked' => $isLocked,
-            'debugSlots' => (bool) ($validated['debug_slots'] ?? false),
-        ])->render();
-
-        return response($html, 200)->header('Content-Type', 'text/html');
     }
 }
