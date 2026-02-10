@@ -22,6 +22,14 @@
 
 @include('pages.mat.partials._content')
 
+<!-- Pusher for Reverb WebSocket -->
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+
 <!-- SortableJS for touch drag & drop in bracket -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+@include('partials.mat-updates-listener', [
+    'toernooi' => $toernooi,
+    'matId' => $matNummer ?? null
+])
 @endsection

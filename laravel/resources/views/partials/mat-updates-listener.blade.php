@@ -71,6 +71,8 @@
                 window.dispatchEvent(new CustomEvent('mat-beurt-update', { detail: data }));
             } else if (data.type === 'poule_klaar') {
                 window.dispatchEvent(new CustomEvent('mat-poule-klaar', { detail: data }));
+            } else if (data.type === 'bracket') {
+                window.dispatchEvent(new CustomEvent('mat-bracket-update', { detail: data }));
             }
         }
 
