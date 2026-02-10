@@ -11,6 +11,7 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use App\Services\ActivityLogger;
+use App\Services\BracketLayoutService;
 use App\Services\EliminatieService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
@@ -21,7 +22,8 @@ class MatController extends Controller
 {
     public function __construct(
         private WedstrijdSchemaService $wedstrijdService,
-        private EliminatieService $eliminatieService
+        private EliminatieService $eliminatieService,
+        private BracketLayoutService $bracketLayoutService,
     ) {}
 
     public function index(Organisator $organisator, Toernooi $toernooi): View
@@ -688,6 +690,32 @@ class MatController extends Controller
             'interface' => 'mat',
         ]);
 
+        // Verzamel alle gewijzigde slots voor client-side DOM updates
+        $alleWedstrijden = Wedstrijd::where('poule_id', $wedstrijd->poule_id)
+            ->with(['judokaWit:id,naam', 'judokaBlauw:id,naam'])
+            ->get();
+
+        $updatedSlots = [];
+        foreach ($alleWedstrijden as $w) {
+            $isBye = $w->uitslag_type === 'bye';
+            $updatedSlots[] = [
+                'wedstrijd_id' => $w->id,
+                'positie' => 'wit',
+                'judoka' => $w->judokaWit ? ['id' => $w->judokaWit->id, 'naam' => $w->judokaWit->naam] : null,
+                'is_winnaar' => (bool) ($w->is_gespeeld && $w->winnaar_id == $w->judoka_wit_id && !$isBye && $w->judokaWit),
+                'is_gespeeld' => (bool) $w->is_gespeeld,
+                'groep' => $w->groep,
+            ];
+            $updatedSlots[] = [
+                'wedstrijd_id' => $w->id,
+                'positie' => 'blauw',
+                'judoka' => $w->judokaBlauw ? ['id' => $w->judokaBlauw->id, 'naam' => $w->judokaBlauw->naam] : null,
+                'is_winnaar' => (bool) ($w->is_gespeeld && $w->winnaar_id == $w->judoka_blauw_id && !$isBye && $w->judokaBlauw),
+                'is_gespeeld' => (bool) $w->is_gespeeld,
+                'groep' => $w->groep,
+            ];
+        }
+
         // Broadcast bracket update
         $wedstrijd->load('poule.blok');
         if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
@@ -701,6 +729,7 @@ class MatController extends Controller
         return response()->json([
             'success' => true,
             'correcties' => $correcties,
+            'updated_slots' => $updatedSlots,
         ]);
     }
 
@@ -886,5 +915,77 @@ class MatController extends Controller
         $this->wedstrijdService->genereerWedstrijden($poule);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Geef bracket HTML voor een specifieke poule + groep.
+     * Wordt via AJAX opgehaald door de mat interface.
+     */
+    public function getBracketHtml(Organisator $organisator, Request $request, Toernooi $toernooi): \Illuminate\Http\Response
+    {
+        return $this->doGetBracketHtml($request);
+    }
+
+    public function getBracketHtmlDevice(Request $request): \Illuminate\Http\Response
+    {
+        return $this->doGetBracketHtml($request);
+    }
+
+    private function doGetBracketHtml(Request $request): \Illuminate\Http\Response
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+            'groep' => 'required|in:A,B',
+        ]);
+
+        $poule = Poule::with(['wedstrijden' => function ($q) {
+            $q->with(['judokaWit:id,naam', 'judokaBlauw:id,naam']);
+        }])->findOrFail($validated['poule_id']);
+
+        $groep = $validated['groep'];
+        $isLocked = $poule->wedstrijden->where('is_gespeeld', true)->isNotEmpty();
+
+        // Bouw wedstrijd-arrays in hetzelfde formaat als getSchemaVoorMat
+        $wedstrijden = $poule->wedstrijden
+            ->where('groep', $groep)
+            ->map(function ($w) {
+                return [
+                    'id' => $w->id,
+                    'volgorde' => $w->volgorde,
+                    'wit' => $w->judokaWit ? ['id' => $w->judokaWit->id, 'naam' => $w->judokaWit->naam] : null,
+                    'blauw' => $w->judokaBlauw ? ['id' => $w->judokaBlauw->id, 'naam' => $w->judokaBlauw->naam] : null,
+                    'is_gespeeld' => (bool) $w->is_gespeeld,
+                    'winnaar_id' => $w->winnaar_id,
+                    'score_wit' => $w->score_wit,
+                    'score_blauw' => $w->score_blauw,
+                    'groep' => $w->groep,
+                    'ronde' => $w->ronde,
+                    'bracket_positie' => $w->bracket_positie,
+                    'volgende_wedstrijd_id' => $w->volgende_wedstrijd_id,
+                    'winnaar_naar_slot' => $w->winnaar_naar_slot,
+                    'uitslag_type' => $w->uitslag_type,
+                    'locatie_wit' => $w->locatie_wit,
+                    'locatie_blauw' => $w->locatie_blauw,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        if ($groep === 'A') {
+            $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden);
+            $view = 'pages.mat.partials._bracket';
+        } else {
+            $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden);
+            $view = 'pages.mat.partials._bracket-b';
+        }
+
+        $html = view($view, [
+            'layout' => $layout,
+            'pouleId' => $poule->id,
+            'isLocked' => $isLocked,
+            'debugSlots' => false,
+        ])->render();
+
+        return response($html, 200)->header('Content-Type', 'text/html');
     }
 }
