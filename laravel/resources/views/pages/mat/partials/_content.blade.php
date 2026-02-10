@@ -118,13 +118,13 @@
                     <div class="flex mb-1 border-b border-gray-200 justify-between">
                         <div class="flex">
                             <button x-show="!poule.groep_filter || poule.groep_filter === 'A'"
-                                    @click="activeTab = 'A'"
+                                    @click="activeTab = 'A'; $nextTick(() => window.initBracketSortable?.())"
                                     :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
                                 {{ __('Groep A (Hoofdboom)') }} <span x-text="'(' + poule.judoka_count + ')'"></span>
                             </button>
                             <template x-if="heeftHerkansing(poule) && (!poule.groep_filter || poule.groep_filter === 'B')">
-                                <button @click="activeTab = 'B'"
+                                <button @click="activeTab = 'B'; $nextTick(() => window.initBracketSortable?.())"
                                         :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
                                     {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
