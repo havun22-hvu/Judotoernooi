@@ -688,6 +688,16 @@ class MatController extends Controller
             'interface' => 'mat',
         ]);
 
+        // Broadcast bracket update
+        $wedstrijd->load('poule.blok');
+        if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
+            MatUpdate::dispatch($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
+                'poule_id' => $wedstrijd->poule_id,
+                'wedstrijd_id' => $wedstrijd->id,
+                'actie' => 'plaats_judoka',
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'correcties' => $correcties,
@@ -837,6 +847,16 @@ class MatController extends Controller
                 'model' => $wedstrijd,
                 'properties' => ['judoka_id' => $judokaId],
                 'interface' => 'mat',
+            ]);
+        }
+
+        // Broadcast bracket update
+        $wedstrijd->load('poule.blok');
+        if ($wedstrijd->poule && $wedstrijd->poule->mat_id) {
+            MatUpdate::dispatch($toernooi->id, $wedstrijd->poule->mat_id, 'bracket', [
+                'poule_id' => $wedstrijd->poule_id,
+                'wedstrijd_id' => $wedstrijd->id,
+                'actie' => 'verwijder_judoka',
             ]);
         }
 

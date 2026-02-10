@@ -2584,13 +2584,13 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// Auto-refresh poules elke 30 seconden (voor verplaatste poules van andere matten)
-setInterval(() => {
-    const component = document.getElementById('mat-interface');
-    if (component) {
-        Alpine.evaluate(component, 'laadWedstrijden()');
-    }
-}, 30000);
+// Reverb push events → refresh bracket/poule data (vervangt 30sec polling)
+['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar', 'mat-bracket-update'].forEach(evt => {
+    window.addEventListener(evt, () => {
+        const el = document.getElementById('mat-interface');
+        if (el) Alpine.evaluate(el, 'laadWedstrijden()');
+    });
+});
 
 // ========================================
 // SortableJS bracket - zaaloverzicht patroon
