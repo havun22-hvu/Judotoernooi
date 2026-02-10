@@ -154,12 +154,18 @@
 
                     <!-- Groep A - Hoofdboom -->
                     <div x-show="activeTab === 'A'">
-                        <div class="flex justify-between items-center">
-                            <button @click="laadBracketHtml(poule.poule_id, 'A')"
-                                    class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
-                                🔄 {{ __('Herlaad') }}
-                            </button>
-                            <span class="text-gray-400 ml-2">|</span>
+                        <div class="flex justify-between items-center flex-wrap gap-1">
+                            <div class="flex items-center gap-1">
+                                <button @click="laadBracketHtml(poule.poule_id, 'A')"
+                                        class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                    🔄 {{ __('Herlaad') }}
+                                </button>
+                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'A')"
+                                        class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
+                                        :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
+                                    #{{ __('Nrs') }}
+                                </button>
+                            </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
@@ -175,12 +181,18 @@
 
                     <!-- Groep B - Herkansing -->
                     <div x-show="activeTab === 'B'">
-                        <div class="flex justify-between items-center">
-                            <button @click="laadBracketHtml(poule.poule_id, 'B')"
-                                    class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
-                                🔄 {{ __('Herlaad') }}
-                            </button>
-                            <span class="text-gray-400 ml-2">|</span>
+                        <div class="flex justify-between items-center flex-wrap gap-1">
+                            <div class="flex items-center gap-1">
+                                <button @click="laadBracketHtml(poule.poule_id, 'B')"
+                                        class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                    🔄 {{ __('Herlaad') }}
+                                </button>
+                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'B')"
+                                        class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
+                                        :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
+                                    #{{ __('Nrs') }}
+                                </button>
+                            </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
@@ -1044,7 +1056,7 @@ function matInterface() {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
-                    body: JSON.stringify({ poule_id: pouleId, groep: groep })
+                    body: JSON.stringify({ poule_id: pouleId, groep: groep, debug_slots: this.debugSlots })
                 });
 
                 if (!response.ok) {

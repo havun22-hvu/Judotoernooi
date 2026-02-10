@@ -942,6 +942,7 @@ class MatController extends Controller
         $validated = $request->validate([
             'poule_id' => 'required|exists:poules,id',
             'groep' => 'required|in:A,B',
+            'debug_slots' => 'nullable|boolean',
         ]);
 
         $poule = Poule::with(['wedstrijden' => function ($q) {
@@ -989,7 +990,7 @@ class MatController extends Controller
             'layout' => $layout,
             'pouleId' => $poule->id,
             'isLocked' => $isLocked,
-            'debugSlots' => true,
+            'debugSlots' => (bool) ($validated['debug_slots'] ?? false),
         ])->render();
 
         return response($html, 200)->header('Content-Type', 'text/html');
