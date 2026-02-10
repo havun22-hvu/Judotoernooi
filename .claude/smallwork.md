@@ -105,11 +105,11 @@
 - **Bestanden:** BlokController.php
 - **Behouden:** Alle wedstrijden, scores, voortgang intact bij verplaatsen
 
-### Feat: Mat interface auto-refresh
-- **Type:** Feature
-- **Wat:** Mat interface refresht elke 30 sec voor verplaatste poules
-- **Bestanden:** mat/_content.blade.php
-- **Logica:** `setInterval(() => laadWedstrijden(), 30000)`
+### Feat: Mat interface auto-refresh → Reverb push
+- **Type:** Feature (vervangen op 10 feb 2026)
+- **Wat:** Mat interface refreshte elke 30 sec → nu vervangen door Reverb WebSocket push events
+- **Bestanden:** mat/_content.blade.php, interface.blade.php, interface-admin.blade.php, mat-updates-listener.blade.php, MatController.php
+- **Logica:** Luistert naar score, beurt, poule_klaar en bracket events via Reverb
 
 ### Fix: Barrage altijd single round-robin
 - **Type:** Bug fix
