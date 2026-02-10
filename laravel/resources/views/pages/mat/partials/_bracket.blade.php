@@ -21,8 +21,8 @@
 @if(empty($rondes))
     <div class="text-gray-500">{{ __('Geen wedstrijden') }}</div>
 @else
-    {{-- Header met ronde namen (sticky bij verticaal scrollen) --}}
-    <div class="flex mb-1 sticky top-0 z-10 bg-white py-1">
+    {{-- Header met ronde namen (wordt door JS verplaatst naar sticky container) --}}
+    <div class="flex mb-1 py-1 bracket-round-header">
         @foreach($rondes as $rondeIdx => $ronde)
             <div class="w-32 flex-shrink-0 text-center text-xs font-bold text-purple-600">
                 {{ $ronde['naam'] }}

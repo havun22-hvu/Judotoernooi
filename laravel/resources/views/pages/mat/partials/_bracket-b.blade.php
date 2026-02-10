@@ -23,8 +23,8 @@
 @if(empty($niveaus))
     <div class="text-gray-500">{{ __('Geen wedstrijden') }}</div>
 @else
-    {{-- Header met ronde namen (sticky bij verticaal scrollen) --}}
-    <div class="flex mb-4 sticky top-0 z-10 bg-white py-1">
+    {{-- Header met ronde namen (wordt door JS verplaatst naar sticky container) --}}
+    <div class="flex mb-4 py-1 bracket-round-header">
         @foreach($niveaus as $niveauIdx => $niveau)
             @foreach($niveau['sub_rondes'] as $srIdx => $sr)
                 <div class="w-32 flex-shrink-0 text-center text-xs font-bold text-purple-600 px-1">
