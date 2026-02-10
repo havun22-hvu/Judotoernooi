@@ -200,27 +200,112 @@ Welke poules worden waar getoond, afhankelijk van type en vulling:
 
 ## Bracket Rendering (Mat Interface)
 
-De bracket wordt gerenderd in `_content.blade.php` met drie lookup-tabellen:
+> **Laatste update:** 2026-02-10 — herschreven van Alpine x-html naar Blade + DOM
 
-| Lookup | Doel |
-|--------|------|
-| `rondeVolgordeLookup` | Kolom-volgorde (links→rechts) |
-| `getRondeDisplayNaam` | Leesbare namen (1/32, 1/16, etc.) |
-| `rondeNiveauMap` | Verticale positie-level |
+### Architectuur
+
+**Oud (vóór 10 feb 2026):** Alpine `x-html="renderBracket()"` bouwde ~300 regels HTML als JS string en herbouwde de hele DOM na elke drop. Dit gaf merkbare vertraging.
+
+**Nieuw:** Server-rendered Blade partials + SortableJS + pure DOM updates. Zelfde patroon als de 4 andere werkende DnD-pagina's (zaaloverzicht, wedstrijddag poules, wachtruimte, poule index).
+
+### Waarom deze keuze?
+
+1. **Performance**: Blade rendert HTML server-side → geen JS string building → geen complete DOM rebuild
+2. **Consistentie**: Alle 5 DnD-pagina's gebruiken nu hetzelfde patroon (SortableJS + DOM updates)
+3. **Onderhoud**: Layout wijzigingen in Blade (PHP) ipv JS template strings — Tailwind purge werkt correct
+4. **Touch support**: SortableJS voor alle devices (PC + tablet) — geen aparte HTML5 DnD fallback nodig
+
+### Data flow
+
+```
+1. Page load → laadWedstrijden() → Alpine poules data
+2. x-init → laadBracketHtml(pouleId, groep) → AJAX POST naar /mat/bracket-html
+3. Server: MatController::getBracketHtml()
+   → Poule + wedstrijden laden
+   → BracketLayoutService berekent posities
+   → Blade partial renderen → HTML response
+4. Client: container.innerHTML = html
+5. initBracketSortable() + applyBeurtaanduiding()
+```
+
+### Na een drop (judoka verplaatsen)
+
+```
+1. SortableJS onEnd → DOM revert ALTIJD (clone verwijderen, item terugzetten)
+2. fakeEvent bouwen → window.dropJudoka() aanroepen
+3. dropJudoka() doet validatie (slot check, wachtwoord, etc.)
+4. API call naar plaatsJudoka → server response met updated_slots[]
+5. updateAlleBracketSlots() update individuele DOM elementen
+6. Bij fout: location.reload()
+```
+
+### Positie-berekening (BracketLayoutService)
+
+| Constante | Waarde | Beschrijving |
+|-----------|--------|--------------|
+| `SLOT_HEIGHT` | 28px | Hoogte van 1 slot (wit of blauw) |
+| `POTJE_HEIGHT` | 56px | 2 × SLOT_HEIGHT (wit + blauw) |
+| `POTJE_GAP` | 8px | Verticale ruimte tussen potjes |
+| `HORIZON_HEIGHT` | 20px | Ruimte tussen B-bracket bovenste/onderste helft |
+
+**A-bracket**: Recursieve `berekenPotjeTop(niveau, potjeIdx)` — elk potje is gecentreerd tussen de 2 potjes van het vorige niveau.
+
+**B-bracket**: Mirrored layout — bovenste helft + onderste helft met horizon gap. Rondes `_1` en `_2` worden gegroepeerd per niveau.
+
+### Lookup tabellen
+
+Ronde-namen en volgorde staan in `BracketLayoutService.php` als class constants:
+
+| Constant | Doel |
+|----------|------|
+| `RONDE_VOLGORDE` | Kolom-volgorde (links→rechts) |
+| `RONDE_NAMEN` | Leesbare namen (1/32, 1/16, Finale, etc.) |
 
 **Ondersteunde rondes (A-groep):**
 `tweeendertigste_finale`, `zestiende_finale`, `achtste_finale`, `kwartfinale`, `halve_finale`, `finale`
 
 **Ondersteunde rondes (B-groep):**
-`b_zestiende_finale_1/_2`, `b_achtste_finale_1/_2`, `b_kwartfinale_1/_2`, `b_halve_finale_1/_2`, `b_finale`
-Plus enkele varianten zonder suffix (SAMEN modus).
+`b_zestiende_finale_1/_2`, `b_achtste_finale_1/_2`, `b_kwartfinale_1/_2`, `b_halve_finale_1/_2`, `b_brons`
+Plus varianten zonder suffix (SAMEN modus).
 
-**Bij nieuwe ronde-namen:** altijd alle 3 lookups bijwerken!
+**Bij nieuwe ronde-namen:** altijd `RONDE_VOLGORDE` + `RONDE_NAMEN` in BracketLayoutService bijwerken!
+
+### Beurtaanduiding (double-click kleuren)
+
+Double-click op eliminatie potje → zelfde 3-kleuren systeem als poules:
+- **Groen** = speelt nu (`actieve_wedstrijd_id`)
+- **Geel** = staat klaar (`volgende_wedstrijd_id`)
+- **Blauw** = gereed maken (`gereedmaken_wedstrijd_id`)
+
+**Flow:** `ondblclick` → `window.dblClickBracket()` → `Alpine.$data()` → `toggleVolgendeWedstrijd()` → `setWedstrijdStatus()` → `applyBeurtaanduiding()`
+
+**applyBeurtaanduiding()** zet inline `style=""` op de wit/blauw slot divs (via `document.getElementById('slot-{id}-wit')`). Inline styles wint van Tailwind classes.
+
+### Bestanden
+
+| Bestand | Rol |
+|---------|-----|
+| `app/Services/BracketLayoutService.php` | Positie-berekening, ronde lookups |
+| `views/pages/mat/partials/_bracket.blade.php` | A-bracket container |
+| `views/pages/mat/partials/_bracket-b.blade.php` | B-bracket container (mirrored) |
+| `views/pages/mat/partials/_bracket-potje.blade.php` | Individueel potje (wit+blauw) |
+| `views/pages/mat/partials/_bracket-medailles.blade.php` | Medaille slots (goud/zilver/brons) |
+| `views/pages/mat/partials/_content.blade.php` | JS: laadBracketHtml, updateBracketSlot, SortableJS, beurtaanduiding |
+| `app/Http/Controllers/MatController.php` | getBracketHtml endpoint + updated_slots in plaatsJudoka |
+
+### Routes
+
+| Route | Middleware | Beschrijving |
+|-------|-----------|--------------|
+| `POST {org}/toernooi/{toernooi}/mat/bracket-html` | auth:organisator | Admin bracket HTML |
+| `POST {org}/{toernooi}/mat/{toegang}/bracket-html` | device.binding | Device-bound bracket HTML |
 
 ## Gerelateerde Bestanden
 
-- `app/Services/EliminatieService.php` - Business logic
-- `resources/views/pages/mat/partials/_content.blade.php` - Bracket rendering
+- `app/Services/EliminatieService.php` - Bracket generatie, uitslag verwerking
+- `app/Services/BracketLayoutService.php` - Visuele layout berekening
+- `resources/views/pages/mat/partials/_content.blade.php` - Mat interface JS
+- `resources/views/pages/mat/partials/_bracket*.blade.php` - Blade partials
 - `database/migrations/*_eliminatie_*.php` - Schema
 
 ## Changelog

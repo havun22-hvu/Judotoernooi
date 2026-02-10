@@ -22,14 +22,21 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $bracketHtmlUrl = route('mat.bracket-html.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
             $huidigeWedstrijdUrl = route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams());
             $pouleKlaarUrl = route('toernooi.mat.poule-klaar', $toernooi->routeParams());
+            $bracketHtmlUrl = route('toernooi.mat.bracket-html', $toernooi->routeParams());
         }
     @endphp
 <div id="mat-interface" x-data="matInterface()" x-init="init()">
+    <!-- Build: v2026.02.10-D (Blade bracket) -->
     <!-- Huidige selectie + Legenda -->
     <div class="flex items-center justify-between mb-1" x-show="blokId && matId">
         <!-- Legenda links met uitleg -->
@@ -148,33 +155,43 @@
                     <!-- Groep A - Hoofdboom -->
                     <div x-show="activeTab === 'A'">
                         <div class="flex justify-between items-center">
-                            <button @click="debugSlots = !debugSlots; $nextTick(() => poules = [...poules])"
-                                    :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'"
-                                    class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
-                                🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
+                            <button @click="laadBracketHtml(poule.poule_id, 'A')"
+                                    class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                🔄 {{ __('Herlaad') }}
                             </button>
+                            <span class="text-gray-400 ml-2">|</span>
+                            <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
-                        <div class="bracket-container overflow-x-auto pb-2" x-html="renderBracket(poule, 'A')"></div>
+                        <div class="bracket-container overflow-x-auto pb-2"
+                             :id="'bracket-container-' + poule.poule_id + '-A'"
+                             x-init="$nextTick(() => laadBracketHtml(poule.poule_id, 'A'))">
+                            <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
+                        </div>
                     </div>
 
                     <!-- Groep B - Herkansing -->
                     <div x-show="activeTab === 'B'">
                         <div class="flex justify-between items-center">
-                            <button @click="debugSlots = !debugSlots; $nextTick(() => poules = [...poules])"
-                                    :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'"
-                                    class="text-xs px-2 py-1 rounded hover:bg-yellow-300">
-                                🔢 <span x-text="debugSlots ? 'Slots AAN' : 'Slots UIT'"></span>
+                            <button @click="laadBracketHtml(poule.poule_id, 'B')"
+                                    class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                🔄 {{ __('Herlaad') }}
                             </button>
+                            <span class="text-gray-400 ml-2">|</span>
+                            <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
-                        <div class="overflow-x-auto pb-2" x-html="renderBracket(poule, 'B')"></div>
+                        <div class="bracket-container overflow-x-auto pb-2"
+                             :id="'bracket-container-' + poule.poule_id + '-B'"
+                             x-init="$nextTick(() => { if (heeftHerkansing(poule)) laadBracketHtml(poule.poule_id, 'B') })">
+                            <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
+                        </div>
                     </div>
 
                 </div>
@@ -364,7 +381,6 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
-    console.log('DROP IN SWAP:', data, 'isLocked:', isLocked);
 
     // Als bracket locked is, vraag admin wachtwoord
     if (isLocked) {
@@ -404,7 +420,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
                     alleen_positie: !isLocked  // Bij locked: ook uitslag resetten
                 })
             });
-            console.log('Verwijder response:', await response.json());
+            await response.json();
         } catch (err) {
             console.error('Fout bij verwijderen:', err);
         }
@@ -414,10 +430,17 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
 };
 
+// Clean drag image: toon judoka naam als witte chip tijdens slepen
+window.setCleanDragImage = function(event, naam) {
+    const ghost = document.createElement('div');
+    ghost.textContent = naam;
+    ghost.style.cssText = 'position:fixed;top:-1000px;left:-1000px;padding:2px 8px;background:#fff;border:1px solid #9ca3af;border-radius:4px;font-size:12px;white-space:nowrap;z-index:9999;';
+    document.body.appendChild(ghost);
+    event.dataTransfer.setDragImage(ghost, 0, 0);
+    requestAnimationFrame(() => ghost.remove());
+};
+
 // Global drop handler - plaats judoka in slot
-// Als judoka vanuit een vorige wedstrijd komt, stuur bron_wedstrijd_id mee
-// Check of positie correct is volgens schema, anders waarschuwing
-// pouleId en huidigeBewoner zijn optioneel voor seeding functionaliteit
 window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
     event.preventDefault();
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
@@ -428,32 +451,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         data.targetHuidigeJudoka = huidigeBewoner;
     }
 
-    // DEBUG: Log alle drag data
-    console.log('=== DROP JUDOKA DEBUG ===');
-    console.log('Target wedstrijd:', targetWedstrijdId, 'Positie:', positie);
-    console.log('Huidige bewoner:', huidigeBewoner);
-    console.log('Drag data:', JSON.stringify(data, null, 2));
-
     // Check of we in seeding-fase zijn (geen wedstrijden gespeeld in deze poule)
-    // data.pouleIsLocked wordt meegegeven vanuit de drag source
     const isLocked = data.pouleIsLocked === true;
     const naam = data.judokaNaam || 'Deze judoka';
-    console.log('isLocked:', isLocked);
 
     // Check 1: Dezelfde wedstrijd?
-    console.log('Check 1: wedstrijdId', data.wedstrijdId, '==', targetWedstrijdId, '?', data.wedstrijdId == targetWedstrijdId);
     if (data.wedstrijdId == targetWedstrijdId) {
         if (data.positie === positie) {
-            // Zelfde wedstrijd EN zelfde positie = teruggezet op oude plek, negeren
-            console.log('Judoka teruggezet op oude plek, geen actie nodig');
-            return;
+            return false; // Teruggezet op oude plek
         }
         // Zelfde wedstrijd maar andere positie = blokkeer
         alert(
             `❌ GEBLOKKEERD: Kan niet verplaatsen binnen dezelfde wedstrijd!\n\n` +
             `${naam} staat al in deze wedstrijd.`
         );
-        return;
+        return false;
     }
 
     // Check 1b: Slot validatie ALTIJD (niet alleen bij locked!)
@@ -466,14 +478,11 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 `❌ VERKEERDE POSITIE!\n\n` +
                 `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
             );
-            return;
+            return false;
         }
     }
 
     // Check 2: Winnaar doorschuiven naar VERKEERDE positie = GEBLOKKEERD (met uitzonderingen)
-    // Alleen strikt checken als wedstrijd al gespeeld is EN dit de winnaar is
-    console.log('Check 2: volgendeWedstrijdId=', data.volgendeWedstrijdId, 'target=', targetWedstrijdId, 'slot=', data.winnaarNaarSlot, 'positie=', positie);
-
     if (data.volgendeWedstrijdId && data.isGespeeld && data.isWinnaar) {
         // Dit is een winnaar die doorschuift - strikt checken
         if (data.volgendeWedstrijdId == targetWedstrijdId) {
@@ -487,10 +496,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     `Zet de winnaar EERST op de juiste plek.\n` +
                     `Swappen binnen de ronde kan daarna (met admin wachtwoord).`
                 );
-                return;
+                return false;
             }
             // Juiste wedstrijd EN juiste positie - doorgaan!
-            console.log('Check 2 PASSED: winnaar naar juiste plek');
         } else {
             // Verkeerde wedstrijd - blokkeer alleen als NIET naar wit slot van volgende ronde
             // (Dit staat toe dat winnaars naar (2) rondes gaan zelfs als volgendeWedstrijdId niet perfect matcht)
@@ -499,24 +507,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 `${naam} moet naar een andere wedstrijd in het schema.\n\n` +
                 `Zet de winnaar EERST op de juiste plek.`
             );
-            return;
+            return false;
         }
-    } else if (data.volgendeWedstrijdId && !data.isGespeeld) {
-        // Wedstrijd nog niet gespeeld - soepeler checken, sta doorschuiven toe
-        console.log('Check 2 SOEPEL: wedstrijd nog niet gespeeld, doorschuiven toegestaan');
     }
-
-    // ============================================================
-    // BLOKKEER-CHECKS VOOR ADMIN WACHTWOORD
-    // Voorkomt dat we om wachtwoord vragen voor ongeldige acties
-    // ============================================================
-
-    console.log('=== BLOKKEER-CHECKS ===');
-    console.log('isLocked:', isLocked);
-    console.log('volgendeWedstrijdId:', data.volgendeWedstrijdId, 'type:', typeof data.volgendeWedstrijdId);
-    console.log('targetWedstrijdId:', targetWedstrijdId, 'type:', typeof targetWedstrijdId);
-    console.log('winnaarNaarSlot:', data.winnaarNaarSlot);
-    console.log('positie:', positie);
 
     // Slot validatie ALTIJD als dit een winnaar-doorschuif is (naar volgende ronde)
     // Seeding is BINNEN dezelfde ronde, niet naar volgende ronde - dus daar geldt geen slot validatie
@@ -525,27 +518,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     if (isWinnaarDoorschuifPoging) {
         // Dit is een winnaar-doorschuif naar de volgende ronde - slot validatie is VERPLICHT
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-            console.log('BLOKKADE: Verkeerde positie!', data.winnaarNaarSlot, '!==', positie);
             const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
             alert(
                 `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
                 `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
             );
-            return;
+            return false;
         }
-        console.log('WINNAAR-DOORSCHUIF: slot validatie passed');
     } else if (isLocked && data.volgendeWedstrijdId) {
-        // Locked bracket, verkeerde wedstrijd → BLOKKEER
-        console.log('BLOKKADE: Verkeerde wedstrijd!', data.volgendeWedstrijdId, '!==', targetWedstrijdId);
         alert(
             `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
             `${naam} kan alleen naar wedstrijd ${data.volgendeWedstrijdId}, niet naar ${targetWedstrijdId}.\n` +
             `Sleep naar het juiste vak.`
         );
-        return;
-    } else {
-        console.log('SEEDING MODE: vrij verplaatsen binnen ronde');
+        return false;
     }
 
     // ============================================================
@@ -576,18 +563,17 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             );
 
             if (!wachtwoord) {
-                return; // Geannuleerd
+                return false; // Geannuleerd
             }
 
             // Check wachtwoord
             const adminWachtwoord = '{{ $toernooi->admin_wachtwoord ?? "admin123" }}';
             if (wachtwoord !== adminWachtwoord) {
                 alert('❌ Onjuist wachtwoord!\n\nWijziging geannuleerd.');
-                return;
+                return false;
             }
 
-            // Admin geautoriseerd - sta wijziging toe
-            console.log('ADMIN OVERRIDE - wijziging toegestaan, isCorrectie:', isCorrectiePoging);
+            // Admin geautoriseerd
             data.isAdminOverride = true;
 
             // Zet correctie flag als dit een correctie is
@@ -598,10 +584,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     }
 
     // Check 3: Extra logging (checks al gedaan boven)
-    console.log('Check 3: volgendeWedstrijdId:', data.volgendeWedstrijdId, 'winnaarNaarSlot:', data.winnaarNaarSlot);
+    // Check 3: Validatie volgendeWedstrijdId + winnaarNaarSlot
     if (isLocked && data.volgendeWedstrijdId) {
         // Checks al gedaan boven - hier alleen logging
-        console.log('Validatie passed - juiste wedstrijd en positie');
+        // Validatie passed - juiste wedstrijd en positie
 
         // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
         if (!data.isAdminOverride && data.isGespeeld && !data.isWinnaar) {
@@ -611,20 +597,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 `${__wilJeAlsWinnaarInstellen.replace(':naam', naam)}\n` +
                 `(${__oudeWinnaarVerwijderd})`
             )) {
-                return; // Gebruiker annuleerde
+                return false; // Gebruiker annuleerde
             }
             // Gebruiker bevestigde - markeer als correctie
             data.isCorrectie = true;
         }
-    } else if (!isLocked) {
-        // SEEDING MODE: Vrij verplaatsen toegestaan
-        console.log('SEEDING MODE - vrij verplaatsen toegestaan');
-    } else {
-        // Geen volgendeWedstrijdId = finale of bye judoka
-        console.log('GEEN volgendeWedstrijdId - finale of bye judoka, wordt geaccepteerd');
     }
-
-    console.log('=== VALIDATIE PASSED - doorgaan met plaatsen ===');
 
     try {
         // Bepaal of dit een SEEDING (move binnen ronde) of WEDSTRIJD WINNEN (copy naar volgende ronde) is
@@ -633,13 +611,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         const isWinnaarDoorschuif = data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId;
         const isSeeding = !isWinnaarDoorschuif && !isLocked;
 
-        console.log('=== ACTIE TYPE ===', { isWinnaarDoorschuif, isSeeding, isLocked });
-
         if (isSeeding) {
             // SEEDING MODE: Verplaatsen binnen zelfde ronde (MOVE)
-            // Huidige bewoner naar swap
             if (data.targetHuidigeJudoka) {
-                console.log('SEEDING: Huidige bewoner naar swap:', data.targetHuidigeJudoka);
                 window.addToSwap(data.pouleId, {
                     id: data.targetHuidigeJudoka.id,
                     naam: data.targetHuidigeJudoka.naam
@@ -648,13 +622,11 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             // Als judoka uit swap komt, verwijder uit swap
             if (data.fromSwap && data.pouleId) {
-                console.log('Verwijder uit swap:', data.judokaId);
                 window.removeFromSwap(data.pouleId, data.judokaId);
             }
 
             // Verwijder judoka uit oude plek (MOVE, niet COPY)
             if (data.wedstrijdId && data.positie && !data.fromSwap) {
-                console.log('SEEDING: Verwijder uit oude plek:', data.wedstrijdId, data.positie);
                 await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
                     method: 'POST',
                     headers: {
@@ -670,19 +642,16 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             }
         } else {
             // WEDSTRIJD WINNEN: Doorschuiven naar volgende ronde (COPY)
-            // Judoka blijft in vorige ronde staan (met groene stip)
-            // Geen verwijdering uit oude plek - dat is de winnaar markering
-            console.log('WINNAAR DOORSCHUIF: Judoka blijft in vorige ronde met groene stip');
+            // WINNAAR DOORSCHUIF: Judoka blijft in vorige ronde met groene stip
         }
 
         const requestBody = {
             wedstrijd_id: targetWedstrijdId,
             judoka_id: data.judokaId,
             positie: positie,
-            bron_wedstrijd_id: data.wedstrijdId || null,  // Stuur bron wedstrijd mee voor uitslag registratie
-            is_correctie: data.isCorrectie || false       // Flag voor winnaar-correctie
+            bron_wedstrijd_id: data.wedstrijdId || null,
+            is_correctie: data.isCorrectie || false
         };
-        console.log('=== FETCH REQUEST ===', requestBody);
 
         const response = await fetch(`{{ route('toernooi.mat.plaats-judoka', $toernooi->routeParams()) }}`, {
             method: 'POST',
@@ -698,7 +667,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         if (!response.ok) {
             // Toon foutmelding - actie geblokkeerd
             alert('❌ GEBLOKKEERD:\n\n' + (result.error || 'Onbekende fout'));
-            return;
+            return false;
         }
 
         // Toon correcties aan admin als die er zijn
@@ -706,10 +675,23 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             alert('✅ Automatische correcties uitgevoerd:\n\n• ' + result.correcties.join('\n• '));
         }
 
+        // Update bracket slots via pure DOM (geen Alpine re-render!)
+        const matEl = document.getElementById('mat-interface');
+        if (matEl && result.updated_slots) {
+            const comp = Alpine.$data(matEl);
+            if (comp) {
+                comp.updateAlleBracketSlots(result.updated_slots, pouleId);
+            }
+        }
+
+        return true; // Succes
+
     } catch (err) {
         console.error('Drop error:', err);
         alert('❌ Fout bij plaatsen: ' + err.message);
+        // Bij fout: location.reload() — zelfde als andere pages
         location.reload();
+        return false;
     }
 };
 
@@ -880,8 +862,10 @@ function matInterface() {
         debugSlots: false,  // Toggle om slot nummers te tonen
         isRefreshing: false, // Loading state voor update knop
         _isLoadingWedstrijden: false, // Guard tegen dubbele API calls
+        _pendingReload: false, // Herlaad na afloop van huidige load
 
         init() {
+            console.log('[Mat] Build v2026.02.10-D (Blade bracket)');
             // Device-bound: always pre-select the bound mat (but allow switching)
             if (isDeviceBound && forcedMatId && !savedMatId) {
                 this.matId = forcedMatId;
@@ -936,12 +920,17 @@ function matInterface() {
         },
 
         async laadWedstrijden() {
-            if (this._isLoadingWedstrijden) return;
+            if (this._isLoadingWedstrijden) {
+                // Er loopt al een load - markeer dat we opnieuw moeten laden
+                this._pendingReload = true;
+                return;
+            }
             if (!this.blokId || !this.matId) {
                 this.poules = [];
                 return;
             }
             this._isLoadingWedstrijden = true;
+            this._pendingReload = false;
 
             // Sla selectie op voor volgende keer
             this.opslaanSelectie();
@@ -1024,13 +1013,142 @@ function matInterface() {
                 return poule;
             });
             // Initialize SortableJS on bracket after render (all devices)
-            this.$nextTick(() => window.initBracketSortable?.());
+            // + beurtaanduiding kleuren toepassen op bestaande bracket DOM
+            this.$nextTick(() => {
+                window.initBracketSortable?.();
+                this.applyBeurtaanduiding();
+            });
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
                 alert('Fout bij laden: ' + err.message);
                 this.poules = [];
             } finally {
                 this._isLoadingWedstrijden = false;
+                // Als er tijdens het laden een nieuwe request binnenkwam, herlaad nu
+                if (this._pendingReload) {
+                    this._pendingReload = false;
+                    this.laadWedstrijden();
+                }
+            }
+        },
+
+        // Laad bracket HTML via AJAX endpoint (server-rendered Blade partial)
+        async laadBracketHtml(pouleId, groep) {
+            const container = document.getElementById('bracket-container-' + pouleId + '-' + groep);
+            if (!container) return;
+
+            try {
+                const response = await fetch(`{{ $bracketHtmlUrl }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ poule_id: pouleId, groep: groep })
+                });
+
+                if (!response.ok) {
+                    console.error('[Bracket] Fout bij laden HTML:', response.status);
+                    container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
+                    return;
+                }
+
+                const html = await response.text();
+                container.innerHTML = html;
+
+                // Initialiseer SortableJS op de nieuwe DOM elementen
+                this.$nextTick(() => window.initBracketSortable?.());
+
+                // Pas beurtaanduiding kleuren toe
+                this.applyBeurtaanduiding();
+            } catch (err) {
+                console.error('[Bracket] Exception bij laden:', err);
+                container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
+            }
+        },
+
+        // Update een individueel bracket slot na succesvolle drop (pure DOM update)
+        updateBracketSlot(wedstrijdId, positie, judoka, isWinnaar, extraDragData = {}) {
+            const slotEl = document.getElementById('slot-' + wedstrijdId + '-' + positie);
+            if (!slotEl) return;
+
+            // Update bewoner data attribute
+            slotEl.dataset.bewoner = judoka ? JSON.stringify({id: judoka.id, naam: judoka.naam}) : 'null';
+
+            if (judoka) {
+                const dragData = JSON.stringify({
+                    judokaId: judoka.id,
+                    wedstrijdId: wedstrijdId,
+                    judokaNaam: judoka.naam,
+                    volgendeWedstrijdId: extraDragData.volgendeWedstrijdId || null,
+                    winnaarNaarSlot: extraDragData.winnaarNaarSlot || null,
+                    pouleIsLocked: extraDragData.pouleIsLocked || false,
+                    pouleId: extraDragData.pouleId || null,
+                    positie: positie,
+                    isWinnaar: !!isWinnaar,
+                    isGespeeld: extraDragData.isGespeeld || false,
+                });
+                const escapedDrag = dragData.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+                slotEl.innerHTML = `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka" data-drag="${escapedDrag}"><span class="truncate">${judoka.naam}</span>${isWinnaar ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>' : ''}</div>`;
+            } else {
+                slotEl.innerHTML = '';
+            }
+        },
+
+        // Update ALLE bracket slots vanuit server response (updated_slots)
+        updateAlleBracketSlots(updatedSlots, pouleId) {
+            if (!updatedSlots || !Array.isArray(updatedSlots)) return;
+
+            updatedSlots.forEach(slot => {
+                this.updateBracketSlot(
+                    slot.wedstrijd_id,
+                    slot.positie,
+                    slot.judoka,
+                    slot.is_winnaar,
+                    { pouleId: pouleId, isGespeeld: slot.is_gespeeld }
+                );
+            });
+
+            // Herinitialiseer SortableJS na DOM updates
+            this.$nextTick(() => window.initBracketSortable?.());
+        },
+
+        // Pas beurtaanduiding kleuren toe op bracket potjes (groen/geel/blauw)
+        applyBeurtaanduiding() {
+            if (!this.matSelectie) return;
+
+            const actieveId = this.matSelectie.actieve_wedstrijd_id;
+            const volgendeId = this.matSelectie.volgende_wedstrijd_id;
+            const gereedmakenId = this.matSelectie.gereedmaken_wedstrijd_id;
+
+            // Reset alle beurtaanduiding
+            document.querySelectorAll('.bracket-potje .drop-slot').forEach(el => {
+                el.style.border = '';
+                el.style.backgroundColor = '';
+            });
+
+            // Actief (groen)
+            if (actieveId) {
+                const witSlot = document.getElementById('slot-' + actieveId + '-wit');
+                const blauwSlot = document.getElementById('slot-' + actieveId + '-blauw');
+                if (witSlot) { witSlot.style.border = '2px solid #16a34a'; witSlot.style.backgroundColor = '#dcfce7'; }
+                if (blauwSlot) { blauwSlot.style.border = '2px solid #16a34a'; blauwSlot.style.backgroundColor = '#dcfce7'; }
+            }
+
+            // Volgende (geel)
+            if (volgendeId) {
+                const witSlot = document.getElementById('slot-' + volgendeId + '-wit');
+                const blauwSlot = document.getElementById('slot-' + volgendeId + '-blauw');
+                if (witSlot) { witSlot.style.border = '2px solid #ca8a04'; witSlot.style.backgroundColor = '#fef9c3'; }
+                if (blauwSlot) { blauwSlot.style.border = '2px solid #ca8a04'; blauwSlot.style.backgroundColor = '#fef9c3'; }
+            }
+
+            // Gereedmaken (blauw)
+            if (gereedmakenId) {
+                const witSlot = document.getElementById('slot-' + gereedmakenId + '-wit');
+                const blauwSlot = document.getElementById('slot-' + gereedmakenId + '-blauw');
+                if (witSlot) { witSlot.style.border = '2px solid #2563eb'; witSlot.style.backgroundColor = '#dbeafe'; }
+                if (blauwSlot) { blauwSlot.style.border = '2px solid #2563eb'; blauwSlot.style.backgroundColor = '#dbeafe'; }
             }
         },
 
@@ -1612,18 +1730,6 @@ function matInterface() {
             return 'Klik om te selecteren';
         },
 
-        // Inline style voor eliminatie potje-slots (border-color + border-width op de wit/blauw slots)
-        getEliminatiePotjeStyle(wedstrijdId) {
-            const matActieveId = this.matSelectie?.actieve_wedstrijd_id;
-            const matVolgendeId = this.matSelectie?.volgende_wedstrijd_id;
-            const matGereedmakenId = this.matSelectie?.gereedmaken_wedstrijd_id;
-
-            if (wedstrijdId == matActieveId && matActieveId != null) return 'border: 2px solid #16a34a; background-color: #dcfce7;';
-            if (wedstrijdId == matVolgendeId && matVolgendeId != null) return 'border: 2px solid #ca8a04; background-color: #fef9c3;';
-            if (wedstrijdId == matGereedmakenId && matGereedmakenId != null) return 'border: 2px solid #2563eb; background-color: #dbeafe;';
-            return '';
-        },
-
         // Toggle wedstrijd selectie (groen/geel/blauw systeem) - MAT NIVEAU
         // Documentatie: MAT-WEDSTRIJD-SELECTIE.md
         // - 1 groen, 1 geel en 1 blauw per mat (ongeacht aantal poules)
@@ -1754,6 +1860,8 @@ function matInterface() {
             };
             // Force re-render VOOR server call (snelle feedback)
             this.poules = [...this.poules];
+            // Beurtaanduiding kleuren direct toepassen op bracket DOM
+            this.$nextTick(() => this.applyBeurtaanduiding());
 
             try {
                 const url = `{{ $huidigeWedstrijdUrl }}`;
@@ -1795,8 +1903,9 @@ function matInterface() {
                         volgende_wedstrijd_id: data.mat.volgende_wedstrijd_id || null,
                         gereedmaken_wedstrijd_id: data.mat.gereedmaken_wedstrijd_id || null
                     };
-                    // Nogmaals re-render met server data
+                    // Nogmaals re-render met server data + beurtaanduiding
                     this.poules = [...this.poules];
+                    this.$nextTick(() => this.applyBeurtaanduiding());
                     return true;
                 } else {
                     throw new Error(data.error || 'Onbekende server response');
@@ -1811,766 +1920,13 @@ function matInterface() {
             }
         },
 
-        // === ELIMINATIE FUNCTIES ===
 
-        // Ronde volgorde voor sorteren (finale = laatste)
-        rondeVolgorde: {
-            'zestiende_finale': 1,
-            'achtste_finale': 2,
-            'kwartfinale': 3,
-            'halve_finale': 4,
-            'finale': 5,
-            'herkansing_r1': 1,
-            'herkansing_r2': 2,
-            'herkansing_r3': 3,
-            'herkansing_r4': 4,
-        },
-
-        // Bepaal ronde naam op basis van aantal slots
-        getRondeNaamVoorSlots(aantalSlots, rondeKey) {
-            // Gebaseerd op aantal deelnemers in de ronde
-            if (aantalSlots >= 32) return '1/16';
-            if (aantalSlots >= 16) return '1/8';
-            if (aantalSlots >= 8) return '1/4';
-            if (aantalSlots >= 4) return '1/2';
-            if (aantalSlots >= 2) return __finale;
-            // Fallback: gebruik key maar maak het leesbaar
-            return rondeKey.replace('_', ' ').replace('ronde ', 'R');
-        },
-
-        // Ronde volgorde voor sorteren (kleinste eerst = meeste wedstrijden)
-        // B-groep: deel 1 en deel 2 rondes op volgorde
-        rondeVolgordeLookup: {
-            // A-groep (1/32, 1/16 met byes als nodig)
-            'tweeendertigste_finale': 0,
-            'zestiende_finale': 1,
-            'achtste_finale': 2,
-            'kwartfinale': 3,
-            'halve_finale': 4,
-            'finale': 5,
-            // B-groep: dynamische structuur op basis van aantal judoka's
-            // 33+ j: B-1/16(1) → B-1/16(2) → B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-brons
-            // 25-32 j: B-1/8(1) → B-1/8(2) → B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
-            // 17-24 j: B-1/8 → B-1/4 → B-brons
-            // 13-16 j: B-1/4(1) → B-1/4(2) → B-1/2(1) → B-brons
-            // 9-12 j: B-1/4 → B-brons
-            'b_zestiende_finale_1': 1,
-            'b_zestiende_finale_2': 2,
-            'b_zestiende_finale': 1,   // Zonder suffix
-            'b_achtste_finale_1': 3,
-            'b_achtste_finale_2': 4,
-            'b_achtste_finale': 3,     // Zonder suffix (17-24 j)
-            'b_kwartfinale_1': 5,
-            'b_kwartfinale_2': 6,
-            'b_kwartfinale': 5,        // Zonder suffix (9-12 j)
-            'b_halve_finale_1': 7,
-            'b_halve_finale_2': 8,
-            'b_brons': 8,  // Legacy support
-        },
-
-        // Get bracket als array van rondes met wedstrijden
-        getEliminatieBracket(poule, groep) {
-            // B-groep: inclusief brons (niet apart renderen)
-            const wedstrijden = poule.wedstrijden.filter(w => w.groep === groep);
-            if (wedstrijden.length === 0) return [];
-
-            // Groepeer op ronde
-            const rondesMap = {};
-            wedstrijden.forEach(w => {
-                if (!rondesMap[w.ronde]) {
-                    rondesMap[w.ronde] = [];
-                }
-                rondesMap[w.ronde].push(w);
-            });
-
-            // Sorteer rondes op volgorde (start/1/16 eerst, finale laatst)
-            const rondes = Object.entries(rondesMap)
-                .sort((a, b) => {
-                    const volgordeA = this.rondeVolgordeLookup[a[0]] ?? 99;
-                    const volgordeB = this.rondeVolgordeLookup[b[0]] ?? 99;
-                    return volgordeA - volgordeB;
-                })
-                .map(([ronde, weds]) => {
-                    weds.sort((a, b) => (a.bracket_positie || 0) - (b.bracket_positie || 0));
-
-                    // Bepaal leesbare naam (geen aparte voorronde, 1/16 met byes)
-                    let naam = this.getRondeDisplayNaam(ronde, weds.length);
-
-                    return { naam, ronde, wedstrijden: weds };
-                });
-
-            return rondes;
-        },
-
-        // Geef leesbare naam voor ronde
-        // A-groep: 1/16 → 1/8 → 1/4 → 1/2 → Finale
-        // B-groep: dynamisch op basis van aantal judoka's
-        getRondeDisplayNaam(ronde, aantalWeds) {
-            const namen = {
-                // A-groep
-                'tweeendertigste_finale': '1/32',
-                'zestiende_finale': '1/16',
-                'achtste_finale': '1/8',
-                'kwartfinale': '1/4',
-                'halve_finale': '1/2',
-                'finale': __finale,
-                // B-groep: (1)/(2) alleen als ronde 2x gespeeld wordt
-                'b_zestiende_finale_1': '1/16 (1)',
-                'b_zestiende_finale_2': '1/16 (2)',
-                'b_zestiende_finale': '1/16',    // Zonder suffix
-                'b_achtste_finale_1': '1/8 (1)',
-                'b_achtste_finale_2': '1/8 (2)',
-                'b_achtste_finale': '1/8',      // Zonder suffix
-                'b_kwartfinale_1': '1/4 (1)',
-                'b_kwartfinale_2': '1/4 (2)',
-                'b_kwartfinale': '1/4',         // Zonder suffix
-                'b_halve_finale_1': '1/2 (1)',
-                'b_halve_finale_2': '1/2 (2)',
-                'b_brons': __brons,  // Legacy support (IJF)
-            };
-            return namen[ronde] || ronde.replace('b_', 'B ').replace('_', ' ');
-        },
 
         // Check of poule herkansing (groep B) heeft
         heeftHerkansing(poule) {
             return poule.wedstrijden.some(w => w.groep === 'B');
         },
 
-        // Check of poule bronswedstrijden heeft
-        heeftBronsWedstrijden(poule) {
-            return poule.wedstrijden.some(w =>
-                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons'
-            );
-        },
-
-        // Check of bracket locked is (minimaal 1 wedstrijd gespeeld)
-        // In seeding-fase (niet locked) mag je vrij schuiven
-        isBracketLocked(poule) {
-            return poule.wedstrijden.some(w => w.is_gespeeld);
-        },
-
-        // Render bracket als HTML met draggable chips
-        renderBracket(poule, groep) {
-            // Expliciete read zodat Alpine x-html herrendert bij matSelectie wijziging
-            const _ms = this.matSelectie;
-
-            const rondes = this.getEliminatieBracket(poule, groep);
-            if (rondes.length === 0) return '<div class="text-gray-500">Geen wedstrijden</div>';
-
-            // B-groep: gebruik gespiegelde layout
-            if (groep === 'B') {
-                return this.renderBBracketMirrored(poule, rondes);
-            }
-
-            // Check of bracket locked is (seeding-fase voorbij)
-            const isLocked = this.isBracketLocked(poule);
-
-            const h = 28; // slot height
-            let html = '';
-
-            // Kleuren op basis van groep
-            const headerColor = 'text-purple-600';
-            const ringColor = 'ring-purple-400';
-            const winIcon = groep === 'A' ? '🏆' : '🥉';
-
-            // Bepaal of er een B-start ronde is (eerste instroom B-groep)
-            const bStartIdx = rondes.findIndex(r => r.ronde === 'b_start');
-            const heeftBStartInBracket = bStartIdx >= 0;
-
-            // B-groep: zelfde volgorde als A-groep (vroege rondes links, brons rechts)
-            const isBGroep = groep === 'B';
-            const displayRondes = rondes;
-
-            // Header met ronde namen
-            html += `<div class="flex mb-1">`;
-            displayRondes.forEach((ronde, rondeIdx) => {
-                const isBStartHeader = ronde.ronde === 'b_start';
-                const headerWidth = isBStartHeader ? 'w-36' : 'w-32';
-                const aantalWeds = ronde.wedstrijden.length;
-                const headerTekst = isBStartHeader ? `${ronde.naam} (${aantalWeds})` : ronde.naam;
-                html += `<div class="${headerWidth} flex-shrink-0 text-center text-xs font-bold ${headerColor}">${headerTekst}</div>`;
-                if (rondeIdx < displayRondes.length - 1) {
-                    html += '<div class="w-2 flex-shrink-0"></div>';
-                }
-            });
-            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600">${winIcon}</div>`;
-            html += '</div>';
-
-            // Simpele berekening met absolute positioning
-            const potjeHeight = 2 * h; // 56px (wit + blauw)
-            const potjeGap = 8; // marge tussen potjes
-
-            // Niveau bepaalt verticale positie
-            // (1) en (2) rondes krijgen NIET hetzelfde niveau - ze zijn opeenvolgend
-            const rondeNiveauMap = {
-                // A-groep: standaard bracket
-                'tweeendertigste_finale': 0,
-                'zestiende_finale': 1,
-                'achtste_finale': 2,
-                'kwartfinale': 3,
-                'halve_finale': 4,
-                'finale': 5,
-                // B-groep: elke ronde eigen niveau (opeenvolgend)
-                'b_zestiende_finale_1': 0,
-                'b_zestiende_finale_2': 1,
-                'b_zestiende_finale': 0,  // Zonder suffix
-                'b_achtste_finale_1': 0,
-                'b_achtste_finale_2': 1,
-                'b_achtste_finale': 0,    // Zonder suffix
-                'b_kwartfinale_1': 0,     // Of 2 als na b_achtste
-                'b_kwartfinale_2': 1,     // Of 3 als na b_kwartfinale_1
-                'b_kwartfinale': 0,       // Zonder suffix (eerste B-ronde)
-                'b_halve_finale_1': 2,
-                'b_halve_finale_2': 3,
-                'b_brons': 3,  // Legacy support
-            };
-
-            // Bereken posities voor elke ronde op basis van niveau
-            const berekenPotjeTop = (niveau, potjeIdx) => {
-                if (niveau <= 0) {
-                    return potjeIdx * (potjeHeight + potjeGap);
-                }
-                // Gecentreerd tussen 2 potjes van vorige niveau
-                const prevPotje1 = potjeIdx * 2;
-                const prevPotje2 = potjeIdx * 2 + 1;
-                const top1 = berekenPotjeTop(niveau - 1, prevPotje1);
-                const top2 = berekenPotjeTop(niveau - 1, prevPotje2);
-                // Center tussen de 2 potjes
-                const center1 = top1 + potjeHeight / 2;
-                const center2 = top2 + potjeHeight / 2;
-                const center = (center1 + center2) / 2;
-                return center - potjeHeight / 2;
-            };
-
-            // Helper om niveau te bepalen voor een ronde
-            // Gebruik gewoon rondeIdx voor beide groepen (simpele bracket layout)
-            const getNiveau = (rondeNaam, rondeIdx) => {
-                return rondeIdx;
-            };
-
-            // Bepaal totale hoogte gebaseerd op eerste ronde
-            const eersteRonde = rondes[0];
-            const tweedeRonde = rondes[1];
-
-            // Bereken aantal slots op basis van eerste ronde wedstrijden
-            let aantalSlots;
-            if (eersteRonde) {
-                // Gebruik eerste ronde wedstrijden * 2 voor correcte spacing
-                aantalSlots = eersteRonde.wedstrijden.length * 2;
-            } else {
-                aantalSlots = 8; // Fallback
-            }
-            const totaleHoogte = Math.max(aantalSlots * (potjeHeight + potjeGap), 300);
-
-            html += `<div class="flex" style="height: ${totaleHoogte}px;">`;
-
-            // Benodigde data voor medaille slots
-            const laatsteRonde = rondes[rondes.length - 1];
-            const laatsteRondeWedstrijden = laatsteRonde?.wedstrijden || [];
-            const laatsteRondeNiveau = getNiveau(laatsteRonde?.ronde, rondes.length - 1);
-
-            displayRondes.forEach((ronde, rondeIdx) => {
-                // Normale ronde rendering met absolute positioning
-                    html += `<div class="relative flex-shrink-0 w-32">`;
-
-                    // Sorteer wedstrijden op bracket_positie voor correcte volgorde
-                    const sortedWeds = [...ronde.wedstrijden].sort((a, b) => a.bracket_positie - b.bracket_positie);
-                    sortedWeds.forEach((wed, wedIdx) => {
-                        const isLastRound = rondeIdx === rondes.length - 1;
-                        const niveau = getNiveau(ronde.ronde, rondeIdx);
-                        const topPos = berekenPotjeTop(niveau, wedIdx);
-
-                        // Potje container met absolute positie + double-click beurtaanduiding
-                        const potjeStyle = this.getEliminatiePotjeStyle(wed.id);
-                        html += `<div class="absolute w-32" style="top: ${topPos}px;"
-                                      ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
-
-                        // Helper: groen cirkeltje voor winnaar (niet bij bye)
-                        const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
-                        const isBye = wed.uitslag_type === 'bye';
-                        const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
-                        const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
-
-                        // Drag data met volgende wedstrijd info voor validatie
-                        // isWinnaar en isGespeeld toegevoegd om te checken of doorschuiven toegestaan is
-                        // Escape for double-quoted HTML attributes
-                        const escapeForHtml = (str) => str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-
-                        const witDragData = escapeForHtml(JSON.stringify({
-                            judokaId: wed.wit?.id,
-                            wedstrijdId: wed.id,
-                            judokaNaam: wed.wit?.naam || '',
-                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot,
-                            pouleIsLocked: isLocked,
-                            pouleId: poule.poule_id,
-                            positie: 'wit',
-                            isWinnaar: isWitWinnaar,
-                            isGespeeld: wed.is_gespeeld === true
-                        }));
-
-                        const blauwDragData = escapeForHtml(JSON.stringify({
-                            judokaId: wed.blauw?.id,
-                            wedstrijdId: wed.id,
-                            judokaNaam: wed.blauw?.naam || '',
-                            volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                            winnaarNaarSlot: wed.winnaar_naar_slot,
-                            pouleIsLocked: isLocked,
-                            pouleId: poule.poule_id,
-                            positie: 'blauw',
-                            isWinnaar: isBlauwWinnaar,
-                            isGespeeld: wed.is_gespeeld === true
-                        }));
-
-                        // Data voor huidige bewoners (voor seeding swap)
-                        const witBewoner = wed.wit ? escapeForHtml(JSON.stringify({id: wed.wit.id, naam: wed.wit.naam})) : 'null';
-                        const blauwBewoner = wed.blauw ? escapeForHtml(JSON.stringify({id: wed.blauw.id, naam: wed.blauw.naam})) : 'null';
-
-                        // Visuele slot nummers (van boven naar beneden: 1,2,3,4,...)
-                        const visualSlotWit = wedIdx * 2 + 1;
-                        const visualSlotBlauw = wedIdx * 2 + 2;
-                        const DEBUG_SLOTS = this.debugSlots;
-
-                        // Wit slot
-                        html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastRound ? 'border-r-0' : ''}"
-                                      style="${potjeStyle}"
-                                      data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="wit" data-poule-id="${poule.poule_id}" data-bewoner="${witBewoner}">`;
-                        if (wed.wit) {
-                            const displayName = DEBUG_SLOTS ? `[${visualSlotWit}] ${wed.wit.naam}` : wed.wit.naam;
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                                          data-drag="${witDragData}">
-                                        <span class="truncate">${displayName}</span>${isWitWinnaar ? winnaarIcon : ''}
-                                     </div>`;
-                        } else if (DEBUG_SLOTS) {
-                            html += `<span class="px-1 text-gray-400">[${visualSlotWit}]</span>`;
-                        }
-                        html += '</div>';
-                        // Connector lijnen naar rechts
-                        if (!isLastRound) {
-                            html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
-                        }
-                        html += '</div>';
-
-                        // Blauw slot
-                        html += `<div class="relative">`;
-                        html += `<div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastRound ? 'border-r-0' : ''}"
-                                      style="${potjeStyle}"
-                                      data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="blauw" data-poule-id="${poule.poule_id}" data-bewoner="${blauwBewoner}">`;
-                        if (wed.blauw) {
-                            const displayName = DEBUG_SLOTS ? `[${visualSlotBlauw}] ${wed.blauw.naam}` : wed.blauw.naam;
-                            html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                                          data-drag="${blauwDragData}">
-                                        <span class="truncate">${displayName}</span>${isBlauwWinnaar ? winnaarIcon : ''}
-                                     </div>`;
-                        } else if (DEBUG_SLOTS) {
-                            html += `<span class="px-1 text-gray-400">[${visualSlotBlauw}]</span>`;
-                        }
-                        html += '</div>';
-                        if (!isLastRound) {
-                            html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
-                        }
-                        html += '</div>';
-
-                        html += '</div>'; // einde potje
-                    });
-
-                    html += '</div>';
-
-                // Ruimte voor connector
-                if (rondeIdx < rondes.length - 1) {
-                    html += '<div class="w-2 flex-shrink-0"></div>';
-                }
-            });
-
-            // Medaille slots RECHTS van finale/brons
-            if (groep === 'A') {
-                const finale = laatsteRondeWedstrijden[0];
-                const winnaar = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw) : null;
-                const verliezer = finale?.is_gespeeld ? (finale.winnaar_id === finale.wit?.id ? finale.blauw : finale.wit) : null;
-                // Winnaar (goud) en verliezer (zilver) naast finale - uitgelijnd op wit/blauw slots
-                const finaleTop = berekenPotjeTop(laatsteRondeNiveau, 0);
-                html += `<div class="relative flex-shrink-0 w-32">`;
-                // Goud (1e plaats) - drop target voor finale winnaar
-                html += `<div class="absolute w-32" style="top: ${finaleTop}px;">`;
-                html += `<div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate bracket-drop bracket-medal ${!winnaar ? 'cursor-pointer' : ''}"
-                              data-drop-handler="dropOpMedaille" data-finale-id="${finale?.id || 'null'}" data-medaille="goud" data-poule-id="${poule.poule_id}">`;
-                html += winnaar ? `🥇 ${winnaar.naam}` : '🥇 Sleep winnaar hier';
-                html += '</div></div>';
-                // Zilver (2e plaats) - drop target voor finale verliezer
-                html += `<div class="absolute w-32" style="top: ${finaleTop + h}px;">`;
-                html += `<div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal ${!verliezer ? 'cursor-pointer' : ''}"
-                              data-drop-handler="dropOpMedaille" data-finale-id="${finale?.id || 'null'}" data-medaille="zilver" data-poule-id="${poule.poule_id}">`;
-                html += verliezer ? `🥈 ${verliezer.naam}` : '🥈 Sleep verliezer hier';
-                html += '</div></div>';
-                html += '</div>';
-            } else {
-                // B groep: bronzen winnaars rechts van brons wedstrijden
-                html += `<div class="relative flex-shrink-0 w-32">`;
-                laatsteRondeWedstrijden.forEach((wed, wedIdx) => {
-                    const winnaar = wed.is_gespeeld ? (wed.winnaar_id === wed.wit?.id ? wed.wit : wed.blauw) : null;
-                    const winnaarTop = berekenPotjeTop(laatsteRondeNiveau, wedIdx) + h / 2;
-                    html += `<div class="absolute w-32" style="top: ${winnaarTop}px;">`;
-                    html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal ${!winnaar ? 'cursor-pointer' : ''}"
-                                  data-drop-handler="dropOpMedaille" data-finale-id="${wed.id}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
-                    html += winnaar ? `🥉 ${winnaar.naam}` : '🥉 Sleep winnaar';
-                    html += '</div></div>';
-                });
-                html += '</div>';
-            }
-
-            html += '</div>';
-
-            return html;
-        },
-
-        // B-groep gespiegelde layout: bovenste helft en onderste helft rond horizon
-        // (1) en (2) rondes horizontaal naast elkaar
-        renderBBracketMirrored(poule, rondes) {
-            const isLocked = this.isBracketLocked(poule);
-            const h = 28; // slot height
-            const potjeHeight = 2 * h;
-            const potjeGap = 8;
-            const ringColor = 'ring-purple-400';
-
-            // Groepeer rondes per niveau: b_achtste_finale_1 en _2 samen, etc.
-            // Niveau = basis ronde naam zonder _1 of _2
-            const niveaus = [];
-            const niveauMap = {};
-
-            rondes.forEach(ronde => {
-                // Bepaal basis niveau (zonder _1 of _2)
-                let basisNiveau = ronde.ronde.replace(/_[12]$/, '');
-                if (!niveauMap[basisNiveau]) {
-                    niveauMap[basisNiveau] = { naam: basisNiveau, subRondes: [] };
-                    niveaus.push(niveauMap[basisNiveau]);
-                }
-                niveauMap[basisNiveau].subRondes.push(ronde);
-            });
-
-            // Bepaal aantal wedstrijden in eerste niveau (voor hoogte berekening)
-            const eersteNiveau = niveaus[0];
-            const wedsPerHelft = eersteNiveau ? Math.ceil(eersteNiveau.subRondes[0].wedstrijden.length / 2) : 4;
-
-            // Totale hoogte: 2 helften met ruimte ertussen
-            const helftHoogte = wedsPerHelft * (potjeHeight + potjeGap);
-            const horizonHoogte = 20; // Ruimte tussen helften (lijn niet zichtbaar)
-            const totaleHoogte = 2 * helftHoogte + horizonHoogte;
-
-            let html = '';
-
-            // Header met niveau namen (niet individuele rondes)
-            html += `<div class="flex mb-4">`;
-            niveaus.forEach((niveau, idx) => {
-                // Voor elk niveau: toon de subronde namen
-                niveau.subRondes.forEach((sr, srIdx) => {
-                    html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-purple-600 px-1">${sr.naam}</div>`;
-                    if (srIdx < niveau.subRondes.length - 1 || idx < niveaus.length - 1) {
-                        html += '<div class="w-4 flex-shrink-0"></div>';
-                    }
-                });
-            });
-            html += `<div class="w-32 flex-shrink-0 text-center text-xs font-bold text-yellow-600 px-1">🥉</div>`;
-            html += '</div>';
-
-            // Main container
-            html += `<div class="flex" style="height: ${totaleHoogte}px;">`;
-
-            // Render elke subronde als kolom
-            niveaus.forEach((niveau, niveauIdx) => {
-                niveau.subRondes.forEach((ronde, subRondeIdx) => {
-                    const sortedWeds = [...ronde.wedstrijden].sort((a, b) => a.bracket_positie - b.bracket_positie);
-                    const halfCount = Math.ceil(sortedWeds.length / 2);
-                    const isLastNiveau = niveauIdx === niveaus.length - 1;
-                    const isLastSubRonde = subRondeIdx === niveau.subRondes.length - 1;
-                    const isLastColumn = isLastNiveau && isLastSubRonde;
-
-                    // Is dit een (1) ronde? Dan offset omhoog voor alignment met wit slot van (2)
-                    const isRonde1 = ronde.ronde.endsWith('_1');
-                    const verticalOffset = isRonde1 ? -h / 2 : 0; // Halve slot hoogte omhoog
-
-                    // Is dit een (2) ronde? Dan toon A-verliezer placeholder
-                    const isRonde2 = ronde.ronde.endsWith('_2');
-                    // Bepaal A-ronde naam voor placeholder (b_achtste_finale_2 → A-1/8)
-                    let aRondeNaam = '';
-                    if (isRonde2) {
-                        if (ronde.ronde.includes('zestiende')) aRondeNaam = 'A-1/16';
-                        else if (ronde.ronde.includes('achtste')) aRondeNaam = 'A-1/8';
-                        else if (ronde.ronde.includes('kwart')) aRondeNaam = 'A-1/4';
-                        else if (ronde.ronde.includes('halve')) aRondeNaam = 'A-1/2';
-                    }
-
-                    html += `<div class="relative flex-shrink-0 w-32">`;
-
-                    // Bovenste helft (wedstrijden 0 tot halfCount-1)
-                    for (let i = 0; i < halfCount; i++) {
-                        const wed = sortedWeds[i];
-                        if (!wed) continue;
-
-                        // Bereken positie binnen bovenste helft
-                        const spacing = helftHoogte / halfCount;
-                        const topPos = i * spacing + (spacing - potjeHeight) / 2 + verticalOffset;
-
-                        // Visuele slotnummers: doorlopend van boven naar beneden (zoals A-bracket)
-                        const vSlotWit = i * 2 + 1;
-                        const vSlotBlauw = i * 2 + 2;
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, false, vSlotWit, vSlotBlauw);
-                    }
-
-                    // Geen horizon lijn in B-groep (was verwarrend)
-
-                    // Onderste helft (wedstrijden halfCount tot einde)
-                    // Slot nummers tellen gewoon door van boven naar beneden
-                    for (let i = halfCount; i < sortedWeds.length; i++) {
-                        const wed = sortedWeds[i];
-                        if (!wed) continue;
-
-                        // Bereken positie binnen onderste helft (gewoon doorlopend, niet gespiegeld)
-                        const lowerIdx = i - halfCount;
-                        const spacing = helftHoogte / halfCount;
-                        const mirroredOffset = isRonde1 ? h / 2 : 0;
-                        const topPos = helftHoogte + horizonHoogte + lowerIdx * spacing + (spacing - potjeHeight) / 2 + mirroredOffset;
-
-                        // Visuele slotnummers: doorlopend (bovenste helft had 0..halfCount-1, deze begint bij halfCount)
-                        const vSlotWit = i * 2 + 1;
-                        const vSlotBlauw = i * 2 + 2;
-                        html += this.renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2, aRondeNaam, true, vSlotWit, vSlotBlauw);
-                    }
-
-                    html += '</div>';
-
-                    // Ruimte tussen kolommen (moet matchen met header spacing)
-                    if (!isLastColumn) {
-                        html += '<div class="w-4 flex-shrink-0"></div>';
-                    }
-                });
-            });
-
-            // Medaille slots rechts van laatste kolom (1/2(2) wedstrijden)
-            const laatsteNiveau = niveaus[niveaus.length - 1];
-            const laatsteRonde = laatsteNiveau?.subRondes[laatsteNiveau.subRondes.length - 1];
-            const sortedLaatsteWeds = [...(laatsteRonde?.wedstrijden || [])].sort((a, b) => a.bracket_positie - b.bracket_positie);
-            const halfLaatste = Math.ceil(sortedLaatsteWeds.length / 2);
-
-            html += `<div class="relative flex-shrink-0 w-32">`;
-
-            // Brons 1 (bovenste 1/2(2) winnaar) - zelfde positie als bovenste 1/2(2) wedstrijd
-            if (sortedLaatsteWeds.length > 0) {
-                const wed1 = sortedLaatsteWeds[0]; // Eerste wedstrijd = bovenste helft
-                const winnaar1 = wed1?.is_gespeeld ? (wed1.winnaar_id === wed1.wit?.id ? wed1.wit : wed1.blauw) : null;
-                const spacing = helftHoogte / halfLaatste;
-                const bronPos1 = 0 * spacing + (spacing - potjeHeight) / 2 + h / 2;
-
-                html += `<div class="absolute w-32" style="top: ${bronPos1}px;">`;
-                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
-                              data-drop-handler="dropOpMedaille" data-finale-id="${wed1?.id || 'null'}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
-                html += winnaar1 ? `🥉 ${winnaar1.naam}` : '🥉 Sleep winnaar hier';
-                html += '</div></div>';
-            }
-
-            // Brons 2 (onderste 1/2(2) winnaar) - gespiegelde positie onder horizon
-            if (sortedLaatsteWeds.length > 1) {
-                const wed2 = sortedLaatsteWeds[sortedLaatsteWeds.length - 1]; // Laatste wedstrijd = onderste helft
-                const winnaar2 = wed2?.is_gespeeld ? (wed2.winnaar_id === wed2.wit?.id ? wed2.wit : wed2.blauw) : null;
-                // Gespiegelde positie: eerste positie onder horizon (gespiegeld = dichtst bij horizon)
-                const spacing = helftHoogte / halfLaatste;
-                const bronPos2 = helftHoogte + horizonHoogte + 0 * spacing + (spacing - potjeHeight) / 2 + h / 2;
-
-                html += `<div class="absolute w-32" style="top: ${bronPos2}px;">`;
-                html += `<div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
-                              data-drop-handler="dropOpMedaille" data-finale-id="${wed2?.id || 'null'}" data-medaille="brons" data-poule-id="${poule.poule_id}">`;
-                html += winnaar2 ? `🥉 ${winnaar2.naam}` : '🥉 Sleep winnaar hier';
-                html += '</div></div>';
-            }
-
-            html += '</div>';
-            html += '</div>';
-
-            return html;
-        },
-
-        // Helper: render een B-groep potje
-        // isRonde2 = true als dit een (2) ronde is waar blauw slot A-verliezer krijgt
-        // isMirrored = true voor onderste helft (alleen grafisch, slot nummers lopen door)
-        // visualSlotWit/visualSlotBlauw = visuele slot nummers (van boven naar beneden doorlopend)
-        renderBPotje(wed, poule, topPos, isLastColumn, isLocked, ringColor, isRonde2 = false, aRondeNaam = '', isMirrored = false, visualSlotWit = null, visualSlotBlauw = null) {
-            const isBye = wed.uitslag_type === 'bye';
-            const isWitWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.wit?.id && !isBye;
-            const isBlauwWinnaar = wed.is_gespeeld && wed.winnaar_id === wed.blauw?.id && !isBye;
-            const winnaarIcon = '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>';
-
-            // DEBUG: Toon visuele slot nummers (doorlopend van boven naar beneden)
-            const DEBUG_SLOTS = this.debugSlots;
-            // Gebruik visuele slot nummers als doorgegeven, anders fallback naar wedstrijd-gebaseerd
-            const topSlotNr = visualSlotWit ?? (wed.locatie_wit || (wed.bracket_positie * 2 - 1));
-            const bottomSlotNr = visualSlotBlauw ?? (wed.locatie_blauw || (wed.bracket_positie * 2));
-
-            // WIT = altijd boven, BLAUW = altijd onder (spiegeling is alleen grafisch)
-            const topSlot = 'wit';
-            const bottomSlot = 'blauw';
-            const topJudoka = wed.wit;
-            const bottomJudoka = wed.blauw;
-            const topIsWinnaar = isWitWinnaar;
-            const bottomIsWinnaar = isBlauwWinnaar;
-            const topBgColor = 'bg-white';
-            const bottomBgColor = 'bg-blue-50';
-
-            // Escape for double-quoted HTML attributes
-            const escapeForHtml = (str) => str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-
-            const topDragData = escapeForHtml(JSON.stringify({
-                judokaId: topJudoka?.id,
-                wedstrijdId: wed.id,
-                judokaNaam: topJudoka?.naam || '',
-                volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                winnaarNaarSlot: wed.winnaar_naar_slot,
-                pouleIsLocked: isLocked,
-                pouleId: poule.poule_id,
-                positie: topSlot,
-                isWinnaar: topIsWinnaar,
-                isGespeeld: wed.is_gespeeld === true
-            }));
-
-            const bottomDragData = escapeForHtml(JSON.stringify({
-                judokaId: bottomJudoka?.id,
-                wedstrijdId: wed.id,
-                judokaNaam: bottomJudoka?.naam || '',
-                volgendeWedstrijdId: wed.volgende_wedstrijd_id,
-                winnaarNaarSlot: wed.winnaar_naar_slot,
-                pouleIsLocked: isLocked,
-                pouleId: poule.poule_id,
-                positie: bottomSlot,
-                isWinnaar: bottomIsWinnaar,
-                isGespeeld: wed.is_gespeeld === true
-            }));
-
-            const topBewoner = topJudoka ? escapeForHtml(JSON.stringify({id: topJudoka.id, naam: topJudoka.naam})) : 'null';
-            const bottomBewoner = bottomJudoka ? escapeForHtml(JSON.stringify({id: bottomJudoka.id, naam: bottomJudoka.naam})) : 'null';
-
-            const potjeStyle = this.getEliminatiePotjeStyle(wed.id);
-            let html = `<div class="absolute w-32" style="top: ${topPos}px;"
-                              ondblclick="window.dblClickBracket(${wed.id}, ${poule.poule_id})">`;
-
-            // Top slot = WIT (altijd)
-            html += `<div class="relative">`;
-            html += `<div class="w-32 h-7 ${topBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastColumn ? 'border-r-0' : ''}"
-                          style="${potjeStyle}"
-                          data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="${topSlot}" data-poule-id="${poule.poule_id}" data-bewoner="${topBewoner}">`;
-            if (topJudoka) {
-                const displayName = DEBUG_SLOTS ? `[${topSlotNr}] ${topJudoka.naam}` : topJudoka.naam;
-                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                              data-drag="${topDragData}">
-                            <span class="truncate">${displayName}</span>${topIsWinnaar ? winnaarIcon : ''}
-                         </div>`;
-            } else if (DEBUG_SLOTS) {
-                html += `<span class="px-1 text-gray-400">[${topSlotNr}]</span>`;
-            }
-            html += '</div>';
-            if (!isLastColumn) {
-                html += `<div class="absolute right-0 top-0 w-4 h-full border-t border-r border-gray-400"></div>`;
-            }
-            html += '</div>';
-
-            // Bottom slot = BLAUW (altijd)
-            html += `<div class="relative">`;
-            html += `<div class="w-32 h-7 ${bottomBgColor} border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop ${!isLastColumn ? 'border-r-0' : ''}"
-                          style="${potjeStyle}"
-                          data-drop-handler="dropJudoka" data-wedstrijd-id="${wed.id}" data-positie="${bottomSlot}" data-poule-id="${poule.poule_id}" data-bewoner="${bottomBewoner}">`;
-            if (bottomJudoka) {
-                const displayName = DEBUG_SLOTS ? `[${bottomSlotNr}] ${bottomJudoka.naam}` : bottomJudoka.naam;
-                html += `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka"
-                              data-drag="${bottomDragData}">
-                            <span class="truncate">${displayName}</span>${bottomIsWinnaar ? winnaarIcon : ''}
-                         </div>`;
-            } else if (isRonde2 && aRondeNaam) {
-                // Placeholder: A-verliezer komt altijd op BLAUW slot
-                html += `<span class="px-1 text-gray-400 italic text-xs">← uit ${aRondeNaam}</span>`;
-            } else if (DEBUG_SLOTS) {
-                html += `<span class="px-1 text-gray-400">[${bottomSlotNr}]</span>`;
-            }
-            html += '</div>';
-            if (!isLastColumn) {
-                html += `<div class="absolute right-0 top-0 w-4 h-full border-b border-r border-gray-400"></div>`;
-            }
-            html += '</div>';
-
-            html += '</div>';
-            return html;
-        },
-
-        // Get finale winnaar (GOUD)
-        getFinaleWinnaar(poule, groep) {
-            const finale = poule.wedstrijden.find(w => w.groep === groep && w.ronde === 'finale');
-            if (!finale || !finale.is_gespeeld || !finale.winnaar_id) return null;
-            return finale.winnaar_id === finale.wit?.id ? finale.wit : finale.blauw;
-        },
-
-        // Get finale verliezer (ZILVER)
-        getFinaleVerliezer(poule) {
-            const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
-            if (!finale || !finale.is_gespeeld || !finale.winnaar_id) return null;
-            // Verliezer is degene die NIET de winnaar is
-            return finale.winnaar_id === finale.wit?.id ? finale.blauw : finale.wit;
-        },
-
-        // Get brons winnaars (2 stuks bij double elimination)
-        getBronsWinnaars(poule) {
-            const bronsWedstrijden = poule.wedstrijden.filter(w =>
-                w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons' || w.ronde === 'b_finale'
-            );
-            return bronsWedstrijden
-                .filter(w => w.is_gespeeld && w.winnaar_id)
-                .map(w => w.winnaar_id === w.wit?.id ? w.wit : w.blauw)
-                .filter(j => j);
-        },
-
-        // Get alle medaille winnaars voor eliminatie
-        getMedailleWinnaars(poule) {
-            const goud = this.getFinaleWinnaar(poule, 'A');
-            const zilver = this.getFinaleVerliezer(poule);
-            const brons = this.getBronsWinnaars(poule);
-            return { goud, zilver, brons };
-        },
-
-        // Drag & drop handler
-        async dropJudoka(event, poule, targetSlot) {
-            // Get dragged judoka data from event
-            const dragData = event.dataTransfer?.getData('text/plain');
-            if (!dragData) return;
-
-            try {
-                const { judokaId, fromWedstrijdId, fromPositie } = JSON.parse(dragData);
-
-                // Find target wedstrijd
-                const targetWedstrijd = poule.wedstrijden.find(w => w.id === targetSlot.wedstrijdId);
-                if (!targetWedstrijd) return;
-
-                // Registreer als winnaar als we van vorige ronde naar volgende slepen
-                const fromWedstrijd = poule.wedstrijden.find(w => w.id === fromWedstrijdId);
-                if (fromWedstrijd && fromWedstrijd.volgende_wedstrijd_id === targetSlot.wedstrijdId) {
-                    // Dit is een winnaar die doorschuift
-                    const response = await fetch(`{{ $uitslagUrl }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify({
-                            wedstrijd_id: fromWedstrijdId,
-                            winnaar_id: judokaId,
-                            uitslag_type: 'eliminatie'
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.success) {
-                        this.laadWedstrijden();
-                    }
-                }
-            } catch (err) {
-                console.error('Drop error:', err);
-            }
-        }
     }
 }
 
@@ -2585,62 +1941,87 @@ updateClock();
 setInterval(updateClock, 1000);
 
 // Reverb push events → refresh bracket/poule data (vervangt 30sec polling)
-['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar', 'mat-bracket-update'].forEach(evt => {
+['mat-score-update', 'mat-beurt-update', 'mat-poule-klaar'].forEach(evt => {
     window.addEventListener(evt, () => {
         const el = document.getElementById('mat-interface');
         if (el) Alpine.evaluate(el, 'laadWedstrijden()');
     });
 });
 
+// Bracket update via Reverb: herlaad bracket HTML (niet hele poule data)
+window.addEventListener('mat-bracket-update', (e) => {
+    const el = document.getElementById('mat-interface');
+    if (!el) return;
+    const comp = Alpine.$data(el);
+    if (!comp) return;
+
+    // Herlaad bracket HTML voor de gewijzigde poule
+    const pouleId = e.detail?.poule_id;
+    if (pouleId) {
+        comp.laadBracketHtml(pouleId, 'A');
+        comp.laadBracketHtml(pouleId, 'B');
+    } else {
+        // Fallback: herlaad alle brackets
+        comp.poules.forEach(p => {
+            if (p.type === 'eliminatie') {
+                comp.laadBracketHtml(p.poule_id, 'A');
+                if (comp.heeftHerkansing(p)) comp.laadBracketHtml(p.poule_id, 'B');
+            }
+        });
+    }
+});
+
 // ========================================
-// SortableJS bracket - zaaloverzicht patroon
-// SortableJS verplaatst element direct, API op achtergrond
+// SortableJS voor ALLE devices (PC + tablet) - bracket DnD
+// DOM revert ALTIJD - updates komen via updateBracketSlot() na API response
 // ========================================
 window.initBracketSortable = function() {
-    if (typeof Sortable === 'undefined') { console.warn('[DnD] Sortable niet geladen'); return; }
+    if (typeof Sortable === 'undefined') return;
 
     const matEl = document.getElementById('mat-interface');
     if (!matEl) return;
 
-    // Destroy previous
+    // Destroy previous instances
     matEl.querySelectorAll('[data-sortable-bracket]').forEach(el => {
         if (el._sortable) el._sortable.destroy();
         el.removeAttribute('data-sortable-bracket');
     });
 
     const containers = matEl.querySelectorAll('.bracket-drop');
-    console.log(`[DnD] init: ${containers.length} containers`);
 
     containers.forEach(container => {
         container.setAttribute('data-sortable-bracket', '1');
-        new Sortable(container, {
-            group: { name: 'bracket', pull: 'clone', put: true },
-            animation: 150,
-            ghostClass: 'bg-blue-100',
-            chosenClass: 'bg-blue-200',
-            dragClass: 'shadow-lg',
+        const pouleId = container.getAttribute('data-poule-id');
+        if (!pouleId) return;
+
+        container._sortable = new Sortable(container, {
+            group: {
+                name: 'bracket-' + pouleId,
+                pull: 'clone',
+                put: true
+            },
+            sort: false,
+            animation: 0,
+            delay: 150,
+            delayOnTouchOnly: true,
             draggable: '.bracket-judoka',
+            ghostClass: 'opacity-50',
+
             onEnd: async function(evt) {
+                // ALTIJD DOM reverten - updates komen via updateBracketSlot
+                if (evt.clone) evt.clone.remove();
+                if (evt.from !== evt.to && evt.item.parentNode === evt.to) {
+                    evt.from.appendChild(evt.item);
+                }
+
                 const dragAttr = evt.item.getAttribute('data-drag');
-                if (!dragAttr) return;
-                if (evt.from === evt.to) return;
+                if (!dragAttr || evt.from === evt.to) return;
 
                 const target = evt.to;
                 const handler = target.getAttribute('data-drop-handler');
-                if (!handler) { console.warn('[DnD] geen handler op target'); return; }
+                if (!handler) return;
 
-                const data = JSON.parse(dragAttr);
-                console.log(`[DnD] ${data.judokaNaam} → ${handler}`);
-
-                // Groene stip op origineel (winnaar markering)
-                const original = evt.clone || evt.from.querySelector(`[data-drag*='"judokaId":${data.judokaId}']`);
-                if (original && !original.querySelector('.bg-green-500')) {
-                    original.querySelector('.truncate')?.insertAdjacentHTML('afterend',
-                        '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>');
-                }
-
-                // SortableJS heeft element al verplaatst = instant zichtbaar
-                // API call op achtergrond (zoals zaaloverzicht)
+                // Bouw fakeEvent voor bestaande handlers
                 const fakeEvent = {
                     preventDefault() {},
                     dataTransfer: { getData() { return dragAttr; } }
@@ -2662,10 +2043,8 @@ window.initBracketSortable = function() {
                     } else if (handler === 'verwijderJudoka') {
                         await window.verwijderJudoka(fakeEvent);
                     }
-
                 } catch(err) {
-                    console.error('[DnD] Fout:', err);
-                    location.reload();
+                    console.error('[DnD] Drop error:', err);
                 }
             }
         });
