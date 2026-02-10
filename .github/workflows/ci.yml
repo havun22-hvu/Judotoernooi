@@ -39,12 +39,21 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('laravel/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Setup CI environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+          sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
+          touch database/database.sqlite
+          mkdir -p bootstrap/cache
+          chmod -R 775 bootstrap/cache
         working-directory: laravel
 
-      - name: Copy environment file
-        run: cp .env.example .env || echo "APP_KEY=" > .env
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
         working-directory: laravel
 
       - name: Generate application key
@@ -76,6 +85,19 @@ jobs:
           php-version: '8.3'
           extensions: dom, curl, libxml, mbstring, zip
 
+      - name: Setup CI environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+          sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
+          touch database/database.sqlite
+          mkdir -p bootstrap/cache
+          chmod -R 775 bootstrap/cache
+        working-directory: laravel
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
         working-directory: laravel
@@ -97,6 +119,19 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+
+      - name: Setup CI environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+          sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
+          touch database/database.sqlite
+          mkdir -p bootstrap/cache
+          chmod -R 775 bootstrap/cache
+        working-directory: laravel
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
@@ -123,6 +158,19 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
+
+      - name: Setup CI environment
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+          sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/BROADCAST_CONNECTION=reverb/BROADCAST_CONNECTION=log/' .env
+          touch database/database.sqlite
+          mkdir -p bootstrap/cache
+          chmod -R 775 bootstrap/cache
+        working-directory: laravel
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
