@@ -705,6 +705,9 @@ class MatController extends Controller
                 'is_winnaar' => (bool) ($w->is_gespeeld && $w->winnaar_id == $w->judoka_wit_id && !$isBye && $w->judokaWit),
                 'is_gespeeld' => (bool) $w->is_gespeeld,
                 'groep' => $w->groep,
+                'volgende_wedstrijd_id' => $w->volgende_wedstrijd_id,
+                'winnaar_naar_slot' => $w->winnaar_naar_slot,
+                'poule_is_locked' => $isLocked,
             ];
             $updatedSlots[] = [
                 'wedstrijd_id' => $w->id,
@@ -713,6 +716,9 @@ class MatController extends Controller
                 'is_winnaar' => (bool) ($w->is_gespeeld && $w->winnaar_id == $w->judoka_blauw_id && !$isBye && $w->judokaBlauw),
                 'is_gespeeld' => (bool) $w->is_gespeeld,
                 'groep' => $w->groep,
+                'volgende_wedstrijd_id' => $w->volgende_wedstrijd_id,
+                'winnaar_naar_slot' => $w->winnaar_naar_slot,
+                'poule_is_locked' => $isLocked,
             ];
         }
 
@@ -983,7 +989,7 @@ class MatController extends Controller
             'layout' => $layout,
             'pouleId' => $poule->id,
             'isLocked' => $isLocked,
-            'debugSlots' => false,
+            'debugSlots' => true,
         ])->render();
 
         return response($html, 200)->header('Content-Type', 'text/html');
