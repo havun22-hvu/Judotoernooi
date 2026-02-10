@@ -1488,24 +1488,14 @@ function matInterface() {
         },
 
         // Check of eliminatie bracket volledig is afgerond
-        // Afgerond = finale gespeeld (met winnaar) + alle brons wedstrijden gespeeld (met winnaar)
-        // ROBUUST: gebruik winnaar_id check, niet alleen is_gespeeld
+        // Afgerond = A-finale gespeeld (met winnaar) + alle B-brons wedstrijden gespeeld (met winnaar)
+        // ALTIJD beide brackets checken — afronden pas als A EN B klaar zijn
         isEliminatieAfgerond(poule) {
-            // Split mat: only check the group visible on this mat
-            if (poule.groep_filter === 'A') {
-                const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
-                return finale && !!finale.winnaar_id;
-            }
-            if (poule.groep_filter === 'B') {
-                const bWedstrijden = poule.wedstrijden.filter(w => w.groep === 'B');
-                return bWedstrijden.length > 0 && bWedstrijden.every(w => w.is_gespeeld);
-            }
-
-            // No split: check all (finale + brons)
+            // A-bracket: finale moet gespeeld zijn met winnaar
             const finale = poule.wedstrijden.find(w => w.groep === 'A' && w.ronde === 'finale');
             if (!finale || !finale.winnaar_id) return false;
 
-            // Check brons wedstrijden (b_halve_finale_2)
+            // B-bracket: check brons wedstrijden
             const bronsWedstrijden = poule.wedstrijden.filter(w =>
                 w.ronde === 'b_halve_finale_2' || w.ronde === 'b_brons' || w.ronde === 'b_finale'
             );
@@ -2037,6 +2027,9 @@ window.initBracketSortable = function() {
             delayOnTouchOnly: true,
             draggable: '.bracket-judoka',
             ghostClass: 'opacity-50',
+
+            filter: '.medaille-label',
+            preventOnFilter: false,
 
             onEnd: async function(evt) {
                 // ALTIJD DOM reverten - updates komen via updateBracketSlot

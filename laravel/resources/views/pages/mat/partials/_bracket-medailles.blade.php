@@ -16,11 +16,13 @@
                  data-finale-id="{{ $medailleData['goud']['finale_id'] ?? 'null' }}"
                  data-medaille="goud"
                  data-poule-id="{{ $pouleId }}">
+                <span class="medaille-label pointer-events-none">
                 @if($medailleData['goud']['winnaar'] ?? null)
                     🥇 {{ $medailleData['goud']['winnaar']['naam'] }}
                 @else
                     🥇 {{ __('Sleep winnaar hier') }}
                 @endif
+                </span>
             </div>
         </div>
         {{-- Zilver (2e plaats) --}}
@@ -31,11 +33,13 @@
                  data-finale-id="{{ $medailleData['zilver']['finale_id'] ?? 'null' }}"
                  data-medaille="zilver"
                  data-poule-id="{{ $pouleId }}">
+                <span class="medaille-label pointer-events-none">
                 @if($medailleData['zilver']['verliezer'] ?? null)
                     🥈 {{ $medailleData['zilver']['verliezer']['naam'] }}
                 @else
                     🥈 {{ __('Sleep verliezer hier') }}
                 @endif
+                </span>
             </div>
         </div>
     </div>
@@ -50,11 +54,13 @@
                      data-finale-id="{{ $medailleData['brons_1']['wedstrijd_id'] ?? 'null' }}"
                      data-medaille="brons"
                      data-poule-id="{{ $pouleId }}">
+                    <span class="medaille-label pointer-events-none">
                     @if($medailleData['brons_1']['winnaar'] ?? null)
                         🥉 {{ $medailleData['brons_1']['winnaar']['naam'] }}
                     @else
                         🥉 {{ __('Sleep winnaar hier') }}
                     @endif
+                    </span>
                 </div>
             </div>
         @endif
@@ -66,11 +72,13 @@
                      data-finale-id="{{ $medailleData['brons_2']['wedstrijd_id'] ?? 'null' }}"
                      data-medaille="brons"
                      data-poule-id="{{ $pouleId }}">
+                    <span class="medaille-label pointer-events-none">
                     @if($medailleData['brons_2']['winnaar'] ?? null)
                         🥉 {{ $medailleData['brons_2']['winnaar']['naam'] }}
                     @else
                         🥉 {{ __('Sleep winnaar hier') }}
                     @endif
+                    </span>
                 </div>
             </div>
         @endif
