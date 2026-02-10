@@ -35,6 +35,7 @@ class BracketLayoutService
         'b_kwartfinale' => 5,
         'b_halve_finale_1' => 7,
         'b_halve_finale_2' => 8,
+        'b_halve_finale' => 7,
         'b_brons' => 8,
     ];
 
@@ -57,6 +58,7 @@ class BracketLayoutService
         'b_kwartfinale' => '1/4',
         'b_halve_finale_1' => '1/2 (1)',
         'b_halve_finale_2' => '1/2 (2)',
+        'b_halve_finale' => '1/2',
         'b_brons' => 'Brons',
     ];
 
