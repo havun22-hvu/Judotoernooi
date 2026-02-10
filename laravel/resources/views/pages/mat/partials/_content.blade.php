@@ -154,30 +154,25 @@
 
                     <!-- Groep A - Hoofdboom -->
                     <div x-show="activeTab === 'A'">
-                        <div class="sticky top-0 z-20 bg-white">
-                            <div class="flex justify-between items-center flex-wrap gap-1">
-                                <div class="flex items-center gap-1">
-                                    <button @click="laadBracketHtml(poule.poule_id, 'A')"
-                                            class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
-                                        🔄 {{ __('Herlaad') }}
-                                    </button>
-                                    <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'A')"
-                                            class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
-                                            :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
-                                        #{{ __('Nrs') }}
-                                    </button>
-                                </div>
-                                <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
-                                <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
-                                     data-drop-handler="verwijderJudoka">
-                                    🗑️ {{ __('verwijder') }}
-                                </div>
+                        <div class="flex justify-between items-center flex-wrap gap-1">
+                            <div class="flex items-center gap-1">
+                                <button @click="laadBracketHtml(poule.poule_id, 'A')"
+                                        class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                    🔄 {{ __('Herlaad') }}
+                                </button>
+                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'A')"
+                                        class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
+                                        :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
+                                    #{{ __('Nrs') }}
+                                </button>
                             </div>
-                            <div class="overflow-x-hidden bracket-header-scroll"
-                                 :id="'bracket-header-' + poule.poule_id + '-A'">
+                            <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
+                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                                 data-drop-handler="verwijderJudoka">
+                                🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
-                        <div class="bracket-container overflow-x-auto pb-2"
+                        <div class="bracket-container overflow-auto pb-2" style="max-height: calc(100vh - 180px);"
                              :id="'bracket-container-' + poule.poule_id + '-A'"
                              x-init="$nextTick(() => laadBracketHtml(poule.poule_id, 'A'))">
                             <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
@@ -186,30 +181,25 @@
 
                     <!-- Groep B - Herkansing -->
                     <div x-show="activeTab === 'B'">
-                        <div class="sticky top-0 z-20 bg-white">
-                            <div class="flex justify-between items-center flex-wrap gap-1">
-                                <div class="flex items-center gap-1">
-                                    <button @click="laadBracketHtml(poule.poule_id, 'B')"
-                                            class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
-                                        🔄 {{ __('Herlaad') }}
-                                    </button>
-                                    <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'B')"
-                                            class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
-                                            :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
-                                        #{{ __('Nrs') }}
-                                    </button>
-                                </div>
-                                <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
-                                <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
-                                     data-drop-handler="verwijderJudoka">
-                                    🗑️ {{ __('verwijder') }}
-                                </div>
+                        <div class="flex justify-between items-center flex-wrap gap-1">
+                            <div class="flex items-center gap-1">
+                                <button @click="laadBracketHtml(poule.poule_id, 'B')"
+                                        class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-yellow-300">
+                                    🔄 {{ __('Herlaad') }}
+                                </button>
+                                <button @click="debugSlots = !debugSlots; laadBracketHtml(poule.poule_id, 'B')"
+                                        class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
+                                        :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
+                                    #{{ __('Nrs') }}
+                                </button>
                             </div>
-                            <div class="overflow-x-hidden bracket-header-scroll"
-                                 :id="'bracket-header-' + poule.poule_id + '-B'">
+                            <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
+                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                                 data-drop-handler="verwijderJudoka">
+                                🗑️ {{ __('verwijder') }}
                             </div>
                         </div>
-                        <div class="bracket-container overflow-x-auto pb-2"
+                        <div class="bracket-container overflow-auto pb-2" style="max-height: calc(100vh - 180px);"
                              :id="'bracket-container-' + poule.poule_id + '-B'"
                              x-init="$nextTick(() => { if (heeftHerkansing(poule)) laadBracketHtml(poule.poule_id, 'B') })">
                             <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
@@ -1090,18 +1080,6 @@ function matInterface() {
 
                 const html = await response.text();
                 container.innerHTML = html;
-
-                // Move round header to sticky container and sync horizontal scroll
-                const header = container.querySelector('.bracket-round-header');
-                const headerScroll = document.getElementById('bracket-header-' + pouleId + '-' + groep);
-                if (header && headerScroll) {
-                    headerScroll.innerHTML = '';
-                    headerScroll.appendChild(header);
-                    // Sync header scroll with bracket content scroll
-                    container.addEventListener('scroll', () => {
-                        headerScroll.scrollLeft = container.scrollLeft;
-                    }, { passive: true });
-                }
 
                 // Initialiseer SortableJS op de nieuwe DOM elementen
                 this.$nextTick(() => window.initBracketSortable?.());
