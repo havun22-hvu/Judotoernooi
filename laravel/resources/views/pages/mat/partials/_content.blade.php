@@ -1105,7 +1105,13 @@ function matInterface() {
                     slot.positie,
                     slot.judoka,
                     slot.is_winnaar,
-                    { pouleId: pouleId, isGespeeld: slot.is_gespeeld }
+                    {
+                        pouleId: pouleId,
+                        isGespeeld: slot.is_gespeeld,
+                        volgendeWedstrijdId: slot.volgende_wedstrijd_id || null,
+                        winnaarNaarSlot: slot.winnaar_naar_slot || null,
+                        pouleIsLocked: slot.poule_is_locked || false,
+                    }
                 );
             });
 
