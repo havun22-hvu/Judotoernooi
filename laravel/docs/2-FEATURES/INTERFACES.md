@@ -980,6 +980,7 @@ De Mat Interface heeft **2 versies** afhankelijk van wie het opent:
 - Eliminatie bracket met drag & drop
 - Stand bijhouden
 - Poule afronden → naar spreker
+- **Real-time updates:** Via Reverb WebSocket (score, beurt, poule_klaar, bracket) — geen polling meer
 
 ### Eliminatie A/B Split Mats
 
