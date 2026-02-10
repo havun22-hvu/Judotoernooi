@@ -957,6 +957,10 @@ class BlokMatVerdelingService
                     // Eliminatie: always show as A-groep entry (B is added separately below)
                     if ($p->type === 'eliminatie') {
                         $aWedstrijden = $p->wedstrijden->where('groep', 'A')->count();
+                        // Fallback naar cached waarde als bracket nog niet gegenereerd is
+                        if ($aWedstrijden === 0 && $p->aantal_wedstrijden > 0) {
+                            $aWedstrijden = $p->aantal_wedstrijden;
+                        }
                         $pouleEntries->push([
                             'id' => $p->id,
                             'nummer' => $p->nummer,

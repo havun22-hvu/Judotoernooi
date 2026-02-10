@@ -466,6 +466,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     // Prevent parallel drops (race condition guard)
     if (window._isDroppingJudoka) return false;
     window._isDroppingJudoka = true;
+    try {
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
     // Voeg target info toe aan data voor seeding logica
@@ -627,7 +628,6 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
     }
 
-    try {
         // Bepaal of dit een SEEDING (move binnen ronde) of WEDSTRIJD WINNEN (copy naar volgende ronde) is
         // Seeding = target is NIET de volgende_wedstrijd_id
         // Winnen = target IS de volgende_wedstrijd_id

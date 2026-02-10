@@ -80,6 +80,7 @@
                 'leeftijdsklasse' => $lk,
                 'gewichtsklasse' => $gk,
                 'titel' => $p['titel'] ?? ($lk . ' ' . $gk),
+                'judokas' => $p['judokas'] ?? 0,
                 'wedstrijden' => $p['wedstrijden'] ?? 0,
                 'leeftijd_sort' => $leeftijdVolgorde[$lk] ?? 99,
                 'gewicht_sort' => $gewichtNum + ($isPlus ? 1000 : 0),
