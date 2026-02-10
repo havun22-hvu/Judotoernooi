@@ -452,9 +452,20 @@ window.setCleanDragImage = function(event, naam) {
     requestAnimationFrame(() => ghost.remove());
 };
 
+// Escape HTML to prevent XSS in innerHTML
+window.escapeHtml = function(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+};
+
 // Global drop handler - plaats judoka in slot
 window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
     event.preventDefault();
+
+    // Prevent parallel drops (race condition guard)
+    if (window._isDroppingJudoka) return false;
+    window._isDroppingJudoka = true;
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
     // Voeg target info toe aan data voor seeding logica
@@ -704,6 +715,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         // Bij fout: location.reload() — zelfde als andere pages
         location.reload();
         return false;
+    } finally {
+        window._isDroppingJudoka = false;
     }
 };
 
@@ -1101,7 +1114,7 @@ function matInterface() {
                     isGespeeld: extraDragData.isGespeeld || false,
                 });
                 const escapedDrag = dragData.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-                slotEl.innerHTML = `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka" data-drag="${escapedDrag}"><span class="truncate">${judoka.naam}</span>${isWinnaar ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>' : ''}</div>`;
+                slotEl.innerHTML = `<div class="w-full h-full px-1 flex items-center cursor-pointer hover:bg-green-50 bracket-judoka" data-drag="${escapedDrag}"><span class="truncate">${window.escapeHtml(judoka.naam)}</span>${isWinnaar ? '<span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>' : ''}</div>`;
             } else {
                 slotEl.innerHTML = '';
             }
@@ -2047,17 +2060,17 @@ window.initBracketSortable = function() {
 
                 try {
                     if (handler === 'dropJudoka') {
-                        const wId = parseInt(target.getAttribute('data-wedstrijd-id'));
+                        const wId = parseInt(target.getAttribute('data-wedstrijd-id'), 10);
                         const pos = target.getAttribute('data-positie');
-                        const pId = parseInt(target.getAttribute('data-poule-id'));
+                        const pId = parseInt(target.getAttribute('data-poule-id'), 10);
                         let bew = null;
                         try { const b = target.getAttribute('data-bewoner'); if (b && b !== 'null') bew = JSON.parse(b); } catch(e) {}
                         await window.dropJudoka(fakeEvent, wId, pos, pId, bew);
                     } else if (handler === 'dropInSwap') {
-                        await window.dropInSwap(fakeEvent, parseInt(target.getAttribute('data-poule-id')), false);
+                        await window.dropInSwap(fakeEvent, parseInt(target.getAttribute('data-poule-id'), 10), false);
                     } else if (handler === 'dropOpMedaille') {
                         const fId = target.getAttribute('data-finale-id');
-                        await window.dropOpMedaille(fakeEvent, fId === 'null' ? null : parseInt(fId), target.getAttribute('data-medaille'), parseInt(target.getAttribute('data-poule-id')));
+                        await window.dropOpMedaille(fakeEvent, fId === 'null' ? null : parseInt(fId, 10), target.getAttribute('data-medaille'), parseInt(target.getAttribute('data-poule-id'), 10));
                     } else if (handler === 'verwijderJudoka') {
                         await window.verwijderJudoka(fakeEvent);
                     }
