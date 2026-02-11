@@ -56,6 +56,8 @@
     $debugSlots = $debugSlots ?? false;
     $isRonde2 = $isRonde2 ?? false;
     $aRondeNaam = $aRondeNaam ?? '';
+    $herkomstWit = $herkomstWit ?? '';
+    $herkomstBlauw = $herkomstBlauw ?? '';
     $visualSlotWit = $visualSlotWit ?? ($wed['_layout']['visual_slot_wit'] ?? 0);
     $visualSlotBlauw = $visualSlotBlauw ?? ($wed['_layout']['visual_slot_blauw'] ?? 0);
 @endphp
@@ -84,6 +86,8 @@
                         <span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>
                     @endif
                 </div>
+            @elseif($herkomstWit)
+                <span class="px-1 text-gray-400 italic text-xs">&larr; {{ $herkomstWit }}</span>
             @elseif($debugSlots)
                 <span class="px-1 text-gray-400">[{{ $visualSlotWit }}]</span>
             @endif
@@ -110,8 +114,8 @@
                         <span class="inline-block w-2 h-2 bg-green-500 rounded-full ml-1 flex-shrink-0" title="Winnaar"></span>
                     @endif
                 </div>
-            @elseif($isRonde2 && $aRondeNaam)
-                <span class="px-1 text-gray-400 italic text-xs">&larr; uit {{ $aRondeNaam }}</span>
+            @elseif($herkomstBlauw)
+                <span class="px-1 text-gray-400 italic text-xs">&larr; {{ $herkomstBlauw }}</span>
             @elseif($debugSlots)
                 <span class="px-1 text-gray-400">[{{ $visualSlotBlauw }}]</span>
             @endif
