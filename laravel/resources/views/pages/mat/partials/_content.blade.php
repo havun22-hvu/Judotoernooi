@@ -492,8 +492,15 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
         }
     }
 
-    // Refresh display
-    Alpine.evaluate(document.getElementById('mat-interface'), 'laadWedstrijden()');
+    // Refresh bracket display
+    const matEl = document.getElementById('mat-interface');
+    if (matEl) {
+        const comp = Alpine.$data(matEl);
+        if (comp) {
+            await comp.laadWedstrijden();
+            comp.laadBracketHtml(pouleId, 'A');
+        }
+    }
 };
 
 // Clean drag image: toon judoka naam als witte chip tijdens slepen
