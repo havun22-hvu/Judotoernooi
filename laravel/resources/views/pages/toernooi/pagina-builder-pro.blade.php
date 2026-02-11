@@ -889,7 +889,7 @@
                         </button>
                     </div>
 
-                    <div class="space-y-4" x-html="renderBlockSettings(editingBlock)"></div>
+                    <div class="space-y-4" x-ref="blockSettings"></div>
                 </div>
             </template>
 
@@ -1763,6 +1763,15 @@ function paginaBuilderPro() {
         editBlock(block) {
             this.editingSection = null;
             this.editingBlock = block;
+            // Double $nextTick: first for template x-if to render, second for refs
+            this.$nextTick(() => {
+                this.$nextTick(() => {
+                    if (this.$refs.blockSettings) {
+                        this.$refs.blockSettings.innerHTML = this.renderBlockSettings(block);
+                        Alpine.initTree(this.$refs.blockSettings);
+                    }
+                });
+            });
         },
 
         updateBlockOrder(evt) {
