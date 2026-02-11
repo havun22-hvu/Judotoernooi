@@ -27,12 +27,18 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $checkWachtwoordUrl = route('mat.check-admin-wachtwoord.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
             $huidigeWedstrijdUrl = route('toernooi.mat.huidige-wedstrijd', $toernooi->routeParams());
             $pouleKlaarUrl = route('toernooi.mat.poule-klaar', $toernooi->routeParams());
             $bracketHtmlUrl = route('toernooi.mat.bracket-html', $toernooi->routeParams());
+            $checkWachtwoordUrl = route('toernooi.mat.check-admin-wachtwoord', $toernooi->routeParams());
         }
     @endphp
 <div id="mat-interface" x-data="matInterface()" x-init="init()">
@@ -360,6 +366,25 @@ const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door een admin.'));
 const __voerAdminWachtwoordIn = @json(__('Voer het admin wachtwoord in:'));
 const __onjuistWachtwoord = @json(__('Onjuist wachtwoord! Verwijdering geannuleerd.'));
 
+// Server-side admin password check (bcrypt)
+window.checkAdminWachtwoord = async function(wachtwoord) {
+    try {
+        const response = await fetch(`{{ $checkWachtwoordUrl }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ wachtwoord })
+        });
+        const result = await response.json();
+        return result.geldig === true;
+    } catch (e) {
+        console.error('Wachtwoord check failed:', e);
+        return false;
+    }
+};
+
 // === SWAP RUIMTE VOOR SEEDING ===
 // Tijdelijke opslag voor judoka's tijdens het seeden
 window.swapRuimte = {}; // { pouleId: [{ id, naam }, ...] }
@@ -393,7 +418,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
 
-    // Als bracket locked is, vraag admin wachtwoord
+    // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
         const wachtwoord = prompt(
             '🔒 BRACKET VERGRENDELD\n\n' +
@@ -406,8 +431,8 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
             return; // Geannuleerd
         }
 
-        const adminWachtwoord = '{{ $toernooi->admin_wachtwoord ?? "admin123" }}';
-        if (wachtwoord !== adminWachtwoord) {
+        const geldig = await window.checkAdminWachtwoord(wachtwoord);
+        if (!geldig) {
             alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
             return;
         }
@@ -589,9 +614,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                 return false; // Geannuleerd
             }
 
-            // Check wachtwoord
-            const adminWachtwoord = '{{ $toernooi->admin_wachtwoord ?? "admin123" }}';
-            if (wachtwoord !== adminWachtwoord) {
+            // Check wachtwoord (server-side bcrypt)
+            const geldig = await window.checkAdminWachtwoord(wachtwoord);
+            if (!geldig) {
                 alert('❌ Onjuist wachtwoord!\n\nWijziging geannuleerd.');
                 return false;
             }
@@ -797,7 +822,7 @@ window.verwijderJudoka = async function(event) {
     const isLocked = data.pouleIsLocked === true;
     const naam = data.judokaNaam || 'Deze judoka';
 
-    // Als bracket locked is, vraag admin wachtwoord
+    // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
         const wachtwoord = prompt(
             `🔒 ${__bracketVergrendeld}\n\n` +
@@ -810,8 +835,8 @@ window.verwijderJudoka = async function(event) {
             return; // Geannuleerd
         }
 
-        const adminWachtwoord = '{{ $toernooi->admin_wachtwoord ?? "admin123" }}';
-        if (wachtwoord !== adminWachtwoord) {
+        const geldig = await window.checkAdminWachtwoord(wachtwoord);
+        if (!geldig) {
             alert(`❌ ${__onjuistWachtwoord}`);
             return;
         }

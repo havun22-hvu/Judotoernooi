@@ -1009,4 +1009,29 @@ class MatController extends Controller
                 ->header('Content-Type', 'text/html');
         }
     }
+
+    /**
+     * Verify admin password for bracket operations (server-side bcrypt check).
+     */
+    public function checkAdminWachtwoord(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doCheckAdminWachtwoord($request, $toernooi);
+    }
+
+    public function checkAdminWachtwoordDevice(Request $request): JsonResponse
+    {
+        $toernooi = $request->device_toegang->toernooi;
+        return $this->doCheckAdminWachtwoord($request, $toernooi);
+    }
+
+    private function doCheckAdminWachtwoord(Request $request, Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'wachtwoord' => 'required|string',
+        ]);
+
+        $geldig = $toernooi->checkWachtwoord('admin', $validated['wachtwoord']);
+
+        return response()->json(['geldig' => $geldig]);
+    }
 }
