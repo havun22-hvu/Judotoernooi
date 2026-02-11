@@ -16,6 +16,7 @@ use App\Services\EliminatieService;
 use App\Services\WedstrijdSchemaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class MatController extends Controller
@@ -1030,7 +1031,11 @@ class MatController extends Controller
             'wachtwoord' => 'required|string',
         ]);
 
-        $geldig = $toernooi->checkWachtwoord('admin', $validated['wachtwoord']);
+        $wachtwoord = $validated['wachtwoord'];
+
+        // Accept: admin pin (wachtwoord_admin) OR organisator login password
+        $geldig = $toernooi->checkWachtwoord('admin', $wachtwoord)
+            || Hash::check($wachtwoord, $toernooi->organisator->password ?? '');
 
         return response()->json(['geldig' => $geldig]);
     }
