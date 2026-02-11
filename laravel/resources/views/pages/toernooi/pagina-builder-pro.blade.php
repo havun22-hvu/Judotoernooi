@@ -584,7 +584,7 @@
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div x-html="renderBlock(block)"></div>
+                                        <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
                                     </div>
                                 </template>
                                 <div x-show="!headerSection.columns[0].blocks || headerSection.columns[0].blocks.length === 0"
@@ -687,7 +687,7 @@
                                                             </div>
 
                                                             <!-- Block Render -->
-                                                            <div x-html="renderBlock(block)"></div>
+                                                            <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
                                                         </div>
                                                     </template>
 
@@ -740,7 +740,7 @@
                                                             </div>
 
                                                             <!-- Block Render -->
-                                                            <div x-html="renderBlock(block)"></div>
+                                                            <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
                                                         </div>
                                                     </template>
 
@@ -854,7 +854,7 @@
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div x-html="renderBlock(block)"></div>
+                                        <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
                                     </div>
                                 </template>
                                 <div x-show="!footerSection.columns[0].blocks || footerSection.columns[0].blocks.length === 0"
@@ -889,7 +889,7 @@
                         </button>
                     </div>
 
-                    <div class="space-y-4" x-ref="blockSettings"></div>
+                    <div class="space-y-4" x-html="_settingsHtml"></div>
                 </div>
             </template>
 
@@ -1065,6 +1065,7 @@ function paginaBuilderPro() {
         sidebarTab: 'blocks',
         editingBlock: null,
         editingSection: null,
+        _settingsHtml: '',
         saving: false,
         saved: false,
         saveTimeout: null,
@@ -1763,15 +1764,7 @@ function paginaBuilderPro() {
         editBlock(block) {
             this.editingSection = null;
             this.editingBlock = block;
-            // Double $nextTick: first for template x-if to render, second for refs
-            this.$nextTick(() => {
-                this.$nextTick(() => {
-                    if (this.$refs.blockSettings) {
-                        this.$refs.blockSettings.innerHTML = this.renderBlockSettings(block);
-                        Alpine.initTree(this.$refs.blockSettings);
-                    }
-                });
-            });
+            this._settingsHtml = this.renderBlockSettings(block);
         },
 
         updateBlockOrder(evt) {
