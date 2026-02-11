@@ -668,6 +668,17 @@ class MatController extends Controller
             if ($heeftBeideJudokas && $volgendeWedstrijdKlopt) {
                 $winnaarId = $validated['judoka_id'];
 
+                // Block correction if the next round match is already played
+                if ($isCorrectie && $bronWedstrijd->volgende_wedstrijd_id) {
+                    $volgendeWedstrijd = Wedstrijd::find($bronWedstrijd->volgende_wedstrijd_id);
+                    if ($volgendeWedstrijd && $volgendeWedstrijd->is_gespeeld) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'De volgende ronde is al gespeeld. De winnaar kan niet meer gewijzigd worden.',
+                        ], 400);
+                    }
+                }
+
                 // Bewaar oude winnaar VOOR update (voor correctie-logica)
                 $oudeWinnaarId = $bronWedstrijd->winnaar_id;
 
