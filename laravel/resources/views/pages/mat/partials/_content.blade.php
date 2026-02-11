@@ -536,7 +536,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return false;
     }
 
-    // Voeg target info toe aan data voor seeding logica
+    // Voeg target info toe aan data
     if (pouleId) data.pouleId = pouleId;
     if (huidigeBewoner && huidigeBewoner.id !== data.judokaId) {
         data.targetHuidigeJudoka = huidigeBewoner;
