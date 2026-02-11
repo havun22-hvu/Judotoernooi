@@ -526,13 +526,8 @@ window.isEliminatieBronGeblokkeerd = function(bronWedstrijdId, groep) {
     if (!comp || !comp.matSelectie) return false;
 
     const ms = comp.matSelectie;
-    // Geen beurtkleur ingesteld = seeding fase
+    // Geen beurtkleur ingesteld = seeding fase, niet blokkeren
     if (!ms.actieve_wedstrijd_id && !ms.volgende_wedstrijd_id && !ms.gereedmaken_wedstrijd_id) {
-        // Seeding alleen mogelijk in A-bracket
-        if (groep === 'B') {
-            alert('⚠️ Seeding is alleen mogelijk in de A-bracket!\n\nWijs eerst een beurtkleur aan om wedstrijden te spelen.');
-            return true;
-        }
         return false;
     }
     // Beurtkleur is ingesteld: alleen vanuit de groene wedstrijd mag gesleept worden
