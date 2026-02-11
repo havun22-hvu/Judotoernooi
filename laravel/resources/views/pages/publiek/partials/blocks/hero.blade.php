@@ -1,8 +1,8 @@
 @php
     $bgImage = $block['data']['bgImage'] ?? null;
     $overlay = $block['data']['overlay'] ?? false;
-    $title = e($block['data']['title'] ?? '');
-    $subtitle = e($block['data']['subtitle'] ?? '');
+    $title = $block['data']['title'] ?? '';
+    $subtitle = $block['data']['subtitle'] ?? '';
     $buttons = $block['data']['buttons'] ?? [];
 @endphp
 <div class="relative rounded-xl overflow-hidden {{ $bgImage ? '' : 'bg-gradient-to-r from-blue-600 to-blue-800' }}"
@@ -22,7 +22,7 @@
                 @foreach($buttons as $btn)
                     <a href="{{ $btn['url'] ?? '#' }}"
                        class="px-8 py-3 rounded-lg font-medium {{ ($btn['style'] ?? 'primary') === 'primary' ? 'bg-white text-blue-600' : 'border-2 border-white text-white' }}">
-                        {{ e($btn['text'] ?? '') }}
+                        {{ $btn['text'] ?? '' }}
                     </a>
                 @endforeach
             </div>

@@ -2,7 +2,7 @@
 @if($targetDate)
 <div class="text-center py-8">
     @if(!empty($block['data']['title']))
-        <h3 class="text-xl font-semibold mb-6">{{ e($block['data']['title']) }}</h3>
+        <h3 class="text-xl font-semibold mb-6">{{ $block['data']['title'] }}</h3>
     @endif
     <div class="flex justify-center gap-4" x-data="{
         target: new Date('{{ $targetDate }}').getTime(),

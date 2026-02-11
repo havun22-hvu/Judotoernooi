@@ -2,7 +2,7 @@
     $style = $block['data']['style'] ?? 'primary';
     $align = $block['data']['align'] ?? 'left';
     $url = $block['data']['url'] ?? '#';
-    $text = e($block['data']['text'] ?? 'Button');
+    $text = $block['data']['text'] ?? 'Button';
     $classes = match($style) {
         'primary' => 'bg-blue-600 text-white',
         'secondary' => 'bg-gray-200 text-gray-800',
