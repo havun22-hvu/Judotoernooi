@@ -356,10 +356,7 @@ const __eliminatie = @json(__('Eliminatie'));
 const __poule = @json(__('Poule'));
 const __finale = @json(__('Finale'));
 const __brons = @json(__('Brons'));
-const __correctieWinnaarWijzigen = @json(__('CORRECTIE: Winnaar wijzigen?'));
-const __wasNietWinnaar = @json(__(':naam was niet de winnaar van deze wedstrijd.'));
-const __wilJeAlsWinnaarInstellen = @json(__('Wil je :naam als nieuwe winnaar instellen?'));
-const __oudeWinnaarVerwijderd = @json(__('De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast'));
+
 const __bracketVergrendeld = @json(__('BRACKET VERGRENDELD'));
 const __probeertTeVerwijderen = @json(__('Je probeert :naam te verwijderen.'));
 const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door de organisator of hoofdjury.'));
@@ -632,72 +629,20 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return false;
     }
 
-    // ============================================================
-    // ADMIN WACHTWOORD VOOR CORRECTIES/SWAPS
-    // Alleen voor legitieme wijzigingen die wel op juiste plek zijn
-    // ============================================================
-
+    // Locked bracket: alleen winnaar doorschuif en terugplaatsen toegestaan
     if (isLocked) {
-        // Check of dit een normale winnaar-doorschuif is (toegestaan zonder wachtwoord)
         const isNormaleWinnaarDoorschuif = data.volgendeWedstrijdId == targetWedstrijdId &&
                                             (!data.isGespeeld || data.isWinnaar);
 
         if (!isNormaleWinnaarDoorschuif) {
-            // Bepaal of dit een correctie is (wedstrijd gespeeld, dit is niet de winnaar)
-            const isCorrectiePoging = data.isGespeeld && !data.isWinnaar;
-            // Of een vrije plaatsing (geen volgendeWedstrijdId)
-            const isVrijePlaatsing = !data.volgendeWedstrijdId;
-
-            const wachtwoord = await window.promptWachtwoord(
-                '🔒 BRACKET VERGRENDELD\n\n' +
-                (isCorrectiePoging
-                    ? `CORRECTIE: ${naam} was niet de winnaar.\nWil je de uitslag corrigeren?\n\n`
-                    : isVrijePlaatsing
-                        ? `PLAATSING: ${naam} handmatig plaatsen.\n\n`
-                        : 'De bracket is vastgezet na de eerste wedstrijd.\n') +
-                'Alleen de organisator of hoofdjury kan wijzigingen maken.\n\n' +
-                'Voer het organisator wachtwoord of hoofdjury pincode in:'
+            // Niet winnaar doorschuif en niet terugplaatsen (dat is hierboven al afgehandeld)
+            // → gewoon weigeren
+            alert(
+                `❌ GEBLOKKEERD\n\n` +
+                `De bracket is vergrendeld.\n` +
+                `${naam} kan hier niet geplaatst worden.`
             );
-
-            if (!wachtwoord) {
-                return false; // Geannuleerd
-            }
-
-            // Check wachtwoord (server-side bcrypt)
-            const geldig = await window.checkAdminWachtwoord(wachtwoord);
-            if (!geldig) {
-                alert('❌ Onjuist wachtwoord!\n\nWijziging geannuleerd.');
-                return false;
-            }
-
-            // Admin geautoriseerd
-            data.isAdminOverride = true;
-
-            // Zet correctie flag als dit een correctie is
-            if (isCorrectiePoging) {
-                data.isCorrectie = true;
-            }
-        }
-    }
-
-    // Check 3: Extra logging (checks al gedaan boven)
-    // Check 3: Validatie volgendeWedstrijdId + winnaarNaarSlot
-    if (isLocked && data.volgendeWedstrijdId) {
-        // Checks al gedaan boven - hier alleen logging
-        // Validatie passed - juiste wedstrijd en positie
-
-        // Check 2c: Als wedstrijd AL gespeeld is en dit is NIET de winnaar = CORRECTIE
-        if (!data.isAdminOverride && data.isGespeeld && !data.isWinnaar) {
-            if (!confirm(
-                `⚠️ ${__correctieWinnaarWijzigen}\n\n` +
-                `${__wasNietWinnaar.replace(':naam', naam)}\n\n` +
-                `${__wilJeAlsWinnaarInstellen.replace(':naam', naam)}\n` +
-                `(${__oudeWinnaarVerwijderd})`
-            )) {
-                return false; // Gebruiker annuleerde
-            }
-            // Gebruiker bevestigde - markeer als correctie
-            data.isCorrectie = true;
+            return false;
         }
     }
 
