@@ -1066,6 +1066,7 @@ function paginaBuilderPro() {
         editingBlock: null,
         editingSection: null,
         _settingsHtml: '',
+        _sortableInstances: [],
         saving: false,
         saved: false,
         saveTimeout: null,
@@ -1077,26 +1078,30 @@ function paginaBuilderPro() {
         },
 
         initSortable() {
+            // Destroy old instances first
+            this._sortableInstances.forEach(s => s.destroy());
+            this._sortableInstances = [];
+
             // Make sections sortable
             const container = document.getElementById('sections-container');
             if (container) {
-                new Sortable(container, {
+                this._sortableInstances.push(new Sortable(container, {
                     animation: 150,
                     handle: '.drag-section-handle',
                     ghostClass: 'sortable-ghost',
                     onEnd: () => this.updateSectionOrder()
-                });
+                }));
             }
 
             // Make blocks in columns sortable
             document.querySelectorAll('.blocks-container').forEach(col => {
-                new Sortable(col, {
+                this._sortableInstances.push(new Sortable(col, {
                     group: 'blocks',
                     animation: 150,
                     handle: '.drag-block-handle',
                     ghostClass: 'sortable-ghost',
                     onEnd: (evt) => this.updateBlockOrder(evt)
-                });
+                }));
             });
         },
 
@@ -1768,25 +1773,50 @@ function paginaBuilderPro() {
         },
 
         updateBlockOrder(evt) {
-            // Re-sync blocks from DOM to data
-            this.sections.forEach(section => {
-                section.columns.forEach((col, colIndex) => {
-                    const container = document.querySelector(`[data-section="${section.id}"][data-col="${colIndex}"]`);
-                    if (container) {
-                        const newBlocks = [];
-                        container.querySelectorAll('[data-block-id]').forEach(el => {
-                            const blockId = el.getAttribute('data-block-id');
-                            // Find block in any section/column
-                            this.sections.forEach(s => {
-                                s.columns.forEach(c => {
-                                    const block = c.blocks.find(b => b.id === blockId);
-                                    if (block) newBlocks.push(block);
-                                });
-                            });
-                        });
-                        col.blocks = newBlocks;
+            // Helper: find block by ID in all sections
+            const findBlock = (blockId) => {
+                for (const s of this.sections) {
+                    for (const c of s.columns) {
+                        const b = c.blocks.find(b => b.id === blockId);
+                        if (b) return b;
+                    }
+                    if (s.grid) {
+                        for (const row of s.grid) {
+                            for (const cell of row) {
+                                if (cell.blocks) {
+                                    const b = cell.blocks.find(b => b.id === blockId);
+                                    if (b) return b;
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
+            };
+
+            // Re-sync all blocks-containers from DOM to data
+            document.querySelectorAll('.blocks-container').forEach(container => {
+                const sectionId = container.dataset.section;
+                const colIndex = parseInt(container.dataset.col || '0');
+                const rowIndex = container.dataset.row;
+                const section = this.sections.find(s => s.id === sectionId);
+                if (!section) return;
+
+                const newBlocks = [];
+                container.querySelectorAll(':scope > [data-block-id], :scope > .block-wrapper').forEach(el => {
+                    const blockId = el.getAttribute('data-block-id');
+                    if (blockId) {
+                        const block = findBlock(blockId);
+                        if (block) newBlocks.push(block);
                     }
                 });
+
+                if (rowIndex !== undefined && section.grid) {
+                    const cell = section.grid[parseInt(rowIndex)]?.[colIndex];
+                    if (cell) cell.blocks = newBlocks;
+                } else if (section.columns[colIndex]) {
+                    section.columns[colIndex].blocks = newBlocks;
+                }
             });
             this.saveData();
         },
