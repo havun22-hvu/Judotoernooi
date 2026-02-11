@@ -528,13 +528,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     try {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-
-    // Seeding: mag alleen binnen dezelfde ronde, NIET naar volgende ronde
     const isLocked = data.pouleIsLocked === true;
-    if (!isLocked && data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId) {
-        alert('⚠️ Seeding mag alleen binnen dezelfde ronde!\n\nJe kunt geen judoka naar de volgende ronde slepen tijdens het seeden.');
-        return false;
-    }
 
     // Voeg target info toe aan data
     if (pouleId) data.pouleId = pouleId;
