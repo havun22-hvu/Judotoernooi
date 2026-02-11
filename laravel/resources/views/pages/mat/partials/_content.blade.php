@@ -535,16 +535,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
     const naam = data.judokaNaam || 'Deze judoka';
 
-    // Check 1: Dezelfde wedstrijd?
+    // Dezelfde wedstrijd? Negeren
     if (data.wedstrijdId == targetWedstrijdId) {
-        if (data.positie === positie) {
-            return false; // Teruggezet op oude plek
-        }
-        // Zelfde wedstrijd maar andere positie = blokkeer
-        alert(
-            `❌ GEBLOKKEERD: Kan niet verplaatsen binnen dezelfde wedstrijd!\n\n` +
-            `${naam} staat al in deze wedstrijd.`
-        );
         return false;
     }
 
@@ -615,23 +607,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             return false;
         }
 
-        // Alles anders in locked bracket → geweigerd
-        alert(
-            `❌ GEBLOKKEERD\n\n` +
-            `De bracket is vergrendeld.\n` +
-            `${naam} kan hier niet geplaatst worden.`
-        );
+        // Alles anders in locked bracket → negeren
         return false;
     } else {
         // REGEL 3: Seeding — bracket niet locked, alleen naar leeg slot
         if (huidigeBewoner && huidigeBewoner.id !== data.judokaId) {
-            // Slot is bezet door iemand anders → weigeren
-            alert(
-                `❌ GEBLOKKEERD\n\n` +
-                `Dit slot is al bezet door ${huidigeBewoner.naam || 'een andere judoka'}.\n` +
-                `Sleep ${naam} naar een leeg slot.`
-            );
-            return false;
+            return false; // Slot bezet → negeren
         }
     }
 
