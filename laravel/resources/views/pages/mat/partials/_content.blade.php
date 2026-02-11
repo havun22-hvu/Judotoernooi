@@ -1111,6 +1111,16 @@ function matInterface() {
                 const html = await response.text();
                 container.innerHTML = html;
 
+                // JS-based sticky header for B-bracket (CSS sticky unreliable in nested scroll containers)
+                const stickyHeader = container.querySelector('.bracket-round-header');
+                if (stickyHeader && groep === 'B') {
+                    if (container._stickyHandler) container.removeEventListener('scroll', container._stickyHandler);
+                    container._stickyHandler = function() {
+                        stickyHeader.style.transform = `translateY(${this.scrollTop}px)`;
+                    };
+                    container.addEventListener('scroll', container._stickyHandler);
+                }
+
                 // Initialiseer SortableJS op de nieuwe DOM elementen
                 this.$nextTick(() => window.initBracketSortable?.());
 
