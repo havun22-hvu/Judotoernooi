@@ -548,99 +548,40 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return false;
     }
 
-    // Auto-correctie: als winnaar op verkeerd slot wordt gedropt, corrigeer stilletjes
-    if (data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot) {
-        if (data.winnaarNaarSlot !== positie) {
-            positie = data.winnaarNaarSlot;
-        }
-    }
+    // === DRAG REGELS ===
+    // 1. Winnaar doorschuiven naar volgende ronde → toegestaan
+    // 2. Winnaar terugplaatsen naar eigen vorige slot → wachtwoord
+    // 3. Seeding (bracket niet locked) naar leeg slot → toegestaan
+    // Al het andere → geweigerd
 
-    // Check 2: Winnaar doorschuiven naar VERKEERDE positie = GEBLOKKEERD (met uitzonderingen)
-    if (data.volgendeWedstrijdId && data.isGespeeld && data.isWinnaar) {
-        // Dit is een winnaar die doorschuift - strikt checken
-        if (data.volgendeWedstrijdId == targetWedstrijdId) {
-            // Juiste wedstrijd — auto-correctie naar juiste slot
-            if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-                positie = data.winnaarNaarSlot;
-            }
-        } else {
-            // Winnaar mag ALLEEN naar de directe volgende ronde, niet 2+ rondes vooruit
-            alert(
-                `❌ GEBLOKKEERD!\n\n` +
-                `${naam} kan alleen naar de directe volgende ronde worden doorgeschoven.\n\n` +
-                `Sleep de winnaar naar het juiste vak in de volgende ronde.`
-            );
-            return false;
-        }
-    }
+    const isWinnaarDoorschuif = data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId;
 
-    // Slot validatie ALTIJD als dit een winnaar-doorschuif is (naar volgende ronde)
-    // Seeding is BINNEN dezelfde ronde, niet naar volgende ronde - dus daar geldt geen slot validatie
-    const isWinnaarDoorschuifPoging = data.volgendeWedstrijdId && String(data.volgendeWedstrijdId) === String(targetWedstrijdId);
-
-    if (isWinnaarDoorschuifPoging) {
-        // Auto-correctie naar juiste slot
+    if (isWinnaarDoorschuif) {
+        // REGEL 1: Winnaar doorschuiven — auto-correctie naar juiste slot
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
             positie = data.winnaarNaarSlot;
         }
-    } else if (isLocked && data.volgendeWedstrijdId) {
-        // Could be a "pull back" action: dragging a judoka back to undo a result
-        const wachtwoord = await window.promptWachtwoord(
-            `🔒 BRACKET VERGRENDELD\n\n` +
-            `${naam} staat in een ander vak.\n\n` +
-            `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
-            `Dit verwijdert de judoka uit het huidige vak.\n\n` +
-            `Voer het organisator wachtwoord of hoofdjury pincode in:`
+    } else if (isLocked) {
+        // Bracket is locked — alleen terugplaatsen naar eigen vorige slot mag (met wachtwoord)
+        // "Eigen vorige slot" = de bron-wedstrijd waar de judoka vandaan komt
+        // Dit is NIET hetzelfde als data.wedstrijdId (dat is de huidige plek)
+        // Terugplaatsen gaat via de bron_wedstrijd_id die de server kent
+        // Hier in de UI blokkeren we alles behalve terugplaatsen
+
+        alert(
+            `❌ GEBLOKKEERD\n\n` +
+            `De bracket is vergrendeld.\n` +
+            `${naam} kan hier niet geplaatst worden.`
         );
-
-        if (!wachtwoord) {
-            return false;
-        }
-
-        const geldig = await window.checkAdminWachtwoord(wachtwoord);
-        if (!geldig) {
-            alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
-            return false;
-        }
-
-        // Remove judoka from current slot (this also resets the source match)
-        try {
-            const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    wedstrijd_id: data.wedstrijdId,
-                    judoka_id: data.judokaId,
-                })
-            });
-            const result = await response.json();
-            if (result.success) {
-                location.reload();
-            } else {
-                alert('❌ ' + (result.error || 'Fout bij terugzetten'));
-            }
-        } catch (e) {
-            console.error('Terugzetten mislukt:', e);
-            location.reload();
-        }
         return false;
-    }
-
-    // Locked bracket: alleen winnaar doorschuif en terugplaatsen toegestaan
-    if (isLocked) {
-        const isNormaleWinnaarDoorschuif = data.volgendeWedstrijdId == targetWedstrijdId &&
-                                            (!data.isGespeeld || data.isWinnaar);
-
-        if (!isNormaleWinnaarDoorschuif) {
-            // Niet winnaar doorschuif en niet terugplaatsen (dat is hierboven al afgehandeld)
-            // → gewoon weigeren
+    } else {
+        // REGEL 3: Seeding — bracket niet locked, alleen naar leeg slot
+        if (huidigeBewoner && huidigeBewoner.id !== data.judokaId) {
+            // Slot is bezet door iemand anders → weigeren
             alert(
                 `❌ GEBLOKKEERD\n\n` +
-                `De bracket is vergrendeld.\n` +
-                `${naam} kan hier niet geplaatst worden.`
+                `Dit slot is al bezet door ${huidigeBewoner.naam || 'een andere judoka'}.\n` +
+                `Sleep ${naam} naar een leeg slot.`
             );
             return false;
         }
