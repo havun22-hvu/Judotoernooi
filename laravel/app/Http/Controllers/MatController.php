@@ -770,6 +770,78 @@ class MatController extends Controller
     }
 
     /**
+     * Advance all byes in the first A-round to the next round.
+     */
+    public function advanceByes(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doAdvanceByes($request, $toernooi);
+    }
+
+    public function advanceByesDevice(Request $request): JsonResponse
+    {
+        $poule = Poule::findOrFail($request->input('poule_id'));
+        $toernooi = $poule->blok?->toernooi ?? $poule->mat?->blok?->toernooi;
+        return $this->doAdvanceByes($request, $toernooi);
+    }
+
+    private function doAdvanceByes(Request $request, ?Toernooi $toernooi): JsonResponse
+    {
+        $validated = $request->validate([
+            'poule_id' => 'required|exists:poules,id',
+        ]);
+
+        $pouleId = $validated['poule_id'];
+
+        // Find all A-group bye matches: wit filled, blauw null, not yet played
+        $byes = Wedstrijd::where('poule_id', $pouleId)
+            ->where('groep', 'A')
+            ->whereNotNull('judoka_wit_id')
+            ->whereNull('judoka_blauw_id')
+            ->where('is_gespeeld', false)
+            ->get();
+
+        $advanced = 0;
+
+        foreach ($byes as $bye) {
+            $winnaarId = $bye->judoka_wit_id;
+
+            // Mark as bye
+            $bye->update([
+                'winnaar_id' => $winnaarId,
+                'is_gespeeld' => true,
+                'uitslag_type' => 'bye',
+                'gespeeld_op' => now(),
+            ]);
+
+            // Advance to next round
+            if ($bye->volgende_wedstrijd_id) {
+                $volgende = Wedstrijd::find($bye->volgende_wedstrijd_id);
+                if ($volgende) {
+                    $slot = $bye->winnaar_naar_slot ?? 'wit';
+                    $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
+                    $volgende->update([$veld => $winnaarId]);
+                }
+            }
+
+            $advanced++;
+        }
+
+        // Broadcast bracket update
+        $poule = Poule::find($pouleId);
+        if ($toernooi && $poule && $poule->mat_id) {
+            MatUpdate::dispatch($toernooi->id, $poule->mat_id, 'bracket', [
+                'poule_id' => $pouleId,
+                'actie' => 'advance_byes',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'advanced' => $advanced,
+        ]);
+    }
+
+    /**
      * Plaats verliezer direct in de B-groep
      */
     private function plaatsVerliezerInB(Wedstrijd $bronWedstrijd, int $verliezerId): void

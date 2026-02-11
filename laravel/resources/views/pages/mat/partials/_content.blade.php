@@ -32,6 +32,11 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $advanceByesUrl = route('mat.advance-byes.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
@@ -39,6 +44,7 @@
             $pouleKlaarUrl = route('toernooi.mat.poule-klaar', $toernooi->routeParams());
             $bracketHtmlUrl = route('toernooi.mat.bracket-html', $toernooi->routeParams());
             $checkWachtwoordUrl = route('toernooi.mat.check-admin-wachtwoord', $toernooi->routeParams());
+            $advanceByesUrl = route('toernooi.mat.advance-byes', $toernooi->routeParams());
         }
     @endphp
 <div id="mat-interface" x-data="matInterface()" x-init="init()">
@@ -170,6 +176,11 @@
                                         class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
+                                </button>
+                                <button x-show="!isBracketLocked(poule)"
+                                        @click="advanceByes(poule.poule_id)"
+                                        class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-300">
+                                    ▶ {{ __('Byes') }}
                                 </button>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
@@ -1137,6 +1148,29 @@ function matInterface() {
             } catch (err) {
                 console.error('[Bracket] Exception bij laden:', err);
                 container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
+            }
+        },
+
+        // Advance all byes in first A-round to next round
+        async advanceByes(pouleId) {
+            try {
+                const response = await fetch(`{{ $advanceByesUrl }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ poule_id: pouleId })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('[Bracket] Byes advanced:', result.advanced);
+                    await this.laadWedstrijden();
+                    this.laadBracketHtml(pouleId, 'A');
+                }
+            } catch (err) {
+                console.error('[Bracket] Fout bij advance byes:', err);
             }
         },
 
