@@ -137,7 +137,7 @@
                                 </button>
                             </template>
                         </div>
-                        <!-- Swap Ruimte - alleen zichtbaar VOOR eerste wedstrijd (seeding fase) -->
+                        <!-- Swap Ruimte - alleen zichtbaar tijdens seeding (voor eerste wedstrijd) -->
                         <div x-show="!isBracketLocked(poule)" class="flex items-center gap-2 px-2">
                             <span class="text-sm font-medium text-gray-600">
                                 Swap:
@@ -173,7 +173,7 @@
                                 </button>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
-                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                            <div x-show="!isBracketLocked(poule)" class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
@@ -200,7 +200,7 @@
                                 </button>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
-                            <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
+                            <div x-show="!isBracketLocked(poule)" class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
                                 🗑️ {{ __('verwijder') }}
                             </div>
