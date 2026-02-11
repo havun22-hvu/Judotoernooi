@@ -1033,9 +1033,14 @@ class MatController extends Controller
 
         $wachtwoord = $validated['wachtwoord'];
 
-        // Accept: admin pin (wachtwoord_admin) OR organisator login password
+        // Accept: admin pin, toernooi-eigenaar password, or logged-in user password
         $geldig = $toernooi->checkWachtwoord('admin', $wachtwoord)
             || Hash::check($wachtwoord, $toernooi->organisator->password ?? '');
+
+        // Also accept the logged-in user's password (e.g. sitebeheerder viewing another org's toernooi)
+        if (!$geldig && auth('organisator')->check()) {
+            $geldig = Hash::check($wachtwoord, auth('organisator')->user()->password ?? '');
+        }
 
         return response()->json(['geldig' => $geldig]);
     }
