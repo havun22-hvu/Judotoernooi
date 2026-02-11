@@ -787,6 +787,30 @@
 
 ---
 
+---
+
+## Sessie: 12 februari 2026 (avond)
+
+### Feat: Pagina Builder Pro publieke rendering
+- **Type:** Feature
+- **Wat:** Pro builder content (sections + header/footer) renderen op publieke pagina
+- **Bestanden:** 22 nieuwe, 1 gewijzigd
+  - `publiek/partials/blocks/*.blade.php` (19 block partials)
+  - `publiek/partials/pro-section.blade.php` (CSS Grid + legacy columns)
+  - `publiek/partials/pro-header-footer.blade.php` (header/footer wrapper)
+  - `publiek/partials/pro-content.blade.php` (orchestrator)
+  - `publiek/index.blade.php` (detectielogica)
+- **Detectie:** `sections` → pro rendering, `blokken` → legacy, niets → default
+- **Beveiliging:** `view()->exists()` check per block type
+
+### Fix: Double HTML escaping in block partials
+- **Type:** Bug fix
+- **Wat:** `e()` + `{{ }}` = dubbele escape → apostrofen werden `&#039;`
+- **Bestanden:** 11 block partials
+- **Oplossing:** `e()` verwijderd, `{{ }}` doet escaping al
+
+---
+
 <!--
 TEMPLATE:
 
