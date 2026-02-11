@@ -188,17 +188,16 @@ class BracketLayoutService
                 } else {
                     // SAMEN round (no _1/_2) or brons
                     if ($isFirstNiveau) {
-                        $herkomstWit = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                        // Eerste B-niveau: beide slots van A-verliezers
+                        // Bij IJF: b_halve_finale is eerste ronde, maar gevuld uit A-1/4
+                        $isIjfBHalveFinale = ($ronde['ronde'] === 'b_halve_finale' && count($niveaus) <= 3);
+                        $label = $isIjfBHalveFinale ? 'A-1/4' : ($aRondeNaam ?: '');
+                        $herkomstWit = $label ? "uit {$label}" : '';
                         $herkomstBlauw = $herkomstWit;
-                    } elseif (str_contains($ronde['ronde'], 'brons') || str_contains($ronde['ronde'], 'repechage')) {
-                        // IJF repechage/brons: specific labels
-                        if (str_contains($ronde['ronde'], 'repechage')) {
-                            $herkomstWit = 'uit A-1/4';
-                            $herkomstBlauw = 'uit A-1/4';
-                        } elseif (str_contains($ronde['ronde'], 'brons')) {
-                            $herkomstWit = 'rep. winnaar';
-                            $herkomstBlauw = 'uit A-1/2';
-                        }
+                    } elseif (str_contains($ronde['ronde'], 'brons')) {
+                        // Brons: B-1/2 winnaar op wit, A-1/2 verliezer op blauw
+                        $herkomstWit = 'B-1/2 winnaar';
+                        $herkomstBlauw = 'uit A-1/2';
                     } else {
                         $herkomstWit = 'B-winnaar';
                         $herkomstBlauw = 'B-winnaar';
