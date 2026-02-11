@@ -489,6 +489,29 @@ window.escapeHtml = function(str) {
     return div.innerHTML;
 };
 
+// Check of een eliminatie drop geblokkeerd is door beurtaanduiding (groen/geel/blauw)
+window.isEliminatieDropGeblokkeerd = function(targetWedstrijdId) {
+    const el = document.getElementById('mat-interface');
+    if (!el) return false;
+    const comp = Alpine.$data(el);
+    if (!comp || !comp.matSelectie) return false;
+
+    const ms = comp.matSelectie;
+    if (ms.actieve_wedstrijd_id == targetWedstrijdId) {
+        alert('⚠️ Deze wedstrijd is aan de beurt!\n\nWacht tot de wedstrijd gespeeld is voordat je een judoka plaatst.');
+        return true;
+    }
+    if (ms.volgende_wedstrijd_id == targetWedstrijdId) {
+        alert('⚠️ Deze wedstrijd staat klaar (geel)!\n\nJe kunt hier nu geen judoka plaatsen.');
+        return true;
+    }
+    if (ms.gereedmaken_wedstrijd_id == targetWedstrijdId) {
+        alert('⚠️ Deze wedstrijd wordt gereed gemaakt (blauw)!\n\nJe kunt hier nu geen judoka plaatsen.');
+        return true;
+    }
+    return false;
+};
+
 // Global drop handler - plaats judoka in slot
 window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
     event.preventDefault();
@@ -497,6 +520,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     if (window._isDroppingJudoka) return false;
     window._isDroppingJudoka = true;
     try {
+
+    // Beurtaanduiding blokkade: groen/geel/blauw potjes zijn niet plaatsbaar
+    if (window.isEliminatieDropGeblokkeerd(targetWedstrijdId)) return false;
+
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
     // Voeg target info toe aan data voor seeding logica
@@ -837,6 +864,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 // Global drop handler - medaille plaatsing (goud/zilver)
 window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     event.preventDefault();
+
+    // Beurtaanduiding blokkade: groen/geel/blauw potjes zijn niet plaatsbaar
+    if (window.isEliminatieDropGeblokkeerd(finaleId)) return;
+
     if (!finaleId) {
         alert('❌ Geen finale gevonden!');
         return;
