@@ -608,48 +608,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             }
             // Juiste wedstrijd EN juiste positie - doorgaan!
         } else {
-            // Wrong match - offer pull-back option with password
-            const wachtwoord = await window.promptWachtwoord(
-                `🔒 ${naam} staat in een ander vak.\n\n` +
-                `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
-                `Dit verwijdert de judoka uit het huidige vak.\n\n` +
-                `Voer het organisator wachtwoord of hoofdjury pincode in:\n` +
-                `(Annuleer als je dit niet wilt)`
+            // Winnaar mag ALLEEN naar de directe volgende ronde, niet 2+ rondes vooruit
+            alert(
+                `❌ GEBLOKKEERD!\n\n` +
+                `${naam} kan alleen naar de directe volgende ronde worden doorgeschoven.\n\n` +
+                `Sleep de winnaar naar het juiste vak in de volgende ronde.`
             );
-
-            if (!wachtwoord) {
-                return false;
-            }
-
-            const geldig = await window.checkAdminWachtwoord(wachtwoord);
-            if (!geldig) {
-                alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
-                return false;
-            }
-
-            // Remove judoka from current slot (this also resets the source match)
-            try {
-                const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        wedstrijd_id: data.wedstrijdId,
-                        judoka_id: data.judokaId,
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('❌ ' + (result.error || 'Fout bij terugzetten'));
-                }
-            } catch (e) {
-                console.error('Terugzetten mislukt:', e);
-                location.reload();
-            }
             return false;
         }
     }
