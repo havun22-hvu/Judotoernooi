@@ -466,6 +466,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('mat/finale-uitslag', [MatController::class, 'finaleUitslag'])->name('mat.finale-uitslag');
         Route::post('mat/genereer-wedstrijden', [MatController::class, 'genereerWedstrijden'])->name('mat.genereer-wedstrijden');
         Route::post('mat/bracket-html', [MatController::class, 'getBracketHtml'])->name('mat.bracket-html');
+        Route::post('mat/check-admin-wachtwoord', [MatController::class, 'checkAdminWachtwoord'])->name('mat.check-admin-wachtwoord');
         Route::post('mat/barrage', [BlokController::class, 'maakBarrage'])->name('mat.barrage');
     });
 
@@ -543,6 +544,7 @@ Route::prefix('{organisator}/{toernooi}')->group(function () {
         Route::post('mat/{toegang}/huidige-wedstrijd', [MatController::class, 'setHuidigeWedstrijdDevice'])->name('mat.huidige-wedstrijd.device');
         Route::post('mat/{toegang}/poule-klaar', [MatController::class, 'pouleKlaarDevice'])->name('mat.poule-klaar.device');
         Route::post('mat/{toegang}/bracket-html', [MatController::class, 'getBracketHtmlDevice'])->name('mat.bracket-html.device');
+        Route::post('mat/{toegang}/check-admin-wachtwoord', [MatController::class, 'checkAdminWachtwoordDevice'])->name('mat.check-admin-wachtwoord.device');
         Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
         Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
         Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');
