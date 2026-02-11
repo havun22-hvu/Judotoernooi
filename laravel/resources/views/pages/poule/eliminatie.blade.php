@@ -101,7 +101,7 @@
         @if($bracket['herkansing']->count() > 0)
         <!-- Herkansing (Groep B) -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-bold mb-4 text-orange-800">Herkansing (Groep B) - {{ $poule->judokas->count() - 2 }} judoka's</h2>
+            <h2 class="text-xl font-bold mb-4 text-orange-800">Herkansing (Groep B) - {{ ($toernooi->eliminatie_type ?? 'dubbel') === 'ijf' ? min(6, $poule->judokas->count()) : $poule->judokas->count() - 2 }} judoka's</h2>
             <div class="bracket-container overflow-x-auto">
                 <div class="bracket flex gap-8 min-w-max">
                     @foreach($bracket['herkansing'] as $ronde => $wedstrijden)
