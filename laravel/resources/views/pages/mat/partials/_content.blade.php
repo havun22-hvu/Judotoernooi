@@ -118,13 +118,13 @@
                     <div class="flex mb-1 border-b border-gray-200 justify-between">
                         <div class="flex">
                             <button x-show="!poule.groep_filter || poule.groep_filter === 'A'"
-                                    @click="activeTab = 'A'; $nextTick(() => window.initBracketSortable?.())"
+                                    @click="activeTab = 'A'; $nextTick(() => { laadBracketHtml(poule.poule_id, 'A'); })"
                                     :class="activeTab === 'A' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                     class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
                                 {{ __('Groep A (Hoofdboom)') }} <span x-text="'(' + poule.judoka_count + ')'"></span>
                             </button>
                             <template x-if="heeftHerkansing(poule) && (!poule.groep_filter || poule.groep_filter === 'B')">
-                                <button @click="activeTab = 'B'; $nextTick(() => window.initBracketSortable?.())"
+                                <button @click="activeTab = 'B'; $nextTick(() => { laadBracketHtml(poule.poule_id, 'B'); })"
                                         :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
                                     {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
@@ -210,8 +210,7 @@
                             </div>
                         </div>
                         <div class="bracket-container overflow-auto pb-2" style="max-height: calc(100vh - 180px);"
-                             :id="'bracket-container-' + poule.poule_id + '-B'"
-                             x-init="$nextTick(() => { if (heeftHerkansing(poule)) laadBracketHtml(poule.poule_id, 'B') })">
+                             :id="'bracket-container-' + poule.poule_id + '-B'">
                             <div class="text-gray-400 text-sm py-4">{{ __('Bracket laden...') }}</div>
                         </div>
                     </div>
