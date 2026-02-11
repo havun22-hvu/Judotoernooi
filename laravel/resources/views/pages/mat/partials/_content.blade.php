@@ -100,9 +100,9 @@
                         ⚔ Barrage
                     </button>
 
-                    <!-- Nog niet klaar maar wel afgerond: toon knop -->
+                    <!-- Nog niet klaar maar wel afgerond: toon knop (alleen voor poules, niet eliminatie - die heeft eigen knoppen in A/B tabs) -->
                     <button
-                        x-show="isPouleAfgerond(poule) && !poule.spreker_klaar && !heeftBarrageNodig(poule)"
+                        x-show="poule.type !== 'eliminatie' && isPouleAfgerond(poule) && !poule.spreker_klaar && !heeftBarrageNodig(poule)"
                         @click="markeerKlaar(poule)"
                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse"
                     >
@@ -165,6 +165,11 @@
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
+                                <button x-show="isEliminatieAfgerond(poule) && !poule.spreker_klaar"
+                                        @click="markeerKlaar(poule)"
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold animate-pulse">
+                                    ✓ {{ __('Afronden') }}
+                                </button>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
@@ -191,6 +196,11 @@
                                         class="text-xs px-2 py-1 rounded hover:bg-yellow-300"
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
+                                </button>
+                                <button x-show="isEliminatieAfgerond(poule) && !poule.spreker_klaar"
+                                        @click="markeerKlaar(poule)"
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs font-bold animate-pulse">
+                                    ✓ {{ __('Afronden') }}
                                 </button>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
