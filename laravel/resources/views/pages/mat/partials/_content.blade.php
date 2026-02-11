@@ -139,7 +139,7 @@
                                 <button @click="activeTab = 'B'; $nextTick(() => { laadBracketHtml(poule.poule_id, 'B'); })"
                                         :class="activeTab === 'B' ? 'border-purple-600 text-purple-700 bg-purple-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                         class="px-4 py-1 text-xs font-bold border-b-2 transition-colors">
-                                    {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.judoka_count - 2) + ')'"></span>
+                                    {{ __('Groep B (Herkansing)') }} <span x-text="'(' + (poule.eliminatie_type === 'ijf' ? Math.min(6, poule.judoka_count) : poule.judoka_count - 2) + ')'"></span>
                                 </button>
                             </template>
                         </div>

@@ -412,6 +412,7 @@ class WedstrijdSchemaService
                 'mat_nummer' => $mat->nummer,
                 'titel' => $poule->getDisplayTitel(),
                 'judoka_count' => $judokaCount,
+                'eliminatie_type' => $blok->toernooi?->eliminatie_type ?? 'dubbel',
                 'groep_filter' => $groepFilter,
                 'spreker_klaar' => $poule->spreker_klaar !== null,
                 'spreker_klaar_tijd' => $poule->spreker_klaar ? $poule->spreker_klaar->format('H:i') : null,
