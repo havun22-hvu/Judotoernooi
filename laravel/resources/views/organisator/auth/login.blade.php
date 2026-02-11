@@ -142,27 +142,6 @@
             </p>
         </div>
 
-        @if($showPinLogin ?? false)
-        <div class="mt-6 pt-6 border-t">
-            <p class="text-xs text-gray-500 mb-3 text-center">{{ __('Superadmin (alleen local/staging)') }}</p>
-            <form action="{{ route('pin-login') }}" method="POST" class="flex gap-2">
-                @csrf
-                <input type="text"
-                       name="pin"
-                       placeholder="PIN"
-                       maxlength="4"
-                       pattern="\d{4}"
-                       class="flex-1 border-2 border-purple-300 rounded-lg px-4 py-2 text-center font-mono text-lg focus:border-purple-500 @error('pin') border-red-500 @enderror">
-                <button type="submit"
-                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg transition-colors">
-                    PIN Login
-                </button>
-            </form>
-            @error('pin')
-            <p class="mt-1 text-sm text-red-600 text-center">{{ $message }}</p>
-            @enderror
-        </div>
-        @endif
     </div>
 </body>
 </html>
