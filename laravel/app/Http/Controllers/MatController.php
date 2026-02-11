@@ -1033,12 +1033,27 @@ class MatController extends Controller
 
         $wachtwoord = $validated['wachtwoord'];
 
-        // Accept: admin pin, jury pin, toernooi-eigenaar password
-        $geldig = $toernooi->checkWachtwoord('admin', $wachtwoord)
-            || $toernooi->checkWachtwoord('jury', $wachtwoord)
-            || Hash::check($wachtwoord, $toernooi->organisator->password ?? '');
+        // Accept: device pincode, toernooi admin/jury pin (bcrypt), organisator password
+        $geldig = false;
 
-        // Also accept the logged-in user's password (e.g. sitebeheerder viewing another org's toernooi)
+        // 1. Device pincode (plain text, 4 digits) - for hoofdjury/mat PWA
+        $toegang = $request->device_toegang ?? null;
+        if (!$geldig && $toegang && $toegang->pincode === $wachtwoord) {
+            $geldig = true;
+        }
+
+        // 2. Toernooi admin or jury pin (bcrypt)
+        if (!$geldig) {
+            $geldig = $toernooi->checkWachtwoord('admin', $wachtwoord)
+                || $toernooi->checkWachtwoord('jury', $wachtwoord);
+        }
+
+        // 3. Organisator login password
+        if (!$geldig) {
+            $geldig = Hash::check($wachtwoord, $toernooi->organisator->password ?? '');
+        }
+
+        // 4. Logged-in user's password (e.g. sitebeheerder viewing another org's toernooi)
         if (!$geldig && auth('organisator')->check()) {
             $geldig = Hash::check($wachtwoord, auth('organisator')->user()->password ?? '');
         }
