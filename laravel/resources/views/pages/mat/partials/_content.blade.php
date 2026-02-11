@@ -616,10 +616,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
     }
 
-        // Bepaal of dit een SEEDING (move binnen ronde) of WEDSTRIJD WINNEN (copy naar volgende ronde) is
-        // Seeding = target is NIET de volgende_wedstrijd_id
-        // Winnen = target IS de volgende_wedstrijd_id
-        const isWinnaarDoorschuif = data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId;
+        // Bepaal of dit seeding (move) of winnaar doorschuif (copy) is
         const isSeeding = !isWinnaarDoorschuif && !isLocked;
 
         if (isSeeding) {
