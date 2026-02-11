@@ -731,9 +731,10 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
 
-    // Check of judoka uit de finale komt
+    // Check of judoka uit de juiste wedstrijd komt
     if (data.wedstrijdId != finaleId) {
-        alert(`❌ ${naam} komt niet uit de finale!\n\nAlleen finalisten kunnen op goud/zilver geplaatst worden.`);
+        const medailleNaam = medaille === 'brons' ? 'brons' : 'goud/zilver';
+        alert(`❌ ${naam} komt niet uit de juiste wedstrijd!\n\nAlleen deelnemers uit deze wedstrijd kunnen op ${medailleNaam} geplaatst worden.`);
         return;
     }
 
@@ -752,7 +753,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
                 wedstrijd_id: finaleId,
                 winnaar_id: winnaarId,
                 geplaatste_judoka_id: data.judokaId,
-                medaille: medaille  // 'goud' of 'zilver'
+                medaille: medaille  // 'goud', 'zilver' of 'brons'
             })
         });
 
@@ -761,6 +762,26 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
         if (!response.ok) {
             alert('❌ Fout:\n\n' + (result.error || 'Onbekende fout'));
             return;
+        }
+
+        // Update Alpine poule.wedstrijden data zodat isEliminatieAfgerond() werkt
+        const matEl = document.getElementById('mat-interface');
+        if (matEl) {
+            const comp = Alpine.$data(matEl);
+            if (comp) {
+                const poule = comp.poules.find(p => p.poule_id == pouleId);
+                if (poule) {
+                    const wed = poule.wedstrijden.find(w => w.id == finaleId);
+                    if (wed) {
+                        wed.winnaar_id = result.winnaar_id;
+                        wed.is_gespeeld = true;
+                    }
+                }
+
+                // Herlaad bracket HTML zodat medaille visueel geüpdatet wordt
+                const groep = (medaille === 'brons') ? 'B' : 'A';
+                comp.laadBracketHtml(pouleId, groep);
+            }
         }
 
     } catch (err) {
