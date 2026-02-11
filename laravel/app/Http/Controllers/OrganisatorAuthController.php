@@ -31,10 +31,7 @@ class OrganisatorAuthController extends Controller
             request()->session()->regenerateToken();
         }
 
-        // On local/staging, show PIN login option for superadmin
-        $showPinLogin = app()->environment(['local', 'staging']);
-
-        return view('organisator.auth.login', compact('showPinLogin'));
+        return view('organisator.auth.login');
     }
 
     /**
@@ -103,6 +100,11 @@ class OrganisatorAuthController extends Controller
         Auth::guard('organisator')->login($superadmin, true);
         $request->session()->regenerate();
         $superadmin->updateLaatsteLogin();
+
+        // Restore saved locale preference
+        if ($superadmin->locale) {
+            $request->session()->put('locale', $superadmin->locale);
+        }
 
         // Superadmin always goes to admin dashboard
         return redirect()->intended(route('admin.index'));
