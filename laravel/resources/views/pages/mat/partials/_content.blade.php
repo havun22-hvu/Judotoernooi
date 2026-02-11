@@ -548,13 +548,48 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             }
             // Juiste wedstrijd EN juiste positie - doorgaan!
         } else {
-            // Verkeerde wedstrijd - blokkeer alleen als NIET naar wit slot van volgende ronde
-            // (Dit staat toe dat winnaars naar (2) rondes gaan zelfs als volgendeWedstrijdId niet perfect matcht)
-            alert(
-                `❌ VERKEERDE WEDSTRIJD!\n\n` +
-                `${naam} moet naar een andere wedstrijd in het schema.\n\n` +
-                `Zet de winnaar EERST op de juiste plek.`
+            // Wrong match - offer pull-back option with password
+            const wachtwoord = prompt(
+                `🔒 ${naam} staat in een ander vak.\n\n` +
+                `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
+                `Dit verwijdert de judoka uit het huidige vak.\n\n` +
+                `Voer het organisator wachtwoord of hoofdjury pincode in:\n` +
+                `(Annuleer als je dit niet wilt)`
             );
+
+            if (!wachtwoord) {
+                return false;
+            }
+
+            const geldig = await window.checkAdminWachtwoord(wachtwoord);
+            if (!geldig) {
+                alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
+                return false;
+            }
+
+            // Remove judoka from current slot (this also resets the source match)
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        wedstrijd_id: data.wedstrijdId,
+                        judoka_id: data.judokaId,
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('❌ ' + (result.error || 'Fout bij terugzetten'));
+                }
+            } catch (e) {
+                console.error('Terugzetten mislukt:', e);
+                location.reload();
+            }
             return false;
         }
     }
@@ -575,11 +610,48 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             return false;
         }
     } else if (isLocked && data.volgendeWedstrijdId) {
-        alert(
-            `❌ GEBLOKKEERD: Verkeerde wedstrijd!\n\n` +
-            `${naam} kan alleen naar wedstrijd ${data.volgendeWedstrijdId}, niet naar ${targetWedstrijdId}.\n` +
-            `Sleep naar het juiste vak.`
+        // Could be a "pull back" action: dragging a judoka back to undo a result
+        const wachtwoord = prompt(
+            `🔒 BRACKET VERGRENDELD\n\n` +
+            `${naam} staat in een ander vak.\n\n` +
+            `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
+            `Dit verwijdert de judoka uit het huidige vak.\n\n` +
+            `Voer het organisator wachtwoord of hoofdjury pincode in:`
         );
+
+        if (!wachtwoord) {
+            return false;
+        }
+
+        const geldig = await window.checkAdminWachtwoord(wachtwoord);
+        if (!geldig) {
+            alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
+            return false;
+        }
+
+        // Remove judoka from current slot (this also resets the source match)
+        try {
+            const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    wedstrijd_id: data.wedstrijdId,
+                    judoka_id: data.judokaId,
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('❌ ' + (result.error || 'Fout bij terugzetten'));
+            }
+        } catch (e) {
+            console.error('Terugzetten mislukt:', e);
+            location.reload();
+        }
         return false;
     }
 
