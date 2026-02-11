@@ -377,10 +377,16 @@ window.checkAdminWachtwoord = async function(wachtwoord) {
             },
             body: JSON.stringify({ wachtwoord })
         });
+        if (!response.ok) {
+            console.error('Wachtwoord check HTTP error:', response.status, response.statusText);
+            alert('⚠️ Serverfout bij wachtwoord check (HTTP ' + response.status + '). Probeer de pagina te herladen.');
+            return false;
+        }
         const result = await response.json();
         return result.geldig === true;
     } catch (e) {
         console.error('Wachtwoord check failed:', e);
+        alert('⚠️ Kon wachtwoord niet controleren (netwerkfout). Probeer de pagina te herladen.');
         return false;
     }
 };
