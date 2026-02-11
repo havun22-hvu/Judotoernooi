@@ -516,27 +516,7 @@ window.escapeHtml = function(str) {
     return div.innerHTML;
 };
 
-// Check of een eliminatie drop geblokkeerd is door beurtaanduiding (groen/geel/blauw)
-// Check of een bracket drop geblokkeerd moet worden
-// Geen beurtkleur = seeding fase (vrij binnen ronde). Beurtkleur aanwezig = alleen groen.
-window.isEliminatieBronGeblokkeerd = function(bronWedstrijdId, groep) {
-    const el = document.getElementById('mat-interface');
-    if (!el) return false;
-    const comp = Alpine.$data(el);
-    if (!comp || !comp.matSelectie) return false;
 
-    const ms = comp.matSelectie;
-    // Geen beurtkleur ingesteld = seeding fase, niet blokkeren
-    if (!ms.actieve_wedstrijd_id && !ms.volgende_wedstrijd_id && !ms.gereedmaken_wedstrijd_id) {
-        return false;
-    }
-    // Beurtkleur is ingesteld: alleen vanuit de groene wedstrijd mag gesleept worden
-    if (ms.actieve_wedstrijd_id != bronWedstrijdId) {
-        alert('⚠️ Deze wedstrijd is niet aan de beurt!\n\nAlleen vanuit de groene (actieve) wedstrijd mag gesleept worden.');
-        return true;
-    }
-    return false;
-};
 
 // Global drop handler - plaats judoka in slot
 window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
@@ -548,9 +528,6 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     try {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-
-    // Beurtaanduiding check: geen kleur = seeding (alleen A-bracket, vrij binnen ronde), kleur = alleen groen
-    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId, data.groep)) return false;
 
     // Seeding: mag alleen binnen dezelfde ronde, NIET naar volgende ronde
     const isLocked = data.pouleIsLocked === true;
@@ -845,9 +822,6 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
-
-    // Beurtaanduiding: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
-    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId, data.groep)) return;
 
     // Check of judoka uit de juiste wedstrijd komt
     if (data.wedstrijdId != finaleId) {
