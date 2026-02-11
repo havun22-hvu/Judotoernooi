@@ -867,6 +867,7 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
     if (!poule) return;
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
     if (!wedstrijd) return;
+    if (wedstrijd.uitslag_type === 'bye') return;
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
 
