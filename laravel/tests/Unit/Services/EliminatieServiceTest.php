@@ -57,12 +57,12 @@ class EliminatieServiceTest extends TestCase
 
         $result = $this->service->genereerBracket($poule, $judokaIds, 'ijf');
 
-        // N=8: A=7 wedstrijden, B=4 (2 repechage + 2 brons) = 11 totaal
+        // N=8: A=7 wedstrijden, B=4 (2 B-1/2 + 2 brons) = 11 totaal
         $aWedstrijden = Wedstrijd::where('poule_id', $poule->id)->where('groep', 'A')->count();
         $bWedstrijden = Wedstrijd::where('poule_id', $poule->id)->where('groep', 'B')->count();
 
         $this->assertEquals(7, $aWedstrijden, 'A-groep moet N-1=7 wedstrijden hebben');
-        $this->assertEquals(4, $bWedstrijden, 'B-groep moet 4 wedstrijden hebben (2 repechage + 2 brons)');
+        $this->assertEquals(4, $bWedstrijden, 'B-groep moet 4 wedstrijden hebben (2 B-1/2 + 2 brons)');
     }
 
     #[Test]
@@ -109,38 +109,38 @@ class EliminatieServiceTest extends TestCase
             ->values()
             ->toArray();
 
-        $this->assertContains('b_repechage_1', $bRondes);
-        $this->assertContains('b_repechage_2', $bRondes);
-        $this->assertContains('b_brons_1', $bRondes);
-        $this->assertContains('b_brons_2', $bRondes);
+        $this->assertContains('b_halve_finale', $bRondes);
+        $this->assertContains('b_brons', $bRondes);
         $this->assertCount(4, $bRondes, 'IJF B-groep moet exact 4 wedstrijden hebben');
     }
 
     #[Test]
-    public function ijf_repechage_winnaars_gaan_naar_brons(): void
+    public function ijf_b_halve_finale_winnaars_gaan_naar_brons(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
         $this->service->genereerBracket($poule, $judokaIds, 'ijf');
 
-        // Repechage wedstrijden moeten gekoppeld zijn aan brons wedstrijden
-        $repechages = Wedstrijd::where('poule_id', $poule->id)
+        // B-1/2 finale wedstrijden moeten gekoppeld zijn aan brons wedstrijden
+        $bHalveFinales = Wedstrijd::where('poule_id', $poule->id)
             ->where('groep', 'B')
-            ->where('ronde', 'like', 'b_repechage_%')
+            ->where('ronde', 'b_halve_finale')
             ->get();
 
-        foreach ($repechages as $repechage) {
-            $this->assertNotNull($repechage->volgende_wedstrijd_id, "Repechage {$repechage->ronde} moet gekoppeld zijn aan brons");
-            $this->assertEquals('wit', $repechage->winnaar_naar_slot, 'Repechage winnaar moet op WIT slot komen');
+        $this->assertCount(2, $bHalveFinales, 'Er moeten 2 B-1/2 finale wedstrijden zijn');
 
-            $bronsWedstrijd = Wedstrijd::find($repechage->volgende_wedstrijd_id);
+        foreach ($bHalveFinales as $bHf) {
+            $this->assertNotNull($bHf->volgende_wedstrijd_id, "B-1/2 {$bHf->bracket_positie} moet gekoppeld zijn aan brons");
+            $this->assertEquals('wit', $bHf->winnaar_naar_slot, 'B-1/2 winnaar moet op WIT slot komen');
+
+            $bronsWedstrijd = Wedstrijd::find($bHf->volgende_wedstrijd_id);
             $this->assertNotNull($bronsWedstrijd);
-            $this->assertStringStartsWith('b_brons_', $bronsWedstrijd->ronde);
+            $this->assertEquals('b_brons', $bronsWedstrijd->ronde);
         }
     }
 
     #[Test]
-    public function ijf_kwartfinale_verliezers_gekoppeld_aan_repechage(): void
+    public function ijf_kwartfinale_verliezers_gekoppeld_aan_b_halve_finale(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
@@ -155,24 +155,24 @@ class EliminatieServiceTest extends TestCase
 
         $this->assertCount(4, $kwartfinales, 'Er moeten 4 kwartfinales zijn');
 
-        // Pos 1+3 → repechage 1, Pos 2+4 → repechage 2
-        $this->assertNotNull($kwartfinales[0]->herkansing_wedstrijd_id, 'KF 1 moet aan repechage gekoppeld zijn');
-        $this->assertNotNull($kwartfinales[1]->herkansing_wedstrijd_id, 'KF 2 moet aan repechage gekoppeld zijn');
-        $this->assertNotNull($kwartfinales[2]->herkansing_wedstrijd_id, 'KF 3 moet aan repechage gekoppeld zijn');
-        $this->assertNotNull($kwartfinales[3]->herkansing_wedstrijd_id, 'KF 4 moet aan repechage gekoppeld zijn');
+        // Pos 1+3 → B-1/2(1), Pos 2+4 → B-1/2(2)
+        $this->assertNotNull($kwartfinales[0]->herkansing_wedstrijd_id, 'KF 1 moet aan B-1/2 gekoppeld zijn');
+        $this->assertNotNull($kwartfinales[1]->herkansing_wedstrijd_id, 'KF 2 moet aan B-1/2 gekoppeld zijn');
+        $this->assertNotNull($kwartfinales[2]->herkansing_wedstrijd_id, 'KF 3 moet aan B-1/2 gekoppeld zijn');
+        $this->assertNotNull($kwartfinales[3]->herkansing_wedstrijd_id, 'KF 4 moet aan B-1/2 gekoppeld zijn');
 
-        // KF 1 en KF 3 moeten naar dezelfde repechage gaan
+        // KF 1 en KF 3 moeten naar dezelfde B-1/2 gaan
         $this->assertEquals(
             $kwartfinales[0]->herkansing_wedstrijd_id,
             $kwartfinales[2]->herkansing_wedstrijd_id,
-            'KF 1 en KF 3 moeten naar dezelfde repechage gaan'
+            'KF 1 en KF 3 moeten naar dezelfde B-1/2 gaan'
         );
 
-        // KF 2 en KF 4 moeten naar dezelfde repechage gaan
+        // KF 2 en KF 4 moeten naar dezelfde B-1/2 gaan
         $this->assertEquals(
             $kwartfinales[1]->herkansing_wedstrijd_id,
             $kwartfinales[3]->herkansing_wedstrijd_id,
-            'KF 2 en KF 4 moeten naar dezelfde repechage gaan'
+            'KF 2 en KF 4 moeten naar dezelfde B-1/2 gaan'
         );
     }
 
@@ -196,7 +196,7 @@ class EliminatieServiceTest extends TestCase
             $this->assertEquals('blauw', $hf->verliezer_naar_slot, 'HF verliezer moet op BLAUW slot (repechage winnaar op wit)');
 
             $bronsWedstrijd = Wedstrijd::find($hf->herkansing_wedstrijd_id);
-            $this->assertStringStartsWith('b_brons_', $bronsWedstrijd->ronde);
+            $this->assertEquals('b_brons', $bronsWedstrijd->ronde);
         }
     }
 
@@ -250,7 +250,7 @@ class EliminatieServiceTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function ijf_verliezer_kwartfinale_wordt_in_repechage_geplaatst(): void
+    public function ijf_verliezer_kwartfinale_wordt_in_b_halve_finale_geplaatst(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
@@ -273,12 +273,12 @@ class EliminatieServiceTest extends TestCase
         $kf->update(['is_gespeeld' => true, 'winnaar_id' => $winnaarId]);
         $this->service->verwerkUitslag($kf, $winnaarId, null, 'ijf');
 
-        // Verliezer moet in repechage staan
-        $repechage = Wedstrijd::find($kf->herkansing_wedstrijd_id);
-        $this->assertNotNull($repechage, 'Repechage wedstrijd moet bestaan');
+        // Verliezer moet in B-1/2 finale staan
+        $bHalveFinale = Wedstrijd::find($kf->herkansing_wedstrijd_id);
+        $this->assertNotNull($bHalveFinale, 'B-1/2 finale wedstrijd moet bestaan');
 
-        $verliezerInRepechage = ($repechage->judoka_wit_id === $verliezerId || $repechage->judoka_blauw_id === $verliezerId);
-        $this->assertTrue($verliezerInRepechage, 'Verliezer van KF moet in repechage geplaatst zijn');
+        $verliezerInBHf = ($bHalveFinale->judoka_wit_id === $verliezerId || $bHalveFinale->judoka_blauw_id === $verliezerId);
+        $this->assertTrue($verliezerInBHf, 'Verliezer van KF moet in B-1/2 finale geplaatst zijn');
     }
 
     #[Test]

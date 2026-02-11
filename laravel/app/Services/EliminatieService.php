@@ -92,14 +92,14 @@ class EliminatieService
             // Genereer B-groep bracket (verschilt per type)
             if ($n >= 5) {
                 if ($type === 'ijf') {
-                    $this->genereerBGroepIJF($poule, $n, $aWedstrijden);
+                    $this->genereerBGroepIJF($poule, $n, $aantalBrons, $aWedstrijden);
                 } else {
                     $this->genereerBGroepDubbel($poule, $n, $aantalBrons, $aWedstrijden);
                 }
             }
         });
 
-        $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);
+        $bWedstrijden = ($type === 'ijf') ? ($aantalBrons === 1 ? 5 : 4) : max(0, $n - 4);
 
         return [
             'totaal_wedstrijden' => $poule->wedstrijden()->count(),
@@ -803,30 +803,28 @@ class EliminatieService
     }
 
     // =========================================================================
-    // B-GROEP: IJF REPECHAGE
+    // B-GROEP: IJF (Quarter-Final Repechage)
     // =========================================================================
 
     /**
-     * Genereer B-groep voor IJF Repechage
+     * Genereer B-groep voor IJF systeem (vereenvoudigd)
      *
-     * Eenvoudiger systeem:
-     * - Alleen verliezers van 1/4 finale krijgen repechage
-     * - 2 repechage pools + 2 brons wedstrijden = 4 wedstrijden totaal
+     * Structuur (2x brons):
+     * b_halve_finale pos 1: Verliezer A-1/4(1) vs Verliezer A-1/4(3)
+     * b_halve_finale pos 2: Verliezer A-1/4(2) vs Verliezer A-1/4(4)
+     * b_brons pos 1: Winnaar B-1/2(1) vs Verliezer A-1/2(1) → BRONS
+     * b_brons pos 2: Winnaar B-1/2(2) vs Verliezer A-1/2(2) → BRONS
      *
-     * Structuur:
-     * b_repechage_1: Verliezer A-1/4(1) vs Verliezer A-1/4(3) → winnaar naar brons
-     * b_repechage_2: Verliezer A-1/4(2) vs Verliezer A-1/4(4) → winnaar naar brons
-     * b_brons_1: Winnaar repechage 1 vs Verliezer A-1/2(1) → BRONS
-     * b_brons_2: Winnaar repechage 2 vs Verliezer A-1/2(2) → BRONS
+     * Structuur (1x brons): zelfde + b_finale (winnaars brons tegen elkaar)
      */
-    private function genereerBGroepIJF(Poule $poule, int $n, array $aWedstrijden): void
+    private function genereerBGroepIJF(Poule $poule, int $n, int $aantalBrons, array $aWedstrijden): void
     {
         $volgorde = 1000;
         $wedstrijdenPerRonde = [];
 
-        // === REPECHAGE POOLS (2 wedstrijden) ===
-        // Verliezers 1/4 finale pos 1+3 → pool 1
-        // Verliezers 1/4 finale pos 2+4 → pool 2
+        // === B HALVE FINALE (2 wedstrijden) ===
+        // Verliezers 1/4 finale pos 1+3 → B-1/2(1)
+        // Verliezers 1/4 finale pos 2+4 → B-1/2(2)
         for ($i = 1; $i <= 2; $i++) {
             $bracketPositie = $i;
             $wedstrijd = Wedstrijd::create([
@@ -834,16 +832,16 @@ class EliminatieService
                 'judoka_wit_id' => null,
                 'judoka_blauw_id' => null,
                 'volgorde' => $volgorde++,
-                'ronde' => 'b_repechage_' . $i,
+                'ronde' => 'b_halve_finale',
                 'groep' => 'B',
                 'bracket_positie' => $bracketPositie,
                 ...$this->berekenLocaties($bracketPositie),
             ]);
-            $wedstrijdenPerRonde['b_repechage'][] = $wedstrijd;
+            $wedstrijdenPerRonde['b_halve_finale'][] = $wedstrijd;
         }
 
         // === BRONS WEDSTRIJDEN (2 wedstrijden) ===
-        // Winnaar repechage op WIT vs Verliezer 1/2 finale op BLAUW
+        // Winnaar B-1/2 op WIT vs Verliezer A-1/2 op BLAUW
         for ($i = 1; $i <= 2; $i++) {
             $bracketPositie = $i;
             $wedstrijd = Wedstrijd::create([
@@ -851,7 +849,7 @@ class EliminatieService
                 'judoka_wit_id' => null,
                 'judoka_blauw_id' => null,
                 'volgorde' => $volgorde++,
-                'ronde' => 'b_brons_' . $i,
+                'ronde' => 'b_brons',
                 'groep' => 'B',
                 'bracket_positie' => $bracketPositie,
                 ...$this->berekenLocaties($bracketPositie),
@@ -859,54 +857,74 @@ class EliminatieService
             $wedstrijdenPerRonde['b_brons'][] = $wedstrijd;
         }
 
-        // Koppel repechage → brons
-        foreach ($wedstrijdenPerRonde['b_repechage'] as $idx => $repechage) {
+        // Koppel B-1/2 → brons
+        foreach ($wedstrijdenPerRonde['b_halve_finale'] as $idx => $halveFinale) {
             if (isset($wedstrijdenPerRonde['b_brons'][$idx])) {
-                $repechage->update([
+                $halveFinale->update([
                     'volgende_wedstrijd_id' => $wedstrijdenPerRonde['b_brons'][$idx]->id,
-                    'winnaar_naar_slot' => 'wit',  // Repechage winnaar op wit
+                    'winnaar_naar_slot' => 'wit',
                 ]);
             }
         }
 
-        // Koppel A-1/4 verliezers aan repechage
-        // En A-1/2 verliezers aan brons
+        // Bij 1 brons: voeg B-finale toe (winnaars brons tegen elkaar)
+        if ($aantalBrons === 1) {
+            $wedstrijd = Wedstrijd::create([
+                'poule_id' => $poule->id,
+                'judoka_wit_id' => null,
+                'judoka_blauw_id' => null,
+                'volgorde' => $volgorde++,
+                'ronde' => 'b_finale',
+                'groep' => 'B',
+                'bracket_positie' => 1,
+                ...$this->berekenLocaties(1),
+            ]);
+            $wedstrijdenPerRonde['b_finale'][] = $wedstrijd;
+
+            // Koppel brons → b_finale
+            foreach ($wedstrijdenPerRonde['b_brons'] as $idx => $brons) {
+                $brons->update([
+                    'volgende_wedstrijd_id' => $wedstrijd->id,
+                    'winnaar_naar_slot' => $idx === 0 ? 'wit' : 'blauw',
+                ]);
+            }
+        }
+
+        // Koppel A-verliezers aan B-wedstrijden
         $this->koppelIJFVerliezers($poule, $aWedstrijden, $wedstrijdenPerRonde);
     }
 
     /**
-     * Koppel A-groep verliezers aan IJF repechage
+     * Koppel A-groep verliezers aan IJF B-groep
      */
     private function koppelIJFVerliezers(Poule $poule, array $aWedstrijden, array $bWedstrijden): void
     {
         // Zoek kwartfinale wedstrijden in A
         $kwartfinales = $aWedstrijden['kwartfinale'] ?? [];
 
-        // Koppel 1/4 verliezers aan repechage
-        // Pos 1+3 → repechage 1, Pos 2+4 → repechage 2
+        // Koppel 1/4 verliezers aan B-1/2 finale
+        // Pos 1+3 → B-1/2(1), Pos 2+4 → B-1/2(2)
         if (count($kwartfinales) >= 4) {
-            $repechage = $bWedstrijden['b_repechage'] ?? [];
-            if (count($repechage) >= 2) {
-                // 1/4(1) en 1/4(3) → repechage 1
-                $kwartfinales[0]->update(['herkansing_wedstrijd_id' => $repechage[0]->id, 'verliezer_naar_slot' => 'wit']);
-                $kwartfinales[2]->update(['herkansing_wedstrijd_id' => $repechage[0]->id, 'verliezer_naar_slot' => 'blauw']);
+            $bHalveFinales = $bWedstrijden['b_halve_finale'] ?? [];
+            if (count($bHalveFinales) >= 2) {
+                // 1/4(1) en 1/4(3) → B-1/2(1)
+                $kwartfinales[0]->update(['herkansing_wedstrijd_id' => $bHalveFinales[0]->id, 'verliezer_naar_slot' => 'wit']);
+                $kwartfinales[2]->update(['herkansing_wedstrijd_id' => $bHalveFinales[0]->id, 'verliezer_naar_slot' => 'blauw']);
 
-                // 1/4(2) en 1/4(4) → repechage 2
-                $kwartfinales[1]->update(['herkansing_wedstrijd_id' => $repechage[1]->id, 'verliezer_naar_slot' => 'wit']);
-                $kwartfinales[3]->update(['herkansing_wedstrijd_id' => $repechage[1]->id, 'verliezer_naar_slot' => 'blauw']);
+                // 1/4(2) en 1/4(4) → B-1/2(2)
+                $kwartfinales[1]->update(['herkansing_wedstrijd_id' => $bHalveFinales[1]->id, 'verliezer_naar_slot' => 'wit']);
+                $kwartfinales[3]->update(['herkansing_wedstrijd_id' => $bHalveFinales[1]->id, 'verliezer_naar_slot' => 'blauw']);
             }
         }
 
         // Zoek halve finale wedstrijden in A
         $halveFinales = $aWedstrijden['halve_finale'] ?? [];
 
-        // Koppel 1/2 verliezers aan brons wedstrijden
+        // Koppel A-1/2 verliezers aan brons wedstrijden (blauw slot)
         if (count($halveFinales) >= 2) {
             $brons = $bWedstrijden['b_brons'] ?? [];
             if (count($brons) >= 2) {
-                // 1/2(1) verliezer → brons 1 (blauw slot, wit is repechage winnaar)
                 $halveFinales[0]->update(['herkansing_wedstrijd_id' => $brons[0]->id, 'verliezer_naar_slot' => 'blauw']);
-                // 1/2(2) verliezer → brons 2
                 $halveFinales[1]->update(['herkansing_wedstrijd_id' => $brons[1]->id, 'verliezer_naar_slot' => 'blauw']);
             }
         }
