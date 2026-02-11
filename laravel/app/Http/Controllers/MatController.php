@@ -1036,10 +1036,11 @@ class MatController extends Controller
         // Accept: device pincode, toernooi admin/jury pin (bcrypt), organisator password
         $geldig = false;
 
-        // 1. Device pincode (plain text, 4 digits) - for hoofdjury/mat PWA
-        $toegang = $request->device_toegang ?? null;
-        if (!$geldig && $toegang && $toegang->pincode === $wachtwoord) {
-            $geldig = true;
+        // 1. Any device pincode for this toernooi (plain text, 4 digits)
+        if (!$geldig) {
+            $geldig = $toernooi->deviceToegangen()
+                ->where('pincode', $wachtwoord)
+                ->exists();
         }
 
         // 2. Toernooi admin or jury pin (bcrypt)
