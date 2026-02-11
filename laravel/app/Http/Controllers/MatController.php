@@ -126,6 +126,16 @@ class MatController extends Controller
 
         // Check if this is an elimination match (has groep field)
         if ($wedstrijd->groep) {
+            // Validatie: winnaar moet een deelnemer zijn van deze wedstrijd
+            if ($validated['winnaar_id'] &&
+                $validated['winnaar_id'] != $wedstrijd->judoka_wit_id &&
+                $validated['winnaar_id'] != $wedstrijd->judoka_blauw_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Winnaar is geen deelnemer van deze wedstrijd!',
+                ], 400);
+            }
+
             // Bewaar oude winnaar VOOR update (voor correctie-logica)
             $oudeWinnaarId = $wedstrijd->winnaar_id;
 
