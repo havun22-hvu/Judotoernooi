@@ -2204,6 +2204,7 @@ window.initBracketSortable = function() {
             delayOnTouchOnly: true,
             draggable: '.bracket-judoka',
             ghostClass: 'opacity-50',
+            emptyInsertThreshold: 15,
 
             filter: '.medaille-label',
             preventOnFilter: false,
