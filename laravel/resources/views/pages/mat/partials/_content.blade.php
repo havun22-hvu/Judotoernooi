@@ -802,10 +802,22 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
         // Update bracket slots via pure DOM (geen Alpine re-render!)
         const matEl = document.getElementById('mat-interface');
-        if (matEl && result.updated_slots) {
+        if (matEl) {
             const comp = Alpine.$data(matEl);
             if (comp) {
-                comp.updateAlleBracketSlots(result.updated_slots, pouleId);
+                if (result.updated_slots) {
+                    comp.updateAlleBracketSlots(result.updated_slots, pouleId);
+                }
+
+                // Auto-advance beurtaanduiding: als de bron-wedstrijd de groene (actieve) was
+                if (data.wedstrijdId && comp.matSelectie) {
+                    const wasActief = comp.matSelectie.actieve_wedstrijd_id === data.wedstrijdId;
+                    if (wasActief) {
+                        const geel = comp.matSelectie.volgende_wedstrijd_id || null;
+                        const blauw = comp.matSelectie.gereedmaken_wedstrijd_id || null;
+                        comp.setWedstrijdStatus(geel, blauw, null);
+                    }
+                }
             }
         }
 
@@ -877,6 +889,16 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
                     if (wed) {
                         wed.winnaar_id = result.winnaar_id;
                         wed.is_gespeeld = true;
+                    }
+                }
+
+                // Auto-advance beurtaanduiding: als de finale de groene (actieve) was
+                if (finaleId && comp.matSelectie) {
+                    const wasActief = comp.matSelectie.actieve_wedstrijd_id === finaleId;
+                    if (wasActief) {
+                        const geel = comp.matSelectie.volgende_wedstrijd_id || null;
+                        const blauw = comp.matSelectie.gereedmaken_wedstrijd_id || null;
+                        comp.setWedstrijdStatus(geel, blauw, null);
                     }
                 }
 
