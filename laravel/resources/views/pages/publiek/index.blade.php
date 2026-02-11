@@ -127,11 +127,16 @@
         <!-- Info Tab -->
         <div x-show="activeTab === 'info'" x-cloak>
             @php
-                $paginaBlokken = $toernooi->pagina_content['blokken'] ?? [];
+                $paginaContent = $toernooi->pagina_content ?? [];
+                $heeftProContent = !empty($paginaContent['sections']);
+                $paginaBlokken = $paginaContent['blokken'] ?? [];
                 $heeftCustomContent = !empty($paginaBlokken);
             @endphp
 
-            @if($heeftCustomContent)
+            @if($heeftProContent)
+                {{-- Pro Pagina Builder Content (sections + header/footer) --}}
+                @include('pages.publiek.partials.pro-content')
+            @elseif($heeftCustomContent)
                 {{-- Custom Pagina Builder Content --}}
                 <div class="space-y-6">
                     @foreach(collect($paginaBlokken)->sortBy('order') as $blok)
