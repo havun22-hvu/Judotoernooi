@@ -394,8 +394,14 @@ class EliminatieService
 
         // Gebruik centrale berekening
         $params = $this->berekenBracketParams($n);
-        $bStartVerliezers = $params['dubbelRondes'] ? $params['a1Verliezers'] : $params['eersteGolf'];
-        $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($bStartVerliezers);
+        if ($params['dubbelRondes']) {
+            // DUBBEL: (2) ronde heeft 1:1 mapping (elke A-verliezer op BLAUW)
+            // Dus startWedstrijden = max van A1 en A2 verliezers
+            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden(max($params['a1Verliezers'], $params['a2Verliezers']) * 2);
+        } else {
+            // SAMEN: beide batches in dezelfde ronde
+            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
+        }
 
         if ($params['dubbelRondes']) {
             // DUBBELE RONDES: (1) en (2) per niveau
@@ -414,7 +420,7 @@ class EliminatieService
     }
 
     /**
-     * Genereer ENKELE B-rondes (V1 ≤ V2)
+     * Genereer ENKELE B-rondes (V1 == V2)
      *
      * aantalBrons = 2: B-start → ... → B-1/2 → B-1/2(2) = 2x BRONS
      * aantalBrons = 1: B-start → ... → B-1/2 → B-1/2(2) → B-finale = 1x BRONS
@@ -482,7 +488,7 @@ class EliminatieService
     }
 
     /**
-     * Genereer DUBBELE B-rondes (V1 > V2)
+     * Genereer DUBBELE B-rondes (V1 != V2)
      *
      * Structuur per niveau:
      * - (1): B onderling (V1 of vorige winnaars)
@@ -940,7 +946,7 @@ class EliminatieService
             'a1Verliezers' => $a1Verliezers,
             'a2Verliezers' => $a2Verliezers,
             'eersteGolf' => $a1Verliezers + $a2Verliezers,
-            'dubbelRondes' => $a1Verliezers > $a2Verliezers,
+            'dubbelRondes' => $a1Verliezers !== $a2Verliezers,
         ];
     }
 
