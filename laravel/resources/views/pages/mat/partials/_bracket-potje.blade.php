@@ -71,7 +71,7 @@
 
     {{-- Wit slot (boven) --}}
     <div class="relative">
-        <div class="w-32 h-7 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop {{ !$isLastRound ? 'border-r-0' : '' }}"
+        <div class="w-32 h-9 bg-white border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop {{ !$isLastRound ? 'border-r-0' : '' }}"
              id="slot-{{ $wed['id'] }}-wit"
              data-drop-handler="dropJudoka"
              data-wedstrijd-id="{{ $wed['id'] }}"
@@ -99,7 +99,7 @@
 
     {{-- Blauw slot (onder) --}}
     <div class="relative">
-        <div class="w-32 h-7 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop {{ !$isLastRound ? 'border-r-0' : '' }}"
+        <div class="w-32 h-9 bg-blue-50 border border-gray-300 rounded-l flex items-center text-xs drop-slot bracket-drop {{ !$isLastRound ? 'border-r-0' : '' }}"
              id="slot-{{ $wed['id'] }}-blauw"
              data-drop-handler="dropJudoka"
              data-wedstrijd-id="{{ $wed['id'] }}"

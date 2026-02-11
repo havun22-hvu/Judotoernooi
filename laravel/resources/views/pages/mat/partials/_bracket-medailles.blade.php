@@ -10,7 +10,7 @@
     <div class="relative flex-shrink-0 w-32">
         {{-- Goud (1e plaats) --}}
         <div class="absolute w-32" style="top: {{ $medailleData['goud']['top'] }}px;">
-            <div class="w-32 h-7 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate bracket-drop bracket-medal {{ !($medailleData['goud']['winnaar'] ?? null) ? 'cursor-pointer' : '' }}"
+            <div class="w-32 h-9 bg-yellow-100 border border-yellow-400 rounded flex items-center px-1 text-xs font-bold truncate bracket-drop bracket-medal {{ !($medailleData['goud']['winnaar'] ?? null) ? 'cursor-pointer' : '' }}"
                  id="medaille-{{ $pouleId }}-goud"
                  data-drop-handler="dropOpMedaille"
                  data-finale-id="{{ $medailleData['goud']['finale_id'] ?? 'null' }}"
@@ -27,7 +27,7 @@
         </div>
         {{-- Zilver (2e plaats) --}}
         <div class="absolute w-32" style="top: {{ $medailleData['zilver']['top'] }}px;">
-            <div class="w-32 h-7 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal {{ !($medailleData['zilver']['verliezer'] ?? null) ? 'cursor-pointer' : '' }}"
+            <div class="w-32 h-9 bg-gray-200 border border-gray-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal {{ !($medailleData['zilver']['verliezer'] ?? null) ? 'cursor-pointer' : '' }}"
                  id="medaille-{{ $pouleId }}-zilver"
                  data-drop-handler="dropOpMedaille"
                  data-finale-id="{{ $medailleData['zilver']['finale_id'] ?? 'null' }}"
@@ -48,7 +48,7 @@
     <div class="relative flex-shrink-0 w-32">
         @if(isset($medailleData['brons_1']))
             <div class="absolute w-32" style="top: {{ $medailleData['brons_1']['top'] }}px;">
-                <div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
+                <div class="w-32 h-9 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
                      id="medaille-{{ $pouleId }}-brons1"
                      data-drop-handler="dropOpMedaille"
                      data-finale-id="{{ $medailleData['brons_1']['wedstrijd_id'] ?? 'null' }}"
@@ -66,7 +66,7 @@
         @endif
         @if(isset($medailleData['brons_2']))
             <div class="absolute w-32" style="top: {{ $medailleData['brons_2']['top'] }}px;">
-                <div class="w-32 h-7 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
+                <div class="w-32 h-9 bg-amber-100 border border-amber-400 rounded flex items-center px-1 text-xs truncate bracket-drop bracket-medal"
                      id="medaille-{{ $pouleId }}-brons2"
                      data-drop-handler="dropOpMedaille"
                      data-finale-id="{{ $medailleData['brons_2']['wedstrijd_id'] ?? 'null' }}"
