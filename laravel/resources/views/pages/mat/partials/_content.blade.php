@@ -2175,7 +2175,6 @@ window.initBracketSortable = function() {
                 name: 'bracket-' + pouleId,
                 pull: 'clone',
                 put: function(toSortable, fromSortable, dragEl) {
-                    // Check of dit slot het juiste doel is voor deze judoka
                     const dragAttr = dragEl.getAttribute('data-drag');
                     if (!dragAttr) return true;
                     try {
@@ -2184,16 +2183,24 @@ window.initBracketSortable = function() {
                         const targetWedId = toEl.getAttribute('data-wedstrijd-id');
                         const targetPos = toEl.getAttribute('data-positie');
 
-                        // Winnaar-doorschuif: alleen juiste slot accepteren
-                        if (data.winnaarNaarSlot && data.volgendeWedstrijdId && targetWedId == data.volgendeWedstrijdId) {
-                            return targetPos === data.winnaarNaarSlot;
+                        // Medaille/swap slots (geen wedstrijd-id) → altijd accepteren
+                        if (!targetWedId) return true;
+
+                        // Zelfde wedstrijd → niet (wordt al door SortableJS geblokkeerd)
+                        if (targetWedId == data.wedstrijdId) return false;
+
+                        if (data.isGespeeld && data.isWinnaar && data.volgendeWedstrijdId) {
+                            // WINNAAR: alleen naar directe volgende ronde + juiste slot
+                            if (targetWedId == data.volgendeWedstrijdId) {
+                                return !data.winnaarNaarSlot || targetPos === data.winnaarNaarSlot;
+                            }
+                            // Alles anders (2+ rondes, andere wedstrijden) → blokkeer
+                            return false;
                         }
 
-                        // Niet naar een ronde verder dan de directe volgende
-                        if (data.volgendeWedstrijdId && data.isGespeeld && data.isWinnaar && targetWedId != data.volgendeWedstrijdId) {
-                            // Medaille slots hebben geen wedstrijd-id, die doorlaten
-                            if (targetWedId) return false;
-                        }
+                        // Niet-winnaar met volgendeWedstrijdId die al gespeeld is:
+                        // mag terug (ongedaan maken) → accepteer alle eerdere rondes
+                        // Seeding (niet gespeeld): accepteer alles
                     } catch(e) {}
                     return true;
                 }
