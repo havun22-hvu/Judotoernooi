@@ -177,7 +177,7 @@
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
-                                <button x-show="!isBracketLocked(poule)"
+                                <button x-show="heeftOnverwerkteByes(poule)"
                                         @click="advanceByes(poule.poule_id)"
                                         class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-300">
                                     ▶ {{ __('Byes') }}
@@ -972,6 +972,11 @@ function matInterface() {
             if (poule.type !== 'eliminatie') return true;
             // Locked zodra een echte wedstrijd gespeeld is (byes tellen niet)
             return poule.wedstrijden.some(w => w.is_gespeeld === true && w.uitslag_type !== 'bye');
+        },
+
+        heeftOnverwerkteByes(poule) {
+            if (poule.type !== 'eliminatie') return false;
+            return poule.wedstrijden.some(w => w.groep === 'A' && w.wit && !w.blauw && !w.is_gespeeld);
         },
 
         // Refresh alles: herlaad data van server + check voor app update
