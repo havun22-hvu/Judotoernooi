@@ -166,7 +166,7 @@
                     <div>
                         <div class="font-bold text-lg flex items-center gap-2">
                             @if($poule->is_eliminatie)
-                                {{ __('Eliminatie') }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
+                                {{ __('Eliminatie') }} {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @else
                                 {{ __('Poule') }} {{ $poule->nummer }} - {{ $poule->leeftijdsklasse }} {{ $poule->gewichtsklasse }}
                             @endif
@@ -537,7 +537,7 @@
             <div :class="selectedPouleData?.poule?.is_eliminatie ? 'bg-purple-700' : 'bg-green-700'" class="text-white px-4 py-3 flex justify-between items-center">
                 <div x-show="!loadingPoule && selectedPouleData">
                     <div class="font-bold" x-text="selectedPouleData?.poule?.is_eliminatie
-                        ? __eliminatie + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
+                        ? __eliminatie + ' ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse
                         : __poule + ' ' + selectedPouleData?.poule?.nummer + ' - ' + selectedPouleData?.poule?.leeftijdsklasse + ' ' + selectedPouleData?.poule?.gewichtsklasse"></div>
                 </div>
                 <div x-show="loadingPoule" class="font-bold" x-text="__laden"></div>
