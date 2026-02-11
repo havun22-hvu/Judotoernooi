@@ -53,6 +53,8 @@
                             'groep' => 'B',
                             'isRonde2' => $wed['_layout']['is_ronde2'] ?? false,
                             'aRondeNaam' => $wed['_layout']['a_ronde_naam'] ?? '',
+                            'herkomstWit' => $wed['_layout']['herkomst_wit'] ?? '',
+                            'herkomstBlauw' => $wed['_layout']['herkomst_blauw'] ?? '',
                             'debugSlots' => $debugSlots,
                             'visualSlotWit' => $wed['_layout']['visual_slot_wit'],
                             'visualSlotBlauw' => $wed['_layout']['visual_slot_blauw'],

@@ -163,13 +163,44 @@ class BracketLayoutService
 
                 $verticalOffset = $isRonde1 ? -(self::SLOT_HEIGHT / 2) : 0;
 
-                // Bepaal A-ronde naam voor placeholder
-                $aRondeNaam = '';
+                // Bepaal A-ronde naam op basis van B-ronde naam
+                $aRondeNaam = $this->bRondeNaarARondeNaam($ronde['ronde']);
+                $isFirstNiveau = ($niveauIdx === 0);
+
+                // Herkomst teksten voor lege slots
+                $herkomstWit = '';
+                $herkomstBlauw = '';
+
                 if ($isRonde2) {
-                    if (str_contains($ronde['ronde'], 'zestiende')) $aRondeNaam = 'A-1/16';
-                    elseif (str_contains($ronde['ronde'], 'achtste')) $aRondeNaam = 'A-1/8';
-                    elseif (str_contains($ronde['ronde'], 'kwart')) $aRondeNaam = 'A-1/4';
-                    elseif (str_contains($ronde['ronde'], 'halve')) $aRondeNaam = 'A-1/2';
+                    $herkomstWit = 'B-winnaar';
+                    $herkomstBlauw = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                } elseif ($isRonde1) {
+                    if ($isFirstNiveau) {
+                        // First B-level (1): both slots receive A-losers
+                        $herkomstWit = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                        $herkomstBlauw = $herkomstWit;
+                    } else {
+                        $herkomstWit = 'B-winnaar';
+                        $herkomstBlauw = 'B-winnaar';
+                    }
+                } else {
+                    // SAMEN round (no _1/_2) or brons
+                    if ($isFirstNiveau) {
+                        $herkomstWit = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                        $herkomstBlauw = $herkomstWit;
+                    } elseif (str_contains($ronde['ronde'], 'brons') || str_contains($ronde['ronde'], 'repechage')) {
+                        // IJF repechage/brons: specific labels
+                        if (str_contains($ronde['ronde'], 'repechage')) {
+                            $herkomstWit = 'uit A-1/4';
+                            $herkomstBlauw = 'uit A-1/4';
+                        } elseif (str_contains($ronde['ronde'], 'brons')) {
+                            $herkomstWit = 'rep. winnaar';
+                            $herkomstBlauw = 'uit A-1/2';
+                        }
+                    } else {
+                        $herkomstWit = 'B-winnaar';
+                        $herkomstBlauw = 'B-winnaar';
+                    }
                 }
 
                 foreach ($sortedWeds as $i => &$wed) {
@@ -190,6 +221,8 @@ class BracketLayoutService
                         'is_last_column' => $isLastColumn,
                         'is_ronde2' => $isRonde2,
                         'a_ronde_naam' => $aRondeNaam,
+                        'herkomst_wit' => $herkomstWit,
+                        'herkomst_blauw' => $herkomstBlauw,
                         'is_mirrored' => $i >= $halfCount,
                         'visual_slot_wit' => $i * 2 + 1,
                         'visual_slot_blauw' => $i * 2 + 2,
@@ -362,5 +395,17 @@ class BracketLayoutService
         }
 
         return $medailles;
+    }
+
+    /**
+     * Map B-ronde naam naar de corresponderende A-ronde naam.
+     */
+    private function bRondeNaarARondeNaam(string $bRonde): string
+    {
+        if (str_contains($bRonde, 'zestiende')) return 'A-1/16';
+        if (str_contains($bRonde, 'achtste')) return 'A-1/8';
+        if (str_contains($bRonde, 'kwart')) return 'A-1/4';
+        if (str_contains($bRonde, 'halve')) return 'A-1/2';
+        return '';
     }
 }
