@@ -2174,7 +2174,29 @@ window.initBracketSortable = function() {
             group: {
                 name: 'bracket-' + pouleId,
                 pull: 'clone',
-                put: true
+                put: function(toSortable, fromSortable, dragEl) {
+                    // Check of dit slot het juiste doel is voor deze judoka
+                    const dragAttr = dragEl.getAttribute('data-drag');
+                    if (!dragAttr) return true;
+                    try {
+                        const data = JSON.parse(dragAttr);
+                        const toEl = toSortable.el;
+                        const targetWedId = toEl.getAttribute('data-wedstrijd-id');
+                        const targetPos = toEl.getAttribute('data-positie');
+
+                        // Winnaar-doorschuif: alleen juiste slot accepteren
+                        if (data.winnaarNaarSlot && data.volgendeWedstrijdId && targetWedId == data.volgendeWedstrijdId) {
+                            return targetPos === data.winnaarNaarSlot;
+                        }
+
+                        // Niet naar een ronde verder dan de directe volgende
+                        if (data.volgendeWedstrijdId && data.isGespeeld && data.isWinnaar && targetWedId != data.volgendeWedstrijdId) {
+                            // Medaille slots hebben geen wedstrijd-id, die doorlaten
+                            if (targetWedId) return false;
+                        }
+                    } catch(e) {}
+                    return true;
+                }
             },
             sort: false,
             animation: 0,
