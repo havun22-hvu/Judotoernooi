@@ -1,7 +1,7 @@
 @php $features = $block['data']['features'] ?? []; @endphp
 <div>
     @if(!empty($block['data']['title']))
-        <h2 class="text-2xl font-bold text-center mb-8">{{ e($block['data']['title']) }}</h2>
+        <h2 class="text-2xl font-bold text-center mb-8">{{ $block['data']['title'] }}</h2>
     @endif
     @if(!empty($features))
     <div class="grid md:grid-cols-3 gap-6">
@@ -13,8 +13,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="font-semibold mb-1">{{ e($feature['title'] ?? '') }}</h3>
-                    <p class="text-gray-600 text-sm">{{ e($feature['description'] ?? '') }}</p>
+                    <h3 class="font-semibold mb-1">{{ $feature['title'] ?? '' }}</h3>
+                    <p class="text-gray-600 text-sm">{{ $feature['description'] ?? '' }}</p>
                 </div>
             </div>
         @endforeach
