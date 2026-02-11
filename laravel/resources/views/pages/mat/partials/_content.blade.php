@@ -553,6 +553,22 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
+    // Beurtaanduiding bron-check: geel/blauw bron = wedstrijd nog niet gespeeld, winnaar doorschuif blokkeren
+    if (data.wedstrijdId) {
+        const el = document.getElementById('mat-interface');
+        if (el) {
+            const comp = Alpine.$data(el);
+            if (comp && comp.matSelectie) {
+                const ms = comp.matSelectie;
+                const bronId = data.wedstrijdId;
+                if (ms.volgende_wedstrijd_id == bronId || ms.gereedmaken_wedstrijd_id == bronId) {
+                    alert('⚠️ Deze wedstrijd is nog niet gespeeld!\n\nDe wedstrijd staat klaar maar is nog niet aan de beurt.');
+                    return false;
+                }
+            }
+        }
+    }
+
     // Voeg target info toe aan data voor seeding logica
     if (pouleId) data.pouleId = pouleId;
     if (huidigeBewoner && huidigeBewoner.id !== data.judokaId) {
