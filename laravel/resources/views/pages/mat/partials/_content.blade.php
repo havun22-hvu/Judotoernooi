@@ -562,12 +562,60 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             positie = data.winnaarNaarSlot;
         }
     } else if (isLocked) {
-        // Bracket is locked — alleen terugplaatsen naar eigen vorige slot mag (met wachtwoord)
-        // "Eigen vorige slot" = de bron-wedstrijd waar de judoka vandaan komt
-        // Dit is NIET hetzelfde als data.wedstrijdId (dat is de huidige plek)
-        // Terugplaatsen gaat via de bron_wedstrijd_id die de server kent
-        // Hier in de UI blokkeren we alles behalve terugplaatsen
+        // Bracket locked — check of dit terugplaatsen naar eigen vorige slot is
+        // Eigen vorige slot = target-wedstrijd waarvan volgendeWedstrijdId == data.wedstrijdId
+        const matEl = document.getElementById('mat-interface');
+        const comp = matEl ? Alpine.$data(matEl) : null;
+        const poule = comp ? comp.poules.find(p => p.poule_id == pouleId) : null;
+        const targetWed = poule ? poule.wedstrijden.find(w => w.id == targetWedstrijdId) : null;
+        const isTerugplaatsen = targetWed && targetWed.volgende_wedstrijd_id == data.wedstrijdId;
 
+        if (isTerugplaatsen) {
+            // REGEL 2: Terugplaatsen naar eigen vorige slot — wachtwoord vereist
+            const wachtwoord = await window.promptWachtwoord(
+                `🔒 BRACKET VERGRENDELD\n\n` +
+                `${naam} terugplaatsen naar vorige ronde?\n` +
+                `Dit reset de uitslag van de bron-wedstrijd.\n\n` +
+                `Voer het organisator wachtwoord of hoofdjury pincode in:`
+            );
+
+            if (!wachtwoord) {
+                return false;
+            }
+
+            const geldig = await window.checkAdminWachtwoord(wachtwoord);
+            if (!geldig) {
+                alert('❌ Onjuist wachtwoord!\n\nActie geannuleerd.');
+                return false;
+            }
+
+            // Verwijder judoka uit huidige slot (reset bron-wedstrijd)
+            try {
+                const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        wedstrijd_id: data.wedstrijdId,
+                        judoka_id: data.judokaId,
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('❌ ' + (result.error || 'Fout bij terugzetten'));
+                }
+            } catch (e) {
+                console.error('Terugzetten mislukt:', e);
+                location.reload();
+            }
+            return false;
+        }
+
+        // Alles anders in locked bracket → geweigerd
         alert(
             `❌ GEBLOKKEERD\n\n` +
             `De bracket is vergrendeld.\n` +
