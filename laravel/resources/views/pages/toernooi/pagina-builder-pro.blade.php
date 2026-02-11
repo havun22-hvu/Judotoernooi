@@ -584,7 +584,7 @@
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
+                                        <div x-html="renderBlock(block)" @click.stop.prevent="editBlock(block)" class="cursor-pointer"></div>
                                     </div>
                                 </template>
                                 <div x-show="!headerSection.columns[0].blocks || headerSection.columns[0].blocks.length === 0"
@@ -687,7 +687,7 @@
                                                             </div>
 
                                                             <!-- Block Render -->
-                                                            <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
+                                                            <div x-html="renderBlock(block)" @click.stop.prevent="editBlock(block)" class="cursor-pointer"></div>
                                                         </div>
                                                     </template>
 
@@ -740,7 +740,7 @@
                                                             </div>
 
                                                             <!-- Block Render -->
-                                                            <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
+                                                            <div x-html="renderBlock(block)" @click.stop.prevent="editBlock(block)" class="cursor-pointer"></div>
                                                         </div>
                                                     </template>
 
@@ -854,7 +854,7 @@
                                                 </svg>
                                             </button>
                                         </div>
-                                        <div x-html="renderBlock(block)" @click="editBlock(block)" class="cursor-pointer"></div>
+                                        <div x-html="renderBlock(block)" @click.stop.prevent="editBlock(block)" class="cursor-pointer"></div>
                                     </div>
                                 </template>
                                 <div x-show="!footerSection.columns[0].blocks || footerSection.columns[0].blocks.length === 0"
