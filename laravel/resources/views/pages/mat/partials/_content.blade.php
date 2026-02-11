@@ -984,7 +984,8 @@ function matInterface() {
         // Check of bracket locked is (minimaal 1 wedstrijd gespeeld)
         isBracketLocked(poule) {
             if (poule.type !== 'eliminatie') return true;
-            return poule.wedstrijden.some(w => w.is_gespeeld === true);
+            // Locked zodra een echte wedstrijd gespeeld is (byes tellen niet)
+            return poule.wedstrijden.some(w => w.is_gespeeld === true && w.uitslag_type !== 'bye');
         },
 
         // Refresh alles: herlaad data van server + check voor app update
