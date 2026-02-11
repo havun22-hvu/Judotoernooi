@@ -1033,20 +1033,24 @@ class EliminatieService
 
         // Als er een oude winnaar was, moet die gecorrigeerd worden
         if ($oudeWinnaarId && $oudeWinnaarId != $winnaarId) {
-            // 1. Vervang oude winnaar door nieuwe winnaar in volgende ronde
+            // 1. Verwijder oude winnaar cascade uit ALLE latere rondes in dezelfde groep
+            // Dit voorkomt corrupte data wanneer de oude winnaar al verder was doorgeschoven
+            $this->verwijderUitLatereRondes($wedstrijd->poule_id, $wedstrijd->groep, $oudeWinnaarId, $wedstrijd->id);
+            $correcties[] = "{$oudeWinnaarNaam} verwijderd uit latere rondes";
+
+            // 2. Plaats nieuwe winnaar in het volgende slot
             if ($wedstrijd->volgende_wedstrijd_id) {
                 $volgendeWedstrijd = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
                 if ($volgendeWedstrijd) {
                     $slot = $wedstrijd->winnaar_naar_slot ?? 'wit';
                     $veld = ($slot === 'wit') ? 'judoka_wit_id' : 'judoka_blauw_id';
 
-                    // Verwijder oude winnaar en plaats nieuwe winnaar in één keer
                     $volgendeWedstrijd->update([$veld => $winnaarId]);
-                    $correcties[] = "{$oudeWinnaarNaam} vervangen door {$winnaarNaam} in volgende ronde";
+                    $correcties[] = "{$winnaarNaam} geplaatst in volgende ronde";
                 }
             }
 
-            // 2. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
+            // 3. Verwijder nieuwe winnaar (=oude verliezer) uit B-groep
             // Want die was daar geplaatst als verliezer, maar is nu winnaar
             // ALLEEN bij A-groep! Bij B-groep correcties blijft de winnaar in B-groep
             if ($wedstrijd->groep === 'A') {
@@ -1054,7 +1058,7 @@ class EliminatieService
                 $correcties[] = "{$winnaarNaam} verwijderd uit B-groep (is nu winnaar)";
             }
 
-            // 3. Plaats oude winnaar (=nieuwe verliezer) in B-groep
+            // 4. Plaats oude winnaar (=nieuwe verliezer) in B-groep
             // De reguliere code hieronder doet dit al
             $correcties[] = "Winnaar gecorrigeerd: {$winnaarNaam} (was: {$oudeWinnaarNaam})";
         }
@@ -1552,6 +1556,56 @@ class EliminatieService
             if ($wed->judoka_blauw_id == $judokaId) {
                 $wed->update(['judoka_blauw_id' => null]);
             }
+        }
+    }
+
+    /**
+     * Verwijder judoka cascade uit alle latere rondes in dezelfde groep.
+     * Volgt de volgende_wedstrijd_id keten vanaf de bronwedstrijd.
+     * Reset ook winnaar_id en is_gespeeld als de judoka daar de winnaar was.
+     */
+    public function verwijderUitLatereRondes(int $pouleId, string $groep, int $judokaId, int $bronWedstrijdId): void
+    {
+        // Volg de keten: bronwedstrijd → volgende → volgende → ...
+        $huidigeWedstrijdId = $bronWedstrijdId;
+        $maxStappen = 20; // Veiligheidsgrens tegen oneindige loops
+
+        while ($huidigeWedstrijdId && $maxStappen > 0) {
+            $maxStappen--;
+            $wedstrijd = Wedstrijd::find($huidigeWedstrijdId);
+            if (!$wedstrijd || !$wedstrijd->volgende_wedstrijd_id) {
+                break;
+            }
+
+            $volgende = Wedstrijd::find($wedstrijd->volgende_wedstrijd_id);
+            if (!$volgende || $volgende->groep !== $groep) {
+                break;
+            }
+
+            $verwijderd = false;
+            if ($volgende->judoka_wit_id == $judokaId) {
+                $volgende->judoka_wit_id = null;
+                $verwijderd = true;
+            }
+            if ($volgende->judoka_blauw_id == $judokaId) {
+                $volgende->judoka_blauw_id = null;
+                $verwijderd = true;
+            }
+
+            // Reset uitslag als deze judoka de winnaar was
+            if ($volgende->winnaar_id == $judokaId) {
+                $volgende->winnaar_id = null;
+                $volgende->is_gespeeld = false;
+                $volgende->gespeeld_op = null;
+                Log::info("Correctie cascade: uitslag gereset voor wed {$volgende->id} ({$volgende->ronde})");
+            }
+
+            if ($verwijderd) {
+                $volgende->save();
+                Log::info("Correctie cascade: judoka {$judokaId} verwijderd uit wed {$volgende->id} ({$volgende->ronde})");
+            }
+
+            $huidigeWedstrijdId = $volgende->id;
         }
     }
 }
