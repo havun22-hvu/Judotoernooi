@@ -549,9 +549,19 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     try {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+    const isLocked = data.pouleIsLocked === true;
 
-    // Beurtaanduiding: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
-    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return false;
+    // Seeding (bracket unlocked): mag alleen binnen eerste ronde, NIET naar volgende ronde
+    if (!isLocked) {
+        if (data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId) {
+            alert('⚠️ Seeding mag alleen binnen dezelfde ronde!\n\nJe kunt geen judoka naar de volgende ronde slepen tijdens het seeden.');
+            return false;
+        }
+        // Seeding binnen eerste ronde = toegestaan zonder groene selectie
+    } else {
+        // Bracket locked: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
+        if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return false;
+    }
 
     // Voeg target info toe aan data voor seeding logica
     if (pouleId) data.pouleId = pouleId;
@@ -559,8 +569,6 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         data.targetHuidigeJudoka = huidigeBewoner;
     }
 
-    // Check of we in seeding-fase zijn (geen wedstrijden gespeeld in deze poule)
-    const isLocked = data.pouleIsLocked === true;
     const naam = data.judokaNaam || 'Deze judoka';
 
     // Check 1: Dezelfde wedstrijd?
