@@ -366,6 +366,33 @@ const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door de organisator of 
 const __voerAdminWachtwoordIn = @json(__('Voer het organisator wachtwoord of hoofdjury pincode in:'));
 const __onjuistWachtwoord = @json(__('Onjuist wachtwoord! Verwijdering geannuleerd.'));
 
+// Password prompt met ** masking (vervangt browser prompt())
+window.promptWachtwoord = function(bericht) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = `
+            <div style="background:white;border-radius:8px;padding:24px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+                <div style="white-space:pre-line;margin-bottom:16px;font-size:14px;line-height:1.5;">${bericht.replace(/</g,'&lt;')}</div>
+                <input type="password" id="ww-input" style="width:100%;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:16px;box-sizing:border-box;" placeholder="Wachtwoord of pincode" autocomplete="off">
+                <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+                    <button id="ww-cancel" style="padding:8px 16px;border:1px solid #d1d5db;border-radius:6px;background:white;cursor:pointer;font-size:14px;">Annuleren</button>
+                    <button id="ww-ok" style="padding:8px 16px;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer;font-size:14px;">OK</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        const input = overlay.querySelector('#ww-input');
+        const cleanup = (val) => { document.body.removeChild(overlay); resolve(val); };
+        overlay.querySelector('#ww-cancel').onclick = () => cleanup(null);
+        overlay.querySelector('#ww-ok').onclick = () => cleanup(input.value || null);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') cleanup(input.value || null);
+            if (e.key === 'Escape') cleanup(null);
+        });
+        setTimeout(() => input.focus(), 50);
+    });
+};
+
 // Server-side admin password check (bcrypt)
 window.checkAdminWachtwoord = async function(wachtwoord) {
     try {
@@ -426,7 +453,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
 
     // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
-        const wachtwoord = prompt(
+        const wachtwoord = await window.promptWachtwoord(
             '🔒 BRACKET VERGRENDELD\n\n' +
             `Je wilt ${data.judokaNaam || 'deze judoka'} naar de swap verplaatsen.\n` +
             'Dit kan alleen door de organisator of hoofdjury.\n\n' +
@@ -582,7 +609,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             // Juiste wedstrijd EN juiste positie - doorgaan!
         } else {
             // Wrong match - offer pull-back option with password
-            const wachtwoord = prompt(
+            const wachtwoord = await window.promptWachtwoord(
                 `🔒 ${naam} staat in een ander vak.\n\n` +
                 `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
                 `Dit verwijdert de judoka uit het huidige vak.\n\n` +
@@ -644,7 +671,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
     } else if (isLocked && data.volgendeWedstrijdId) {
         // Could be a "pull back" action: dragging a judoka back to undo a result
-        const wachtwoord = prompt(
+        const wachtwoord = await window.promptWachtwoord(
             `🔒 BRACKET VERGRENDELD\n\n` +
             `${naam} staat in een ander vak.\n\n` +
             `Wil je ${naam} terugzetten en de uitslag resetten?\n` +
@@ -704,7 +731,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             // Of een vrije plaatsing (geen volgendeWedstrijdId)
             const isVrijePlaatsing = !data.volgendeWedstrijdId;
 
-            const wachtwoord = prompt(
+            const wachtwoord = await window.promptWachtwoord(
                 '🔒 BRACKET VERGRENDELD\n\n' +
                 (isCorrectiePoging
                     ? `CORRECTIE: ${naam} was niet de winnaar.\nWil je de uitslag corrigeren?\n\n`
@@ -955,7 +982,7 @@ window.verwijderJudoka = async function(event) {
 
     // Als bracket locked is, vraag admin wachtwoord (server-side check)
     if (isLocked) {
-        const wachtwoord = prompt(
+        const wachtwoord = await window.promptWachtwoord(
             `🔒 ${__bracketVergrendeld}\n\n` +
             `${__probeertTeVerwijderen.replace(':naam', naam)}\n` +
             `${__ditKanAlleenDoorAdmin}\n\n` +
