@@ -985,6 +985,11 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
     if (!poule) return;
     const wedstrijd = poule.wedstrijden.find(w => w.id === wedstrijdId);
     if (!wedstrijd) return;
+    // Beurtkleur alleen als er 2 judoka's in het potje staan
+    if (!wedstrijd.wit_id || !wedstrijd.blauw_id) {
+        alert('⚠️ Er moeten 2 judoka\'s in dit potje staan voordat je een beurtkleur kunt toewijzen.');
+        return;
+    }
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
 
