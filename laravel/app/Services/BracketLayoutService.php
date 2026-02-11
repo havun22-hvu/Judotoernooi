@@ -37,6 +37,7 @@ class BracketLayoutService
         'b_halve_finale_2' => 8,
         'b_halve_finale' => 7,
         'b_brons' => 8,
+        'b_finale' => 9,
     ];
 
     // Leesbare namen per ronde
@@ -60,6 +61,7 @@ class BracketLayoutService
         'b_halve_finale_2' => '1/2 (2)',
         'b_halve_finale' => '1/2',
         'b_brons' => 'Brons',
+        'b_finale' => 'B Finale',
     ];
 
     /**
