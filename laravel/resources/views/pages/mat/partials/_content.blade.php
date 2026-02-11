@@ -362,8 +362,8 @@ const __wilJeAlsWinnaarInstellen = @json(__('Wil je :naam als nieuwe winnaar ins
 const __oudeWinnaarVerwijderd = @json(__('De oude winnaar wordt uit de volgende ronde verwijderd en de B-groep wordt aangepast'));
 const __bracketVergrendeld = @json(__('BRACKET VERGRENDELD'));
 const __probeertTeVerwijderen = @json(__('Je probeert :naam te verwijderen.'));
-const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door een admin.'));
-const __voerAdminWachtwoordIn = @json(__('Voer het admin wachtwoord in:'));
+const __ditKanAlleenDoorAdmin = @json(__('Dit kan alleen door de organisator of hoofdjury.'));
+const __voerAdminWachtwoordIn = @json(__('Voer het organisator wachtwoord of hoofdjury pincode in:'));
 const __onjuistWachtwoord = @json(__('Onjuist wachtwoord! Verwijdering geannuleerd.'));
 
 // Server-side admin password check (bcrypt)
@@ -423,8 +423,8 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
         const wachtwoord = prompt(
             '🔒 BRACKET VERGRENDELD\n\n' +
             `Je wilt ${data.judokaNaam || 'deze judoka'} naar de swap verplaatsen.\n` +
-            'Dit kan alleen door een admin.\n\n' +
-            'Voer het admin wachtwoord in:'
+            'Dit kan alleen door de organisator of hoofdjury.\n\n' +
+            'Voer het organisator wachtwoord of hoofdjury pincode in:'
         );
 
         if (!wachtwoord) {
@@ -542,7 +542,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     `❌ VERKEERDE POSITIE!\n\n` +
                     `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.\n\n` +
                     `Zet de winnaar EERST op de juiste plek.\n` +
-                    `Swappen binnen de ronde kan daarna (met admin wachtwoord).`
+                    `Swappen binnen de ronde kan daarna (met organisator wachtwoord of hoofdjury pincode).`
                 );
                 return false;
             }
@@ -606,8 +606,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     : isVrijePlaatsing
                         ? `PLAATSING: ${naam} handmatig plaatsen.\n\n`
                         : 'De bracket is vastgezet na de eerste wedstrijd.\n') +
-                'Alleen een admin kan wijzigingen maken.\n\n' +
-                'Voer het admin wachtwoord in:'
+                'Alleen de organisator of hoofdjury kan wijzigingen maken.\n\n' +
+                'Voer het organisator wachtwoord of hoofdjury pincode in:'
             );
 
             if (!wachtwoord) {
