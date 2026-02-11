@@ -517,23 +517,23 @@ window.escapeHtml = function(str) {
 };
 
 // Check of een eliminatie drop geblokkeerd is door beurtaanduiding (groen/geel/blauw)
-window.isEliminatieDropGeblokkeerd = function(targetWedstrijdId) {
+// Check of een bracket drop geblokkeerd moet worden
+// Regel: alleen judoka's van de GROENE (actieve) wedstrijd mogen gesleept worden
+window.isEliminatieBronGeblokkeerd = function(bronWedstrijdId) {
     const el = document.getElementById('mat-interface');
     if (!el) return false;
     const comp = Alpine.$data(el);
     if (!comp || !comp.matSelectie) return false;
 
     const ms = comp.matSelectie;
-    if (ms.actieve_wedstrijd_id == targetWedstrijdId) {
-        alert('⚠️ Deze wedstrijd is aan de beurt!\n\nWacht tot de wedstrijd gespeeld is voordat je een judoka plaatst.');
+    // Geen actieve wedstrijd ingesteld = alles geblokkeerd
+    if (!ms.actieve_wedstrijd_id) {
+        alert('⚠️ Geen actieve wedstrijd!\n\nDubbelklik eerst op een wedstrijd om deze groen (actief) te maken.');
         return true;
     }
-    if (ms.volgende_wedstrijd_id == targetWedstrijdId) {
-        alert('⚠️ Deze wedstrijd staat klaar (geel)!\n\nJe kunt hier nu geen judoka plaatsen.');
-        return true;
-    }
-    if (ms.gereedmaken_wedstrijd_id == targetWedstrijdId) {
-        alert('⚠️ Deze wedstrijd wordt gereed gemaakt (blauw)!\n\nJe kunt hier nu geen judoka plaatsen.');
+    // Alleen vanuit de groene wedstrijd mag gesleept worden
+    if (ms.actieve_wedstrijd_id != bronWedstrijdId) {
+        alert('⚠️ Deze wedstrijd is niet aan de beurt!\n\nAlleen vanuit de groene (actieve) wedstrijd mag gesleept worden.');
         return true;
     }
     return false;
@@ -548,26 +548,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     window._isDroppingJudoka = true;
     try {
 
-    // Beurtaanduiding blokkade: groen/geel/blauw potjes zijn niet plaatsbaar
-    if (window.isEliminatieDropGeblokkeerd(targetWedstrijdId)) return false;
-
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
 
-    // Beurtaanduiding bron-check: geel/blauw bron = wedstrijd nog niet gespeeld, winnaar doorschuif blokkeren
-    if (data.wedstrijdId) {
-        const el = document.getElementById('mat-interface');
-        if (el) {
-            const comp = Alpine.$data(el);
-            if (comp && comp.matSelectie) {
-                const ms = comp.matSelectie;
-                const bronId = data.wedstrijdId;
-                if (ms.volgende_wedstrijd_id == bronId || ms.gereedmaken_wedstrijd_id == bronId) {
-                    alert('⚠️ Deze wedstrijd is nog niet gespeeld!\n\nDe wedstrijd staat klaar maar is nog niet aan de beurt.');
-                    return false;
-                }
-            }
-        }
-    }
+    // Beurtaanduiding: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
+    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return false;
 
     // Voeg target info toe aan data voor seeding logica
     if (pouleId) data.pouleId = pouleId;
@@ -850,9 +834,6 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     event.preventDefault();
 
-    // Beurtaanduiding blokkade: groen/geel/blauw potjes zijn niet plaatsbaar
-    if (window.isEliminatieDropGeblokkeerd(finaleId)) return;
-
     if (!finaleId) {
         alert('❌ Geen finale gevonden!');
         return;
@@ -860,6 +841,9 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
+
+    // Beurtaanduiding: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
+    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return;
 
     // Check of judoka uit de juiste wedstrijd komt
     if (data.wedstrijdId != finaleId) {
