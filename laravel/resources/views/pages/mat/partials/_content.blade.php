@@ -576,17 +576,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         return false;
     }
 
-    // Check 1b: Slot validatie ALTIJD (niet alleen bij locked!)
-    // Winnaar mag alleen naar de correcte positie (wit of blauw) in de volgende ronde
+    // Auto-correctie: als winnaar op verkeerd slot wordt gedropt, corrigeer stilletjes
     if (data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId && data.winnaarNaarSlot) {
         if (data.winnaarNaarSlot !== positie) {
-            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            alert(
-                `❌ VERKEERDE POSITIE!\n\n` +
-                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
-            );
-            return false;
+            positie = data.winnaarNaarSlot;
         }
     }
 
@@ -594,19 +587,10 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     if (data.volgendeWedstrijdId && data.isGespeeld && data.isWinnaar) {
         // Dit is een winnaar die doorschuift - strikt checken
         if (data.volgendeWedstrijdId == targetWedstrijdId) {
-            // Juiste wedstrijd, maar check positie
+            // Juiste wedstrijd — auto-correctie naar juiste slot
             if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-                const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-                const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-                alert(
-                    `❌ VERKEERDE POSITIE!\n\n` +
-                    `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.\n\n` +
-                    `Zet de winnaar EERST op de juiste plek.\n` +
-                    `Swappen binnen de ronde kan daarna (met organisator wachtwoord of hoofdjury pincode).`
-                );
-                return false;
+                positie = data.winnaarNaarSlot;
             }
-            // Juiste wedstrijd EN juiste positie - doorgaan!
         } else {
             // Winnaar mag ALLEEN naar de directe volgende ronde, niet 2+ rondes vooruit
             alert(
@@ -623,15 +607,9 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     const isWinnaarDoorschuifPoging = data.volgendeWedstrijdId && String(data.volgendeWedstrijdId) === String(targetWedstrijdId);
 
     if (isWinnaarDoorschuifPoging) {
-        // Dit is een winnaar-doorschuif naar de volgende ronde - slot validatie is VERPLICHT
+        // Auto-correctie naar juiste slot
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
-            const juistePositie = data.winnaarNaarSlot === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            const gekozenPositie = positie === 'wit' ? 'WIT (boven)' : 'BLAUW (onder)';
-            alert(
-                `❌ GEBLOKKEERD: Verkeerde positie!\n\n` +
-                `${naam} moet op ${juistePositie} staan, niet op ${gekozenPositie}.`
-            );
-            return false;
+            positie = data.winnaarNaarSlot;
         }
     } else if (isLocked && data.volgendeWedstrijdId) {
         // Could be a "pull back" action: dragging a judoka back to undo a result
