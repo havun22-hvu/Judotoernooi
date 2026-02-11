@@ -518,7 +518,7 @@ window.escapeHtml = function(str) {
 
 // Check of een eliminatie drop geblokkeerd is door beurtaanduiding (groen/geel/blauw)
 // Check of een bracket drop geblokkeerd moet worden
-// Regel: alleen judoka's van de GROENE (actieve) wedstrijd mogen gesleept worden
+// Geen beurtkleur = seeding fase (vrij binnen ronde). Beurtkleur aanwezig = alleen groen.
 window.isEliminatieBronGeblokkeerd = function(bronWedstrijdId) {
     const el = document.getElementById('mat-interface');
     if (!el) return false;
@@ -526,12 +526,11 @@ window.isEliminatieBronGeblokkeerd = function(bronWedstrijdId) {
     if (!comp || !comp.matSelectie) return false;
 
     const ms = comp.matSelectie;
-    // Geen actieve wedstrijd ingesteld = alles geblokkeerd
-    if (!ms.actieve_wedstrijd_id) {
-        alert('⚠️ Geen actieve wedstrijd!\n\nDubbelklik eerst op een wedstrijd om deze groen (actief) te maken.');
-        return true;
+    // Geen beurtkleur ingesteld = seeding fase, niet blokkeren
+    if (!ms.actieve_wedstrijd_id && !ms.volgende_wedstrijd_id && !ms.gereedmaken_wedstrijd_id) {
+        return false;
     }
-    // Alleen vanuit de groene wedstrijd mag gesleept worden
+    // Beurtkleur is ingesteld: alleen vanuit de groene wedstrijd mag gesleept worden
     if (ms.actieve_wedstrijd_id != bronWedstrijdId) {
         alert('⚠️ Deze wedstrijd is niet aan de beurt!\n\nAlleen vanuit de groene (actieve) wedstrijd mag gesleept worden.');
         return true;
@@ -549,18 +548,15 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
     try {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-    const isLocked = data.pouleIsLocked === true;
 
-    // Seeding (bracket unlocked): mag alleen binnen eerste ronde, NIET naar volgende ronde
-    if (!isLocked) {
-        if (data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId) {
-            alert('⚠️ Seeding mag alleen binnen dezelfde ronde!\n\nJe kunt geen judoka naar de volgende ronde slepen tijdens het seeden.');
-            return false;
-        }
-        // Seeding binnen eerste ronde = toegestaan zonder groene selectie
-    } else {
-        // Bracket locked: alleen vanuit de groene (actieve) wedstrijd mag gesleept worden
-        if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return false;
+    // Beurtaanduiding check: geen kleur = seeding (vrij binnen ronde), kleur = alleen groen
+    if (data.wedstrijdId && window.isEliminatieBronGeblokkeerd(data.wedstrijdId)) return false;
+
+    // Seeding: mag alleen binnen dezelfde ronde, NIET naar volgende ronde
+    const isLocked = data.pouleIsLocked === true;
+    if (!isLocked && data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId) {
+        alert('⚠️ Seeding mag alleen binnen dezelfde ronde!\n\nJe kunt geen judoka naar de volgende ronde slepen tijdens het seeden.');
+        return false;
     }
 
     // Voeg target info toe aan data voor seeding logica
