@@ -883,21 +883,21 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
 };
 
 // Bracket kolom navigatie - server-side re-render met start_ronde parameter
-window.bracketNavigate = function(pouleId, direction) {
-    const bracketEl = document.getElementById('bracket-' + pouleId + '-A');
+window.bracketNavigate = function(pouleId, direction, groep = 'A') {
+    const bracketEl = document.getElementById('bracket-' + pouleId + '-' + groep);
     if (!bracketEl) return;
     const huidigeStart = parseInt(bracketEl.dataset.startRonde) || 0;
     const nieuweStart = Math.max(0, huidigeStart + direction);
 
-    // Bewaar start_ronde per poule zodat laadBracketHtml het kan meesturen
+    // Bewaar start_ronde per poule+groep zodat laadBracketHtml het kan meesturen
     window._bracketStartRonde = window._bracketStartRonde || {};
-    window._bracketStartRonde[pouleId] = nieuweStart;
+    window._bracketStartRonde[pouleId + '-' + groep] = nieuweStart;
 
     // Re-render via bestaande laadBracketHtml
     const el = document.getElementById('mat-interface');
     if (el) {
         const comp = Alpine.$data(el);
-        if (comp) comp.laadBracketHtml(pouleId, 'A');
+        if (comp) comp.laadBracketHtml(pouleId, groep);
     }
 };
 
@@ -1146,7 +1146,7 @@ function matInterface() {
                         poule_id: pouleId,
                         groep: groep,
                         debug_slots: this.debugSlots,
-                        start_ronde: (groep === 'A' && window._bracketStartRonde?.[pouleId]) || 0,
+                        start_ronde: window._bracketStartRonde?.[pouleId + '-' + groep] || 0,
                     })
                 });
 

@@ -122,27 +122,33 @@ class BracketLayoutService
      * @param array $wedstrijden Array van B-groep wedstrijd-arrays
      * @return array ['niveaus' => [...], 'totale_hoogte' => int, 'medaille_data' => [...]]
      */
-    public function berekenBBracketLayout(array $wedstrijden): array
+    public function berekenBBracketLayout(array $wedstrijden, int $startRonde = 0): array
     {
         $rondes = $this->groepeerPerRonde($wedstrijden);
         if (empty($rondes)) {
-            return ['niveaus' => [], 'totale_hoogte' => 300, 'medaille_data' => [], 'rondes_flat' => []];
+            return ['niveaus' => [], 'totale_hoogte' => 300, 'medaille_data' => [], 'rondes_flat' => [], 'start_ronde' => 0, 'totaal_niveaus' => 0];
         }
 
         // Groepeer rondes per niveau: b_achtste_finale_1 en _2 samen
-        $niveaus = [];
+        $alleNiveaus = [];
         $niveauMap = [];
 
         foreach ($rondes as $ronde) {
             $basisNiveau = preg_replace('/_[12]$/', '', $ronde['ronde']);
             if (!isset($niveauMap[$basisNiveau])) {
                 $niveauMap[$basisNiveau] = ['naam' => $basisNiveau, 'sub_rondes' => []];
-                $niveaus[] = &$niveauMap[$basisNiveau];
+                $alleNiveaus[] = &$niveauMap[$basisNiveau];
             }
             $niveauMap[$basisNiveau]['sub_rondes'][] = $ronde;
         }
         // Reset references
         unset($niveauMap);
+
+        $totaalNiveaus = count($alleNiveaus);
+        $startRonde = max(0, min($startRonde, $totaalNiveaus - 2));
+
+        // Skip vroege niveaus
+        $niveaus = array_values(array_slice($alleNiveaus, $startRonde));
 
         // Bereken hoogte
         $eersteNiveau = $niveaus[0] ?? null;
@@ -253,6 +259,8 @@ class BracketLayoutService
             'totale_hoogte' => $totaleHoogte,
             'medaille_data' => $medailleData,
             'rondes_flat' => $rondesFlat,
+            'start_ronde' => $startRonde,
+            'totaal_niveaus' => $totaalNiveaus,
         ];
     }
 
