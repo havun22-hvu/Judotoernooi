@@ -144,7 +144,7 @@
                             </template>
                         </div>
                         <!-- Swap Ruimte - alleen zichtbaar tijdens seeding (voor eerste wedstrijd) -->
-                        <div x-show="!isBracketLocked(poule)" class="flex items-center gap-2 px-2">
+                        <div x-show="!isBracketLocked(poule) && activeTab !== 'B'" class="flex items-center gap-2 px-2">
                             <span class="text-sm font-medium text-gray-600">
                                 Swap:
                             </span>
