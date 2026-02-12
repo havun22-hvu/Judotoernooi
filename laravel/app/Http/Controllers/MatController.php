@@ -1087,7 +1087,8 @@ class MatController extends Controller
                 $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden, $startRonde);
                 $view = 'pages.mat.partials._bracket';
             } else {
-                $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden);
+                $startRonde = (int) ($validated['start_ronde'] ?? 0);
+                $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden, $startRonde);
                 $view = 'pages.mat.partials._bracket-b';
             }
 
