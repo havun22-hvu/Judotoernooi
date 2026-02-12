@@ -600,7 +600,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
             const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
             if (isGeel || isBlauw) {
-                return false; // Stil negeren — geel/blauw mag niet gespeeld worden
+                alert('⚠️ Eerst de groene wedstrijd afmaken!');
+                return false;
             }
         }
     }
@@ -795,7 +796,8 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
             const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
             const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
             if (isGeel || isBlauw) {
-                return; // Stil negeren — geel/blauw mag niet gespeeld worden
+                alert('⚠️ Eerst de groene wedstrijd afmaken!');
+                return;
             }
         }
     }
