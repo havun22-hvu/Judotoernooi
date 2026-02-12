@@ -70,14 +70,19 @@ class BracketLayoutService
      * @param array $wedstrijden Array van wedstrijd-arrays (uit getSchemaVoorMat)
      * @return array ['rondes' => [...], 'totale_hoogte' => int, 'medaille_data' => [...]]
      */
-    public function berekenABracketLayout(array $wedstrijden): array
+    public function berekenABracketLayout(array $wedstrijden, int $startRonde = 0): array
     {
-        $rondes = $this->groepeerPerRonde($wedstrijden);
-        if (empty($rondes)) {
-            return ['rondes' => [], 'totale_hoogte' => 300, 'medaille_data' => []];
+        $alleRondes = $this->groepeerPerRonde($wedstrijden);
+        if (empty($alleRondes)) {
+            return ['rondes' => [], 'totale_hoogte' => 300, 'medaille_data' => [], 'start_ronde' => 0, 'totaal_rondes' => 0];
         }
 
-        // Bereken posities per wedstrijd
+        $totaalRondes = count($alleRondes);
+        $startRonde = max(0, min($startRonde, $totaalRondes - 2));
+
+        // Skip vroege rondes → herbereken posities vanaf nieuwe kolom 0
+        $rondes = array_values(array_slice($alleRondes, $startRonde));
+
         $eersteRonde = $rondes[0];
         $aantalSlots = count($eersteRonde['wedstrijden']) * 2;
         $totaleHoogte = max($aantalSlots * (self::POTJE_HEIGHT + self::POTJE_GAP), 300);
@@ -98,7 +103,6 @@ class BracketLayoutService
         }
         unset($ronde);
 
-        // Medaille data
         $laatsteRonde = end($rondes);
         $laatsteRondeNiveau = count($rondes) - 1;
         $medailleData = $this->berekenAMedailles($laatsteRonde, $laatsteRondeNiveau);
@@ -107,6 +111,8 @@ class BracketLayoutService
             'rondes' => $rondes,
             'totale_hoogte' => $totaleHoogte,
             'medaille_data' => $medailleData,
+            'start_ronde' => $startRonde,
+            'totaal_rondes' => $totaalRondes,
         ];
     }
 
