@@ -1079,7 +1079,16 @@ function matInterface() {
 
         heeftOnverwerkteByes(poule) {
             if (poule.type !== 'eliminatie') return false;
-            return poule.wedstrijden.some(w => w.groep === 'A' && w.wit && !w.blauw && !w.is_gespeeld);
+            // Byes bestaan alleen in de eerste ronde (ronde met meeste A-wedstrijden)
+            const aWeds = poule.wedstrijden.filter(w => w.groep === 'A');
+            const counts = {};
+            aWeds.forEach(w => { counts[w.ronde] = (counts[w.ronde] || 0) + 1; });
+            let eersteRonde = null, max = 0;
+            for (const [r, c] of Object.entries(counts)) {
+                if (c > max) { max = c; eersteRonde = r; }
+            }
+            if (!eersteRonde) return false;
+            return aWeds.some(w => w.ronde === eersteRonde && w.wit && !w.blauw && !w.is_gespeeld);
         },
 
         // Refresh alles: herlaad data van server + check voor app update
