@@ -882,6 +882,64 @@ window.dblClickBracket = function(wedstrijdId, pouleId) {
     comp.toggleVolgendeWedstrijd(poule, wedstrijd);
 };
 
+// Bracket kolom navigatie - verberg afgespeelde vroege rondes voor compacter overzicht
+// Geen herberekening nodig: winnaars staan al in de volgende ronde slots.
+// Voorwaarde: kolom mag alleen verborgen worden als alle wedstrijden gespeeld zijn.
+window.bracketNavigate = function(btn, direction) {
+    const bracketId = btn.dataset.bracketId;
+    const bracketEl = document.getElementById(bracketId);
+    if (!bracketEl) return;
+
+    const totalRondes = parseInt(bracketEl.dataset.totalRondes) || 0;
+    let startKolom = parseInt(bracketEl.dataset.startKolom) || 0;
+    const maxStart = Math.max(0, totalRondes - 2);
+    const nieuweStart = Math.max(0, Math.min(maxStart, startKolom + direction));
+
+    // Bij rechts: check of alle wedstrijden in de te verbergen kolom gevuld zijn
+    if (direction > 0 && nieuweStart > startKolom) {
+        const kolom = bracketEl.querySelector(`.bracket-ronde-kolom[data-ronde-idx="${startKolom}"]`);
+        if (kolom) {
+            const potjes = kolom.querySelectorAll('.bracket-potje');
+            const alleGevuld = Array.from(potjes).every(p => {
+                // Minstens 1 judoka in het potje (gespeeld of bye doorgeschoven)
+                return p.querySelectorAll('.bracket-judoka').length >= 1;
+            });
+            if (!alleGevuld) return;
+        }
+    }
+
+    startKolom = nieuweStart;
+    bracketEl.dataset.startKolom = startKolom;
+
+    // Verberg/toon kolommen + spacers (puur display:none)
+    bracketEl.querySelectorAll('.bracket-ronde-kolom').forEach(k => {
+        k.style.display = parseInt(k.dataset.rondeIdx) < startKolom ? 'none' : '';
+    });
+    bracketEl.querySelectorAll('.bracket-ronde-spacer').forEach(s => {
+        s.style.display = parseInt(s.dataset.rondeIdx) < startKolom ? 'none' : '';
+    });
+
+    // Update header kolommen
+    const headerEl = document.querySelector(`.bracket-round-header[data-bracket-id="${bracketId}"]`);
+    if (headerEl) {
+        headerEl.querySelectorAll('.bracket-ronde-header').forEach(h => {
+            h.style.display = parseInt(h.dataset.rondeIdx) < startKolom ? 'none' : '';
+        });
+        headerEl.querySelectorAll('.bracket-ronde-spacer').forEach(s => {
+            s.style.display = parseInt(s.dataset.rondeIdx) < startKolom ? 'none' : '';
+        });
+    }
+
+    // Update navigatie knoppen
+    const navBtns = document.querySelectorAll(`.bracket-nav-btn[data-bracket-id="${bracketId}"]`);
+    navBtns.forEach(b => {
+        if (b.dataset.direction === 'left') b.disabled = startKolom === 0;
+        if (b.dataset.direction === 'right') b.disabled = startKolom >= maxStart;
+    });
+    const label = document.querySelector(`.bracket-nav-label[data-bracket-id="${bracketId}"]`);
+    if (label) label.textContent = startKolom === 0 ? 'Alle rondes' : 'Verborgen: ' + startKolom;
+};
+
 function matInterface() {
     const urlParams = new URLSearchParams(window.location.search);
     const blokNummer = urlParams.get('blok');
