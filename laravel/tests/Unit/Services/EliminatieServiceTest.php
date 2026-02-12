@@ -109,38 +109,38 @@ class EliminatieServiceTest extends TestCase
             ->values()
             ->toArray();
 
-        $this->assertContains('b_halve_finale', $bRondes);
-        $this->assertContains('b_brons', $bRondes);
+        $this->assertContains('b_halve_finale_1', $bRondes);
+        $this->assertContains('b_halve_finale_2', $bRondes);
         $this->assertCount(4, $bRondes, 'IJF B-groep moet exact 4 wedstrijden hebben');
     }
 
     #[Test]
-    public function ijf_b_halve_finale_winnaars_gaan_naar_brons(): void
+    public function ijf_b_halve_finale_1_winnaars_gaan_naar_halve_finale_2(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
         $this->service->genereerBracket($poule, $judokaIds, 'ijf');
 
-        // B-1/2 finale wedstrijden moeten gekoppeld zijn aan brons wedstrijden
-        $bHalveFinales = Wedstrijd::where('poule_id', $poule->id)
+        // B-1/2(1) wedstrijden moeten gekoppeld zijn aan B-1/2(2) wedstrijden
+        $bHalveFinale1 = Wedstrijd::where('poule_id', $poule->id)
             ->where('groep', 'B')
-            ->where('ronde', 'b_halve_finale')
+            ->where('ronde', 'b_halve_finale_1')
             ->get();
 
-        $this->assertCount(2, $bHalveFinales, 'Er moeten 2 B-1/2 finale wedstrijden zijn');
+        $this->assertCount(2, $bHalveFinale1, 'Er moeten 2 B-1/2(1) wedstrijden zijn');
 
-        foreach ($bHalveFinales as $bHf) {
-            $this->assertNotNull($bHf->volgende_wedstrijd_id, "B-1/2 {$bHf->bracket_positie} moet gekoppeld zijn aan brons");
-            $this->assertEquals('wit', $bHf->winnaar_naar_slot, 'B-1/2 winnaar moet op WIT slot komen');
+        foreach ($bHalveFinale1 as $bHf) {
+            $this->assertNotNull($bHf->volgende_wedstrijd_id, "B-1/2(1) {$bHf->bracket_positie} moet gekoppeld zijn aan B-1/2(2)");
+            $this->assertEquals('wit', $bHf->winnaar_naar_slot, 'B-1/2(1) winnaar moet op WIT slot komen');
 
-            $bronsWedstrijd = Wedstrijd::find($bHf->volgende_wedstrijd_id);
-            $this->assertNotNull($bronsWedstrijd);
-            $this->assertEquals('b_brons', $bronsWedstrijd->ronde);
+            $bHalveFinale2 = Wedstrijd::find($bHf->volgende_wedstrijd_id);
+            $this->assertNotNull($bHalveFinale2);
+            $this->assertEquals('b_halve_finale_2', $bHalveFinale2->ronde);
         }
     }
 
     #[Test]
-    public function ijf_kwartfinale_verliezers_gekoppeld_aan_b_halve_finale(): void
+    public function ijf_kwartfinale_verliezers_gekoppeld_aan_b_halve_finale_1(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
@@ -177,7 +177,7 @@ class EliminatieServiceTest extends TestCase
     }
 
     #[Test]
-    public function ijf_halve_finale_verliezers_gekoppeld_aan_brons(): void
+    public function ijf_halve_finale_verliezers_gekoppeld_aan_b_halve_finale_2(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 
@@ -192,11 +192,11 @@ class EliminatieServiceTest extends TestCase
         $this->assertCount(2, $halveFinales, 'Er moeten 2 halve finales zijn');
 
         foreach ($halveFinales as $hf) {
-            $this->assertNotNull($hf->herkansing_wedstrijd_id, "HF {$hf->bracket_positie} moet aan brons gekoppeld zijn");
-            $this->assertEquals('blauw', $hf->verliezer_naar_slot, 'HF verliezer moet op BLAUW slot (repechage winnaar op wit)');
+            $this->assertNotNull($hf->herkansing_wedstrijd_id, "HF {$hf->bracket_positie} moet aan B-1/2(2) gekoppeld zijn");
+            $this->assertEquals('blauw', $hf->verliezer_naar_slot, 'HF verliezer moet op BLAUW slot (B-winnaar op wit)');
 
-            $bronsWedstrijd = Wedstrijd::find($hf->herkansing_wedstrijd_id);
-            $this->assertEquals('b_brons', $bronsWedstrijd->ronde);
+            $bHalveFinale2 = Wedstrijd::find($hf->herkansing_wedstrijd_id);
+            $this->assertEquals('b_halve_finale_2', $bHalveFinale2->ronde);
         }
     }
 
@@ -250,7 +250,7 @@ class EliminatieServiceTest extends TestCase
     // =========================================================================
 
     #[Test]
-    public function ijf_verliezer_kwartfinale_wordt_in_b_halve_finale_geplaatst(): void
+    public function ijf_verliezer_kwartfinale_wordt_in_b_halve_finale_1_geplaatst(): void
     {
         [$poule, $judokaIds] = $this->createPouleWithJudokas(8);
 

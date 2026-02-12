@@ -36,7 +36,7 @@ class BracketLayoutService
         'b_halve_finale_1' => 7,
         'b_halve_finale_2' => 8,
         'b_halve_finale' => 7,
-        'b_brons' => 8,
+        'b_brons' => 9,
         'b_finale' => 9,
     ];
 
@@ -173,13 +173,17 @@ class BracketLayoutService
                 $herkomstWit = '';
                 $herkomstBlauw = '';
 
+                // IJF detectie: b_halve_finale is eerste niveau → verliezers uit A-1/4
+                $isIjf = ($isFirstNiveau && str_contains($ronde['ronde'], 'b_halve_finale') && count($niveaus) <= 3);
+
                 if ($isRonde2) {
                     $herkomstWit = 'B-winnaar';
-                    $herkomstBlauw = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                    $herkomstBlauw = $isIjf ? 'uit A-1/2' : ($aRondeNaam ? "uit {$aRondeNaam}" : '');
                 } elseif ($isRonde1) {
                     if ($isFirstNiveau) {
                         // First B-level (1): both slots receive A-losers
-                        $herkomstWit = $aRondeNaam ? "uit {$aRondeNaam}" : '';
+                        $label = $isIjf ? 'A-1/4' : ($aRondeNaam ?: '');
+                        $herkomstWit = $label ? "uit {$label}" : '';
                         $herkomstBlauw = $herkomstWit;
                     } else {
                         $herkomstWit = 'B-winnaar';
@@ -188,16 +192,12 @@ class BracketLayoutService
                 } else {
                     // SAMEN round (no _1/_2) or brons
                     if ($isFirstNiveau) {
-                        // Eerste B-niveau: beide slots van A-verliezers
-                        // Bij IJF: b_halve_finale is eerste ronde, maar gevuld uit A-1/4
-                        $isIjfBHalveFinale = ($ronde['ronde'] === 'b_halve_finale' && count($niveaus) <= 3);
-                        $label = $isIjfBHalveFinale ? 'A-1/4' : ($aRondeNaam ?: '');
+                        $label = $isIjf ? 'A-1/4' : ($aRondeNaam ?: '');
                         $herkomstWit = $label ? "uit {$label}" : '';
                         $herkomstBlauw = $herkomstWit;
                     } elseif (str_contains($ronde['ronde'], 'brons')) {
-                        // Brons: B-1/2 winnaar op wit, A-1/2 verliezer op blauw
-                        $herkomstWit = 'B-1/2 winnaar';
-                        $herkomstBlauw = 'uit A-1/2';
+                        $herkomstWit = 'B-winnaar';
+                        $herkomstBlauw = 'B-winnaar';
                     } else {
                         $herkomstWit = 'B-winnaar';
                         $herkomstBlauw = 'B-winnaar';
