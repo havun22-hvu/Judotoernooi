@@ -125,4 +125,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Offline Mode
+    |--------------------------------------------------------------------------
+    |
+    | When running as offline noodpakket, the app operates without internet.
+    | Auth is device PIN only, no login/registration, no payments.
+    |
+    */
+
+    'offline_mode' => (bool) env('OFFLINE_MODE', false),
+    'offline_toernooi_id' => env('TOERNOOI_ID'),
+
 ];

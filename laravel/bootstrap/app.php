@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Web middleware group additions (session is available here)
         $middleware->web(\App\Http\Middleware\SetLocale::class);
+        $middleware->web(\App\Http\Middleware\OfflineMode::class);
 
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,

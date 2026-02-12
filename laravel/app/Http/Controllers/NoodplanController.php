@@ -13,9 +13,12 @@ use App\Models\Poule;
 use App\Models\Toernooi;
 use App\Models\Wedstrijd;
 use App\Exports\PouleExport;
+use App\Services\OfflineExportService;
+use App\Services\OfflinePackageBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -594,6 +597,79 @@ class NoodplanController extends Controller
             'synced' => $synced,
             'skipped' => $skipped,
         ]);
+    }
+
+    /**
+     * Download offline server pakket (.zip met launcher + PHP + Laravel + data)
+     */
+    public function downloadServerPakket(Organisator $organisator, Toernooi $toernooi, OfflinePackageBuilder $builder)
+    {
+        // Free tier: not available
+        if ($toernooi->isFreeTier()) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => 'Offline Server Pakket',
+            ]);
+        }
+
+        // Check if build prerequisites are available
+        $prereqs = $builder->checkPrerequisites();
+        if (!$prereqs['ready']) {
+            return back()->with('error', 'Offline server pakket is nog niet beschikbaar. Ontbrekend: ' . implode(', ', $prereqs['missing']));
+        }
+
+        try {
+            $packagePath = $builder->build($toernooi);
+
+            $filename = sprintf('noodpakket_%s_%s.zip',
+                preg_replace('/[^a-zA-Z0-9_-]/', '_', $toernooi->naam),
+                now()->format('Y-m-d')
+            );
+
+            return response()->download($packagePath, $filename, [
+                'Content-Type' => 'application/zip',
+            ])->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            Log::error('Offline server pakket build failed', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Fout bij genereren offline pakket: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download only the SQLite database (for testing/development)
+     */
+    public function downloadDatabase(Organisator $organisator, Toernooi $toernooi, OfflineExportService $exportService)
+    {
+        if ($toernooi->isFreeTier()) {
+            return view('pages.noodplan.upgrade-required', [
+                'toernooi' => $toernooi,
+                'feature' => 'Database Export',
+            ]);
+        }
+
+        try {
+            $dbPath = $exportService->export($toernooi);
+
+            $filename = sprintf('%s_offline_%s.sqlite',
+                preg_replace('/[^a-zA-Z0-9_-]/', '_', $toernooi->naam),
+                now()->format('Y-m-d_Hi')
+            );
+
+            return response()->download($dbPath, $filename, [
+                'Content-Type' => 'application/x-sqlite3',
+            ])->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            Log::error('Offline database export failed', [
+                'toernooi_id' => $toernooi->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Fout bij exporteren database: ' . $e->getMessage());
+        }
     }
 
     /**

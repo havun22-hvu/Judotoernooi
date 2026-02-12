@@ -17,6 +17,11 @@ class CheckToernooiRol
      */
     public function handle(Request $request, Closure $next, string ...$rollen): Response
     {
+        // In offline mode, skip auth - device PIN is sufficient
+        if (config('app.offline_mode')) {
+            return $next($request);
+        }
+
         $toernooi = $request->route('toernooi');
 
         // Als route model binding nog niet is gebeurd, handmatig oplossen
