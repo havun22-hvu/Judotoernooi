@@ -590,6 +590,21 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
     const isWinnaarDoorschuif = data.volgendeWedstrijdId && data.volgendeWedstrijdId == targetWedstrijdId;
 
+    // BEURTAANDUIDING BLOKKERING: winnaar doorschuif alleen toegestaan als de bron-wedstrijd
+    // de actieve (groene) is, of geen beurtaanduiding heeft. Geel/blauw = geblokkeerd.
+    if (isWinnaarDoorschuif && data.wedstrijdId) {
+        const matEl = document.getElementById('mat-interface');
+        const comp = matEl ? Alpine.$data(matEl) : null;
+        if (comp && comp.matSelectie) {
+            const sel = comp.matSelectie;
+            const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
+            const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
+            if (isGeel || isBlauw) {
+                return false; // Stil negeren — geel/blauw mag niet gespeeld worden
+            }
+        }
+    }
+
     if (isWinnaarDoorschuif) {
         // REGEL 1: Winnaar doorschuiven — auto-correctie naar juiste slot
         if (data.winnaarNaarSlot && data.winnaarNaarSlot !== positie) {
@@ -770,6 +785,20 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
 
     const data = JSON.parse(event.dataTransfer.getData('text/plain'));
     const naam = data.judokaNaam || 'Deze judoka';
+
+    // BEURTAANDUIDING BLOKKERING: medaille drop alleen als bron-wedstrijd actief (groen) is
+    if (data.wedstrijdId) {
+        const matEl = document.getElementById('mat-interface');
+        const comp = matEl ? Alpine.$data(matEl) : null;
+        if (comp && comp.matSelectie) {
+            const sel = comp.matSelectie;
+            const isGeel = sel.volgende_wedstrijd_id === data.wedstrijdId;
+            const isBlauw = sel.gereedmaken_wedstrijd_id === data.wedstrijdId;
+            if (isGeel || isBlauw) {
+                return; // Stil negeren — geel/blauw mag niet gespeeld worden
+            }
+        }
+    }
 
     // Check of judoka uit de juiste wedstrijd komt
     if (data.wedstrijdId != finaleId) {
