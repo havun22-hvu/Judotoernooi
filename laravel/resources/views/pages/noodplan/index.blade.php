@@ -728,84 +728,34 @@ function abbreviateClub(name) {
             </div>
             @endif
 
-            <!-- JSON Backup + Lokale Server Pakket -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- JSON Backup -->
-                <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="jsonDownloader()">
-                    <h3 class="font-medium text-purple-800">{{ __('Offline Backup (JSON)') }}</h3>
-                    <p class="text-sm text-purple-600 mt-1">{{ __('Voor lokale server bij internetstoring - laad in via "Laad JSON backup" hierboven') }}</p>
-                    <button @click="download()" type="button"
-                            class="mt-3 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium w-full">
-                        {{ __('Download backup') }}
-                    </button>
-                </div>
-
-                <!-- Lokale Server Download -->
-                @if(!$isFreeTier)
-                <div class="p-4 bg-green-50 border border-green-200 rounded">
-                    <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
-                    <p class="text-sm text-green-600 mt-1">{{ __('Draai een volledige server op je laptop. Tablets verbinden via WiFi.') }}</p>
-                    <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
-                       class="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium w-full block text-center">
-                        {{ __('Download server pakket') }}
-                    </a>
-                </div>
-                @else
-                <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
-                    <h3 class="font-medium text-gray-500">{{ __('Offline Server Pakket') }}
-                        <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
-                    </h3>
-                    <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
-                    <span class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium w-full block text-center cursor-not-allowed">
-                        {{ __('Premium') }}
-                    </span>
-                </div>
-                @endif
+            <!-- Offline Server Pakket -->
+            @if(!$isFreeTier)
+            <div class="p-4 bg-green-50 border border-green-200 rounded">
+                <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
+                <p class="text-sm text-green-600 mt-1">{{ __('Compleet pakket met server + database. Dubbelklik om te starten, tablets verbinden via WiFi.') }}</p>
+                <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
+                    <li>{{ __('Bevat alle poules, judoka\'s, wedstrijden en scores') }}</li>
+                    <li>{{ __('Draait volledig offline op je laptop') }}</li>
+                    <li>{{ __('Aparte JSON backup niet meer nodig') }}</li>
+                </ul>
+                <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
+                   class="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block">
+                    {{ __('Download server pakket') }}
+                </a>
             </div>
+            @else
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
+                <h3 class="font-medium text-gray-500">{{ __('Offline Server Pakket') }}
+                    <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
+                </h3>
+                <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
+                <span class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium inline-block cursor-not-allowed">
+                    {{ __('Premium') }}
+                </span>
+            </div>
+            @endif
         </div>
     </div>
-
-    <script>
-        function jsonDownloader() {
-            return {
-                toernooiId: {{ $toernooi->id }},
-                toernooiNaam: '{{ $toernooi->slug }}',
-
-                async download() {
-                    try {
-                        // Probeer eerst van server
-                        const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                        if (!response.ok) throw new Error('Server error');
-                        const data = await response.json();
-                        this.saveAsFile(data);
-                    } catch (e) {
-                        // Fallback naar localStorage
-                        const storageKey = `noodplan_${this.toernooiId}_poules`;
-                        const data = localStorage.getItem(storageKey);
-                        if (data) {
-                            this.saveAsFile(JSON.parse(data));
-                        } else {
-                            alert('Geen data beschikbaar (server offline en geen lokale cache).');
-                        }
-                    }
-                },
-
-                saveAsFile(data) {
-                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-                    const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            };
-        }
-    </script>
 
     <!-- NETWERK CONFIGURATIE -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="networkConfig()">
@@ -1202,7 +1152,7 @@ function abbreviateClub(name) {
             <div class="p-4 bg-gray-50 border border-gray-200 rounded">
                 <h3 class="font-bold text-gray-800 mb-2">🗓️ Avond ervoor</h3>
                 <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside">
-                    <li>Download de <strong>JSON backup</strong> (knop hierboven)</li>
+                    <li>Download het <strong>Offline Server Pakket</strong> (knop hierboven)</li>
                     <li>Bewaar op USB-stick én laptop</li>
                     <li>Controleer 5G hotspot op telefoon (naam + wachtwoord)</li>
                     @if($toernooi->heeft_eigen_router)
@@ -1282,7 +1232,7 @@ function abbreviateClub(name) {
         <h3 class="font-bold text-blue-800 mb-2">✅ Checklist vóór het toernooi</h3>
         <ul class="text-sm text-blue-700 space-y-1">
             <li>☐ Download <strong>Excel backup</strong> (poule-indeling)</li>
-            <li>☐ Download <strong>JSON backup</strong> (alle wedstrijddata)</li>
+            <li>☐ Download <strong>Offline Server Pakket</strong> (alle wedstrijddata)</li>
             <li>☐ Test 5G hotspot op telefoon (werkt internet?)</li>
             @if($toernooi->heeft_eigen_router)
             <li>☐ Test eigen router + USB-tethering met telefoon</li>
