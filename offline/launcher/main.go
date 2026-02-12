@@ -2,8 +2,6 @@ package main
 
 import (
 	"archive/zip"
-	"bytes"
-	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,9 +16,6 @@ import (
 	"time"
 )
 
-//go:embed bundle.zip
-var bundleZip []byte
-
 // License structure matches PHP OfflineExportService output
 type License struct {
 	ToernooiID   int    `json:"toernooi_id"`
@@ -33,16 +28,31 @@ type License struct {
 }
 
 func main() {
-	fmt.Println("╔══════════════════════════════════════════════╗")
-	fmt.Println("║   JudoToernooi Noodpakket - Offline Server  ║")
-	fmt.Println("╚══════════════════════════════════════════════╝")
+	fmt.Println("+==============================================+")
+	fmt.Println("|   JudoToernooi Noodpakket - Offline Server   |")
+	fmt.Println("+==============================================+")
 	fmt.Println()
 
-	// Determine extraction directory
-	extractDir := filepath.Join(os.TempDir(), "noodpakket_judo")
+	// Find bundle.zip next to the executable
+	exePath, err := os.Executable()
+	if err != nil {
+		fmt.Println("[FOUT] Kan eigen pad niet bepalen:", err)
+		waitForExit()
+		return
+	}
+	exeDir := filepath.Dir(exePath)
+	bundlePath := filepath.Join(exeDir, "bundle.zip")
 
-	// Check license before extracting
-	licenseData, err := extractSingleFile("license.json")
+	if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
+		fmt.Println("[FOUT] bundle.zip niet gevonden naast noodpakket.exe")
+		fmt.Println("       Verwacht op:", bundlePath)
+		fmt.Println("       Pak het volledige zip bestand uit voordat je start.")
+		waitForExit()
+		return
+	}
+
+	// Read license from bundle
+	licenseData, err := readFileFromZip(bundlePath, "license.json")
 	if err != nil {
 		fmt.Println("[FOUT] Kan license.json niet lezen:", err)
 		waitForExit()
@@ -76,9 +86,12 @@ func main() {
 	fmt.Printf("Geldig tot: %s\n", expiresAt.Format("02-01-2006 15:04"))
 	fmt.Println()
 
+	// Determine extraction directory
+	extractDir := filepath.Join(os.TempDir(), fmt.Sprintf("noodpakket_%d", license.ToernooiID))
+
 	// Extract bundle
 	fmt.Println("[1/4] Bestanden uitpakken...")
-	if err := extractBundle(extractDir); err != nil {
+	if err := extractZip(bundlePath, extractDir); err != nil {
 		fmt.Println("[FOUT] Kan bestanden niet uitpakken:", err)
 		waitForExit()
 		return
@@ -145,15 +158,15 @@ CACHE_STORE=file
 
 	// Open browser
 	fmt.Println("[4/4] Browser openen...")
-	openBrowser(fmt.Sprintf("http://localhost:8000"))
+	openBrowser("http://localhost:8000")
 
 	fmt.Println()
-	fmt.Println("════════════════════════════════════════════════")
+	fmt.Println("================================================")
 	fmt.Printf("  Server actief op: http://%s:8000\n", localIP)
 	fmt.Println("  Tablets verbinden via bovenstaand adres")
 	fmt.Println()
 	fmt.Println("  SLUIT DIT VENSTER OM DE SERVER TE STOPPEN")
-	fmt.Println("════════════════════════════════════════════════")
+	fmt.Println("================================================")
 
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
@@ -172,7 +185,8 @@ CACHE_STORE=file
 	// Wait for PHP process to exit
 	if err := cmd.Wait(); err != nil {
 		// Process was killed, that's expected
-		if !strings.Contains(err.Error(), "signal: killed") {
+		if !strings.Contains(err.Error(), "signal: killed") &&
+			!strings.Contains(err.Error(), "exit status") {
 			fmt.Println("Server gestopt:", err)
 		}
 	}
@@ -180,14 +194,15 @@ CACHE_STORE=file
 	cleanup(extractDir)
 }
 
-func extractSingleFile(name string) ([]byte, error) {
-	reader, err := zip.NewReader(bytes.NewReader(bundleZip), int64(len(bundleZip)))
+func readFileFromZip(zipPath, fileName string) ([]byte, error) {
+	reader, err := zip.OpenReader(zipPath)
 	if err != nil {
 		return nil, err
 	}
+	defer reader.Close()
 
 	for _, f := range reader.File {
-		if f.Name == name {
+		if f.Name == fileName {
 			rc, err := f.Open()
 			if err != nil {
 				return nil, err
@@ -197,23 +212,26 @@ func extractSingleFile(name string) ([]byte, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("bestand '%s' niet gevonden in bundle", name)
+	return nil, fmt.Errorf("bestand '%s' niet gevonden in %s", fileName, filepath.Base(zipPath))
 }
 
-func extractBundle(destDir string) error {
+func extractZip(zipPath, destDir string) error {
 	// Clean previous extraction
 	os.RemoveAll(destDir)
 
-	reader, err := zip.NewReader(bytes.NewReader(bundleZip), int64(len(bundleZip)))
+	reader, err := zip.OpenReader(zipPath)
 	if err != nil {
-		return fmt.Errorf("kan zip niet lezen: %w", err)
+		return fmt.Errorf("kan zip niet openen: %w", err)
 	}
+	defer reader.Close()
 
 	for _, f := range reader.File {
 		path := filepath.Join(destDir, f.Name)
 
 		// Security: prevent zip slip
-		if !strings.HasPrefix(filepath.Clean(path), filepath.Clean(destDir)+string(os.PathSeparator)) {
+		cleanDest := filepath.Clean(destDir) + string(os.PathSeparator)
+		if !strings.HasPrefix(filepath.Clean(path)+string(os.PathSeparator), cleanDest) &&
+			filepath.Clean(path) != filepath.Clean(destDir) {
 			return fmt.Errorf("ongeldig pad in zip: %s", f.Name)
 		}
 
@@ -249,7 +267,6 @@ func extractBundle(destDir string) error {
 func readAppKey(extractDir string) string {
 	data, err := os.ReadFile(filepath.Join(extractDir, "laravel", "app_key.txt"))
 	if err != nil {
-		// Generate a random key as fallback
 		return "base64:OFFLINE_FALLBACK_KEY_DO_NOT_USE_IN_PROD"
 	}
 	return strings.TrimSpace(string(data))
