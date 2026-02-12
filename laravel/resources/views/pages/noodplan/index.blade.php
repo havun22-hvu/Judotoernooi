@@ -753,15 +753,26 @@ function abbreviateClub(name) {
                 </div>
 
                 <!-- Lokale Server Download -->
-                <div class="p-4 bg-gray-50 border border-gray-200 rounded">
-                    <h3 class="font-medium text-gray-800">{{ __('Lokale Server Pakket') }}</h3>
-                    <p class="text-sm text-gray-600 mt-1">{{ __('Compleet pakket om lokale server op te starten bij internetuitval (Scenario C)') }}</p>
-                    <button type="button" disabled
-                            class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium w-full cursor-not-allowed"
-                            title="{{ __('Binnenkort beschikbaar') }}">
-                        {{ __('Binnenkort beschikbaar') }}
-                    </button>
+                @if(!$isFreeTier)
+                <div class="p-4 bg-green-50 border border-green-200 rounded">
+                    <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
+                    <p class="text-sm text-green-600 mt-1">{{ __('Draai een volledige server op je laptop. Tablets verbinden via WiFi.') }}</p>
+                    <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
+                       class="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium w-full block text-center">
+                        {{ __('Download server pakket') }}
+                    </a>
                 </div>
+                @else
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
+                    <h3 class="font-medium text-gray-500">{{ __('Offline Server Pakket') }}
+                        <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
+                    </h3>
+                    <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
+                    <span class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium w-full block text-center cursor-not-allowed">
+                        {{ __('Premium') }}
+                    </span>
+                </div>
+                @endif
             </div>
         </div>
     </div>

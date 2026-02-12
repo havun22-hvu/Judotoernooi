@@ -43,6 +43,12 @@ use Illuminate\Support\Facades\Route;
 // Simple ping for connection status check (no auth required)
 Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]))->name('ping');
 
+// Offline mode routes (only active when OFFLINE_MODE=true)
+if (config('app.offline_mode')) {
+    Route::get('/', [\App\Http\Controllers\OfflineController::class, 'index'])->name('offline.index');
+    Route::get('/offline/export-resultaten', [\App\Http\Controllers\OfflineController::class, 'uploadResultaten'])->name('offline.export-resultaten');
+}
+
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
@@ -405,6 +411,8 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 
         // Offline pakket
         Route::get('/offline-pakket', [NoodplanController::class, 'downloadOfflinePakket'])->name('offline-pakket');
+        Route::get('/server-pakket', [NoodplanController::class, 'downloadServerPakket'])->name('server-pakket');
+        Route::get('/database-export', [NoodplanController::class, 'downloadDatabase'])->name('database-export');
         Route::post('/upload-resultaten', [NoodplanController::class, 'uploadOfflineResultaten'])->name('upload-resultaten');
     });
 
