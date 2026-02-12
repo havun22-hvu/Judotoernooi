@@ -177,6 +177,18 @@
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
+                                {{-- Kolom navigatie pijltjes --}}
+                                <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-A'">
+                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], -1)"
+                                            class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-left" disabled>
+                                        &larr;
+                                    </button>
+                                    <span class="text-xs text-gray-400 bracket-nav-label">{{ __('Alle rondes') }}</span>
+                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], 1)"
+                                            class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-right">
+                                        &rarr;
+                                    </button>
+                                </span>
                                 <button x-show="heeftOnverwerkteByes(poule)"
                                         @click="advanceByes(poule.poule_id)"
                                         class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-300">
@@ -209,6 +221,18 @@
                                         :class="debugSlots ? 'bg-yellow-200 text-yellow-800' : 'bg-gray-100 text-gray-600'">
                                     #{{ __('Nrs') }}
                                 </button>
+                                {{-- Kolom navigatie pijltjes --}}
+                                <span class="bracket-nav-controls" :id="'bracket-nav-' + poule.poule_id + '-B'">
+                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], -1, 'B')"
+                                            class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-left" disabled>
+                                        &larr;
+                                    </button>
+                                    <span class="text-xs text-gray-400 bracket-nav-label">{{ __('Alle rondes') }}</span>
+                                    <button type="button" onclick="bracketNavigate(this.closest('[id^=bracket-nav]').id.split('-')[2], 1, 'B')"
+                                            class="text-xs px-1.5 py-1 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-30 disabled:cursor-not-allowed bracket-nav-right">
+                                        &rarr;
+                                    </button>
+                                </span>
                             </div>
                             <span class="text-gray-400">{{ __('Dubbelklik op wedstrijd om klaar te zetten') }}</span>
                             <div x-show="!isBracketLocked(poule)" class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
@@ -901,6 +925,34 @@ window.bracketNavigate = function(pouleId, direction, groep = 'A') {
     }
 };
 
+// Update navigatie knoppen in toolbar na bracket (her)laden
+window.updateBracketNav = function(pouleId, groep) {
+    const bracketEl = document.getElementById('bracket-' + pouleId + '-' + groep);
+    const navEl = document.getElementById('bracket-nav-' + pouleId + '-' + groep);
+    if (!navEl) return;
+
+    if (!bracketEl) {
+        navEl.style.display = 'none';
+        return;
+    }
+
+    const startRonde = parseInt(bracketEl.dataset.startRonde) || 0;
+    const totaalRondes = parseInt(bracketEl.dataset.totaalRondes) || 0;
+
+    // Verberg als <=3 rondes (niet nodig)
+    navEl.style.display = totaalRondes > 3 ? '' : 'none';
+    if (totaalRondes <= 3) return;
+
+    const maxStart = Math.max(0, totaalRondes - 2);
+    const leftBtn = navEl.querySelector('.bracket-nav-left');
+    const rightBtn = navEl.querySelector('.bracket-nav-right');
+    const label = navEl.querySelector('.bracket-nav-label');
+
+    if (leftBtn) leftBtn.disabled = startRonde === 0;
+    if (rightBtn) rightBtn.disabled = startRonde >= maxStart;
+    if (label) label.textContent = startRonde === 0 ? 'Alle rondes' : 'Vanaf ronde ' + (startRonde + 1);
+};
+
 function matInterface() {
     const urlParams = new URLSearchParams(window.location.search);
     const blokNummer = urlParams.get('blok');
@@ -1170,7 +1222,10 @@ function matInterface() {
                 }
 
                 // Initialiseer SortableJS op de nieuwe DOM elementen
-                this.$nextTick(() => window.initBracketSortable?.());
+                this.$nextTick(() => {
+                    window.initBracketSortable?.();
+                    window.updateBracketNav?.(pouleId, groep);
+                });
 
                 // Pas beurtaanduiding kleuren toe
                 this.applyBeurtaanduiding();
