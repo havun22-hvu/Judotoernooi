@@ -1045,6 +1045,7 @@ class MatController extends Controller
             'poule_id' => 'required|exists:poules,id',
             'groep' => 'required|in:A,B',
             'debug_slots' => 'nullable|boolean',
+            'start_ronde' => 'nullable|integer|min:0',
         ]);
 
         $poule = Poule::with(['wedstrijden' => function ($q) {
@@ -1082,7 +1083,8 @@ class MatController extends Controller
 
         try {
             if ($groep === 'A') {
-                $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden);
+                $startRonde = (int) ($validated['start_ronde'] ?? 0);
+                $layout = $this->bracketLayoutService->berekenABracketLayout($wedstrijden, $startRonde);
                 $view = 'pages.mat.partials._bracket';
             } else {
                 $layout = $this->bracketLayoutService->berekenBBracketLayout($wedstrijden);
