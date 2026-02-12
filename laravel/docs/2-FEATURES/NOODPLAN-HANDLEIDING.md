@@ -12,8 +12,8 @@ De noodplan configuratie vind je in de app onder:
 
 Hier kun je:
 - **Netwerk status** live bekijken (lokaal netwerk + internet latency)
-- **Netwerk modus** kiezen (MET/ZONDER eigen router)
-- **IP-adressen** configureren (primair, standby, hotspot)
+- **Scenario kiezen** (A: goed bereik / B: slecht bereik / C: geen internet)
+- **Netwerk gegevens** configureren (router SSID, hotspot, server IP's)
 - **Noodbackup downloaden** (avond voor het toernooi)
 - **Poule-indeling downloaden** (Excel voor printen)
 
@@ -31,34 +31,61 @@ Met dit noodplan blijft je toernooi **altijd** doorlopen.
 
 ---
 
-## Kort Overzicht
+## Scenario's — Welke setup past bij jouw sporthal?
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   NIVEAU 1: Alles werkt normaal                            │
-│   → Via internet, judotournament.org                        │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   NIVEAU 2: Internet weg                                   │
-│   → Lokaal netwerk neemt over (Deco mesh)                  │
-│   → Toernooi gaat gewoon door                              │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   NIVEAU 3: Laptop crasht                                  │
-│   → Backup laptop neemt over                               │
-│   → Max 2 minuten onderbreking                             │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│   NIVEAU 4: Alles crasht                                   │
-│   → Papieren schema's                                       │
-│   → Handmatig scoren                                        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+### Altijd (bij elk scenario)
+- **Laptops** voor hoofd-apps (mat interface, hoofdjury) — muis is preciezer
+- **Tablets** voor vrijwilligers (wegen, dojo check-in, spreker)
+- **Papieren backup** — schrijf uitslagen mee per mat
+- **Hotspot** van tevoren klaarzetten op telefoon (naam + wachtwoord noteren)
+
+### Scenario A: Goed internet bereik
+| | |
+|---|---|
+| **Netwerk** | Sporthal WiFi |
+| **Server** | judotournament.org (online) |
+| **Publieke PWA** | Ja (live scores voor publiek) |
+| **Vrijwilligers PWA** | Ja (mat, wegen, dojo, spreker) |
+| **Eigen Deco** | Optioneel als backup netwerk |
+
+**Storingen:**
+
+| Situatie | Actie |
+|----------|-------|
+| Internet valt weg | Hotspot aan, alle tablets + laptops op hotspot |
+| Internet + hotspot onmogelijk | Lokale server starten → scenario C |
+| Online server crash | Lokale server starten → scenario C |
+
+### Scenario B: Slecht WiFi bereik
+| | |
+|---|---|
+| **Netwerk** | Eigen lokaal netwerk (Deco's ~60 devices / hubs / LAN-kabels) |
+| **Internet** | Via LAN-aansluiting sporthal |
+| **Server** | judotournament.org (online) |
+| **Publieke PWA** | Nee (beperkte netwerkcapaciteit) |
+| **Vrijwilligers PWA** | Ja (mat, wegen, dojo, spreker) |
+
+**Storingen:**
+
+| Situatie | Actie |
+|----------|-------|
+| Deco / eigen netwerk uitval | Herstarten Deco's, of overschakelen op LAN-kabels |
+| Online server crash | Lokale server starten → scenario C |
+
+### Scenario C: Geen internet / server crash
+| | |
+|---|---|
+| **Netwerk** | Eigen lokaal netwerk (verplicht) |
+| **Server** | Lokale server op primaire laptop |
+| **Publieke PWA** | Nee |
+| **Vrijwilligers PWA** | Ja, op lokaal IP (bijv. 192.168.1.100:8000) |
+
+**Storingen:**
+
+| Situatie | Actie |
+|----------|-------|
+| Primaire laptop crash | Standby laptop starten, tablets naar standby IP |
+| Standby ook stuk | Papieren backup — verder op papier |
 
 ---
 
@@ -111,22 +138,17 @@ Met dit noodplan blijft je toernooi **altijd** doorlopen.
 
 > **Voor wie:** Iedereen die niet technisch is maar wel het systeem moet opzetten
 
-### Kan Ik de Wifi van de Sporthal Gebruiken?
+### Welk scenario kies ik?
 
-**Kort antwoord:** Liever niet voor de kritieke apparaten.
+Check van tevoren het WiFi bereik in de sporthal:
 
-| Situatie | Advies |
-|----------|--------|
-| Sporthal heeft betrouwbare wifi | Kan, maar eigen Deco is veiliger |
-| Sporthal wifi is traag/instabiel | Gebruik eigen Deco mesh |
-| Sporthal wifi valt vaak uit | Absoluut eigen Deco gebruiken |
-| Geen sporthal wifi beschikbaar | Eigen Deco is de enige optie |
+| Bereik | Scenario | Advies |
+|--------|----------|--------|
+| Goed en stabiel | **A** | Sporthal WiFi gebruiken, Deco optioneel als backup |
+| Matig of wisselend | **B** | Eigen Deco / hubs / LAN, internet via LAN-aansluiting |
+| Geen of zeer slecht | **C** | Volledig lokaal, eigen netwerk verplicht |
 
-**Waarom eigen netwerk beter is:**
-- Je hebt 100% controle
-- Geen concurrentie met 500 telefoons van publiek
-- Werkt ook als sporthal internet uitvalt
-- Sneller en stabieler
+**Tip:** Test het bereik met je telefoon op meerdere plekken in de zaal (bij de matten, jurytafel, tribunes).
 
 ### De Deco M4 Mesh Uitgelegd
 
@@ -468,103 +490,65 @@ TOTAAL:            6 stopcontacten
 
 ## Als Er Iets Misgaat
 
-### Scenario 1: Internet Weg
+### Internet valt weg (scenario A)
 
-**Wat je ziet:**
-- Publiek dashboard op smartphones werkt niet
-- Lokale tablets werken WEL
+**Wat je ziet:** Publieke PWA werkt niet, vrijwilligers PWA laden traag of niet.
 
 **Wat je doet:**
-- Niets! Lokaal netwerk werkt automatisch door
-- Informeer publiek: "Tijdelijk geen live scores op telefoon"
-- Wedstrijden gaan gewoon door
+1. Hotspot aan op telefoon
+2. Alle tablets + laptops verbinden met hotspot
+3. Wedstrijden gaan door via judotournament.org (via hotspot)
 
-**Wanneer het terugkomt:**
-- Scores worden automatisch gesynchroniseerd
-- Geen actie nodig
+**Als hotspot ook niet lukt:** Lokale server starten → scenario C toepassen.
 
 ---
 
-### Scenario 2: Laptop A Crasht
+### Online server crash (scenario A/B)
 
-**Wat je ziet:**
-- Mat tablets reageren niet
-- Foutmelding "Server niet bereikbaar"
+**Wat je ziet:** judotournament.org reageert niet, foutmelding in browser.
 
 **Wat je doet:**
-
-```
-1. Ga naar Laptop B
-2. Dubbelklik "Activeer als Hoofdserver"
-3. Wacht 30 seconden
-4. Open Deco app op je telefoon:
-   - Ga naar "Apparaten" of "Clients"
-   - Zoek Laptop B
-   - Wijzig IP-adres naar: 192.168.1.100
-     (dit was het IP van Laptop A)
-5. Zet wifi uit/aan op Laptop B
-   (om nieuw IP te krijgen)
-6. Test 1 tablet - deze hoeft NIKS te wijzigen!
-7. Als het werkt: doorgaan
-```
-
-**Waarom dit werkt:**
-- Tablets waren verbonden met 192.168.1.100
-- Laptop B krijgt nu dat IP via Deco
-- Tablets merken niks, verbinden automatisch opnieuw
-
-**Hoelang duurt dit?**
-- 2-3 minuten maximaal
+1. Schakel over naar lokale server (zie "Lokale Server Starten" hieronder)
+2. Alle tablets naar lokaal IP overschakelen
+3. Publieke PWA is tijdelijk niet beschikbaar
 
 ---
 
-### Scenario 3: Beide Laptops Crashen
+### Deco / eigen netwerk uitval (scenario B)
 
-**Wat je ziet:**
-- Niets werkt meer digitaal
-
-**Wat je doet:**
-
-```
-1. RUSTIG BLIJVEN
-2. Roep mat-vrijwilligers bij elkaar
-3. Pak de geprinte wedstrijdschema's
-4. Verdeel schema's over de matten
-5. Instrueer:
-   "Vul handmatig de W en J kolommen in"
-   "W = 0 of 2 (verlies of winst)"
-   "J = judopunten (5, 7 of 10)"
-6. Jij noteert de uitslagen centraal
-7. Na toernooi: invoeren in systeem
-```
-
-**Hoelang duurt dit?**
-- 5-10 minuten om over te schakelen
-- Daarna: toernooi gaat door
-
----
-
-### Scenario 4: Deco Wifi Werkt Niet
-
-**Wat je ziet:**
-- Tablets kunnen niet verbinden
-- Laptops kunnen elkaar niet vinden
+**Wat je ziet:** Tablets kunnen niet verbinden, laptops zien elkaar niet.
 
 **Wat je doet:**
-
-```
-1. Check Deco units:
-   - Stroom aangesloten?
-   - Lampje brandt wit?
-2. Herstart Deco units:
-   - Stekker eruit
-   - 10 seconden wachten
-   - Stekker erin
+1. Check Deco units: stroom aangesloten? Lampje brandt wit?
+2. Herstart Deco's: stekker eruit, 10 sec wachten, stekker erin
 3. Wacht 2 minuten
-4. Als het niet werkt:
-   - Laptop A als wifi hotspot gebruiken
-   - Instructies: [Windows] of [Mac] hotspot
-```
+4. Als het niet werkt: overschakelen op LAN-kabels voor laptops
+
+---
+
+### Primaire laptop crash (scenario C)
+
+**Wat je ziet:** Mat tablets reageren niet, foutmelding "Server niet bereikbaar".
+
+**Wat je doet:**
+1. Start standby laptop
+2. Start lokale server op standby laptop
+3. Alle tablets naar standby IP overschakelen
+
+**Hoelang duurt dit?** 2-3 minuten maximaal.
+
+---
+
+### Alles crasht (noodgeval)
+
+**Wat je ziet:** Niets werkt meer digitaal.
+
+**Wat je doet:**
+1. RUSTIG BLIJVEN
+2. Pak de geprinte wedstrijdschema's
+3. Verdeel schema's over de matten
+4. Instrueer: "Vul handmatig W en J kolommen in"
+5. Na toernooi: invoeren in systeem
 
 ---
 
@@ -636,8 +620,9 @@ OP DE DAG:
 ✓ Leg prints klaar
 
 ALS HET MISGAAT:
-✓ Internet weg → Niets doen, lokaal werkt
-✓ Laptop A crasht → Start Laptop B
+✓ Internet weg → Hotspot aan, of lokale server starten
+✓ Server crash → Lokale server starten (scenario C)
+✓ Laptop crasht → Standby laptop overneemt
 ✓ Alles crasht → Papieren backup
 ```
 
@@ -680,12 +665,16 @@ Print deze uit en hang op bij jurytafel:
 ╠═══════════════════════════════════════════════════════════════╣
 ║                                                               ║
 ║  INTERNET WEG?                                                ║
-║  → Niets doen, lokaal werkt automatisch                       ║
+║  → Hotspot aan op telefoon                                    ║
+║  → Alle devices op hotspot                                    ║
 ║                                                               ║
-║  LAPTOP A CRASHT?                                             ║
-║  → Ga naar Laptop B                                           ║
-║  → Dubbelklik "Activeer als Hoofdserver"                      ║
-║  → Meld nieuw IP aan vrijwilligers                            ║
+║  SERVER CRASH?                                                ║
+║  → Lokale server starten op laptop                            ║
+║  → Tablets naar lokaal IP overschakelen                       ║
+║                                                               ║
+║  LAPTOP CRASHT?                                               ║
+║  → Standby laptop starten                                     ║
+║  → Tablets naar standby IP                                    ║
 ║                                                               ║
 ║  ALLES CRASHT?                                                ║
 ║  → Pak geprinte schema's                                      ║
