@@ -80,13 +80,12 @@ class OfflinePackageBuilder
         $licensePath = storage_path('app/offline_license_' . $toernooi->id . '.json');
         file_put_contents($licensePath, json_encode($license, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-        // Step 3: Create the bundle.zip (everything the Go launcher will embed)
+        // Step 3: Create the bundle.zip (PHP + Laravel + data + license)
         $bundlePath = storage_path('app/offline_bundle_' . $toernooi->id . '.zip');
         $this->createBundle($bundlePath, $sqlitePath, $licensePath);
 
-        // Step 4: Create the final self-extracting exe
-        // The Go launcher has bundle.zip embedded at compile time.
-        // For dynamic packages, we create a zip with launcher + bundle.
+        // Step 4: Create the final downloadable package
+        // Launcher reads bundle.zip from disk at runtime (not embedded)
         $outputPath = storage_path('app/noodpakket_' . $toernooi->id . '.zip');
         $this->createFinalPackage($outputPath, $bundlePath);
 
