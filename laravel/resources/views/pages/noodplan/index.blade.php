@@ -7,7 +7,7 @@
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-3xl font-bold text-gray-800">🆘 {{ __('Noodplan') }}</h1>
-            <p class="text-gray-600 mt-1">{{ __('Exports, backups en prints voor als het mis gaat') }}</p>
+            <p class="text-gray-600 mt-1">{{ __('Exports, prints en noodscenario\'s') }}</p>
         </div>
         <div class="text-right text-sm text-gray-500">
             <p>{{ __('Momentopname') }}: <span class="font-mono">{{ now()->format('H:i:s') }}</span></p>
@@ -65,52 +65,15 @@
         }
     </script>
 
-    <!-- OFFLINE PAKKET -->
-    @if(!$isFreeTier)
-    <div class="bg-indigo-50 border-2 border-indigo-300 rounded-lg p-6 mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-indigo-800 flex items-center gap-2">
-                    <span>📦</span> {{ __('OFFLINE PAKKET') }}
-                </h2>
-                <p class="text-sm text-indigo-600 mt-1">
-                    {{ __('Download een standalone HTML bestand met alle toernooi data. Werkt zonder internet - dubbelklik om te openen in een browser.') }}
-                </p>
-                <ul class="mt-2 text-sm text-indigo-500 list-disc list-inside">
-                    <li>{{ __('Weeglijst, zaaloverzicht, wedstrijdschema\'s') }}</li>
-                    <li>{{ __('Score invoer (opslaat lokaal in browser)') }}</li>
-                    <li>{{ __('Upload resultaten terug naar server als weer online') }}</li>
-                </ul>
-            </div>
-            <a href="{{ route('toernooi.noodplan.offline-pakket', $toernooi->routeParams()) }}"
-               class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-lg whitespace-nowrap ml-4">
-                {{ __('Download (.html)') }}
-            </a>
-        </div>
-    </div>
-    @else
-    <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6 opacity-75">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-gray-500 flex items-center gap-2">
-                    <span>🔒</span> {{ __('OFFLINE PAKKET') }}
-                    <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
-                </h2>
-                <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
-            </div>
-            <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
-               class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium whitespace-nowrap ml-4">
-                {{ __('Upgrade') }}
-            </a>
-        </div>
-    </div>
-    @endif
+    {{-- ================================================================== --}}
+    {{-- SECTIE 1: EXPORTS & DOWNLOADS                                      --}}
+    {{-- ================================================================== --}}
 
     <!-- POULE EXPORT -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
             <span class="mr-2">📋</span>
-            {{ __('POULE EXPORT (backup)') }}
+            {{ __('POULE EXPORT') }}
         </h2>
 
         <div class="space-y-4">
@@ -135,62 +98,6 @@
                     <li>{{ __('Met leeftijds-/gewichtsklasse') }}</li>
                 </ul>
             </div>
-
-            <!-- JSON Download voor offline gebruik -->
-            <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="jsonDownloader()">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium text-purple-800">{{ __('Offline Backup (JSON)') }}</h3>
-                        <p class="text-sm text-purple-600">{{ __('Voor lokale server bij internetstoring - laad in via "Laad JSON backup" hieronder') }}</p>
-                    </div>
-                    <button @click="download()" type="button"
-                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium">
-                        {{ __('Download backup') }}
-                    </button>
-                </div>
-            </div>
-
-            <script>
-                function jsonDownloader() {
-                    return {
-                        toernooiId: {{ $toernooi->id }},
-                        toernooiNaam: '{{ $toernooi->slug }}',
-
-                        async download() {
-                            try {
-                                // Probeer eerst van server
-                                const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
-                                if (!response.ok) throw new Error('Server error');
-                                const data = await response.json();
-                                this.saveAsFile(data);
-                            } catch (e) {
-                                // Fallback naar localStorage
-                                const storageKey = `noodplan_${this.toernooiId}_poules`;
-                                const data = localStorage.getItem(storageKey);
-                                if (data) {
-                                    this.saveAsFile(JSON.parse(data));
-                                } else {
-                                    alert('Geen data beschikbaar (server offline en geen lokale cache).');
-                                }
-                            }
-                        },
-
-                        saveAsFile(data) {
-                            const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
-                            const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
-                            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = filename;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                        }
-                    };
-                }
-            </script>
 
             <!-- Weeglijsten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -300,6 +207,10 @@
         </div>
     </div>
 
+    {{-- ================================================================== --}}
+    {{-- SECTIE 2: POULES PRINTEN                                           --}}
+    {{-- ================================================================== --}}
+
     <!-- POULES PRINTEN (VOORBEREIDING) -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
@@ -333,6 +244,10 @@
             @endforeach
         </div>
     </div>
+
+    {{-- ================================================================== --}}
+    {{-- SECTIE 3: TIJDENS DE WEDSTRIJD                                     --}}
+    {{-- ================================================================== --}}
 
     <!-- TIJDENS DE WEDSTRIJD -->
     <div class="bg-white rounded-lg shadow p-6 mb-6" x-data="liveBackup()" x-init="init()">
@@ -760,6 +675,134 @@ function abbreviateClub(name) {
                         players.splice(1, 0, players.pop());
                     }
                     return schema;
+                }
+            };
+        }
+    </script>
+
+    {{-- ================================================================== --}}
+    {{-- SECTIE 4: NOODSCENARIO'S                                          --}}
+    {{-- ================================================================== --}}
+
+    <div class="border-t-4 border-red-300 mt-8 mb-6"></div>
+
+    <h2 class="text-2xl font-bold text-red-800 mb-4 flex items-center gap-2">
+        🚨 {{ __('NOODSCENARIO\'S') }}
+    </h2>
+    <p class="text-sm text-gray-600 mb-6">{{ __('Downloads en instructies voor als het mis gaat: internetstoring, servercrash of stroomuitval.') }}</p>
+
+    <!-- NOODPLAN DOWNLOADS -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
+            <span class="mr-2">💾</span>
+            {{ __('NOODPLAN DOWNLOADS') }}
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Offline Pakket -->
+            @if(!$isFreeTier)
+            <div class="p-4 bg-indigo-50 border-2 border-indigo-300 rounded">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-indigo-800 flex items-center gap-2">
+                            📦 {{ __('Offline Pakket (.html)') }}
+                        </h3>
+                        <p class="text-sm text-indigo-600 mt-1">
+                            {{ __('Standalone HTML bestand met alle toernooi data. Dubbelklik om te openen in een browser.') }}
+                        </p>
+                        <ul class="mt-2 text-sm text-indigo-500 list-disc list-inside">
+                            <li>{{ __('Weeglijst, zaaloverzicht, wedstrijdschema\'s') }}</li>
+                            <li>{{ __('Score invoer (opslaat lokaal in browser)') }}</li>
+                            <li>{{ __('Upload resultaten terug naar server als weer online') }}</li>
+                        </ul>
+                    </div>
+                    <a href="{{ route('toernooi.noodplan.offline-pakket', $toernooi->routeParams()) }}"
+                       class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-lg whitespace-nowrap ml-4">
+                        {{ __('Download') }}
+                    </a>
+                </div>
+            </div>
+            @else
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-gray-500 flex items-center gap-2">
+                            🔒 {{ __('Offline Pakket') }}
+                            <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
+                        </h3>
+                        <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
+                    </div>
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
+                       class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium whitespace-nowrap ml-4">
+                        {{ __('Upgrade') }}
+                    </a>
+                </div>
+            </div>
+            @endif
+
+            <!-- JSON Backup + Lokale Server Pakket -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- JSON Backup -->
+                <div class="p-4 bg-purple-50 border border-purple-200 rounded" x-data="jsonDownloader()">
+                    <h3 class="font-medium text-purple-800">{{ __('Offline Backup (JSON)') }}</h3>
+                    <p class="text-sm text-purple-600 mt-1">{{ __('Voor lokale server bij internetstoring - laad in via "Laad JSON backup" hierboven') }}</p>
+                    <button @click="download()" type="button"
+                            class="mt-3 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium w-full">
+                        {{ __('Download backup') }}
+                    </button>
+                </div>
+
+                <!-- Lokale Server Download -->
+                <div class="p-4 bg-gray-50 border border-gray-200 rounded">
+                    <h3 class="font-medium text-gray-800">{{ __('Lokale Server Pakket') }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">{{ __('Compleet pakket om lokale server op te starten bij internetuitval (Scenario C)') }}</p>
+                    <button type="button" disabled
+                            class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium w-full cursor-not-allowed"
+                            title="{{ __('Binnenkort beschikbaar') }}">
+                        {{ __('Binnenkort beschikbaar') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function jsonDownloader() {
+            return {
+                toernooiId: {{ $toernooi->id }},
+                toernooiNaam: '{{ $toernooi->slug }}',
+
+                async download() {
+                    try {
+                        // Probeer eerst van server
+                        const response = await fetch('{{ route("toernooi.noodplan.sync-data", $toernooi->routeParams()) }}');
+                        if (!response.ok) throw new Error('Server error');
+                        const data = await response.json();
+                        this.saveAsFile(data);
+                    } catch (e) {
+                        // Fallback naar localStorage
+                        const storageKey = `noodplan_${this.toernooiId}_poules`;
+                        const data = localStorage.getItem(storageKey);
+                        if (data) {
+                            this.saveAsFile(JSON.parse(data));
+                        } else {
+                            alert('Geen data beschikbaar (server offline en geen lokale cache).');
+                        }
+                    }
+                },
+
+                saveAsFile(data) {
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+                    const filename = `backup_${this.toernooiNaam}_${timestamp}.json`;
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
                 }
             };
         }
