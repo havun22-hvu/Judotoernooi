@@ -99,6 +99,32 @@
                 </ul>
             </div>
 
+            <!-- Poules printen per blok/mat -->
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded">
+                <h3 class="font-medium text-blue-800 mb-1">{{ __('Poules printen') }}</h3>
+                <p class="text-sm text-blue-600 mb-3">{{ __('Print poule-overzichten per blok/mat. Handig om uit te delen aan tafelofficiëls.') }}</p>
+                <div class="space-y-2">
+                    @foreach($blokken as $blok)
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-sm font-medium text-blue-800 w-14">Blok {{ $blok->nummer }}</span>
+                        @php
+                            $matten = $blok->poules->pluck('mat_nummer')->unique()->sort();
+                        @endphp
+                        @foreach($matten as $matNummer)
+                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}&mat={{ $matNummer }}" target="_blank"
+                           class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                            Mat {{ $matNummer }}
+                        </a>
+                        @endforeach
+                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}" target="_blank"
+                           class="px-3 py-1.5 bg-blue-800 text-white rounded text-sm hover:bg-blue-900">
+                            {{ __('Alle matten') }}
+                        </a>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+
             <!-- Weeglijsten -->
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
@@ -208,45 +234,7 @@
     </div>
 
     {{-- ================================================================== --}}
-    {{-- SECTIE 2: POULES PRINTEN                                           --}}
-    {{-- ================================================================== --}}
-
-    <!-- POULES PRINTEN (VOORBEREIDING) -->
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b flex items-center">
-            <span class="mr-2">📋</span>
-            {{ __('POULES PRINTEN (voorbereiding)') }}
-        </h2>
-        <p class="text-sm text-gray-600 mb-4">{{ __('Print poule-overzichten per blok/mat vóór het toernooi begint. Handig om uit te delen aan tafelofficiëls.') }}</p>
-
-        <div class="space-y-4">
-            @foreach($blokken as $blok)
-            <div class="p-3 bg-blue-50 border border-blue-200 rounded">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-medium text-blue-800">Blok {{ $blok->nummer }}</h3>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    @php
-                        $matten = $blok->poules->pluck('mat_nummer')->unique()->sort();
-                    @endphp
-                    @foreach($matten as $matNummer)
-                    <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}&mat={{ $matNummer }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                        Mat {{ $matNummer }}
-                    </a>
-                    @endforeach
-                    <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}" target="_blank"
-                       class="px-3 py-2 bg-blue-800 text-white rounded text-sm hover:bg-blue-900">
-                        {{ __('Alle matten') }}
-                    </a>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-
-    {{-- ================================================================== --}}
-    {{-- SECTIE 3: TIJDENS DE WEDSTRIJD                                     --}}
+    {{-- SECTIE 2: TIJDENS DE WEDSTRIJD                                     --}}
     {{-- ================================================================== --}}
 
     <!-- TIJDENS DE WEDSTRIJD -->
