@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 12 februari 2026
+> **Laatste update:** 13 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -19,6 +19,8 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **13 feb 2026 (2)** | **Offline Noodpakket Server (Fase 1):** Complete infrastructuur gebouwd. OfflineExportService (SQLite export, getest: 51 judokas/77 wedstrijden/120KB). Go launcher (leest bundle.zip runtime). OfflinePackageBuilder (combineert launcher+PHP+Laravel+data). PowerShell build.ps1 (automatisch Go+PHP downloaden, Laravel strippen, compileren). OfflineMode middleware. Artisan `offline:export` command. **Build script nog niet gedraaid** (Go download nodig). | `offline/README.md`, `memory/offline-pakket.md` |
+| **13 feb 2026** | Noodplan pagina reorganisatie: exports/prints boven, noodscenario's onder. JSON backup verwijderd (zit in server pakket). Poules printen in POULE EXPORT sectie. Live sync uitgebreid met weeg-gegevens + aanwezigheid. Offline Server Pakket knop (premium/free tier). | `memory/offline-pakket.md` |
 | **12 feb 2026 (2)** | Pagina Builder Pro publieke rendering: 19 block partials + orchestrator, sections/header/footer detectie, fallback naar legacy blokken. Double-escape fix (`e()` + `{{ }}`). Deployed staging + production. | smallwork.md |
 | **12 feb 2026** | IJF B-bracket vereenvoudigd: `b_repechage` hernoemd naar `b_halve_finale`, `aantal_brons` ondersteuning (1 of 2, standaard 2), B-groep count fix (6 bij IJF), herkomst labels fix ("uit A-1/4", "B-1/2 winnaar", "uit A-1/2"). **WIP: B-1/4 finale nog niet geïmplementeerd** — huidige IJF B-bracket heeft alleen B-1/2 + Brons (4 wed). Zie hieronder. | `memory/MEMORY.md` (Eliminatie sectie) |
 | **10 feb 2026 avond** | Eliminatie bracket DnD hersteld: HTML5 DnD terug voor PC (ondragstart/ondrop/ondragover), SortableJS alleen als touch-only fallback (group per poule, DOM revert). dropJudoka opgeschoond (debug logs weg, laadWedstrijden terug). Beurtaanduiding (double-click kleuren) intact. | `memory/eliminatie-beurtaanduiding.md` |
@@ -52,9 +54,10 @@
 - **Production deploy** - Alle 3 omgevingen in sync (commit 7458156)
 
 ### 🔧 In Progress
+- **Noodplan pagina** - Gereorganiseerd (branch `feature/noodplan-scenarios`), nog niet gemerged naar main
+- **Offline Server Pakket** - Go launcher + portable PHP wordt gebouwd in terminal sessie. Download knop staat klaar op noodplan pagina (premium only). Zie `memory/offline-pakket.md`
 - **Pagina Builder Pro** - Publieke rendering klaar, nog visueel testen met diverse bloktypes op staging
-- **IJF B-1/4 finale** - Huidige IJF B-bracket heeft alleen B-1/2 + Brons (4 wed, 6 judoka's). De B-1/4 finale moet nog geïmplementeerd worden. Bestanden: `EliminatieService.php` (`genereerBGroepIJF()`), `BracketLayoutService.php` (lookup tabellen), `EliminatieServiceTest.php` (tests aanpassen)
-- **Offline Pakket** - MVP klaar, nog visueel testen in browser nodig → `memory/offline-pakket.md`
+- **IJF B-1/4 finale** - Huidige IJF B-bracket heeft alleen B-1/2 + Brons (4 wed, 6 judoka's). De B-1/4 finale moet nog geïmplementeerd worden
 
 ### 🎯 Volgende Stap
 - **Live toernooi** - Klaar voor eerste echte toernooi
