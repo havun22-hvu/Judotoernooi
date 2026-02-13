@@ -748,6 +748,9 @@ class NoodplanController extends Controller
                         'id' => $j->id,
                         'naam' => $j->naam,
                         'club' => $j->club?->naam,
+                        'gewicht' => $j->gewicht,
+                        'gewogen_gewicht' => $j->gewogen_gewicht,
+                        'aanwezigheid' => $j->aanwezigheid,
                     ])->values(),
                     'wedstrijden' => $poule->wedstrijden->map(fn($w) => [
                         'id' => $w->id,
