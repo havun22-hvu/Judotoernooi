@@ -789,25 +789,21 @@
 
 ---
 
-## Sessie: 12 februari 2026 (avond)
+## Sessie: 14 februari 2026
 
-### Feat: Pagina Builder Pro publieke rendering
-- **Type:** Feature
-- **Wat:** Pro builder content (sections + header/footer) renderen op publieke pagina
-- **Bestanden:** 22 nieuwe, 1 gewijzigd
-  - `publiek/partials/blocks/*.blade.php` (19 block partials)
-  - `publiek/partials/pro-section.blade.php` (CSS Grid + legacy columns)
-  - `publiek/partials/pro-header-footer.blade.php` (header/footer wrapper)
-  - `publiek/partials/pro-content.blade.php` (orchestrator)
-  - `publiek/index.blade.php` (detectielogica)
-- **Detectie:** `sections` → pro rendering, `blokken` → legacy, niets → default
-- **Beveiliging:** `view()->exists()` check per block type
-
-### Fix: Double HTML escaping in block partials
-- **Type:** Bug fix
-- **Wat:** `e()` + `{{ }}` = dubbele escape → apostrofen werden `&#039;`
-- **Bestanden:** 11 block partials
-- **Oplossing:** `e()` verwijderd, `{{ }}` doet escaping al
+### Refactor: Page Builder verwijderd → Havunity
+- **Type:** Grote opschoning
+- **Wat:** Pagina builder uit JudoToernooi gehaald, wordt apart product (Havunity)
+- **Verwijderd (28 bestanden, 4077 regels):**
+  - `PaginaBuilderController.php`
+  - `pagina-builder.blade.php` + `pagina-builder-pro.blade.php`
+  - 3 pro-partials (`pro-content`, `pro-section`, `pro-header-footer`)
+  - 19 block partials (`blocks/` directory)
+  - 4 pagina-builder routes uit `web.php`
+- **Publieke info tab:** Vereenvoudigd naar standaard content (icon + judoschool naam + toernooi info)
+- **Edit pagina:** Pagina Builder knop → Preview link + URL kopiëren knop
+- **Test tab → Admin tab:** Hernoemd in edit.blade.php
+- **Havunity:** Nieuw project `D:\GitHub\Havunity\` met PLAN.md, CLAUDE.md, .claude/context.md
 
 ---
 
