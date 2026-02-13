@@ -187,6 +187,32 @@ foreach ($dir in $RemoveDirs) {
 $exportsDir = Join-Path $LaravelTarget "app\Exports"
 if (Test-Path $exportsDir) { Remove-Item -Recurse -Force $exportsDir }
 
+# Verwijder dev-only vendor packages (phpunit, mockery, faker etc.)
+$RemoveVendors = @(
+    "vendor\sebastian", "vendor\phpunit", "vendor\mockery", "vendor\fakerphp",
+    "vendor\nunomaduro", "vendor\psy", "vendor\filp",
+    "vendor\phpoffice", "vendor\ezyang", "vendor\maatwebsite",
+    "vendor\laravel\pint", "vendor\laravel\sail", "vendor\laravel\tinker",
+    "vendor\laravel\breeze", "vendor\laravel\reverb",
+    "vendor\pusher", "vendor\react", "vendor\ratchet", "vendor\cboden",
+    "vendor\mollie"
+)
+foreach ($dir in $RemoveVendors) {
+    $path = Join-Path $LaravelTarget $dir
+    if (Test-Path $path) {
+        Remove-Item -Recurse -Force $path
+        Write-Host "      Verwijderd: $dir" -ForegroundColor DarkGray
+    }
+}
+
+# Verwijder tests/docs uit alle overgebleven vendor packages
+Write-Host "      Vendor tests/docs opschonen..." -ForegroundColor DarkGray
+$VendorDir = Join-Path $LaravelTarget "vendor"
+$CleanPatterns = @("tests", "Tests", "test", "Test", "doc", "docs", "documentation", "examples", "example", ".github", ".git")
+Get-ChildItem $VendorDir -Directory -Recurse -Depth 2 | Where-Object { $CleanPatterns -contains $_.Name } | ForEach-Object {
+    Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # Maak lege migrations dir (Laravel verwacht dit)
 New-Item -ItemType Directory -Path (Join-Path $LaravelTarget "database\migrations") -Force | Out-Null
 
