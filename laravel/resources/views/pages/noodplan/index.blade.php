@@ -730,19 +730,74 @@ function abbreviateClub(name) {
 
             <!-- Offline Server Pakket -->
             @if(!$isFreeTier)
-            <div class="p-4 bg-green-50 border border-green-200 rounded">
-                <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
+            <div class="p-4 bg-green-50 border border-green-200 rounded" x-data="serverPakketStatus()" x-init="init()">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
+                    <div class="flex items-center gap-2 text-xs">
+                        <template x-if="syncStatus === 'connected'">
+                            <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                                Data up-to-date — <span x-text="laatsteSync"></span>
+                            </span>
+                        </template>
+                        <template x-if="syncStatus === 'stale'">
+                            <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                                Laatste sync: <span x-text="laatsteSync"></span>
+                            </span>
+                        </template>
+                        <template x-if="syncStatus === 'none'">
+                            <span class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span>
+                                {{ __('Nog geen sync') }}
+                            </span>
+                        </template>
+                    </div>
+                </div>
                 <p class="text-sm text-green-600 mt-1">{{ __('Compleet pakket met server + database. Dubbelklik om te starten, tablets verbinden via WiFi.') }}</p>
                 <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
                     <li>{{ __('Bevat alle poules, judoka\'s, wedstrijden en scores') }}</li>
                     <li>{{ __('Draait volledig offline op je laptop') }}</li>
-                    <li>{{ __('Aparte JSON backup niet meer nodig') }}</li>
+                    <li>{{ __('Bij opstarten haalt de launcher automatisch de nieuwste data op') }}</li>
                 </ul>
                 <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
                    class="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block">
                     {{ __('Download server pakket') }}
                 </a>
             </div>
+            <script>
+                function serverPakketStatus() {
+                    return {
+                        syncStatus: 'none',
+                        laatsteSync: '',
+                        toernooiId: {{ $toernooi->id }},
+
+                        init() {
+                            this.checkSync();
+                            setInterval(() => this.checkSync(), 5000);
+                        },
+
+                        checkSync() {
+                            const syncKey = `noodplan_${this.toernooiId}_laatste_sync`;
+                            const sync = localStorage.getItem(syncKey);
+
+                            if (!sync) {
+                                this.syncStatus = 'none';
+                                return;
+                            }
+
+                            const syncDate = new Date(sync);
+                            const now = new Date();
+                            const diffMs = now - syncDate;
+
+                            this.laatsteSync = syncDate.toLocaleTimeString('nl-NL', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+                            // < 2 min = connected, anders stale
+                            this.syncStatus = diffMs < 120000 ? 'connected' : 'stale';
+                        }
+                    };
+                }
+            </script>
             @else
             <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
                 <h3 class="font-medium text-gray-500">{{ __('Offline Server Pakket') }}
