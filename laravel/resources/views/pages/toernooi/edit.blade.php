@@ -94,10 +94,10 @@
         </button>
         @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
         <button type="button"
-                @click="activeTab = 'test'"
-                :class="activeTab === 'test' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                @click="activeTab = 'admin'"
+                :class="activeTab === 'admin' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                 class="px-6 py-3 font-medium border-b-2 -mb-px transition-colors">
-            {{ __('Test') }}
+            {{ __('Admin') }}
         </button>
         @endif
         </div>
@@ -1964,13 +1964,23 @@
     <!-- PUBLIEKE APP -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">
         <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Publieke app') }}</h2>
-        <div class="flex flex-wrap gap-4">
-            <a href="{{ route('toernooi.pagina-builder.index', $toernooi->routeParams()) }}" target="_blank" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 flex items-center gap-2">
+        @php
+            $publiekUrl = route('publiek.index', [$toernooi->organisator->slug, $toernooi->slug]);
+        @endphp
+        <div class="flex flex-wrap gap-4 items-center">
+            <a href="{{ $publiekUrl }}" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
-                {{ __('Pagina Builder') }}
+                {{ __('Bekijk publieke pagina') }}
             </a>
+            <button type="button" onclick="navigator.clipboard.writeText('{{ $publiekUrl }}').then(() => { this.textContent = 'Gekopieerd!'; setTimeout(() => { this.innerHTML = '<svg class=\'w-5 h-5 inline mr-1\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z\'></path></svg>URL kopiëren'; }, 2000); })" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                {{ __('URL kopiëren') }}
+            </button>
             <form action="{{ route('toernooi.portaal.instellingen', $toernooi->routeParams()) }}" method="POST" class="inline">
                 @csrf
                 @method('PUT')
@@ -3266,7 +3276,7 @@
 
     <!-- TAB: TEST (alleen voor admin) -->
     @if(auth()->user()?->email === 'henkvu@gmail.com' || session("toernooi_{$toernooi->id}_rol") === 'admin')
-    <div x-show="activeTab === 'test'" x-cloak>
+    <div x-show="activeTab === 'admin'" x-cloak>
 
     <!-- RESET ALLES -->
     <div class="bg-white rounded-lg shadow p-6 mb-6">

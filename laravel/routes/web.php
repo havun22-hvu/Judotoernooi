@@ -16,7 +16,6 @@ use App\Http\Controllers\WegingController;
 use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
-use App\Http\Controllers\PaginaBuilderController;
 use App\Http\Controllers\MollieController;
 use App\Http\Controllers\WimpelController;
 use App\Http\Controllers\DeviceToegangController;
@@ -358,11 +357,6 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::get('coach-kaarten/ingecheckt', [CoachKaartController::class, 'ingecheckteCoaches'])->name('coach-kaart.ingecheckt');
         Route::post('coach-kaarten/{coachKaart}/force-checkout', [CoachKaartController::class, 'forceCheckout'])->name('coach-kaart.force-checkout');
 
-        // Pagina Builder (publieke voorpagina bewerken)
-        Route::get('pagina-builder', [PaginaBuilderController::class, 'index'])->name('pagina-builder.index');
-        Route::post('pagina-builder/opslaan', [PaginaBuilderController::class, 'opslaan'])->name('pagina-builder.opslaan');
-        Route::post('pagina-builder/upload', [PaginaBuilderController::class, 'upload'])->name('pagina-builder.upload');
-        Route::delete('pagina-builder/afbeelding', [PaginaBuilderController::class, 'verwijderAfbeelding'])->name('pagina-builder.verwijder-afbeelding');
 
         // Activiteiten log
         Route::get('activiteiten', [ActivityLogController::class, 'index'])->name('activiteiten');
