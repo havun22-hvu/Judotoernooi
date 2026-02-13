@@ -61,7 +61,7 @@ class NoodplanController extends Controller
      */
     public function printPoules(Organisator $organisator, Toernooi $toernooi, ?int $blokNummer = null): View
     {
-        $query = $toernooi->blokken()->with(['poules' => fn($q) => $q->with(['judokas.club', 'mat'])])->orderBy('nummer');
+        $query = $toernooi->blokken()->with(['poules' => fn($q) => $q->has('judokas')->with(['judokas.club', 'mat'])])->orderBy('nummer');
 
         if ($blokNummer) {
             $query->where('nummer', $blokNummer);
