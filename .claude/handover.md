@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 13 februari 2026
+> **Laatste update:** 14 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -19,6 +19,7 @@
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **14 feb 2026** | **Page Builder verwijderd → Havunity:** Alle page builder code verwijderd (28 bestanden, 4077 regels). Publieke info tab vereenvoudigd (icon + judoschool). Preview link + URL kopiëren in edit pagina. Test tab → Admin. Nieuw project `D:\GitHub\Havunity\` opgezet (PLAN.md, CLAUDE.md, context.md). | smallwork.md |
 | **13 feb 2026 (2)** | **Offline Noodpakket Server (Fase 1):** Complete infrastructuur gebouwd. OfflineExportService (SQLite export, getest: 51 judokas/77 wedstrijden/120KB). Go launcher (leest bundle.zip runtime). OfflinePackageBuilder (combineert launcher+PHP+Laravel+data). PowerShell build.ps1 (automatisch Go+PHP downloaden, Laravel strippen, compileren). OfflineMode middleware. Artisan `offline:export` command. **Build script nog niet gedraaid** (Go download nodig). | `offline/README.md`, `memory/offline-pakket.md` |
 | **13 feb 2026** | Noodplan pagina reorganisatie: exports/prints boven, noodscenario's onder. JSON backup verwijderd (zit in server pakket). Poules printen in POULE EXPORT sectie. Live sync uitgebreid met weeg-gegevens + aanwezigheid. Offline Server Pakket knop (premium/free tier). | `memory/offline-pakket.md` |
 | **12 feb 2026 (2)** | Pagina Builder Pro publieke rendering: 19 block partials + orchestrator, sections/header/footer detectie, fallback naar legacy blokken. Double-escape fix (`e()` + `{{ }}`). Deployed staging + production. | smallwork.md |
@@ -56,7 +57,7 @@
 ### 🔧 In Progress
 - **Noodplan pagina** - Gereorganiseerd (branch `feature/noodplan-scenarios`), nog niet gemerged naar main
 - **Offline Server Pakket** - Go launcher + portable PHP wordt gebouwd in terminal sessie. Download knop staat klaar op noodplan pagina (premium only). Zie `memory/offline-pakket.md`
-- **Pagina Builder Pro** - Publieke rendering klaar, nog visueel testen met diverse bloktypes op staging
+- **Havunity** - Nieuw project `D:\GitHub\Havunity\`, alleen docs/plan. Laravel installatie in aparte sessie
 - **IJF B-1/4 finale** - Huidige IJF B-bracket heeft alleen B-1/2 + Brons (4 wed, 6 judoka's). De B-1/4 finale moet nog geïmplementeerd worden
 
 ### 🎯 Volgende Stap
