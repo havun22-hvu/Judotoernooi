@@ -99,28 +99,22 @@
                 </ul>
             </div>
 
-            <!-- Poules printen per blok/mat -->
-            <div class="p-4 bg-blue-50 border border-blue-200 rounded">
-                <h3 class="font-medium text-blue-800 mb-1">{{ __('Poules printen') }}</h3>
-                <p class="text-sm text-blue-600 mb-3">{{ __('Print poule-overzichten per blok/mat. Handig om uit te delen aan tafelofficiëls.') }}</p>
-                <div class="space-y-2">
+            <!-- Poules printen -->
+            <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+                <div>
+                    <h3 class="font-medium text-blue-800">{{ __('Poules printen') }}</h3>
+                    <p class="text-sm text-blue-600">{{ __('Poule-schema\'s met judoka\'s per blok. Voor tafelofficiëls.') }}</p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
+                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        {{ __('Alle') }}
+                    </a>
                     @foreach($blokken as $blok)
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-sm font-medium text-blue-800 w-14">Blok {{ $blok->nummer }}</span>
-                        @php
-                            $matten = $blok->poules->pluck('mat_nummer')->unique()->sort();
-                        @endphp
-                        @foreach($matten as $matNummer)
-                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}&mat={{ $matNummer }}" target="_blank"
-                           class="px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                            Mat {{ $matNummer }}
-                        </a>
-                        @endforeach
-                        <a href="{{ route('toernooi.poule.index', $toernooi->routeParams()) }}?blok={{ $blok->nummer }}" target="_blank"
-                           class="px-3 py-1.5 bg-blue-800 text-white rounded text-sm hover:bg-blue-900">
-                            {{ __('Alle matten') }}
-                        </a>
-                    </div>
+                    <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
+                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                        {{ $blok->nummer }}
+                    </a>
                     @endforeach
                 </div>
             </div>
