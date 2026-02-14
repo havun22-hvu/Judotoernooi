@@ -1,3 +1,8 @@
+<style>
+    /* Touch devices: prevent browser scroll from intercepting drag */
+    .bracket-judoka { touch-action: none; }
+    .bracket-drop { touch-action: none; }
+</style>
     @php
         $pwaApp = 'mat';
         // API URLs - different for device-bound vs admin access
@@ -2304,6 +2309,7 @@ window.initBracketSortable = function() {
             animation: 0,
             delay: 150,
             delayOnTouchOnly: true,
+            forceFallback: true,
             draggable: '.bracket-judoka',
             ghostClass: 'opacity-50',
             emptyInsertThreshold: 15,
