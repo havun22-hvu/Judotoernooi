@@ -50,7 +50,7 @@
                                             class="w-full text-sm border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">{{ __('-- Selecteer vrijwilliger --') }}</option>
                                         <template x-for="v in vrijwilligersPerFunctie[rol.key] || []" :key="v.id">
-                                            <option :value="v.id" :selected="toegang.naam === v.voornaam" x-text="v.voornaam + (v.telefoonnummer ? ' (' + v.telefoonnummer + ')' : '')"></option>
+                                            <option :value="v.id" :selected="toegang.naam === v.voornaam" x-text="v.voornaam + (v.telefoonnummer ? ' (' + v.telefoonnummer + ')' : '') + (v.email ? ' - ' + v.email : '')"></option>
                                         </template>
                                     </select>
                                     <span x-show="savedId === toegang.id" x-cloak
@@ -72,6 +72,13 @@
                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded text-sm"
                                    title="{{ __('Stuur via WhatsApp') }}">
                                     <span>📱 WhatsApp</span>
+                                </a>
+                                {{-- Email (alleen als email bekend) --}}
+                                <a x-show="toegang.email"
+                                   :href="getEmailUrl(toegang)"
+                                   class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded text-sm"
+                                   title="{{ __('Stuur via Email') }}">
+                                    <span>📧 Email</span>
                                 </a>
                                 {{-- Copy URL --}}
                                 <button type="button"
@@ -158,13 +165,17 @@
                         <input type="text"
                                x-model="newVrijwilliger.voornaam"
                                placeholder="{{ __('Voornaam') }}"
-                               class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                               class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <input type="text"
                                x-model="newVrijwilliger.telefoonnummer"
-                               placeholder="{{ __('Telefoonnummer') }}"
-                               class="col-span-4 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                               placeholder="{{ __('Telefoon') }}"
+                               class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                        <input type="email"
+                               x-model="newVrijwilliger.email"
+                               placeholder="{{ __('Email') }}"
+                               class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                         <select x-model="newVrijwilliger.functie"
-                                class="col-span-3 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
+                                class="col-span-2 text-sm border border-gray-300 rounded px-2 py-1.5 focus:ring-1 focus:ring-blue-500">
                             <template x-for="rol in rollen" :key="rol.key">
                                 <option :value="rol.key" x-text="rol.naam"></option>
                             </template>
@@ -185,9 +196,10 @@
                     </template>
                     <template x-for="v in vrijwilligers" :key="v.id">
                         <div class="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 flex-wrap">
                                 <span class="font-medium" x-text="v.voornaam"></span>
                                 <span class="text-gray-500 text-sm" x-text="v.telefoonnummer || '-'"></span>
+                                <span x-show="v.email" class="text-gray-500 text-sm" x-text="v.email"></span>
                                 <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded" x-text="v.functie_label"></span>
                             </div>
                             <button type="button"
@@ -217,7 +229,7 @@ function deviceToegangen() {
         toegangen: [],
         vrijwilligers: [],
         showVrijwilligersModal: false,
-        newVrijwilliger: { voornaam: '', telefoonnummer: '', functie: 'mat' },
+        newVrijwilliger: { voornaam: '', telefoonnummer: '', email: '', functie: 'mat' },
         toernooiNaam: '{{ $toernooi->naam }}',
         rollen: [
             { key: 'hoofdjury', naam: '{{ __('Hoofdjury') }}', icon: '⚖️' },
@@ -289,7 +301,7 @@ function deviceToegangen() {
                 if (response.ok) {
                     const nieuweV = await response.json();
                     this.vrijwilligers.push(nieuweV);
-                    this.newVrijwilliger = { voornaam: '', telefoonnummer: '', functie: this.newVrijwilliger.functie };
+                    this.newVrijwilliger = { voornaam: '', telefoonnummer: '', email: '', functie: this.newVrijwilliger.functie };
                 }
             } catch (e) {
                 console.error('Failed to add vrijwilliger:', e);
@@ -314,6 +326,7 @@ function deviceToegangen() {
             const v = this.vrijwilligers.find(x => x.id == vrijwilligerId);
             const naam = v ? v.voornaam : '';
             const telefoon = v ? v.telefoonnummer : null;
+            const email = v ? v.email : null;
 
             try {
                 const response = await fetch(`{{ url($toernooi->organisator->slug . '/toernooi/' . $toernooi->slug . '/api/device-toegang') }}/${toegang.id}`, {
@@ -324,7 +337,7 @@ function deviceToegangen() {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ naam, telefoon }),
+                    body: JSON.stringify({ naam, telefoon, email }),
                 });
                 if (response.ok) {
                     const updated = await response.json();
@@ -347,6 +360,13 @@ function deviceToegangen() {
             }
             const bericht = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}! {{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\nPIN: ${toegang.pincode}`;
             return 'https://wa.me/' + nummer.replace('+', '') + '?text=' + encodeURIComponent(bericht);
+        },
+
+        getEmailUrl(toegang) {
+            if (!toegang.email) return '';
+            const subject = `{{ __('Toegang') }} ${toegang.label} - ${this.toernooiNaam}`;
+            const body = `{{ __('Hoi') }} ${toegang.naam || '{{ __('daar') }}'}!\n\n{{ __('Hier is je link voor') }} ${toegang.label} {{ __('op') }} ${this.toernooiNaam}:\n${toegang.url}\n\nPIN: ${toegang.pincode}\n\n{{ __('Klik op de link en voer de PIN in om in te loggen.') }}`;
+            return 'mailto:' + encodeURIComponent(toegang.email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
         },
 
         async addToegang(rol) {
