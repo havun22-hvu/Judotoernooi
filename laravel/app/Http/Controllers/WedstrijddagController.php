@@ -469,43 +469,45 @@ class WedstrijddagController extends Controller
             'from_poule_id' => 'required|exists:poules,id',
         ]);
 
-        $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $oudePoule = Poule::findOrFail($validated['from_poule_id']);
+        return DB::transaction(function () use ($validated, $toernooi) {
+            $judoka = Judoka::findOrFail($validated['judoka_id']);
+            $oudePoule = Poule::findOrFail($validated['from_poule_id']);
 
-        // Verwijder uit oude poule
-        $oudePoule->judokas()->detach($judoka->id);
-        $oudePoule->updateStatistieken();
-        $oudePoule->refresh();
-        $oudePoule->load('judokas');
+            // Verwijder uit oude poule
+            $oudePoule->judokas()->detach($judoka->id);
+            $oudePoule->updateStatistieken();
+            $oudePoule->refresh();
+            $oudePoule->load('judokas');
 
-        // Bereken actieve judoka's voor response
-        $actieveJudokas = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
+            // Bereken actieve judoka's voor response
+            $actieveJudokas = $oudePoule->judokas->filter(fn($j) => $j->aanwezigheid !== 'afwezig')->count();
 
-        // Hervalideer of poule nog problematisch is
-        $probleem = $oudePoule->isProblematischNaWeging();
+            // Hervalideer of poule nog problematisch is
+            $probleem = $oudePoule->isProblematischNaWeging();
 
-        // Bereken nieuwe gewichtsrange voor titel update
-        $gewichtsRange = $oudePoule->getGewichtsRange();
+            // Bereken nieuwe gewichtsrange voor titel update
+            $gewichtsRange = $oudePoule->getGewichtsRange();
 
-        ActivityLogger::log($toernooi, 'naar_wachtruimte', "{$judoka->naam} naar wachtruimte vanuit poule {$oudePoule->nummer}", [
-            'model' => $judoka,
-            'properties' => ['van_poule_id' => $oudePoule->id],
-            'interface' => 'hoofdjury',
-        ]);
+            ActivityLogger::log($toernooi, 'naar_wachtruimte', "{$judoka->naam} naar wachtruimte vanuit poule {$oudePoule->nummer}", [
+                'model' => $judoka,
+                'properties' => ['van_poule_id' => $oudePoule->id],
+                'interface' => 'hoofdjury',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => "{$judoka->naam} verplaatst naar wachtruimte",
-            'van_poule' => [
-                'id' => $oudePoule->id,
-                'titel' => $oudePoule->titel,
-                'aantal_judokas' => $actieveJudokas,
-                'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
-                'is_problematisch' => $probleem !== null,
-                'probleem' => $probleem,
-                'gewichts_range' => $gewichtsRange,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => "{$judoka->naam} verplaatst naar wachtruimte",
+                'van_poule' => [
+                    'id' => $oudePoule->id,
+                    'titel' => $oudePoule->titel,
+                    'aantal_judokas' => $actieveJudokas,
+                    'aantal_wedstrijden' => $oudePoule->berekenAantalWedstrijden($actieveJudokas),
+                    'is_problematisch' => $probleem !== null,
+                    'probleem' => $probleem,
+                    'gewichts_range' => $gewichtsRange,
+                ],
+            ]);
+        });
     }
 
     /**
@@ -518,36 +520,38 @@ class WedstrijddagController extends Controller
             'poule_id' => 'required|exists:poules,id',
         ]);
 
-        $judoka = Judoka::findOrFail($validated['judoka_id']);
-        $poule = Poule::findOrFail($validated['poule_id']);
+        return DB::transaction(function () use ($validated, $toernooi) {
+            $judoka = Judoka::findOrFail($validated['judoka_id']);
+            $poule = Poule::findOrFail($validated['poule_id']);
 
-        // Verwijder uit poule
-        $poule->judokas()->detach($judoka->id);
+            // Verwijder uit poule
+            $poule->judokas()->detach($judoka->id);
 
-        // Bereken actuele statistieken (alleen actieve judoka's)
-        $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
-        $actieveJudokas = $poule->judokas()
-            ->with('toernooi')
-            ->get()
-            ->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))
-            ->count();
+            // Bereken actuele statistieken (alleen actieve judoka's)
+            $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
+            $actieveJudokas = $poule->judokas()
+                ->with('toernooi')
+                ->get()
+                ->filter(fn($j) => !$j->moetUitPouleVerwijderd($tolerantie))
+                ->count();
 
-        $aantalWedstrijden = $actieveJudokas > 1 ? ($actieveJudokas * ($actieveJudokas - 1)) / 2 : 0;
+            $aantalWedstrijden = $actieveJudokas > 1 ? ($actieveJudokas * ($actieveJudokas - 1)) / 2 : 0;
 
-        ActivityLogger::log($toernooi, 'verwijder_uit_poule', "{$judoka->naam} verwijderd uit poule {$poule->nummer}", [
-            'model' => $judoka,
-            'properties' => ['poule_id' => $poule->id],
-            'interface' => 'hoofdjury',
-        ]);
+            ActivityLogger::log($toernooi, 'verwijder_uit_poule', "{$judoka->naam} verwijderd uit poule {$poule->nummer}", [
+                'model' => $judoka,
+                'properties' => ['poule_id' => $poule->id],
+                'interface' => 'hoofdjury',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'poule' => [
-                'id' => $poule->id,
-                'aantal_judokas' => $actieveJudokas,
-                'aantal_wedstrijden' => $aantalWedstrijden,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'poule' => [
+                    'id' => $poule->id,
+                    'aantal_judokas' => $actieveJudokas,
+                    'aantal_wedstrijden' => $aantalWedstrijden,
+                ],
+            ]);
+        });
     }
 
     /**
@@ -614,8 +618,9 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Te weinig judoka\'s'], 400);
         }
 
-        // Determine optimal pool sizes based on tournament settings
-        $voorkeur = $toernooi->getPouleGrootteVoorkeurOfDefault();
+        return DB::transaction(function () use ($validated, $elimPoule, $judokas, $aantalJudokas, $toernooi) {
+            // Determine optimal pool sizes based on tournament settings
+            $voorkeur = $toernooi->getPouleGrootteVoorkeurOfDefault();
         $minPoule = $toernooi->min_judokas_poule ?? 3;
         $maxPoule = $toernooi->max_judokas_poule ?? 6;
 
@@ -707,7 +712,8 @@ class WedstrijddagController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Eliminatie omgezet naar ' . ($validated['systeem'] === 'poules_kruisfinale' ? 'poules + kruisfinale' : 'poules'),
-        ]);
+            ]);
+        });
     }
 
     /**
@@ -896,32 +902,34 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Judoka niet gevonden'], 404);
         }
 
-        // Houd bij in welke poules de judoka zat (voor statistieken update)
-        $pouleIds = $judoka->poules()->pluck('poules.id');
+        return DB::transaction(function () use ($judoka, $toernooi) {
+            // Houd bij in welke poules de judoka zat (voor statistieken update)
+            $pouleIds = $judoka->poules()->pluck('poules.id');
 
-        // Markeer als afwezig
-        $judoka->update(['aanwezigheid' => 'afwezig']);
+            // Markeer als afwezig
+            $judoka->update(['aanwezigheid' => 'afwezig']);
 
-        // Verwijder uit alle poules
-        $judoka->poules()->detach();
+            // Verwijder uit alle poules
+            $judoka->poules()->detach();
 
-        // Update statistieken van de poules
-        foreach ($pouleIds as $pouleId) {
-            $poule = Poule::find($pouleId);
-            if ($poule) {
-                $poule->updateStatistieken();
+            // Update statistieken van de poules
+            foreach ($pouleIds as $pouleId) {
+                $poule = Poule::find($pouleId);
+                if ($poule) {
+                    $poule->updateStatistieken();
+                }
             }
-        }
 
-        ActivityLogger::log($toernooi, 'meld_af', "{$judoka->naam} afgemeld", [
-            'model' => $judoka,
-            'interface' => 'hoofdjury',
-        ]);
+            ActivityLogger::log($toernooi, 'meld_af', "{$judoka->naam} afgemeld", [
+                'model' => $judoka,
+                'interface' => 'hoofdjury',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => $judoka->naam . ' is afgemeld',
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => $judoka->naam . ' is afgemeld',
+            ]);
+        });
     }
 
     /**
@@ -951,52 +959,54 @@ class WedstrijddagController extends Controller
             return response()->json(['success' => false, 'message' => 'Poule niet gevonden'], 404);
         }
 
-        // Calculate classification based on age/gender
-        $leeftijdsklasse = $poule->leeftijdsklasse;
-        $gewichtsklasse = $poule->gewichtsklasse;
+        return DB::transaction(function () use ($validated, $poule, $toernooi) {
+            // Calculate classification based on age/gender
+            $leeftijdsklasse = $poule->leeftijdsklasse;
+            $gewichtsklasse = $poule->gewichtsklasse;
 
-        if (!empty($validated['geboortejaar'])) {
-            $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
-            $leeftijd = $toernooiJaar - $validated['geboortejaar'];
+            if (!empty($validated['geboortejaar'])) {
+                $toernooiJaar = $toernooi->datum ? $toernooi->datum->year : (int) date('Y');
+                $leeftijd = $toernooiJaar - $validated['geboortejaar'];
 
-            // Try to determine gewichtsklasse from weight
-            if (!empty($validated['gewicht'])) {
-                $bepaaldeGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, null, $validated['band'] ?? null);
-                if ($bepaaldeGewichtsklasse) {
-                    $gewichtsklasse = $bepaaldeGewichtsklasse;
+                // Try to determine gewichtsklasse from weight
+                if (!empty($validated['gewicht'])) {
+                    $bepaaldeGewichtsklasse = $toernooi->bepaalGewichtsklasse($validated['gewicht'], $leeftijd, null, $validated['band'] ?? null);
+                    if ($bepaaldeGewichtsklasse) {
+                        $gewichtsklasse = $bepaaldeGewichtsklasse;
+                    }
                 }
             }
-        }
 
-        $judoka = Judoka::create([
-            'toernooi_id' => $toernooi->id,
-            'club_id' => $validated['club_id'] ?? null,
-            'naam' => $validated['naam'],
-            'geboortejaar' => $validated['geboortejaar'] ?? null,
-            'band' => $validated['band'] ?? null,
-            'gewicht' => $validated['gewicht'] ?? null,
-            'gewicht_gewogen' => $validated['gewicht'] ?? null,
-            'leeftijdsklasse' => $leeftijdsklasse,
-            'gewichtsklasse' => $gewichtsklasse,
-            'aanwezigheid' => 'aanwezig',
-        ]);
+            $judoka = Judoka::create([
+                'toernooi_id' => $toernooi->id,
+                'club_id' => $validated['club_id'] ?? null,
+                'naam' => $validated['naam'],
+                'geboortejaar' => $validated['geboortejaar'] ?? null,
+                'band' => $validated['band'] ?? null,
+                'gewicht' => $validated['gewicht'] ?? null,
+                'gewicht_gewogen' => $validated['gewicht'] ?? null,
+                'leeftijdsklasse' => $leeftijdsklasse,
+                'gewichtsklasse' => $gewichtsklasse,
+                'aanwezigheid' => 'aanwezig',
+            ]);
 
-        // Attach to poule at last position
-        $maxPositie = $poule->judokas()->max('positie') ?? 0;
-        $poule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
-        $poule->updateStatistieken();
+            // Attach to poule at last position
+            $maxPositie = $poule->judokas()->max('positie') ?? 0;
+            $poule->judokas()->attach($judoka->id, ['positie' => $maxPositie + 1]);
+            $poule->updateStatistieken();
 
-        ActivityLogger::log($toernooi, 'nieuwe_judoka', "{$judoka->naam} toegevoegd aan poule {$poule->nummer}", [
-            'model' => $judoka,
-            'properties' => ['poule_id' => $poule->id],
-            'interface' => 'hoofdjury',
-        ]);
+            ActivityLogger::log($toernooi, 'nieuwe_judoka', "{$judoka->naam} toegevoegd aan poule {$poule->nummer}", [
+                'model' => $judoka,
+                'properties' => ['poule_id' => $poule->id],
+                'interface' => 'hoofdjury',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => $judoka->naam . ' toegevoegd aan poule ' . $poule->nummer,
-            'judoka' => $judoka,
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => $judoka->naam . ' toegevoegd aan poule ' . $poule->nummer,
+                'judoka' => $judoka,
+            ]);
+        });
     }
 
     /**

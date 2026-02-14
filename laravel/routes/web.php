@@ -50,7 +50,7 @@ if (config('app.offline_mode')) {
 
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
-Route::get('/health/detailed', [HealthController::class, 'detailed'])->name('health.detailed');
+Route::get('/health/detailed', [HealthController::class, 'detailed'])->middleware('auth:organisator')->name('health.detailed');
 
 // Locale switch - context-aware: saves to club, toernooi, or organisator
 Route::post('/locale/{locale}', function (\Illuminate\Http\Request $request, string $locale) {

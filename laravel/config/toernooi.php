@@ -49,8 +49,8 @@ return [
     |
     */
 
-    'admin_password' => env('ADMIN_PASSWORD', 'WestFries2026'),
-    'superadmin_pin' => env('SUPERADMIN_PIN', '1234'),
+    'admin_password' => env('ADMIN_PASSWORD', in_array(env('APP_ENV'), ['local', 'testing']) ? 'dev' : null),
+    'superadmin_pin' => env('SUPERADMIN_PIN', in_array(env('APP_ENV'), ['local', 'testing']) ? '0000' : null),
 
     /*
     |--------------------------------------------------------------------------
