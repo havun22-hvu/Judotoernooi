@@ -120,9 +120,15 @@ class MatController extends Controller
             'score_wit' => 'nullable|integer|min:0|max:99',
             'score_blauw' => 'nullable|integer|min:0|max:99',
             'uitslag_type' => 'nullable|string|max:20',
+            'updated_at' => 'nullable|string',
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Optimistic locking: check if wedstrijd was modified by another device
+        if ($conflict = $this->checkConflict($wedstrijd, $validated['updated_at'] ?? null)) {
+            return $conflict;
+        }
 
         // Check if this is an elimination match (has groep field)
         if ($wedstrijd->groep) {
@@ -170,6 +176,7 @@ class MatController extends Controller
             return response()->json([
                 'success' => true,
                 'correcties' => $correcties,
+                'updated_at' => $wedstrijd->fresh()->updated_at?->toISOString(),
             ]);
         } else {
             // Regular pool match
@@ -205,7 +212,10 @@ class MatController extends Controller
             ]);
         }
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'updated_at' => $wedstrijd->fresh()->updated_at?->toISOString(),
+        ]);
     }
 
     /**
@@ -217,9 +227,15 @@ class MatController extends Controller
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
             'geplaatste_judoka_id' => 'required|exists:judokas,id',
             'medaille' => 'required|in:goud,zilver,brons',
+            'updated_at' => 'nullable|string',
         ]);
 
         $wedstrijd = Wedstrijd::findOrFail($validated['wedstrijd_id']);
+
+        // Optimistic locking: check if wedstrijd was modified by another device
+        if ($conflict = $this->checkConflict($wedstrijd, $validated['updated_at'] ?? null)) {
+            return $conflict;
+        }
 
         // Check of dit een finale of brons wedstrijd is
         $isMedailleWedstrijd = $wedstrijd->ronde === 'finale' ||
@@ -266,6 +282,7 @@ class MatController extends Controller
         return response()->json([
             'success' => true,
             'winnaar_id' => $winnaarId,
+            'updated_at' => $wedstrijd->fresh()->updated_at?->toISOString(),
         ]);
     }
 
@@ -1156,5 +1173,29 @@ class MatController extends Controller
         }
 
         return response()->json(['geldig' => $geldig]);
+    }
+
+    /**
+     * Check for optimistic locking conflict.
+     * Returns a conflict JsonResponse if the wedstrijd was modified since the client loaded it.
+     */
+    private function checkConflict(Wedstrijd $wedstrijd, ?string $clientUpdatedAt): ?JsonResponse
+    {
+        if (!$clientUpdatedAt || !$wedstrijd->updated_at) {
+            return null;
+        }
+
+        $clientTime = \Carbon\Carbon::parse($clientUpdatedAt);
+        // Allow 1 second tolerance for clock drift / serialization differences
+        if ($wedstrijd->updated_at->gt($clientTime->copy()->addSecond())) {
+            return response()->json([
+                'success' => false,
+                'conflict' => true,
+                'message' => 'Deze wedstrijd is zojuist gewijzigd door een ander apparaat. De pagina wordt herladen.',
+                'server_updated_at' => $wedstrijd->updated_at->toISOString(),
+            ], 409);
+        }
+
+        return null;
     }
 }

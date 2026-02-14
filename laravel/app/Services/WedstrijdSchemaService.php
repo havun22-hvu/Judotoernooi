@@ -445,6 +445,7 @@ class WedstrijdSchemaService
                         'winnaar_id' => $w->winnaar_id,
                         'score_wit' => $w->score_wit,
                         'score_blauw' => $w->score_blauw,
+                        'updated_at' => $w->updated_at?->toISOString(),
                     ];
 
                     // Add elimination-specific fields

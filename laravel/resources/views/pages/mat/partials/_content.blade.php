@@ -559,6 +559,20 @@ window.escapeHtml = function(str) {
 
 
 
+// Helper: get updated_at from Alpine wedstrijd data
+window.getWedstrijdUpdatedAt = function(wedstrijdId, pouleId) {
+    const matEl = document.getElementById('mat-interface');
+    if (!matEl) return null;
+    const comp = Alpine.$data(matEl);
+    if (!comp || !comp.poules) return null;
+    for (const poule of comp.poules) {
+        if (pouleId && poule.poule_id != pouleId) continue;
+        const wed = poule.wedstrijden?.find(w => w.id == wedstrijdId);
+        if (wed) return wed.updated_at || null;
+    }
+    return null;
+};
+
 // Global drop handler - plaats judoka in slot
 window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = null, huidigeBewoner = null) {
     event.preventDefault();
@@ -830,14 +844,21 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
                 wedstrijd_id: finaleId,
                 winnaar_id: winnaarId,
                 geplaatste_judoka_id: data.judokaId,
-                medaille: medaille  // 'goud', 'zilver' of 'brons'
+                medaille: medaille,  // 'goud', 'zilver' of 'brons'
+                updated_at: window.getWedstrijdUpdatedAt(finaleId, pouleId)
             })
         });
 
         const result = await response.json();
 
+        if (response.status === 409 && result.conflict) {
+            alert(result.message || 'Deze wedstrijd is gewijzigd door een ander apparaat.');
+            location.reload();
+            return;
+        }
+
         if (!response.ok) {
-            alert('❌ Fout:\n\n' + (result.error || 'Onbekende fout'));
+            alert('Fout:\n\n' + (result.error || 'Onbekende fout'));
             return;
         }
 
@@ -852,6 +873,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
                     if (wed) {
                         wed.winnaar_id = result.winnaar_id;
                         wed.is_gespeeld = true;
+                        if (result.updated_at) wed.updated_at = result.updated_at;
                     }
                 }
 
@@ -1531,7 +1553,7 @@ function matInterface() {
             }
 
             // Save to backend
-            await fetch(`{{ $uitslagUrl }}`, {
+            const uitslagResponse = await fetch(`{{ $uitslagUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1543,9 +1565,26 @@ function matInterface() {
                     winnaar_id: winnaarId,
                     score_wit: wedstrijd.jpScores[wedstrijd.wit.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.wit.id]) : '',
                     score_blauw: wedstrijd.jpScores[wedstrijd.blauw.id] !== undefined ? String(wedstrijd.jpScores[wedstrijd.blauw.id]) : '',
-                    uitslag_type: 'punten'
+                    uitslag_type: 'punten',
+                    updated_at: wedstrijd.updated_at || null
                 })
             });
+
+            // Check for conflict (another device modified this match)
+            if (uitslagResponse.status === 409) {
+                const conflictData = await uitslagResponse.json();
+                alert(conflictData.message || 'Deze wedstrijd is gewijzigd door een ander apparaat.');
+                location.reload();
+                return;
+            }
+
+            // Update client-side updated_at from server response
+            if (uitslagResponse.ok) {
+                try {
+                    const uitslagResult = await uitslagResponse.json();
+                    if (uitslagResult.updated_at) wedstrijd.updated_at = uitslagResult.updated_at;
+                } catch (e) { /* ignore parse errors */ }
+            }
 
             const wasGespeeld = wedstrijd.is_gespeeld;
 
