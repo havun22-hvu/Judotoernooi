@@ -100,7 +100,6 @@ Route::get('/disclaimer', [LegalController::class, 'disclaimer'])->name('legal.d
 Route::get('login', [OrganisatorAuthController::class, 'showLogin'])->name('login');
 Route::middleware('throttle:login')->group(function () {
     Route::post('login', [OrganisatorAuthController::class, 'login'])->name('login.submit');
-    Route::post('pin-login', [OrganisatorAuthController::class, 'pinLogin'])->name('pin-login');
 });
 
 // Guest routes (only for users not logged in)
