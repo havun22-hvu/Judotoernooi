@@ -489,7 +489,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
 // Coach Portal with code and PIN - NEW URL structure: /{org}/{toernooi}/school/{code}
 Route::prefix('{organisator}/{toernooi}/school')->name('coach.portal.')->group(function () {
     Route::get('{code}', [CoachPortalController::class, 'indexCode'])->name('code');
-    Route::post('{code}/login', [CoachPortalController::class, 'loginPin'])->name('login');
+    Route::post('{code}/login', [CoachPortalController::class, 'loginPin'])->middleware('throttle:login')->name('login');
     Route::post('{code}/logout', [CoachPortalController::class, 'logoutCode'])->name('logout');
     Route::get('{code}/judokas', [CoachPortalController::class, 'judokasCode'])->name('judokas');
     Route::post('{code}/judoka', [CoachPortalController::class, 'storeJudokaCode'])->name('judoka.store');
@@ -584,7 +584,7 @@ Route::middleware('rol.sessie')->group(function () {
 | Local Server Sync Routes (Redundancy System)
 |--------------------------------------------------------------------------
 */
-Route::prefix('local-server')->name('local.')->group(function () {
+Route::prefix('local-server')->name('local.')->middleware('local-sync.auth')->group(function () {
     // Setup
     Route::get('/setup', [LocalSyncController::class, 'setup'])->name('setup');
     Route::post('/setup', [LocalSyncController::class, 'saveSetup'])->name('setup.save');

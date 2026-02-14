@@ -34,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rol.sessie' => \App\Http\Middleware\CheckRolSessie::class,
             'device.binding' => \App\Http\Middleware\CheckDeviceBinding::class,
+            'local-sync.auth' => \App\Http\Middleware\LocalSyncAuth::class,
         ]);
 
         // Redirect guests to organisator login
