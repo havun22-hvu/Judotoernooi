@@ -2,6 +2,8 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +17,10 @@ import (
 	"syscall"
 	"time"
 )
+
+// Magic bytes to find the appended bundle inside the exe
+// PHP appends: [bundle.zip bytes] [8 bytes: zip offset as uint64] [8 bytes: magic "JTNOODPK"]
+var magic = []byte("JTNOODPK")
 
 // License structure matches PHP OfflineExportService output
 type License struct {
@@ -33,26 +39,26 @@ func main() {
 	fmt.Println("+==============================================+")
 	fmt.Println()
 
-	// Find bundle.zip next to the executable
+	// Find own executable path
 	exePath, err := os.Executable()
 	if err != nil {
 		fmt.Println("[FOUT] Kan eigen pad niet bepalen:", err)
 		waitForExit()
 		return
 	}
-	exeDir := filepath.Dir(exePath)
-	bundlePath := filepath.Join(exeDir, "bundle.zip")
 
-	if _, err := os.Stat(bundlePath); os.IsNotExist(err) {
-		fmt.Println("[FOUT] bundle.zip niet gevonden naast noodpakket.exe")
-		fmt.Println("       Verwacht op:", bundlePath)
-		fmt.Println("       Pak het volledige zip bestand uit voordat je start.")
+	// Extract embedded bundle from self
+	fmt.Println("[1/4] Bestanden uitpakken...")
+	bundleData, err := extractEmbeddedBundle(exePath)
+	if err != nil {
+		fmt.Println("[FOUT] Kan ingebouwde data niet lezen:", err)
+		fmt.Println("       Dit bestand is mogelijk beschadigd. Download opnieuw.")
 		waitForExit()
 		return
 	}
 
 	// Read license from bundle
-	licenseData, err := readFileFromZip(bundlePath, "license.json")
+	licenseData, err := readFileFromZipBytes(bundleData, "license.json")
 	if err != nil {
 		fmt.Println("[FOUT] Kan license.json niet lezen:", err)
 		waitForExit()
@@ -89,9 +95,8 @@ func main() {
 	// Determine extraction directory
 	extractDir := filepath.Join(os.TempDir(), fmt.Sprintf("noodpakket_%d", license.ToernooiID))
 
-	// Extract bundle
-	fmt.Println("[1/4] Bestanden uitpakken...")
-	if err := extractZip(bundlePath, extractDir); err != nil {
+	// Extract bundle zip to temp dir
+	if err := extractZipBytes(bundleData, extractDir); err != nil {
 		fmt.Println("[FOUT] Kan bestanden niet uitpakken:", err)
 		waitForExit()
 		return
@@ -194,12 +199,59 @@ CACHE_STORE=file
 	cleanup(extractDir)
 }
 
-func readFileFromZip(zipPath, fileName string) ([]byte, error) {
-	reader, err := zip.OpenReader(zipPath)
+// extractEmbeddedBundle reads the appended bundle.zip from the exe itself.
+// Format: [exe bytes] [bundle.zip bytes] [8 bytes: zip start offset (uint64 LE)] [8 bytes: "JTNOODPK"]
+func extractEmbeddedBundle(exePath string) ([]byte, error) {
+	f, err := os.Open(exePath)
+	if err != nil {
+		return nil, fmt.Errorf("kan exe niet openen: %w", err)
+	}
+	defer f.Close()
+
+	// Read last 16 bytes: 8 bytes offset + 8 bytes magic
+	fi, err := f.Stat()
 	if err != nil {
 		return nil, err
 	}
-	defer reader.Close()
+	fileSize := fi.Size()
+
+	if fileSize < 16 {
+		return nil, fmt.Errorf("bestand te klein")
+	}
+
+	trailer := make([]byte, 16)
+	if _, err := f.ReadAt(trailer, fileSize-16); err != nil {
+		return nil, fmt.Errorf("kan trailer niet lezen: %w", err)
+	}
+
+	// Check magic
+	if !bytes.Equal(trailer[8:], magic) {
+		return nil, fmt.Errorf("geen ingebouwde data gevonden (magic mismatch)")
+	}
+
+	// Read zip offset
+	zipOffset := binary.LittleEndian.Uint64(trailer[:8])
+	zipSize := fileSize - 16 - int64(zipOffset)
+
+	if zipSize <= 0 || int64(zipOffset) >= fileSize {
+		return nil, fmt.Errorf("ongeldige offset in trailer")
+	}
+
+	// Read the zip data
+	bundleData := make([]byte, zipSize)
+	if _, err := f.ReadAt(bundleData, int64(zipOffset)); err != nil {
+		return nil, fmt.Errorf("kan bundle data niet lezen: %w", err)
+	}
+
+	return bundleData, nil
+}
+
+// readFileFromZipBytes reads a single file from an in-memory zip
+func readFileFromZipBytes(zipData []byte, fileName string) ([]byte, error) {
+	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		return nil, err
+	}
 
 	for _, f := range reader.File {
 		if f.Name == fileName {
@@ -212,18 +264,18 @@ func readFileFromZip(zipPath, fileName string) ([]byte, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("bestand '%s' niet gevonden in %s", fileName, filepath.Base(zipPath))
+	return nil, fmt.Errorf("bestand '%s' niet gevonden in bundle", fileName)
 }
 
-func extractZip(zipPath, destDir string) error {
+// extractZipBytes extracts an in-memory zip to a directory
+func extractZipBytes(zipData []byte, destDir string) error {
 	// Clean previous extraction
 	os.RemoveAll(destDir)
 
-	reader, err := zip.OpenReader(zipPath)
+	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return fmt.Errorf("kan zip niet openen: %w", err)
 	}
-	defer reader.Close()
 
 	for _, f := range reader.File {
 		path := filepath.Join(destDir, f.Name)

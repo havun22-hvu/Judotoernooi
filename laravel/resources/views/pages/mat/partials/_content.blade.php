@@ -432,6 +432,7 @@ window.checkAdminWachtwoord = async function(wachtwoord) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({ wachtwoord })
@@ -513,6 +514,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
@@ -645,6 +647,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -697,6 +700,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -723,6 +727,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify(requestBody)
@@ -818,6 +823,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
@@ -904,6 +910,7 @@ window.verwijderJudoka = async function(event) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
@@ -1134,6 +1141,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -1143,6 +1151,20 @@ function matInterface() {
                 });
 
                 console.log('[Mat] Response status:', response.status);
+
+                // Check for non-JSON response (login redirect, server error page)
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    console.error('[Mat] Non-JSON response:', response.status, contentType);
+                    if (response.status === 401 || response.status === 419 || response.redirected) {
+                        alert('Sessie verlopen. De pagina wordt herladen.');
+                        location.reload();
+                    } else {
+                        alert('Server fout (' + response.status + '). Probeer de pagina te herladen.');
+                    }
+                    this.poules = [];
+                    return;
+                }
 
                 if (!response.ok) {
                     let errorMsg = 'Fout bij laden wedstrijden: ' + response.status;
@@ -1157,7 +1179,7 @@ function matInterface() {
                             localStorage.removeItem(storageKey);
                         }
                     } catch (e) {
-                        console.error('[Mat] Error response:', await response.text());
+                        console.error('[Mat] Error response not parseable');
                     }
                     alert(errorMsg);
                     this.poules = [];
@@ -1211,6 +1233,11 @@ function matInterface() {
             });
             } catch (err) {
                 console.error('[Mat] Exception loading wedstrijden:', err);
+                if (err.message && err.message.includes('Unexpected token')) {
+                    alert('Sessie verlopen. De pagina wordt herladen.');
+                    location.reload();
+                    return;
+                }
                 alert('Fout bij laden: ' + err.message);
                 this.poules = [];
             } finally {
@@ -1233,6 +1260,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -1283,6 +1311,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({ poule_id: pouleId })
@@ -1506,6 +1535,7 @@ function matInterface() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
@@ -1722,6 +1752,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -1838,6 +1869,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
@@ -2103,6 +2135,7 @@ function matInterface() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({

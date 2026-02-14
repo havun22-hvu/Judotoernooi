@@ -2,10 +2,47 @@
 
 @section('title', __('Poule-indeling') . ($blok ? ' ' . __('Blok') . " {$blok->nummer}" : ''))
 
+@push('styles')
+<style>
+    @media print {
+        .mat-page.print-exclude { display: none !important; }
+        .mat-page:not(.print-exclude) + .mat-page:not(.print-exclude) { page-break-before: always; }
+    }
+    @media screen {
+        .mat-page.print-exclude { opacity: 0.3; }
+        .mat-toolbar { background: #eff6ff; border-bottom: 1px solid #bfdbfe; padding: 8px 16px; }
+        .mat-checkbox { display: inline-flex; align-items: center; gap: 6px; margin-right: 16px; cursor: pointer; font-size: 14px; }
+        .mat-checkbox input { width: 18px; height: 18px; cursor: pointer; }
+    }
+</style>
+@endpush
+
+@section('toolbar')
+<div class="mat-toolbar no-print">
+    <div class="max-w-7xl mx-auto flex items-center flex-wrap gap-2">
+        <span class="text-sm font-medium text-blue-800 mr-2">{{ __('Matten:') }}</span>
+        @foreach($matten as $mat)
+            @php
+                $heeftPoules = $blokken->flatMap(fn($b) => $b->poules->where('mat_id', $mat->id))->isNotEmpty();
+            @endphp
+            @if($heeftPoules)
+            <label class="mat-checkbox">
+                <input type="checkbox" checked onchange="toggleMat({{ $mat->id }}, this.checked)">
+                <span>{{ __('Mat') }} {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}</span>
+            </label>
+            @endif
+        @endforeach
+        <span class="text-gray-300 mx-1">|</span>
+        <button onclick="selectAllMats(true)" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Alles') }}</button>
+        <button onclick="selectAllMats(false)" class="text-xs text-blue-600 hover:text-blue-800 underline">{{ __('Geen') }}</button>
+        <span class="ml-auto text-xs text-gray-500" id="mat-count"></span>
+    </div>
+</div>
+@endsection
+
 @section('content')
 @php
     $enkelBlok = $blokken->count() === 1;
-    $isFirst = true;
 @endphp
 
 @foreach($blokken as $blok)
@@ -14,7 +51,7 @@
             $matPoules = $blok->poules->where('mat_id', $mat->id)->sortBy(fn($p) => $p->nummer);
         @endphp
         @if($matPoules->isNotEmpty())
-        <div class="{{ !$isFirst ? 'page-break' : '' }}">
+        <div class="mat-page" data-mat-id="{{ $mat->id }}">
             <h2 class="text-xl font-bold text-blue-800 mb-3 border-b-2 border-blue-300 pb-2">
                 {{ !$enkelBlok ? __('Blok') . " {$blok->nummer} - " : '' }}{{ __('Mat') }} {{ $mat->nummer }}{{ $mat->label ? " ({$mat->label})" : '' }}
             </h2>
@@ -48,7 +85,6 @@
                 </table>
             </div>
             @endforeach
-            @php $isFirst = false; @endphp
         </div>
         @endif
     @endforeach
@@ -57,4 +93,35 @@
 @if($blokken->flatMap(fn($b) => $b->poules)->isEmpty())
 <p class="text-gray-500 text-center py-8">{{ __('Geen poules gevonden') }}</p>
 @endif
+@endsection
+
+@section('scripts')
+<script>
+    function toggleMat(matId, checked) {
+        document.querySelectorAll('.mat-page[data-mat-id="' + matId + '"]').forEach(function(el) {
+            if (checked) {
+                el.classList.remove('print-exclude');
+            } else {
+                el.classList.add('print-exclude');
+            }
+        });
+        updateMatCount();
+    }
+
+    function selectAllMats(checked) {
+        document.querySelectorAll('.mat-toolbar input[type="checkbox"]').forEach(function(cb) {
+            cb.checked = checked;
+            cb.dispatchEvent(new Event('change'));
+        });
+    }
+
+    function updateMatCount() {
+        var total = document.querySelectorAll('.mat-page').length;
+        var selected = document.querySelectorAll('.mat-page:not(.print-exclude)').length;
+        var el = document.getElementById('mat-count');
+        if (el) el.textContent = selected + ' / ' + total + ' pagina\'s';
+    }
+
+    updateMatCount();
+</script>
 @endsection
