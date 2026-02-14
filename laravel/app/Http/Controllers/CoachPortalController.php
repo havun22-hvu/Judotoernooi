@@ -343,9 +343,10 @@ class CoachPortalController extends Controller
             'telefoon' => 'nullable|string|max:20',
         ]);
 
+        // Keep existing values if not provided (prevent losing data on partial edit)
+        $band = !empty($validated['band']) ? $validated['band'] : $judoka->band;
         $leeftijdsklasse = null;
         $gewichtsklasse = $validated['gewichtsklasse'] ?? null;
-        $band = $validated['band'] ?? null;
 
         if (!empty($validated['geboortejaar']) && !empty($validated['geslacht'])) {
             $leeftijd = date('Y') - $validated['geboortejaar'];
@@ -362,10 +363,10 @@ class CoachPortalController extends Controller
 
         // Free tier: naam cannot be changed after creation
         $updateData = [
-            'geboortejaar' => $validated['geboortejaar'] ?? null,
-            'geslacht' => $validated['geslacht'] ?? null,
-            'band' => $validated['band'] ?? null,
-            'gewicht' => $validated['gewicht'] ?? null,
+            'geboortejaar' => $validated['geboortejaar'] ?? $judoka->geboortejaar,
+            'geslacht' => $validated['geslacht'] ?? $judoka->geslacht,
+            'band' => $band,
+            'gewicht' => $validated['gewicht'] ?? $judoka->gewicht,
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
