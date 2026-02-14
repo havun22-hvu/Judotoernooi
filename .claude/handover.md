@@ -5,13 +5,53 @@
 
 ---
 
+## ⚡ EERSTVOLGENDE OPDRACHT: Sprint 1 Code Hardening
+
+**HavunCore heeft een volledige code audit gedaan op 14 feb 2026.**
+
+Het verbeterrapport met concrete fixes, code voorbeelden en regelnummers staat hier:
+```
+D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
+```
+
+**Wat al gefixt is (14 feb 2026 door HavunCore):**
+- `app/Http/Middleware/LocalSyncAuth.php` - Auth op alle `/local-server/*` routes
+- `routes/web.php` regel 492 - `throttle:login` op coach PIN login
+
+**Sprint 1 - nu uitvoeren (5 taken):**
+
+1. **Health endpoint auth** - `D:\GitHub\JudoToernooi\laravel\routes\web.php` regel 53
+   → Voeg `->middleware('auth:organisator')` toe aan `/health/detailed` route
+
+2. **Hardcoded wachtwoord defaults** - `D:\GitHub\JudoToernooi\laravel\config\toernooi.php` regel 52-53
+   → Vervang publieke defaults door `null` voor non-local environments
+
+3. **Dode api.php verwijderen** - `D:\GitHub\JudoToernooi\laravel\routes\api.php`
+   → Dit bestand wordt NIET geladen (geen `api:` in `bootstrap/app.php`). Verwijder het.
+
+4. **DB transactions in WedstrijddagController** - `D:\GitHub\JudoToernooi\laravel\app\Http\Controllers\WedstrijddagController.php`
+   → Wrap deze methods in `DB::transaction()`:
+   - `naarWachtruimte()` (regel 465) - detach + updateStatistieken
+   - `verwijderUitPoule()` (regel 514) - detach + stats
+   - `zetOmNaarPoules()` (regel 602) - create poules + attach + delete oude poule
+   - `afmeldenJudoka()` (regel ~890) - update + detach
+   - `nieuweJudoka()` (regel 930) - create + attach
+
+5. **Admin klanten route** - GEEN ACTIE NODIG
+   → `AdminController` heeft al `checkSitebeheerder()` op elke method
+
+**Na Sprint 1:** Lees het volledige rapport voor Sprint 2-5.
+
+---
+
 ## 🚀 Quick Start
 
 **Lees in volgorde:**
 
 1. `CLAUDE.md` - Project regels en conventies
 2. `.claude/handover.md` - Dit bestand (algemeen overzicht)
-3. `.claude/handover/2026-02-02-10plus-production.md` - **Actuele status & planning**
+3. `.claude/code-review-2026-02-14.md` - **Code audit rapport met Sprint 1-5**
+4. `.claude/handover/2026-02-02-10plus-production.md` - Actuele status & planning
 
 ---
 
