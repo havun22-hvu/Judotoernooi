@@ -108,6 +108,10 @@ class Toernooi extends Model
 
     protected $table = 'toernooien';
 
+    protected $attributes = [
+        'portaal_modus' => 'mutaties',
+    ];
+
     protected $fillable = [
         'organisator_id',
         'plan_type',
