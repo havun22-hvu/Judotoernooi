@@ -110,7 +110,9 @@
             $isGewogen = $judoka->gewicht_gewogen > 0;
             $isAfwezig = !$judoka->isActief($wegingGesloten);
             // Gebruik poule's gewichtsklasse, niet judoka's eigen klasse
-            $isAfwijkendGewicht = $isGewogen && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
+            // Check ook opgegeven gewicht als niet gewogen (vb: 26.1 kg in -25 poule)
+            $heeftGewicht = $isGewogen || $judoka->gewicht > 0;
+            $isAfwijkendGewicht = $heeftGewicht && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $poule->gewichtsklasse);
             // Verdacht gewicht: < 15 kg OF > 5 kg afwijking van opgegeven gewicht
             $isVerdachtGewicht = $isGewogen && (
                 $judoka->gewicht_gewogen < 15 ||
