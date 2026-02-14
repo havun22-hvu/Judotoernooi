@@ -21,6 +21,9 @@ return [
     'standby_ip' => '192.168.1.101',
     'port' => 8000,
 
+    // Auth token for remote access to sync routes (set in .env)
+    'sync_token' => env('LOCAL_SYNC_TOKEN'),
+
     // Sync settings
     'heartbeat_interval' => 5, // seconds
     'sync_interval' => 5, // seconds
