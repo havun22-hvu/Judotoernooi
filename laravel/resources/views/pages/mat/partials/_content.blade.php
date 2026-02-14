@@ -1,4 +1,11 @@
 <style>
+    /* Touch: block text selection on entire mat interface */
+    #mat-interface {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+
     /* Touch devices: prevent browser scroll from intercepting drag */
     .bracket-judoka { touch-action: none; }
     .bracket-drop { touch-action: none; }
@@ -28,12 +35,29 @@
         );
     }
 
-    /* Drop target highlight when dragging over */
-    .bracket-drop.sortable-ghost-parent,
-    .bracket-drop:has(.sortable-ghost) {
-        outline: 2px dashed #a855f7 !important;
+    /* Drop target: valid (green outline) */
+    .drop-target-valid {
+        outline: 2px solid #22c55e !important;
         outline-offset: -2px;
-        background-color: #f3e8ff !important;
+        background-color: #f0fdf4 !important;
+    }
+
+    /* Drop target: primary/winnaar doorschuif (thick green + pulse) */
+    .drop-target-primary {
+        outline: 3px solid #16a34a !important;
+        outline-offset: -2px;
+        background-color: #dcfce7 !important;
+        animation: drop-pulse 1s ease-in-out infinite;
+    }
+    @keyframes drop-pulse {
+        0%, 100% { outline-color: #16a34a; }
+        50% { outline-color: #86efac; }
+    }
+
+    /* Drop target: disabled (dimmed) */
+    .drop-target-disabled {
+        opacity: 0.25 !important;
+        pointer-events: none;
     }
 </style>
     @php
@@ -2313,6 +2337,83 @@ window.addEventListener('mat-bracket-update', (e) => {
 // SortableJS voor ALLE devices (PC + tablet) - bracket DnD
 // DOM revert ALTIJD - updates komen via updateBracketSlot() na API response
 // ========================================
+
+// Mark valid/invalid drop targets when drag starts
+window._markValidBracketTargets = function(dragItem) {
+    const dragAttr = dragItem.getAttribute('data-drag');
+    if (!dragAttr) return;
+    let data;
+    try { data = JSON.parse(dragAttr); } catch(e) { return; }
+
+    const pouleId = data.pouleId;
+    if (!pouleId) return;
+
+    const matEl = document.getElementById('mat-interface');
+    if (!matEl) return;
+
+    // Alpine component for wedstrijden lookup (needed for terugplaatsen check)
+    const comp = Alpine.$data(matEl);
+    const poule = comp ? comp.poules?.find(p => p.poule_id == pouleId) : null;
+
+    const allDrops = matEl.querySelectorAll('.bracket-drop[data-poule-id="' + pouleId + '"]');
+
+    const isLocked = data.pouleIsLocked === true;
+    const isWinnaar = data.isWinnaar === true;
+    const volgendeWedstrijdId = data.volgendeWedstrijdId;
+    const bronWedstrijdId = data.wedstrijdId;
+
+    allDrops.forEach(drop => {
+        const handler = drop.getAttribute('data-drop-handler');
+        const dropWedstrijdId = drop.getAttribute('data-wedstrijd-id');
+        const bewoner = drop.getAttribute('data-bewoner');
+        const heeftBewoner = bewoner && bewoner !== 'null';
+
+        // Source slot — no marking, stays normal
+        if (dropWedstrijdId && dropWedstrijdId == bronWedstrijdId) return;
+
+        let isValid = false;
+        let isPrimary = false;
+
+        if (handler === 'dropJudoka') {
+            if (isWinnaar && volgendeWedstrijdId && dropWedstrijdId == volgendeWedstrijdId) {
+                // Regel 1: Winnaar doorschuif target
+                isPrimary = true;
+                isValid = true;
+            } else if (isLocked && poule) {
+                // Locked: only terugplaatsen is valid (target whose volgende_wedstrijd_id == bronWedstrijdId)
+                const targetWed = poule.wedstrijden?.find(w => w.id == parseInt(dropWedstrijdId));
+                if (targetWed && targetWed.volgende_wedstrijd_id == bronWedstrijdId) {
+                    isValid = true;
+                }
+            } else if (!isLocked) {
+                // Seeding: only empty slots
+                if (!heeftBewoner) isValid = true;
+            }
+        } else if (handler === 'dropInSwap') {
+            if (!isLocked) isValid = true;
+        } else if (handler === 'verwijderJudoka') {
+            if (!isLocked) isValid = true;
+        } else if (handler === 'dropOpMedaille') {
+            if (isWinnaar) isValid = true;
+        }
+
+        if (isPrimary) {
+            drop.classList.add('drop-target-primary');
+        } else if (isValid) {
+            drop.classList.add('drop-target-valid');
+        } else {
+            drop.classList.add('drop-target-disabled');
+        }
+    });
+};
+
+// Clear all drop target marks
+window._clearBracketTargetMarks = function() {
+    document.querySelectorAll('.drop-target-valid, .drop-target-primary, .drop-target-disabled').forEach(el => {
+        el.classList.remove('drop-target-valid', 'drop-target-primary', 'drop-target-disabled');
+    });
+};
+
 window.initBracketSortable = function() {
     if (typeof Sortable === 'undefined') return;
 
@@ -2340,8 +2441,9 @@ window.initBracketSortable = function() {
             },
             sort: false,
             animation: 0,
-            delay: 300,
+            delay: 150,
             delayOnTouchOnly: true,
+            touchStartThreshold: 5,
             forceFallback: true,
             fallbackTolerance: 3,
             draggable: '.bracket-judoka',
@@ -2353,7 +2455,21 @@ window.initBracketSortable = function() {
             filter: '.medaille-label',
             preventOnFilter: false,
 
+            onStart: function(evt) {
+                window._markValidBracketTargets(evt.item);
+            },
+
+            onMove: function(evt) {
+                // Block drop on disabled targets
+                if (evt.to.classList.contains('drop-target-disabled')) {
+                    return false;
+                }
+            },
+
             onEnd: async function(evt) {
+                // Clear all target marks first
+                window._clearBracketTargetMarks();
+
                 // ALTIJD DOM reverten - updates komen via updateBracketSlot
                 if (evt.clone) evt.clone.remove();
                 if (evt.from !== evt.to && evt.item.parentNode === evt.to) {
