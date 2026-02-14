@@ -2,6 +2,39 @@
     /* Touch devices: prevent browser scroll from intercepting drag */
     .bracket-judoka { touch-action: none; }
     .bracket-drop { touch-action: none; }
+
+    /* Drag feedback: item being dragged */
+    .bracket-judoka.sortable-chosen {
+        font-weight: 700 !important;
+        background: #dcfce7 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25) !important;
+        border-radius: 4px;
+        z-index: 999;
+    }
+    .sortable-fallback {
+        opacity: 0.9 !important;
+        font-weight: 700 !important;
+        background: #bbf7d0 !important;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3) !important;
+        border: 2px solid #22c55e !important;
+        border-radius: 4px;
+    }
+
+    /* Empty drop slots: bigger and more visible on touch */
+    .bracket-drop:empty {
+        min-height: 36px;
+        background-image: repeating-linear-gradient(
+            45deg, transparent, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 8px
+        );
+    }
+
+    /* Drop target highlight when dragging over */
+    .bracket-drop.sortable-ghost-parent,
+    .bracket-drop:has(.sortable-ghost) {
+        outline: 2px dashed #a855f7 !important;
+        outline-offset: -2px;
+        background-color: #f3e8ff !important;
+    }
 </style>
     @php
         $pwaApp = 'mat';
@@ -2307,12 +2340,15 @@ window.initBracketSortable = function() {
             },
             sort: false,
             animation: 0,
-            delay: 150,
+            delay: 300,
             delayOnTouchOnly: true,
             forceFallback: true,
+            fallbackTolerance: 3,
             draggable: '.bracket-judoka',
-            ghostClass: 'opacity-50',
-            emptyInsertThreshold: 15,
+            ghostClass: 'opacity-30',
+            chosenClass: 'sortable-chosen',
+            fallbackClass: 'sortable-fallback',
+            emptyInsertThreshold: 20,
 
             filter: '.medaille-label',
             preventOnFilter: false,
