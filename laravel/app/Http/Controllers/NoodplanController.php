@@ -621,13 +621,13 @@ class NoodplanController extends Controller
         try {
             $packagePath = $builder->build($toernooi);
 
-            $filename = sprintf('noodpakket_%s_%s.zip',
+            $filename = sprintf('noodpakket_%s_%s.exe',
                 preg_replace('/[^a-zA-Z0-9_-]/', '_', $toernooi->naam),
                 now()->format('Y-m-d')
             );
 
             return response()->download($packagePath, $filename, [
-                'Content-Type' => 'application/zip',
+                'Content-Type' => 'application/octet-stream',
             ])->deleteFileAfterSend();
         } catch (\Exception $e) {
             Log::error('Offline server pakket build failed', [

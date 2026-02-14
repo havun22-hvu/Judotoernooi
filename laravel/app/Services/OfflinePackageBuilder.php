@@ -7,11 +7,20 @@ use Illuminate\Support\Facades\Log;
 use ZipArchive;
 
 /**
- * Builds the complete offline noodpakket for download.
- * Combines: pre-built Go launcher + portable PHP + stripped Laravel + SQLite data + license.
+ * Builds the complete offline noodpakket as a single self-extracting exe.
+ *
+ * Architecture:
+ * 1. Pre-built Go launcher (generic, ~2MB)
+ * 2. Bundle.zip (PHP + Laravel + SQLite + license) appended to launcher
+ * 3. 16-byte trailer: [8 bytes: zip offset (uint64 LE)] [8 bytes: magic "JTNOODPK"]
+ *
+ * Result: single noodpakket.exe that the organizer double-clicks to start.
  */
 class OfflinePackageBuilder
 {
+    /** Magic bytes matching Go launcher's expected trailer */
+    private const MAGIC = 'JTNOODPK';
+
     private OfflineExportService $exportService;
 
     /** Path to pre-built launcher binary (Go cross-compiled for Windows) */
@@ -60,8 +69,9 @@ class OfflinePackageBuilder
 
     /**
      * Build the complete offline package for a tournament.
+     * Returns a single self-extracting exe.
      *
-     * @return string Path to the generated zip/exe file
+     * @return string Path to the generated noodpakket.exe
      */
     public function build(Toernooi $toernooi): string
     {
@@ -84,10 +94,9 @@ class OfflinePackageBuilder
         $bundlePath = storage_path('app/offline_bundle_' . $toernooi->id . '.zip');
         $this->createBundle($bundlePath, $sqlitePath, $licensePath);
 
-        // Step 4: Create the final downloadable package
-        // Launcher reads bundle.zip from disk at runtime (not embedded)
-        $outputPath = storage_path('app/noodpakket_' . $toernooi->id . '.zip');
-        $this->createFinalPackage($outputPath, $bundlePath);
+        // Step 4: Create self-extracting exe (launcher + bundle + trailer)
+        $outputPath = storage_path('app/noodpakket_' . $toernooi->id . '.exe');
+        $this->createSelfExtractingExe($outputPath, $bundlePath);
 
         // Clean up intermediate files
         @unlink($sqlitePath);
@@ -127,26 +136,41 @@ class OfflinePackageBuilder
     }
 
     /**
-     * Create the final downloadable package.
-     * Contains the launcher exe + bundle zip.
+     * Create a self-extracting exe by appending bundle.zip to the launcher.
+     *
+     * Format: [launcher.exe bytes] [bundle.zip bytes] [8 bytes: zip offset] [8 bytes: "JTNOODPK"]
+     *
+     * The Go launcher reads the last 16 bytes to find the zip offset,
+     * then extracts the embedded zip from itself.
      */
-    private function createFinalPackage(string $outputPath, string $bundlePath): void
+    private function createSelfExtractingExe(string $outputPath, string $bundlePath): void
     {
-        $zip = new ZipArchive();
-        if ($zip->open($outputPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \RuntimeException('Kan noodpakket.zip niet aanmaken');
+        // Copy launcher as base
+        if (!copy($this->launcherPath, $outputPath)) {
+            throw new \RuntimeException('Kan launcher niet kopiëren');
         }
 
-        // Add launcher
-        $zip->addFile($this->launcherPath, 'noodpakket.exe');
+        $launcherSize = filesize($outputPath);
+        $bundleData = file_get_contents($bundlePath);
 
-        // Add bundle (launcher will look for this next to itself)
-        $zip->addFile($bundlePath, 'bundle.zip');
+        if ($bundleData === false) {
+            throw new \RuntimeException('Kan bundle.zip niet lezen');
+        }
 
-        // Add README
-        $zip->addFromString('LEES MIJ.txt', $this->getReadmeContent());
+        // Append bundle + trailer to exe
+        $handle = fopen($outputPath, 'ab');
+        if (!$handle) {
+            throw new \RuntimeException('Kan exe niet openen voor schrijven');
+        }
 
-        $zip->close();
+        // Write bundle zip data
+        fwrite($handle, $bundleData);
+
+        // Write trailer: zip offset (8 bytes, uint64 LE) + magic (8 bytes)
+        fwrite($handle, pack('P', $launcherSize)); // P = uint64 little-endian
+        fwrite($handle, self::MAGIC);
+
+        fclose($handle);
     }
 
     /**
@@ -170,35 +194,5 @@ class OfflinePackageBuilder
                 $zip->addFile($item->getPathname(), $relativePath);
             }
         }
-    }
-
-    private function getReadmeContent(): string
-    {
-        return <<<'TXT'
-JudoToernooi Noodpakket - Offline Server
-=========================================
-
-INSTRUCTIES:
-1. Pak deze zip uit in een map op uw laptop
-2. Dubbelklik op "noodpakket.exe"
-3. De server start automatisch
-4. Tablets verbinden via het getoonde IP adres
-
-VEREISTEN:
-- Windows 10 of nieuwer
-- Laptop verbonden met hetzelfde WiFi netwerk als de tablets
-- Eventueel Windows Firewall toestemming geven voor poort 8000
-
-PROBLEMEN?
-- Als tablets niet kunnen verbinden: controleer of laptop en tablets op hetzelfde WiFi zitten
-- Als server niet start: probeer als Administrator uit te voeren
-- Noodpakket verlopen? Download een nieuw pakket via judotournament.org
-
-Na het toernooi:
-- Start de server opnieuw als er internet is
-- Klik op "Upload resultaten naar cloud" in het menu
-
-Havun - judotournament.org
-TXT;
     }
 }

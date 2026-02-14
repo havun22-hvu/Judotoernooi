@@ -100,19 +100,19 @@
             </div>
 
             <!-- Poules printen -->
-            <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                 <div>
-                    <h3 class="font-medium text-blue-800">{{ __('Poules printen') }}</h3>
-                    <p class="text-sm text-blue-600">{{ __('Poule-schema\'s met judoka\'s per blok. Voor tafelofficiëls.') }}</p>
+                    <h3 class="font-medium">{{ __('Poules printen') }}</h3>
+                    <p class="text-sm text-gray-500">{{ __('Poule-schema\'s met judoka\'s per blok. Voor tafelofficiëls.') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParams()) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                       class="px-3 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
                         {{ __('Alle') }}
                     </a>
                     @foreach($blokken as $blok)
                     <a href="{{ route('toernooi.noodplan.poules', $toernooi->routeParamsWith(['blok' => $blok->nummer])) }}" target="_blank"
-                       class="px-3 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                       class="px-3 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
                         {{ $blok->nummer }}
                     </a>
                     @endforeach
@@ -681,83 +681,42 @@ function abbreviateClub(name) {
         </h2>
 
         <div class="space-y-4">
-            <!-- Offline Pakket -->
+            <!-- Noodpakket (.exe) -->
             @if(!$isFreeTier)
-            <div class="p-4 bg-indigo-50 border-2 border-indigo-300 rounded">
+            <div class="p-4 bg-green-50 border-2 border-green-300 rounded" x-data="serverPakketStatus()" x-init="init()">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="font-bold text-indigo-800 flex items-center gap-2">
-                            📦 {{ __('Offline Pakket (.html)') }}
+                        <h3 class="font-bold text-green-800 flex items-center gap-2">
+                            {{ __('Noodpakket') }}
+                            <div class="flex items-center gap-2 text-xs font-normal">
+                                <template x-if="syncStatus === 'connected'">
+                                    <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                        <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
+                                        Data up-to-date — <span x-text="laatsteSync"></span>
+                                    </span>
+                                </template>
+                                <template x-if="syncStatus === 'stale'">
+                                    <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
+                                        <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                                        Laatste sync: <span x-text="laatsteSync"></span>
+                                    </span>
+                                </template>
+                            </div>
                         </h3>
-                        <p class="text-sm text-indigo-600 mt-1">
-                            {{ __('Standalone HTML bestand met alle toernooi data. Dubbelklik om te openen in een browser.') }}
+                        <p class="text-sm text-green-600 mt-1">
+                            {{ __('Dubbelklik op het bestand en de server start automatisch. Tablets verbinden via WiFi.') }}
                         </p>
-                        <ul class="mt-2 text-sm text-indigo-500 list-disc list-inside">
-                            <li>{{ __('Weeglijst, zaaloverzicht, wedstrijdschema\'s') }}</li>
-                            <li>{{ __('Score invoer (opslaat lokaal in browser)') }}</li>
-                            <li>{{ __('Upload resultaten terug naar server als weer online') }}</li>
+                        <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
+                            <li>{{ __('Bevat alle poules, judoka\'s, wedstrijden en scores') }}</li>
+                            <li>{{ __('Draait volledig offline op je laptop') }}</li>
+                            <li>{{ __('Na het toernooi: resultaten uploaden naar de cloud') }}</li>
                         </ul>
                     </div>
-                    <a href="{{ route('toernooi.noodplan.offline-pakket', $toernooi->routeParams()) }}"
-                       class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-lg whitespace-nowrap ml-4">
+                    <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
+                       class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-lg whitespace-nowrap ml-4">
                         {{ __('Download') }}
                     </a>
                 </div>
-            </div>
-            @else
-            <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-gray-500 flex items-center gap-2">
-                            🔒 {{ __('Offline Pakket') }}
-                            <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
-                        </h3>
-                        <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
-                    </div>
-                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
-                       class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium whitespace-nowrap ml-4">
-                        {{ __('Upgrade') }}
-                    </a>
-                </div>
-            </div>
-            @endif
-
-            <!-- Offline Server Pakket -->
-            @if(!$isFreeTier)
-            <div class="p-4 bg-green-50 border border-green-200 rounded" x-data="serverPakketStatus()" x-init="init()">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-medium text-green-800">{{ __('Offline Server Pakket (.zip)') }}</h3>
-                    <div class="flex items-center gap-2 text-xs">
-                        <template x-if="syncStatus === 'connected'">
-                            <span class="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                                <span class="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-                                Data up-to-date — <span x-text="laatsteSync"></span>
-                            </span>
-                        </template>
-                        <template x-if="syncStatus === 'stale'">
-                            <span class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full">
-                                <span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
-                                Laatste sync: <span x-text="laatsteSync"></span>
-                            </span>
-                        </template>
-                        <template x-if="syncStatus === 'none'">
-                            <span class="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
-                                <span class="w-2 h-2 rounded-full bg-gray-400 mr-1"></span>
-                                {{ __('Nog geen sync') }}
-                            </span>
-                        </template>
-                    </div>
-                </div>
-                <p class="text-sm text-green-600 mt-1">{{ __('Compleet pakket met server + database. Dubbelklik om te starten, tablets verbinden via WiFi.') }}</p>
-                <ul class="mt-2 text-sm text-green-600 list-disc list-inside">
-                    <li>{{ __('Bevat alle poules, judoka\'s, wedstrijden en scores') }}</li>
-                    <li>{{ __('Draait volledig offline op je laptop') }}</li>
-                    <li>{{ __('Bij opstarten haalt de launcher automatisch de nieuwste data op') }}</li>
-                </ul>
-                <a href="{{ route('toernooi.noodplan.server-pakket', $toernooi->routeParams()) }}"
-                   class="mt-3 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-medium inline-block">
-                    {{ __('Download server pakket') }}
-                </a>
             </div>
             <script>
                 function serverPakketStatus() {
@@ -794,13 +753,19 @@ function abbreviateClub(name) {
             </script>
             @else
             <div class="p-4 bg-gray-50 border border-gray-200 rounded opacity-75">
-                <h3 class="font-medium text-gray-500">{{ __('Offline Server Pakket') }}
-                    <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
-                </h3>
-                <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
-                <span class="mt-3 px-4 py-2 bg-gray-400 text-white rounded font-medium inline-block cursor-not-allowed">
-                    {{ __('Premium') }}
-                </span>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-gray-500 flex items-center gap-2">
+                            {{ __('Noodpakket') }}
+                            <span class="text-sm font-normal text-gray-400">- {{ __('Premium') }}</span>
+                        </h3>
+                        <p class="text-sm text-gray-400 mt-1">{{ __('Beschikbaar met een betaald abonnement.') }}</p>
+                    </div>
+                    <a href="{{ route('toernooi.upgrade', $toernooi->routeParams()) }}"
+                       class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 font-medium whitespace-nowrap ml-4">
+                        {{ __('Upgrade') }}
+                    </a>
+                </div>
             </div>
             @endif
         </div>

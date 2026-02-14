@@ -273,6 +273,7 @@ Write-Host "  Totaal (excl db) ${TotalSize}MB"
 Write-Host ""
 Write-Host "  Build output: $BuildDir" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  De server download op judotournament.org combineert dit" -ForegroundColor Yellow
-Write-Host "  met de SQLite database en license per toernooi." -ForegroundColor Yellow
+Write-Host "  De server op judotournament.org combineert launcher + PHP + Laravel" -ForegroundColor Yellow
+Write-Host "  + SQLite database tot een enkele noodpakket.exe per toernooi." -ForegroundColor Yellow
+Write-Host "  Organisator dubbelklikt op het bestand en de server draait." -ForegroundColor Yellow
 Write-Host ""
