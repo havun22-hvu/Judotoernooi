@@ -9,8 +9,8 @@ namespace App\Services;
 class BracketLayoutService
 {
     // Slot height in pixels
-    private const SLOT_HEIGHT = 36;
-    private const POTJE_HEIGHT = 72; // 2 * SLOT_HEIGHT
+    private const SLOT_HEIGHT = 40;
+    private const POTJE_HEIGHT = 80; // 2 * SLOT_HEIGHT
     private const POTJE_GAP = 8;
     private const HORIZON_HEIGHT = 20; // Ruimte tussen B-bracket helften
 
