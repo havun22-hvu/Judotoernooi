@@ -531,8 +531,18 @@ function judokaTable() {
 
         get sortedJudokas() {
             const list = this.filteredJudokas;
-            if (!this.sortKey) return list;
+            if (!this.sortKey) {
+                // Default: incomplete judokas first
+                return [...list].sort((a, b) => {
+                    if (a.incompleet !== b.incompleet) return a.incompleet ? -1 : 1;
+                    return 0;
+                });
+            }
             return [...list].sort((a, b) => {
+                // Incomplete judokas always first (unless filtering on incomplete)
+                if (!this.toonOnvolledig && a.incompleet !== b.incompleet) {
+                    return a.incompleet ? -1 : 1;
+                }
                 let aVal, bVal;
                 if (this.sortKey === 'leeftijdsklasse') {
                     aVal = a.leeftijdsklasseOrder;
