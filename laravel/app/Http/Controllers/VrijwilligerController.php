@@ -23,6 +23,7 @@ class VrijwilligerController extends Controller
                 'id' => $v->id,
                 'voornaam' => $v->voornaam,
                 'telefoonnummer' => $v->telefoonnummer,
+                'email' => $v->email,
                 'functie' => $v->functie,
                 'functie_label' => $v->getFunctieLabel(),
             ]);
@@ -38,6 +39,7 @@ class VrijwilligerController extends Controller
         $request->validate([
             'voornaam' => 'required|string|max:255',
             'telefoonnummer' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
+            'email' => 'nullable|email|max:255',
             'functie' => 'required|in:' . implode(',', Vrijwilliger::FUNCTIES),
         ], [
             'telefoonnummer.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
@@ -47,6 +49,7 @@ class VrijwilligerController extends Controller
             'organisator_id' => $toernooi->organisator->id,
             'voornaam' => $request->voornaam,
             'telefoonnummer' => $request->telefoonnummer,
+            'email' => $request->email,
             'functie' => $request->functie,
         ]);
 
@@ -54,6 +57,7 @@ class VrijwilligerController extends Controller
             'id' => $vrijwilliger->id,
             'voornaam' => $vrijwilliger->voornaam,
             'telefoonnummer' => $vrijwilliger->telefoonnummer,
+            'email' => $vrijwilliger->email,
             'functie' => $vrijwilliger->functie,
             'functie_label' => $vrijwilliger->getFunctieLabel(),
         ], 201);
@@ -72,6 +76,7 @@ class VrijwilligerController extends Controller
         $request->validate([
             'voornaam' => 'required|string|max:255',
             'telefoonnummer' => ['nullable', 'string', 'max:20', 'regex:/^(\+31|0)[1-9][\d\s\-]{7,12}$/'],
+            'email' => 'nullable|email|max:255',
             'functie' => 'required|in:' . implode(',', Vrijwilliger::FUNCTIES),
         ], [
             'telefoonnummer.regex' => 'Voer een geldig Nederlands telefoonnummer in (bijv. 06-12345678)',
@@ -80,6 +85,7 @@ class VrijwilligerController extends Controller
         $vrijwilliger->update([
             'voornaam' => $request->voornaam,
             'telefoonnummer' => $request->telefoonnummer,
+            'email' => $request->email,
             'functie' => $request->functie,
         ]);
 
@@ -87,6 +93,7 @@ class VrijwilligerController extends Controller
             'id' => $vrijwilliger->id,
             'voornaam' => $vrijwilliger->voornaam,
             'telefoonnummer' => $vrijwilliger->telefoonnummer,
+            'email' => $vrijwilliger->email,
             'functie' => $vrijwilliger->functie,
             'functie_label' => $vrijwilliger->getFunctieLabel(),
         ]);

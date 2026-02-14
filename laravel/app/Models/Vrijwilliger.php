@@ -13,6 +13,7 @@ class Vrijwilliger extends Model
         'organisator_id',
         'voornaam',
         'telefoonnummer',
+        'email',
         'functie',
     ];
 
