@@ -711,27 +711,6 @@
                            placeholder="-" class="w-12 border rounded px-2 py-1 text-center">
                 </div>
 
-                <!-- Judoka's per coach -->
-                <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
-                    <label for="judokas_per_coach" class="text-gray-700 font-medium">{{ __('Judoka\'s per coach kaart:') }}</label>
-                    <input type="number" name="judokas_per_coach" id="judokas_per_coach"
-                           x-model="value"
-                           class="w-16 border rounded px-2 py-1 text-center" min="1">
-                    <span class="text-sm text-gray-500">{{ __('(toegang tot dojo)') }}</span>
-                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
-                </div>
-
-                <!-- Coach in/uitcheck systeem -->
-                <div class="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
-                    <input type="checkbox" name="coach_incheck_actief" id="coach_incheck_actief"
-                           value="1" {{ old('coach_incheck_actief', $toernooi->coach_incheck_actief) ? 'checked' : '' }}
-                           class="w-5 h-5 text-blue-600 rounded">
-                    <div>
-                        <label for="coach_incheck_actief" class="text-gray-700 font-medium">{{ __('Coach in/uitcheck bij dojo') }}</label>
-                        <p class="text-sm text-gray-500">{{ __('Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen') }}</p>
-                    </div>
-                </div>
-
             </div>
 
             <div class="max-w-md border-t pt-4">
@@ -743,6 +722,32 @@
                     {{ __('Hoeveel kg mag een judoka boven de gewichtsklasse-limiet wegen?') }}
                     {{ __('Standaard: 0.5 kg. Gebruik 0.3 voor strikter beleid.') }}
                 </p>
+            </div>
+        </div>
+
+        <!-- DOJO / COACH -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b">{{ __('Dojo / Coach') }}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Judoka's per coach -->
+                <div class="flex items-center gap-2" x-data="{ value: {{ old('judokas_per_coach', $toernooi->judokas_per_coach ?? 5) }} }">
+                    <label for="judokas_per_coach" class="text-gray-700 font-medium">{{ __('Judoka\'s per coach kaart:') }}</label>
+                    <input type="number" name="judokas_per_coach" id="judokas_per_coach"
+                           x-model="value"
+                           class="w-16 border rounded px-2 py-1 text-center" min="1">
+                    <span x-show="value > 10" x-cloak class="text-orange-600 text-sm">{{ __('Hoog aantal') }}</span>
+                </div>
+
+                <!-- Coach in/uitcheck systeem -->
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <input type="checkbox" name="coach_incheck_actief" id="coach_incheck_actief"
+                           value="1" {{ old('coach_incheck_actief', $toernooi->coach_incheck_actief) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="coach_incheck_actief" class="text-gray-700 font-medium">{{ __('Coach in/uitcheck bij dojo') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen') }}</p>
+                    </div>
+                </div>
             </div>
         </div>
 
