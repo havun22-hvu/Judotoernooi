@@ -1509,6 +1509,15 @@ function matInterface() {
                         pouleIsLocked: slot.poule_is_locked || false,
                     }
                 );
+
+                // Sync updated_at in Alpine data (voorkomt false 409 conflict)
+                if (slot.updated_at) {
+                    const poule = this.poules.find(p => p.poule_id == pouleId);
+                    if (poule) {
+                        const wed = poule.wedstrijden.find(w => w.id == slot.wedstrijd_id);
+                        if (wed) wed.updated_at = slot.updated_at;
+                    }
+                }
             });
 
             // Herinitialiseer SortableJS na DOM updates
