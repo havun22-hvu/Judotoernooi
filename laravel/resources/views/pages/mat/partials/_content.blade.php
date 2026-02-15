@@ -32,23 +32,25 @@
         min-height: 36px;
     }
 
-    /* Drop target: valid (green outline) */
+    /* Drop target: valid (solid green) */
     .drop-target-valid {
-        outline: 2px solid #22c55e !important;
+        outline: 3px solid #22c55e !important;
         outline-offset: -2px;
-        background-color: #f0fdf4 !important;
+        background-color: #bbf7d0 !important;
+        box-shadow: inset 0 0 8px rgba(34, 197, 94, 0.3) !important;
     }
 
-    /* Drop target: primary/winnaar doorschuif (thick green + pulse) */
+    /* Drop target: primary/winnaar doorschuif (bold green pulse) */
     .drop-target-primary {
-        outline: 3px solid #16a34a !important;
+        outline: 4px solid #16a34a !important;
         outline-offset: -2px;
-        background-color: #dcfce7 !important;
-        animation: drop-pulse 1s ease-in-out infinite;
+        background-color: #86efac !important;
+        box-shadow: 0 0 12px rgba(22, 163, 106, 0.5), inset 0 0 8px rgba(34, 197, 94, 0.3) !important;
+        animation: drop-pulse 0.8s ease-in-out infinite;
     }
     @keyframes drop-pulse {
-        0%, 100% { outline-color: #16a34a; }
-        50% { outline-color: #86efac; }
+        0%, 100% { background-color: #86efac; }
+        50% { background-color: #bbf7d0; }
     }
 
     /* Drop target: disabled (dimmed) */
