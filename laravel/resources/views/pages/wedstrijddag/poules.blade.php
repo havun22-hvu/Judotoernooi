@@ -3,6 +3,7 @@
 @section('title', __('Wedstrijddag Poules'))
 
 @section('content')
+<div class="select-none">
 @php
     $tolerantie = $toernooi->gewicht_tolerantie ?? 0.5;
     // Onderscheid vaste gewichtsklassen vs variabele poules
@@ -2052,4 +2053,5 @@ function closeZoekMatchModal() {
     opacity: 0.4;
 }
 </style>
+</div>
 @endsection
