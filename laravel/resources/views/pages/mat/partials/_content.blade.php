@@ -1230,7 +1230,15 @@ function matInterface() {
                 // 1. Herlaad wedstrijden data
                 await this.laadWedstrijden();
 
-                // 2. Check voor nieuwe versie (force reload van cache)
+                // 2. Herlaad alle bracket HTML (server-rendered partials)
+                for (const p of this.poules) {
+                    if (p.type === 'eliminatie') {
+                        this.laadBracketHtml(p.poule_id, 'A');
+                        if (this.heeftHerkansing(p)) this.laadBracketHtml(p.poule_id, 'B');
+                    }
+                }
+
+                // 3. Check voor nieuwe versie (force reload van cache)
                 if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
                 }
