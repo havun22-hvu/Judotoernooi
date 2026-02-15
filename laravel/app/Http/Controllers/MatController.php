@@ -788,6 +788,7 @@ class MatController extends Controller
                 'volgende_wedstrijd_id' => $w->volgende_wedstrijd_id,
                 'winnaar_naar_slot' => $w->winnaar_naar_slot,
                 'poule_is_locked' => $isLocked,
+                'updated_at' => $w->updated_at?->toISOString(),
             ];
             $updatedSlots[] = [
                 'wedstrijd_id' => $w->id,
@@ -799,6 +800,7 @@ class MatController extends Controller
                 'volgende_wedstrijd_id' => $w->volgende_wedstrijd_id,
                 'winnaar_naar_slot' => $w->winnaar_naar_slot,
                 'poule_is_locked' => $isLocked,
+                'updated_at' => $w->updated_at?->toISOString(),
             ];
         }
 
