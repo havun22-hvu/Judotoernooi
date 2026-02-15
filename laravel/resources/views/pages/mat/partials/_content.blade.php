@@ -1459,6 +1459,7 @@ function matInterface() {
                     console.log('[Bracket] Byes advanced:', result.advanced);
                     await this.laadWedstrijden();
                     this.laadBracketHtml(pouleId, 'A');
+                    this.laadBracketHtml(pouleId, 'B');
                 }
             } catch (err) {
                 console.error('[Bracket] Fout bij advance byes:', err);
