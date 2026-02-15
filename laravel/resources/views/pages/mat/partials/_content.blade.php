@@ -37,6 +37,38 @@
         pointer-events: none;
     }
 </style>
+<script>
+    // Global CSRF-safe fetch: automatically refreshes token on 419 and retries once
+    window.csrfFetch = async function(url, options = {}) {
+        const token = () => document.querySelector('meta[name="csrf-token"]')?.content;
+        if (!options.headers) options.headers = {};
+        options.headers['X-CSRF-TOKEN'] = token();
+
+        const response = await fetch(url, options);
+
+        if (response.status === 419) {
+            console.log('[CSRF] Token expired, refreshing...');
+            try {
+                // Fetch fresh CSRF token from a lightweight GET request
+                const html = await (await fetch(window.location.href, { method: 'GET', headers: { 'Accept': 'text/html' } })).text();
+                const match = html.match(/csrf-token['"]\s+content=['"](.*?)['"]/);
+                if (match) {
+                    document.querySelector('meta[name="csrf-token"]').content = match[1];
+                    console.log('[CSRF] Token refreshed, retrying request...');
+                    options.headers['X-CSRF-TOKEN'] = match[1];
+                    return fetch(url, options);
+                }
+            } catch (e) {
+                console.error('[CSRF] Failed to refresh token:', e);
+            }
+            // Fallback: reload page
+            alert('Sessie verlopen. De pagina wordt herladen.');
+            location.reload();
+        }
+
+        return response;
+    };
+</script>
     @php
         $pwaApp = 'mat';
         // API URLs - different for device-bound vs admin access
@@ -486,12 +518,12 @@ window.promptWachtwoord = function(bericht) {
 // Server-side admin password check (bcrypt)
 window.checkAdminWachtwoord = async function(wachtwoord) {
     try {
-        const response = await fetch(`{{ $checkWachtwoordUrl }}`, {
+        const response = await csrfFetch(`{{ $checkWachtwoordUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+
             },
             body: JSON.stringify({ wachtwoord })
         });
@@ -568,12 +600,12 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     // Verwijder uit huidige wedstrijd
     if (data.wedstrijdId && data.positie) {
         try {
-            const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
+            const response = await csrfFetch(`{{ $verwijderJudokaUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    
                 },
                 body: JSON.stringify({
                     wedstrijd_id: data.wedstrijdId,
@@ -715,12 +747,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             // Verwijder judoka uit huidige slot (reset bron-wedstrijd)
             try {
-                const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
+                const response = await csrfFetch(`{{ $verwijderJudokaUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({
                         wedstrijd_id: data.wedstrijdId,
@@ -768,12 +800,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             // Verwijder judoka uit oude plek (MOVE, niet COPY)
             if (data.wedstrijdId && data.positie && !data.fromSwap) {
-                await fetch(`{{ $verwijderJudokaUrl }}`, {
+                await csrfFetch(`{{ $verwijderJudokaUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({
                         wedstrijd_id: data.wedstrijdId,
@@ -795,12 +827,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             is_correctie: data.isCorrectie || false
         };
 
-        const response = await fetch(`{{ $plaatsJudokaUrl }}`, {
+        const response = await csrfFetch(`{{ $plaatsJudokaUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+
             },
             body: JSON.stringify(requestBody)
         });
@@ -814,11 +846,6 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             return false;
         }
 
-        if (response.status === 419) {
-            alert('Sessie verlopen. De pagina wordt herladen.');
-            location.reload();
-            return false;
-        }
         if (!response.ok) {
             console.error('[DROP] Server response:', response.status, result);
             const msg = result.error || result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Server status ' + response.status);
@@ -909,12 +936,12 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     const winnaarId = medaille === 'goud' ? data.judokaId : null;
 
     try {
-        const response = await fetch(`{{ $finaleUitslagUrl }}`, {
+        const response = await csrfFetch(`{{ $finaleUitslagUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+
             },
             body: JSON.stringify({
                 wedstrijd_id: finaleId,
@@ -1004,12 +1031,12 @@ window.verwijderJudoka = async function(event) {
     }
 
     try {
-        const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
+        const response = await csrfFetch(`{{ $verwijderJudokaUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+
             },
             body: JSON.stringify({
                 wedstrijd_id: data.wedstrijdId,
@@ -1235,12 +1262,11 @@ function matInterface() {
                 const apiUrl = `{{ $wedstrijdenUrl }}`;
                 console.log('[Mat] API URL:', apiUrl);
                 console.log('[Mat] Loading wedstrijden for blok:', this.blokId, 'mat:', this.matId);
-                const response = await fetch(apiUrl, {
+                const response = await csrfFetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
                         blok_id: this.blokId,
@@ -1261,12 +1287,6 @@ function matInterface() {
                         alert('Server fout (' + response.status + '). Probeer de pagina te herladen.');
                     }
                     this.poules = [];
-                    return;
-                }
-
-                if (response.status === 419) {
-                    alert('Sessie verlopen. De pagina wordt herladen.');
-                    location.reload();
                     return;
                 }
 
@@ -1360,12 +1380,12 @@ function matInterface() {
             if (!container) return;
 
             try {
-                const response = await fetch(`{{ $bracketHtmlUrl }}`, {
+                const response = await csrfFetch(`{{ $bracketHtmlUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({
                         poule_id: pouleId,
@@ -1375,11 +1395,6 @@ function matInterface() {
                     })
                 });
 
-                if (response.status === 419) {
-                    alert('Sessie verlopen. De pagina wordt herladen.');
-                    location.reload();
-                    return;
-                }
                 if (!response.ok) {
                     console.error('[Bracket] Fout bij laden HTML:', response.status);
                     container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
@@ -1416,12 +1431,12 @@ function matInterface() {
         // Advance all byes in first A-round to next round
         async advanceByes(pouleId) {
             try {
-                const response = await fetch(`{{ $advanceByesUrl }}`, {
+                const response = await csrfFetch(`{{ $advanceByesUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({ poule_id: pouleId })
                 });
@@ -1640,12 +1655,12 @@ function matInterface() {
             }
 
             // Save to backend
-            const uitslagResponse = await fetch(`{{ $uitslagUrl }}`, {
+            const uitslagResponse = await csrfFetch(`{{ $uitslagUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    
                 },
                 body: JSON.stringify({
                     wedstrijd_id: wedstrijd.id,
@@ -1874,12 +1889,12 @@ function matInterface() {
 
         async markeerKlaar(poule) {
             try {
-                const response = await fetch(`{{ $pouleKlaarUrl }}`, {
+                const response = await csrfFetch(`{{ $pouleKlaarUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({
                         poule_id: poule.poule_id
@@ -1991,12 +2006,12 @@ function matInterface() {
             if (!confirm(`Barrage maken voor: ${namen}?`)) return;
 
             try {
-                const response = await fetch(`{{ route('toernooi.mat.barrage', $toernooi->routeParams()) }}`, {
+                const response = await csrfFetch(`{{ route('toernooi.mat.barrage', $toernooi->routeParams()) }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        
                     },
                     body: JSON.stringify({
                         poule_id: poule.poule_id,
@@ -2251,18 +2266,12 @@ function matInterface() {
 
             try {
                 const url = `{{ $huidigeWedstrijdUrl }}`;
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
-                if (!csrfToken) {
-                    throw new Error('CSRF token niet gevonden. Refresh de pagina.');
-                }
-
-                const response = await fetch(url, {
+                const response = await csrfFetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         mat_id: this.matId,
