@@ -786,11 +786,19 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             body: JSON.stringify(requestBody)
         });
 
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseErr) {
+            alert('❌ Server fout (geen JSON response)\n\nStatus: ' + response.status);
+            location.reload();
+            return false;
+        }
 
         if (!response.ok) {
             // Toon foutmelding - actie geblokkeerd
-            alert('❌ GEBLOKKEERD:\n\n' + (result.error || 'Onbekende fout'));
+            const msg = result.error || result.message || (result.errors ? JSON.stringify(result.errors) : 'Onbekende fout (status ' + response.status + ')');
+            alert('❌ GEBLOKKEERD:\n\n' + msg);
             return false;
         }
 
