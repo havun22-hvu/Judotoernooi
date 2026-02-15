@@ -1,7 +1,7 @@
 // Service Worker for Judo Toernooi PWA
 // BELANGRIJK: Verhoog VERSION bij elke release om update te forceren
-// v1.2.18 - 2026-01-31: Fix best_of_three_bij_2 form saving
-const VERSION = '1.2.18';
+// v1.3.1 - 2026-02-16: Better error diagnostics for mobile drag
+const VERSION = '1.3.1';
 const CACHE_NAME = `judo-toernooi-v${VERSION}`;
 const OFFLINE_URL = '/offline.html';
 

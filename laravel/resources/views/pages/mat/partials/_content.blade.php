@@ -832,7 +832,12 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
     } catch (err) {
         console.error('Drop error:', err);
-        alert('❌ Fout bij plaatsen: ' + err.message);
+        const errMsg = err.message || String(err);
+        if (errMsg.includes('fetch') || errMsg.includes('network') || errMsg.includes('Failed')) {
+            alert('❌ Netwerkfout: ' + errMsg + '\n\nControleer je internetverbinding.\nDe pagina wordt herladen.');
+        } else {
+            alert('❌ Fout bij plaatsen: ' + errMsg);
+        }
         // Bij fout: location.reload() — zelfde als andere pages
         location.reload();
         return false;
