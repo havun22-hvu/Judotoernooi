@@ -132,6 +132,12 @@
                             <a href="{{ route('organisator.instellingen', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Instellingen') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <hr class="my-1">
+                            <div class="px-4 py-2">
+                                <p class="text-xs text-gray-400">v{{ config('toernooi.version') }}</p>
+                                <p class="text-xs text-gray-400">{{ __('Update') }}: {{ config('toernooi.version_date') }}</p>
+                                <button type="button" onclick="location.reload(true)" class="mt-1 text-xs text-blue-600 hover:text-blue-800">{{ __('Ververs app') }}</button>
+                            </div>
+                            <hr class="my-1">
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
