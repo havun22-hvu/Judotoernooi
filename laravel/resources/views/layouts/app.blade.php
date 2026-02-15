@@ -112,7 +112,7 @@
 
                     @if(Auth::guard('organisator')->check())
                     {{-- Organisator ingelogd - dropdown menu --}}
-                    <div class="relative" x-data="{ open: false }">
+                    <div class="relative" x-data="{ open: false, showAbout: false }">
                         <button @click="open = !open" @click.away="open = false" class="flex items-center text-blue-200 hover:text-white text-sm focus:outline-none">
                             @if(Auth::guard('organisator')->user()->isSitebeheerder())
                                 👑
@@ -132,16 +132,47 @@
                             <a href="{{ route('organisator.instellingen', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Instellingen') }}</a>
                             <a href="{{ route('help') }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Help & Handleiding') }} ↗</a>
                             <hr class="my-1">
-                            <div class="px-4 py-2">
-                                <p class="text-xs text-gray-400">v{{ config('toernooi.version') }}</p>
-                                <p class="text-xs text-gray-400">{{ __('Update') }}: {{ config('toernooi.version_date') }}</p>
-                                <button type="button" onclick="location.reload(true)" class="mt-1 text-xs text-blue-600 hover:text-blue-800">{{ __('Ververs app') }}</button>
-                            </div>
-                            <hr class="my-1">
+                            <button type="button" @click="showAbout = true; open = false" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Over') }}</button>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">{{ __('Uitloggen') }}</button>
                             </form>
+                        </div>
+
+                        {{-- About modal --}}
+                        <div x-show="showAbout" x-cloak
+                             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                             @click.self="showAbout = false">
+                            <div class="bg-white rounded-lg shadow-xl w-80 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white text-center">
+                                    <h2 class="text-xl font-bold">JudoToernooi</h2>
+                                    <p class="text-blue-200 text-sm">{{ __('Toernooi Management') }}</p>
+                                </div>
+                                <div class="px-6 py-4 space-y-3">
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Versie') }}</p>
+                                        <p class="font-medium text-gray-800">v{{ config('toernooi.version') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Laatste update') }}</p>
+                                        <p class="font-medium text-gray-800">{{ config('toernooi.version_date') }}</p>
+                                    </div>
+                                    <hr>
+                                    <div>
+                                        <p class="text-xs text-gray-400">{{ __('Ontwikkeld door') }}</p>
+                                        <p class="font-medium text-gray-800">Havun</p>
+                                        <p class="text-sm text-gray-500">havun22@gmail.com</p>
+                                    </div>
+                                    <hr>
+                                    <button type="button" onclick="location.reload(true)"
+                                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">
+                                        {{ __('Ververs app') }}
+                                    </button>
+                                </div>
+                                <div class="px-6 py-3 bg-gray-50 text-center">
+                                    <button type="button" @click="showAbout = false" class="text-sm text-gray-500 hover:text-gray-700">{{ __('Sluiten') }}</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     @elseif(isset($toernooi) && session("toernooi_{$toernooi->id}_rol"))
