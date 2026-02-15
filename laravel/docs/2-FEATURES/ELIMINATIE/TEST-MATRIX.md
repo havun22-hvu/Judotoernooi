@@ -5,16 +5,20 @@
 
 ## Quick Test: Samen of Dubbel?
 
-| N | A1 verliezers | A2 verliezers | A1 > A2? | Verwacht |
-|---|---------------|---------------|----------|----------|
-| 12 | 4 | 4 | Nee | **SAMEN** |
+| N | a1 | a2 | a1 > a2? | Type |
+|---|----|----|----------|------|
+| 12 | 4 | 4 | Nee | **SAMEN** (exact) |
 | 16 | 8 | 4 | Ja | **DUBBEL** |
-| 24 | 8 | 8 | Nee | **SAMEN** |
+| 21 | 5 | 8 | Nee | **SAMEN** (3 byes WIT) |
+| 24 | 8 | 8 | Nee | **SAMEN** (exact) |
 | 32 | 16 | 8 | Ja | **DUBBEL** |
-| 48 | 16 | 16 | Nee | **SAMEN** |
+| 48 | 16 | 16 | Nee | **SAMEN** (exact) |
 | 64 | 32 | 16 | Ja | **DUBBEL** |
 
-**Vuistregel:** Exacte machten van 2 (16, 32, 64) hebben ALTIJD dubbele rondes.
+**Vuistregels:**
+- Exacte machten van 2 (8, 16, 32, 64) → ALTIJD DUBBEL
+- N = 3D/2 (6, 12, 24, 48) → SAMEN exact (a1 = a2)
+- Daartussen: a1 < a2 → SAMEN met byes, a1 > a2 → DUBBEL
 
 ## Complete Referentietabel (5-64 judoka's)
 
@@ -42,14 +46,15 @@
 
 ### N = 17-32 (D=16, start A-1/16)
 
-| N | V1 | Byes | A1 verl | A2 verl | B-type | B-start |
-|---|-----|------|---------|---------|--------|---------|
-| 17 | 1 | 15 | 1 | 8 | Samen | B-1/8 |
-| 20 | 4 | 12 | 4 | 8 | Samen | B-1/8 |
-| 24 | 8 | 8 | 8 | 8 | Samen | B-1/8 |
-| 25 | 9 | 7 | 9 | 8 | Dubbel | B-1/8(1) |
-| 28 | 12 | 4 | 12 | 8 | Dubbel | B-1/8(1) |
-| **32** | 0 | - | **16** | **8** | **Dubbel** | B-1/8(1) |
+| N | V1 | Byes | a1 | a2 | B-type | B-start | B WIT byes |
+|---|-----|------|----|----|--------|---------|------------|
+| 17 | 1 | 15 | 1 | 8 | Samen | B-1/8 | 7 |
+| 20 | 4 | 12 | 4 | 8 | Samen | B-1/8 | 4 |
+| **21** | **5** | **11** | **5** | **8** | **Samen** | **B-1/8** | **3** |
+| 24 | 8 | 8 | 8 | 8 | Samen | B-1/8 | 0 |
+| 25 | 9 | 7 | 9 | 8 | Dubbel | B-1/8(1) | - |
+| 28 | 12 | 4 | 12 | 8 | Dubbel | B-1/8(1) | - |
+| **32** | 0 | - | **16** | **8** | **Dubbel** | B-1/8(1) | - |
 
 ### N = 33-64 (D=32, start A-1/32)
 
