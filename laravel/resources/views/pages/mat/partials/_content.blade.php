@@ -2448,9 +2448,12 @@ window._markValidBracketTargets = function(dragItem) {
                 isPrimary = true;
                 isValid = true;
             } else if (isLocked && poule) {
-                // Locked: only terugplaatsen is valid (target whose volgende_wedstrijd_id == bronWedstrijdId)
+                // Locked: terugplaatsen naar eigen vorige slot (subtiel groen)
+                // Alleen de wedstrijd die naar de bron-wedstrijd wees EN
+                // waarvan winnaar_naar_slot overeenkomt met de positie van de judoka
                 const targetWed = poule.wedstrijden?.find(w => w.id == parseInt(dropWedstrijdId));
-                if (targetWed && targetWed.volgende_wedstrijd_id == bronWedstrijdId) {
+                if (targetWed && targetWed.volgende_wedstrijd_id == bronWedstrijdId
+                    && (!targetWed.winnaar_naar_slot || !data.positie || targetWed.winnaar_naar_slot === data.positie)) {
                     isValid = true;
                 }
             } else if (!isLocked) {
