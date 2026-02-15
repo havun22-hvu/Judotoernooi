@@ -266,7 +266,7 @@
 
                         $isDoorgestuurdElim = $elimPoule->doorgestuurd_op !== null;
                     @endphp
-                    <div id="poule-{{ $elimPoule->id }}" class="col-span-2 md:col-span-3 lg:col-span-4 border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}" data-type="eliminatie">
+                    <div id="poule-{{ $elimPoule->id }}" class="col-span-2 md:col-span-3 lg:col-span-4 border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}" data-poule-nummer="{{ $elimPoule->nummer }}" data-type="eliminatie">
                         <div class="bg-orange-600 text-white px-4 py-2 flex justify-between items-center poule-header">
                             <div>
                                 <div class="font-bold">⚔️ #{{ $elimPoule->nummer }} {{ $elimTitelFormatted }} <span class="font-normal text-orange-200">({{ __('Eliminatie') }})</span></div>
@@ -391,7 +391,7 @@
                             return $j->naam . ' (' . __('afwijkend gewicht') . ')';
                         });
                     @endphp
-                    <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}" data-type="eliminatie">
+                    <div class="border-2 border-orange-300 rounded-lg overflow-hidden bg-white poule-card" data-poule-id="{{ $elimPoule->id }}" data-poule-nummer="{{ $elimPoule->nummer }}" data-type="eliminatie">
                         <div class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center poule-header">
                             <span class="font-bold poule-stats"><span class="poule-actief">{{ $aantalActiefElim }}</span> {{ __("judoka's") }}</span>
                             <div class="flex items-center gap-2">
