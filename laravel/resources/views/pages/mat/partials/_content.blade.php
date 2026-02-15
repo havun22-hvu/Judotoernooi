@@ -814,6 +814,11 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             return false;
         }
 
+        if (response.status === 419) {
+            alert('Sessie verlopen. De pagina wordt herladen.');
+            location.reload();
+            return false;
+        }
         if (!response.ok) {
             console.error('[DROP] Server response:', response.status, result);
             const msg = result.error || result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Server status ' + response.status);
@@ -1259,6 +1264,12 @@ function matInterface() {
                     return;
                 }
 
+                if (response.status === 419) {
+                    alert('Sessie verlopen. De pagina wordt herladen.');
+                    location.reload();
+                    return;
+                }
+
                 if (!response.ok) {
                     let errorMsg = 'Fout bij laden wedstrijden: ' + response.status;
                     try {
@@ -1364,6 +1375,11 @@ function matInterface() {
                     })
                 });
 
+                if (response.status === 419) {
+                    alert('Sessie verlopen. De pagina wordt herladen.');
+                    location.reload();
+                    return;
+                }
                 if (!response.ok) {
                     console.error('[Bracket] Fout bij laden HTML:', response.status);
                     container.innerHTML = '<div class="text-red-500 text-sm py-2">Fout bij laden bracket</div>';
