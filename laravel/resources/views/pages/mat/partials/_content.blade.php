@@ -1436,7 +1436,7 @@ function matInterface() {
             }
         },
 
-        // Advance all byes in first A-round to next round
+        // Advance all unplayed byes (A + B) to next round
         async advanceByes(pouleId) {
             try {
                 const response = await csrfFetch(`{{ $advanceByesUrl }}`, {
