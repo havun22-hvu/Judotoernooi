@@ -2463,9 +2463,9 @@ window._markValidBracketTargets = function(dragItem) {
             if (!isLocked) isValid = true;
         } else if (handler === 'dropOpMedaille') {
             // Medaille drop is valid als judoka uit de juiste finale/brons wedstrijd komt
-            // (de dropOpMedaille handler checkt zelf of wedstrijd_id matcht)
             const finaleId = drop.getAttribute('data-finale-id');
             if (finaleId && finaleId !== 'null' && parseInt(finaleId) === bronWedstrijdId) {
+                isPrimary = true;
                 isValid = true;
             }
         }
