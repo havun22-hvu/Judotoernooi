@@ -12,18 +12,22 @@ D  = 2^floor(log2(N))    # grootste macht van 2 die <= N
 
 ### D Bepalen
 
-| N range | D | Eerste A-ronde |
-|---------|---|----------------|
-| 5-8 | 4 | A-1/4 |
-| 9-16 | 8 | A-1/8 |
-| 17-32 | 16 | A-1/16 |
-| 33-64 | 32 | A-1/32 |
-| 65-128 | 64 | A-1/64 |
+| N range | D |
+|---------|---|
+| 5-7 | 4 |
+| 8-15 | 8 |
+| 16-31 | 16 |
+| 32-63 | 32 |
+| 64-127 | 64 |
 
-**Speciale gevallen (exacte machten van 2):**
-- N=8: D=8, eerste ronde = A-1/4 (NIET A-1/8)
-- N=16: D=16, eerste ronde = A-1/8 (NIET A-1/16)
-- N=32: D=32, eerste ronde = A-1/16 (NIET A-1/32)
+### Eerste A-ronde
+
+V1 = N - D (aantal wedstrijden in eerste ronde)
+
+| Conditie | Eerste A-ronde | Voorbeeld |
+|----------|---------------|-----------|
+| V1 > 0 | A-1/D fractie (V1 wedstrijden + byes) | N=12, D=8 → A-1/8 (4 wed + 4 byes) |
+| V1 = 0 (exacte macht van 2) | A-1/(D/2) fractie (geen seeding ronde) | N=8, D=8 → A-1/4 (4 wedstrijden) |
 
 ## A-Groep Formules
 
@@ -104,7 +108,7 @@ $dubbelRondes = $a1 > $a2;  // NIET !==, want a1 < a2 = SAMEN met byes
 
 ## B-Groep Structuur
 
-### SAMEN (verliezers eerste ronde == verliezers tweede ronde)
+### SAMEN (a1 ≤ a2)
 
 Beide batches verliezers passen tegelijk in één B-ronde:
 
@@ -126,7 +130,7 @@ Tweede A-ronde verliezers → B-start BLAUW slots
 5. B-start = B-1/4
 6. Plaatsing: A-1/8 verliezers → WIT, A-1/4 verliezers → BLAUW
 
-### DUBBEL (verliezers eerste ronde > verliezers tweede ronde)
+### DUBBEL (a1 > a2)
 
 Eerste batch moet eerst onderling uitvechten:
 
@@ -146,7 +150,7 @@ Tweede A-ronde verliezers → B-start(2) BLAUW slots
 
 ## B-Start Ronde Bepalen
 
-De B-groep start **één niveau lager** dan waar de tweede batch verliezers vandaan komt:
+De B-groep start op **hetzelfde niveau** als de tweede batch A-verliezers:
 
 | Tweede A-ronde | Verliezers | B-start |
 |----------------|------------|---------|
