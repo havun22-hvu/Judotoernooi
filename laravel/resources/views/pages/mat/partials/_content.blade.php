@@ -7,8 +7,8 @@
     }
 
     /* Touch devices: prevent browser scroll from intercepting drag */
-    .bracket-judoka { touch-action: none; }
-    .bracket-drop { touch-action: none; }
+    .bracket-judoka { touch-action: none; -webkit-user-select: none; user-select: none; }
+    .bracket-drop { touch-action: none; -webkit-user-select: none; user-select: none; }
 
     /* Drag feedback: item being dragged */
     .bracket-judoka.sortable-chosen {
