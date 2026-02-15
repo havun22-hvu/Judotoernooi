@@ -790,14 +790,14 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         try {
             result = await response.json();
         } catch (parseErr) {
-            alert('❌ Server fout (geen JSON response)\n\nStatus: ' + response.status);
+            alert('❌ Server fout (geen JSON response)\n\nStatus: ' + response.status + '\n\nHerlaad de pagina en probeer opnieuw.');
             location.reload();
             return false;
         }
 
         if (!response.ok) {
-            // Toon foutmelding - actie geblokkeerd
-            const msg = result.error || result.message || (result.errors ? JSON.stringify(result.errors) : 'Onbekende fout (status ' + response.status + ')');
+            console.error('[DROP] Server response:', response.status, result);
+            const msg = result.error || result.message || (result.errors ? Object.values(result.errors).flat().join(', ') : 'Server status ' + response.status);
             alert('❌ GEBLOKKEERD:\n\n' + msg);
             return false;
         }
@@ -2513,6 +2513,8 @@ window.initBracketSortable = function() {
                     }
                 } catch(err) {
                     console.error('[DnD] Drop error:', err);
+                    console.error('[DnD] dragAttr:', dragAttr);
+                    console.error('[DnD] target:', target?.id, target?.dataset);
                 }
             }
         });
