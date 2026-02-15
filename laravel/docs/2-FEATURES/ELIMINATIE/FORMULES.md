@@ -84,13 +84,18 @@ if ($v1 > 0) {
 
 ### SAMEN of DUBBEL?
 
-De B-start ronde heeft `a2` wedstrijden. De `a1` verliezers komen op WIT, de `a2` verliezers op BLAUW.
+De B-start ronde heeft `a2` wedstrijden.
 
-| Conditie | Gevolg | B-structuur |
-|----------|--------|-------------|
-| a1 < a2 | a1 past in a2 slots, (a2 - a1) byes op WIT | **SAMEN** met byes |
-| a1 = a2 | Precies gevuld, geen byes | **SAMEN** exact |
+| Conditie | Plaatsing | B-structuur |
+|----------|-----------|-------------|
+| a1 = a2 | a1 → WIT, a2 → BLAUW, precies gevuld | **SAMEN** exact |
+| a1 < a2 | a1 → WIT, extra (a2-a1) a2 ook → WIT, rest a2 → BLAUW | **SAMEN** met byes |
 | a1 > a2 | a1 past NIET in a2 slots, extra ronde nodig | **DUBBEL** met (1)/(2) |
+
+**UITZONDERING bij SAMEN (a1 < a2):**
+Er zijn meer a2 dan a1 verliezers. De extra (a2-a1) a2-verliezers komen op WIT.
+Dit is de ENIGE situatie dat a2 verliezers op WIT komen.
+Vul-volgorde: zie Fairness Regel.
 
 ```php
 $dubbelRondes = $a1 > $a2;  // NIET !==, want a1 < a2 = SAMEN met byes
@@ -113,8 +118,15 @@ $dubbelRondes = $a1 > $a2;  // NIET !==, want a1 < a2 = SAMEN met byes
 Beide batches verliezers passen tegelijk in één B-ronde:
 
 ```
-Eerste A-ronde verliezers → B-start WIT slots
-Tweede A-ronde verliezers → B-start BLAUW slots
+a1 = a2 (exact):
+  a1 verliezers → WIT slots
+  a2 verliezers → BLAUW slots
+
+a1 < a2 (met byes), vul-volgorde:
+  Stap 1: a1 verliezers → WIT slots bovenaan (slot 1, 3, 5, 7...)
+  Stap 2: a2 verliezers → overige WIT slots + meteen hun BLAUW (= a2 vs a2)
+  Stap 3: rest a2 verliezers → BLAUW slots van a1 (random, LAATST vullen)
+  a1 wedstrijden zonder BLAUW tegenstander = bye
 ```
 
 **Bepalen eerste A-ronde:**
@@ -122,13 +134,25 @@ Tweede A-ronde verliezers → B-start BLAUW slots
 - D = 8 → eerste A-ronde = A-1/8
 - D = 16 → eerste A-ronde = A-1/16
 
-**Voorbeeld N=12:**
+**Voorbeeld N=12 (a1=a2):**
 1. D = 8
 2. Eerste A-ronde = A-1/8, verliezers = 4
 3. Tweede A-ronde = A-1/4, verliezers = 4
-4. 4 == 4 → SAMEN
+4. 4 == 4 → SAMEN exact
 5. B-start = B-1/4
-6. Plaatsing: A-1/8 verliezers → WIT, A-1/4 verliezers → BLAUW
+6. Plaatsing: a1 → WIT, a2 → BLAUW
+
+**Voorbeeld N=21 (a1 < a2):**
+1. D = 16
+2. Eerste A-ronde = A-1/16, verliezers = 5 (a1)
+3. Tweede A-ronde = A-1/8, verliezers = 8 (a2)
+4. 5 < 8 → SAMEN met byes
+5. B-start = B-1/8 (8 wedstrijden)
+6. Plaatsing (vul-volgorde):
+   - Stap 1: 5 a1 verliezers → WIT slots 1, 3, 5, 7, 9
+   - Stap 2: 6 a2 als 3 paren → WIT+BLAUW slots 11/12, 13/14, 15/16 (a2 vs a2)
+   - Stap 3: 2 rest a2 → BLAUW slots 2, 4 (tegenover a1, LAATST)
+   - 3 a1 zonder BLAUW tegenstander = 3 byes (slots 6, 8, 10 leeg)
 
 ### DUBBEL (a1 > a2)
 
@@ -192,6 +216,16 @@ Bye wedstrijden worden handmatig door de hoofdjury geregistreerd.
 
 ```
 REGEL: Judoka's met A-bye krijgen GEEN B-bye (indien mogelijk)
+
+Implementatie (SAMEN, a1 < a2):
+1. Zet a1 verliezers op WIT bovenaan (slot 1, 3, 5...)
+2. Zet a2 op overige WIT + hun BLAUW (= a2 vs a2 wedstrijden)
+3. Verdeel rest a2 random over BLAUW slots van a1 (LAATST vullen)
+4. a1 zonder BLAUW tegenstander = bye
+
+Waarom: a1 verliezers hebben al gevochten in de eerste A-ronde.
+a2 verliezers hadden mogelijk een A-bye. Door de BLAUW slots
+van a1 als LAATST te vullen krijgen a1 de byes (geen dubbele bye).
 ```
 
 ## Totaal Wedstrijden
