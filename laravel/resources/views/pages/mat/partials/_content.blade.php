@@ -324,6 +324,11 @@
                                         &rarr;
                                     </button>
                                 </span>
+                                <button x-show="heeftOnverwerkteByes(poule, 'B')"
+                                        @click="advanceByes(poule.poule_id)"
+                                        class="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-300">
+                                    ▶ {{ __('Byes') }}
+                                </button>
                             </div>
                             <div x-show="!isBracketLocked(poule)" class="text-sm text-gray-600 cursor-pointer hover:text-gray-800 bracket-drop bracket-delete"
                                  data-drop-handler="verwijderJudoka">
@@ -1209,18 +1214,18 @@ function matInterface() {
             return poule.wedstrijden.some(w => w.is_gespeeld === true && w.uitslag_type !== 'bye');
         },
 
-        heeftOnverwerkteByes(poule) {
+        heeftOnverwerkteByes(poule, groep = 'A') {
             if (poule.type !== 'eliminatie') return false;
-            // Byes bestaan alleen in de eerste ronde (ronde met meeste A-wedstrijden)
-            const aWeds = poule.wedstrijden.filter(w => w.groep === 'A');
+            // Byes: wit gevuld, blauw leeg, nog niet gespeeld
+            const weds = poule.wedstrijden.filter(w => w.groep === groep);
             const counts = {};
-            aWeds.forEach(w => { counts[w.ronde] = (counts[w.ronde] || 0) + 1; });
+            weds.forEach(w => { counts[w.ronde] = (counts[w.ronde] || 0) + 1; });
             let eersteRonde = null, max = 0;
             for (const [r, c] of Object.entries(counts)) {
                 if (c > max) { max = c; eersteRonde = r; }
             }
             if (!eersteRonde) return false;
-            return aWeds.some(w => w.ronde === eersteRonde && w.wit && !w.blauw && !w.is_gespeeld);
+            return weds.some(w => w.ronde === eersteRonde && w.wit && !w.blauw && !w.is_gespeeld);
         },
 
         // Refresh alles: herlaad data van server + check voor app update
