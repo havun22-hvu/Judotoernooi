@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\MatUpdate;
 use App\Http\Requests\WedstrijdUitslagRequest;
+use App\Models\Judoka;
 use App\Models\Organisator;
 use App\Models\Blok;
 use App\Models\Mat;
@@ -167,7 +168,10 @@ class MatController extends Controller
                 $correcties = $this->eliminatieService->verwerkUitslag($wedstrijd, $validated['winnaar_id'], $oudeWinnaarId, $eliminatieType);
             }
 
-            ActivityLogger::log($toernooi, 'registreer_uitslag', "Eliminatie uitslag: wedstrijd #{$wedstrijd->id}" . ($validated['winnaar_id'] ? " winnaar #{$validated['winnaar_id']}" : ' gereset'), [
+            $winnaarNaam = $validated['winnaar_id'] ? Judoka::find($validated['winnaar_id'])?->naam : null;
+            $pouleNr = $wedstrijd->poule?->nummer;
+            $rondeLabel = str_replace('_', ' ', $wedstrijd->ronde ?? '');
+            ActivityLogger::log($toernooi, 'registreer_uitslag', "Eliminatie poule {$pouleNr}: {$rondeLabel}" . ($winnaarNaam ? " — winnaar {$winnaarNaam}" : ' gereset'), [
                 'model' => $wedstrijd,
                 'properties' => ['winnaar_id' => $validated['winnaar_id'], 'groep' => $wedstrijd->groep, 'ronde' => $wedstrijd->ronde],
                 'interface' => 'mat',
@@ -191,7 +195,11 @@ class MatController extends Controller
 
         $uitslagToernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
         if ($uitslagToernooi) {
-            ActivityLogger::log($uitslagToernooi, 'registreer_uitslag', "Poule uitslag: wedstrijd #{$wedstrijd->id}" . ($validated['winnaar_id'] ? " winnaar #{$validated['winnaar_id']}" : ' gereset'), [
+            $winnaarNaam = $validated['winnaar_id'] ? Judoka::find($validated['winnaar_id'])?->naam : null;
+            $pouleNr = $wedstrijd->poule?->nummer;
+            $witNaam = $wedstrijd->judokaWit?->naam ?? '?';
+            $blauwNaam = $wedstrijd->judokaBlauw?->naam ?? '?';
+            ActivityLogger::log($uitslagToernooi, 'registreer_uitslag', "Poule {$pouleNr}: {$witNaam} vs {$blauwNaam}" . ($winnaarNaam ? " — winnaar {$winnaarNaam}" : ' gereset'), [
                 'model' => $wedstrijd,
                 'properties' => ['winnaar_id' => $validated['winnaar_id'], 'score_wit' => $validated['score_wit'] ?? null, 'score_blauw' => $validated['score_blauw'] ?? null],
                 'interface' => 'mat',
@@ -754,7 +762,9 @@ class MatController extends Controller
             }
         }
 
-        ActivityLogger::log($toernooi, 'plaats_judoka', "Judoka #{$validated['judoka_id']} geplaatst op {$validated['positie']} in wedstrijd #{$wedstrijd->id}", [
+        $judokaNaam = Judoka::find($validated['judoka_id'])?->naam ?? "#{$validated['judoka_id']}";
+        $pouleNr = $wedstrijd->poule?->nummer;
+        ActivityLogger::log($toernooi, 'plaats_judoka', "{$judokaNaam} geplaatst op {$validated['positie']} in poule {$pouleNr}", [
             'model' => $wedstrijd,
             'properties' => ['judoka_id' => $validated['judoka_id'], 'positie' => $validated['positie'], 'is_correctie' => $isCorrectie],
             'interface' => 'mat',
@@ -1033,7 +1043,9 @@ class MatController extends Controller
 
         $verwijderToernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
         if ($verwijderToernooi) {
-            ActivityLogger::log($verwijderToernooi, 'verwijder_judoka', "Judoka #{$judokaId} verwijderd uit wedstrijd #{$wedstrijd->id}", [
+            $judokaNaam = Judoka::find($judokaId)?->naam ?? "#{$judokaId}";
+            $pouleNr = $wedstrijd->poule?->nummer;
+            ActivityLogger::log($verwijderToernooi, 'verwijder_judoka', "{$judokaNaam} verwijderd uit poule {$pouleNr}", [
                 'model' => $wedstrijd,
                 'properties' => ['judoka_id' => $judokaId],
                 'interface' => 'mat',
