@@ -2339,6 +2339,10 @@ window._markValidBracketTargets = function(dragItem) {
     const volgendeWedstrijdId = data.volgendeWedstrijdId;
     const bronWedstrijdId = data.wedstrijdId;
 
+    // Check of dit potje geel (volgende) of blauw (gereedmaken) is — dan geen doorschuif
+    const sel = comp?.matSelectie;
+    const isGeelOfBlauw = sel && (sel.volgende_wedstrijd_id === bronWedstrijdId || sel.gereedmaken_wedstrijd_id === bronWedstrijdId);
+
     allDrops.forEach(drop => {
         const handler = drop.getAttribute('data-drop-handler');
         const dropWedstrijdId = drop.getAttribute('data-wedstrijd-id');
@@ -2352,8 +2356,9 @@ window._markValidBracketTargets = function(dragItem) {
         let isPrimary = false;
 
         if (handler === 'dropJudoka') {
-            if (isWinnaar && volgendeWedstrijdId && dropWedstrijdId == volgendeWedstrijdId) {
-                // Regel 1: Winnaar doorschuif target
+            if (!isGeelOfBlauw && volgendeWedstrijdId && dropWedstrijdId == volgendeWedstrijdId) {
+                // Regel 1: Doorschuif naar volgende ronde (drag = bevestiging winnaar)
+                // Geblokkeerd als potje geel/blauw is (eerst groene wedstrijd afhandelen)
                 isPrimary = true;
                 isValid = true;
             } else if (isLocked && poule) {
@@ -2371,7 +2376,7 @@ window._markValidBracketTargets = function(dragItem) {
         } else if (handler === 'verwijderJudoka') {
             if (!isLocked) isValid = true;
         } else if (handler === 'dropOpMedaille') {
-            if (isWinnaar) isValid = true;
+            isValid = true;
         }
 
         if (isPrimary) {
