@@ -395,9 +395,10 @@ class EliminatieService
         // Gebruik centrale berekening
         $params = $this->berekenBracketParams($n);
         if ($params['dubbelRondes']) {
-            // DUBBEL: (2) ronde heeft 1:1 mapping (elke A-verliezer op BLAUW)
-            // Dus startWedstrijden = max van A1 en A2 verliezers
-            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden(max($params['a1Verliezers'], $params['a2Verliezers']) * 2);
+            // DUBBEL: B-start = a2Verliezers (zie FORMULES.md §B-Start Ronde Bepalen)
+            // _1 ronde: a1Verliezers in 2×a2Verliezers slots (knock-out)
+            // _2 ronde: _1-winnaars op WIT + a2Verliezers op BLAUW (1:1)
+            $bStartWedstrijden = $params['a2Verliezers'];
         } else {
             // SAMEN: beide batches in dezelfde ronde
             $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
@@ -960,7 +961,7 @@ class EliminatieService
             'a1Verliezers' => $a1Verliezers,
             'a2Verliezers' => $a2Verliezers,
             'eersteGolf' => $a1Verliezers + $a2Verliezers,
-            'dubbelRondes' => $a1Verliezers !== $a2Verliezers,
+            'dubbelRondes' => $a1Verliezers > $a2Verliezers,
         ];
     }
 
@@ -992,7 +993,11 @@ class EliminatieService
     public function berekenStatistieken(int $n, string $type = 'dubbel'): array
     {
         $params = $this->berekenBracketParams($n);
-        $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
+        if ($params['dubbelRondes']) {
+            $bStartWedstrijden = $params['a2Verliezers'];
+        } else {
+            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
+        }
         $bCapaciteit = 2 * $bStartWedstrijden;
 
         $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);

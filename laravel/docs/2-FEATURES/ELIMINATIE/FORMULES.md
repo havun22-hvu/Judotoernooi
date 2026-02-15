@@ -54,59 +54,53 @@ Totaal A: 8 + 8 + 4 + 2 + 1 = 23 = N - 1 ✓
 
 ## B-Groep: Verliezers Bepalen
 
-### KRITIEK: Echte Verliezers per Ronde
+### a1 en a2: Verliezers per A-ronde
 
-De formule `V1 = N - D` geeft het aantal **extra wedstrijden** in de eerste ronde, maar dit is **NIET** altijd gelijk aan het aantal verliezers!
-
-**Correcte berekening:**
-
-```php
-// Stap 1: Bepaal bracket grootte
-$bracketGrootte = pow(2, ceil(log2($n)));  // Kleinste 2^x >= N
-
-// Stap 2: Bepaal eerste VOLLE ronde (zonder byes)
-$eersteVolleRonde = $bracketGrootte / 2;
-
-// Stap 3: Bereken echte verliezers
-$a1Verliezers = $eersteVolleRonde;         // Eerste volle ronde
-$a2Verliezers = $eersteVolleRonde / 2;     // Tweede volle ronde
-
-// Stap 4: Bepaal SAMEN of DUBBEL
-$dubbelRondes = ($a1Verliezers > $a2Verliezers);  // Altijd true behalve edge cases
+```
+a1 = verliezers uit de EERSTE A-ronde (gaan als eerste naar B)
+a2 = verliezers uit de TWEEDE A-ronde (gaan als tweede naar B)
 ```
 
-### Waarom V1 > V2 Niet Werkt
-
-| N | D | V1 (N-D) | V2 (D/2) | V1 > V2? | Werkelijk |
-|---|---|----------|----------|----------|-----------|
-| 12 | 8 | 4 | 4 | Nee | A1=4, A2=4 → SAMEN ✓ |
-| 16 | 16 | 0 | 8 | Nee | A1=8, A2=4 → **DUBBEL** ✗ |
-| 24 | 16 | 8 | 8 | Nee | A1=8, A2=8 → SAMEN ✓ |
-| 32 | 32 | 0 | 16 | Nee | A1=16, A2=8 → **DUBBEL** ✗ |
-
-**Probleem:** Bij exacte machten van 2 (N=16, 32, 64) is V1=0, maar er zijn WEL verliezers!
-
-### Correcte Formule
+**Berekening (exact zoals EliminatieService::berekenBracketParams):**
 
 ```php
-/**
- * Bepaal of B-groep dubbele rondes nodig heeft
- */
-public function heeftDubbeleRondes(int $n): bool
-{
-    // Kleinste bracket waar N in past
-    $bracketGrootte = pow(2, ceil(log2($n)));
+$d = pow(2, floor(log($n, 2)));  // Grootste macht van 2 ≤ N
+$v1 = $n - $d;
 
-    // Eerste volle ronde = bracket / 2
-    $eersteVolleRonde = $bracketGrootte / 2;
-
-    // Verliezers per ronde
-    $a1Verliezers = $eersteVolleRonde;
-    $a2Verliezers = $eersteVolleRonde / 2;
-
-    return $a1Verliezers > $a2Verliezers;
+if ($v1 > 0) {
+    // Niet-exacte macht van 2 (N=9,12,21,24,etc.)
+    $a1 = $v1;           // = N - D
+    $a2 = (int)($d / 2);
+} else {
+    // Exacte macht van 2 (N=8,16,32,64)
+    $a1 = (int)($d / 2);
+    $a2 = (int)($d / 4);
 }
 ```
+
+### SAMEN of DUBBEL?
+
+De B-start ronde heeft `a2` wedstrijden. De `a1` verliezers komen op WIT, de `a2` verliezers op BLAUW.
+
+| Conditie | Gevolg | B-structuur |
+|----------|--------|-------------|
+| a1 < a2 | a1 past in a2 slots, (a2 - a1) byes op WIT | **SAMEN** met byes |
+| a1 = a2 | Precies gevuld, geen byes | **SAMEN** exact |
+| a1 > a2 | a1 past NIET in a2 slots, extra ronde nodig | **DUBBEL** met (1)/(2) |
+
+```php
+$dubbelRondes = $a1 > $a2;  // NIET !==, want a1 < a2 = SAMEN met byes
+```
+
+### Verificatie
+
+| N | D | a1 | a2 | a1 > a2? | Type |
+|---|---|----|----|----------|------|
+| 12 | 8 | 4 | 4 | Nee | SAMEN (exact) |
+| 16 | 16 | 8 | 4 | Ja | DUBBEL |
+| 21 | 16 | 5 | 8 | Nee | SAMEN (3 byes WIT) |
+| 24 | 16 | 8 | 8 | Nee | SAMEN (exact) |
+| 32 | 32 | 16 | 8 | Ja | DUBBEL |
 
 ## B-Groep Structuur
 

@@ -64,10 +64,11 @@ Zie ook: [CLASSIFICATIE.md](../CLASSIFICATIE.md#verificatie-poule-grootte-per-ty
 ```
 N  = aantal judoka's
 D  = 2^floor(log2(N))           # grootste macht van 2 <= N
-V1 = N - D                       # verliezers eerste A-ronde
-V2 = D / 2                       # verliezers tweede A-ronde
+a1 = verliezers eerste A-ronde  # N-D (of D/2 bij exacte macht van 2)
+a2 = verliezers tweede A-ronde  # D/2 (of D/4 bij exacte macht van 2)
 
-Dubbele B-rondes als: V1 > V2
+SAMEN  als: a1 <= a2  (a1 past in B-start, evt. met byes op WIT)
+DUBBEL als: a1 > a2   (a1 te groot, extra (1)-ronde nodig)
 ```
 
 ### Wedstrijden Totaal
@@ -81,14 +82,10 @@ Dubbele B-rondes als: V1 > V2
 
 | Conditie | B-structuur | Voorbeeld |
 |----------|-------------|-----------|
-| V1 <= V2 | SAMEN (geen suffix) | N=12, 24, 48 |
-| V1 > V2 | DUBBEL met (1)/(2) | N=16, 32, 64 |
+| a1 ≤ a2 | **SAMEN** (geen suffix) | N=5-6, 9-12, 17-24, 33-48 |
+| a1 > a2 | **DUBBEL** met (1)/(2) | N=7-8, 13-16, 25-32, 49-64 |
 
-**Let op exacte machten van 2:**
-- N=16: V1=0, maar A-1/8 heeft 8 verliezers, A-1/4 heeft 4 → DUBBEL
-- N=32: V1=0, maar A-1/16 heeft 16 verliezers, A-1/8 heeft 8 → DUBBEL
-
-Zie [FORMULES.md](./FORMULES.md) voor de correcte berekening.
+Zie [FORMULES.md](./FORMULES.md) voor de volledige berekening incl. exacte machten van 2.
 
 ### B-Start Byes (Dubbele Rondes)
 
