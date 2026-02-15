@@ -177,6 +177,14 @@
                                class="w-full border rounded px-3 py-2" placeholder="06-12345678">
                         <p class="text-xs text-gray-500 mt-1">{{ __('Voor WhatsApp contact') }}</p>
                     </div>
+                    @if($toernooi->danpunten_actief)
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-1">{{ __('JBN Lidnummer') }}</label>
+                        <input type="text" name="jbn_lidnummer"
+                               class="w-full border rounded px-3 py-2" placeholder="bijv. 703828 of D7GJ44V">
+                        <p class="text-xs text-gray-500 mt-1">{{ __('Verplicht voor bruine banden (danpunten)') }}</p>
+                    </div>
+                    @endif
                 </div>
                 <p class="text-xs text-gray-500 mt-2">{{ __('* Alleen naam is verplicht. Vul de rest later aan voordat de inschrijving sluit.') }}</p>
                 <div class="mt-4">
@@ -462,6 +470,9 @@
                                     <template x-for="gw in gewichtsopties" :key="gw"><option :value="gw" x-text="gw + ' kg'"></option></template>
                                 </select>
                                 <input type="tel" name="telefoon" value="{{ $judoka->telefoon }}" class="border rounded px-3 py-2" placeholder="Telefoon">
+                                @if($toernooi->danpunten_actief)
+                                <input type="text" name="jbn_lidnummer" value="{{ $judoka->jbn_lidnummer }}" class="border rounded px-3 py-2" placeholder="JBN Lidnummer">
+                                @endif
                             </div>
                             <div class="mt-3 flex items-center gap-3">
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Opslaan</button>

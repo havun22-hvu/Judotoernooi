@@ -18,6 +18,7 @@ class JudokaUpdateRequest extends FormRequest
             'geboortejaar' => 'required|integer|min:1900|max:' . date('Y'),
             'geslacht' => 'required|in:M,V',
             'band' => 'required|string|max:20',
+            'jbn_lidnummer' => 'nullable|string|max:20',
             'gewicht' => 'nullable|numeric|min:10|max:200',
         ];
     }

@@ -653,6 +653,7 @@ Route::prefix('{organisator}/{toernooi}')->name('publiek.')->group(function () {
     });
     Route::get('manifest.json', [PubliekController::class, 'manifest'])->name('manifest');
     Route::get('uitslagen.csv', [PubliekController::class, 'exportUitslagen'])->name('export-uitslagen');
+    Route::get('danpunten.csv', [PubliekController::class, 'exportDanpunten'])->name('export-danpunten');
 })
 ->where('organisator', '^(?!admin|login|logout|registreren|weegkaart|coach-kaart|mollie|betaling|help|dashboard|local-server).*$')
 ->where('toernooi', '^(?!dashboard|clubs|templates|presets|toernooi).*$');

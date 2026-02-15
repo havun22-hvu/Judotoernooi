@@ -197,6 +197,9 @@ class ToernooiController extends Controller
         // Handle coach_incheck_actief checkbox
         $data['coach_incheck_actief'] = (bool) ($data['coach_incheck_actief'] ?? false);
 
+        // Handle danpunten_actief checkbox
+        $data['danpunten_actief'] = (bool) ($data['danpunten_actief'] ?? false);
+
         // Handle poule match settings checkboxes
         if (array_key_exists('dubbel_bij_2_judokas', $data)) {
             $data['dubbel_bij_2_judokas'] = (bool) $data['dubbel_bij_2_judokas'];

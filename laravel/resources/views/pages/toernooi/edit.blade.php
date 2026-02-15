@@ -731,6 +731,18 @@
                         <p class="text-sm text-gray-500">{{ __('Coaches moeten eerst uitchecken voordat kaart kan worden overgedragen') }}</p>
                     </div>
                 </div>
+
+                <!-- Danpunten registreren -->
+                <div class="flex items-center gap-3 mt-4 p-3 bg-gray-50 rounded-lg">
+                    <input type="hidden" name="danpunten_actief" value="0">
+                    <input type="checkbox" name="danpunten_actief" id="danpunten_actief"
+                           value="1" {{ old('danpunten_actief', $toernooi->danpunten_actief) ? 'checked' : '' }}
+                           class="w-5 h-5 text-blue-600 rounded">
+                    <div>
+                        <label for="danpunten_actief" class="text-gray-700 font-medium">{{ __('Danpunten registreren') }}</label>
+                        <p class="text-sm text-gray-500">{{ __('Gewonnen wedstrijden bijhouden voor bruine banden (JBN). JBN lidnummer wordt verplicht.') }}</p>
+                    </div>
+                </div>
             </div>
 
             <div class="max-w-md border-t pt-4">

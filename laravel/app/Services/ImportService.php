@@ -47,6 +47,7 @@ class ImportService
             'geslacht' => ['geslacht', 'gender', 'sex', 'm/v', 'jongen/meisje'],
             'gewicht' => ['gewicht', 'weight', 'kg', 'gewicht kg'],
             'band' => ['band', 'gordel', 'belt', 'kyu', 'graad'],
+            'jbn_lidnummer' => ['jbn', 'jbn nummer', 'jbn lidnummer', 'lidnummer', 'bondsnummer', 'jbn nr', 'jbn_lidnummer'],
         ];
 
         // Gewichtsklasse veld alleen detecteren als toernooi vaste gewichtsklassen heeft
@@ -189,6 +190,7 @@ class ImportService
                     'gewichtsklasse' => 'gewichtsklasse',
                     'geslacht' => 'geslacht',
                     'geboortejaar' => 'geboortejaar',
+                    'jbn_lidnummer' => 'jbn_lidnummer',
                 ], $kolomMapping);
 
                 foreach ($data as $index => $rij) {
@@ -269,6 +271,7 @@ class ImportService
         $gewichtsklasseRaw = $this->getWaarde($rij, $mapping['gewichtsklasse']);
         $geslachtRaw = $this->getWaarde($rij, $mapping['geslacht']);
         $geboortejaarRaw = $this->getWaarde($rij, $mapping['geboortejaar']);
+        $jbnLidnummer = trim($this->getWaarde($rij, $mapping['jbn_lidnummer']) ?? '');
         // Skip rows without name (name is required)
         if (empty($naam)) {
             return null;
@@ -396,6 +399,7 @@ class ImportService
                 'club_id' => $club?->id,
                 'geslacht' => $geslacht,
                 'band' => $band,
+                'jbn_lidnummer' => $jbnLidnummer ?: $bestaande->jbn_lidnummer,
                 'gewicht' => $gewicht,
                 'leeftijdsklasse' => $leeftijdsklasse,
                 'categorie_key' => $categorieKey,
@@ -416,6 +420,7 @@ class ImportService
             'geboortejaar' => $geboortejaar,
             'geslacht' => $geslacht,
             'band' => $band,
+            'jbn_lidnummer' => $jbnLidnummer ?: null,
             'gewicht' => $gewicht,
             'leeftijdsklasse' => $leeftijdsklasse,
             'categorie_key' => $categorieKey,
