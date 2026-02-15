@@ -722,7 +722,7 @@ class PubliekController extends Controller
         }
 
         $filename = sprintf('danpunten_%s_%s.csv',
-            Str::slug($toernooi->naam),
+            \Illuminate\Support\Str::slug($toernooi->naam),
             now()->format('Y-m-d')
         );
 
