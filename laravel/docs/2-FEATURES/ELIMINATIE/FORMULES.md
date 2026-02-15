@@ -224,10 +224,11 @@ Voorbeelden:
   N=32: a2=8, DUBBEL → b_achtste_finale_1
 ```
 
-### Code
+### Opmerking
 
-JS (`heeftOnverwerkteByes`) en PHP (`berekenBracketParams`) gebruiken
-dezelfde formules. Nooit wedstrijden tellen om de eerste ronde te bepalen.
+Byes komen **alleen in de eerste ronde** voor. Daarom hoeft
+`heeftOnverwerkteByes()` geen ronde-naam te berekenen — elke bye in de
+groep is per definitie in de eerste ronde.
 
 ## Byes Berekening
 
