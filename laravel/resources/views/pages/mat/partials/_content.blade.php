@@ -1216,16 +1216,10 @@ function matInterface() {
 
         heeftOnverwerkteByes(poule, groep = 'A') {
             if (poule.type !== 'eliminatie') return false;
-            // Byes: wit gevuld, blauw leeg, nog niet gespeeld
-            const weds = poule.wedstrijden.filter(w => w.groep === groep);
-            const counts = {};
-            weds.forEach(w => { counts[w.ronde] = (counts[w.ronde] || 0) + 1; });
-            let eersteRonde = null, max = 0;
-            for (const [r, c] of Object.entries(counts)) {
-                if (c > max) { max = c; eersteRonde = r; }
-            }
-            if (!eersteRonde) return false;
-            return weds.some(w => w.ronde === eersteRonde && w.wit && !w.blauw && !w.is_gespeeld);
+            // Bye = wedstrijd met WIT gevuld, BLAUW leeg, nog niet gespeeld
+            return poule.wedstrijden.some(w =>
+                w.groep === groep && w.wit && !w.blauw && !w.is_gespeeld
+            );
         },
 
         // Refresh alles: herlaad data van server + check voor app update
