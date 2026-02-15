@@ -548,6 +548,9 @@ Route::prefix('{organisator}/{toernooi}')->group(function () {
         Route::post('mat/{toegang}/bracket-html', [MatController::class, 'getBracketHtmlDevice'])->name('mat.bracket-html.device');
         Route::post('mat/{toegang}/check-admin-wachtwoord', [MatController::class, 'checkAdminWachtwoordDevice'])->name('mat.check-admin-wachtwoord.device');
         Route::post('mat/{toegang}/advance-byes', [MatController::class, 'advanceByesDevice'])->name('mat.advance-byes.device');
+        Route::post('mat/{toegang}/plaats-judoka', [MatController::class, 'plaatsJudokaDevice'])->name('mat.plaats-judoka.device');
+        Route::post('mat/{toegang}/verwijder-judoka', [MatController::class, 'verwijderJudokaDevice'])->name('mat.verwijder-judoka.device');
+        Route::post('mat/{toegang}/finale-uitslag', [MatController::class, 'finaleUitslagDevice'])->name('mat.finale-uitslag.device');
         Route::get('jury/{toegang}', [RoleToegang::class, 'juryDeviceBound'])->name('jury.interface');
         Route::get('spreker/{toegang}', [RoleToegang::class, 'sprekerDeviceBound'])->name('spreker.interface');
         Route::post('spreker/{toegang}/notities', [RoleToegang::class, 'sprekerNotitiesSave'])->name('spreker.notities.save');

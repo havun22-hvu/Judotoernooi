@@ -76,6 +76,21 @@
                 'toernooi' => $toernooi->slug,
                 'toegang' => $toegang->id,
             ]);
+            $plaatsJudokaUrl = route('mat.plaats-judoka.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
+            $verwijderJudokaUrl = route('mat.verwijder-judoka.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
+            $finaleUitslagUrl = route('mat.finale-uitslag.device', [
+                'organisator' => $toernooi->organisator->slug,
+                'toernooi' => $toernooi->slug,
+                'toegang' => $toegang->id,
+            ]);
         } else {
             $wedstrijdenUrl = route('toernooi.mat.wedstrijden', $toernooi->routeParams());
             $uitslagUrl = route('toernooi.mat.uitslag', $toernooi->routeParams());
@@ -84,6 +99,9 @@
             $bracketHtmlUrl = route('toernooi.mat.bracket-html', $toernooi->routeParams());
             $checkWachtwoordUrl = route('toernooi.mat.check-admin-wachtwoord', $toernooi->routeParams());
             $advanceByesUrl = route('toernooi.mat.advance-byes', $toernooi->routeParams());
+            $plaatsJudokaUrl = route('toernooi.mat.plaats-judoka', $toernooi->routeParams());
+            $verwijderJudokaUrl = route('toernooi.mat.verwijder-judoka', $toernooi->routeParams());
+            $finaleUitslagUrl = route('toernooi.mat.finale-uitslag', $toernooi->routeParams());
         }
     @endphp
 <div id="mat-interface" x-data="matInterface()" x-init="init()">
@@ -550,7 +568,7 @@ window.dropInSwap = async function(event, pouleId, isLocked = false) {
     // Verwijder uit huidige wedstrijd
     if (data.wedstrijdId && data.positie) {
         try {
-            const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+            const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -697,7 +715,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             // Verwijder judoka uit huidige slot (reset bron-wedstrijd)
             try {
-                const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+                const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -750,7 +768,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
 
             // Verwijder judoka uit oude plek (MOVE, niet COPY)
             if (data.wedstrijdId && data.positie && !data.fromSwap) {
-                await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+                await fetch(`{{ $verwijderJudokaUrl }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -777,7 +795,7 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
             is_correctie: data.isCorrectie || false
         };
 
-        const response = await fetch(`{{ route('toernooi.mat.plaats-judoka', $toernooi->routeParams()) }}`, {
+        const response = await fetch(`{{ $plaatsJudokaUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -886,7 +904,7 @@ window.dropOpMedaille = async function(event, finaleId, medaille, pouleId) {
     const winnaarId = medaille === 'goud' ? data.judokaId : null;
 
     try {
-        const response = await fetch(`{{ route('toernooi.mat.finale-uitslag', $toernooi->routeParams()) }}`, {
+        const response = await fetch(`{{ $finaleUitslagUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -981,7 +999,7 @@ window.verwijderJudoka = async function(event) {
     }
 
     try {
-        const response = await fetch(`{{ route('toernooi.mat.verwijder-judoka', $toernooi->routeParams()) }}`, {
+        const response = await fetch(`{{ $verwijderJudokaUrl }}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

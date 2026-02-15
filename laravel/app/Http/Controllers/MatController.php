@@ -221,7 +221,17 @@ class MatController extends Controller
     /**
      * Register finale/brons result via medal placement (drag to gold/silver/bronze)
      */
+    public function finaleUitslagDevice(Request $request): JsonResponse
+    {
+        return $this->doFinaleUitslag($request);
+    }
+
     public function finaleUitslag(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doFinaleUitslag($request);
+    }
+
+    private function doFinaleUitslag(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -511,7 +521,20 @@ class MatController extends Controller
      * Als bron_wedstrijd_id is meegegeven, registreer ook de uitslag
      * Bij correctie worden foute plaatsingen automatisch opgeruimd
      */
+    public function plaatsJudokaDevice(Request $request): JsonResponse
+    {
+        // Device-bound: derive toernooi from wedstrijd
+        $wedstrijd = Wedstrijd::findOrFail($request->input('wedstrijd_id'));
+        $toernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
+        return $this->doPlaatsJudoka($request, $toernooi);
+    }
+
     public function plaatsJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doPlaatsJudoka($request, $toernooi);
+    }
+
+    private function doPlaatsJudoka(Request $request, ?Toernooi $toernooi): JsonResponse
     {
         $validated = $request->validate([
             'wedstrijd_id' => 'required|exists:wedstrijden,id',
@@ -914,7 +937,20 @@ class MatController extends Controller
      * Remove a judoka from an elimination bracket slot (drag to trash)
      * Als deze judoka winnaar was van een vorige wedstrijd, reset die ook
      */
+    public function verwijderJudokaDevice(Request $request): JsonResponse
+    {
+        // Device-bound: derive toernooi from wedstrijd
+        $wedstrijd = Wedstrijd::findOrFail($request->input('wedstrijd_id'));
+        $toernooi = $wedstrijd->poule?->blok?->toernooi ?? $wedstrijd->poule?->toernooi;
+        return $this->doVerwijderJudoka($request, $toernooi);
+    }
+
     public function verwijderJudoka(Organisator $organisator, Request $request, Toernooi $toernooi): JsonResponse
+    {
+        return $this->doVerwijderJudoka($request, $toernooi);
+    }
+
+    private function doVerwijderJudoka(Request $request, ?Toernooi $toernooi): JsonResponse
     {
         \Log::info('verwijderJudoka aangeroepen', $request->all());
 
