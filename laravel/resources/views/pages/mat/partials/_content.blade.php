@@ -864,6 +864,8 @@ window.dropJudoka = async function(event, targetWedstrijdId, positie, pouleId = 
         }
 
         // Update bracket slots via pure DOM (geen Alpine re-render!)
+        // Skip Reverb reload voor eigen actie (voorkomt scroll-reset op mobiel)
+        window._skipBracketReload = Date.now();
         const matEl = document.getElementById('mat-interface');
         if (matEl) {
             const comp = Alpine.$data(matEl);
@@ -2355,6 +2357,13 @@ setInterval(updateClock, 1000);
 
 // Bracket update via Reverb: herlaad bracket HTML (niet hele poule data)
 window.addEventListener('mat-bracket-update', (e) => {
+    // Skip reload als dit ons eigen event is (binnen 2s na drop)
+    // DOM is al geüpdatet via updateAlleBracketSlots()
+    if (window._skipBracketReload && (Date.now() - window._skipBracketReload) < 2000) {
+        console.log('[Reverb] Skip bracket reload (eigen actie)');
+        return;
+    }
+
     const el = document.getElementById('mat-interface');
     if (!el) return;
     const comp = Alpine.$data(el);
