@@ -369,18 +369,11 @@ class EliminatieService
     /**
      * Genereer B-groep voor Dubbel Eliminatie
      *
-     * KERNLOGICA (zie ELIMINATIE_BEREKENING.md):
+     * KERNLOGICA (zie docs/2-FEATURES/ELIMINATIE/FORMULES.md):
      *
-     * N  = aantal judoka's
-     * D  = grootste macht van 2 ≤ N
-     * V1 = verliezers A-1e ronde = N - D
-     * V2 = verliezers A-2e ronde = D / 2 (altijd vast!)
-     *
-     * Als V1 ≤ V2: ENKELE B-rondes (V1 + V2 passen samen)
-     * Als V1 > V2: DUBBELE B-rondes met (1) en (2)
-     *
-     * B-start capaciteit = 2 × V2
-     * B-byes = capaciteit - instroom
+     * B-start = a2 wedstrijden (zelfde niveau als tweede A-ronde)
+     * - SAMEN (a1 ≤ a2): a1 op WIT, a2 op BLAUW, (a2 - a1) byes op WIT
+     * - DUBBEL (a1 > a2): extra (1) ronde voor a1 onderling, winnaars + a2 in (2)
      *
      * BELANGRIJK:
      * - aantalBrons = 2: Eindigt met 2x B-1/2(2), GEEN finale! (2x brons)
@@ -394,15 +387,10 @@ class EliminatieService
 
         // Gebruik centrale berekening
         $params = $this->berekenBracketParams($n);
-        if ($params['dubbelRondes']) {
-            // DUBBEL: B-start = a2Verliezers (zie FORMULES.md §B-Start Ronde Bepalen)
-            // _1 ronde: a1Verliezers in 2×a2Verliezers slots (knock-out)
-            // _2 ronde: _1-winnaars op WIT + a2Verliezers op BLAUW (1:1)
-            $bStartWedstrijden = $params['a2Verliezers'];
-        } else {
-            // SAMEN: beide batches in dezelfde ronde
-            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
-        }
+        // B-start = a2 wedstrijden (zie FORMULES.md §B-Start Ronde Bepalen)
+        // SAMEN: a1 op WIT, a2 op BLAUW, (a2 - a1) byes op WIT
+        // DUBBEL: extra (1) ronde ervoor voor a1 onderling
+        $bStartWedstrijden = $params['a2Verliezers'];
 
         if ($params['dubbelRondes']) {
             // DUBBELE RONDES: (1) en (2) per niveau
@@ -676,7 +664,7 @@ class EliminatieService
             // (1) ronde = eerste B-ronde (bv. b_kwartfinale_1)
             $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'eerste');
         } else {
-            // SAMEN: eerste A-ronde verliezers → B-start WIT slots
+            // SAMEN: eerste A-ronde verliezers → B-start WIT slots bovenaan
             $this->koppelARondeAanBRonde($aWedstrijden[$eersteARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_wit');
         }
 
@@ -688,8 +676,18 @@ class EliminatieService
                 $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStart2Ronde], 'dubbel_blauw');
             }
         } else {
-            // SAMEN: tweede A-ronde verliezers → B-start BLAUW slots
-            $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_blauw');
+            // SAMEN: tweede A-ronde verliezers → B-start
+            // Fairness vulvolgorde (zie FORMULES.md §Fairness Regel):
+            //   a1 = a2: alle a2 → BLAUW (1:1)
+            //   a1 < a2: extra (a2-a1) a2 → overige WIT + hun BLAUW (a2 vs a2),
+            //            rest a2 → BLAUW van a1 (LAATST vullen)
+            $a1 = $params['a1Verliezers'];
+            $a2 = $params['a2Verliezers'];
+            if ($a1 < $a2) {
+                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_fairness', $a1);
+            } else {
+                $this->koppelARondeAanBRonde($aWedstrijden[$tweedeARonde], $bWedstrijden[$bStartRonde] ?? [], 'samen_blauw');
+            }
         }
 
         // === LATERE A-RONDES (kwartfinale, halve finale) → corresponderende B-(2) rondes ===
@@ -723,10 +721,12 @@ class EliminatieService
      *   - 'eerste': eerste batch, 2:1 mapping naar WIT/BLAUW (voor (1) rondes)
      *   - 'samen_wit': SAMEN mode, A-verliezers → WIT
      *   - 'samen_blauw': SAMEN mode, A-verliezers → BLAUW
+     *   - 'samen_fairness': SAMEN mode a1<a2, fairness vulvolgorde (zie FORMULES.md)
      *   - 'dubbel_blauw': latere rondes, A-verliezers → BLAUW (1:1 mapping)
      *   - 'brons_blauw': halve finale verliezers → brons matching BLAUW (1:1 mapping)
+     * @param int $a1Count Alleen voor samen_fairness: aantal a1 verliezers
      */
-    private function koppelARondeAanBRonde(array $aWedstrijden, array $bWedstrijden, string $type): void
+    private function koppelARondeAanBRonde(array $aWedstrijden, array $bWedstrijden, string $type, int $a1Count = 0): void
     {
         if (empty($bWedstrijden)) return;
 
@@ -778,6 +778,31 @@ class EliminatieService
                     // SAMEN: 1:1 mapping op BLAUW slots
                     $bWedstrijd = $bWedstrijden[$idx] ?? null;
                     $slot = 'blauw';
+                    break;
+
+                case 'samen_fairness':
+                    // SAMEN (a1 < a2): fairness vulvolgorde (FORMULES.md §Fairness)
+                    // a1 verliezers zitten al op WIT slots 0..(a1-1) (via samen_wit)
+                    // B-wedstrijden: idx 0..(a1-1) = a1 weds, idx a1..(a2-1) = overige
+                    //
+                    // Stap 2: extra a2 als paren op overige WIT+BLAUW (a2 vs a2)
+                    //   Aantal overige wedstrijden = a2 - a1
+                    //   Elke overige wed krijgt 2 a2 verliezers (WIT + BLAUW)
+                    // Stap 3: rest a2 → BLAUW van a1 wedstrijden (LAATST)
+                    $overigeWeds = count($bWedstrijden) - $a1Count; // = a2 - a1
+                    $a2VoorParen = $overigeWeds * 2; // zoveel a2 gaan in paren
+
+                    if ($idx < $a2VoorParen) {
+                        // Stap 2: a2 paren op overige wedstrijden
+                        $paarIdx = (int) floor($idx / 2);
+                        $bWedstrijd = $bWedstrijden[$a1Count + $paarIdx] ?? null;
+                        $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
+                    } else {
+                        // Stap 3: rest a2 → BLAUW van a1 wedstrijden (LAATST)
+                        $restIdx = $idx - $a2VoorParen;
+                        $bWedstrijd = $bWedstrijden[$restIdx] ?? null;
+                        $slot = 'blauw';
+                    }
                     break;
 
                 case 'dubbel_blauw':
@@ -993,11 +1018,7 @@ class EliminatieService
     public function berekenStatistieken(int $n, string $type = 'dubbel'): array
     {
         $params = $this->berekenBracketParams($n);
-        if ($params['dubbelRondes']) {
-            $bStartWedstrijden = $params['a2Verliezers'];
-        } else {
-            $bStartWedstrijden = $this->berekenMinimaleBWedstrijden($params['eersteGolf']);
-        }
+        $bStartWedstrijden = $params['a2Verliezers'];
         $bCapaciteit = 2 * $bStartWedstrijden;
 
         $bWedstrijden = ($type === 'ijf') ? 4 : max(0, $n - 4);
