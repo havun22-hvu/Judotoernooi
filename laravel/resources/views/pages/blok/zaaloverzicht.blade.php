@@ -3,6 +3,7 @@
 @section('title', __('Zaaloverzicht'))
 
 @section('content')
+<div class="select-none">
 <div class="flex justify-between items-center mb-6">
     <div class="flex items-center gap-4">
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Zaaloverzicht') }}</h1>
@@ -324,4 +325,5 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(fixBlokBreedte, 100);
 });
 </script>
+</div>
 @endsection
