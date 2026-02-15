@@ -807,6 +807,32 @@
 
 ---
 
+## Sessie: 15 februari 2026
+
+### Feat: Danpunten (JBN) registratie
+- **Type:** Feature
+- **Wat:** Compleet danpunten systeem voor bruine banden: toernooi toggle, JBN lidnummer per judoka, CSV export voor JBN
+- **Bestanden:** Migration, Toernooi.php, Judoka.php, PubliekController.php, ImportService.php, CoachPortalController.php, edit.blade.php, coach/judokas.blade.php, judoka/edit.blade.php, resultaten/organisator.blade.php, web.php
+- **Docs:** `docs/2-FEATURES/DANPUNTEN.md` (nieuw), `docs/README.md` (link toegevoegd)
+- **→ Gedocumenteerd in:** `DANPUNTEN.md`
+
+### Fix: Str class import in danpunten export
+- **Type:** Bug fix
+- **Wat:** `Class "App\Http\Controllers\Str" not found` op staging
+- **Bestanden:** PubliekController.php
+- **Oplossing:** `\Illuminate\Support\Str::slug()` (fully qualified, zelfde patroon als exportUitslagen)
+
+### UI: Instellingen pagina blokken reorganisatie
+- **Type:** UI improvement
+- **Wat:** Weging, Dojo/Coach en Danpunten als 3 aparte blokken (waren allemaal in Weging)
+- **Bestanden:** edit.blade.php
+- **Details:**
+  - "Dojo / Coach" blok: judoka's per coach kaart + coach in/uitcheck bij dojo
+  - "Danpunten (JBN)" blok: danpunten registreren checkbox
+  - "Weging" blok: alleen weging-gerelateerde instellingen
+
+---
+
 <!--
 TEMPLATE:
 
