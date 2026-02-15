@@ -264,6 +264,7 @@ class CoachPortalController extends Controller
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
             'telefoon' => 'nullable|string|max:20',
+            'jbn_lidnummer' => 'nullable|string|max:20',
         ]);
 
         $leeftijdsklasse = null;
@@ -304,6 +305,7 @@ class CoachPortalController extends Controller
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
+            'jbn_lidnummer' => $validated['jbn_lidnummer'] ?? null,
         ]);
 
         return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
@@ -341,6 +343,7 @@ class CoachPortalController extends Controller
             'gewicht' => 'nullable|numeric|min:10|max:200',
             'gewichtsklasse' => 'nullable|string|max:10',
             'telefoon' => 'nullable|string|max:20',
+            'jbn_lidnummer' => 'nullable|string|max:20',
         ]);
 
         // Keep existing values if not provided (prevent losing data on partial edit)
@@ -370,6 +373,7 @@ class CoachPortalController extends Controller
             'leeftijdsklasse' => $leeftijdsklasse,
             'gewichtsklasse' => $gewichtsklasse,
             'telefoon' => $this->parseTelefoon($validated['telefoon'] ?? null),
+            'jbn_lidnummer' => $validated['jbn_lidnummer'] ?? $judoka->jbn_lidnummer,
         ];
 
         if (!$toernooiModel->isFreeTier()) {

@@ -50,6 +50,15 @@
             </div>
         </div>
 
+        @if($toernooi->danpunten_actief)
+        <div class="mb-4">
+            <label for="jbn_lidnummer" class="block text-gray-700 font-bold mb-2">{{ __('JBN Lidnummer') }}</label>
+            <input type="text" name="jbn_lidnummer" id="jbn_lidnummer" value="{{ old('jbn_lidnummer', $judoka->jbn_lidnummer) }}"
+                   class="w-full border rounded px-3 py-2 max-w-xs" placeholder="bijv. 703828 of D7GJ44V">
+            <p class="text-xs text-gray-500 mt-1">{{ __('Verplicht voor bruine banden (danpunten)') }}</p>
+        </div>
+        @endif
+
         @php
             $terugUrl = route('toernooi.judoka.index', $toernooi->routeParams());
             if (request('filter') === 'onvolledig') {

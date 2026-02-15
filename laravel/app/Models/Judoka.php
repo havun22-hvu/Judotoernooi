@@ -27,6 +27,7 @@ class Judoka extends Model
         'geboortejaar',
         'geslacht',
         'band',
+        'jbn_lidnummer',
         'gewicht',
         'leeftijdsklasse',
         'gewichtsklasse',

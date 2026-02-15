@@ -681,6 +681,57 @@ class PubliekController extends Controller
     }
 
     /**
+     * Export danpunten CSV voor JBN - gewonnen wedstrijden voor bruine banden
+     */
+    public function exportDanpunten(Organisator $organisator, Toernooi $toernooi): Response
+    {
+        if (!$toernooi->danpunten_actief) {
+            abort(404);
+        }
+
+        // Get all brown belt judokas with at least 1 won match
+        $bruineBanden = Judoka::where('toernooi_id', $toernooi->id)
+            ->where('band', 'bruin')
+            ->with('club')
+            ->get();
+
+        $csv = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel
+        $csv .= "Naam;JBN Lidnummer;Judoschool;Toernooi;Toernooi datum;Aantal gewonnen wedstrijden\n";
+
+        foreach ($bruineBanden as $judoka) {
+            // Count won matches (poule + eliminatie, exclude byes)
+            $gewonnen = \App\Models\Wedstrijd::where('winnaar_id', $judoka->id)
+                ->whereNotNull('judoka_wit_id')
+                ->whereNotNull('judoka_blauw_id')
+                ->whereHas('poule', fn ($q) => $q->where('toernooi_id', $toernooi->id))
+                ->count();
+
+            if ($gewonnen === 0) {
+                continue;
+            }
+
+            $csv .= sprintf(
+                "%s;%s;%s;%s;%s;%d\n",
+                $judoka->naam,
+                $judoka->jbn_lidnummer ?? '',
+                $judoka->club?->naam ?? '-',
+                $toernooi->naam,
+                $toernooi->datum?->format('d-m-Y') ?? '',
+                $gewonnen
+            );
+        }
+
+        $filename = sprintf('danpunten_%s_%s.csv',
+            Str::slug($toernooi->naam),
+            now()->format('Y-m-d')
+        );
+
+        return response($csv)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    /**
      * Organisator resultaten pagina - alle uitslagen + club ranking
      */
     public function organisatorResultaten(Organisator $organisator, Toernooi $toernooi): View
