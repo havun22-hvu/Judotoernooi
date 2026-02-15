@@ -32,30 +32,8 @@
         min-height: 36px;
     }
 
-    /* Drop target: valid (solid green) */
-    .drop-target-valid {
-        outline: 3px solid #22c55e !important;
-        outline-offset: -2px;
-        background-color: #bbf7d0 !important;
-        box-shadow: inset 0 0 8px rgba(34, 197, 94, 0.3) !important;
-    }
-
-    /* Drop target: primary/winnaar doorschuif (bold green pulse) */
-    .drop-target-primary {
-        outline: 4px solid #16a34a !important;
-        outline-offset: -2px;
-        background-color: #86efac !important;
-        box-shadow: 0 0 12px rgba(22, 163, 106, 0.5), inset 0 0 8px rgba(34, 197, 94, 0.3) !important;
-        animation: drop-pulse 0.8s ease-in-out infinite;
-    }
-    @keyframes drop-pulse {
-        0%, 100% { background-color: #86efac; }
-        50% { background-color: #bbf7d0; }
-    }
-
-    /* Drop target: disabled (dimmed) */
-    .drop-target-disabled {
-        opacity: 0.25 !important;
+    /* Drop target: disabled slots get dimmed (applied via inline style, this is fallback) */
+    [data-drop-target="disabled"] {
         pointer-events: none;
     }
 </style>
@@ -2397,19 +2375,35 @@ window._markValidBracketTargets = function(dragItem) {
         }
 
         if (isPrimary) {
-            drop.classList.add('drop-target-primary');
+            drop.dataset.dropTarget = 'primary';
+            drop.style.outline = '4px solid #16a34a';
+            drop.style.outlineOffset = '-2px';
+            drop.style.backgroundColor = '#86efac';
+            drop.style.boxShadow = '0 0 12px rgba(22,163,106,0.5), inset 0 0 8px rgba(34,197,94,0.3)';
         } else if (isValid) {
-            drop.classList.add('drop-target-valid');
+            drop.dataset.dropTarget = 'valid';
+            drop.style.outline = '3px solid #22c55e';
+            drop.style.outlineOffset = '-2px';
+            drop.style.backgroundColor = '#bbf7d0';
+            drop.style.boxShadow = 'inset 0 0 8px rgba(34,197,94,0.3)';
         } else {
-            drop.classList.add('drop-target-disabled');
+            drop.dataset.dropTarget = 'disabled';
+            drop.style.opacity = '0.25';
+            drop.style.pointerEvents = 'none';
         }
     });
 };
 
 // Clear all drop target marks
 window._clearBracketTargetMarks = function() {
-    document.querySelectorAll('.drop-target-valid, .drop-target-primary, .drop-target-disabled').forEach(el => {
-        el.classList.remove('drop-target-valid', 'drop-target-primary', 'drop-target-disabled');
+    document.querySelectorAll('[data-drop-target]').forEach(el => {
+        el.style.outline = '';
+        el.style.outlineOffset = '';
+        el.style.backgroundColor = '';
+        el.style.boxShadow = '';
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+        delete el.dataset.dropTarget;
     });
 };
 
@@ -2460,7 +2454,7 @@ window.initBracketSortable = function() {
 
             onMove: function(evt) {
                 // Block drop on disabled targets
-                if (evt.to.classList.contains('drop-target-disabled')) {
+                if (evt.to.dataset.dropTarget === 'disabled') {
                     return false;
                 }
             },
