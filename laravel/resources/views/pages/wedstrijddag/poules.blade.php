@@ -293,7 +293,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sortable-poule" data-poule-id="{{ $elimPoule->id }}">
                             @foreach($elimPoule->judokas as $judoka)
                             @if(!$judoka->isActief($wegingGesloten)) @continue @endif
                             @php
@@ -301,7 +301,7 @@
                                 $heeftGewichtElim = $isGewogenElim || $judoka->gewicht > 0;
                                 $isAfwijkendElim = $heeftGewichtElim && !$judoka->isGewichtBinnenKlasse(null, $tolerantie, $elimPoule->gewichtsklasse);
                             @endphp
-                            <div class="px-2 py-1.5 rounded text-sm {{ $isAfwijkendElim ? 'bg-red-50 border border-red-400' : 'bg-orange-50 border border-orange-200' }} group relative" @if($isAfwijkendElim) title="{{ __('Te zwaar voor') }} {{ $elimPoule->gewichtsklasse }}!" @endif>
+                            <div class="px-2 py-1.5 rounded text-sm judoka-item cursor-move {{ $isAfwijkendElim ? 'bg-red-50 border border-red-400' : 'bg-orange-50 border border-orange-200' }} group relative" data-judoka-id="{{ $judoka->id }}" draggable="true" @if($isAfwijkendElim) title="{{ __('Te zwaar voor') }} {{ $elimPoule->gewichtsklasse }}!" @endif>
                                 <div class="flex items-center gap-1">
                                     @if($isAfwijkendElim)<span class="text-red-600 text-xs">⚠</span>
                                     @elseif($isGewogenElim)<span class="text-green-500 text-xs">●</span>@endif
@@ -404,13 +404,13 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                        <div class="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sortable-poule" data-poule-id="{{ $elimPoule->id }}">
                             @foreach($elimPoule->judokas as $judoka)
                             @if(!$judoka->isActief($wegingGesloten))
                                 @continue
                             @endif
                             @php $isGewogen = $judoka->gewicht_gewogen > 0; @endphp
-                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 group">
+                            <div class="px-2 py-1.5 rounded text-sm bg-orange-50 border border-orange-200 judoka-item cursor-move group" data-judoka-id="{{ $judoka->id }}" draggable="true">
                                 <div class="flex items-center gap-1">
                                     @if($isGewogen)
                                         <span class="text-green-500 text-xs">●</span>
