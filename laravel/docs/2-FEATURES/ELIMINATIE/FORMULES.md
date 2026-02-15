@@ -123,10 +123,14 @@ a1 = a2 (exact):
   a2 verliezers → BLAUW slots
 
 a1 < a2 (met byes), vul-volgorde:
-  Stap 1: a1 verliezers → WIT slots bovenaan (slot 1, 3, 5, 7...)
-  Stap 2: a2 verliezers → overige WIT slots + meteen hun BLAUW (= a2 vs a2)
-  Stap 3: rest a2 verliezers → BLAUW slots van a1 (random, LAATST vullen)
+  Stap 1: a1 verliezers → WIT bovenaan (slot 1, 3, 5, 7...)
+  Stap 2: a2 verliezers → ALLE overige WIT slots (elke wed heeft nu minstens 1 judoka!)
+  Stap 3: rest a2 → BLAUW van a2-wedstrijden (a2 vs a2, volle weds eerst)
+  Stap 4: rest a2 → BLAUW van a1-wedstrijden (LAATST vullen)
   a1 wedstrijden zonder BLAUW tegenstander = bye
+
+  BELANGRIJK: Geen enkele wedstrijd mag leeg zijn!
+  Daarom EERST alle WIT vullen (stap 1+2), dan pas BLAUW (stap 3+4).
 ```
 
 **Bepalen eerste A-ronde:**
@@ -150,9 +154,10 @@ a1 < a2 (met byes), vul-volgorde:
 5. B-start = B-1/8 (8 wedstrijden)
 6. Plaatsing (vul-volgorde):
    - Stap 1: 5 a1 verliezers → WIT slots 1, 3, 5, 7, 9
-   - Stap 2: 6 a2 als 3 paren → WIT+BLAUW slots 11/12, 13/14, 15/16 (a2 vs a2)
-   - Stap 3: 2 rest a2 → BLAUW slots 2, 4 (tegenover a1, LAATST)
-   - 3 a1 zonder BLAUW tegenstander = 3 byes (slots 6, 8, 10 leeg)
+   - Stap 2: 3 a2 verliezers → WIT slots 11, 13, 15 (elke wed heeft nu 1 judoka)
+   - Stap 3: 3 a2 → BLAUW slots 12, 14, 16 (a2 vs a2, volle weds)
+   - Stap 4: 2 a2 → BLAUW slots 2, 4 (tegenover a1, LAATST)
+   - 3 a1 zonder BLAUW = 3 byes (slots 6, 8, 10 leeg)
 
 ### DUBBEL (a1 > a2)
 
@@ -216,16 +221,23 @@ Bye wedstrijden worden handmatig door de hoofdjury geregistreerd.
 
 ```
 REGEL: Judoka's met A-bye krijgen GEEN B-bye (indien mogelijk)
+REGEL: Geen enkele wedstrijd mag helemaal leeg zijn!
 
 Implementatie (SAMEN, a1 < a2):
 1. Zet a1 verliezers op WIT bovenaan (slot 1, 3, 5...)
-2. Zet a2 op overige WIT + hun BLAUW (= a2 vs a2 wedstrijden)
-3. Verdeel rest a2 random over BLAUW slots van a1 (LAATST vullen)
-4. a1 zonder BLAUW tegenstander = bye
+2. Zet a2 op ALLE overige WIT slots (elke wed heeft nu minstens 1 judoka)
+3. Zet rest a2 op BLAUW van a2-wedstrijden (a2 vs a2, volle weds)
+4. Zet rest a2 op BLAUW van a1-wedstrijden (LAATST vullen)
+5. a1 zonder BLAUW tegenstander = bye
 
-Waarom: a1 verliezers hebben al gevochten in de eerste A-ronde.
-a2 verliezers hadden mogelijk een A-bye. Door de BLAUW slots
-van a1 als LAATST te vullen krijgen a1 de byes (geen dubbele bye).
+Waarom EERST alle WIT vullen:
+- Elke wedstrijd moet minstens 1 judoka hebben
+- Anders heb je in de volgende ronde lege slots
+
+Waarom BLAUW van a1 LAATST:
+- a1 verliezers hebben al gevochten in de eerste A-ronde
+- a2 verliezers hadden mogelijk een A-bye
+- Door BLAUW van a1 als laatst te vullen krijgen a1 de byes
 ```
 
 ## Totaal Wedstrijden

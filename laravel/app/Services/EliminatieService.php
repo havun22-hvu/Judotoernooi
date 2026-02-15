@@ -781,25 +781,26 @@ class EliminatieService
                     break;
 
                 case 'samen_fairness':
-                    // SAMEN (a1 < a2): fairness vulvolgorde (FORMULES.md §Fairness)
+                    // SAMEN (a1 < a2): 4-stappen vulvolgorde (FORMULES.md §Fairness)
                     // a1 verliezers zitten al op WIT slots 0..(a1-1) (via samen_wit)
-                    // B-wedstrijden: idx 0..(a1-1) = a1 weds, idx a1..(a2-1) = overige
                     //
-                    // Stap 2: extra a2 als paren op overige WIT+BLAUW (a2 vs a2)
-                    //   Aantal overige wedstrijden = a2 - a1
-                    //   Elke overige wed krijgt 2 a2 verliezers (WIT + BLAUW)
-                    // Stap 3: rest a2 → BLAUW van a1 wedstrijden (LAATST)
+                    // Stap 2: a2 → ALLE overige WIT (elke wed minstens 1 judoka!)
+                    // Stap 3: rest a2 → BLAUW van a2-weds (a2 vs a2)
+                    // Stap 4: rest a2 → BLAUW van a1-weds (LAATST)
                     $overigeWeds = count($bWedstrijden) - $a1Count; // = a2 - a1
-                    $a2VoorParen = $overigeWeds * 2; // zoveel a2 gaan in paren
 
-                    if ($idx < $a2VoorParen) {
-                        // Stap 2: a2 paren op overige wedstrijden
-                        $paarIdx = (int) floor($idx / 2);
-                        $bWedstrijd = $bWedstrijden[$a1Count + $paarIdx] ?? null;
-                        $slot = ($idx % 2 === 0) ? 'wit' : 'blauw';
+                    if ($idx < $overigeWeds) {
+                        // Stap 2: a2 → overige WIT slots (idx a1..a2-1)
+                        $bWedstrijd = $bWedstrijden[$a1Count + $idx] ?? null;
+                        $slot = 'wit';
+                    } elseif ($idx < $overigeWeds * 2) {
+                        // Stap 3: a2 → BLAUW van a2-wedstrijden (a2 vs a2)
+                        $blauwIdx = $idx - $overigeWeds;
+                        $bWedstrijd = $bWedstrijden[$a1Count + $blauwIdx] ?? null;
+                        $slot = 'blauw';
                     } else {
-                        // Stap 3: rest a2 → BLAUW van a1 wedstrijden (LAATST)
-                        $restIdx = $idx - $a2VoorParen;
+                        // Stap 4: rest a2 → BLAUW van a1-wedstrijden (LAATST)
+                        $restIdx = $idx - ($overigeWeds * 2);
                         $bWedstrijd = $bWedstrijden[$restIdx] ?? null;
                         $slot = 'blauw';
                     }
