@@ -27,12 +27,9 @@
         border-radius: 4px;
     }
 
-    /* Empty drop slots: bigger and more visible on touch */
+    /* Empty drop slots: ensure minimum hit area on touch */
     .bracket-drop:empty {
         min-height: 36px;
-        background-image: repeating-linear-gradient(
-            45deg, transparent, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 8px
-        );
     }
 
     /* Drop target: valid (green outline) */
