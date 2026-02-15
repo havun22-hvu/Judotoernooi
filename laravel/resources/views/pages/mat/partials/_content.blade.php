@@ -2337,6 +2337,7 @@ window._markValidBracketTargets = function(dragItem) {
     const isLocked = data.pouleIsLocked === true;
     const isWinnaar = data.isWinnaar === true;
     const volgendeWedstrijdId = data.volgendeWedstrijdId;
+    const winnaarNaarSlot = data.winnaarNaarSlot; // 'wit' of 'blauw'
     const bronWedstrijdId = data.wedstrijdId;
 
     // Check of dit potje geel (volgende) of blauw (gereedmaken) is — dan geen doorschuif
@@ -2346,6 +2347,7 @@ window._markValidBracketTargets = function(dragItem) {
     allDrops.forEach(drop => {
         const handler = drop.getAttribute('data-drop-handler');
         const dropWedstrijdId = drop.getAttribute('data-wedstrijd-id');
+        const dropPositie = drop.getAttribute('data-positie'); // 'wit' of 'blauw'
         const bewoner = drop.getAttribute('data-bewoner');
         const heeftBewoner = bewoner && bewoner !== 'null';
 
@@ -2356,9 +2358,9 @@ window._markValidBracketTargets = function(dragItem) {
         let isPrimary = false;
 
         if (handler === 'dropJudoka') {
-            if (!isGeelOfBlauw && volgendeWedstrijdId && dropWedstrijdId == volgendeWedstrijdId) {
-                // Regel 1: Doorschuif naar volgende ronde (drag = bevestiging winnaar)
-                // Geblokkeerd als potje geel/blauw is (eerst groene wedstrijd afhandelen)
+            if (!isGeelOfBlauw && volgendeWedstrijdId && dropWedstrijdId == volgendeWedstrijdId
+                && (!winnaarNaarSlot || dropPositie === winnaarNaarSlot)) {
+                // Doorschuif naar volgende ronde — alleen het juiste slot (wit of blauw)
                 isPrimary = true;
                 isValid = true;
             } else if (isLocked && poule) {
@@ -2376,21 +2378,19 @@ window._markValidBracketTargets = function(dragItem) {
         } else if (handler === 'verwijderJudoka') {
             if (!isLocked) isValid = true;
         } else if (handler === 'dropOpMedaille') {
-            isValid = true;
+            if (isWinnaar) isValid = true;
         }
 
         if (isPrimary) {
             drop.dataset.dropTarget = 'primary';
-            drop.style.outline = '4px solid #16a34a';
-            drop.style.outlineOffset = '-2px';
-            drop.style.backgroundColor = '#86efac';
-            drop.style.boxShadow = '0 0 12px rgba(22,163,106,0.5), inset 0 0 8px rgba(34,197,94,0.3)';
-        } else if (isValid) {
-            drop.dataset.dropTarget = 'valid';
             drop.style.outline = '3px solid #22c55e';
             drop.style.outlineOffset = '-2px';
-            drop.style.backgroundColor = '#bbf7d0';
-            drop.style.boxShadow = 'inset 0 0 8px rgba(34,197,94,0.3)';
+            drop.style.backgroundColor = '#dcfce7';
+        } else if (isValid) {
+            drop.dataset.dropTarget = 'valid';
+            drop.style.outline = '2px solid #86efac';
+            drop.style.outlineOffset = '-2px';
+            drop.style.backgroundColor = '#f0fdf4';
         } else {
             drop.dataset.dropTarget = 'disabled';
             drop.style.opacity = '0.25';
