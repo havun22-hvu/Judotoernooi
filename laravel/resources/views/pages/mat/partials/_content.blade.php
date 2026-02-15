@@ -1214,12 +1214,58 @@ function matInterface() {
             return poule.wedstrijden.some(w => w.is_gespeeld === true && w.uitslag_type !== 'bye');
         },
 
+        /**
+         * Check byes in EERSTE ronde van A of B bracket.
+         * Eerste ronde is berekenbaar uit N (judoka_count):
+         *   D = 2^floor(log2(N)), V1 = N - D
+         *   A: V1 > 0 → getRondeNaam(2*D), V1 == 0 → getRondeNaam(D)
+         *   B: a2 = V1>0 ? D/2 : D/4, getBRondeNaam(a2) + dubbelRondes ? '_1' : ''
+         * Zie FORMULES.md §Eerste A-ronde en §B-Start Ronde Bepalen
+         */
         heeftOnverwerkteByes(poule, groep = 'A') {
             if (poule.type !== 'eliminatie') return false;
-            // Bye = wedstrijd met WIT gevuld, BLAUW leeg, nog niet gespeeld
+            const eersteRonde = this.getEersteRonde(poule.judoka_count, groep);
+            if (!eersteRonde) return false;
             return poule.wedstrijden.some(w =>
-                w.groep === groep && w.wit && !w.blauw && !w.is_gespeeld
+                w.groep === groep && w.ronde === eersteRonde && w.wit && !w.blauw && !w.is_gespeeld
             );
+        },
+
+        /**
+         * Bereken eerste ronde naam uit N (formule, niet wedstrijden tellen).
+         * Zelfde logica als EliminatieService::getRondeNaam / getBRondeNaam
+         */
+        getEersteRonde(n, groep = 'A') {
+            if (!n || n < 3) return null;
+            const d = Math.pow(2, Math.floor(Math.log2(n)));
+            const v1 = n - d;
+
+            const rondeNaam = (slots) => {
+                if (slots > 32) return 'tweeendertigste_finale';
+                if (slots > 16) return 'zestiende_finale';
+                if (slots > 8) return 'achtste_finale';
+                if (slots > 4) return 'kwartfinale';
+                if (slots > 2) return 'halve_finale';
+                return 'finale';
+            };
+            const bRondeNaam = (weds) => {
+                if (weds >= 16) return 'b_zestiende_finale';
+                if (weds >= 8) return 'b_achtste_finale';
+                if (weds >= 4) return 'b_kwartfinale';
+                return 'b_halve_finale';
+            };
+
+            if (groep === 'A') {
+                // V1 > 0: eerste ronde = 1/D fractie (2D slots → ronde naam)
+                // V1 == 0: eerste ronde = 1/(D/2) (D slots → ronde naam)
+                return v1 > 0 ? rondeNaam(2 * d) : rondeNaam(d);
+            }
+
+            // B-bracket: a1, a2 bepalen, dan B-start ronde
+            const a1 = v1 > 0 ? v1 : d / 2;
+            const a2 = v1 > 0 ? d / 2 : d / 4;
+            const dubbel = a1 > a2;
+            return bRondeNaam(a2) + (dubbel ? '_1' : '');
         },
 
         // Refresh alles: herlaad data van server + check voor app update
