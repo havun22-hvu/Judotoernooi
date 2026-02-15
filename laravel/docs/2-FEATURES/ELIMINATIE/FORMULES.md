@@ -189,6 +189,46 @@ De B-groep start op **hetzelfde niveau** als de tweede batch A-verliezers:
 | A-1/16 | 16 | B-1/16 |
 | A-1/32 | 32 | B-1/32 |
 
+## Eerste Ronde Berekenen (uit N, zonder wedstrijden te tellen)
+
+De eerste ronde van A en B is **vooraf berekenbaar** uit N:
+
+### A-bracket eerste ronde
+
+```
+D = 2^floor(log2(N))
+V1 = N - D
+
+V1 > 0: eerste ronde = getRondeNaam(2*D)
+  → N=21, D=16 → getRondeNaam(32) = zestiende_finale
+  → N=12, D=8  → getRondeNaam(16) = achtste_finale
+
+V1 = 0: eerste ronde = getRondeNaam(D)
+  → N=16, D=16 → getRondeNaam(16) = achtste_finale
+  → N=32, D=32 → getRondeNaam(32) = zestiende_finale
+```
+
+### B-bracket eerste ronde
+
+```
+a1 = V1 > 0 ? V1 : D/2
+a2 = V1 > 0 ? D/2 : D/4
+dubbel = a1 > a2
+
+Eerste B-ronde = getBRondeNaam(a2) + (dubbel ? '_1' : '')
+
+Voorbeelden:
+  N=12: a2=4, SAMEN  → b_kwartfinale
+  N=16: a2=4, DUBBEL → b_kwartfinale_1
+  N=21: a2=8, SAMEN  → b_achtste_finale
+  N=32: a2=8, DUBBEL → b_achtste_finale_1
+```
+
+### Code
+
+JS (`heeftOnverwerkteByes`) en PHP (`berekenBracketParams`) gebruiken
+dezelfde formules. Nooit wedstrijden tellen om de eerste ronde te bepalen.
+
 ## Byes Berekening
 
 ### A-Groep Byes
