@@ -842,9 +842,8 @@ class MatController extends Controller
 
         $pouleId = $validated['poule_id'];
 
-        // Find all A-group bye matches: wit filled, blauw null, not yet played
+        // Find all bye matches (A + B): wit filled, blauw null, not yet played
         $byes = Wedstrijd::where('poule_id', $pouleId)
-            ->where('groep', 'A')
             ->whereNotNull('judoka_wit_id')
             ->whereNull('judoka_blauw_id')
             ->where('is_gespeeld', false)
