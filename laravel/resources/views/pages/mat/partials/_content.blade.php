@@ -113,11 +113,13 @@
             &bull;
             <span class="font-bold">Mat <span x-text="mattenData.find(m => m.id == matId)?.nummer"></span></span>
             <a href="#blok-mat-keuze" class="text-purple-600 hover:underline">(wijzig)</a>
+            @if(!isset($isDeviceBound) || !$isDeviceBound)
             <button @click="refreshAll()" class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1" :class="{ 'animate-spin': isRefreshing }">
                 <svg x-show="!isRefreshing" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 <span x-show="isRefreshing">...</span>
                 <span x-show="!isRefreshing">Update</span>
             </button>
+            @endif
         </div>
     </div>
 
