@@ -223,7 +223,18 @@ document.querySelectorAll('.club-toggle').forEach(cb => {
                 this.checked = !wantChecked;
                 return;
             }
-            location.reload();
+            const row = this.closest('tr');
+            if (wantChecked) {
+                // Aanvinken: reload nodig voor portal URL/PIN/WhatsApp
+                location.reload();
+            } else {
+                // Uitvinken: simpele DOM update
+                row.classList.remove('bg-green-50');
+                const portalTd = row.querySelectorAll('td')[5];
+                if (portalTd) portalTd.innerHTML = '<span class="text-gray-400 text-sm">{{ __("Eerst selecteren") }}</span>';
+                const emailTd = row.querySelectorAll('td')[6];
+                if (emailTd) emailTd.innerHTML = '<span class="text-gray-400 text-sm">-</span>';
+            }
         } catch (e) {
             this.checked = !wantChecked;
         }
