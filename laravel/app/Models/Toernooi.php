@@ -356,20 +356,6 @@ class Toernooi extends Model
         return $this->clubs()->wherePivot('portal_code', $code)->first();
     }
 
-    /**
-     * Ensure a club has a pivot record for this tournament.
-     * Creates one with new portal_code if it doesn't exist.
-     */
-    public function ensureClubPivot(Club $club): void
-    {
-        if (!$this->clubs()->where('clubs.id', $club->id)->exists()) {
-            $this->clubs()->attach($club->id, [
-                'portal_code' => Club::generatePortalCode(),
-                'pincode' => Club::generatePincode(),
-            ]);
-        }
-    }
-
     public function activityLogs(): HasMany
     {
         return $this->hasMany(ActivityLog::class);

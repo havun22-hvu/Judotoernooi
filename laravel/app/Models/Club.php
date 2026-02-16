@@ -61,15 +61,14 @@ class Club extends Model
 
     /**
      * Get portal URL for a specific tournament (new URL structure).
+     * Returns null if club is not linked to this tournament.
      */
-    public function getPortalUrl(Toernooi $toernooi): string
+    public function getPortalUrl(Toernooi $toernooi): ?string
     {
         $pivot = $this->toernooien()->where('toernooien.id', $toernooi->id)->first()?->pivot;
 
         if (!$pivot || !$pivot->portal_code) {
-            // Ensure pivot exists with code
-            $toernooi->ensureClubPivot($this);
-            $pivot = $this->toernooien()->where('toernooien.id', $toernooi->id)->first()->pivot;
+            return null;
         }
 
         return route('coach.portal.code', [
