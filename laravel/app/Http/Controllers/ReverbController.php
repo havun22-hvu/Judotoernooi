@@ -98,4 +98,33 @@ class ReverbController extends Controller
             ]);
         }
     }
+
+    /**
+     * Restart Reverb
+     */
+    public function restart(): JsonResponse
+    {
+        if (app()->environment('local')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reverb alleen beschikbaar op server',
+                'local' => true,
+            ]);
+        }
+
+        try {
+            $result = Process::run('supervisorctl restart reverb');
+
+            return response()->json([
+                'success' => $result->successful(),
+                'message' => $result->successful() ? 'Reverb herstart' : 'Fout bij herstarten',
+                'output' => trim($result->output() . $result->errorOutput()),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Fout: ' . $e->getMessage(),
+            ]);
+        }
+    }
 }
