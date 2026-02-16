@@ -215,7 +215,8 @@ document.querySelectorAll('.club-toggle').forEach(cb => {
         }
 
         try {
-            const res = await fetch(`{{ url($organisator->slug . '/' . $toernooi->slug) }}/club/${clubId}/toggle`, {
+            const toggleBase = '{{ route("toernooi.club.toggle", ["organisator" => $organisator->slug, "toernooi" => $toernooi->slug, "club" => "__CLUB__"]) }}'.replace('__CLUB__', clubId);
+            const res = await fetch(toggleBase, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
