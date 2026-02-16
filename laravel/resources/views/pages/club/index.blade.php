@@ -108,11 +108,13 @@
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
                     <input type="checkbox"
-                           class="club-toggle w-5 h-5 rounded border-gray-300 text-green-500 focus:ring-green-500 cursor-pointer"
+                           class="club-toggle w-5 h-5 rounded border-gray-300 text-green-500 focus:ring-green-500 {{ $isUitgenodigd && $heeftJudokas ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer' }}"
                            data-club-id="{{ $club->id }}"
                            data-club-naam="{{ $club->naam }}"
                            data-judokas="{{ $club->judokas_count }}"
-                           {{ $isUitgenodigd ? 'checked' : '' }}>
+                           {{ $isUitgenodigd ? 'checked' : '' }}
+                           {{ $isUitgenodigd && $heeftJudokas ? 'disabled' : '' }}
+                           title="{{ $isUitgenodigd && $heeftJudokas ? __('Verwijder eerst de judoka\'s van deze club') : '' }}">
                 </td>
                 <td class="px-4 py-3">
                     <span class="font-medium text-gray-800">{{ $club->naam }}</span>
@@ -205,14 +207,6 @@ document.querySelectorAll('.club-toggle').forEach(cb => {
         const clubNaam = this.dataset.clubNaam;
         const judokas = parseInt(this.dataset.judokas || 0);
         const wantChecked = this.checked;
-
-        // Warn if unchecking club with judokas
-        if (!wantChecked && judokas > 0) {
-            if (!confirm(`${clubNaam} heeft nog ${judokas} judoka's. Toch deselecteren?`)) {
-                this.checked = true;
-                return;
-            }
-        }
 
         try {
             const toggleUrl = '{{ route("toernooi.club.toggle", ["organisator" => $organisator->slug, "toernooi" => $toernooi->slug, "club" => "__CLUB__"]) }}'.replace('__CLUB__', clubId);
