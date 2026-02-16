@@ -215,8 +215,9 @@ document.querySelectorAll('.club-toggle').forEach(cb => {
         }
 
         try {
-            const toggleBase = '{{ route("toernooi.club.toggle", ["organisator" => $organisator->slug, "toernooi" => $toernooi->slug, "club" => "__CLUB__"]) }}'.replace('__CLUB__', clubId);
-            const res = await fetch(toggleBase, {
+            const toggleUrl = '{{ route("toernooi.club.toggle", ["organisator" => $organisator->slug, "toernooi" => $toernooi->slug, "club" => "__CLUB__"]) }}'.replace('__CLUB__', clubId);
+            console.log('[CLUB TOGGLE] URL:', toggleUrl, 'Club:', clubNaam, 'Want:', wantChecked);
+            const res = await fetch(toggleUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -224,15 +225,25 @@ document.querySelectorAll('.club-toggle').forEach(cb => {
                     'Content-Type': 'application/json',
                 },
             });
-            const data = await res.json();
-            if (!data.success) {
-                this.checked = !wantChecked; // revert
+            console.log('[CLUB TOGGLE] Response status:', res.status, res.statusText);
+            const text = await res.text();
+            console.log('[CLUB TOGGLE] Response body:', text.substring(0, 200));
+            let data;
+            try { data = JSON.parse(text); } catch(pe) {
+                console.error('[CLUB TOGGLE] JSON parse error:', pe.message);
+                this.checked = !wantChecked;
                 return;
             }
-            // Reload to update portal URLs and other state
+            if (!data.success) {
+                console.warn('[CLUB TOGGLE] Server zegt niet success:', data);
+                this.checked = !wantChecked;
+                return;
+            }
+            console.log('[CLUB TOGGLE] Succes! Reload...');
             location.reload();
         } catch (e) {
-            this.checked = !wantChecked; // revert on error
+            console.error('[CLUB TOGGLE] Fetch error:', e);
+            this.checked = !wantChecked;
         }
     });
 });
