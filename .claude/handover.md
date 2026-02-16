@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 16 februari 2026
+> **Laatste update:** 17 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -59,6 +59,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **17 feb 2026** | **Club toggle fix + PWA punten + Reverb UI:** Club toggle was kapot door `getPortalUrl()` side effect (`ensureClubPivot` koppelde clubs automatisch terug). Verwijderd. Clubs met judoka's nu disabled (niet loskoppelbaar). PWA favorieten toonde verkeerde punten (pivot formula vs WP/JP live). Polling verwijderd → Reverb only + auto-fallback. Reverb health check + restart knop in toernooi settings. Activity log details verrijkt met blok/mat badges. | `memory/MEMORY.md` |
 | **16 feb 2026** | **Eliminatie DnD fix:** Judoka's in eliminatie poules nu draggable (sortable-poule + judoka-item classes). Titelbalk counts updaten correct na DnD (berekenEliminatieWedstrijden JS, updatePouleCountsFromServer). #undefined fix (data-poule-nummer). select-none op zaaloverzicht + poules pagina. Deployed staging + production. | smallwork.md |
 | **15 feb 2026** | **Danpunten (JBN):** Feature compleet: toernooi toggle, JBN lidnummer per judoka (import + coach portal + edit), CSV export voor JBN (bruine banden, gewonnen wedstrijden). UI reorganisatie: Weging/Dojo/Danpunten als aparte blokken. Deployed naar staging. | `DANPUNTEN.md`, smallwork.md |
 | **14 feb 2026** | **Page Builder verwijderd → Havunity:** Alle page builder code verwijderd (28 bestanden, 4077 regels). Publieke info tab vereenvoudigd (icon + judoschool). Preview link + URL kopiëren in edit pagina. Test tab → Admin. Nieuw project `D:\GitHub\Havunity\` opgezet (PLAN.md, CLAUDE.md, context.md). | smallwork.md |
