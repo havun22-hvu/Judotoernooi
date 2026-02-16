@@ -454,9 +454,29 @@ class PubliekController extends Controller
                         'judoka1_id' => $gereedmakenWedstrijd->judoka_wit_id,
                         'judoka2_id' => $gereedmakenWedstrijd->judoka_blauw_id,
                     ] : null,
-                    'judokas' => $poule->judokas->map(function ($j) use ($judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds, $gereedmakenJudokaIds) {
+                    'judokas' => $poule->judokas->map(function ($j) use ($poule, $judokaIds, $tolerantie, $huidigeJudokaIds, $volgendeJudokaIds, $gereedmakenJudokaIds) {
                         // Extract band color for colored dot display
                         $bandKleur = $this->getBandKleur($j->band);
+
+                        // Calculate WP/JP live from wedstrijden (same as admin view)
+                        $wp = 0;
+                        $jp = 0;
+                        foreach ($poule->wedstrijden as $w) {
+                            if (!$w->is_gespeeld) continue;
+                            if ($w->judoka_wit_id !== $j->id && $w->judoka_blauw_id !== $j->id) continue;
+
+                            if ($w->judoka_wit_id === $j->id) {
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_wit ?? '');
+                            } else {
+                                $jp += (int) preg_replace('/[^0-9]/', '', $w->score_blauw ?? '');
+                            }
+
+                            if ($w->winnaar_id === $j->id) {
+                                $wp += 2;
+                            } elseif ($w->winnaar_id === null) {
+                                $wp += 1;
+                            }
+                        }
 
                         return [
                             'id' => $j->id,
@@ -472,7 +492,8 @@ class PubliekController extends Controller
                             'is_volgende' => in_array($j->id, $volgendeJudokaIds),
                             'is_gereedmaken' => in_array($j->id, $gereedmakenJudokaIds),
                             'positie' => $j->pivot->positie ?? null,
-                            'punten' => $j->pivot->punten ?? 0,
+                            'wp' => $wp,
+                            'jp' => $jp,
                             'eindpositie' => $j->pivot->eindpositie ?? null,
                         ];
                     })->sortBy('positie')->values(),

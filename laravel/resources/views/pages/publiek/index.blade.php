@@ -710,7 +710,7 @@
                                                 <span x-show="judoka.leeftijd" class="text-gray-400" x-text="judoka.leeftijd + 'j'"></span>
                                                 <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
                                                 <span x-show="judoka.band_kleur" class="w-3 h-3 rounded-full border border-gray-300" :style="'background-color: ' + judoka.band_kleur"></span>
-                                                <span x-show="judoka.punten > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.punten + 'pt'"></span>
+                                                <span x-show="judoka.wp > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.wp + 'WP ' + judoka.jp + 'JP'"></span>
                                             </div>
                                         </div>
                                     </template>
@@ -1300,8 +1300,10 @@
                         // Geel (klaar maken) daarna
                         if (a.is_volgende && !b.is_volgende) return -1;
                         if (!a.is_volgende && b.is_volgende) return 1;
-                        // Dan op punten (hoog naar laag)
-                        return (b.punten || 0) - (a.punten || 0);
+                        // Dan op WP (hoog naar laag), JP als tiebreaker
+                        const wpDiff = (b.wp || 0) - (a.wp || 0);
+                        if (wpDiff !== 0) return wpDiff;
+                        return (b.jp || 0) - (a.jp || 0);
                     });
                 },
 
