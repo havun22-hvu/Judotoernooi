@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 15 februari 2026
+> **Laatste update:** 16 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -59,6 +59,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **16 feb 2026** | **Eliminatie DnD fix:** Judoka's in eliminatie poules nu draggable (sortable-poule + judoka-item classes). Titelbalk counts updaten correct na DnD (berekenEliminatieWedstrijden JS, updatePouleCountsFromServer). #undefined fix (data-poule-nummer). select-none op zaaloverzicht + poules pagina. Deployed staging + production. | smallwork.md |
 | **15 feb 2026** | **Danpunten (JBN):** Feature compleet: toernooi toggle, JBN lidnummer per judoka (import + coach portal + edit), CSV export voor JBN (bruine banden, gewonnen wedstrijden). UI reorganisatie: Weging/Dojo/Danpunten als aparte blokken. Deployed naar staging. | `DANPUNTEN.md`, smallwork.md |
 | **14 feb 2026** | **Page Builder verwijderd → Havunity:** Alle page builder code verwijderd (28 bestanden, 4077 regels). Publieke info tab vereenvoudigd (icon + judoschool). Preview link + URL kopiëren in edit pagina. Test tab → Admin. Nieuw project `D:\GitHub\Havunity\` opgezet (PLAN.md, CLAUDE.md, context.md). | smallwork.md |
 | **13 feb 2026 (2)** | **Offline Noodpakket Server (Fase 1):** Complete infrastructuur gebouwd. OfflineExportService (SQLite export, getest: 51 judokas/77 wedstrijden/120KB). Go launcher (leest bundle.zip runtime). OfflinePackageBuilder (combineert launcher+PHP+Laravel+data). PowerShell build.ps1 (automatisch Go+PHP downloaden, Laravel strippen, compileren). OfflineMode middleware. Artisan `offline:export` command. **Build script nog niet gedraaid** (Go download nodig). | `offline/README.md`, `memory/offline-pakket.md` |
@@ -96,7 +97,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 - **Production deploy** - Alle 3 omgevingen in sync (commit 7458156)
 
 ### 🔧 In Progress
-- **Danpunten (JBN)** - Feature compleet, deployed staging, nog niet production. Docs: `DANPUNTEN.md`
+- **Danpunten (JBN)** - Feature compleet, deployed staging + production. Docs: `DANPUNTEN.md`
 - **Noodplan pagina** - Gereorganiseerd (branch `feature/noodplan-scenarios`), nog niet gemerged naar main
 - **Offline Server Pakket** - Go launcher + portable PHP wordt gebouwd in terminal sessie. Download knop staat klaar op noodplan pagina (premium only). Zie `memory/offline-pakket.md`
 - **Havunity** - Nieuw project `D:\GitHub\Havunity\`, alleen docs/plan. Laravel installatie in aparte sessie
