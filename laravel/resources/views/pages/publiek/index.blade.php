@@ -114,7 +114,7 @@
     <!-- Debug Panel (double-click on LIVE/POLL button to toggle) -->
     <div x-show="debugMode" x-cloak class="bg-gray-900 text-green-400 text-xs font-mono p-2 border-b border-gray-700">
         <div class="max-w-6xl mx-auto flex flex-wrap gap-4">
-            <span>WS: <span :class="isConnected ? 'text-green-400' : 'text-red-400'" x-text="isConnected ? 'Connected' : 'Disconnected'"></span></span>
+            <span>Reverb: <span :class="isConnected ? 'text-green-400' : 'text-red-400'" x-text="isConnected ? 'Connected' : 'Polling (15s)'"></span></span>
             <span>WS msgs: <span x-text="wsMessageCount"></span></span>
             <button @click="debugMode = false" class="text-gray-500 hover:text-white ml-auto">[x]</button>
         </div>
@@ -890,6 +890,7 @@
                 isConnected: false, // WebSocket verbinding status
                 isRefreshing: false, // Bezig met forceren refresh
                 wsMessageCount: 0, // Count WebSocket messages for debug
+                pollTimer: null, // Polling fallback timer
                 debugMode: false, // Toggle with double-click on LIVE button
                 debugTapCount: 0, // For tracking taps
 
@@ -944,10 +945,23 @@
                         this.loadMatten();
                     }
 
-                    // Reverb handles real-time updates, no polling needed
-
-                    // Real-time updates via Reverb
+                    // Real-time updates via Reverb, polling fallback als Reverb uitvalt
                     this.setupRealtimeListeners();
+                    this.startPollingFallback();
+                },
+
+                // Polling fallback: alleen actief als Reverb niet verbonden is
+                startPollingFallback() {
+                    if (!poulesGegenereerd) return;
+                    setInterval(() => {
+                        if (this.isConnected) return; // Reverb werkt, skip polling
+                        if (this.activeTab === 'favorieten' && this.favorieten.length > 0) {
+                            this.loadFavorieten();
+                        }
+                        if (this.activeTab === 'live') {
+                            this.loadMatten();
+                        }
+                    }, 15000);
                 },
 
                 // Force refresh - herlaad alles en herconnect WebSocket

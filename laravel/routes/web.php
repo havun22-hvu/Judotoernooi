@@ -368,6 +368,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
             Route::get('status', [ReverbController::class, 'status'])->name('status');
             Route::post('start', [ReverbController::class, 'start'])->name('start');
             Route::post('stop', [ReverbController::class, 'stop'])->name('stop');
+            Route::post('restart', [ReverbController::class, 'restart'])->name('restart');
         });
     });
 
