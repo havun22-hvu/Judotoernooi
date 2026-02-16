@@ -40,53 +40,17 @@
 
         <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ __('Instellingen') }}</h1>
 
-        <form action="{{ route('organisator.instellingen.update', $organisator) }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 class="text-lg font-bold text-gray-800 mb-4">{{ __('Live Verversing') }}</h2>
-                <p class="text-gray-600 text-sm mb-4">
-                    {{ __('Deze instelling bepaalt hoe vaak de publieke apps (Publiek PWA, Spreker) automatisch verversen.') }}
-                    {{ __('Dit geldt voor al je toernooien.') }}
-                </p>
-
-                <div class="mb-4">
-                    <label for="live_refresh_interval" class="block text-gray-700 font-medium mb-2">
-                        {{ __('Verversingsinterval') }}
-                    </label>
-                    <select name="live_refresh_interval" id="live_refresh_interval" class="w-full md:w-64 border rounded px-3 py-2">
-                        <option value="" {{ $organisator->live_refresh_interval === null ? 'selected' : '' }}>
-                            {{ __('Automatisch (adaptief)') }}
-                        </option>
-                        <option value="5" {{ $organisator->live_refresh_interval == 5 ? 'selected' : '' }}>
-                            {{ __('5 seconden (snel, meer dataverkeer)') }}
-                        </option>
-                        <option value="10" {{ $organisator->live_refresh_interval == 10 ? 'selected' : '' }}>
-                            {{ __('10 seconden') }}
-                        </option>
-                        <option value="15" {{ $organisator->live_refresh_interval == 15 ? 'selected' : '' }}>
-                            {{ __('15 seconden (aanbevolen)') }}
-                        </option>
-                        <option value="30" {{ $organisator->live_refresh_interval == 30 ? 'selected' : '' }}>
-                            {{ __('30 seconden') }}
-                        </option>
-                        <option value="60" {{ $organisator->live_refresh_interval == 60 ? 'selected' : '' }}>
-                            {{ __('60 seconden (minder dataverkeer)') }}
-                        </option>
-                    </select>
-                    <p class="text-gray-500 text-sm mt-2">
-                        <strong>{{ __('Automatisch') }}</strong> = {{ __('snel bij activiteit, langzaam bij pauze.') }}
-                    </p>
-                </div>
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">{{ __('Live Verversing') }}</h2>
+            <p class="text-gray-600 text-sm mb-4">
+                {{ __('De publieke apps (Publiek PWA, Spreker) worden realtime bijgewerkt via de Chat Server (Reverb).') }}
+                {{ __('Zorg dat de Chat Server actief is bij de toernooi-instellingen.') }}
+            </p>
+            <div class="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded p-3">
+                <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span>{{ __('Realtime updates via WebSocket — geen polling meer nodig.') }}</span>
             </div>
-
-            <div class="flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded">
-                    {{ __('Opslaan') }}
-                </button>
-            </div>
-        </form>
+        </div>
     </main>
 </body>
 </html>
