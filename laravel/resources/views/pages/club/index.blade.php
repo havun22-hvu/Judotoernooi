@@ -10,18 +10,12 @@
         <h1 class="text-3xl font-bold text-gray-800">{{ __('Clubs Uitnodigen') }}</h1>
         <p class="text-gray-600 mt-1">{{ __('Selecteer welke clubs je wilt uitnodigen voor dit toernooi') }}</p>
         <div class="flex gap-2 mt-2">
-            <form action="{{ route('toernooi.club.select-all', $toernooi->routeParams()) }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded">
-                    {{ __('Alles aan') }}
-                </button>
-            </form>
-            <form action="{{ route('toernooi.club.deselect-all', $toernooi->routeParams()) }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded">
-                    {{ __('Alles uit') }}
-                </button>
-            </form>
+            <button type="button" onclick="toggleAlleClubs(true)" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded">
+                {{ __('Alles aan') }}
+            </button>
+            <button type="button" onclick="toggleAlleClubs(false)" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded">
+                {{ __('Alles uit') }}
+            </button>
         </div>
     </div>
     <div class="flex gap-2">
@@ -113,22 +107,12 @@
             @endphp
             <tr class="hover:bg-gray-50 {{ $isUitgenodigd ? 'bg-green-50' : '' }}">
                 <td class="px-4 py-3">
-                    {{-- DEBUG: Club ID = {{ $club->id }}, Naam = {{ $club->naam }} --}}
-                    <form action="{{ route('toernooi.club.toggle', ['organisator' => $organisator->slug, 'toernooi' => $toernooi->slug, 'club' => $club->id]) }}" method="POST"
-                          @if($isUitgenodigd && $club->judokas_count > 0)
-                          onsubmit="return confirm('{{ __(':club heeft nog :count judoka\'s. Toch deselecteren?', ['club' => $club->naam, 'count' => $club->judokas_count]) }}');"
-                          @endif>
-                        @csrf
-                        <button type="submit" class="w-6 h-6 rounded border-2 flex items-center justify-center transition-colors
-                            {{ $isUitgenodigd ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400' }}"
-                            title="Club ID: {{ $club->id }}">
-                            @if($isUitgenodigd)
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                                </svg>
-                            @endif
-                        </button>
-                    </form>
+                    <input type="checkbox"
+                           class="club-toggle w-5 h-5 rounded border-gray-300 text-green-500 focus:ring-green-500 cursor-pointer"
+                           data-club-id="{{ $club->id }}"
+                           data-club-naam="{{ $club->naam }}"
+                           data-judokas="{{ $club->judokas_count }}"
+                           {{ $isUitgenodigd ? 'checked' : '' }}>
                 </td>
                 <td class="px-4 py-3">
                     <span class="font-medium text-gray-800">{{ $club->naam }}</span>
@@ -213,4 +197,62 @@
 @endif
 
 </div>
+
+<script>
+document.querySelectorAll('.club-toggle').forEach(cb => {
+    cb.addEventListener('change', async function() {
+        const clubId = this.dataset.clubId;
+        const clubNaam = this.dataset.clubNaam;
+        const judokas = parseInt(this.dataset.judokas || 0);
+        const wantChecked = this.checked;
+
+        // Warn if unchecking club with judokas
+        if (!wantChecked && judokas > 0) {
+            if (!confirm(`${clubNaam} heeft nog ${judokas} judoka's. Toch deselecteren?`)) {
+                this.checked = true;
+                return;
+            }
+        }
+
+        try {
+            const res = await fetch(`{{ url($organisator->slug . '/' . $toernooi->slug) }}/club/${clubId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+            const data = await res.json();
+            if (!data.success) {
+                this.checked = !wantChecked; // revert
+                return;
+            }
+            // Reload to update portal URLs and other state
+            location.reload();
+        } catch (e) {
+            this.checked = !wantChecked; // revert on error
+        }
+    });
+});
+
+async function toggleAlleClubs(selecteren) {
+    const url = selecteren
+        ? '{{ route("toernooi.club.select-all", $toernooi->routeParams()) }}'
+        : '{{ route("toernooi.club.deselect-all", $toernooi->routeParams()) }}';
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+        });
+        location.reload();
+    } catch (e) {
+        location.reload();
+    }
+}
+</script>
 @endsection
