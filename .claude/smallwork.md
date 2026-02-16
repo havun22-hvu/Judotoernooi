@@ -807,6 +807,40 @@
 
 ---
 
+## Sessie: 16 februari 2026
+
+### Fix: DnD voor judoka's in eliminatie poules
+- **Type:** Bug fix
+- **Wat:** Eliminatie poule containers misten `sortable-poule` class, `data-poule-id`, en judoka divs misten `judoka-item`, `data-judoka-id`, `draggable="true"` → SortableJS initialiseerde niet
+- **Bestanden:** poules.blade.php (variabel + vast toernooi secties)
+- **Oplossing:** Juiste classes en data-attributen toegevoegd aan beide secties
+
+### Fix: Eliminatie poule titelbalk counts na DnD
+- **Type:** Bug fix
+- **Wat:** Aantal judoka's en wedstrijden werden niet bijgewerkt na DnD van/naar eliminatie poules
+- **Bestanden:** poules.blade.php
+- **Oorzaak:** Wrappers misten `.poule-card`, `data-poule-id`, `.poule-actief`/`.poule-wedstrijden` spans
+- **Oplossing:**
+  - HTML: `.poule-card`, `data-poule-id`, `data-poule-nummer`, `data-type="eliminatie"` op wrappers
+  - HTML: `.poule-actief` + `.poule-wedstrijden` spans in headers
+  - JS: `berekenEliminatieWedstrijden()` (2N-5 formule)
+  - JS: `updatePouleCountsFromServer()` helper voor exacte waarden uit API response
+  - JS: `updatePouleFromDOM()` skip blauw resetten voor eliminatie (behoud oranje)
+  - Alle 4 DnD response handlers roepen nu `updatePouleCountsFromServer()` aan
+
+### Fix: #undefined in eliminatie poule titels na DnD
+- **Type:** Bug fix
+- **Wat:** `updatePouleTitel()` gebruikte `pouleCard.dataset.pouleNummer` maar dat ontbrak op eliminatie wrappers
+- **Bestanden:** poules.blade.php
+- **Oplossing:** `data-poule-nummer="{{ $elimPoule->nummer }}"` toegevoegd
+
+### UI: select-none op zaaloverzicht en poules pagina
+- **Type:** UI fix
+- **Wat:** Tekst selectie uitgeschakeld om DnD niet te verstoren
+- **Bestanden:** zaaloverzicht.blade.php, poules.blade.php
+
+---
+
 ## Sessie: 15 februari 2026
 
 ### Feat: Danpunten (JBN) registratie
