@@ -1201,11 +1201,11 @@ In de poule van je favoriet worden groen/geel spelers **bovenaan** getoond:
 ┌─────────────────────────────────┐
 │ P#5 Jeugd -24    Mat 1 | Blok 1 │
 ├─────────────────────────────────┤
-│ 🥋 Jan (speelt nu)         2pt  │  ← Groen, altijd bovenaan
-│ ⏳ Karel (klaar maken)     1pt  │  ← Geel, daarna
+│ 🥋 Jan (speelt nu)    8WP 34JP  │  ← Groen, altijd bovenaan
+│ ⏳ Karel (klaar maken) 6WP 25JP │  ← Geel, daarna
 ├─────────────────────────────────┤
-│ 1. Piet ★                  3pt  │  ← Je favoriet
-│ 2. Ahmed                   2pt  │
+│ 1. Piet ★              4WP 12JP │  ← Je favoriet
+│ 2. Ahmed               2WP  5JP │
 │ 3. ...                          │
 └─────────────────────────────────┘
 ```
@@ -1226,13 +1226,20 @@ De publiek app ontvangt real-time updates via WebSockets (Laravel Reverb):
 
 > **Zie:** `CHAT.md` voor volledige Reverb documentatie
 
-### Polling fallback
-- **Favorieten:** Elke 60 seconden (AJAX) - verlaagd van 15s door real-time
-- **Live Matten:** Elke 60 seconden (AJAX) - verlaagd door real-time
+### Geen polling meer
+Polling is volledig verwijderd (feb 2026). Reverb WebSocket events zijn de enige
+bron van updates. Handmatige refresh-knop beschikbaar als fallback.
+
+### Puntenberekening Favorieten
+WP/JP worden **live berekend** uit wedstrijden in `PubliekController@favorieten`:
+- WP: win=2, gelijk=1, verlies=0
+- JP: som van scores per judoka
+
+**Let op:** NIET uit `poule_judoka.punten` pivot (die gebruikt een andere formule).
 
 ### Bestanden
 - `PubliekController@index` - Hoofd view
-- `PubliekController@favorieten` - AJAX endpoint voor favorieten poules
+- `PubliekController@favorieten` - AJAX endpoint voor favorieten poules (berekent WP/JP)
 - `resources/views/pages/publiek/index.blade.php` - Alpine.js SPA
 
 ---
