@@ -240,7 +240,14 @@ class ClubController extends Controller
 
         if ($isLinked) {
             if ($judokasCount > 0) {
-                $warning = "Let op: {$club->naam} heeft nog {$judokasCount} judoka's ingeschreven!";
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => "{$club->naam} heeft {$judokasCount} judoka's. Verwijder eerst de judoka's of verplaats ze naar een andere club.",
+                    ], 422);
+                }
+                return redirect()->route('toernooi.club.index', $toernooi->routeParams())
+                    ->with('error', "{$club->naam} heeft {$judokasCount} judoka's. Verwijder eerst de judoka's of verplaats ze naar een andere club.");
             }
             $toernooi->clubs()->detach($club->id);
             $newState = false;
