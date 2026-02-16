@@ -710,7 +710,7 @@
                                                 <span x-show="judoka.leeftijd" class="text-gray-400" x-text="judoka.leeftijd + 'j'"></span>
                                                 <span class="text-gray-500" x-text="judoka.gewicht ? judoka.gewicht + 'kg' : ''"></span>
                                                 <span x-show="judoka.band_kleur" class="w-3 h-3 rounded-full border border-gray-300" :style="'background-color: ' + judoka.band_kleur"></span>
-                                                <span x-show="judoka.wp > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.wp + 'WP ' + judoka.jp + 'JP'"></span>
+                                                <span x-show="judoka.wp > 0" class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium" x-text="judoka.wp + ':' + judoka.jp"></span>
                                             </div>
                                         </div>
                                     </template>
