@@ -122,12 +122,29 @@
                         </td>
                         <td class="px-4 py-3 text-sm">
                             @if($log->properties)
-                                <button @click="$el.nextElementSibling.classList.toggle('hidden')"
-                                        class="text-blue-600 hover:underline text-xs">
-                                    {{ __('Toon') }}
-                                </button>
-                                <div class="hidden mt-2 bg-gray-50 p-2 rounded text-xs font-mono max-w-md overflow-auto">
-                                    <pre>{{ json_encode($log->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                @php $props = $log->properties; @endphp
+                                <div class="flex flex-wrap gap-1.5">
+                                    @if(!empty($props['blok']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-purple-100 text-purple-700 text-xs font-medium">B{{ $props['blok'] }}</span>
+                                    @endif
+                                    @if(!empty($props['mat']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-xs font-medium">M{{ $props['mat'] }}</span>
+                                    @endif
+                                    @if(isset($props['score_wit']) && isset($props['score_blauw']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs">{{ $props['score_wit'] ?? 0 }}-{{ $props['score_blauw'] ?? 0 }}</span>
+                                    @endif
+                                    @if(!empty($props['groep']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs">{{ $props['groep'] }}</span>
+                                    @endif
+                                    @if(!empty($props['ronde']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">{{ str_replace('_', ' ', $props['ronde']) }}</span>
+                                    @endif
+                                    @if(!empty($props['positie']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-blue-100 text-blue-700 text-xs">{{ $props['positie'] }}</span>
+                                    @endif
+                                    @if(!empty($props['is_correctie']))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs">correctie</span>
+                                    @endif
                                 </div>
                             @else
                                 <span class="text-gray-400">-</span>
