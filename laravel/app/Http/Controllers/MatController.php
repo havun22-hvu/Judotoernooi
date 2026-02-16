@@ -173,7 +173,13 @@ class MatController extends Controller
             $rondeLabel = str_replace('_', ' ', $wedstrijd->ronde ?? '');
             ActivityLogger::log($toernooi, 'registreer_uitslag', "Eliminatie poule {$pouleNr}: {$rondeLabel}" . ($winnaarNaam ? " — winnaar {$winnaarNaam}" : ' gereset'), [
                 'model' => $wedstrijd,
-                'properties' => ['winnaar_id' => $validated['winnaar_id'], 'groep' => $wedstrijd->groep, 'ronde' => $wedstrijd->ronde],
+                'properties' => [
+                    'winnaar_id' => $validated['winnaar_id'],
+                    'groep' => $wedstrijd->groep,
+                    'ronde' => $wedstrijd->ronde,
+                    'blok' => $wedstrijd->poule?->blok?->nummer,
+                    'mat' => $wedstrijd->poule?->mat?->nummer,
+                ],
                 'interface' => 'mat',
             ]);
 
@@ -201,7 +207,13 @@ class MatController extends Controller
             $blauwNaam = $wedstrijd->judokaBlauw?->naam ?? '?';
             ActivityLogger::log($uitslagToernooi, 'registreer_uitslag', "Poule {$pouleNr}: {$witNaam} vs {$blauwNaam}" . ($winnaarNaam ? " — winnaar {$winnaarNaam}" : ' gereset'), [
                 'model' => $wedstrijd,
-                'properties' => ['winnaar_id' => $validated['winnaar_id'], 'score_wit' => $validated['score_wit'] ?? null, 'score_blauw' => $validated['score_blauw'] ?? null],
+                'properties' => [
+                    'winnaar_id' => $validated['winnaar_id'],
+                    'score_wit' => $validated['score_wit'] ?? null,
+                    'score_blauw' => $validated['score_blauw'] ?? null,
+                    'blok' => $wedstrijd->poule?->blok?->nummer,
+                    'mat' => $wedstrijd->poule?->mat?->nummer,
+                ],
                 'interface' => 'mat',
             ]);
         }
@@ -384,6 +396,10 @@ class MatController extends Controller
         if ($klaarToernooi) {
             ActivityLogger::log($klaarToernooi, 'poule_klaar', "Poule {$poule->nummer} klaar voor spreker", [
                 'model' => $poule,
+                'properties' => [
+                    'blok' => $poule->blok?->nummer,
+                    'mat' => $poule->mat?->nummer,
+                ],
                 'interface' => 'mat',
             ]);
         }
@@ -766,7 +782,13 @@ class MatController extends Controller
         $pouleNr = $wedstrijd->poule?->nummer;
         ActivityLogger::log($toernooi, 'plaats_judoka', "{$judokaNaam} geplaatst op {$validated['positie']} in poule {$pouleNr}", [
             'model' => $wedstrijd,
-            'properties' => ['judoka_id' => $validated['judoka_id'], 'positie' => $validated['positie'], 'is_correctie' => $isCorrectie],
+            'properties' => [
+                'judoka_id' => $validated['judoka_id'],
+                'positie' => $validated['positie'],
+                'is_correctie' => $isCorrectie,
+                'blok' => $wedstrijd->poule?->blok?->nummer,
+                'mat' => $wedstrijd->poule?->mat?->nummer,
+            ],
             'interface' => 'mat',
         ]);
 
@@ -1048,7 +1070,11 @@ class MatController extends Controller
             $pouleNr = $wedstrijd->poule?->nummer;
             ActivityLogger::log($verwijderToernooi, 'verwijder_judoka', "{$judokaNaam} verwijderd uit poule {$pouleNr}", [
                 'model' => $wedstrijd,
-                'properties' => ['judoka_id' => $judokaId],
+                'properties' => [
+                    'judoka_id' => $judokaId,
+                    'blok' => $wedstrijd->poule?->blok?->nummer,
+                    'mat' => $wedstrijd->poule?->mat?->nummer,
+                ],
                 'interface' => 'mat',
             ]);
         }
