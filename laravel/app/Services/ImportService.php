@@ -393,10 +393,9 @@ class ImportService
             $importStatus = 'te_corrigeren';
         }
 
-        if ($bestaande) {
-            // Update existing judoka instead of creating new one
+        if ($bestaande && $bestaande->club_id === $club?->id) {
+            // Same name + birth year + same club = same person, update
             $bestaande->update([
-                'club_id' => $club?->id,
                 'geslacht' => $geslacht,
                 'band' => $band,
                 'jbn_lidnummer' => $jbnLidnummer ?: $bestaande->jbn_lidnummer,
@@ -410,6 +409,16 @@ class ImportService
                 'import_status' => $importStatus,
             ]);
             return null; // Return null to count as skipped
+        }
+
+        if ($bestaande) {
+            // Same name + birth year but different club = different person, warn
+            $clubNaam = $bestaande->club?->naam ?? 'onbekend';
+            $warnings[] = "Naamgenoot: er is al een {$naam} ({$geboortejaar}) van {$clubNaam}";
+            $importWarnings = implode(' | ', array_filter($warnings));
+            if ($importStatus === 'compleet') {
+                $importStatus = 'te_corrigeren';
+            }
         }
 
         // Create judoka (judoka_code will be calculated after full import)
@@ -471,7 +480,7 @@ class ImportService
     /**
      * Normalize name (proper case, trim)
      */
-    private function normaliseerNaam(string $naam): string
+    public static function normaliseerNaam(string $naam): string
     {
         $naam = trim($naam);
 
@@ -501,7 +510,7 @@ class ImportService
      * 24-01-15, 15\01\24, 20150124, 24012015, 240115,
      * 24 januari 2015, 15 mrt 2010, 2015-01-24T12:00:00Z, etc.
      */
-    private function parseGeboortejaar(mixed $waarde): int
+    public static function parseGeboortejaar(mixed $waarde): int
     {
         $huidigJaar = (int) date('Y');
 
@@ -619,7 +628,7 @@ class ImportService
     /**
      * Parse gender from various formats
      */
-    private function parseGeslacht(mixed $waarde): string
+    public static function parseGeslacht(mixed $waarde): string
     {
         $geslacht = Geslacht::fromString((string)$waarde);
         return $geslacht?->value ?? 'M';
@@ -628,7 +637,7 @@ class ImportService
     /**
      * Parse belt color - returns lowercase base value (geel, groen, etc.)
      */
-    private function parseBand(mixed $waarde): string
+    public static function parseBand(mixed $waarde): string
     {
         if (empty($waarde)) {
             return 'wit';
@@ -668,7 +677,7 @@ class ImportService
     /**
      * Parse weight (handle comma/point decimal separator)
      */
-    private function parseGewicht(mixed $waarde): ?float
+    public static function parseGewicht(mixed $waarde): ?float
     {
         if (empty($waarde)) {
             return null;

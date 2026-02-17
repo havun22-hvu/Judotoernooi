@@ -116,13 +116,7 @@ class JudokaController extends Controller
             unset($validated['naam']);
         }
 
-        try {
-            $judoka->update($validated);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Er bestaat al een judoka met deze naam en geboortejaar in dit toernooi.');
-        }
+        $judoka->update($validated);
 
         // Recalculate leeftijdsklasse from toernooi config (NOT hardcoded enum)
         $leeftijd = date('Y') - $judoka->geboortejaar;
