@@ -105,14 +105,17 @@ class StamJudokaController extends Controller
         $analyse = $importService->analyseerCsvData($header, $data, false);
         $detectie = $analyse['detectie'];
 
-        // naam + geboortejaar are required
-        if ($detectie['naam']['csv_index'] === null && $detectie['geboortejaar']['csv_index'] === null) {
+        // Detect naam columns: support voornaam + (tussenvoegsel) + achternaam
+        // Same multi-column approach as tournament import preview
+        $headerLower = array_map('strtolower', array_map(fn($h) => trim((string)$h), $header));
+        $naamIndices = $this->detectNaamKolommen($headerLower, $detectie['naam']['csv_index']);
+
+        if (empty($naamIndices) || $detectie['geboortejaar']['csv_index'] === null) {
             return response()->json([
-                'error' => 'Bestand moet minimaal kolommen "naam" en "geboortejaar" bevatten.',
+                'error' => 'Bestand moet minimaal kolommen "naam" (of "voornaam"+"achternaam") en "geboortejaar" bevatten.',
             ], 422);
         }
 
-        $naamIdx = $detectie['naam']['csv_index'];
         $geboortejaarIdx = $detectie['geboortejaar']['csv_index'];
         $geslachtIdx = $detectie['geslacht']['csv_index'] ?? null;
         $bandIdx = $detectie['band']['csv_index'] ?? null;
@@ -131,12 +134,21 @@ class StamJudokaController extends Controller
             if ($isEmpty) continue;
 
             $rijNummer = $index + 2;
-            $naamRaw = $naamIdx !== null ? ($row[$naamIdx] ?? null) : null;
 
-            if (empty($naamRaw) || trim((string)$naamRaw) === '') continue;
+            // Combine naam from multiple columns (voornaam + tussenvoegsel + achternaam)
+            $naamParts = [];
+            foreach ($naamIndices as $idx) {
+                $val = $row[$idx] ?? null;
+                if ($val !== null && trim((string)$val) !== '') {
+                    $naamParts[] = trim((string)$val);
+                }
+            }
+            $naamRaw = implode(' ', $naamParts);
+
+            if (empty($naamRaw)) continue;
 
             try {
-                $naam = ImportService::normaliseerNaam(trim((string)$naamRaw));
+                $naam = ImportService::normaliseerNaam($naamRaw);
 
                 $geboortejaar = null;
                 if ($geboortejaarIdx !== null && !empty($row[$geboortejaarIdx])) {
@@ -198,6 +210,49 @@ class StamJudokaController extends Controller
             'fouten' => $fouten,
             'message' => $message,
         ]);
+    }
+
+    /**
+     * Detect naam column(s): returns array of indices.
+     * If CSV has separate voornaam/achternaam columns, returns all in order.
+     * Same multi-column approach as tournament import.
+     */
+    private function detectNaamKolommen(array $headerLower, ?int $detectieNaamIdx): array
+    {
+        $voornaamAliases = ['voornaam', 'first name', 'firstname', 'first_name'];
+        $tussenvoegselAliases = ['tussenvoegsel', 'tussenvoegsels', 'prefix', 'middle'];
+        $achternaamAliases = ['achternaam', 'last name', 'lastname', 'last_name', 'familienaam'];
+
+        $voornaamIdx = null;
+        $tussenvoegselIdx = null;
+        $achternaamIdx = null;
+
+        foreach ($headerLower as $i => $kol) {
+            foreach ($voornaamAliases as $alias) {
+                if ($kol === $alias || str_contains($kol, $alias)) { $voornaamIdx = $i; break; }
+            }
+            foreach ($tussenvoegselAliases as $alias) {
+                if ($kol === $alias || str_contains($kol, $alias)) { $tussenvoegselIdx = $i; break; }
+            }
+            foreach ($achternaamAliases as $alias) {
+                if ($kol === $alias || str_contains($kol, $alias)) { $achternaamIdx = $i; break; }
+            }
+        }
+
+        // If we found separate voornaam + achternaam, combine them
+        if ($voornaamIdx !== null && $achternaamIdx !== null) {
+            $indices = [$voornaamIdx];
+            if ($tussenvoegselIdx !== null) $indices[] = $tussenvoegselIdx;
+            $indices[] = $achternaamIdx;
+            return $indices;
+        }
+
+        // Fallback: single naam column from analyseerCsvData
+        if ($detectieNaamIdx !== null) {
+            return [$detectieNaamIdx];
+        }
+
+        return [];
     }
 
     private function authorizeAccess(Organisator $organisator): void
