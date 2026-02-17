@@ -867,6 +867,30 @@
 
 ---
 
+## Sessie: 18 februari 2026
+
+### Fix: Coach portal 404 bij verwijderde judoka
+- **Type:** Bug fix
+- **Wat:** `updateJudokaCode` en `destroyJudokaCode` gebruiken nu `int $judoka` + `Judoka::find()` ipv implicit model binding. Vriendelijke error redirect ipv 404.
+- **Bestanden:** CoachPortalController.php
+
+### Feat: Global ModelNotFoundException handler
+- **Type:** Error handling
+- **Wat:** Centraal in `app.php` vangt alle verwijderde records op met redirect + flash error. Dekt alle controllers in één keer.
+- **Bestanden:** bootstrap/app.php
+
+### Feat: Custom error pages met "Meld dit probleem" knop
+- **Type:** Feature
+- **Wat:** Custom 404, 403, 419, 500 error pages. "Meld dit probleem" knop stuurt email naar havun22@gmail.com met volledige debug info (exception, stack trace, route, params, input).
+- **Bestanden:** errors/layout.blade.php, errors/404.blade.php, errors/403.blade.php, errors/419.blade.php, errors/500.blade.php, bootstrap/app.php, routes/web.php
+- **Details:**
+  - Exception handler slaat debug info op in sessie (`_last_error`)
+  - POST `/error-report` endpoint stuurt email met alle server-side info
+  - Rate limited: 5 meldingen per minuut per IP
+  - Email subject bevat exception class naam
+
+---
+
 <!--
 TEMPLATE:
 

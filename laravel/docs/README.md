@@ -61,6 +61,7 @@ docs/
 - [Noodplan](./4-PLANNING/PLANNING_NOODPLAN.md) - Offline fallback
 - [Intropage & PWA](./4-PLANNING/PLANNING_INTROPAGE_PWA.md) - Publieke website vs live app
 - [Multi-tenancy](./4-PLANNING/PLANNING_MULTI_TENANCY.md) - Meerdere organisatoren
+- [Club Stambestand](./4-PLANNING/PLANNING_CLUB_STAMBESTAND.md) - Judoka stambestand per club + wimpelkoppeling
 
 ### 5. Reglement
 - [JBN Reglement 2026](./5-REGLEMENT/JBN-REGLEMENT-2026.md)
