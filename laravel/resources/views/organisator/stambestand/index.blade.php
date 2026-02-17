@@ -26,7 +26,27 @@
         </div>
     </div>
 
-    {{-- Feedback --}}
+    {{-- Flash messages (na import redirect) --}}
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 rounded px-4 py-3 mb-4">
+            {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 rounded px-4 py-3 mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if(session('import_fouten'))
+        <div class="bg-yellow-50 border border-yellow-300 rounded p-3 mb-4 text-sm max-h-40 overflow-y-auto">
+            <p class="font-medium text-yellow-800 mb-1">{{ count(session('import_fouten')) }} fout(en):</p>
+            @foreach(session('import_fouten') as $fout)
+                <p class="text-yellow-700 text-xs">{{ $fout }}</p>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- Feedback (AJAX) --}}
     <div x-show="feedback" x-transition x-cloak
          :class="feedbackType === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700'"
          class="border rounded px-4 py-3 mb-4">
@@ -180,21 +200,16 @@
             <h3 class="text-lg font-semibold mb-4">CSV Import</h3>
             <p class="text-sm text-gray-600 mb-4">
                 Upload een CSV of Excel bestand met kolommen: <strong>naam</strong>, <strong>geboortejaar</strong>,
-                geslacht (M/V), band, gewicht. Zelfde formaat als toernooi-import.
+                geslacht (M/V), band, gewicht. Na upload kun je de kolom-toewijzing controleren.
             </p>
-            <div x-show="importFouten.length > 0" class="bg-red-50 border border-red-200 rounded p-3 mb-4 text-sm max-h-32 overflow-y-auto">
-                <p class="font-medium text-red-700 mb-1" x-text="importFouten.length + ' fout(en):'"></p>
-                <template x-for="fout in importFouten" :key="fout">
-                    <p class="text-red-600 text-xs" x-text="fout"></p>
-                </template>
-            </div>
-            <form @submit.prevent="importCsv()">
-                <input type="file" x-ref="csvFile" accept=".csv,.txt,.xlsx,.xls" required
+            <form action="{{ route('organisator.stambestand.import.upload', $organisator) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="bestand" accept=".csv,.txt,.xlsx,.xls" required
                        class="w-full border rounded px-3 py-2 text-sm mb-4">
                 <div class="flex gap-3">
-                    <button type="submit" :disabled="importing"
+                    <button type="submit"
                             class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded text-sm">
-                        <span x-text="importing ? 'Importeren...' : 'Importeer'"></span>
+                        Upload &amp; Preview
                     </button>
                     <button type="button" @click="showImportModal = false"
                             class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded text-sm">
@@ -218,8 +233,6 @@ function stambestandPage() {
         showForm: false,
         showImportModal: false,
         saving: false,
-        importing: false,
-        importFouten: [],
         editId: null,
         form: { naam: '', geboortejaar: '', geslacht: 'M', band: 'wit', gewicht: '', notities: '' },
         judokas: @php
@@ -429,46 +442,6 @@ function stambestandPage() {
             }
         },
 
-        async importCsv() {
-            this.importing = true;
-            this.feedback = '';
-            this.importFouten = [];
-
-            const formData = new FormData();
-            formData.append('csv_file', this.$refs.csvFile.files[0]);
-
-            try {
-                const response = await fetch('{{ route("organisator.stambestand.import", $organisator) }}', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    this.feedback = data.error || data.message || 'Import mislukt';
-                    this.feedbackType = 'error';
-                } else if (data.success) {
-                    this.feedback = data.message;
-                    this.feedbackType = 'success';
-                    if (data.fouten && data.fouten.length > 0) {
-                        this.importFouten = data.fouten;
-                    } else {
-                        this.showImportModal = false;
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                }
-            } catch (e) {
-                this.feedback = 'Verbindingsfout';
-                this.feedbackType = 'error';
-            }
-
-            this.importing = false;
-        },
     }
 }
 </script>

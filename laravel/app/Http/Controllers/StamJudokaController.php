@@ -8,6 +8,7 @@ use App\Models\StamJudoka;
 use App\Services\ImportService;
 use App\Services\StambestandService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
@@ -83,43 +84,52 @@ class StamJudokaController extends Controller
         ]);
     }
 
-    public function importCsv(Request $request, Organisator $organisator): JsonResponse
+    /**
+     * Step 1: Upload file and show preview with column detection
+     */
+    public function importUpload(Request $request, Organisator $organisator): View
     {
         $this->authorizeAccess($organisator);
 
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:2048',
+            'bestand' => 'required|file|mimes:csv,txt,xlsx,xls',
         ]);
 
-        $file = $request->file('csv_file');
+        $file = $request->file('bestand');
         $data = Excel::toArray(null, $file)[0];
-
-        if (count($data) < 2) {
-            return response()->json(['error' => 'Bestand is leeg of heeft alleen een header.'], 422);
-        }
 
         $header = array_shift($data);
 
-        // Use ImportService column detection (same as tournament import)
         $importService = app(ImportService::class);
         $analyse = $importService->analyseerCsvData($header, $data, false);
-        $detectie = $analyse['detectie'];
 
-        // Detect naam columns: support voornaam + (tussenvoegsel) + achternaam
-        // Same multi-column approach as tournament import preview
-        $headerLower = array_map('strtolower', array_map(fn($h) => trim((string)$h), $header));
-        $naamIndices = $this->detectNaamKolommen($headerLower, $detectie['naam']['csv_index']);
+        // Store in session for step 2
+        session(['stam_import_data' => $data, 'stam_import_header' => $header]);
 
-        if (empty($naamIndices) || $detectie['geboortejaar']['csv_index'] === null) {
-            return response()->json([
-                'error' => 'Bestand moet minimaal kolommen "naam" (of "voornaam"+"achternaam") en "geboortejaar" bevatten.',
-            ], 422);
+        return view('organisator.stambestand.import-preview', [
+            'organisator' => $organisator,
+            'analyse' => $analyse,
+        ]);
+    }
+
+    /**
+     * Step 2: Confirm import with (adjusted) column mapping
+     */
+    public function importConfirm(Request $request, Organisator $organisator): RedirectResponse
+    {
+        $this->authorizeAccess($organisator);
+
+        $mapping = $request->input('mapping', []);
+        $data = session('stam_import_data');
+        $header = session('stam_import_header');
+
+        if (!$data || !$header) {
+            return redirect()
+                ->route('organisator.stambestand.index', $organisator)
+                ->with('error', 'Geen import data gevonden. Upload opnieuw.');
         }
 
-        $geboortejaarIdx = $detectie['geboortejaar']['csv_index'];
-        $geslachtIdx = $detectie['geslacht']['csv_index'] ?? null;
-        $bandIdx = $detectie['band']['csv_index'] ?? null;
-        $gewichtIdx = $detectie['gewicht']['csv_index'] ?? null;
+        $headerCount = count($header);
 
         $imported = 0;
         $skipped = 0;
@@ -133,32 +143,23 @@ class StamJudokaController extends Controller
             }
             if ($isEmpty) continue;
 
+            // Pad row to match header length
+            $row = array_pad($row, $headerCount, '');
             $rijNummer = $index + 2;
 
-            // Combine naam from multiple columns (voornaam + tussenvoegsel + achternaam)
-            $naamParts = [];
-            foreach ($naamIndices as $idx) {
-                $val = $row[$idx] ?? null;
-                if ($val !== null && trim((string)$val) !== '') {
-                    $naamParts[] = trim((string)$val);
-                }
-            }
-            $naamRaw = implode(' ', $naamParts);
-
-            if (empty($naamRaw)) continue;
-
             try {
-                $naam = ImportService::normaliseerNaam($naamRaw);
+                // Get naam (supports multi-column via comma-separated indices)
+                $naamRaw = $this->getMappedValue($row, $mapping['naam'] ?? '');
+                if (empty($naamRaw)) continue;
 
-                $geboortejaar = null;
-                if ($geboortejaarIdx !== null && !empty($row[$geboortejaarIdx])) {
-                    $geboortejaar = ImportService::parseGeboortejaar($row[$geboortejaarIdx]);
-                }
+                $naam = ImportService::normaliseerNaam(trim((string)$naamRaw));
 
-                if (!$geboortejaar) {
-                    $fouten[] = "Rij {$rijNummer} ({$naam}): Geboortejaar ontbreekt of ongeldig";
+                $geboortejaarRaw = $this->getMappedValue($row, $mapping['geboortejaar'] ?? '');
+                if (empty($geboortejaarRaw)) {
+                    $fouten[] = "Rij {$rijNummer} ({$naam}): Geboortejaar ontbreekt";
                     continue;
                 }
+                $geboortejaar = ImportService::parseGeboortejaar($geboortejaarRaw);
 
                 // Check for duplicate
                 $exists = StamJudoka::where('organisator_id', $organisator->id)
@@ -171,17 +172,14 @@ class StamJudokaController extends Controller
                     continue;
                 }
 
-                $geslacht = ($geslachtIdx !== null && !empty($row[$geslachtIdx]))
-                    ? ImportService::parseGeslacht($row[$geslachtIdx])
-                    : 'M';
+                $geslachtRaw = $this->getMappedValue($row, $mapping['geslacht'] ?? '');
+                $geslacht = !empty($geslachtRaw) ? ImportService::parseGeslacht($geslachtRaw) : 'M';
 
-                $band = ($bandIdx !== null && !empty($row[$bandIdx]))
-                    ? ImportService::parseBand($row[$bandIdx])
-                    : 'wit';
+                $bandRaw = $this->getMappedValue($row, $mapping['band'] ?? '');
+                $band = !empty($bandRaw) ? ImportService::parseBand($bandRaw) : 'wit';
 
-                $gewicht = ($gewichtIdx !== null && !empty($row[$gewichtIdx]))
-                    ? ImportService::parseGewicht($row[$gewichtIdx])
-                    : null;
+                $gewichtRaw = $this->getMappedValue($row, $mapping['gewicht'] ?? '');
+                $gewicht = !empty($gewichtRaw) ? ImportService::parseGewicht($gewichtRaw) : null;
 
                 $stamJudoka = StamJudoka::create([
                     'organisator_id' => $organisator->id,
@@ -195,64 +193,52 @@ class StamJudokaController extends Controller
                 $this->stambestandService->koppelWimpelJudoka($stamJudoka);
                 $imported++;
             } catch (\Exception $e) {
-                $fouten[] = "Rij {$rijNummer} ({$naamRaw}): {$e->getMessage()}";
+                $fouten[] = "Rij {$rijNummer}: {$e->getMessage()}";
             }
         }
 
-        $message = "{$imported} judoka's geimporteerd";
-        if ($skipped > 0) $message .= ", {$skipped} overgeslagen (duplicaat)";
+        session()->forget(['stam_import_data', 'stam_import_header']);
+
+        $message = "Import voltooid: {$imported} geimporteerd";
+        if ($skipped > 0) $message .= ", {$skipped} duplicaten overgeslagen";
         if (count($fouten) > 0) $message .= ", " . count($fouten) . " fouten";
 
-        return response()->json([
-            'success' => true,
-            'imported' => $imported,
-            'skipped' => $skipped,
-            'fouten' => $fouten,
-            'message' => $message,
-        ]);
+        $redirect = redirect()->route('organisator.stambestand.index', $organisator)->with('success', $message);
+
+        if (!empty($fouten)) {
+            $redirect = $redirect->with('import_fouten', $fouten);
+        }
+
+        return $redirect;
     }
 
     /**
-     * Detect naam column(s): returns array of indices.
-     * If CSV has separate voornaam/achternaam columns, returns all in order.
-     * Same multi-column approach as tournament import.
+     * Get value from row using mapping index (supports comma-separated for multi-column).
      */
-    private function detectNaamKolommen(array $headerLower, ?int $detectieNaamIdx): array
+    private function getMappedValue(array $row, string $mappingValue): ?string
     {
-        $voornaamAliases = ['voornaam', 'first name', 'firstname', 'first_name'];
-        $tussenvoegselAliases = ['tussenvoegsel', 'tussenvoegsels', 'prefix', 'middle'];
-        $achternaamAliases = ['achternaam', 'last name', 'lastname', 'last_name', 'familienaam'];
+        if ($mappingValue === '') return null;
 
-        $voornaamIdx = null;
-        $tussenvoegselIdx = null;
-        $achternaamIdx = null;
-
-        foreach ($headerLower as $i => $kol) {
-            foreach ($voornaamAliases as $alias) {
-                if ($kol === $alias || str_contains($kol, $alias)) { $voornaamIdx = $i; break; }
+        // Multi-column: comma-separated indices (e.g., "0,1,2" for voornaam+tussenvoegsel+achternaam)
+        if (str_contains($mappingValue, ',')) {
+            $indices = array_map('intval', explode(',', $mappingValue));
+            $parts = [];
+            foreach ($indices as $idx) {
+                $val = $row[$idx] ?? null;
+                if ($val !== null && trim((string)$val) !== '') {
+                    $parts[] = trim((string)$val);
+                }
             }
-            foreach ($tussenvoegselAliases as $alias) {
-                if ($kol === $alias || str_contains($kol, $alias)) { $tussenvoegselIdx = $i; break; }
-            }
-            foreach ($achternaamAliases as $alias) {
-                if ($kol === $alias || str_contains($kol, $alias)) { $achternaamIdx = $i; break; }
-            }
+            return $parts ? implode(' ', $parts) : null;
         }
 
-        // If we found separate voornaam + achternaam, combine them
-        if ($voornaamIdx !== null && $achternaamIdx !== null) {
-            $indices = [$voornaamIdx];
-            if ($tussenvoegselIdx !== null) $indices[] = $tussenvoegselIdx;
-            $indices[] = $achternaamIdx;
-            return $indices;
+        // Single column index
+        if (is_numeric($mappingValue)) {
+            $val = $row[(int)$mappingValue] ?? null;
+            return ($val !== null && trim((string)$val) !== '') ? trim((string)$val) : null;
         }
 
-        // Fallback: single naam column from analyseerCsvData
-        if ($detectieNaamIdx !== null) {
-            return [$detectieNaamIdx];
-        }
-
-        return [];
+        return null;
     }
 
     private function authorizeAccess(Organisator $organisator): void
