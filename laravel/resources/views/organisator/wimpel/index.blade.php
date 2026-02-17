@@ -163,18 +163,22 @@ function wimpelPage() {
         feedbackType: 'success',
         sortKolom: 'punten_totaal',
         sortRichting: 'desc',
-        judokas: @json($judokas->map(fn($j) => [
-            'id' => $j->id,
-            'naam' => $j->naam,
-            'geboortejaar' => $j->geboortejaar,
-            'punten_totaal' => $j->punten_totaal,
-            'is_nieuw' => $j->is_nieuw,
-            'url' => route('organisator.wimpel.show', [$organisator, $j]),
-            'volgende' => $j->volgendeMilestone ? [
-                'punten' => $j->volgendeMilestone->punten,
-                'omschrijving' => $j->volgendeMilestone->omschrijving,
-            ] : null,
-        ])->values()),
+        judokas: @php
+            $judokaData = $judokas->map(function($j) use ($organisator) {
+                return [
+                    'id' => $j->id,
+                    'naam' => $j->naam,
+                    'geboortejaar' => $j->geboortejaar,
+                    'punten_totaal' => $j->punten_totaal,
+                    'is_nieuw' => $j->is_nieuw,
+                    'url' => route('organisator.wimpel.show', [$organisator, $j]),
+                    'volgende' => $j->volgendeMilestone ? [
+                        'punten' => $j->volgendeMilestone->punten,
+                        'omschrijving' => $j->volgendeMilestone->omschrijving,
+                    ] : null,
+                ];
+            })->values();
+        @endphp {!! json_encode($judokaData) !!},
 
         get gefilterd() {
             let lijst = this.judokas;
