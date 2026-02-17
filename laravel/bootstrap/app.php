@@ -128,6 +128,15 @@ return Application::configure(basePath: dirname(__DIR__))
                         'error' => $notifyError->getMessage(),
                     ]);
                 }
+
+                // AutoFix: analyze error with Claude and propose a fix
+                try {
+                    app(\App\Services\AutoFixService::class)->handle($e);
+                } catch (\Exception $autofixError) {
+                    \Illuminate\Support\Facades\Log::warning('AutoFix failed', [
+                        'error' => $autofixError->getMessage(),
+                    ]);
+                }
             }
         });
 
