@@ -68,15 +68,8 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Band *</label>
-                <select x-model="form.band" required class="w-full border rounded px-3 py-2 text-sm">
-                    <option value="wit">Wit</option>
-                    <option value="geel">Geel</option>
-                    <option value="oranje">Oranje</option>
-                    <option value="groen">Groen</option>
-                    <option value="blauw">Blauw</option>
-                    <option value="bruin">Bruin</option>
-                    <option value="zwart">Zwart</option>
-                </select>
+                <input type="text" x-model="form.band" required
+                       class="w-full border rounded px-3 py-2 text-sm" placeholder="bijv. wit, geel, oranje">
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
