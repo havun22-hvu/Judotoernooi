@@ -47,6 +47,7 @@ class Judoka extends Model
         'import_status',
         'telefoon',
         'overpouled_van_poule_id',
+        'stam_judoka_id',
     ];
 
     protected $casts = [
@@ -108,6 +109,11 @@ class Judoka extends Model
     public function club(): BelongsTo
     {
         return $this->belongsTo(Club::class);
+    }
+
+    public function stamJudoka(): BelongsTo
+    {
+        return $this->belongsTo(StamJudoka::class);
     }
 
     public function betaling(): BelongsTo
