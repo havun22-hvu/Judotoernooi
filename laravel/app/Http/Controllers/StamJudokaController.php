@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StamJudokaRequest;
 use App\Models\Organisator;
 use App\Models\StamJudoka;
+use App\Services\ImportService;
 use App\Services\StambestandService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StamJudokaController extends Controller
 {
@@ -86,93 +88,116 @@ class StamJudokaController extends Controller
         $this->authorizeAccess($organisator);
 
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'csv_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:2048',
         ]);
 
         $file = $request->file('csv_file');
-        $rows = array_map('str_getcsv', file($file->getRealPath()));
+        $data = Excel::toArray(null, $file)[0];
 
-        if (count($rows) < 2) {
-            return response()->json(['error' => 'CSV bestand is leeg of heeft alleen een header.'], 422);
+        if (count($data) < 2) {
+            return response()->json(['error' => 'Bestand is leeg of heeft alleen een header.'], 422);
         }
 
-        $header = array_map('strtolower', array_map('trim', $rows[0]));
-        $naamIdx = $this->findColumn($header, ['naam', 'name', 'judoka']);
-        $geboortejaarIdx = $this->findColumn($header, ['geboortejaar', 'jaar', 'birth_year', 'geb.jaar']);
-        $geslachtIdx = $this->findColumn($header, ['geslacht', 'gender', 'sex', 'm/v']);
-        $bandIdx = $this->findColumn($header, ['band', 'belt', 'gordel']);
-        $gewichtIdx = $this->findColumn($header, ['gewicht', 'weight', 'kg']);
+        $header = array_shift($data);
 
-        if ($naamIdx === null || $geboortejaarIdx === null) {
+        // Use ImportService column detection (same as tournament import)
+        $importService = app(ImportService::class);
+        $analyse = $importService->analyseerCsvData($header, $data, false);
+        $detectie = $analyse['detectie'];
+
+        // naam + geboortejaar are required
+        if ($detectie['naam']['csv_index'] === null && $detectie['geboortejaar']['csv_index'] === null) {
             return response()->json([
-                'error' => 'CSV moet minimaal kolommen "naam" en "geboortejaar" bevatten.',
+                'error' => 'Bestand moet minimaal kolommen "naam" en "geboortejaar" bevatten.',
             ], 422);
         }
 
+        $naamIdx = $detectie['naam']['csv_index'];
+        $geboortejaarIdx = $detectie['geboortejaar']['csv_index'];
+        $geslachtIdx = $detectie['geslacht']['csv_index'] ?? null;
+        $bandIdx = $detectie['band']['csv_index'] ?? null;
+        $gewichtIdx = $detectie['gewicht']['csv_index'] ?? null;
+
         $imported = 0;
         $skipped = 0;
+        $fouten = [];
 
-        for ($i = 1; $i < count($rows); $i++) {
-            $row = $rows[$i];
-            if (count($row) < 2) continue;
-
-            $naam = trim($row[$naamIdx] ?? '');
-            $geboortejaar = (int) trim($row[$geboortejaarIdx] ?? '');
-
-            if (empty($naam) || $geboortejaar < 1950) continue;
-
-            // Check for duplicate
-            $exists = StamJudoka::where('organisator_id', $organisator->id)
-                ->where('naam', $naam)
-                ->where('geboortejaar', $geboortejaar)
-                ->exists();
-
-            if ($exists) {
-                $skipped++;
-                continue;
+        foreach ($data as $index => $row) {
+            // Skip empty rows
+            $isEmpty = true;
+            foreach ($row as $val) {
+                if ($val !== null && trim((string)$val) !== '') { $isEmpty = false; break; }
             }
+            if ($isEmpty) continue;
 
-            $geslacht = $geslachtIdx !== null ? strtoupper(trim($row[$geslachtIdx] ?? 'M')) : 'M';
-            if (!in_array($geslacht, ['M', 'V'])) $geslacht = 'M';
+            $rijNummer = $index + 2;
+            $naamRaw = $naamIdx !== null ? ($row[$naamIdx] ?? null) : null;
 
-            $band = $bandIdx !== null ? strtolower(trim($row[$bandIdx] ?? 'wit')) : 'wit';
-            $validBands = ['wit', 'geel', 'oranje', 'groen', 'blauw', 'bruin', 'zwart'];
-            if (!in_array($band, $validBands)) {
-                $parsed = \App\Enums\Band::fromString($band);
-                $band = $parsed ? strtolower($parsed->label()) : 'wit';
+            if (empty($naamRaw) || trim((string)$naamRaw) === '') continue;
+
+            try {
+                $naam = ImportService::normaliseerNaam(trim((string)$naamRaw));
+
+                $geboortejaar = null;
+                if ($geboortejaarIdx !== null && !empty($row[$geboortejaarIdx])) {
+                    $geboortejaar = ImportService::parseGeboortejaar($row[$geboortejaarIdx]);
+                }
+
+                if (!$geboortejaar) {
+                    $fouten[] = "Rij {$rijNummer} ({$naam}): Geboortejaar ontbreekt of ongeldig";
+                    continue;
+                }
+
+                // Check for duplicate
+                $exists = StamJudoka::where('organisator_id', $organisator->id)
+                    ->where('naam', $naam)
+                    ->where('geboortejaar', $geboortejaar)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
+
+                $geslacht = ($geslachtIdx !== null && !empty($row[$geslachtIdx]))
+                    ? ImportService::parseGeslacht($row[$geslachtIdx])
+                    : 'M';
+
+                $band = ($bandIdx !== null && !empty($row[$bandIdx]))
+                    ? ImportService::parseBand($row[$bandIdx])
+                    : 'wit';
+
+                $gewicht = ($gewichtIdx !== null && !empty($row[$gewichtIdx]))
+                    ? ImportService::parseGewicht($row[$gewichtIdx])
+                    : null;
+
+                $stamJudoka = StamJudoka::create([
+                    'organisator_id' => $organisator->id,
+                    'naam' => $naam,
+                    'geboortejaar' => $geboortejaar,
+                    'geslacht' => $geslacht,
+                    'band' => $band,
+                    'gewicht' => $gewicht,
+                ]);
+
+                $this->stambestandService->koppelWimpelJudoka($stamJudoka);
+                $imported++;
+            } catch (\Exception $e) {
+                $fouten[] = "Rij {$rijNummer} ({$naamRaw}): {$e->getMessage()}";
             }
-
-            $gewicht = $gewichtIdx !== null ? floatval($row[$gewichtIdx] ?? 0) : null;
-            if ($gewicht !== null && ($gewicht < 10 || $gewicht > 200)) $gewicht = null;
-
-            $stamJudoka = StamJudoka::create([
-                'organisator_id' => $organisator->id,
-                'naam' => $naam,
-                'geboortejaar' => $geboortejaar,
-                'geslacht' => $geslacht,
-                'band' => $band,
-                'gewicht' => $gewicht,
-            ]);
-
-            $this->stambestandService->koppelWimpelJudoka($stamJudoka);
-            $imported++;
         }
+
+        $message = "{$imported} judoka's geimporteerd";
+        if ($skipped > 0) $message .= ", {$skipped} overgeslagen (duplicaat)";
+        if (count($fouten) > 0) $message .= ", " . count($fouten) . " fouten";
 
         return response()->json([
             'success' => true,
             'imported' => $imported,
             'skipped' => $skipped,
-            'message' => "{$imported} judoka's geimporteerd" . ($skipped > 0 ? ", {$skipped} overgeslagen (duplicaat)" : ''),
+            'fouten' => $fouten,
+            'message' => $message,
         ]);
-    }
-
-    private function findColumn(array $header, array $aliases): ?int
-    {
-        foreach ($aliases as $alias) {
-            $idx = array_search($alias, $header);
-            if ($idx !== false) return $idx;
-        }
-        return null;
     }
 
     private function authorizeAccess(Organisator $organisator): void
