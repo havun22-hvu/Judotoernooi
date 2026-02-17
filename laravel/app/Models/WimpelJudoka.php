@@ -12,6 +12,7 @@ class WimpelJudoka extends Model
 
     protected $fillable = [
         'organisator_id',
+        'stam_judoka_id',
         'naam',
         'geboortejaar',
         'punten_totaal',
@@ -27,6 +28,11 @@ class WimpelJudoka extends Model
     public function organisator(): BelongsTo
     {
         return $this->belongsTo(Organisator::class);
+    }
+
+    public function stamJudoka(): BelongsTo
+    {
+        return $this->belongsTo(StamJudoka::class);
     }
 
     public function puntenLog(): HasMany

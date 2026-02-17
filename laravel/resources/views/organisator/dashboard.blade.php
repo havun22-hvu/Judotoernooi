@@ -121,6 +121,10 @@
                    class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                     Wimpeltoernooi
                 </a>
+                <a href="{{ route('organisator.stambestand.index', $organisator) }}"
+                   class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    {{ __('Mijn Judoka\'s') }}
+                </a>
                 <a href="{{ route('organisator.clubs.index', $organisator) }}"
                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors">
                     {{ __('Mijn Clubs') }}

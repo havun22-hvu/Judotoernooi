@@ -209,6 +209,11 @@ class Organisator extends Authenticatable
         return $this->hasMany(Vrijwilliger::class);
     }
 
+    public function stamJudokas(): HasMany
+    {
+        return $this->hasMany(StamJudoka::class);
+    }
+
     public function wimpelJudokas(): HasMany
     {
         return $this->hasMany(WimpelJudoka::class);

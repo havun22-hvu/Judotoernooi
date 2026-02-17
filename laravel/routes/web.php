@@ -17,6 +17,7 @@ use App\Http\Controllers\CoachKaartController;
 use App\Http\Controllers\PubliekController;
 use App\Http\Controllers\NoodplanController;
 use App\Http\Controllers\MollieController;
+use App\Http\Controllers\StamJudokaController;
 use App\Http\Controllers\WimpelController;
 use App\Http\Controllers\DeviceToegangController;
 use App\Http\Controllers\DeviceToegangBeheerController;
@@ -190,6 +191,14 @@ Route::prefix('{organisator}')->middleware('auth:organisator')->group(function (
     Route::get('wimpeltoernooi/{wimpelJudoka}', [WimpelController::class, 'show'])->name('organisator.wimpel.show');
     Route::post('wimpeltoernooi/{wimpelJudoka}/aanpassen', [WimpelController::class, 'aanpassen'])->name('organisator.wimpel.aanpassen');
     Route::post('wimpeltoernooi/{wimpelJudoka}/bevestig', [WimpelController::class, 'bevestigJudoka'])->name('organisator.wimpel.bevestig');
+
+    // Stambestand (organisator level - persistent judoka database)
+    Route::post('judokas/import', [StamJudokaController::class, 'importCsv'])->name('organisator.stambestand.import');
+    Route::get('judokas', [StamJudokaController::class, 'index'])->name('organisator.stambestand.index');
+    Route::post('judokas', [StamJudokaController::class, 'store'])->name('organisator.stambestand.store');
+    Route::put('judokas/{stamJudoka}', [StamJudokaController::class, 'update'])->name('organisator.stambestand.update');
+    Route::delete('judokas/{stamJudoka}', [StamJudokaController::class, 'destroy'])->name('organisator.stambestand.destroy');
+    Route::post('judokas/{stamJudoka}/toggle', [StamJudokaController::class, 'toggleActief'])->name('organisator.stambestand.toggle');
 });
 
 // Mollie webhooks & callbacks (no auth, called by Mollie)
