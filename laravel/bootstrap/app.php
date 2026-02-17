@@ -104,6 +104,18 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        // Handle deleted/missing models (judoka verwijderd terwijl pagina open, etc.)
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Dit item bestaat niet meer. Mogelijk is het verwijderd of verplaatst.',
+                ], 404);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Dit item bestaat niet meer. Mogelijk is het verwijderd of verplaatst door de organisator.');
+        });
+
         // Handle 419 Page Expired (CSRF token expired)
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {
