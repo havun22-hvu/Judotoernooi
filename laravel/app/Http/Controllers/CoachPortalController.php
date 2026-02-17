@@ -312,13 +312,19 @@ class CoachPortalController extends Controller
             ->with('success', 'Judoka toegevoegd');
     }
 
-    public function updateJudokaCode(Request $request, string $organisator, string $toernooi, string $code, Judoka $judoka): RedirectResponse
+    public function updateJudokaCode(Request $request, string $organisator, string $toernooi, string $code, int $judoka): RedirectResponse
     {
         $toernooiModel = $this->getToernooiFromRoute($organisator, $toernooi);
         $club = $this->getLoggedInClub($request, $toernooiModel, $code);
 
         if (!$club) {
             return $this->redirectToLoginExpired($organisator, $toernooi, $code);
+        }
+
+        $judoka = Judoka::find($judoka);
+        if (!$judoka) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'Deze judoka bestaat niet meer. Mogelijk is deze verwijderd of verplaatst door de organisator.');
         }
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooiModel->id) {
@@ -388,13 +394,19 @@ class CoachPortalController extends Controller
             ->with('success', 'Judoka bijgewerkt');
     }
 
-    public function destroyJudokaCode(Request $request, string $organisator, string $toernooi, string $code, Judoka $judoka): RedirectResponse
+    public function destroyJudokaCode(Request $request, string $organisator, string $toernooi, string $code, int $judoka): RedirectResponse
     {
         $toernooiModel = $this->getToernooiFromRoute($organisator, $toernooi);
         $club = $this->getLoggedInClub($request, $toernooiModel, $code);
 
         if (!$club) {
             return $this->redirectToLoginExpired($organisator, $toernooi, $code);
+        }
+
+        $judoka = Judoka::find($judoka);
+        if (!$judoka) {
+            return redirect()->route('coach.portal.judokas', $this->routeParams($organisator, $toernooi, $code))
+                ->with('error', 'Deze judoka bestaat niet meer. Mogelijk is deze verwijderd of verplaatst door de organisator.');
         }
 
         if ($judoka->club_id !== $club->id || $judoka->toernooi_id !== $toernooiModel->id) {
