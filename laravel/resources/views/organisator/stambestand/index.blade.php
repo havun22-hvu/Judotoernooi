@@ -133,11 +133,7 @@
                                 <td class="px-4 py-3 font-medium" x-text="judoka.naam"></td>
                                 <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geboortejaar"></td>
                                 <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.geslacht"></td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                                          :class="bandClass(judoka.band)"
-                                          x-text="judoka.band.charAt(0).toUpperCase() + judoka.band.slice(1)"></span>
-                                </td>
+                                <td class="px-4 py-3 text-center text-gray-600" x-text="judoka.band.charAt(0).toUpperCase() + judoka.band.slice(1)"></td>
                                 <td class="px-4 py-3 text-center text-gray-600">
                                     <span x-text="judoka.gewicht ? judoka.gewicht + ' kg' : '-'"></span>
                                 </td>
@@ -268,19 +264,6 @@ function stambestandPage() {
                 this.sortKolom = kolom;
                 this.sortRichting = kolom === 'naam' ? 'asc' : 'desc';
             }
-        },
-
-        bandClass(band) {
-            const classes = {
-                wit: 'bg-gray-100 text-gray-800 border border-gray-300',
-                geel: 'bg-yellow-100 text-yellow-800',
-                oranje: 'bg-orange-100 text-orange-800',
-                groen: 'bg-green-100 text-green-800',
-                blauw: 'bg-blue-100 text-blue-800',
-                bruin: 'bg-amber-800 text-white',
-                zwart: 'bg-gray-900 text-white',
-            };
-            return classes[band] || 'bg-gray-100 text-gray-800';
         },
 
         openForm() {
