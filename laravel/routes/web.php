@@ -49,6 +49,78 @@ if (config('app.offline_mode')) {
     Route::get('/offline/export-resultaten', [\App\Http\Controllers\OfflineController::class, 'uploadResultaten'])->name('offline.export-resultaten');
 }
 
+// Error report endpoint (public, rate limited)
+Route::post('/error-report', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'url' => 'required|string|max:2000',
+        'referrer' => 'nullable|string|max:2000',
+        'error_code' => 'nullable|string|max:10',
+        'user_agent' => 'nullable|string|max:500',
+    ]);
+
+    // Retrieve server-side debug info from session (stored by exception handler)
+    $debugInfo = session()->pull('_last_error', []);
+
+    $lines = [
+        'ERROR REPORT - Gemeld door gebruiker',
+        str_repeat('=', 40),
+        '',
+        '--- Gebruiker info ---',
+        'Pagina URL: ' . $data['url'],
+        'Referrer: ' . ($data['referrer'] ?: '-'),
+        'HTTP error code: ' . ($data['error_code'] ?: '-'),
+        'User agent: ' . ($data['user_agent'] ?: '-'),
+        'IP: ' . $request->ip(),
+        'Gemeld op: ' . now()->format('d-m-Y H:i:s'),
+        'Omgeving: ' . app()->environment(),
+    ];
+
+    if (!empty($debugInfo)) {
+        $lines[] = '';
+        $lines[] = '--- Server debug info ---';
+        $lines[] = 'Exception: ' . ($debugInfo['exception'] ?? '-');
+        $lines[] = 'Message: ' . ($debugInfo['message'] ?? '-');
+        $lines[] = 'File: ' . ($debugInfo['file'] ?? '-');
+        $lines[] = 'Route: ' . ($debugInfo['route'] ?? '-');
+        $lines[] = 'Method: ' . ($debugInfo['method'] ?? '-');
+        $lines[] = 'User ID: ' . ($debugInfo['user_id'] ?? 'guest');
+        $lines[] = 'Tijdstip error: ' . ($debugInfo['timestamp'] ?? '-');
+
+        if (!empty($debugInfo['route_params'])) {
+            $lines[] = 'Route params: ' . json_encode($debugInfo['route_params'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
+        if (!empty($debugInfo['input'])) {
+            $lines[] = 'Request input: ' . json_encode($debugInfo['input'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
+        if (!empty($debugInfo['trace'])) {
+            $lines[] = '';
+            $lines[] = '--- Stack trace (top 10) ---';
+            foreach ($debugInfo['trace'] as $i => $frame) {
+                $lines[] = "  #{$i} {$frame}";
+            }
+        }
+    }
+
+    $body = implode("\n", $lines);
+
+    \Illuminate\Support\Facades\Log::channel('daily')->warning('User error report', array_merge($data, ['debug' => $debugInfo]));
+
+    try {
+        \Illuminate\Support\Facades\Mail::raw($body, function ($message) use ($debugInfo) {
+            $subject = '[JudoToernooi] Gebruiker meldt probleem';
+            if (!empty($debugInfo['exception'])) {
+                $short = class_basename($debugInfo['exception']);
+                $subject .= ": {$short}";
+            }
+            $message->to('havun22@gmail.com')->subject($subject);
+        });
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::warning('Error report email failed', ['error' => $e->getMessage()]);
+    }
+
+    return response()->json(['success' => true]);
+})->middleware('throttle:5,1')->name('error.report');
+
 // Health check endpoints for monitoring
 Route::get('/health', [HealthController::class, 'check'])->name('health');
 Route::get('/health/detailed', [HealthController::class, 'detailed'])->middleware('auth:organisator')->name('health.detailed');

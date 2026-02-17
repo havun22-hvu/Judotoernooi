@@ -70,8 +70,35 @@ return Application::configure(basePath: dirname(__DIR__))
             return back()->with('error', $e->getUserMessage());
         });
 
-        // Send notifications for critical/unexpected exceptions in production
+        // Store debug info in session for error reporting + notify admin
         $exceptions->report(function (\Throwable $e) {
+            // Store debug info in session so the error page "Meld probleem" button can send it
+            try {
+                $trace = collect($e->getTrace())->take(10)->map(function ($frame) {
+                    $file = $frame['file'] ?? '';
+                    // Strip server paths for readability
+                    $file = str_replace([base_path() . '/', base_path() . '\\'], '', $file);
+                    return ($file ? $file . ':' . ($frame['line'] ?? '?') : '') .
+                        ' ' . ($frame['class'] ?? '') . ($frame['type'] ?? '') . ($frame['function'] ?? '');
+                })->filter()->values()->toArray();
+
+                session()->put('_last_error', [
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => str_replace([base_path() . '/', base_path() . '\\'], '', $e->getFile()) . ':' . $e->getLine(),
+                    'url' => request()?->fullUrl(),
+                    'method' => request()?->method(),
+                    'route' => request()?->route()?->getName() ?? request()?->route()?->uri(),
+                    'route_params' => request()?->route()?->parameters() ?? [],
+                    'input' => request()?->except(['password', 'password_confirmation', '_token']),
+                    'user_id' => auth()->id(),
+                    'trace' => $trace,
+                    'timestamp' => now()->format('d-m-Y H:i:s'),
+                ]);
+            } catch (\Exception $sessionError) {
+                // Session may not be available (console, etc.)
+            }
+
             // Only notify in production for critical errors
             if (!app()->environment('local', 'testing')) {
                 // Skip common non-critical exceptions
