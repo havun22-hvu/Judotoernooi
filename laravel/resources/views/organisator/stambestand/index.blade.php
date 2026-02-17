@@ -35,14 +35,24 @@
 
     {{-- Zoek + Filter --}}
     <div class="mb-4 flex flex-wrap gap-3 items-center">
-        <input type="text" x-model="zoek" placeholder="Zoek judoka..."
-               class="w-full md:w-72 border rounded px-3 py-2 text-sm">
+        <div class="relative flex-1 min-w-[200px]">
+            <input type="text" x-model="zoek"
+                   placeholder="Filter: naam, band, -45kg, +55kg, 20-30kg..."
+                   class="w-full border rounded-lg px-4 py-2 pl-10 text-sm focus:border-blue-500 focus:outline-none">
+            <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+        </div>
         <select x-model="filter" class="border rounded px-3 py-2 text-sm">
             <option value="actief">Actief</option>
             <option value="inactief">Inactief</option>
             <option value="alle">Alle</option>
         </select>
-        <span class="text-sm text-gray-500" x-text="gefilterd.length + ' judoka\'s'"></span>
+        <div x-show="zoek" x-cloak class="bg-green-100 border border-green-300 rounded-lg px-3 py-1.5 flex items-center gap-1">
+            <span class="text-green-800 font-bold" x-text="gefilterd.length"></span>
+            <span class="text-green-700 text-sm">resultaten</span>
+        </div>
+        <span x-show="!zoek" class="text-sm text-gray-500" x-text="gefilterd.length + ' judoka\'s'"></span>
     </div>
 
     {{-- Toevoegen/bewerken formulier --}}
@@ -236,8 +246,45 @@ function stambestandPage() {
             else if (this.filter === 'inactief') lijst = lijst.filter(j => !j.actief);
 
             if (this.zoek) {
-                const z = this.zoek.toLowerCase();
-                lijst = lijst.filter(j => j.naam.toLowerCase().includes(z));
+                const terms = this.zoek.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+                const gewichtFilters = [];
+                const tekstTerms = [];
+
+                terms.forEach(term => {
+                    // Weight patterns: -45, +55, 20-30, 20kg
+                    const clean = term.replace(/kg$/i, '');
+                    if (/^[+-]?\d+(\.\d+)?$/.test(clean) || /^\d+(\.\d+)?-\d+(\.\d+)?$/.test(clean)) {
+                        gewichtFilters.push(clean);
+                    } else {
+                        tekstTerms.push(term);
+                    }
+                });
+
+                // Apply weight filters
+                gewichtFilters.forEach(f => {
+                    if (f.startsWith('-')) {
+                        const max = parseFloat(f.substring(1));
+                        lijst = lijst.filter(j => j.gewicht && parseFloat(j.gewicht) <= max);
+                    } else if (f.startsWith('+')) {
+                        const min = parseFloat(f.substring(1));
+                        lijst = lijst.filter(j => j.gewicht && parseFloat(j.gewicht) >= min);
+                    } else if (f.includes('-')) {
+                        const [min, max] = f.split('-').map(Number);
+                        lijst = lijst.filter(j => j.gewicht && parseFloat(j.gewicht) >= min && parseFloat(j.gewicht) <= max);
+                    } else {
+                        const exact = parseFloat(f);
+                        lijst = lijst.filter(j => j.gewicht && Math.abs(parseFloat(j.gewicht) - exact) < 0.5);
+                    }
+                });
+
+                // Text search over all fields
+                if (tekstTerms.length > 0) {
+                    lijst = lijst.filter(j => {
+                        const text = [j.naam, j.geboortejaar, j.geslacht, j.band, j.gewicht ? j.gewicht + 'kg' : '', j.notities || '']
+                            .filter(Boolean).join(' ').toLowerCase();
+                        return tekstTerms.every(term => text.includes(term));
+                    });
+                }
             }
 
             const kolom = this.sortKolom;
