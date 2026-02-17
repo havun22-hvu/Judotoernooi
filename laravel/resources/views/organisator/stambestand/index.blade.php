@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Mijn Judoka\'s - ' . $organisator->naam)
+@section('title', 'Judoka\'s ' . ($organisator->organisatie_naam ?: $organisator->naam))
 
 @section('content')
 <div class="max-w-6xl mx-auto" x-data="stambestandPage()">
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Mijn Judoka's</h1>
-            <p class="text-gray-500">Stambestand - persistent overzicht van alle judoka's</p>
+            <h1 class="text-2xl font-bold text-gray-800">Judoka's van {{ $organisator->organisatie_naam ?: $organisator->naam }}</h1>
+            <p class="text-gray-500">Stambestand - alle judoka's van jouw club</p>
         </div>
         <div class="flex items-center gap-3">
             <button @click="showImportModal = true"
