@@ -43,6 +43,11 @@ use Illuminate\Support\Facades\Route;
 // Simple ping for connection status check (no auth required)
 Route::get('/ping', fn() => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]))->name('ping');
 
+// AutoFix: review and approve error fix proposals
+Route::get('/autofix/{token}', [App\Http\Controllers\AutoFixController::class, 'show'])->name('autofix.show');
+Route::post('/autofix/{token}/approve', [App\Http\Controllers\AutoFixController::class, 'approve'])->name('autofix.approve');
+Route::post('/autofix/{token}/reject', [App\Http\Controllers\AutoFixController::class, 'reject'])->name('autofix.reject');
+
 // Offline mode routes (only active when OFFLINE_MODE=true)
 if (config('app.offline_mode')) {
     Route::get('/', [\App\Http\Controllers\OfflineController::class, 'index'])->name('offline.index');
