@@ -268,13 +268,12 @@ class Judoka extends Model
 
     /**
      * Check of judoka uit poules moet worden verwijderd
-     * ALLEEN afwezig = verwijderen uit poule
+     * Afwezig (wedstrijddag) of afgemeld (vooraf uitgeschreven) = verwijderen
      * Afwijkend gewicht NIET verwijderen - organisator kiest wie eruit gaat
      */
     public function moetUitPouleVerwijderd(?float $tolerantie = null): bool
     {
-        // Alleen afwezig = verwijderen
-        return $this->aanwezigheid === 'afwezig';
+        return in_array($this->aanwezigheid, ['afwezig', 'afgemeld']);
     }
 
     /**

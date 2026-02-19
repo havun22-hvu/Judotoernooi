@@ -1188,4 +1188,34 @@ class PouleController extends Controller
 
         return $nieuweTitel;
     }
+
+    /**
+     * Uitschrijven: judoka afmelden en uit poule halen (geen tegenstanders)
+     */
+    public function uitschrijvenJudoka(Organisator $organisator, Request $request, Toernooi $toernooi, Judoka $judoka): JsonResponse
+    {
+        if ($judoka->toernooi_id !== $toernooi->id) {
+            return response()->json(['success' => false, 'message' => 'Judoka hoort niet bij dit toernooi'], 403);
+        }
+
+        $judoka->update(['aanwezigheid' => 'afgemeld']);
+
+        // Remove from all poules
+        foreach ($judoka->poules as $poule) {
+            $poule->judokas()->detach($judoka->id);
+            $poule->wedstrijden()->delete();
+            $poule->load('judokas');
+            $this->wedstrijdService->genereerWedstrijdenVoorPoule($poule);
+            $poule->updateStatistieken();
+        }
+
+        ActivityLogger::log($toernooi, 'uitschrijven', "{$judoka->naam} uitgeschreven (geen tegenstanders)", [
+            'model' => $judoka,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$judoka->naam} is uitgeschreven",
+        ]);
+    }
 }

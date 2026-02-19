@@ -384,6 +384,7 @@ Route::prefix('{organisator}/toernooi/{toernooi}')->middleware('auth:organisator
         Route::post('poule/verifieer', [PouleController::class, 'verifieer'])->name('poule.verifieer');
         Route::get('poule/zoek-match/{judoka}', [PouleController::class, 'zoekMatch'])->name('poule.zoek-match');
         Route::post('poule/verplaats-judoka', [PouleController::class, 'verplaatsJudokaApi'])->name('poule.verplaats-judoka-api');
+        Route::post('poule/uitschrijven/{judoka}', [PouleController::class, 'uitschrijvenJudoka'])->name('poule.uitschrijven');
         Route::post('poule', [PouleController::class, 'store'])->name('poule.store');
         Route::patch('poule/{poule}/kruisfinale', [PouleController::class, 'updateKruisfinale'])->name('poule.update-kruisfinale');
         Route::delete('poule/{poule}', [PouleController::class, 'destroy'])->name('poule.destroy');

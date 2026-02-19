@@ -444,6 +444,13 @@
                                 class="zoek-match-btn text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                 title="{{ __('Zoek geschikte poule') }}"
                             >🔍</button>
+                            @if($poule->judokas->count() === 1 && !$isKruisfinale && !$isEliminatie)
+                            <button
+                                onclick="event.stopPropagation(); uitschrijvenJudoka({{ $judoka->id }}, '{{ addslashes($judoka->naam) }}', {{ $poule->id }})"
+                                class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                                title="{{ __('Uitschrijven (geen tegenstanders)') }}"
+                            >✕</button>
+                            @endif
                         </div>
                     </div>
                     @endforeach
@@ -562,6 +569,7 @@ const zoekMatchUrl = '{{ route('toernooi.poule.zoek-match', $toernooi->routePara
 const nieuwePouleUrl = '{{ route('toernooi.poule.store', $toernooi->routeParams()) }}';
 const verwijderPouleUrl = '{{ route('toernooi.poule.destroy', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
 const updateKruisfinaleUrl = '{{ route('toernooi.poule.update-kruisfinale', $toernooi->routeParamsWith(['poule' => ':id'])) }}';
+const uitschrijvenUrl = '{{ route('toernooi.poule.uitschrijven', $toernooi->routeParamsWith(['judoka' => '__JUDOKA_ID__'])) }}';
 const zetOmNaarPoulesUrl = '{{ route('toernooi.wedstrijddag.zetOmNaarPoules', $toernooi->routeParams()) }}';
 const wijzigPouleTypeUrl = '{{ route('toernooi.wedstrijddag.wijzigPouleType', $toernooi->routeParams()) }}';
 
@@ -690,6 +698,45 @@ async function verwijderPoule(pouleId, pouleNummer) {
     } catch (error) {
         console.error('Error:', error);
         showToast('{{ __('Fout bij verwijderen') }}', true);
+    }
+}
+
+async function uitschrijvenJudoka(judokaId, naam, pouleId) {
+    if (!confirm(`${naam} uitschrijven? Er zijn geen tegenstanders voor deze judoka.`)) return;
+
+    try {
+        const response = await fetch(uitschrijvenUrl.replace('__JUDOKA_ID__', judokaId), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message);
+            // Remove judoka from DOM
+            const judokaEl = document.querySelector(`[data-judoka-id="${judokaId}"][data-poule-id="${pouleId}"]`);
+            if (judokaEl) judokaEl.remove();
+            // Update poule count
+            const countEl = document.querySelector(`[data-poule-count="${pouleId}"]`);
+            if (countEl) countEl.textContent = '0';
+            const wedEl = document.querySelector(`[data-poule-wedstrijden="${pouleId}"]`);
+            if (wedEl) wedEl.textContent = '-';
+            // Show empty placeholder
+            const pouleBody = document.querySelector(`#poule-${pouleId} .sortable-poule`);
+            if (pouleBody && pouleBody.children.length === 0) {
+                pouleBody.innerHTML = '<div class="px-3 py-4 text-gray-400 text-sm italic text-center empty-placeholder">{{ __('Leeg') }}</div>';
+            }
+            updateTotaalStats();
+        } else {
+            showToast(data.message || '{{ __('Fout bij uitschrijven') }}', true);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('{{ __('Fout bij uitschrijven') }}', true);
     }
 }
 
