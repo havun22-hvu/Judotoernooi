@@ -267,7 +267,7 @@
                 <ul class="list-disc list-inside space-y-1">
                     <li>{{ __('Eerste getal = ideale grootte (bv. 5 judoka\'s)') }}</li>
                     <li>{{ __('Volgorde = voorkeur bij verdeling') }}</li>
-                    <li>{{ __('Groottes niet in lijst = problematisch (rood)') }}</li>
+                    <li>{{ __('Poule grootte niet in lijst = problematisch (rood)') }}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Handmatig aanpassen') }}</h4>
