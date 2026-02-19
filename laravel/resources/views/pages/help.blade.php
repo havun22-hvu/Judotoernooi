@@ -332,27 +332,12 @@
                 <span class="text-2xl">&#127941;</span> {{ __('Kruisfinales') }}
             </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
-                <h4 class="font-semibold text-gray-800">{{ __('Hoe werkt het?') }}</h4>
-                <ol class="list-decimal list-inside space-y-1">
-                    <li>{!! __('<strong>Voorrondes</strong> - Judoka\'s spelen in poules (iedereen tegen iedereen)') !!}</li>
-                    <li>{!! __('<strong>Doorplaatsing</strong> - Beste judoka\'s (1e of 1e+2e) gaan door') !!}</li>
-                    <li>{!! __('<strong>Kruisfinale</strong> - Finale poule met alle doorgeplaatste judoka\'s') !!}</li>
-                </ol>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Configuratie') }}</h4>
-                <p>{!! __('Op de <strong>Poules</strong> pagina stel je per kruisfinale in hoeveel plaatsen doorgaan:') !!}</p>
+                <h4 class="font-semibold text-gray-800">{{ __('In de app') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>{!! __('<strong>1 plaats</strong> - Alleen de winnaar van elke voorronde') !!}</li>
-                    <li>{!! __('<strong>2 plaatsen</strong> - Nummer 1 en 2 van elke voorronde') !!}</li>
+                    <li>{!! __('Op de <strong>Poules</strong> pagina stel je per kruisfinale in hoeveel plaatsen doorgaan (1 of 2)') !!}</li>
+                    <li>{{ __('Na afronding voorrondes selecteert het systeem automatisch de doorgeplaatste judoka\'s') }}</li>
+                    <li>{{ __('Wijs een mat toe aan de kruisfinale in het Zaaloverzicht') }}</li>
                 </ul>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Workflow') }}</h4>
-                <ol class="list-decimal list-inside space-y-1">
-                    <li>{{ __('Voorrondes worden gespeeld en afgerond') }}</li>
-                    <li>{{ __('Systeem selecteert automatisch de beste judoka\'s') }}</li>
-                    <li>{{ __('Hoofdjury wijst mat toe aan kruisfinale') }}</li>
-                    <li>{{ __('Nieuw wedstrijdschema wordt gegenereerd') }}</li>
-                </ol>
             </div>
         </section>
 
