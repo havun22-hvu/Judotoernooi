@@ -273,7 +273,7 @@
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Poule titel') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('<strong>Vast</strong> - Titel toont de gewichtscategorie (bv. "Mini\'s -27kg")') !!}</li>
-                    <li>{!! __('<strong>Variabel</strong> - Titel toont leeftijdsrange en gewichtsrange (bv. "8-10 jaar 25-32kg")') !!}</li>
+                    <li>{!! __('<strong>Variabel</strong> - Titel toont leeftijdsrange en gewichtsrange (bv. "8-9 jaar, 25-28 kg")') !!}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Handmatig aanpassen') }}</h4>
