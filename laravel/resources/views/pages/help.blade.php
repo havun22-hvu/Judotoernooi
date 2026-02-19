@@ -347,47 +347,13 @@
                 <span class="text-2xl">&#129351;</span> {{ __('Eliminatie (Knock-out)') }}
             </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
-                <h4 class="font-semibold text-gray-800">{{ __('Double Elimination') }}</h4>
-                <p>{!! __('Bij eliminatie worden judoka\'s pas na <strong>twee nederlagen</strong> uitgeschakeld:') !!}</p>
-
-                <table class="min-w-full text-sm mt-2">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-1">{{ __('Groep') }}</th>
-                            <th class="text-left py-1">{{ __('Wie') }}</th>
-                            <th class="text-left py-1">{{ __('Uitkomst') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="py-1"><strong>{{ __('A-groep') }}</strong> ({{ __('Hoofdboom') }})</td>
-                            <td class="py-1">{{ __('Alle judoka\'s starten hier') }}</td>
-                            <td class="py-1">{{ __('Winnaar = Goud, Verliezer finale = Zilver') }}</td>
-                        </tr>
-                        <tr>
-                            <td class="py-1"><strong>{{ __('B-groep') }}</strong> ({{ __('Herkansing') }})</td>
-                            <td class="py-1">{{ __('Verliezers uit A-groep') }}</td>
-                            <td class="py-1">{{ __('Winnaar(s) = Brons') }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Flow') }}</h4>
-                <ol class="list-decimal list-inside space-y-1">
-                    <li>{!! __('Alle judoka\'s starten in de <strong>A-groep</strong>') !!}</li>
-                    <li>{!! __('Verlies in A → naar <strong>B-groep</strong> (herkansing)') !!}</li>
-                    <li>{!! __('Verlies in B → <strong>uitgeschakeld</strong>') !!}</li>
-                    <li>{!! __('Winnaars B-groep krijgen <strong>brons</strong>') !!}</li>
-                </ol>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Aantal brons medailles') }}</h4>
-                <p>{!! __('Bij <strong>Toernooi Instellingen</strong> kies je 1 of 2 brons medailles per categorie.') !!}</p>
-
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Wanneer gebruiken?') }}</h4>
+                <h4 class="font-semibold text-gray-800">{{ __('In de app') }}</h4>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>{{ __('Competitieve toernooien') }}</li>
-                    <li>{{ __('Gevorderde judoka\'s (groen band en hoger)') }}</li>
-                    <li>{{ __('Wanneer snelle progressie gewenst is') }}</li>
+                    <li>{!! __('Kies eliminatie als wedstrijdsysteem bij <strong>Toernooi Bewerken &gt; Categorieën</strong>') !!}</li>
+                    <li>{!! __('Aantal brons medailles (1 of 2) instelbaar bij <strong>Toernooi Instellingen</strong>') !!}</li>
+                    <li>{{ __('Seeding via drag & drop op de bracket') }}</li>
+                    <li>{{ __('Winnaar doorschuiven door te slepen naar volgende ronde') }}</li>
+                    <li>{{ __('Medailles toekennen door winnaar/verliezer naar medaille-slots te slepen') }}</li>
                 </ul>
             </div>
         </section>
