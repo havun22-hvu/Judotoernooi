@@ -347,10 +347,25 @@ class AutoFixService
             ->get();
 
         try {
-            Mail::to($email)->send(new AutoFixProposalMail($proposals->first(), $proposals));
+            if ($proposals->isNotEmpty()) {
+                Mail::to($email)->send(new AutoFixProposalMail($proposals->first(), $proposals));
 
-            foreach ($proposals as $proposal) {
-                $proposal->update(['email_sent_at' => now()]);
+                foreach ($proposals as $proposal) {
+                    $proposal->update(['email_sent_at' => now()]);
+                }
+            } else {
+                // No proposals created (Claude API unreachable) - send plain text notification
+                $body = "[AutoFix] Could not analyze error - AI Proxy unreachable\n\n"
+                    . "Exception: " . get_class($e) . "\n"
+                    . "Message: " . $e->getMessage() . "\n"
+                    . "File: {$file}:{$line}\n"
+                    . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
+                    . "Time: " . now()->format('d-m-Y H:i:s');
+
+                Mail::raw($body, function ($message) use ($email, $e) {
+                    $message->to($email)
+                        ->subject('[AutoFix] AI Proxy onbereikbaar - ' . class_basename(get_class($e)));
+                });
             }
 
         } catch (Throwable $mailError) {
