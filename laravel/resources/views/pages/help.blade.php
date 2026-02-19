@@ -318,7 +318,7 @@
                         <tr>
                             <td class="py-1"><strong>{{ __('Eliminatie') }}</strong></td>
                             <td class="py-1">{{ __('Competitief, gevorderden') }}</td>
-                            <td class="py-1">{{ __('Double elimination, pas na 2 nederlagen uit') }}</td>
+                            <td class="py-1">{{ __('Bracket met herkansing (IJF: alleen verliezers kwartfinale)') }}</td>
                         </tr>
                     </tbody>
                 </table>
