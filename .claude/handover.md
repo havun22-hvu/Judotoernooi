@@ -1,6 +1,6 @@
 # Session Handover - JudoToernooi
 
-> **Laatste update:** 17 februari 2026
+> **Laatste update:** 20 februari 2026
 > **Status:** PRODUCTION DEPLOYED - Live op https://judotournament.org
 
 ---
@@ -59,6 +59,7 @@ D:\GitHub\JudoToernooi\.claude\code-review-2026-02-14.md
 
 | Datum | Onderwerp | Handover |
 |-------|-----------|----------|
+| **20 feb 2026** | **Help pagina verbeteringen:** Variabel gewicht/leeftijd uitleg (max kg verschil, v.lft). Mollie vereenvoudigd (alleen eigen account). Kruisfinale/eliminatie: alleen praktisch. Blokverdeling flow gefixt (Zaaloverzicht → matten aanpassen → Einde Voorbereiding → weegkaarten). Poule titel uitleg (vast vs variabel). Validatie timing gefixt. Poule generatie 3 stappen. IJF eliminatie beschrijving gecorrigeerd (herkansing alleen kwartfinale verliezers). Uitschrijven knop in Zoek Match modal (alle judoka's). BLOKVERDELING.md ook gefixt. | help.blade.php, en.json |
 | **18 feb 2026** | **Error handling & reporting:** Coach portal 404 fix (int param + Judoka::find). Global ModelNotFoundException handler in app.php. Custom error pages (404/403/419/500) met "Meld dit probleem" knop → email naar havun22@gmail.com met volledige debug info (exception, stack trace, route, params). Import duplicate fix (unique constraint verwijderd, naamgenoot waarschuwing). Wimpel ParseError fix (Blade fn() in @json). AutoFixService toegevoegd door gebruiker. | smallwork.md |
 | **17 feb 2026** | **Club toggle fix + PWA punten + Reverb UI:** Club toggle was kapot door `getPortalUrl()` side effect (`ensureClubPivot` koppelde clubs automatisch terug). Verwijderd. Clubs met judoka's nu disabled (niet loskoppelbaar). PWA favorieten toonde verkeerde punten (pivot formula vs WP/JP live). Polling verwijderd → Reverb only + auto-fallback. Reverb health check + restart knop in toernooi settings. Activity log details verrijkt met blok/mat badges. | `memory/MEMORY.md` |
 | **16 feb 2026** | **Eliminatie DnD fix:** Judoka's in eliminatie poules nu draggable (sortable-poule + judoka-item classes). Titelbalk counts updaten correct na DnD (berekenEliminatieWedstrijden JS, updatePouleCountsFromServer). #undefined fix (data-poule-nummer). select-none op zaaloverzicht + poules pagina. Deployed staging + production. | smallwork.md |
