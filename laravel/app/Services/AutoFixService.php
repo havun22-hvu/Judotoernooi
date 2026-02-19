@@ -248,6 +248,10 @@ class AutoFixService
                 . ' ' . ($frame['class'] ?? '') . ($frame['type'] ?? '') . ($frame['function'] ?? '');
         })->filter()->implode("\n");
 
+        // Capture user and toernooi context
+        $organisator = auth('organisator')->user();
+        $toernooi = $this->resolveToernooi();
+
         return AutofixProposal::create([
             'exception_class' => get_class($e),
             'exception_message' => Str::limit($e->getMessage(), 1000),
@@ -260,6 +264,12 @@ class AutoFixService
             'approval_token' => Str::random(64),
             'status' => 'pending',
             'url' => request()?->fullUrl(),
+            'organisator_id' => $organisator?->id,
+            'organisator_naam' => $organisator?->naam,
+            'toernooi_id' => $toernooi?->id,
+            'toernooi_naam' => $toernooi?->naam,
+            'http_method' => request()?->method(),
+            'route_name' => request()?->route()?->getName(),
         ]);
     }
 
@@ -409,6 +419,29 @@ class AutoFixService
             Log::warning('AutoFix: Failure notification email failed', [
                 'error' => $mailError->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Try to resolve the current toernooi from route parameters.
+     */
+    protected function resolveToernooi(): ?object
+    {
+        try {
+            $route = request()?->route();
+            if (!$route) {
+                return null;
+            }
+
+            // Try route model binding first
+            $toernooi = $route->parameter('toernooi');
+            if ($toernooi && is_object($toernooi) && isset($toernooi->id, $toernooi->naam)) {
+                return $toernooi;
+            }
+
+            return null;
+        } catch (Throwable $e) {
+            return null;
         }
     }
 
