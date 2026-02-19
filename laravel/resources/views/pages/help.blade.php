@@ -126,25 +126,44 @@
                     <li>{!! __('<strong>Handmatig</strong> - Zelf categorieën instellen') !!}</li>
                 </ul>
 
-                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Vaste vs Variabele indeling') }}</h4>
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Max kg verschil (gewicht binnen 1 poule)') }}</h4>
+                <p class="mb-2">{{ __('Bepaalt hoe judoka\'s qua gewicht over poules worden verdeeld:') }}</p>
                 <table class="min-w-full text-sm mt-2">
                     <thead>
                         <tr class="border-b">
-                            <th class="text-left py-1">{{ __('Type') }}</th>
-                            <th class="text-left py-1">{{ __('Wanneer') }}</th>
+                            <th class="text-left py-1">{{ __('Instelling') }}</th>
                             <th class="text-left py-1">{{ __('Werking') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr class="border-b">
-                            <td class="py-1"><strong>{{ __('Vast') }}</strong></td>
-                            <td class="py-1">{{ __('Max kg verschil = 0') }}</td>
-                            <td class="py-1">{{ __('JBN gewichtsklassen (-24kg, -27kg, etc.)') }}</td>
+                            <td class="py-1"><strong>{{ __('Max kg = 0 (vast)') }}</strong></td>
+                            <td class="py-1">{{ __('Vaste gewichtsklassen zoals JBN (-24kg, -27kg, etc.). Judoka\'s worden ingedeeld op basis van hun gewichtsklasse.') }}</td>
                         </tr>
                         <tr>
-                            <td class="py-1"><strong>{{ __('Variabel') }}</strong></td>
-                            <td class="py-1">{{ __('Max kg verschil > 0') }}</td>
-                            <td class="py-1">{{ __('Poules op basis van werkelijk gewicht') }}</td>
+                            <td class="py-1"><strong>{{ __('Max kg > 0 (variabel)') }}</strong></td>
+                            <td class="py-1">{{ __('Poules worden samengesteld op basis van werkelijk gewicht. Binnen één poule mag het gewichtsverschil niet groter zijn dan dit getal. Bijv. max kg = 3: een poule kan 28kg, 29kg en 31kg bevatten.') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4 class="font-semibold text-gray-800 mt-4">{{ __('Max leeftijdsverschil (leeftijd binnen 1 poule)') }}</h4>
+                <p class="mb-2">{{ __('Bepaalt hoe judoka\'s qua leeftijd over poules worden verdeeld:') }}</p>
+                <table class="min-w-full text-sm mt-2">
+                    <thead>
+                        <tr class="border-b">
+                            <th class="text-left py-1">{{ __('Instelling') }}</th>
+                            <th class="text-left py-1">{{ __('Werking') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="py-1"><strong>{{ __('V.lft = 0 (vast)') }}</strong></td>
+                            <td class="py-1">{{ __('Houdt de categorie-leeftijd aan. Judoka\'s worden alleen ingedeeld met leeftijdgenoten binnen dezelfde categorie.') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1"><strong>{{ __('V.lft > 0 (variabel)') }}</strong></td>
+                            <td class="py-1">{{ __('Maximaal leeftijdsverschil binnen één poule. Bijv. v.lft = 1: een 8-jarige en 9-jarige mogen in dezelfde poule, maar niet een 8-jarige en 10-jarige.') }}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -154,7 +173,8 @@
                     <li>{!! __('<strong>Max leeftijd</strong> - Hoogste leeftijd in deze categorie') !!}</li>
                     <li>{!! __('<strong>Geslacht</strong> - Gemengd, Jongens of Meisjes') !!}</li>
                     <li>{!! __('<strong>Band filter</strong> - Optioneel: t/m oranje, vanaf groen, etc.') !!}</li>
-                    <li>{!! __('<strong>Max kg verschil</strong> - 0 = vast, >0 = variabel') !!}</li>
+                    <li>{!! __('<strong>Max kg verschil</strong> - 0 = vaste gewichtsklassen, >0 = variabel (max gewichtsverschil binnen 1 poule)') !!}</li>
+                    <li>{!! __('<strong>Max leeftijdsverschil (v.lft)</strong> - 0 = categorie leeftijd aanhouden, >0 = max leeftijdsverschil binnen 1 poule') !!}</li>
                     <li>{!! __('<strong>Wedstrijdsysteem</strong> - Poules, Kruisfinale of Eliminatie') !!}</li>
                 </ul>
 
