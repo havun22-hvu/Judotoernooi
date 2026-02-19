@@ -48,6 +48,12 @@ Route::get('/autofix/{token}', [App\Http\Controllers\AutoFixController::class, '
 Route::post('/autofix/{token}/approve', [App\Http\Controllers\AutoFixController::class, 'approve'])->name('autofix.approve');
 Route::post('/autofix/{token}/reject', [App\Http\Controllers\AutoFixController::class, 'reject'])->name('autofix.reject');
 
+// AutoFix test route (REMOVE AFTER TESTING)
+Route::get('/test-autofix', function () {
+    // Deliberately cause an error in a project file
+    throw new \RuntimeException('AutoFix test error: deze fout is expres gegenereerd om AutoFix te testen');
+});
+
 // Offline mode routes (only active when OFFLINE_MODE=true)
 if (config('app.offline_mode')) {
     Route::get('/', [\App\Http\Controllers\OfflineController::class, 'index'])->name('offline.index');
