@@ -399,6 +399,7 @@
                     <li>{{ __('In Zaaloverzicht kunt u matten nog aanpassen via drag & drop') }}</li>
                     <li>{!! __('Klik <strong>Einde Voorbereiding</strong> als de matverdeling klaar is') !!}</li>
                     <li>{{ __('Pas daarna zijn weegkaarten beschikbaar met de juiste blok- en matinfo') }}</li>
+                    <li>{{ __('Weegkaarten passen zich automatisch aan als blok of mat later nog gewijzigd wordt') }}</li>
                 </ul>
             </div>
         </section>
