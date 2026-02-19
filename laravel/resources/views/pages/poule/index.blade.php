@@ -700,7 +700,7 @@ async function verwijderPoule(pouleId, pouleNummer) {
 }
 
 async function uitschrijvenJudoka(judokaId, naam, pouleId) {
-    if (!confirm(`${naam} uitschrijven? Er zijn geen tegenstanders voor deze judoka.`)) return;
+    if (!confirm(`${naam} afmelden en uit poule verwijderen?`)) return;
 
     try {
         const response = await fetch(uitschrijvenUrl.replace('__JUDOKA_ID__', judokaId), {
@@ -1289,12 +1289,10 @@ async function openZoekMatch() {
     naamSpan.textContent = naam;
     infoSpan.textContent = leeftijd ? `(${leeftijd}j${gewicht ? ', ' + gewicht + 'kg' : ''})` : '';
 
-    // Show afmelden button if judoka is alone in poule
+    // Show afmelden button in modal
     const afmeldenBtn = document.getElementById('zoek-match-afmelden-btn');
-    const pouleBody = pouleId ? document.querySelector(`#poule-${pouleId} .sortable-poule`) : null;
-    const judokaCount = pouleBody ? pouleBody.querySelectorAll('.judoka-item').length : 0;
     if (afmeldenBtn) {
-        afmeldenBtn.classList.toggle('hidden', judokaCount > 1);
+        afmeldenBtn.classList.remove('hidden');
     }
 
     modal.classList.remove('hidden');
