@@ -64,7 +64,9 @@ class AutoFixService
                         'file' => $file,
                     ]);
 
-                    return; // Done, no email needed
+                    $this->sendSuccessNotification($e, $file, $line, $proposal, $attempt);
+
+                    return;
                 }
 
                 // Fix failed, store error for next attempt
@@ -325,6 +327,41 @@ class AutoFixService
         }
 
         return true;
+    }
+
+    /**
+     * Send success notification email after fix applied.
+     */
+    protected function sendSuccessNotification(Throwable $e, string $file, int $line, AutofixProposal $proposal, int $attempt): void
+    {
+        $email = config('autofix.email');
+        if (!$email) {
+            return;
+        }
+
+        try {
+            $body = "[AutoFix OK] Fix automatisch toegepast (poging {$attempt})\n\n"
+                . "Exception: " . get_class($e) . "\n"
+                . "Message: " . $e->getMessage() . "\n"
+                . "File: {$file}:{$line}\n"
+                . "URL: " . (request()?->fullUrl() ?? 'N/A') . "\n"
+                . "Time: " . now()->format('d-m-Y H:i:s') . "\n\n"
+                . "--- Claude's analyse ---\n"
+                . Str::limit($proposal->claude_analysis, 500) . "\n\n"
+                . "Backup: {$file}.autofix-backup." . date('YmdHis');
+
+            Mail::raw($body, function ($message) use ($email, $e) {
+                $message->to($email)
+                    ->subject('[AutoFix OK] ' . class_basename(get_class($e)) . ' - fix toegepast');
+            });
+
+            $proposal->update(['email_sent_at' => now()]);
+
+        } catch (Throwable $mailError) {
+            Log::warning('AutoFix: Success notification email failed', [
+                'error' => $mailError->getMessage(),
+            ]);
+        }
     }
 
     /**

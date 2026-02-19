@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AutofixProposal;
 use App\Models\Organisator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -91,6 +92,25 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.klanten')
             ->with('success', 'Klantgegevens bijgewerkt');
+    }
+
+    /**
+     * AutoFix proposals overview
+     */
+    public function autofix(): View
+    {
+        $this->checkSitebeheerder();
+
+        $proposals = AutofixProposal::latest()->take(50)->get();
+
+        $stats = [
+            'total' => AutofixProposal::count(),
+            'applied' => AutofixProposal::where('status', 'applied')->count(),
+            'failed' => AutofixProposal::where('status', 'failed')->count(),
+            'pending' => AutofixProposal::where('status', 'pending')->count(),
+        ];
+
+        return view('pages.admin.autofix', compact('proposals', 'stats'));
     }
 
     /**
