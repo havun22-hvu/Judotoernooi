@@ -12,6 +12,13 @@
         <a href="{{ route('admin.klanten') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             {{ __('Klantenbeheer') }}
         </a>
+        <a href="{{ route('admin.autofix') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+            AutoFix
+            @php $afCount = \App\Models\AutofixProposal::where('created_at', '>=', now()->subDay())->count(); @endphp
+            @if($afCount > 0)
+                <span class="ml-1 bg-white text-gray-700 text-xs font-bold px-1.5 py-0.5 rounded-full">{{ $afCount }}</span>
+            @endif
+        </a>
         <a href="{{ route('organisator.dashboard', ['organisator' => Auth::guard('organisator')->user()->slug]) }}" class="text-blue-600 hover:text-blue-800 flex items-center">
             &larr; {{ __('Terug naar Dashboard') }}
         </a>
