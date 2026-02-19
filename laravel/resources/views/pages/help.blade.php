@@ -340,7 +340,7 @@
                 </ol>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Configuratie') }}</h4>
-                <p>{!! __('Bij <strong>Toernooi Instellingen</strong> stel je in hoeveel plaatsen doorgaan:') !!}</p>
+                <p>{!! __('Op de <strong>Poules</strong> pagina stel je per kruisfinale in hoeveel plaatsen doorgaan:') !!}</p>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('<strong>1 plaats</strong> - Alleen de winnaar van elke voorronde') !!}</li>
                     <li>{!! __('<strong>2 plaatsen</strong> - Nummer 1 en 2 van elke voorronde') !!}</li>
