@@ -288,6 +288,11 @@ class AutoFixService
         $targetFile = trim($fileMatch[1]);
         $fullPath = base_path($targetFile);
 
+        // Only allow changes to project files (not vendor, node_modules, etc.)
+        if (!$this->isProjectFile($fullPath)) {
+            return "Target file is not a project file: {$targetFile}";
+        }
+
         if (!file_exists($fullPath)) {
             return "Target file not found: {$targetFile}";
         }
