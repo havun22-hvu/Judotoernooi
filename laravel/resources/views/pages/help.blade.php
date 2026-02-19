@@ -255,12 +255,11 @@
             </h2>
             <div class="prose prose-sm max-w-none text-gray-600">
                 <h4 class="font-semibold text-gray-800">{{ __('Automatisch genereren') }}</h4>
-                <p>{{ __('Het systeem werkt in 4 stappen:') }}</p>
+                <p>{{ __('Het systeem werkt in 3 stappen:') }}</p>
                 <ol class="list-decimal list-inside space-y-1">
                     <li>{!! __('<strong>Categoriseren</strong> - Judoka naar categorie (harde criteria: leeftijd, geslacht, band)') !!}</li>
                     <li>{!! __('<strong>Sorteren</strong> - Binnen de categorie op prioriteit (leeftijd/gewicht/band)') !!}</li>
-                    <li>{!! __('<strong>Groeperen</strong> - Per categorie') !!}</li>
-                    <li>{!! __('<strong>Poules maken</strong> - Verdelen binnen kg/leeftijd limieten') !!}</li>
+                    <li>{!! __('<strong>Poules maken</strong> - Verdelen in poules binnen kg/leeftijd limieten') !!}</li>
                 </ol>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Poule grootte') }}</h4>
