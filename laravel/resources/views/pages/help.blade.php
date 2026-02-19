@@ -58,7 +58,7 @@
             </li>
             <li class="flex items-start gap-3">
                 <span class="bg-white text-blue-800 rounded-full w-6 h-6 flex items-center justify-center font-bold shrink-0">6</span>
-                <span>{!! __('<strong>Verdeel over matten</strong> - Automatische mat toewijzing, weegkaarten beschikbaar') !!}</span>
+                <span>{!! __('<strong>Verdeel over matten</strong> - Matten toewijzen, aanpassen in Zaaloverzicht, Einde Voorbereiding') !!}</span>
             </li>
         </ol>
 
@@ -394,11 +394,11 @@
                 <p>{{ __('Verschuif tussen "Gelijke verdeling" en "Aansluiting gewichten" voor verschillende optimalisaties.') }}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Verdeel over matten') }}</h4>
-                <p>{!! __('Na blokverdeling klikt u <strong>Naar Zaaloverzicht</strong>. Dit:') !!}</p>
+                <p>{!! __('Na blokverdeling klikt u <strong>Naar Zaaloverzicht</strong>. Dit slaat de blokverdeling op en wijst matten automatisch toe.') !!}</p>
                 <ul class="list-disc list-inside space-y-1">
-                    <li>{{ __('Slaat de blokverdeling op') }}</li>
-                    <li>{{ __('Wijst matten automatisch toe') }}</li>
-                    <li>{{ __('Maakt weegkaarten beschikbaar (met blok + mat info)') }}</li>
+                    <li>{{ __('In Zaaloverzicht kunt u matten nog aanpassen via drag & drop') }}</li>
+                    <li>{!! __('Klik <strong>Einde Voorbereiding</strong> als de matverdeling klaar is') !!}</li>
+                    <li>{{ __('Pas daarna zijn weegkaarten beschikbaar met de juiste blok- en matinfo') }}</li>
                 </ul>
             </div>
         </section>

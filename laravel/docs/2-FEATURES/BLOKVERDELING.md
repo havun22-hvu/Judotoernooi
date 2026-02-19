@@ -91,10 +91,15 @@ Verdeel alle categorieën (leeftijd + gewicht combinaties) over de beschikbare b
 ### Naar Zaaloverzicht → (ook: "Verdeel over matten")
 - Sla huidige blokverdeling op in database
 - **Wijs matten toe** aan poules volgens sorteerlogica (zie hieronder)
-- **Weegkaarten worden nu beschikbaar** (QR-code + bloknaam + weging tijden)
-  - Vereist: eerst "Valideer judoka's" uitgevoerd (QR-codes aangemaakt)
 - Ga naar zaaloverzicht (preview met matverdeling)
-- Matten kunnen na overpoelen nog aangepast worden
+- Matten kunnen nog aangepast worden via drag & drop in zaaloverzicht
+
+### Einde Voorbereiding
+- Knop in Zaaloverzicht, pas klikken als matverdeling definitief is
+- Valideert: alle judoka's hebben poule, blok en mat
+- Herberekent coachkaarten
+- **Weegkaarten worden nu beschikbaar** met juiste blok- en matinfo
+  - Vereist: eerst "Valideer judoka's" uitgevoerd (QR-codes aangemaakt)
 
 #### Mat-toewijzing Logica
 
