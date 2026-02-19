@@ -47,6 +47,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Exception</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gebruiker / Toernooi</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestand</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tijdstip</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
@@ -80,6 +81,16 @@
                             <div class="text-xs text-gray-500 truncate max-w-xs">{{ Str::limit($proposal->exception_message, 80) }}</div>
                         </td>
                         <td class="px-4 py-3">
+                            @if($proposal->organisator_naam)
+                                <div class="text-sm font-medium text-gray-900">{{ $proposal->organisator_naam }}</div>
+                            @else
+                                <div class="text-sm text-gray-400 italic">Niet ingelogd</div>
+                            @endif
+                            @if($proposal->toernooi_naam)
+                                <div class="text-xs text-gray-500">{{ $proposal->toernooi_naam }}</div>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3">
                             <div class="text-sm text-gray-700 font-mono">{{ $proposal->file }}:{{ $proposal->line }}</div>
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
@@ -92,12 +103,19 @@
                         </td>
                     </tr>
                     <tr id="detail-{{ $proposal->id }}" class="hidden bg-gray-50">
-                        <td colspan="6" class="px-4 py-4">
+                        <td colspan="7" class="px-4 py-4">
                             <div class="space-y-3">
                                 @if($proposal->url)
                                 <div>
                                     <span class="text-xs font-medium text-gray-500">URL:</span>
-                                    <span class="text-sm text-gray-700">{{ $proposal->url }}</span>
+                                    <span class="text-sm text-gray-700">{{ $proposal->http_method }} {{ $proposal->url }}</span>
+                                </div>
+                                @endif
+
+                                @if($proposal->route_name)
+                                <div>
+                                    <span class="text-xs font-medium text-gray-500">Route:</span>
+                                    <span class="text-sm text-gray-700 font-mono">{{ $proposal->route_name }}</span>
                                 </div>
                                 @endif
 
