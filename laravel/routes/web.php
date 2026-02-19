@@ -219,6 +219,9 @@ Route::middleware('auth:organisator')->group(function () {
     Route::get('admin/klanten/{klant}', [AdminController::class, 'editKlant'])->name('admin.klanten.edit');
     Route::put('admin/klanten/{klant}', [AdminController::class, 'updateKlant'])->name('admin.klanten.update');
     Route::delete('admin/klanten/{klant}', [AdminController::class, 'destroyKlant'])->name('admin.klanten.destroy');
+
+    // AutoFix overzicht (sitebeheerder only)
+    Route::get('admin/autofix', [AdminController::class, 'autofix'])->name('admin.autofix');
 });
 
 // Dashboard - redirect to organisator dashboard (new URL structure)
