@@ -198,11 +198,11 @@
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Betaling (optioneel)') }}</h4>
-                <p>{{ __('Bij actieve Mollie koppeling:') }}</p>
+                <p>{!! __('Koppel je eigen <strong>Mollie account</strong> bij Toernooi Bewerken. Betalingen gaan direct naar jouw rekening.') !!}</p>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{{ __('Betaling via iDEAL, creditcard, etc.') }}</li>
                     <li>{{ __('Automatische bevestigingsmail naar coach') }}</li>
-                    <li>{!! __('Twee modi: <strong>Connect</strong> (naar organisator) of <strong>Platform</strong> (via JudoToernooi)') !!}</li>
+                    <li>{{ __('Inschrijfgeld per judoka instelbaar') }}</li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Handmatige import') }}</h4>
