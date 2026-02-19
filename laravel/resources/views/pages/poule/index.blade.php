@@ -444,13 +444,6 @@
                                 class="zoek-match-btn text-gray-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors opacity-0 group-hover:opacity-100"
                                 title="{{ __('Zoek geschikte poule') }}"
                             >🔍</button>
-                            @if($poule->judokas->count() === 1 && !$isKruisfinale && !$isEliminatie)
-                            <button
-                                onclick="event.stopPropagation(); uitschrijvenJudoka({{ $judoka->id }}, '{{ addslashes($judoka->naam) }}', {{ $poule->id }})"
-                                class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                                title="{{ __('Uitschrijven (geen tegenstanders)') }}"
-                            >✕</button>
-                            @endif
                         </div>
                     </div>
                     @endforeach
@@ -519,7 +512,12 @@
                 Match voor: <span id="zoek-match-judoka-naam"></span>
                 <span class="text-gray-500 font-normal" id="zoek-match-judoka-info"></span>
             </h2>
-            <button onclick="closeZoekMatchModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            <div class="flex items-center gap-2">
+                <button id="zoek-match-afmelden-btn" onclick="uitschrijvenVanuitModal()" class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded hidden">
+                    ✕ {{ __('Afmelden') }}
+                </button>
+                <button onclick="closeZoekMatchModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
         </div>
         <div class="p-4 overflow-y-auto flex-1" id="zoek-match-results">
             <p class="text-gray-500 text-center py-8">{{ __('Laden...') }}</p>
@@ -738,6 +736,14 @@ async function uitschrijvenJudoka(judokaId, naam, pouleId) {
         console.error('Error:', error);
         showToast('{{ __('Fout bij uitschrijven') }}', true);
     }
+}
+
+function uitschrijvenVanuitModal() {
+    if (!selectedJudokaId || !selectedJudokaElement) return;
+    const naam = selectedJudokaElement.dataset.judokaNaam || 'Judoka';
+    const pouleId = selectedJudokaElement.dataset.pouleId;
+    closeZoekMatchModal();
+    uitschrijvenJudoka(selectedJudokaId, naam, pouleId);
 }
 
 async function updateKruisfinalesPlaatsen(pouleId, plaatsen) {
@@ -1279,8 +1285,17 @@ async function openZoekMatch() {
     const naam = selectedJudokaElement?.dataset.judokaNaam || 'Judoka';
     const leeftijd = selectedJudokaElement?.dataset.judokaLeeftijd || '';
     const gewicht = selectedJudokaElement?.dataset.judokaGewicht || '';
+    const pouleId = selectedJudokaElement?.dataset.pouleId;
     naamSpan.textContent = naam;
     infoSpan.textContent = leeftijd ? `(${leeftijd}j${gewicht ? ', ' + gewicht + 'kg' : ''})` : '';
+
+    // Show afmelden button if judoka is alone in poule
+    const afmeldenBtn = document.getElementById('zoek-match-afmelden-btn');
+    const pouleBody = pouleId ? document.querySelector(`#poule-${pouleId} .sortable-poule`) : null;
+    const judokaCount = pouleBody ? pouleBody.querySelectorAll('.judoka-item').length : 0;
+    if (afmeldenBtn) {
+        afmeldenBtn.classList.toggle('hidden', judokaCount > 1);
+    }
 
     modal.classList.remove('hidden');
     resultsDiv.innerHTML = `<p class="text-gray-500 text-center py-8">${__laden}</p>`;
