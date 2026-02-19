@@ -235,7 +235,7 @@
                 <p>{{ __('Club, gewicht, band, gewichtsklasse - systeem berekent ontbrekende waarden.') }}</p>
 
                 <h4 class="font-semibold text-gray-800 mt-4">{{ __('Valideer judoka\'s (belangrijk!)') }}</h4>
-                <p>{{ __('Na sluiting gewichtsmutaties doorgeven:') }}</p>
+                <p>{{ __('Valideer na sluiting datum gewichtsmutaties doorgeven:') }}</p>
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('Ga naar <strong>Judoka\'s &gt; Valideer</strong>') !!}</li>
                     <li>{{ __('Systeem controleert alle gegevens') }}</li>
