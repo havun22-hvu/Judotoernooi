@@ -361,7 +361,7 @@
                 <ul class="list-disc list-inside space-y-1">
                     <li>{!! __('Kies eliminatie als wedstrijdsysteem bij <strong>Toernooi Bewerken &gt; Categorieën</strong>') !!}</li>
                     <li>{!! __('Aantal brons medailles (1 of 2) instelbaar bij <strong>Toernooi Instellingen</strong>') !!}</li>
-                    <li>{{ __('Seeding via drag & drop op de bracket') }}</li>
+                    <li>{{ __('Seeding via drag & drop op de A-bracket (alleen voor aanvang 1e wedstrijd)') }}</li>
                     <li>{{ __('Winnaar doorschuiven door te slepen naar volgende ronde') }}</li>
                     <li>{{ __('Medailles toekennen door winnaar/verliezer naar medaille-slots te slepen') }}</li>
                 </ul>
