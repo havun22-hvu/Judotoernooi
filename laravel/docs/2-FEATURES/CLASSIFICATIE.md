@@ -1067,32 +1067,29 @@ Een poule is rood als grootte NIET in `poule_grootte_voorkeur`:
 - Default [5, 4, 6, 3] → 1, 2, 7, 8+ zijn rood
 - Lege poules (0) zijn blauw (verwijderbaar)
 
-### Zoek Match vs Wachtruimte - Twee Verplaats-Systemen
+### Overpoulen op Wedstrijddag
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ VERPLAATSEN VAN JUDOKA'S - TWEE SYSTEMEN                            │
+│ KERNREGEL: Vast = JUDOKA afwijkend, Variabel = POULE afwijkend      │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│ 🔍 ZOEK MATCH (alle categorieën)                                   │
-│    Doel:    Verplaatsen BINNEN dezelfde (leeftijds)categorie       │
-│    Waar:    Poules pagina + Wedstrijddag                           │
-│    Hoe:     Klik op 🔍 achter judoka → kies poule uit popup        │
-│    Voorbeeld: Judoka van poule #5 naar poule #8 (beide U11)        │
+│ 📦 VASTE GEWICHTSCATEGORIEËN (max_kg_verschil = 0)                 │
+│    Wat:     JUDOKA weegt buiten eigen gewichtsklasse               │
+│    Markering: Judoka gemarkeerd in poule (rode stip/badge)         │
+│    Actie:   Org sleept of gebruikt 🔍 Zoek Match                   │
+│    Judoka BLIJFT in poule tot org verplaatst                       │
 │                                                                     │
-│ 🟠 WACHTRUIMTE (alleen VASTE gewichtscategorieën)                  │
-│    Doel:    Verplaatsen naar ANDERE gewichtscategorie              │
-│    Waar:    Alleen Wedstrijddag                                    │
-│    Wanneer: Judoka weegt buiten eigen gewichtsklasse               │
-│    Flow:    Na weging → automatisch naar juiste wachtruimte        │
-│             (bij passende gewichtsklasse)                          │
-│    Info:    In oude poule getoond bij ℹ️ info als "afwijkend"      │
+│ 📊 DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0)                    │
+│    Wat:     POULE range te groot (lichtste vs zwaarste)            │
+│    Markering: Poule gemarkeerd als problematisch                   │
+│    Actie:   Org sleept of gebruikt 🔍 Zoek Match                   │
+│    Lichtste/zwaarste judoka gemarkeerd                             │
 │                                                                     │
-├─────────────────────────────────────────────────────────────────────┤
-│ ⚠️ BELANGRIJK:                                                      │
-│    - PHP CategorieClassifier bepaalt gewichtsklasse (niet Python)  │
-│    - Python solver maakt alleen poules BINNEN een categorie        │
-│    - Wachtruimte = tijdelijke parkeerplaats per gewichtsklasse     │
+│ BEIDE:                                                              │
+│    - Tools: Drag & drop + 🔍 Zoek Match                            │
+│    - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info       │
+│    - Geen wachtruimte (OBSOLEET sinds feb 2026)                    │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -1179,202 +1176,57 @@ Response:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ OVERPOULEN OP WEDSTRIJDDAG - TWEE FLOWS                             │
+│ KERNREGEL: Vast = JUDOKA afwijkend, Variabel = POULE afwijkend      │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │ 📦 VASTE GEWICHTSCATEGORIEËN (max_kg_verschil = 0)                 │
 │ ───────────────────────────────────────────────────────────────────│
-│ Probleem:  Judoka weegt buiten eigen gewichtsklasse                │
+│ Probleem:  JUDOKA weegt buiten eigen gewichtsklasse                │
 │ Detectie:  gewogen_gewicht past niet in ingeschreven klasse        │
-│ Actie:     AUTOMATISCH naar wachtruimte van juiste gewichtsklasse  │
-│ Info:      Oude poule toont "afwijkend gewicht" bij ℹ️             │
-│ Afhandeling: Organisator sleept van wachtruimte naar poule         │
+│ Markering: Judoka gemarkeerd in poule (rode stip/badge)            │
+│ Judoka BLIJFT in poule — wordt NIET automatisch verwijderd         │
+│ Actie:     Org sleept of gebruikt 🔍 Zoek Match                    │
 │                                                                     │
 │ 📊 DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0)                    │
 │ ───────────────────────────────────────────────────────────────────│
-│ Probleem:  Poule gewichtsrange > max_kg_verschil                   │
-│            Voorbeeld: poule 27-32kg = 5kg, max = 3kg → ❌          │
+│ Probleem:  POULE gewichtsrange > max_kg_verschil                   │
 │ Detectie:  range = max(gewogen) - min(gewogen)                     │
-│ Actie:     Organisator gebruikt 🔍 Zoek Match                      │
-│ Geen wachtruimte: verplaatsen binnen dezelfde categorie            │
+│ Markering: Poule gemarkeerd als problematisch                      │
+│            Lichtste + zwaarste judoka gemarkeerd                   │
+│ Actie:     Org sleept of gebruikt 🔍 Zoek Match                    │
 │                                                                     │
 ├─────────────────────────────────────────────────────────────────────┤
-│ ⚠️ BEIDE: Weegkaart + publieke pagina's updaten automatisch        │
+│ BEIDE:                                                              │
+│   - Tools: Drag & drop + 🔍 Zoek Match                             │
+│   - Afwezigen: automatisch uit poule, zichtbaar bij ℹ️ info        │
+│   - Weegkaart + publieke pagina's updaten automatisch              │
+│   - ⛔ GEEN wachtruimte (OBSOLEET sinds feb 2026)                  │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-
-### Flow Diagram
-
-```
-┌──────────────────┐
-│ Weging gesloten  │
-│ voor blok X      │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Check alle poules│
-│ in blok X        │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐     Nee      ┌──────────────────┐
-│ range > max_kg?  │─────────────►│ Klaar, geen      │
-│                  │              │ actie nodig      │
-└────────┬─────────┘              └──────────────────┘
-         │ Ja
-         ▼
-┌──────────────────┐
-│ Markeer poule    │
-│ als problematisch│
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Toon lichtste +  │
-│ zwaarste judoka  │
-│ met Zoek Match   │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Org kiest judoka │
-│ → Zoek Match     │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Filter opties:   │
-│ • Zelfde blok    │
-│ • Andere blokken │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐     Zelfde      ┌──────────────────┐
-│ Org kiest doel   │────────────────►│ Direct in poule  │
-│                  │                 │ plaatsen         │
-└────────┬─────────┘                 └──────────────────┘
-         │ Ander blok
-         ▼
-┌──────────────────┐
-│ Naar WACHTPOULE  │
-│ van doelblok     │
-│ (paarse kleur)   │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Wacht tot weging │
-│ doelblok sluit   │
-└────────┬─────────┘
-         ▼
-┌──────────────────┐
-│ Org plaatst in   │
-│ echte poule      │
-│ (gewichten known)│
-└──────────────────┘
-```
-
-### Het Probleem
-
-Bij **vaste categorieën** werkt overpoulen zo:
-- Judoka te zwaar → uit poule → naar wachtruimte van juiste gewichtsklasse
-- Wachtruimte bestaat per vaste categorie (-36kg, -40kg, etc.)
-
-Bij **dynamische poules** is dit anders:
-- Geen vaste gewichtsklassen = geen wachtruimtes
-- Poules zijn gevormd op basis van werkelijke gewichten
-- Na weging kunnen gewichten afwijken → poule range kan te groot worden
 
 ### Detectie: Wanneer is overpoulen nodig?
 
 **Na sluiten weging** per blok:
 
+#### Vaste gewichtscategorieën
+- Per judoka: `gewogen_gewicht` past niet in de gewichtsklasse van de poule
+- Judoka wordt **gemarkeerd** in de poule (rode stip + badge)
+- Judoka **blijft in de poule** tot org actie onderneemt
+
+#### Dynamische categorieën
 1. **Herbereken min-max kg** per poule op basis van **gewogen gewichten**
 2. **Check:** `(max_kg - min_kg) > max_kg_verschil` uit categorie config?
-3. **Indien ja:** poule is problematisch → moet opgelost worden
+3. **Indien ja:** poule is problematisch → lichtste + zwaarste gemarkeerd
 
-**Voorbeeld:**
+**Voorbeeld (dynamisch):**
 ```
 Poule #42 vóór weging:  28, 29, 30, 31 kg → range 3kg ✅ (max=3)
 Poule #42 na weging:    27, 29, 30, 32 kg → range 5kg ❌ (max=3)
 → Probleem: 27kg of 32kg moet verplaatst worden
 ```
 
-**Belangrijk:** Het gaat om de POULE range, niet om individuele judoka's!
-- Als iedereen 1kg zwaarder is → range blijft gelijk → geen probleem
-- Alleen als de spreiding te groot wordt → actie nodig
-
-### Oplossing: Zoek Match voor Wedstrijddag
-
-Hergebruik het Zoek Match systeem met extra beperkingen:
-
-**Blok beperkingen voor doelpoule:**
-
-| Blok situatie | Actie | Reden |
-|---------------|-------|-------|
-| **Zelfde blok** | Direct in poule | Gewichten al bekend |
-| **Ander blok (weging open)** | Naar wachtpoule | Gewichten nog niet bekend |
-| **Ander blok (weging gesloten)** | Direct in poule | Gewichten al bekend |
-
-### Verschil Lege Poules: Vast vs Dynamisch
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ LEGE POULES OP WEDSTRIJDDAG                                       │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│ VASTE CATEGORIEËN (max_kg_verschil = 0):                         │
-│   • Lege poules WEL tonen op wedstrijddag                        │
-│   • Reden: Wachtruimte per gewichtsklasse nodig                  │
-│   • Voorbeeld: -36kg poule leeg → judoka uit -32kg kan erheen    │
-│                                                                   │
-│ DYNAMISCHE CATEGORIEËN (max_kg_verschil > 0):                    │
-│   • Lege poules NIET tonen op wedstrijddag                       │
-│   • Reden: We gebruiken wachtpoules per blok                     │
-│   • Geen vaste gewichtsklassen = geen wachtruimtes nodig         │
-│                                                                   │
-├──────────────────────────────────────────────────────────────────┤
-│ ⚠️  BELANGRIJK: LEGE POULES NOOIT OP MAT ZETTEN!                 │
-│                                                                   │
-│ Geldt voor BEIDE systemen (vast én dynamisch):                   │
-│   • Lege poule = geen wedstrijden = niet op mat                  │
-│   • Bij "naar zaaloverzicht": lege poules overslaan              │
-│   • Mat interface toont alleen poules met judoka's               │
-│                                                                   │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Wachtruimte (alleen VASTE gewichtscategorieën)
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ WACHTRUIMTE - ALLEEN BIJ VASTE GEWICHTSCATEGORIEËN               │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│ WAT:    Parkeerplaats per GEWICHTSKLASSE (bijv. -36kg, -40kg)    │
-│         Rechts van de poules in UI                               │
-│                                                                   │
-│ WANNEER: Judoka weegt buiten eigen gewichtsklasse                │
-│          Voorbeeld: Ingeschreven -36kg, weegt 37.2kg             │
-│                                                                   │
-│ AUTOMATISCHE FLOW NA WEGING:                                      │
-│   1. Judoka weegt af (te zwaar/licht voor eigen klasse)          │
-│   2. Systeem bepaalt nieuwe gewichtsklasse (PHP Classifier)      │
-│   3. Judoka wordt automatisch in WACHTRUIMTE van nieuwe          │
-│      gewichtsklasse geplaatst                                    │
-│   4. In OUDE poule: getoond bij ℹ️ info als "afwijkend gewicht"  │
-│   5. Organisator plaatst judoka vanuit wachtruimte in poule      │
-│                                                                   │
-│ INHOUD WACHTRUIMTE:                                               │
-│   - Judoka's met afwijkend gewicht (automatisch geplaatst)       │
-│   - Handmatig uit poule gesleepte judoka's                       │
-│   - NIET: afwezigen (die staan alleen bij ℹ️ info)               │
-│                                                                   │
-│ KLEUR:   Oranje (border + achtergrond)                           │
-│                                                                   │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-**Acties:**
-- **Automatisch:** Na weging → judoka naar wachtruimte van juiste gewichtsklasse
-- **Handmatig:** Drag & drop van wachtruimte → poule
-- **Handmatig:** Drag & drop van poule → wachtruimte
-- **Zoek Match:** 🔍 vanuit wachtruimte om geschikte poule te vinden
+**Belangrijk:** Bij dynamisch gaat het om de POULE range, niet om individuele judoka's!
 
 ### Afwijkend Gewicht bij Vaste Categorieën
 
@@ -1387,26 +1239,55 @@ Hergebruik het Zoek Match systeem met extra beperkingen:
 │                                                                   │
 │ STAP 1: WEGING                                                    │
 │   - Weegstation registreert 37.2kg                               │
-│   - PHP Classifier bepaalt: past in -40kg (niet meer -36kg)      │
+│   - Systeem markeert judoka als "afwijkend gewicht"              │
 │                                                                   │
-│ STAP 2: AUTOMATISCHE VERPLAATSING                                │
-│   - Judoka wordt UIT -36kg poule gehaald                         │
-│   - Judoka wordt IN wachtruimte -40kg geplaatst                  │
+│ STAP 2: MARKERING (geen automatische verplaatsing!)              │
+│   - Judoka BLIJFT in -36kg poule                                 │
+│   - Rode stip/badge toont "afwijkend gewicht"                    │
+│   - Judoka is zichtbaar voor org om actie te ondernemen          │
 │                                                                   │
-│ STAP 3: INFO BIJ OUDE POULE                                      │
-│   - Bij ℹ️ info van -36kg poule: "Afwijkend gewicht: [naam]"     │
-│   - Judoka niet meer zichtbaar in poule zelf                     │
-│                                                                   │
-│ STAP 4: ORGANISATOR HANDELT                                      │
-│   - Bekijkt wachtruimte -40kg                                    │
+│ STAP 3: ORGANISATOR HANDELT                                      │
 │   - Sleept judoka naar passende -40kg poule                      │
 │   - OF gebruikt 🔍 Zoek Match voor suggesties                    │
-│                                                                   │
-│ ⚠️ DYNAMISCHE CATEGORIEËN: Geen wachtruimte!                     │
-│    Daar gebruik je alleen 🔍 Zoek Match binnen de categorie      │
+│   - Org bepaalt zelf prioriteit en timing                        │
 │                                                                   │
 └──────────────────────────────────────────────────────────────────┘
 ```
+
+### Afwezigen (BEIDE categorie types)
+
+- Afwezigen gaan **automatisch** uit de poule
+- Zichtbaar bij ℹ️ info tooltip van de poule
+- NIET zichtbaar in de poule zelf
+
+### Lege Poules op Wedstrijddag
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│ LEGE POULES                                                        │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│ VASTE CATEGORIEËN: Lege poules WEL tonen                         │
+│   → Voorbeeld: -36kg poule leeg → judoka uit -32kg kan erheen   │
+│                                                                   │
+│ DYNAMISCHE CATEGORIEËN: Lege poules NIET tonen                   │
+│                                                                   │
+│ ⚠️ LEGE POULES NOOIT OP MAT ZETTEN!                              │
+│   • Lege poule = geen wedstrijden = niet op mat                  │
+│   • Mat interface toont alleen poules met judoka's               │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Zoek Match (Wedstrijddag variant)
+
+Hergebruik Zoek Match met blok-beperkingen:
+
+| Blok situatie | Actie |
+|---------------|-------|
+| **Zelfde blok** | Direct in poule |
+| **Ander blok (weging gesloten)** | Direct in poule |
+| **Ander blok (weging open)** | Zoek Match toont waarschuwing |
 
 ### UI: Problematische Poules na Weging
 
@@ -1540,32 +1421,28 @@ $validated = $request->validate([
 
 ### Implementatie Stappen
 
-1. **Detectie problematische poules** ✅
+1. **Detectie problematische poules (dynamisch)** ✅
    - Na `sluitWeging()`: check alle poules in blok
    - Bereken range op basis van gewogen gewichten
    - Markeer poules waar range > max_kg_verschil
 
-2. **UI aanpassing Wedstrijddag Poules** ✅
-   - Toon problematische poules met waarschuwing
-   - Zoek Match knop bij lichtste/zwaarste judoka
-   - Blok status indicator
+2. **Markering afwijkende judoka's (vast)** 🚧 TODO
+   - Na weging: check of judoka binnen gewichtsklasse van poule past
+   - Markeer judoka in poule (rode stip/badge)
+   - Judoka blijft in poule (NIET automatisch verwijderen)
+   - Wachtruimte VERWIJDERD (obsoleet)
 
-3. **Zoek Match uitbreiden** ✅
-   - Parameter: `wedstrijddag=true` voor extra blok-filtering
+3. **UI aanpassing Wedstrijddag Poules** 🚧 TODO
+   - Vaste gewichtsklassen: elke gewichtsklasse op aparte rij
+   - Wachtruimte UI verwijderen
+   - Afwijkende judoka's visueel gemarkeerd in poule
+
+4. **Zoek Match** ✅
+   - 🔍 knop op alle judoka's (vast + dynamisch)
+   - Blok-filtering bij wedstrijddag variant
    - Groepeer resultaten per blok
-   - Check blok status (gestart/weging open/gesloten)
 
-4. **Validatie bij verplaatsen** ✅
-   - Check of doelblok beschikbaar is
-   - Blokkeer verplaatsen naar eerder blok met gesloten weging
-
-5. **Wachtruimte bidirectioneel** 🚧 TODO
-   - Drag van poule → wachtruimte (judoka uit poule halen)
-   - Drag van wachtruimte → poule (judoka in poule plaatsen)
-   - Zoek Match vanuit wachtruimte
-   - Afwezigen alleen in info tooltip (i), niet in wachtruimte
-
-6. **Data updates na verplaatsen** ✅
+5. **Data updates na verplaatsen** ✅
    - **Weegkaarten:** Dynamisch, blok/mat info update automatisch
    - **Publieke pagina's:** Deelnemer zoeken, poule overzichten, etc. tonen actuele data
    - **QR-code:** Blijft zelfde (gebaseerd op judoka ID, niet poule)

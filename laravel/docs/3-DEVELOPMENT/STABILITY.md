@@ -631,7 +631,7 @@ ActivityLogger::log($toernooi, 'verplaats_judoka', "Jevi verplaatst naar Poule 7
 
 ### Welke acties worden gelogd
 
-**Wedstrijddag:** verplaats_judoka, nieuwe_judoka, meld_af, herstel, naar_wachtruimte, verwijder_uit_poule
+**Wedstrijddag:** verplaats_judoka, nieuwe_judoka, meld_af, herstel, verwijder_uit_poule
 **Mat:** registreer_uitslag, plaats_judoka, verwijder_judoka, poule_klaar
 **Weging:** registreer_gewicht, markeer_aanwezig, markeer_afwezig
 **Poules:** genereer_poules, maak_poule, verwijder_poule, verplaats_judoka
