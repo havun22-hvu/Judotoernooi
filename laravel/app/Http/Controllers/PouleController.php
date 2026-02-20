@@ -666,6 +666,7 @@ class PouleController extends Controller
                 'judokas_count' => $vanPoule->aantal_judokas,
                 'aantal_wedstrijden' => $vanPoule->aantal_wedstrijden,
                 'titel' => $vanPoule->getDisplayTitel(),
+                'gewichtsklasse' => $vanPoule->gewichtsklasse,
                 ...$vanRanges,
             ],
             'naar_poule' => [
@@ -674,6 +675,7 @@ class PouleController extends Controller
                 'judokas_count' => $naarPoule->aantal_judokas,
                 'aantal_wedstrijden' => $naarPoule->aantal_wedstrijden,
                 'titel' => $naarPoule->getDisplayTitel(),
+                'gewichtsklasse' => $naarPoule->gewichtsklasse,
                 ...$naarRanges,
             ],
         ]);
