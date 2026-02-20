@@ -220,12 +220,14 @@
 
     // Poules zijn problematisch als:
     // 1. Grootte niet in toegestane groottes staat, OF
-    // 2. Gewichtsverschil > 4kg
+    // 2. Gewichtsverschil > max_kg_verschil uit categorie config
     // (excl. eliminatie/kruisfinale)
     $problematischePoules = $poules->filter(function($p) use ($isProblematischeGrootte, $berekenGewichtVerschil) {
         if ($p->type === 'eliminatie' || $p->type === 'kruisfinale') return false;
         $heeftGrootteProbleem = $isProblematischeGrootte($p->judokas_count);
-        $heeftGewichtProbleem = $berekenGewichtVerschil($p) > 4;
+        $config = $p->getCategorieConfig();
+        $maxKg = (float) ($config['max_kg_verschil'] ?? 0);
+        $heeftGewichtProbleem = $maxKg > 0 && $berekenGewichtVerschil($p) > $maxKg;
         return $heeftGrootteProbleem || $heeftGewichtProbleem;
     });
 @endphp
@@ -234,7 +236,7 @@
 @if($problematischePoules->count() > 0)
 <div class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6">
     <h3 class="font-bold text-red-800 mb-2">{{ __('Problematische poules') }} (<span id="problematische-count">{{ $problematischePoules->count() }}</span>)</h3>
-    <p class="text-red-700 text-sm mb-3">{{ __('Poules met verkeerde grootte of te groot gewichtsverschil (>4kg). Klik om naar de poule te gaan:') }}</p>
+    <p class="text-red-700 text-sm mb-3">{{ __('Poules met verkeerde grootte of te groot gewichtsverschil. Klik om naar de poule te gaan:') }}</p>
     <div id="problematische-links" class="flex flex-wrap gap-2">
         @foreach($problematischePoules as $p)
         @php
@@ -355,7 +357,7 @@
                             @else
                                 <span class="text-gray-900" data-poule-titel="{{ $poule->id }}">#{{ $poule->nummer }} {{ $poule->getDisplayTitel() }}</span>
                                 @if($heeftGewichtWaarschuwing)
-                                <span class="ml-1 text-orange-600" title="{{ __('Gewichtsverschil te groot: :verschilkg (max 4kg)', ['verschil' => round($gewichtVerschil, 1)]) }}">⚠️</span>
+                                <span class="ml-1 text-orange-600" title="{{ __('Gewichtsverschil te groot: :verschilkg (max :maxkg)', ['verschil' => round($gewichtVerschil, 1), 'max' => $maxKgVerschil]) }}">⚠️</span>
                                 @endif
                             @endif
                         </div>
