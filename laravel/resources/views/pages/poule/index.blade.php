@@ -564,6 +564,8 @@ const __paginaVernieuwen = @json(__('Pagina vernieuwen'));
 const __omWijzigingenTeZien = @json(__('om wijzigingen te zien'));
 
 const isLocked = {{ $isLocked ? 'true' : 'false' }};
+const wegingTolerantie = {{ $toernooi->weging_tolerantie ?? 0.5 }};
+const __teZwaarVoor = @json(__('Te zwaar voor :klasse'));
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 const verifieerUrl = '{{ route('toernooi.poule.verifieer', $toernooi->routeParams()) }}';
 const verplaatsUrl = '{{ route('toernooi.poule.verplaats-judoka-api', $toernooi->routeParams()) }}';
@@ -976,6 +978,37 @@ async function verifieerPoules() {
     }
 }
 
+// Update weight warning icon after judoka is moved to a different poule
+function updateGewichtWarning(judokaEl, gewichtsklasse) {
+    const gewicht = parseFloat(judokaEl.dataset.judokaGewicht);
+    const gewichtDiv = judokaEl.querySelector('.text-right .font-medium');
+    if (!gewichtDiv) return;
+
+    // Remove existing warning
+    const bestaandeWarning = gewichtDiv.querySelector('span[title]');
+    if (bestaandeWarning) bestaandeWarning.remove();
+
+    // No weight or no weight class = no warning needed
+    if (!gewicht || !gewichtsklasse) return;
+
+    // Only check fixed weight classes (-XX or +XX)
+    const isPlus = gewichtsklasse.startsWith('+');
+    const isMinus = gewichtsklasse.startsWith('-');
+    if (!isPlus && !isMinus) return;
+
+    const limiet = parseFloat(gewichtsklasse.replace(/[^0-9.]/g, ''));
+    const pastInKlasse = isPlus
+        ? gewicht >= (limiet - wegingTolerantie)
+        : gewicht <= (limiet + wegingTolerantie);
+
+    if (!pastInKlasse) {
+        const warn = document.createElement('span');
+        warn.title = __teZwaarVoor.replace(':klasse', gewichtsklasse);
+        warn.textContent = '⚠️';
+        gewichtDiv.appendChild(warn);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 
     // Don't initialize sortable if page is locked
@@ -1038,6 +1071,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Update poule statistieken en titels
                         updatePouleStats(data.van_poule);
                         updatePouleStats(data.naar_poule);
+
+                        // Update weight warning for moved judoka
+                        updateGewichtWarning(evt.item, data.naar_poule.gewichtsklasse);
 
                         // Update totaal statistieken bovenaan
                         updateTotaalStats();
