@@ -638,7 +638,7 @@ Niet-gewogen judoka's worden **NIET** automatisch afwezig. De organisator meldt 
 - Gewogen = per definitie aanwezig (je kunt niet wegen zonder er te zijn)
 - **AFWEZIG badge** wordt pas getoond nadat de weegtijd van het blok is gesloten
 - Vóór sluiting weegtijd toont de weeglijst geen AFWEZIG status (ongeacht database waarde)
-- De wachtruimte toont alleen **aanwezige** judoka's die overgepouled moeten worden
+- Afwijkende judoka's worden gemarkeerd in hun poule (alleen aanwezigen)
 
 ## Overpoelen (Wedstrijddag Poules)
 

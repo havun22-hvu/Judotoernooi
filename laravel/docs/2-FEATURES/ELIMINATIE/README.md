@@ -203,7 +203,7 @@ Welke poules worden waar getoond, afhankelijk van type en vulling:
 
 **Oud (vóór 10 feb 2026):** Alpine `x-html="renderBracket()"` bouwde ~300 regels HTML als JS string en herbouwde de hele DOM na elke drop. Dit gaf merkbare vertraging.
 
-**Nieuw:** Server-rendered Blade partials + SortableJS + pure DOM updates. Zelfde patroon als de 4 andere werkende DnD-pagina's (zaaloverzicht, wedstrijddag poules, wachtruimte, poule index).
+**Nieuw:** Server-rendered Blade partials + SortableJS + pure DOM updates. Zelfde patroon als de 4 andere werkende DnD-pagina's (zaaloverzicht, wedstrijddag poules, poule index).
 
 ### Waarom deze keuze?
 
